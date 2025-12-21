@@ -88,7 +88,16 @@
 
             <!-- SECTION: RISK MATRIX -->
             <section id="risk-matrix" style="margin-bottom:4rem;">
-                <h2>⚠️ Risk Matrix</h2>
+                <div class="flex-between">
+                    <h2>⚠️ Risk Matrix</h2>
+                    <span class="badge badge-warning" style="font-size:0.8rem;">Quant Model v4.2</span>
+                </div>
+                <p>Visualizing tail risks by Probability vs. Severity. Size denotes hedging priority.</p>
+
+                <div class="mw-card">
+                    <div style="height:300px; width:100%;"><canvas id="riskBubbleChart"></canvas></div>
+                </div>
+
                 <div class="mw-card">
                     <table class="data-table">
                         <thead>
@@ -96,39 +105,27 @@
                                 <th>Risk Factor</th>
                                 <th>Prob.</th>
                                 <th>Impact</th>
-                                <th>Mitigation Strategy</th>
+                                <th>Mitigation</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="badge badge-red">BTC Expiry Vol</span></td>
+                                <td><strong>BTC Expiry Vol</strong></td>
                                 <td>45%</td>
-                                <td style="font-weight:700;">HIGH</td>
-                                <td>Reduce crypto size, Tight trailing stops</td>
+                                <td class="text-red">High</td>
+                                <td>Tighter Trailing Stops</td>
                             </tr>
                             <tr>
-                                <td><span class="badge badge-red">Yen Carry Unwind</span></td>
+                                <td><strong>Yen Carry Unwind</strong></td>
                                 <td>30%</td>
-                                <td style="font-weight:700;">HIGH</td>
-                                <td>Long JPY (FXY / Futures) Hedge</td>
+                                <td class="text-red">High</td>
+                                <td>Long JPY Hedge</td>
                             </tr>
                             <tr>
-                                <td><span class="badge badge-warning">Liquidity Void</span></td>
+                                <td><strong>Liquidity Void</strong></td>
                                 <td>60%</td>
-                                <td>MEDIUM</td>
-                                <td>Avoid new entries Dec 24-26</td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge badge-warning">Venezuela Escalation</span></td>
-                                <td>25%</td>
-                                <td>MEDIUM</td>
-                                <td>Long Oil Supermajors</td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge badge-green">Christmas Rally</span></td>
-                                <td>65%</td>
-                                <td class="text-green">POSITIVE</td>
-                                <td>Maintain Quality Tech Exposure</td>
+                                <td class="text-warning">Med</td>
+                                <td>No new entries (24-26 Dec)</td>
                             </tr>
                         </tbody>
                     </table>
@@ -137,41 +134,47 @@
 
             <!-- SECTION: MARKET REGIME -->
             <section id="market-regime" style="margin-bottom:4rem;">
-                <h2>📊 Market Regime Analysis (Quant)</h2>
-                <div class="grid-3">
+                <h2>📊 Quant Market Regime</h2>
+                <div class="grid-2">
                     <div class="mw-card">
-                        <h4 style="margin:0 0 0.5rem 0;">VIX Term Structure</h4>
-                        <div class="text-green" style="font-weight:700; font-size:1.2rem;">Normal Contango</div>
-                        <p style="font-size:0.85rem; margin:0.5rem 0 0 0;">Front-end volatility is low (14.91),
-                            signaling no immediate hedging demand despite headlines.</p>
+                        <div class="flex-between" style="margin-bottom:1rem;">
+                            <h3 class="mw-card-title">Regime Radar</h3>
+                            <span class="badge badge-green">Risk-On (0.46)</span>
+                        </div>
+                        <div style="height:250px;"><canvas id="regimeRadarChart"></canvas></div>
+                        <p style="font-size:0.8rem; margin-top:10px; color:var(--text-muted); text-align:center;">
+                            Polygons inside 0.5 indicate Risk-On / Complacency.
+                        </p>
                     </div>
-                    <div class="mw-card">
-                        <h4 style="margin:0 0 0.5rem 0;">Credit Spreads (HY)</h4>
-                        <div class="text-green" style="font-weight:700; font-size:1.2rem;">Tight (0.55)</div>
-                        <p style="font-size:0.85rem; margin:0.5rem 0 0 0;">High Yield spreads remain near historic lows.
-                            Watch for widening >350bps as early warning.</p>
-                    </div>
-                    <div class="mw-card">
-                        <h4 style="margin:0 0 0.5rem 0;">Liquidity Index</h4>
-                        <div class="text-warning" style="font-weight:700; font-size:1.2rem;">Thinning (0.57)</div>
-                        <p style="font-size:0.85rem; margin:0.5rem 0 0 0;">Year-end balance sheet constraints and
-                            holidays are reducing depth. Slippage risk elevated.</p>
+                    <div>
+                        <div class="mw-card">
+                            <h4 style="margin:0 0 0.5rem 0;">VIX Term Structure</h4>
+                            <div class="text-green" style="font-weight:700; font-size:1.2rem;">Normal Contango</div>
+                            <p style="font-size:0.85rem; margin:0.5rem 0 0 0;">Front-end volatility (14.91) remains
+                                suppressed relative to back-end, signaling no immediate panic.</p>
+                        </div>
+                        <div class="mw-card">
+                            <h4 style="margin:0 0 0.5rem 0;">Credit Spreads</h4>
+                            <div class="text-green" style="font-weight:700; font-size:1.2rem;">Tight (0.55)</div>
+                            <p style="font-size:0.85rem; margin:0.5rem 0 0 0;">HY spreads < 300bps validates
+                                    the "Soft Landing" thesis despite macro headwinds.</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <!-- SECTION: TARGETS -->
             <section id="targets" style="margin-bottom:4rem;">
-                <h2>🎯 EOY 2025 Targets (Probability Weighted)</h2>
+                <h2>🎯 Probability-Weighted Targets</h2>
                 <div class="mw-card">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Index / Asset</th>
+                                <th>Asset</th>
                                 <th>Current</th>
                                 <th>Target (Dec 31)</th>
                                 <th>Implied Move</th>
-                                <th>Confidence</th>
+                                <th>Conf.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -181,13 +184,6 @@
                                 <td>6,900 - 6,950</td>
                                 <td class="text-green">+1.5%</td>
                                 <td>65%</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Nasdaq 100</strong></td>
-                                <td>23,307</td>
-                                <td>23,800 - 24,000</td>
-                                <td class="text-green">+2.5%</td>
-                                <td>60%</td>
                             </tr>
                             <tr>
                                 <td><strong>Bitcoin</strong></td>
@@ -210,26 +206,28 @@
 
             <!-- SECTION: STRATEGY -->
             <section id="institutional-strategy" style="margin-bottom:4rem;">
-                <h2>♟️ Institutional Strategy: The Alpha</h2>
+                <h2>♟️ Alpha Strategy</h2>
+                <div class="grid-3">
+                    <div class="mw-card" style="border-top: 4px solid var(--accent);">
+                        <div class="badge badge-blue" style="margin-bottom:0.5rem;">HEDGE</div>
+                        <h3 class="mw-card-title">Long JPY (FXY)</h3>
+                        <p style="font-size:0.9rem;">Hedge against liquidity contraction as Carry Trade unwinds. Inverse
+                            correlation to SPX in stress scenarios.</p>
+                    </div>
 
-                <div class="mw-card" style="border-left:4px solid var(--accent);">
-                    <h3 class="mw-card-title">1. Long JPY Hedge (FXY)</h3>
-                    <p><strong>Rationale:</strong> As the BoJ hikes rates, the carry trade unwinds roughly $3T+ of
-                        capital. Buying JPY acts as a functional hedge against a broader equity drawdown caused by
-                        liquidity contraction.</p>
-                </div>
+                    <div class="mw-card" style="border-top: 4px solid var(--success);">
+                        <div class="badge badge-green">LONG</div>
+                        <h3 class="mw-card-title">EU Defense</h3>
+                        <p style="font-size:0.9rem;">Structural fiscal tailwinds. Rheinmetall/Leonardo offer decoupling
+                            from US consumer cycle.</p>
+                    </div>
 
-                <div class="mw-card" style="border-left:4px solid var(--accent);">
-                    <h3 class="mw-card-title">2. European Defense (RHM / Leonardo)</h3>
-                    <p><strong>Rationale:</strong> Regardless of economic cycles, EU rearmament is a multi-year fiscal
-                        commitment. Relative strength vs Eurostoxx 50 is at ATH. Pure alpha play unrelated to US
-                        consumer weakness.</p>
-                </div>
-
-                <div class="mw-card" style="border-left:4px solid var(--accent);">
-                    <h3 class="mw-card-title">3. Avoid Consumer Discretionary (XLY)</h3>
-                    <p><strong>Rationale:</strong> Tariff risks + depleted pandemic savings + China weakness = Triple
-                        threat for global consumer brands (LVMH, Nike, Starbucks). Short/Underweight recommended.</p>
+                    <div class="mw-card" style="border-top: 4px solid var(--danger);">
+                        <div class="badge badge-red">SHORT</div>
+                        <h3 class="mw-card-title">Cons. Discretionary</h3>
+                        <p style="font-size:0.9rem;">Short XLY. Triple threat: China weakness, Tariffs, and depleted
+                            excess savings.</p>
+                    </div>
                 </div>
             </section>
 
@@ -243,23 +241,24 @@
                     <h4 class="mw-card-title">Execution Checklist</h4>
                 </div>
                 <div style="font-size:0.85rem; color:var(--text-secondary);">
-                    <div style="margin-bottom:8px;"><strong>Dec 24 (13:00 EST):</strong> Close tactical longs.</div>
-                    <div style="margin-bottom:8px;"><strong>Dec 26 (08:00 UTC):</strong> BTC Option Expiry. Fade initial
-                        spike?</div>
-                    <div style="margin-bottom:8px;"><strong>Dec 27:</strong> Evaluate Santa Rally volume participation.
-                    </div>
+                    <div style="margin-bottom:8px; display:flex; gap:8px;"><i
+                            class="fa-regular fa-square-check text-blue"></i> <span><strong>Dec 24:</strong> Close
+                            tactical longs.</span></div>
+                    <div style="margin-bottom:8px; display:flex; gap:8px;"><i
+                            class="fa-regular fa-square text-muted"></i> <span><strong>Dec 26:</strong> BTC Expiry
+                            Fade.</span></div>
+                    <div style="margin-bottom:8px; display:flex; gap:8px;"><i
+                            class="fa-regular fa-square text-muted"></i> <span><strong>Dec 27:</strong> Assess
+                            Volume.</span></div>
                 </div>
             </div>
 
             <!-- ASSET ALLOCATION -->
             <div class="mw-card">
                 <div class="mw-card-header">
-                    <h4 class="mw-card-title">Institutional Alloc</h4>
+                    <h4 class="mw-card-title">Inst. Allocation</h4>
                 </div>
                 <div style="height:200px; position:relative;"><canvas id="expertAllocChart"></canvas></div>
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; text-align:center;">
-                    Overweight: Semi, Defense, Gold<br>Underweight: Cons. Disc, China
-                </div>
             </div>
 
         </aside>
@@ -273,29 +272,104 @@
         }
 
         Chart.defaults.color = '#64748b';
-        Chart.defaults.borderColor = '#e2e8f0';
+        Chart.defaults.borderColor = 'rgba(226, 232, 240, 0.5)';
         Chart.defaults.font.family = "'Inter', sans-serif";
 
-        const allocCtx = document.getElementById('expertAllocChart').getContext('2d');
-        new Chart(allocCtx, {
-            type: 'bar',
+        // 1. RISK BUBBLE CHART
+        const bubbleCtx = document.getElementById('riskBubbleChart').getContext('2d');
+        new Chart(bubbleCtx, {
+            type: 'bubble',
             data: {
-                labels: ['Tech', 'Def.', 'Gold', 'Cash'],
                 datasets: [{
-                    label: 'Target Weight',
-                    data: [45, 20, 10, 25],
-                    backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#64748b'],
-                    borderRadius: 4
+                    label: 'Risks',
+                    data: [
+                        { x: 45, y: 80, r: 15, label: 'BTC Vol' },      // High Impact, Med Prob
+                        { x: 30, y: 90, r: 20, label: 'Yen Unwind' },   // Severe Impact, Low Prob
+                        { x: 60, y: 50, r: 10, label: 'Liquidity' },    // Med Impact, High Prob
+                        { x: 25, y: 60, r: 12, label: 'Oil/Venezuela' } // Med Impact, Low Prob
+                    ],
+                    backgroundColor: ['rgba(239, 68, 68, 0.6)', 'rgba(239, 68, 68, 0.8)', 'rgba(245, 158, 11, 0.6)', 'rgba(245, 158, 11, 0.6)'],
+                    borderColor: 'transparent'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.raw.label + ': ' + context.raw.x + '% Prob, Impact: ' + context.raw.y;
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
+                    x: {
+                        title: { display: true, text: 'Probability (%)' },
+                        min: 0, max: 100,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Severity (Impact)' },
+                        min: 0, max: 100,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
+        });
+
+        // 2. REGIME RADAR CHART
+        const radarCtx = document.getElementById('regimeRadarChart').getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: ['VIX (Fear)', 'Credit Stress', 'Dollar', 'Liquidity', 'Momentum'],
+                datasets: [{
+                    label: 'Current Regime',
+                    data: [20, 35, 47, 57, 59], // Visual representation of scores
+                    fill: true,
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    borderColor: '#2563eb',
+                    pointBackgroundColor: '#2563eb'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(0,0,0,0.05)' },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 3. ALLOCATION BAR CHART
+        const allocCtx = document.getElementById('expertAllocChart').getContext('2d');
+        new Chart(allocCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Tech', 'Def.', 'Gold', 'Cash'],
+                datasets: [{
+                    label: 'Target',
+                    data: [45, 20, 10, 25],
+                    backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#64748b'],
+                    borderRadius: 4,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { display: false, beginAtZero: true },
                     x: { grid: { display: false } }
                 }
             }
