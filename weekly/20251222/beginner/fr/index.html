@@ -81,6 +81,20 @@
         <main class="main-content">
             <header style="margin-bottom:4rem;" class="animate-in">
                 <div class="header-meta">22 Déc 2025 • VOL. 42</div>
+
+                <!-- READING TIME & AUDIO -->
+                <div style="display:flex; align-items:center; gap:16px; margin:12px 0 20px 0; flex-wrap:wrap;">
+                    <span
+                        style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-muted);">
+                        <i class="fa-regular fa-clock"></i> ~5 min de lecture
+                    </span>
+                    <button id="audioPlayBtn" onclick="toggleAudio()"
+                        style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--border); border-radius:20px; background:#f8fafc; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
+                        <i class="fa-solid fa-volume-high" id="audioIcon"></i> <span id="audioLabel">Écouter le
+                            résumé</span>
+                    </button>
+                </div>
+
                 <h1>Quoi faire avant la fin de l'année ?</h1>
                 <p class="lead">
                     C'est la dernière ligne droite avant 2026 ! Le marché monte grâce à l'Intelligence Artificielle,
@@ -177,18 +191,34 @@
 
         <!-- CONTEXT BAR -->
         <aside class="sidebar-context">
-            <div class="mw-card">
-                <div class="mw-card-header">
-                    <h4 class="mw-card-title">Portefeuille Idéal</h4>
-                </div>
-                <div style="height:200px; position:relative;"><canvas id="beginnerAllocChart"></canvas></div>
-                <div style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-top:10px;">
-                    Moitié Tech, un quart Cash (sécurité), le reste en Défense/Crypto.
+            <!-- KEY DATES -->
+            <div class="mw-card" style="border:2px solid var(--accent);">
+                <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fa-solid fa-calendar-days text-blue"></i>
+                    Dates Clés</h4>
+                <div style="font-size:0.8rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>Mar 24</strong><span style="color:var(--warning);">Close 13h</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Mer 25</strong><span class="text-red">🎄 FERMÉ</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Jeu 26</strong><span class="text-red">⚠️ BTC Piège</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:6px 0;"><strong>Ven
+                            27</strong><span class="text-green">🎅 Achats?</span></div>
                 </div>
             </div>
-            <div class="mw-card"
-                style="margin-top:20px; font-style:italic; font-size:0.8rem; color:var(--text-muted); background:#f8fafc;">
-                "En Bourse, ne pas perdre d'argent est plus important que d'en gagner vite."
+            <!-- ALLOCATION -->
+            <div class="mw-card" style="margin-top:16px;">
+                <h4 style="font-size:0.85rem; margin-bottom:8px;">Portefeuille Idéal</h4>
+                <div style="height:150px;"><canvas id="beginnerAllocChart"></canvas></div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-align:center; margin-top:6px;">50% Tech |
+                    25% Cash | 15% Déf. | 10% Crypto</div>
+            </div>
+            <!-- QUOTE -->
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">
+                "Ne pas perdre d'argent est plus important que d'en gagner vite."
             </div>
         </aside>
 
@@ -276,6 +306,33 @@
                 plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }
             }
         });
+
+        // Text-to-Speech Audio Player
+        let speechSynth = window.speechSynthesis;
+        let isPlaying = false;
+        const summaryText = "Résumé pour débutants. Cette semaine, le marché est optimiste grâce à l'intelligence artificielle. Les entreprises tech gagnent, alors que Nike et le luxe perdent à cause de la Chine. Ce qu'il faut faire: premièrement, ne rien acheter le 26 décembre matin, c'est une journée piège pour le Bitcoin. Deuxièmement, gardez 25% de votre argent en cash. Troisièmement, misez sur la défense et la tech pour 2026. Moralité: ne pas perdre d'argent est plus important que d'en gagner vite.";
+
+        function toggleAudio() {
+            if (isPlaying) {
+                speechSynth.cancel();
+                isPlaying = false;
+                document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                document.getElementById('audioLabel').textContent = 'Écouter le résumé';
+            } else {
+                const utterance = new SpeechSynthesisUtterance(summaryText);
+                utterance.lang = 'fr-FR';
+                utterance.rate = 0.9;
+                utterance.onend = () => {
+                    isPlaying = false;
+                    document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                    document.getElementById('audioLabel').textContent = 'Écouter le résumé';
+                };
+                speechSynth.speak(utterance);
+                isPlaying = true;
+                document.getElementById('audioIcon').className = 'fa-solid fa-pause';
+                document.getElementById('audioLabel').textContent = 'Pause';
+            }
+        }
     </script>
 </body>
 
