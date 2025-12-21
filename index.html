@@ -6,20 +6,22 @@
     <title>Market Watch | Intelligence</title>
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
     <link rel="stylesheet" href="weekly/20251222/assets/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Landing Specific Overrides */
-        body { display: block; }
+        /* Landing Specific Styles */
+        body { display: block; background-color: var(--bg-app); font-family: 'Inter', sans-serif; }
         .hero-section {
             text-align: center;
             padding: 8rem 2rem;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 70%);
+            background: radial-gradient(circle at center, var(--bg-panel) 0%, var(--bg-app) 70%);
+            color: var(--text-primary);
         }
         .hero-title {
             font-size: 4rem;
+            font-weight: 800;
             margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -28,6 +30,7 @@
             color: var(--text-secondary);
             max-width: 700px;
             margin: 0 auto 3rem;
+            line-height: 1.5;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
         .grid-cards {
@@ -35,15 +38,18 @@
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
             margin-top: -4rem;
+            padding-bottom: 4rem;
         }
         .report-card {
             background: var(--bg-panel);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
+            border: var(--border);
+            border-radius: var(--radius);
             padding: 2.5rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .report-card:hover {
             transform: translateY(-8px);
@@ -69,6 +75,7 @@
             font-weight: 600;
             margin-top: 1.5rem;
             transition: background 0.2s;
+            text-decoration: none;
         }
         .btn-action:hover { background: var(--accent-hover); }
         
@@ -78,6 +85,7 @@
             right: 2rem;
             display: flex;
             gap: 10px;
+            z-index: 10;
         }
         .lang-btn {
             background: rgba(255,255,255,0.05);
@@ -87,11 +95,68 @@
             border-radius: 20px;
             cursor: pointer;
             transition: 0.2s;
+            font-weight: 600;
         }
         .lang-btn.active {
             background: var(--accent);
             color: white;
             border-color: var(--accent);
+        }
+        .lang-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        .report-card-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .report-card h2 {
+            margin-top:0; 
+            border:none; 
+            padding:0; 
+            color:white; 
+            font-size:1.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        .report-card p {
+            color: var(--text-secondary);
+            flex-grow: 1;
+            margin-bottom: 1.5rem;
+        }
+        .report-card .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        .report-card .actions a {
+            flex: 1;
+            text-align: center;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .report-card .actions .btn-read-primary {
+            background: var(--accent);
+            color: white;
+            border: 1px solid var(--accent);
+        }
+        .report-card .actions .btn-read-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .report-card .actions .btn-read-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--text-muted);
+        }
+        .report-card .actions .btn-read-secondary:hover { background: rgba(255,255,255,0.1); border-color: white; }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: var(--border);
+            margin-top: auto;
         }
     </style>
 </head>
@@ -104,9 +169,9 @@
 
     <div class="hero-section">
         <div class="container">
-            <div class="brand" style="justify-content:center; margin-bottom: 2rem;">
+            <a href="#" class="brand" style="justify-content:center; margin-bottom: 2rem;">
                 <img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH
-            </div>
+            </a>
             <h1 class="hero-title" id="hero-h1">Institutional Intelligence.</h1>
             <p class="hero-subtitle" id="hero-p">Weekly deep-dive analysis into Macro, Equities, and Crypto. Clear, actionable, and noise-free.</p>
         </div>
@@ -118,60 +183,76 @@
             <!-- Latest Report Card -->
             <div class="report-card">
                 <span class="badge badge-green" style="margin-bottom:1rem; display:inline-block;">Latest Issue</span>
-                <h2 style="margin-top:0; border:none; padding:0; color:white; font-size:1.8rem;">Weekly Dispatch</h2>
-                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Dec 22 - Dec 26, 2025 • Vol. 42</div>
+                <h2 id="card-title">Weekly Dispatch</h2>
+                <div class="report-card-meta" id="report-meta">Dec 22 - 26, 2025 • Vol. 42</div>
                 
                 <p id="card-desc">Featuring Micron's AI Triumph, Nike's China struggles, and the Bank of Japan's historic pivot. Don't miss the Bitcoin expiry analysis.</p>
                 
-                <div style="display:flex; gap:10px; margin-top:2rem;">
-                    <a href="weekly/20251222/expert/en/index.html" class="btn-action" style="flex:1; text-align:center;" id="btn-read">Read Report</a>
+                <div class="actions">
+                    <a href="weekly/20251222/expert/en/index.html" class="btn-read-primary" id="btn-read-en">Read Report (EN)</a>
+                    <a href="weekly/20251222/expert/fr/index.html" class="btn-read-secondary" id="btn-read-fr">Lire le Rapport (FR)</a>
                 </div>
             </div>
 
-            <!-- Archive Card (Visual Only) -->
+            <!-- Archive Card (Conceptual, for design) -->
             <div class="report-card" style="opacity:0.6;">
                 <span class="badge" style="background:rgba(255,255,255,0.1); color:var(--text-muted); margin-bottom:1rem; display:inline-block;">Archive</span>
-                <h2 style="margin-top:0; border:none; padding:0; color:white; font-size:1.8rem;">Previous Weeks</h2>
-                <p style="margin-bottom:3rem;">Access the full library of past reports, performance tracking, and deep-dive thematic research.</p>
-                <button class="btn-action" style="background:rgba(255,255,255,0.1); width:100%; cursor:not-allowed;">Library Locked</button>
+                <h2 style="color:var(--text-secondary);">Previous Weeks</h2>
+                <p>Access the full library of past reports, performance tracking, and deep-dive thematic research.</p>
+                <div class="actions">
+                    <a href="#" class="btn-read-secondary" style="width:100%; cursor:not-allowed;">Browse Archive</a>
+                </div>
             </div>
 
         </div>
     </div>
 
+    <footer>
+        &copy; 2025 Market Watch. All rights reserved.
+    </footer>
+
     <script>
-        const TEXT = {
+        const TEXT_CONTENT = {
             en: {
-                h1: "Institutional Intelligence.",
-                p: "Weekly deep-dive analysis into Macro, Equities, and Crypto. Clear, actionable, and noise-free.",
-                desc: "Featuring Micron's AI Triumph, Nike's China struggles, and the Bank of Japan's historic pivot.",
-                btn: "Read Report (EN)",
-                link: "weekly/20251222/expert/en/index.html"
+                hero_h1: "Institutional Intelligence.",
+                hero_p: "Weekly deep-dive analysis into Macro, Equities, and Crypto. Clear, actionable, and noise-free.",
+                card_title: "Weekly Dispatch",
+                report_meta: "Dec 22 - 26, 2025 • Vol. 42",
+                card_desc: "Dec 22 - 26, 2025. Featuring Micron's AI Triumph, Nike's China struggles, and the Bank of Japan's historic pivot. Don't miss the Bitcoin expiry analysis.",
+                btn_read_en: "Read Report (EN)",
+                btn_read_fr: "Lire le Rapport (FR)",
+                expert_en_link: "weekly/20251222/expert/en/index.html",
+                expert_fr_link: "weekly/20251222/expert/fr/index.html"
             },
             fr: {
-                h1: "Intelligence Institutionnelle.",
-                p: "Analyses hebdomadaires Macro, Actions et Crypto. Clair, actionnable et sans bruit.",
-                desc: "Focus sur le triomphe IA de Micron, les difficultés de Nike en Chine et le pivot historique de la BoJ.",
-                btn: "Lire le Rapport (FR)",
-                link: "weekly/20251222/expert/fr/index.html"
+                hero_h1: "Intelligence Institutionnelle.",
+                hero_p: "Analyses hebdomadaires Macro, Actions et Crypto. Clair, actionnable et sans bruit.",
+                card_title: "Dépêche Hebdo",
+                report_meta: "22 - 26 Déc 2025 • Vol. 42",
+                card_desc: "Focus sur le triomphe IA de Micron, les difficultés de Nike en Chine et le pivot historique de la BoJ. N'oubliez pas l'expiration Bitcoin.",
+                btn_read_en: "Read Report (EN)",
+                btn_read_fr: "Lire le Rapport (FR)",
+                expert_en_link: "weekly/20251222/expert/en/index.html",
+                expert_fr_link: "weekly/20251222/expert/fr/index.html"
             }
         };
 
         function switchLang(lang) {
-            document.getElementById('hero-h1').textContent = TEXT[lang].h1;
-            document.getElementById('hero-p').textContent = TEXT[lang].p;
-            document.getElementById('card-desc').textContent = TEXT[lang].desc;
+            document.getElementById('hero-h1').textContent = TEXT_CONTENT[lang].hero_h1;
+            document.getElementById('hero-p').textContent = TEXT_CONTENT[lang].hero_p;
+            document.getElementById('card-title').textContent = TEXT_CONTENT[lang].card_title;
+            document.getElementById('report-meta').textContent = TEXT_CONTENT[lang].report_meta;
+            document.getElementById('card-desc').textContent = TEXT_CONTENT[lang].card_desc;
             
-            const btn = document.getElementById('btn-read');
-            btn.textContent = TEXT[lang].btn;
-            btn.href = TEXT[lang].link;
+            document.getElementById('btn-read-en').textContent = TEXT_CONTENT[lang].btn_read_en;
+            document.getElementById('btn-read-en').href = TEXT_CONTENT[lang].expert_en_link;
+            document.getElementById('btn-read-fr').textContent = TEXT_CONTENT[lang].btn_read_fr;
+            document.getElementById('btn-read-fr').href = TEXT_CONTENT[lang].expert_fr_link;
 
-            // Toggle Active State
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + lang).classList.add('active');
         }
 
-        // Auto-detect
         const userLang = navigator.language || navigator.userLanguage; 
         if (userLang.startsWith('fr')) {
             switchLang('fr');
