@@ -80,6 +80,20 @@
         <main class="main-content">
             <header style="margin-bottom:4rem;" class="animate-in">
                 <div class="header-meta">Dec 22 2025 • VOL. 42</div>
+
+                <!-- READING TIME & AUDIO -->
+                <div style="display:flex; align-items:center; gap:16px; margin:12px 0 20px 0; flex-wrap:wrap;">
+                    <span
+                        style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-muted);">
+                        <i class="fa-regular fa-clock"></i> ~5 min read
+                    </span>
+                    <button id="audioPlayBtn" onclick="toggleAudio()"
+                        style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--border); border-radius:20px; background:#f8fafc; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
+                        <i class="fa-solid fa-volume-high" id="audioIcon"></i> <span id="audioLabel">Listen to
+                            summary</span>
+                    </button>
+                </div>
+
                 <h1>What to do before year-end?</h1>
                 <p class="lead">
                     It's the final stretch before 2026! The market is rising thanks to AI, but be careful: don't just
@@ -175,18 +189,34 @@
 
         <!-- CONTEXT BAR -->
         <aside class="sidebar-context">
-            <div class="mw-card">
-                <div class="mw-card-header">
-                    <h4 class="mw-card-title">Ideal Portfolio</h4>
-                </div>
-                <div style="height:200px; position:relative;"><canvas id="beginnerAllocChart"></canvas></div>
-                <div style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-top:10px;">
-                    Half Tech, Quarter Cash (safety), rest in Defense/Crypto.
+            <!-- KEY DATES -->
+            <div class="mw-card" style="border:2px solid var(--accent);">
+                <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fa-solid fa-calendar-days text-blue"></i>
+                    Key Dates</h4>
+                <div style="font-size:0.8rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>Tue 24</strong><span style="color:var(--warning);">Close 1PM</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Wed 25</strong><span class="text-red">🎄 CLOSED</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Thu 26</strong><span class="text-red">⚠️ BTC Trap</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:6px 0;"><strong>Fri
+                            27</strong><span class="text-green">🎅 Buy?</span></div>
                 </div>
             </div>
-            <div class="mw-card"
-                style="margin-top:20px; font-style:italic; font-size:0.8rem; color:var(--text-muted); background:#f8fafc;">
-                "In Investing, not losing money is more important than winning fast."
+            <!-- ALLOCATION -->
+            <div class="mw-card" style="margin-top:16px;">
+                <h4 style="font-size:0.85rem; margin-bottom:8px;">Ideal Portfolio</h4>
+                <div style="height:150px;"><canvas id="beginnerAllocChart"></canvas></div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-align:center; margin-top:6px;">50% Tech |
+                    25% Cash | 15% Def. | 10% Crypto</div>
+            </div>
+            <!-- QUOTE -->
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">
+                "Not losing money is more important than winning fast."
             </div>
         </aside>
 
@@ -274,6 +304,33 @@
                 plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }
             }
         });
+
+        // Text-to-Speech Audio Player
+        let speechSynth = window.speechSynthesis;
+        let isPlaying = false;
+        const summaryText = "Beginner summary. This week, the market is optimistic thanks to artificial intelligence. Tech companies are winning, while Nike and luxury are losing because of China. What to do: first, don't buy anything on December 26 morning, it's a trap day for Bitcoin. Second, keep 25% of your money in cash. Third, bet on defense and tech for 2026. Bottom line: not losing money is more important than winning fast.";
+
+        function toggleAudio() {
+            if (isPlaying) {
+                speechSynth.cancel();
+                isPlaying = false;
+                document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                document.getElementById('audioLabel').textContent = 'Listen to summary';
+            } else {
+                const utterance = new SpeechSynthesisUtterance(summaryText);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.onend = () => {
+                    isPlaying = false;
+                    document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                    document.getElementById('audioLabel').textContent = 'Listen to summary';
+                };
+                speechSynth.speak(utterance);
+                isPlaying = true;
+                document.getElementById('audioIcon').className = 'fa-solid fa-pause';
+                document.getElementById('audioLabel').textContent = 'Pause';
+            }
+        }
     </script>
 </body>
 

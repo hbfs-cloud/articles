@@ -85,6 +85,20 @@
             <!-- INTRO -->
             <section id="intro" class="animate-in">
                 <div class="header-meta">Institutional Buy-Side Report • Dec 22 2025</div>
+
+                <!-- READING TIME & AUDIO -->
+                <div style="display:flex; align-items:center; gap:16px; margin:12px 0 20px 0; flex-wrap:wrap;">
+                    <span
+                        style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-muted);">
+                        <i class="fa-regular fa-clock"></i> ~12 min read
+                    </span>
+                    <button id="audioPlayBtn" onclick="toggleAudio()"
+                        style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--border); border-radius:20px; background:#f8fafc; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
+                        <i class="fa-solid fa-volume-high" id="audioIcon"></i> <span id="audioLabel">Listen to
+                            summary</span>
+                    </button>
+                </div>
+
                 <h1>Institutional Alpha: Navigating Structural Change.</h1>
                 <p class="lead">
                     The return to a <strong>Risk-On (0.46)</strong> zone post-MU validates AI demand, but the structural
@@ -583,23 +597,37 @@
 
         <!-- SIDEBAR CONTEXT -->
         <aside class="sidebar-context">
-            <div class="mw-card">
-                <div class="mw-card-header">
-                    <h4 class="mw-card-title">Current Allocation</h4>
+            <!-- KEY DATES -->
+            <div class="mw-card" style="border:2px solid var(--accent);">
+                <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fa-solid fa-calendar-days text-blue"></i>
+                    Key Dates</h4>
+                <div style="font-size:0.8rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>Mon 23</strong><span style="color:var(--text-muted);">Positioning</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>Tue 24</strong><span style="color:var(--warning);">Close 1PM</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Wed 25</strong><span class="text-red">🔴 CLOSED</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Thu 26</strong><span class="text-red">⚡ BTC $23.8B</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:6px 0;"><strong>Fri
+                            27</strong><span class="text-green">Santa Rally?</span></div>
                 </div>
-                <div style="height:200px; position:relative;"><canvas id="expertAllocChart"></canvas></div>
-                <ul style="font-size:0.8rem; margin-top:10px; padding-left:15px; list-style-type:disc;">
-                    <li>US Tech (45%)</li>
-                    <li>EU Defense (20%)</li>
-                    <li>Hard Assets (Gold/BTC) (10%)</li>
-                    <li>Cash/Hedges (25%)</li>
-                </ul>
             </div>
-
-            <div class="mw-card"
-                style="margin-top:20px; font-style:italic; font-size:0.85rem; color:var(--text-muted); background:#f8fafc;">
-                "The gravitational pull of expiry vanishes when the contract dies. That's when the real move begins."
+            <!-- ALLOCATION -->
+            <div class="mw-card" style="margin-top:16px;">
+                <h4 style="font-size:0.85rem; margin-bottom:8px;">Current Allocation</h4>
+                <div style="height:150px;"><canvas id="expertAllocChart"></canvas></div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-align:center; margin-top:6px;">Tech 45% |
+                    Def. 20% | Assets 10% | Cash 25%</div>
             </div>
+            <!-- QUOTE -->
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">"The
+                gravitational pull of expiry vanishes when the contract dies."</div>
         </aside>
 
     </div>
@@ -625,7 +653,7 @@
             });
         });
 
-        // 3. ALLOCATION BAR CHART
+        // Allocation Chart
         const allocCtx = document.getElementById('expertAllocChart').getContext('2d');
         new Chart(allocCtx, {
             type: 'doughnut',
@@ -645,6 +673,33 @@
                 cutout: '70%'
             }
         });
+
+        // Text-to-Speech Audio Player
+        let speechSynth = window.speechSynthesis;
+        let isPlaying = false;
+        const summaryText = "Expert Summary. Composite score 0.46, Risk-On regime. This week: Record Triple Witching of 7.1 trillion dollars, volatility contained. Bank of Japan hikes to 0.75%, highest since 1995. Micron massive beat, plus 21%, confirms AI demand. Nike drops 10% despite beat, China down 17%. CPI at 2.7% but data questionable post-shutdown. Key dates: December 24 early close, 25 closed, December 26 Bitcoin expiry 23.8 billion, do not trade in the morning. Strategy: maintain 70-75% invested, focus post-expiry for crypto, overweight European defense and banks.";
+
+        function toggleAudio() {
+            if (isPlaying) {
+                speechSynth.cancel();
+                isPlaying = false;
+                document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                document.getElementById('audioLabel').textContent = 'Listen to summary';
+            } else {
+                const utterance = new SpeechSynthesisUtterance(summaryText);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.95;
+                utterance.onend = () => {
+                    isPlaying = false;
+                    document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                    document.getElementById('audioLabel').textContent = 'Listen to summary';
+                };
+                speechSynth.speak(utterance);
+                isPlaying = true;
+                document.getElementById('audioIcon').className = 'fa-solid fa-pause';
+                document.getElementById('audioLabel').textContent = 'Pause';
+            }
+        }
     </script>
 </body>
 

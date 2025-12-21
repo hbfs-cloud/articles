@@ -82,6 +82,20 @@
         <main class="main-content">
             <header style="margin-bottom:4rem;" class="animate-in">
                 <div class="header-meta">22 Déc 2025 • VOL. 42</div>
+
+                <!-- READING TIME & AUDIO -->
+                <div style="display:flex; align-items:center; gap:16px; margin:12px 0 20px 0; flex-wrap:wrap;">
+                    <span
+                        style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-muted);">
+                        <i class="fa-regular fa-clock"></i> ~8 min de lecture
+                    </span>
+                    <button id="audioPlayBtn" onclick="toggleAudio()"
+                        style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--border); border-radius:20px; background:#f8fafc; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
+                        <i class="fa-solid fa-volume-high" id="audioIcon"></i> <span id="audioLabel">Écouter le
+                            résumé</span>
+                    </button>
+                </div>
+
                 <h1>Mécanique de Marché : Le retour de la volatilité structurelle.</h1>
                 <p class="lead">
                     Alors que l'IA tire l'indice vers le haut, une rotation s'opère en surface. Le débouclage du "Carry
@@ -243,44 +257,50 @@
 
         <!-- RIGHT CONTEXT BAR -->
         <aside class="sidebar-context">
-
-            <div class="mw-card">
-                <div class="mw-card-header">
-                    <h4 class="mw-card-title">Watchlist Hebdo</h4>
+            <!-- KEY DATES -->
+            <div class="mw-card" style="border:2px solid var(--accent);">
+                <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fa-solid fa-calendar-days text-blue"></i>
+                    Dates Clés</h4>
+                <div style="font-size:0.8rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>Mar 24</strong><span style="color:var(--warning);">Close 13h</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Mer 25</strong><span class="text-red">🔴 FERMÉ</span></div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Jeu 26</strong><span class="text-red">⚡ BTC Expiry</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:6px 0;"><strong>Ven
+                            27</strong><span class="text-green">Santa Rally?</span></div>
                 </div>
-                <ul style="font-size:0.9rem;">
-                    <li style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                        <div class="flex-between"><strong>NVDA</strong> <span class="text-green">+2.4%</span></div>
-                        <small class="text-muted">Breakout confirmé.</small>
-                    </li>
-                    <li style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                        <div class="flex-between"><strong>NIKE</strong> <span class="text-red">-9.8%</span></div>
-                        <small class="text-muted">Ne pas "attraper le couteau".</small>
-                    </li>
-                    <li>
-                        <div class="flex-between"><strong>USD/JPY</strong> <span class="text-warning">148.50</span>
-                        </div>
-                        <small class="text-muted">Niveau clé à surveiller.</small>
-                    </li>
+            </div>
+
+            <!-- WATCHLIST -->
+            <div class="mw-card" style="margin-top:16px;">
+                <h4 style="font-size:0.85rem; margin-bottom:10px;">Watchlist Hebdo</h4>
+                <ul style="font-size:0.85rem; padding:0; list-style:none;">
+                    <li
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>NVDA</strong><span class="text-green">+2.4%</span></li>
+                    <li
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>NKE</strong><span class="text-red">-9.8%</span></li>
+                    <li style="display:flex; justify-content:space-between; padding:6px 0;">
+                        <strong>USD/JPY</strong><span class="text-warning">148.50</span></li>
                 </ul>
             </div>
 
             <!-- ALLOCATION CHART -->
-            <div class="mw-card">
-                <div class="mw-card-header">
-                    <h4 class="mw-card-title">Alloc. Interm.</h4>
-                </div>
-                <div style="height:200px; position:relative;"><canvas id="interAllocChart"></canvas></div>
+            <div class="mw-card" style="margin-top:16px;">
+                <h4 style="font-size:0.85rem; margin-bottom:8px;">Allocation</h4>
+                <div style="height:150px;"><canvas id="interAllocChart"></canvas></div>
             </div>
 
-            <div class="mw-card" style="margin-top:20px; background:#f8fafc;">
-                <h4 style="font-size:0.9rem; margin-bottom:5px;">💡 Leçon de la semaine</h4>
-                <p style="font-size:0.8rem; margin:0;">
-                    "Quand une nouvelle est attendue par tout le monde (comme l'expiry du 26), le marché ne bouge
-                    souvent qu'après l'événement."
-                </p>
+            <!-- QUOTE -->
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">
+                "Le marché ne bouge souvent qu'après l'événement attendu."
             </div>
-
         </aside>
 
     </div>
@@ -368,6 +388,33 @@
                 plugins: { legend: { display: false } }
             }
         });
+
+        // Text-to-Speech Audio Player
+        let speechSynth = window.speechSynthesis;
+        let isPlaying = false;
+        const summaryText = "Résumé Intermédiaire. Le marché est en mode Risk-On avec un score de 0.46. Cette semaine, une rotation sectorielle s'opère: la Tech monte grâce à Micron, tandis que la consommation souffre avec Nike moins 10%. Trois forces à comprendre: le Yen Carry Trade qui se débouble, l'attraction gravitationnelle des options sur Bitcoin, et le Debasement Trade sur l'or. Stratégie: surpondérer la Tech et la Défense, attendre le 26 décembre pour la crypto, éviter le luxe exposé à la Chine.";
+
+        function toggleAudio() {
+            if (isPlaying) {
+                speechSynth.cancel();
+                isPlaying = false;
+                document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                document.getElementById('audioLabel').textContent = 'Écouter le résumé';
+            } else {
+                const utterance = new SpeechSynthesisUtterance(summaryText);
+                utterance.lang = 'fr-FR';
+                utterance.rate = 0.95;
+                utterance.onend = () => {
+                    isPlaying = false;
+                    document.getElementById('audioIcon').className = 'fa-solid fa-volume-high';
+                    document.getElementById('audioLabel').textContent = 'Écouter le résumé';
+                };
+                speechSynth.speak(utterance);
+                isPlaying = true;
+                document.getElementById('audioIcon').className = 'fa-solid fa-pause';
+                document.getElementById('audioLabel').textContent = 'Pause';
+            }
+        }
     </script>
 </body>
 
