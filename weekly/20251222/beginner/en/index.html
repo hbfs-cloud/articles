@@ -15,7 +15,7 @@
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
     <link rel="stylesheet" href="../../assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -23,9 +23,9 @@
 
     <!-- MOBILE HEADER -->
     <header class="mobile-header">
-        <div class="brand" style="margin-bottom:0; font-size:1.2rem;">
+        <a href="#" class="brand" style="margin-bottom:0;">
             <img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH
-        </div>
+        </a>
         <button class="mobile-menu-toggle" onclick="toggleMenu()">
             <i class="fa-solid fa-bars"></i>
         </button>
@@ -56,14 +56,12 @@
                 <div class="mw-card" style="padding:1.5rem; text-align:center;">
                     <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; margin-bottom:10px;">MARKET
                         MOOD</div>
-                    <div style="position:relative; height:100px; margin-bottom:-50px;">
+                    <div style="position:relative; height:100px; margin-bottom:-40px;">
                         <canvas id="moodChart"></canvas>
                         <div
                             style="position:absolute; top:60%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.2rem; color:var(--success);">
                             OPTIMISTIC</div>
                     </div>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">Investors are confident for
-                        Christmas, but cautious.</p>
                 </div>
 
             </nav>
@@ -134,18 +132,18 @@
             <section id="action-plan" style="margin-bottom:5rem;" class="animate-in delay-3">
                 <h2>📝 Your Action Plan (Checklist)</h2>
                 <div class="mw-card">
-                    <ul class="checklist">
-                        <li>
+                    <ul class="checklist" style="list-style:none; padding:0;">
+                        <li style="margin-bottom:10px;">
                             <i class="fa-regular fa-square"></i>
                             <strong>Do nothing on Dec 26 morning.</strong> It's a "trap" date for Bitcoin (contract
                             expiry). Wait for the afternoon.
                         </li>
-                        <li>
+                        <li style="margin-bottom:10px;">
                             <i class="fa-regular fa-square"></i>
                             <strong>Keep some Cash.</strong> About 25% of your money should be ready to invest if prices
                             drop suddenly.
                         </li>
-                        <li>
+                        <li style="margin-bottom:10px;">
                             <i class="fa-regular fa-square"></i>
                             <strong>Bet on Defense.</strong> With global tensions, countries are spending more on
                             security. It's a safe sector for 2026.
@@ -186,7 +184,8 @@
                     Half Tech, Quarter Cash (safety), rest in Defense/Crypto.
                 </div>
             </div>
-            <div class="mw-card" style="margin-top:20px; font-style:italic; font-size:0.8rem; color:var(--text-muted);">
+            <div class="mw-card"
+                style="margin-top:20px; font-style:italic; font-size:0.8rem; color:var(--text-muted); background:#f8fafc;">
                 "In Investing, not losing money is more important than winning fast."
             </div>
         </aside>
@@ -199,7 +198,7 @@
             document.getElementById('sidebar').classList.toggle('open');
         }
 
-        // Active Link Handling
+        // Active Link Handling & Smooth Scroll
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function (e) {
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -210,26 +209,7 @@
             });
         });
 
-        // Scroll Spy
-        const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.nav-link');
-        window.addEventListener('scroll', () => {
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (scrollY >= (sectionTop - 150)) {
-                    current = section.getAttribute('id');
-                }
-            });
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href').includes(current)) {
-                    link.classList.add('active');
-                }
-            });
-        });
-
-
+        // Chart defaults
         Chart.defaults.color = '#64748b';
         Chart.defaults.font.family = "'Inter', sans-serif";
 
