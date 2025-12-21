@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch - Weekly Intelligence</title>
+    <link href="weekly/20251222/assets/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; }
+        .hero { background: #0f172a; color: white; padding: 4rem 2rem; text-align: center; }
+        .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; color: #94a3b8; max-width: 600px; margin: 0 auto 2rem; }
+        .lang-switch { position: absolute; top: 20px; right: 20px; }
+        .btn-lang { background: rgba(255,255,255,0.1); color: white; border: none; padding: 5px 15px; border-radius: 20px; cursor: pointer; }
+        .btn-lang.active { background: #3b82f6; }
+        .container { max-width: 1000px; margin: -50px auto 0; padding: 0 20px; flex: 1; }
+        .card { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .report-item { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #e2e8f0; transition: bg 0.2s; }
+        .report-item:hover { background: #f1f5f9; }
+        .report-item:last-child { border-bottom: none; }
+        .tag { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .tag-latest { background: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body>
+    <div class="lang-switch">
+        <button class="btn-lang active" onclick="setLang('en')">EN</button>
+        <button class="btn-lang" onclick="setLang('fr')">FR</button>
+    </div>
+
+    <div class="hero">
+        <h1 id="hero-title">Market Intelligence.</h1>
+        <p id="hero-sub">Institutional-grade analysis for everyone.</p>
+    </div>
+
+    <div class="container">
+        <!-- Latest Report Card -->
+        <div class="card">
+            <h3 id="latest-title" style="margin-bottom: 1.5rem;">Latest Report</h3>
+            <div class="report-item">
+                <div>
+                    <span class="tag tag-latest">Latest</span>
+                    <h4 style="margin: 0.5rem 0;">Weekly Report: Dec 22 - Dec 26, 2025</h4>
+                    <p class="text-muted small" style="margin:0;">Micron AI, Nike Crash, BoJ Pivot</p>
+                </div>
+                <div>
+                    <a href="weekly/20251222/expert/en/index.html" id="btn-read-en" class="btn btn-primary btn-sm">Read (EN)</a>
+                    <a href="weekly/20251222/expert/fr/index.html" id="btn-read-fr" class="btn btn-secondary btn-sm">Lire (FR)</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Card -->
+        <div class="card">
+            <h3 id="about-title">What We Do</h3>
+            <p id="about-text">We synthesize complex market data into actionable insights. No noise, just signal.</p>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
+        &copy; 2025 Market Watch.
+    </footer>
+
+    <script>
+        const content = {
+            en: {
+                hero_title: "Market Intelligence.",
+                hero_sub: "Institutional-grade analysis for everyone.",
+                latest_title: "Latest Report",
+                about_title: "What We Do",
+                about_text: "We synthesize complex market data into actionable insights. No noise, just signal."
+            },
+            fr: {
+                hero_title: "Intelligence de Marché.",
+                hero_sub: "Analyses de niveau institutionnel pour tous.",
+                latest_title: "Dernier Rapport",
+                about_title: "Ce que nous faisons",
+                about_text: "Nous synthétisons les données de marché complexes en insights actionnables. Pas de bruit, juste du signal."
+            }
+        };
+
+        function setLang(lang) {
+            document.getElementById('hero-title').innerText = content[lang].hero_title;
+            document.getElementById('hero-sub').innerText = content[lang].hero_sub;
+            document.getElementById('latest-title').innerText = content[lang].latest_title;
+            document.getElementById('about-title').innerText = content[lang].about_title;
+            document.getElementById('about-text').innerText = content[lang].about_text;
+            
+            document.querySelectorAll('.btn-lang').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.btn-lang[onclick="setLang('${lang}')"]`).classList.add('active');
+            
+            // Toggle buttons visibility based on preference if you wanted strict separation, 
+            // but here we show both buttons for accessibility.
+        }
+
+        // Auto-detect
+        const userLang = navigator.language || navigator.userLanguage; 
+        if (userLang.startsWith('fr')) {
+            setLang('fr');
+        } else {
+            setLang('en');
+        }
+    </script>
+</body>
+</html>
