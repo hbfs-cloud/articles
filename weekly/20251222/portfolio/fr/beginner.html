@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch | Mon Premier Portefeuille - Débutant</title>
+    <meta property="og:title" content="💰 Ton Premier Portefeuille en Bourse">
+    <meta property="og:description" content="Apprends à investir avec une vraie stratégie qui a fait +32.9%">
+
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="../../assets/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .big-number {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 24px;
+            margin-bottom: 2rem;
+        }
+
+        .big-number .value {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #059669;
+        }
+
+        .big-number .label {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .simple-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .step-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .emoji-big {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .good-bad-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .good-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 2px solid #10b981;
+        }
+
+        .bad-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 2px solid #ef4444;
+        }
+
+        .trade-simple {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-radius: 20px;
+            padding: 2rem;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .price-box {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .chart-simple {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        @media (max-width: 600px) {
+            .good-bad-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .price-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .big-number .value {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="mobile-header">
+        <a href="#" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH</a>
+        <button class="mobile-menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i
+                class="fa-solid fa-bars"></i></button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar-nav" id="sidebar">
+            <a href="../../../../index.html" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW">
+                MARKET WATCH</a>
+            <nav style="flex:1; overflow-y:auto;">
+                <div class="nav-section">
+                    <div class="nav-title">💰 Mon Portefeuille</div>
+                    <a href="#gain" class="nav-link active"><i class="fa-solid fa-star"></i> Le Résultat</a>
+                    <a href="#how" class="nav-link"><i class="fa-solid fa-magic-wand-sparkles"></i> Comment ça
+                        marche</a>
+                    <a href="#trade" class="nav-link"><i class="fa-solid fa-lightbulb"></i> L'idée du moment</a>
+                    <a href="#start" class="nav-link"><i class="fa-solid fa-rocket"></i> Par où commencer</a>
+                </div>
+                <div class="nav-section" style="margin-top:1rem;">
+                    <div class="nav-title">← Retour</div>
+                    <a href="../../beginner/fr/index.html" class="nav-link"><i class="fa-solid fa-newspaper"></i>
+                        Rapport Hebdo</a>
+                </div>
+            </nav>
+            <div class="level-selector">
+                <div class="level-btn active">Débutant</div>
+                <a href="intermediate.html" class="level-btn">Interm.</a>
+                <a href="expert.html" class="level-btn">Expert</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- THE BIG NUMBER -->
+            <section id="gain" class="animate-in">
+                <div class="header-meta">Mon Premier Portefeuille • 22 Décembre 2025</div>
+
+                <h1 style="font-size:2rem; line-height:1.3; margin:1rem 0 1.5rem;">
+                    💰 Ton argent peut travailler pour toi
+                </h1>
+
+                <p style="font-size:1.1rem; line-height:1.7; margin-bottom:2rem;">
+                    On a testé une stratégie d'investissement cette année. Voici le résultat :
+                </p>
+
+                <div class="big-number">
+                    <div class="value">+32.9%</div>
+                    <div class="label">de gain en 1 an</div>
+                </div>
+
+                <div class="good-bad-grid">
+                    <div class="good-box">
+                        <span class="emoji-big">📈</span>
+                        <h3 style="color:#059669;">Si tu avais mis 1000€</h3>
+                        <p style="font-size:1.3rem; font-weight:700; margin-top:0.5rem;">Tu aurais 1329€</p>
+                        <p style="font-size:0.9rem; color:var(--text-muted); margin-top:0.5rem;">+329€ de gain</p>
+                    </div>
+                    <div class="bad-box">
+                        <span class="emoji-big">📉</span>
+                        <h3 style="color:#dc2626;">Le pire moment</h3>
+                        <p style="font-size:1.3rem; font-weight:700; margin-top:0.5rem;">-17.3%</p>
+                        <p style="font-size:0.9rem; color:var(--text-muted); margin-top:0.5rem;">Mais ça a remonté
+                            après !</p>
+                    </div>
+                </div>
+
+                <!-- SIMPLE CHART -->
+                <div class="chart-simple">
+                    <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-chart-line text-blue"></i> L'évolution mois
+                        par mois</h3>
+                    <div style="height:280px;"><canvas id="simpleChart"></canvas></div>
+                </div>
+            </section>
+
+            <!-- HOW IT WORKS -->
+            <section id="how" style="margin-top:4rem;">
+                <h2>🪄 Comment ça marche ?</h2>
+                <p style="font-size:1.1rem; line-height:1.7; margin-bottom:2rem;">
+                    C'est comme un robot qui choisit les meilleurs actions pour toi. Voici ses 3 règles simples :
+                </p>
+
+                <div class="simple-card" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+                    <div class="step-box">
+                        <div class="step-number">1</div>
+                        <div>
+                            <h3>🔍 Cherche partout les bonnes affaires</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                Le robot regarde <strong>932 actifs</strong> chaque jour : actions, or, argent,
+                                crypto, pétrole. Il choisit celles qui <strong>montent déjà</strong> avec de bonnes
+                                chances de continuer.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">2</div>
+                        <div>
+                            <h3>🛡️ Protège ton argent automatiquement</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                Si une action baisse trop, on la <strong>vend automatiquement</strong> grâce à un
+                                "trailing stop". C'est comme avoir un parachute de secours qui s'ouvre tout seul !
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-box" style="margin-bottom:0;">
+                        <div class="step-number">3</div>
+                        <div>
+                            <h3>💰 Prend les gains au bon moment</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                Quand une action gagne +15%, on <strong>vend 70% pour sécuriser</strong>. On garde un
+                                peu au cas où ça monte encore.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-box" style="margin-top:1.5rem;">
+                    💡 <strong>Le secret :</strong> On perd souvent (~72% des trades) mais quand on gagne, on gagne GROS
+                    (+35% en moyenne). C'est mathématique : petites pertes × beaucoup = moins que grosses gains × peu.
+                </div>
+            </section>
+
+            <!-- ONE SIMPLE TRADE IDEA -->
+            <section id="trade" style="margin-top:4rem;">
+                <h2>💡 L'idée du moment</h2>
+                <p style="font-size:1.1rem; line-height:1.7; margin-bottom:2rem;">
+                    Une seule action à regarder cette semaine. Simple et claire.
+                </p>
+
+                <div class="trade-simple">
+                    <h3><span style="font-size:2rem;">🪙</span> NGD - Un mineur d'or</h3>
+
+                    <div class="price-grid">
+                        <div class="price-box" style="background:white;">
+                            <div style="font-size:0.8rem; color:var(--text-muted);">Prix d'achat</div>
+                            <div style="font-size:1.5rem; font-weight:800;">$8.33</div>
+                        </div>
+                        <div class="price-box" style="background:#fef2f2;">
+                            <div style="font-size:0.8rem; color:#dc2626;">Si ça baisse, vendre à</div>
+                            <div style="font-size:1.5rem; font-weight:800; color:#dc2626;">$7.35</div>
+                        </div>
+                        <div class="price-box" style="background:#f0fdf4;">
+                            <div style="font-size:0.8rem; color:#059669;">Objectif</div>
+                            <div style="font-size:1.5rem; font-weight:800; color:#059669;">$10.00</div>
+                        </div>
+                    </div>
+
+                    <div style="background:white; border-radius:16px; padding:1.5rem; margin-top:1rem;">
+                        <h4>🤔 Pourquoi cette action ?</h4>
+                        <p style="margin-top:0.75rem; font-size:1rem; line-height:1.7;">
+                            L'<strong>or</strong> est en train de monter beaucoup cette année (+60%). Quand l'or monte,
+                            les entreprises qui minent l'or gagnent encore plus. <strong>NGD</strong> est une de ces
+                            entreprises.
+                        </p>
+                        <p style="margin-top:0.75rem; font-size:1rem; line-height:1.7;">
+                            C'est comme parier qu'un boulanger va gagner plus si le prix du pain augmente ! 🍞
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    style="background:#fef2f2; border-radius:16px; padding:1.5rem; margin-top:1.5rem; border-left:4px solid #ef4444;">
+                    <h4 style="color:#dc2626;">⚠️ TRÈS IMPORTANT</h4>
+                    <ul style="margin-top:0.75rem; line-height:2; font-size:1rem; padding-left:1.2rem;">
+                        <li>Ne mets <strong>jamais plus de 5-10%</strong> de ton argent sur une seule action</li>
+                        <li>Si NGD tombe à $7.35 → <strong>vends immédiatement</strong> (pas de regrets)</li>
+                        <li>Attends <strong>après le 27 décembre</strong> pour acheter (marchés bizarres pendant les
+                            fêtes)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- WHERE TO START -->
+            <section id="start" style="margin-top:4rem; margin-bottom:4rem;">
+                <h2>🚀 Par où commencer ?</h2>
+                <p style="font-size:1.1rem; line-height:1.7; margin-bottom:2rem;">
+                    Tu veux commencer à investir ? Voici 4 étapes simples.
+                </p>
+
+                <div class="simple-card">
+                    <div class="step-box">
+                        <div class="step-number">1</div>
+                        <div>
+                            <h3>📱 Ouvre un compte de courtage</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                Trade Republic, Degiro, ou Interactive Brokers. C'est gratuit et ça prend 10 minutes.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">2</div>
+                        <div>
+                            <h3>💵 Dépose un montant que tu peux PERDRE</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                Commence petit : 200€, 500€, 1000€. Jamais l'argent du loyer ou des courses.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">3</div>
+                        <div>
+                            <h3>🪙 Achète 1 ou 2 ETFs simples</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                <strong>GLD</strong> (or) ou <strong>SPY</strong> (S&P 500). Ce sont des paniers
+                                d'investissements, moins risqués qu'une seule action.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-box" style="margin-bottom:0;">
+                        <div class="step-number">4</div>
+                        <div>
+                            <h3>📖 Apprends en regardant ton argent</h3>
+                            <p style="margin-top:0.5rem; font-size:1rem; line-height:1.6;">
+                                Tu vas voir ton solde monter et descendre. C'est normal ! Lis les rapports Market Watch
+                                chaque semaine pour comprendre pourquoi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upsell-banner">
+                    <h3>🧠 Envie de comprendre mieux ?</h3>
+                    <p>Le niveau Intermédiaire explique la stratégie plus en détail avec 3 idées de trade.</p>
+                    <a href="intermediate.html">Passer au niveau Intermédiaire →</a>
+                </div>
+            </section>
+
+            <footer
+                style="padding:2rem 0; text-align:center; border-top:1px solid #e2e8f0; color:var(--text-muted); font-size:0.85rem;">
+                <p><a href="../../beginner/fr/index.html" style="color:var(--accent);">← Retour au Rapport Hebdo</a></p>
+            </footer>
+        </main>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar-context">
+            <div class="mw-card" style="border:2px solid var(--success); background:#f0fdf4; text-align:center;">
+                <span style="font-size:2.5rem;">🏆</span>
+                <div style="font-size:2rem; font-weight:800; color:#059669; margin-top:8px;">+32.9%</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Cette année</div>
+            </div>
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.9rem; background:#f8fafc;">
+                "On ne devient pas riche vite, mais on peut le devenir lentement et sûrement." 🐢
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // Simple Chart
+        new Chart(document.getElementById('simpleChart'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+                datasets: [{
+                    label: 'Ton argent',
+                    data: [1000, 1033, 1048, 1007, 1008, 1016, 1068, 1065, 1242, 1371, 1234, 1329],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16,185,129,0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#10b981',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => ctx.raw.toLocaleString() + '€' } }
+                },
+                scales: {
+                    y: { ticks: { callback: (v) => v + '€' }, grid: { color: '#f1f5f9' }, min: 800 },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
