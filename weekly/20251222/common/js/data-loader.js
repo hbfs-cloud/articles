@@ -1,11 +1,15 @@
+window.loadData = loadPeriod;
 
 let equityChartInstance = null;
+let riskRewardChartInstance = null;
+let drawdownChartInstance = null;
+let timeAllocChartInstance = null;
 let currentCurrencyRate = 1.0; // Default USD
 let currentCurrencySymbol = "€";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Load default period (1Y)
-    loadPeriod('1y');
+    // Load default period (1Y) if not already triggered by inline script
+    if (!window.dataLoaded) loadPeriod('current');
 
     // Add event listeners to period buttons
     document.querySelectorAll('.period-btn').forEach(btn => {
@@ -17,14 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             e.target.classList.remove('bg-gray-100', 'text-gray-600');
             e.target.classList.add('active', 'bg-blue-600', 'text-white');
-
-            const period = e.target.getAttribute('data-period');
-            loadPeriod(period);
         });
     });
 });
 
 async function loadPeriod(period) {
+    window.dataLoaded = true;
     try {
         const response = await fetch(`../../common/data/portfolio_${period}.json?v=${new Date().getTime()}`);
         if (!response.ok) throw new Error("Data not found");
@@ -32,12 +34,18 @@ async function loadPeriod(period) {
         const data = await response.json();
 
         updateStats(data.stats);
-        updateChart(data);
-        if (data.benchmark_drawdowns) updateDrawdownChart(data);
+        updateChart(data); // Equity Curve (Percentage)
+        updateRiskRewardChart(data); // Risk vs Reward
+        updateDrawdownComparisonChart(data); // Drawdown Underwater Chart
 
         if (data.trade_logs) updateLogs(data.trade_logs);
         if (data.stats && data.stats.current_positions) updatePositions(data.stats.current_positions);
-        if (data.system_events) updateTimeline(data.system_events);
+
+        if (data.system_events) {
+            updateTimeline(data.system_events);
+            updateCalendarView(data);
+        }
+
         updateMonthlyHeatmap(data);
         if (data.stats.avg_allocation) updateTimeAllocationChart(data.stats.avg_allocation);
         updateEduStats(data);
@@ -51,41 +59,35 @@ function updateStats(stats) {
         const el = document.getElementById(id);
         if (el) {
             el.innerText = value;
-            if (colorClass) {
-                el.className = colorClass; // Reset class and add new
-            }
+            if (colorClass) el.className = colorClass;
         }
     };
 
     updateElement('stat-total-return', (stats.total_return_pct >= 0 ? '+' : '') + stats.total_return_pct.toFixed(1) + '%');
     updateElement('stat-cagr', stats.cagr_pct ? stats.cagr_pct.toFixed(1) + '%' : 'N/A');
-    updateElement('stat-sharpe', stats.sharpe_ratio.toFixed(2));
-    updateElement('stat-max-dd', '-' + Math.abs(stats.max_dd_pct).toFixed(1) + '%');
+    if (stats.sharpe_ratio) updateElement('stat-sharpe', stats.sharpe_ratio.toFixed(2));
+    if (stats.max_dd_pct) updateElement('stat-max-dd', '-' + Math.abs(stats.max_dd_pct).toFixed(1) + '%');
 
-    // Update balance if needed
     if (document.getElementById('stat-balance')) {
         document.getElementById('stat-balance').innerText = '€' + Math.round(stats.final_balance).toLocaleString();
     }
 
-    // New Advanced Stats
     if (stats.win_rate_pct !== undefined) updateElement('stat-winrate', stats.win_rate_pct.toFixed(1) + '%');
     if (stats.profit_factor !== undefined) updateElement('stat-profitfactor', stats.profit_factor.toFixed(2));
-    if (stats.max_trade_win !== undefined) updateElement('stat-maxwin', '+' + currentCurrencySymbol + stats.max_trade_win.toFixed(0), 'text-green-600 font-bold');
-    if (stats.max_trade_loss !== undefined) updateElement('stat-maxloss', currentCurrencySymbol + stats.max_trade_loss.toFixed(0), 'text-red-600 font-bold');
+    if (stats.max_trade_win !== undefined) updateElement('stat-maxwin', '+' + currentCurrencySymbol + stats.max_trade_win.toFixed(0), 'text-emerald-600 font-bold');
+    if (stats.max_trade_loss !== undefined) updateElement('stat-maxloss', currentCurrencySymbol + stats.max_trade_loss.toFixed(0), 'text-rose-600 font-bold');
 
-    // Update Risk Metrics
     if (stats.risk_metrics) {
-        updateElement('stat-var99', '-' + Math.abs(stats.risk_metrics.var_99_monte_carlo_pct).toFixed(2) + '%'); // Display as negative loss
-        updateElement('stat-beta', stats.risk_metrics.beta.toFixed(2));
-        if (stats.risk_metrics.greeks) {
+        if (stats.risk_metrics.var_99_monte_carlo_pct) updateElement('stat-var99', '-' + Math.abs(stats.risk_metrics.var_99_monte_carlo_pct).toFixed(2) + '%');
+        if (stats.risk_metrics.beta) updateElement('stat-beta', stats.risk_metrics.beta.toFixed(2));
+        if (stats.risk_metrics.greeks && stats.risk_metrics.greeks.vega) {
             updateElement('stat-vega', stats.risk_metrics.greeks.vega.toFixed(2));
         }
 
-        // Update Max Pain List
         const mpList = document.getElementById('list-maxpain');
         if (mpList && stats.risk_metrics.max_pain_list) {
             mpList.innerHTML = stats.risk_metrics.max_pain_list.slice(0, 5).map(p => {
-                const pnlClass = p.pnl_pct >= 0 ? '#16a34a' : '#dc2626'; // Green / Red hex
+                const pnlClass = p.pnl_pct >= 0 ? '#16a34a' : '#dc2626';
                 const pnlSign = p.pnl_pct >= 0 ? '+' : '';
                 return `
                 <div style="border-bottom:1px dashed #f1f5f9; padding-bottom:4px; margin-bottom:4px;">
@@ -99,13 +101,9 @@ function updateStats(stats) {
                     </div>
                 </div>`;
             }).join('');
-        } else {
-            // Fallback for old data structure
-            updateElement('stat-maxpain', '$' + (stats.risk_metrics.max_pain_spy || 0).toFixed(0));
         }
     }
 
-    // Update Event Calendar
     const eventList = document.getElementById('event-calendar-list');
     if (eventList && stats.event_calendar) {
         eventList.innerHTML = stats.event_calendar.map(evt => `
@@ -119,7 +117,6 @@ function updateStats(stats) {
         `).join('');
     }
 
-    // Update Radar Chart
     if (stats.allocation_radar && document.getElementById('radarChart')) {
         const ctxRadar = document.getElementById('radarChart');
         if (window.radarChartInstance) window.radarChartInstance.destroy();
@@ -135,7 +132,7 @@ function updateStats(stats) {
                     borderColor: '#6366f1',
                     borderWidth: 2,
                     pointBackgroundColor: '#6366f1',
-                    pointRadius: 3
+                    pointRadius: 4
                 }]
             },
             options: {
@@ -144,16 +141,15 @@ function updateStats(stats) {
                 plugins: { legend: { display: false } },
                 scales: {
                     r: {
-                        ticks: { display: false, backdropColor: 'transparent' },
-                        grid: { color: '#e2e8f0' },
-                        angleLines: { color: '#e2e8f0' },
+                        ticks: { display: true, backdropColor: 'transparent', font: { size: 9 }, color: '#94a3b8', maxTicksLimit: 4 },
+                        grid: { color: '#cbd5e1' },
+                        angleLines: { color: '#cbd5e1' },
                         suggestedMin: 0
                     }
                 }
             }
         });
 
-        // Update Regions
         if (stats.allocation_region) {
             const regionDiv = document.getElementById('region-allocation');
             if (regionDiv) {
@@ -174,7 +170,6 @@ function updateStats(stats) {
         }
     }
 
-    // Update Benchmarks & Stability
     if (stats.benchmarks) {
         const benchList = document.getElementById('benchmark-list');
         if (benchList) {
@@ -195,13 +190,11 @@ function updateStats(stats) {
              `;
 
             const refs = ['SPY', 'GLD', 'BTC-USD', 'SI=F', 'CL=F'];
-            const inflation = { sym: 'Inflation (CPI)', ret: 2.5, vol: 1.2 };
-
             const list = refs.map(sym => {
                 const d = stats.benchmarks[sym];
                 return d ? { sym, ret: d.return_pct, vol: d.volatility_pct } : null;
             }).filter(x => x);
-            list.push(inflation);
+            list.push({ sym: 'Inflation (CPI)', ret: 2.5, vol: 1.2 });
 
             list.forEach(item => {
                 const symName = item.sym === 'BTC-USD' ? 'Bitcoin' : (item.sym === 'GLD' ? 'Gold' : (item.sym === 'SPY' ? 'S&P 500' : (item.sym === 'SI=F' ? 'Silver' : (item.sym === 'CL=F' ? 'Crude Oil' : item.sym))));
@@ -231,15 +224,17 @@ function updateChart(data) {
 
     const curveData = data.equity_curve;
     const dates = curveData.map(d => d.date);
-    const values = curveData.map(d => d.equity);
+
+    // Normalize Portfolio to %
+    const startEq = curveData[0].equity;
+    const values = curveData.map(d => ((d.equity - startEq) / startEq) * 100);
 
     if (equityChartInstance) {
         equityChartInstance.destroy();
     }
 
-    // Main Portfolio Dataset
     const datasets = [{
-        label: 'Portfolio Equity',
+        label: 'Portfolio (%)',
         data: values,
         borderColor: '#2563eb', // Blue
         backgroundColor: 'rgba(37, 99, 235, 0.05)',
@@ -250,148 +245,209 @@ function updateChart(data) {
         tension: 0.1
     }];
 
-    // Add Benchmarks from data.benchmarks
     if (data.benchmarks) {
         const colors = {
-            'SPY': '#f97316', // Orange
-            'GLD': '#eab308', // Yellow
-            'DIA': '#475569', // Slate
-            'IWM': '#9333ea', // Purple
-            'SI=F': '#9ca3af', // Gray (Silver)
-            'BTC-USD': '#f59e0b' // Amber
+            'SPY': '#f97316', 'GLD': '#eab308', 'DIA': '#475569', 'IWM': '#9333ea', 'SI=F': '#9ca3af', 'BTC-USD': '#f59e0b'
         };
         const labels = {
             'SPY': 'S&P 500', 'GLD': 'Gold', 'DIA': 'Dow Jones', 'IWM': 'Russell 2000', 'SI=F': 'Silver', 'BTC-USD': 'Bitcoin'
         };
 
-        // Order: SPY, Gold, Dow, Russell, Silver
-        const priority = ['SPY', 'GLD', 'DIA', 'IWM', 'SI=F'];
-
-        priority.forEach(sym => {
+        ['SPY', 'GLD'].forEach(sym => {
             if (data.benchmarks[sym]) {
-                datasets.push({
-                    label: labels[sym] || sym,
-                    data: data.benchmarks[sym],
-                    borderColor: colors[sym] || '#000',
-                    borderWidth: 1.5,
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 3,
-                    tension: 0.1,
-                    borderDash: sym === 'SPY' || sym === 'GLD' ? [] : [5, 5] // Dashed for less important ones
-                });
+                const bCurve = data.benchmarks[sym];
+                if (bCurve && bCurve.length > 0) {
+                    const bStart = bCurve[0];
+                    const bValues = bCurve.map(v => ((v - bStart) / bStart) * 100);
+                    datasets.push({
+                        label: labels[sym] || sym,
+                        data: bValues,
+                        borderColor: colors[sym] || '#000',
+                        borderWidth: 1.5,
+                        fill: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 3,
+                        tension: 0.1,
+                        borderDash: sym === 'SPY' ? [] : [5, 5]
+                    });
+                }
             }
         });
     }
 
     equityChartInstance = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: dates,
-            datasets: datasets
-        },
+        data: { labels: dates, datasets: datasets },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function (context) {
-                            return context.dataset.label + ': ' + currentCurrencySymbol + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
+                tooltip: { mode: 'index', intersect: false, callbacks: { label: c => c.dataset.label + ': ' + (c.parsed.y > 0 ? '+' : '') + c.parsed.y.toFixed(2) + '%' } }
             },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
             scales: {
                 x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 6 } },
-                y: {
-                    display: true,
-                    grid: { color: '#f1f5f9' },
-                    ticks: { callback: function (value) { return currentCurrencySymbol + value.toLocaleString(); } }
-                }
+                y: { display: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => v + '%' } }
             }
         }
     });
 }
 
-let drawdownChartInstance = null;
-function updateDrawdownChart(data) {
-    const ctx = document.getElementById('drawdownComparisonChart');
+function updateRiskRewardChart(data) {
+    const ctx = document.getElementById('riskRewardChart');
     if (!ctx) return;
 
-    // Dates from internal system
-    const dates = data.equity_curve.map(d => d.date);
+    const portRet = data.stats.total_return_pct;
+    const portDD = Math.abs(data.stats.max_dd_pct);
 
-    // Benchmark DDs
-    const datasets = [];
+    const points = [{ x: portDD, y: portRet, label: 'Portfolio', r: 8, bg: '#2563eb' }];
 
-    // Portfolio DD (Negative %)
-    const portDD = data.equity_curve.map(d => -Math.abs(d.dd * 100)); // Ensure negative
-    datasets.push({
-        label: 'Portfolio DD',
-        data: portDD,
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37, 99, 235, 0.2)',
-        borderWidth: 2,
-        fill: true,
-        pointRadius: 0
-    });
+    if (data.benchmarks) {
+        const colors = { 'SPY': '#f97316', 'GLD': '#eab308', 'BTC-USD': '#f59e0b', 'Inflation': '#ef4444' };
+        // Simple benchmark approximation needed OR pass BenchmarkStats. 
+        // Assuming we access Pre-Calculated Benchmark Stats or calc on fly:
 
-    // Benchmarks
-    if (data.benchmark_drawdowns) {
-        const colors = {
-            'SPY': '#f97316', 'GLD': '#eab308', 'DIA': '#475569', 'IWM': '#9333ea', 'SI=F': '#9ca3af'
-        };
-        const priority = ['SPY', 'GLD', 'DIA', 'IWM', 'SI=F'];
-        priority.forEach(sym => {
-            if (data.benchmark_drawdowns[sym]) {
-                datasets.push({
-                    label: sym,
-                    data: data.benchmark_drawdowns[sym].map(v => -Math.abs(v * 100)),
-                    borderColor: colors[sym] || '#000',
-                    borderWidth: 1,
-                    fill: false,
-                    pointRadius: 0,
-                    borderDash: [2, 2]
-                });
+        // Simpler: Just put standard benchmarks if available in curve
+        Object.keys(data.benchmarks).forEach(sym => {
+            if (['SPY', 'GLD', 'BTC-USD'].includes(sym)) {
+                let c = data.benchmarks[sym];
+                if (c && c.length) {
+                    // Calc Return
+                    let r = ((c[c.length - 1] - c[0]) / c[0]) * 100;
+                    // Calc DD
+                    let pk = -Infinity, mdd = 0;
+                    c.forEach(v => { if (v > pk) pk = v; else mdd = Math.max(mdd, (pk - v) / pk); });
+                    mdd *= 100;
+
+                    points.push({ x: mdd, y: r, label: sym, r: 6, bg: colors[sym] || '#64748b' });
+                }
             }
         });
     }
 
-    if (drawdownChartInstance) drawdownChartInstance.destroy();
+    if (riskRewardChartInstance) riskRewardChartInstance.destroy();
 
-    drawdownChartInstance = new Chart(ctx, {
+    riskRewardChartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Risk/Reward',
+                data: points,
+                backgroundColor: points.map(p => p.bg),
+                pointRadius: points.map(p => p.r)
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw.label}: +${c.raw.y.toFixed(1)}% / -${c.raw.x.toFixed(1)}% DD` } } },
+            scales: {
+                x: { title: { display: true, text: 'Max Drawdown (%) - Risk' }, min: 0 },
+                y: { title: { display: true, text: 'Total Return (%) - Reward' } }
+            }
+        }
+    });
+}
+
+function updateDrawdownComparisonChart(data) {
+    const ctx = document.getElementById('drawdownComparisonChart');
+    if (!ctx) return;
+    if (window.drawdownChartInstance) window.drawdownChartInstance.destroy();
+
+    const getDD = (arr) => {
+        let pk = -Infinity;
+        return arr.map(v => {
+            const val = typeof v === 'object' ? v.equity : v;
+            if (val > pk) pk = val;
+            return ((val - pk) / pk) * 100;
+        });
+    };
+
+    const dates = data.equity_curve.map(d => d.date);
+    const portDD = getDD(data.equity_curve);
+
+    const datasets = [
+        { label: 'Portfolio', data: portDD, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', borderWidth: 2, fill: true, pointRadius: 0, tension: 0 }
+    ];
+
+    if (data.benchmarks && data.benchmarks['SPY']) {
+        datasets.push({ label: 'S&P 500', data: getDD(data.benchmarks['SPY']), borderColor: '#94a3b8', borderWidth: 1, fill: false, pointRadius: 0, tension: 0, borderDash: [4, 4] });
+    }
+
+    window.drawdownChartInstance = new Chart(ctx, {
         type: 'line',
         data: { labels: dates, datasets: datasets },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true, position: 'top', labels: { boxWidth: 10, font: { size: 9 } } },
-                tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => c.dataset.label + ': ' + c.parsed.y.toFixed(1) + '%' } }
-            },
-            scales: {
-                x: { display: false },
-                y: { display: true, min: -35, max: 0, grid: { color: '#f1f5f9' }, ticks: { callback: (v) => v + '%' } }
-            }
+            plugins: { legend: { display: true, position: 'top' }, tooltip: { mode: 'index', intersect: false, callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toFixed(2) + '%' } } },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            scales: { x: { display: false }, y: { title: { display: true, text: 'Drawdown %' }, grid: { color: '#f1f5f9' }, suggestedMin: -25 } }
         }
     });
 }
 
 function updateLogs(logs) {
+    window.allLogs = logs;
+    renderLogs(logs.slice().reverse().slice(0, 100));
+}
+
+window.filterLogs = function (mode) {
+    const logs = window.allLogs; if (!logs) return;
     const container = document.getElementById('logs-table-body');
-    if (!container) return;
+    container.innerHTML = '';
 
-    // Sort by date desc (assuming logs are chronological append)
-    const recent = logs.slice().reverse().slice(0, 100);
+    document.querySelectorAll('.log-filter-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        b.classList.add('bg-white', 'text-slate-600');
+    });
+    const activeBtn = document.getElementById('btn-ft-' + mode);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-slate-600');
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+    }
 
+    if (mode === 'list') { renderLogs(logs.slice().reverse().slice(0, 100)); return; }
+
+    if (mode === 'by_symbol') {
+        const map = {};
+        logs.forEach(l => {
+            if (!map[l.symbol]) map[l.symbol] = { count: 0, pnl: 0, wins: 0, losses: 0 };
+            map[l.symbol].count++;
+            if (l.pnl) {
+                map[l.symbol].pnl += l.pnl;
+                if (l.pnl > 0) map[l.symbol].wins++; else if (l.pnl < 0) map[l.symbol].losses++;
+            }
+        });
+        const sorted = Object.entries(map).sort((a, b) => b[1].pnl - a[1].pnl);
+        container.innerHTML = sorted.map(([sym, stats]) => `
+             <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-bold text-slate-800">${sym}</td>
+                <td class="py-3 px-4 text-center font-mono text-xs">${stats.count} Trades</td>
+                <td class="py-3 px-4 text-center text-emerald-600 font-bold text-xs">${stats.wins} Wins</td>
+                <td class="py-3 px-4 text-center text-rose-600 font-bold text-xs">${stats.losses} Losses</td>
+                <td class="py-3 px-4 text-right font-bold ${stats.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono" colspan="3">${currentCurrencySymbol}${stats.pnl.toFixed(0)}</td>
+             </tr>`).join('');
+        return;
+    }
+
+    if (mode === 'by_date') {
+        const map = {};
+        logs.forEach(l => {
+            const d = l.date.substring(0, 7);
+            if (!map[d]) map[d] = { count: 0, pnl: 0 };
+            map[d].count++; if (l.pnl) map[d].pnl += l.pnl;
+        });
+        const sorted = Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]));
+        container.innerHTML = sorted.map(([date, stats]) => `
+             <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-bold text-slate-800">${date}</td>
+                <td class="py-3 px-4 text-center text-xs text-slate-500" colspan="3">${stats.count} Events</td>
+                <td class="py-3 px-4 text-right font-bold ${stats.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono" colspan="3">${currentCurrencySymbol}${stats.pnl.toFixed(0)}</td>
+             </tr>`).join('');
+    }
+}
+
+function renderLogs(recent) {
+    const container = document.getElementById('logs-table-body');
     container.innerHTML = recent.map(l => `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
             <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap">${l.date}</td>
@@ -401,16 +457,13 @@ function updateLogs(logs) {
             <td class="py-3 px-4 text-sm text-right font-mono text-slate-700">${l.shares.toFixed(0)}</td>
             <td class="py-3 px-4 text-right font-bold font-mono ${l.pnl > 0 ? 'text-emerald-600' : (l.pnl < 0 ? 'text-rose-600' : 'text-slate-400')}">${l.pnl ? (l.pnl > 0 ? '+' : '') + currentCurrencySymbol + l.pnl.toFixed(0) : '-'}</td>
             <td class="py-3 px-4 text-xs text-slate-400 italic">${l.reason}</td>
-        </tr>
-    `).join('');
+        </tr>`).join('');
 }
 
 function updatePositions(positions) {
     const container = document.getElementById('positions-table-body');
     if (!container) return;
-
     positions.sort((a, b) => b.weight_pct - a.weight_pct);
-
     container.innerHTML = positions.map(p => `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
             <td class="py-3 px-4 font-bold text-slate-900">${p.symbol}</td>
@@ -420,129 +473,119 @@ function updatePositions(positions) {
             <td class="py-3 px-4 text-right text-sm font-mono text-slate-900 font-bold">${currentCurrencySymbol}${p.current_price.toFixed(2)}</td>
             <td class="py-3 px-4 text-right font-bold ${p.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono">${currentCurrencySymbol}${p.pnl.toFixed(0)} <span class="text-xs ml-1 opacity-80">(${p.pnl_pct > 0 ? '+' : ''}${p.pnl_pct.toFixed(2)}%)</span></td>
             <td class="py-3 px-4 text-right text-sm font-bold text-slate-800">${p.weight_pct.toFixed(1)}%</td>
-        </tr>
-    `).join('');
+        </tr>`).join('');
 }
 
 function updateTimeline(events) {
     const container = document.getElementById('timeline-container');
     if (!container) return;
-
-    // Sort recent first
     const recent = events.slice().reverse();
-
-    // Color Mapping for Tailwind (Safe listing)
     const colorMap = {
         'emerald': { dot: 'bg-emerald-500', line: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-800' },
         'amber': { dot: 'bg-amber-500', line: 'border-amber-200', badge: 'bg-amber-100 text-amber-800' },
         'rose': { dot: 'bg-rose-500', line: 'border-rose-200', badge: 'bg-rose-100 text-rose-800' },
         'zinc': { dot: 'bg-slate-400', line: 'border-slate-200', badge: 'bg-slate-100 text-slate-600' }
     };
-
     container.innerHTML = recent.map(e => {
         const c = colorMap[e.color] || colorMap['zinc'];
         return `
         <div class="relative pl-8 pb-8 border-l-2 ${c.line} last:border-0 last:pb-0">
             <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full ${c.dot} ring-4 ring-white"></div>
             <div class="mb-1 text-sm font-bold text-slate-500 flex items-center gap-2">
-                ${e.date} 
-                <span class="px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${c.badge}">${e.type}</span>
+                ${e.date} <span class="px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${c.badge}">${e.type}</span>
             </div>
             <div class="text-slate-800 font-medium">${e.message}</div>
-        </div>
-        `;
+        </div>`;
     }).join('');
+}
+
+function updateCalendarView(data) {
+    const container = document.getElementById('calendar-view');
+    if (!container) return;
+    const curve = data.equity_curve;
+    if (!curve || curve.length === 0) return;
+
+    const eventMap = {};
+    if (data.system_events) {
+        data.system_events.forEach(e => {
+            if (!eventMap[e.date]) eventMap[e.date] = [];
+            eventMap[e.date].push(e);
+        });
+    }
+    const stopMap = {};
+    if (data.trade_logs) {
+        data.trade_logs.forEach(l => {
+            if (l.action === 'STOP') {
+                if (!stopMap[l.date]) stopMap[l.date] = 0;
+                stopMap[l.date]++;
+            }
+        });
+    }
+
+    let currentRegime = 'NEUTRAL';
+    const regimeColor = { 'BULL': 'bg-emerald-100', 'BEAR': 'bg-rose-100', 'NEUTRAL': 'bg-gray-100', 'UNCERTAIN': 'bg-gray-100' };
+
+    let html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap:4px;">';
+    curve.slice(-365).forEach(p => {
+        const d = p.date;
+        if (eventMap[d]) {
+            eventMap[d].forEach(e => {
+                if (e.type === 'REGIME' || e.message.includes('Regime')) {
+                    if (e.message.includes('Bull')) currentRegime = 'BULL';
+                    else if (e.message.includes('Bear')) currentRegime = 'BEAR';
+                    else currentRegime = 'NEUTRAL';
+                }
+            });
+        }
+        let colorClass = regimeColor[currentRegime] || 'bg-gray-100';
+        let borderColor = 'border-transparent';
+        let tooltip = `${d} (${currentRegime})`;
+        const stopCount = stopMap[d] || 0;
+        if (stopCount > 0) { borderColor = 'border-rose-500'; tooltip += ` | ${stopCount} Stops`; }
+        let isPanic = false;
+        if (eventMap[d]) {
+            eventMap[d].forEach(e => {
+                if (e.type === 'PANIC' || e.message.includes('LIQUIDATE')) { isPanic = true; colorClass = 'bg-slate-900 text-white'; tooltip += " | CIRCUIT BREAKER 🚨"; }
+            });
+        }
+        html += `<div class="${colorClass} border-2 ${borderColor} rounded text-[9px] flex items-center justify-center cursor-help h-9 w-9 relative group" title="${tooltip}"><span class="opacity-60 font-mono">${d.split('-')[2]}</span>${isPanic ? '<span class="absolute top-0 right-0 text-[8px]">🚨</span>' : ''}${stopCount > 0 ? `<span class="absolute bottom-0 right-0 text-[8px] font-bold text-rose-600 bg-white px-0.5 rounded-full">${stopCount}</span>` : ''}</div>`;
+    });
+    html += '</div>';
+    html += '<div class="mt-4 text-xs text-slate-400 flex flex-wrap gap-4"><span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> Bull Regime</span> <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> Bear Regime</span> <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-900"></span> Circuit Breaker</span> <span class="flex items-center gap-1"><span class="w-3 h-3 rounded border-2 border-rose-500"></span> Stop Loss Activity</span></div>';
+    container.innerHTML = html;
 }
 
 function updateMonthlyHeatmap(data) {
     const container = document.getElementById('monthly-heatmap-body');
     if (!container) return;
-
     const curve = data.equity_curve;
     if (!curve || curve.length === 0) return;
-
-    // Calculate Monthly Returns
-    const monthlyRets = {}; // { '2023-01': 0.05, ... }
-    const yearRets = {};    // { '2023': 0.15, ... }
-
-    // We need End of Month prices.
-    // Map: Year -> { Jan: val, Feb: val ... Total: val }
-    const matrix = {};
-    const years = [];
-
-    // Index by YYYY-MM
-    let lastEq = curve[0].equity; // Start equity
-    // Actually we need to find the equity at the end of each month
-    // Iterate points
     const pointsByMonth = {};
-
+    const years = [];
+    const matrix = {};
     curve.forEach(p => {
         const d = new Date(p.date);
         const y = d.getFullYear();
-        const m = d.getMonth() + 1; // 1-12
+        const m = d.getMonth() + 1;
         const key = `${y}-${m.toString().padStart(2, '0')}`;
-
         if (!matrix[y]) { matrix[y] = {}; years.push(y); }
-
-        // Keep updating to find last point of month
         pointsByMonth[key] = p.equity;
     });
-
-    years.sort((a, b) => b - a); // Descending
-
-    // Calculate returns
-    // Ret_M = (Eq_End_M - Eq_End_PrevM) / Eq_End_PrevM
-    // We need Eq_End_PrevM.
-    // For 2023-01, prev is 2022-12. If not exists, use start of current month?
-    // Use curve scan.
-
-    // Better Approach:
-    // Iterate years, then months 1-12.
-    // Find End Equity of this month.
-    // Find End Equity of previous month (or start of data).
-
+    years.sort((a, b) => b - a);
     let html = '';
-
     years.forEach(y => {
         let rowHtml = `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-2 text-left font-bold text-slate-700">${y}</td>`;
-
-        let yearStartEq = 0;
-        let yearEndEq = 0;
-
-        // Find EOY and SOY (approx)
-        const lastMonthKey = `${y}-12`;
-        // Actually simple sum of monthly rets is approx, but compounding is correct.
-        // Let's use stored monthly points.
-
-        // Total Year Return can be taken from Stats if available, or calculated.
-
-        // Loop months
         for (let m = 1; m <= 12; m++) {
             const currentKey = `${y}-${m.toString().padStart(2, '0')}`;
-
-            // Find Prev Key
             let prevKey;
-            if (m === 1) {
-                prevKey = `${y - 1}-12`;
-            } else {
-                prevKey = `${y}-${(m - 1).toString().padStart(2, '0')}`;
-            }
-
+            if (m === 1) prevKey = `${y - 1}-12`;
+            else prevKey = `${y}-${(m - 1).toString().padStart(2, '0')}`;
             const currEq = pointsByMonth[currentKey];
             let prevEq = pointsByMonth[prevKey];
-
-            // Boundary condition: start of dataset
             if (!prevEq && m === 1) {
-                // If this is the very first year, try to find start equity
-                // For now, if no prevEq, we can't calc (or skip).
-                // But usually we have context.
-                // Check if curve starts before this month.
                 const firstDate = new Date(curve[0].date);
-                if (firstDate.getFullYear() === y && firstDate.getMonth() + 1 === m) {
-                    prevEq = curve[0].equity; // Use very first point
-                }
+                if (firstDate.getFullYear() === y && firstDate.getMonth() + 1 === m) prevEq = curve[0].equity;
             }
-
             if (currEq && prevEq) {
                 const ret = (currEq - prevEq) / prevEq;
                 const color = ret >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
@@ -551,122 +594,72 @@ function updateMonthlyHeatmap(data) {
                 rowHtml += `<td class="p-2 text-slate-300">-</td>`;
             }
         }
-
-        // Year Total
-        // If we have stats.annual_returns[y], use it.
-        // Else calc from first/last of year.
-        const firstM = Object.keys(pointsByMonth).filter(k => k.startsWith(y + '-')).sort()[0];
-        const lastM = Object.keys(pointsByMonth).filter(k => k.startsWith(y + '-')).sort().reverse()[0];
-
-        if (firstM && lastM) {
-            // We need PREV of firstM to get correct year start.
-            // Or use first point of year?
-            // Simplest: use data from `pointsByMonth`.
-            // But strictly: Year Ret = (Last_Dec - Prev_Dec)/Prev_Dec.
-            const prevYKey = `${y - 1}-12`;
-            let startY = pointsByMonth[prevYKey];
-            const endY = pointsByMonth[lastM];
-
-            if (!startY) {
-                // Check if start of dataset
-                const firstDate = new Date(curve[0].date);
-                if (firstDate.getFullYear() === y) startY = curve[0].equity;
+        const months = Object.keys(pointsByMonth).filter(k => k.startsWith(y));
+        if (months.length > 0) {
+            months.sort();
+            const firstM = months[0];
+            const lastM = months[months.length - 1];
+            let startEq;
+            const fmParts = firstM.split('-');
+            const fmMonth = parseInt(fmParts[1]);
+            if (fmMonth === 1) startEq = pointsByMonth[`${y - 1}-12`];
+            else startEq = pointsByMonth[`${y}-${(fmMonth - 1).toString().padStart(2, '0')}`];
+            if (!startEq && months.length > 0) {
+                const firstPt = curve.find(p => p.date.startsWith(y));
+                if (firstPt) startEq = firstPt.equity;
             }
-
-            if (startY && endY) {
-                const yRet = (endY - startY) / startY;
+            const endEq = pointsByMonth[lastM];
+            if (startEq && endEq) {
+                const yRet = (endEq - startEq) / startEq;
                 const yColor = yRet >= 0 ? 'text-emerald-600' : 'text-rose-600';
-                // Insert After Year Label? No, table structure is: Year | Total | Jan...
-                // I put Year Label first.
-                // Now I add Total column.
-                // Wait, I appended months already. I should PREPEND Total column after Year.
-                // Re-construct string.
-
-                const totalCell = `<td class="p-2 font-bold ${yColor}">${(yRet * 100).toFixed(1)}%</td>`;
-                // Insert after first </td>
-                rowHtml = rowHtml.replace('</td>', '</td>' + totalCell);
+                rowHtml = rowHtml.replace('</td>', '</td>' + `<td class="p-2 font-bold ${yColor}">${(yRet * 100).toFixed(1)}%</td>`);
             } else {
                 rowHtml = rowHtml.replace('</td>', '</td><td class="p-2">-</td>');
             }
         } else {
             rowHtml = rowHtml.replace('</td>', '</td><td class="p-2">-</td>');
         }
-
         rowHtml += '</tr>';
         html += rowHtml;
     });
-
     container.innerHTML = html;
 }
 
-let timeAllocChartInstance = null;
+let timeAllocChartInstanceLast = null;
 function updateTimeAllocationChart(alloc) {
     const ctx = document.getElementById('timeAllocationChart');
     if (!ctx) return;
-
-    if (timeAllocChartInstance) timeAllocChartInstance.destroy();
-
-    // Data handling
+    if (timeAllocChartInstanceLast) timeAllocChartInstanceLast.destroy();
     const labels = Object.keys(alloc);
     const data = Object.values(alloc);
-
-    // Custom Colors
-    const colors = {
-        "Cash": "#94a3b8", // Slate 400
-        "Stock": "#3b82f6", // Blue 500
-        "ETF": "#6366f1",   // Indigo 500
-        "Crypto": "#f59e0b", // Amber 500
-        "Gold+Silver": "#eab308" // Yellow 500
-    };
+    const colors = { "Cash": "#94a3b8", "Stock": "#3b82f6", "ETF": "#6366f1", "Crypto": "#f59e0b", "Gold+Silver": "#eab308" };
     const bgColors = labels.map(l => colors[l] || "#cbd5e1");
-
-    timeAllocChartInstance = new Chart(ctx, {
+    timeAllocChartInstanceLast = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: bgColors,
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
+            datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 4 }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '65%',
-            plugins: {
-                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } },
-                tooltip: {
-                    callbacks: { label: function (c) { return ' ' + c.label + ': ' + c.parsed.toFixed(1) + '%'; } }
-                }
-            }
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: function (c) { return ' ' + c.label + ': ' + c.parsed.toFixed(1) + '%'; } } } }
         }
     });
 }
 
 function updateEduStats(data) {
-    // 1. Calculate Volatility & VaR from Equity Curve
     const curve = data.equity_curve;
     if (!curve || curve.length < 2) return;
-
     let returns = [];
     for (let i = 1; i < curve.length; i++) {
         const r = (curve[i].equity - curve[i - 1].equity) / curve[i - 1].equity;
         returns.push(r);
     }
-
-    // Mean
     const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-    // Variance/Std
     const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
     const stdDev = Math.sqrt(variance);
     const dailyVaR95 = 1.65 * stdDev;
-
-    // Update UI
     const s = data.stats;
-
-    // Sharpe
     const elSharpe = document.getElementById('edu-sharpe');
     const elSharpeV = document.getElementById('verdict-sharpe');
     if (elSharpe && s.sharpe_ratio) {
@@ -677,8 +670,6 @@ function updateEduStats(data) {
         else if (sr > 1.0) elSharpeV.textContent = "✅ Solide";
         else elSharpeV.textContent = "⚠️ À améliorer";
     }
-
-    // Winrate
     const elWR = document.getElementById('edu-winrate');
     const elWRV = document.getElementById('verdict-winrate');
     if (elWR && s.win_rate_pct) {
@@ -689,36 +680,23 @@ function updateEduStats(data) {
         else if (wr > 50) elWRV.textContent = "👌 Correct";
         else elWRV.textContent = "🎲 Casino";
     }
-
-    // Drawdown
     const elDD = document.getElementById('edu-dd');
     const elDDV = document.getElementById('verdict-dd');
     if (elDD && s.max_drawdown_pct) {
-        const dd = s.max_drawdown_pct; // usually negative
+        const dd = s.max_drawdown_pct;
         elDD.textContent = dd.toFixed(1) + '%';
         if (dd > -10) elDDV.textContent = "🛡️ Forteresse";
         else if (dd > -20) elDDV.textContent = "✅ Normal";
         else elDDV.textContent = "⚠️ Risqué";
     }
-
-    // VaR
     const elVaR = document.getElementById('edu-var');
-    if (elVaR) {
-        elVaR.textContent = "-" + (dailyVaR95 * 100).toFixed(2) + "%";
-    }
+    if (elVaR) elVaR.textContent = "-" + (dailyVaR95 * 100).toFixed(2) + "%";
 
-    // Allocations (Approximation based on avg_allocation if avail)
-    // We update table IDs: alloc-crypto, alloc-tech, alloc-gold, alloc-cash
     if (s.avg_allocation) {
-        const setTxt = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val ? val.toFixed(1) + '%' : '0%';
-        };
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ? val.toFixed(1) + '%' : '0%'; };
         setTxt('alloc-crypto', s.avg_allocation['Crypto']);
-        setTxt('alloc-tech', (s.avg_allocation['Stock'] || 0) + (s.avg_allocation['ETF'] || 0)); // Approx Tech as Stock+ETF
+        setTxt('alloc-tech', (s.avg_allocation['Stock'] || 0) + (s.avg_allocation['ETF'] || 0));
         setTxt('alloc-gold', s.avg_allocation['Gold+Silver']);
         setTxt('alloc-cash', s.avg_allocation['Cash']);
     }
 }
-
-window.loadData = loadPeriod;

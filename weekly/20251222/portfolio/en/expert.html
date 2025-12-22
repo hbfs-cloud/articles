@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
@@ -158,15 +159,13 @@
             <div class="nav-tab" data-tab="positions" onclick="switchTab('positions')"><i
                     class="fa-solid fa-wallet mr-2"></i>Positions</div>
             <div class="nav-tab" data-tab="logs" onclick="switchTab('logs')"><i
-                    class="fa-solid fa-list-check mr-2"></i>Log</div>
+                    class="fa-solid fa-list-check mr-2"></i>Journal</div>
             <div class="nav-tab" data-tab="risk" onclick="switchTab('risk')"><i
                     class="fa-solid fa-shield-halved mr-2"></i>Risk</div>
             <div class="nav-tab" data-tab="strategy" onclick="switchTab('strategy')"><i
-                    class="fa-solid fa-brain mr-2"></i>Strategy</div>
+                    class="fa-solid fa-brain mr-2"></i>Strategy & Methodology</div>
             <div class="nav-tab" data-tab="timeline" onclick="switchTab('timeline')"><i
                     class="fa-solid fa-clock-rotate-left mr-2"></i>Timeline</div>
-            <div class="nav-tab" data-tab="methodology" onclick="switchTab('methodology')"><i
-                    class="fa-solid fa-flask mr-2"></i>Methodology</div>
         </div>
 
         <!-- TAB: DASHBOARD -->
@@ -181,17 +180,17 @@
                 <div class="hero-stat">
                     <div class="label">Win Rate</div>
                     <div class="value text-emerald-600" id="stat-winrate">--%</div>
-                    <div class="subtext">Trades Gagnants (>55% obj)</div>
+                    <div class="subtext">Winning Trades (>55% obj)</div>
                 </div>
                 <div class="hero-stat">
                     <div class="label">Profit Factor</div>
                     <div class="value text-purple-600" id="stat-profitfactor">--</div>
-                    <div class="subtext">Gains / Pertes (>1.5 excellent)</div>
+                    <div class="subtext">Gains / Losses (>1.5 excellent)</div>
                 </div>
                 <div class="hero-stat">
                     <div class="label">Max Drawdown</div>
                     <div class="value text-rose-600" id="stat-max-dd">--%</div>
-                    <div class="subtext">Pire Baisse (Risk Control)</div>
+                    <div class="subtext">Worst Drop (Risk Control)</div>
                 </div>
             </div>
 
@@ -199,8 +198,8 @@
                 <!-- Equity Curve (2 cols) -->
                 <div class="mw-card md:col-span-2 flex flex-col">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-lg">Courbe de Performance</h3>
-                        <div class="text-xs text-slate-400">Capital Départ: €100k</div>
+                        <h3 class="font-bold text-lg">Performance Curve (%)</h3>
+                        <div class="text-xs text-slate-400">Normalized (Base 0%)</div>
                     </div>
                     <div class="flex-1 min-h-[300px] relative">
                         <canvas id="equityCurveChart"></canvas>
@@ -209,19 +208,19 @@
 
                 <!-- Quick Info -->
                 <div class="mw-card flex flex-col justify-center">
-                    <h3 class="font-bold text-sm text-slate-500 uppercase mb-4 text-center">Meilleurs Trades</h3>
+                    <h3 class="font-bold text-sm text-slate-500 uppercase mb-4 text-center">Best Trades</h3>
                     <div class="text-center mb-6">
                         <div class="text-xs text-slate-400 uppercase">Max Gain</div>
                         <div id="stat-maxwin" class="text-2xl font-bold text-emerald-600">--</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-xs text-slate-400 uppercase">Max Perte</div>
+                        <div class="text-xs text-slate-400 uppercase">Max Loss</div>
                         <div id="stat-maxloss" class="text-2xl font-bold text-rose-600">--</div>
                     </div>
                     <div class="mt-8 pt-4 border-t border-slate-100 text-center">
-                        <div class="text-xs text-slate-400 uppercase">Balance Actuelle</div>
+                        <div class="text-xs text-slate-400 uppercase">Current Balance</div>
                         <div id="stat-balance" class="text-xl font-bold text-slate-800">--</div>
-                        <div class="text-xs text-slate-400 mt-1">Updated: Dec 22 2025 • FX Impact Included</div>
+                        <div class="text-xs text-slate-400 mt-1">Updated: Dec 22 2025 • FX Impact Inc</div>
                     </div>
                 </div>
             </div>
@@ -234,32 +233,54 @@
                     <p class="text-xs text-slate-500 mb-4">Dynamic risk distribution by asset class.</p>
                     <div class="h-64 relative"><canvas id="radarChart"></canvas></div>
                     <div class="mt-6">
-                        <h5 class="font-bold text-xs text-slate-500 uppercase mb-2 text-center">Regional Exposure</h5>
+                        <h5 class="font-bold text-xs text-slate-500 uppercase mb-2 text-center">Regional Exposure
+                        </h5>
                         <div id="region-allocation" class="pt-2 border-t border-slate-100"></div>
+                    </div>
+                    <!-- Time Allocation -->
+                    <div class="mw-card">
+                        <h4 class="font-bold flex items-center gap-2 mb-4"><span
+                                class="bg-amber-100 text-amber-700 p-1 rounded">⏳</span> Time Exposure</h4>
+                        <p class="text-xs text-slate-500 mb-4">Historical average time allocated per asset class.</p>
+                        <div class="h-64 relative"><canvas id="timeAllocationChart"></canvas></div>
                     </div>
                 </div>
                 <!-- Benchmarks -->
                 <div class="mw-card">
                     <h4 class="font-bold flex items-center gap-2 mb-4"><span
                             class="bg-green-100 text-green-700 p-1 rounded">🚀</span> Benchmark Comparison</h4>
-                    <p class="text-xs text-slate-500 mb-4">Relative performance adjusted for volatility.</p>
+                    <p class="text-xs text-slate-500 mb-4">Relative performance adjusted to volatility.</p>
                     <div id="benchmark-list" class="flex flex-col gap-3"></div>
                 </div>
             </div>
 
-            <!-- COMPARATIVE DRAWDOWN CHART -->
-            <div class="mw-card mt-6">
-                <h3 class="font-bold text-lg mb-4">Comparative Drawdown (Stress Test)</h3>
-                <p class="text-xs text-slate-500 mb-4">Depth of drawdown comparison between Portfolio and major indices.
-                </p>
-                <div class="h-64 relative w-full">
-                    <canvas id="drawdownComparisonChart"></canvas>
+            <!-- COMPARATIVE DRAWDOWN & RISK REWARD -->
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div class="mw-card">
+                    <h3 class="font-bold text-lg mb-4">Comparative Drawdown (Stress Test)</h3>
+                    <p class="text-xs text-slate-500 mb-4">Depth of drawdown comparison between Portfolio and major
+                        indices.</p>
+                    <div class="h-64 relative w-full">
+                        <canvas id="drawdownComparisonChart"></canvas>
+                    </div>
+                </div>
+                <div class="mw-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg">Risk / Reward Trade-off</h3>
+                            <p class="text-xs text-slate-500">Portfolio positioning vs classic assets.</p>
+                        </div>
+                        <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded">Top Left = Ideal</span>
+                    </div>
+                    <div class="h-64 relative w-full">
+                        <canvas id="riskRewardChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <!-- MONTHLY HEATMAP -->
             <div class="mw-card mt-6">
-                <h3 class="font-bold text-lg mb-4">Monthly Performance (Heatmap)</h3>
+                <h3 class="font-bold text-lg mb-4">Monthly Performance</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs text-center border-collapse">
                         <thead>
@@ -360,7 +381,7 @@
                     </div>
                 </div>
 
-                <!-- SENSITIVITY TABLE -->
+                <!-- SENSIBILITE (DELTA) TABLE -->
                 <div class="mw-card mt-6">
                     <h4 class="font-bold mb-4">⚡ Sensitivity & Delta by Asset Class</h4>
                     <div class="overflow-x-auto">
@@ -369,6 +390,7 @@
                                 <tr>
                                     <th class="p-2">Class</th>
                                     <th class="p-2">Sector</th>
+                                    <th class="p-2">Proxy / ETF</th>
                                     <th class="p-2">Delta (Est.)</th>
                                     <th class="p-2">Risk</th>
                                     <th class="p-2 text-right">Allocation</th>
@@ -378,6 +400,7 @@
                                 <tr>
                                     <td class="p-2 font-bold">Crypto</td>
                                     <td class="p-2">Blockchain</td>
+                                    <td class="p-2 font-mono text-xs text-slate-500">BTC, ETH</td>
                                     <td class="p-2 text-red-600">3.5 (Explosive)</td>
                                     <td class="p-2">🔥🔥 High</td>
                                     <td class="p-2 text-right font-mono" id="alloc-crypto">--%</td>
@@ -385,6 +408,7 @@
                                 <tr>
                                     <td class="p-2 font-bold">Equity</td>
                                     <td class="p-2">Tech / AI</td>
+                                    <td class="p-2 font-mono text-xs text-slate-500">QQQ, NVDA</td>
                                     <td class="p-2 text-orange-600">1.8 (Aggressive)</td>
                                     <td class="p-2">🔥 Med-High</td>
                                     <td class="p-2 text-right font-mono" id="alloc-tech">--%</td>
@@ -392,6 +416,7 @@
                                 <tr>
                                     <td class="p-2 font-bold">Commodities</td>
                                     <td class="p-2">Gold / Silver</td>
+                                    <td class="p-2 font-mono text-xs text-slate-500">GLD, SLV</td>
                                     <td class="p-2 text-yellow-600">0.8 (Independent)</td>
                                     <td class="p-2">🛡️ Defensive</td>
                                     <td class="p-2 text-right font-mono" id="alloc-gold">--%</td>
@@ -399,6 +424,7 @@
                                 <tr>
                                     <td class="p-2 font-bold">Cash</td>
                                     <td class="p-2">Liquidity</td>
+                                    <td class="p-2 font-mono text-xs text-slate-500">BIL, SHV</td>
                                     <td class="p-2 text-slate-400">0.0 (Neutral)</td>
                                     <td class="p-2">✅ Risk-Free</td>
                                     <td class="p-2 text-right font-mono" id="alloc-cash">--%</td>
@@ -424,18 +450,18 @@
                             <tr class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                                 <th class="px-4 py-3">Symbol</th>
                                 <th class="px-4 py-3">Asset Class / Region</th>
-                                <th class="py-3 px-4 text-right">Cost Basis</th>
-                                <th class="py-3 px-4 text-right">Current Price</th>
-                                <th class="py-3 px-4 text-right">Unrealized P&L</th>
-                                <th class="py-3 px-4 text-right">P&L %</th>
-                                <th class="py-3 px-4 text-right">Weight</th>
+                                <th class="px-4 py-3 text-right">Qty</th>
+                                <th class="px-4 py-3 text-right">Avg Price</th>
+                                <th class="px-4 py-3 text-right">Current Price</th>
+                                <th class="px-4 py-3 text-right">Unrealized P&L</th>
+                                <th class="px-4 py-3 text-right">Weight %</th>
                             </tr>
                         </thead>
                         <tbody id="positions-table-body">
                             <!-- JS populated -->
                             <tr>
-                                <td colspan="7" class="text-center py-8 text-slate-400">Sélectionnez une période pour
-                                    voir les positions finales.</td>
+                                <td colspan="7" class="text-center py-8 text-slate-400">Select a period to see
+                                    positions.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -446,20 +472,35 @@
         <!-- TAB: LOGS -->
         <div id="tab-logs" class="tab-content hidden">
             <div class="mw-card">
-                <h3 class="font-bold text-lg mb-6 flex items-center gap-2"><i
-                        class="fa-solid fa-list-check text-slate-600"></i> Execution Log</h3>
-                <p class="text-sm text-slate-500 mb-4">List of last 100 actions in the selected period.</p>
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h3 class="font-bold text-lg flex items-center gap-2"><i
+                            class="fa-solid fa-list-check text-slate-600"></i> Execution Journal</h3>
+
+                    <div class="flex gap-2 bg-slate-100 p-1 rounded-lg">
+                        <button id="btn-ft-list" onclick="filterLogs('list')"
+                            class="log-filter-btn px-3 py-1 text-xs font-bold rounded bg-blue-600 text-white shadow-sm transition-all text-slate-600">List
+                            View</button>
+                        <button id="btn-ft-by_symbol" onclick="filterLogs('by_symbol')"
+                            class="log-filter-btn px-3 py-1 text-xs font-bold rounded hover:bg-white hover:shadow-sm transition-all text-slate-600">By
+                            Symbol</button>
+                        <button id="btn-ft-by_date" onclick="filterLogs('by_date')"
+                            class="log-filter-btn px-3 py-1 text-xs font-bold rounded hover:bg-white hover:shadow-sm transition-all text-slate-600">By
+                            Month</button>
+                    </div>
+                </div>
+
+                <p class="text-sm text-slate-500 mb-4">Detailed view of operations.</p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                                 <th class="px-4 py-3">Date</th>
                                 <th class="px-4 py-3">Symbol</th>
-                                <th class="py-3 px-4 text-left">Action</th>
-                                <th class="py-3 px-4 text-right">Exec Price</th>
-                                <th class="py-3 px-4 text-right">Qty</th>
-                                <th class="py-3 px-4 text-right">Realized P&L</th>
-                                <th class="py-3 px-4 text-left">Reason / Algo Note</th>
+                                <th class="px-4 py-3">Action / View</th>
+                                <th class="px-4 py-3 text-right">Price</th>
+                                <th class="px-4 py-3 text-right">Qty</th>
+                                <th class="px-4 py-3 text-right">P&L / Info</th>
+                                <th class="px-4 py-3">Reason / Note</th>
                             </tr>
                         </thead>
                         <tbody id="logs-table-body">
@@ -473,6 +514,7 @@
         <!-- TAB: RISK -->
         <div id="tab-risk" class="tab-content hidden">
             <div class="grid md:grid-cols-2 gap-6">
+                <!-- Same Risk Content -->
                 <div class="mw-card">
                     <h3 class="font-bold text-lg mb-4">Risk Metrics (Explained)</h3>
                     <div class="space-y-6">
@@ -482,8 +524,7 @@
                                 <span id="stat-var99" class="font-bold bg-slate-100 px-2 rounded">--</span>
                             </div>
                             <p class="text-xs text-slate-500">
-                                <strong>Pedagogy:</strong> Estimated max daily loss with 99% confidence. If -2%, the
-                                portfolio shouldn't lose more than 2% in a day statistically.
+                                <strong>Pedagogy:</strong> Estimated max daily loss with 99% confidence.
                             </p>
                         </div>
                         <div class="border-b border-slate-100 pb-4">
@@ -492,8 +533,7 @@
                                 <span id="stat-beta" class="font-bold bg-slate-100 px-2 rounded">--</span>
                             </div>
                             <p class="text-xs text-slate-500">
-                                <strong>Pedagogy:</strong> Measures volatility relative to SPY. 0.5 means if market
-                                drops 1%, portfolio drops 0.5%.
+                                <strong>Pedagogy:</strong> Measures volatility relative to SPY.
                             </p>
                         </div>
                         <div class="border-b border-slate-100 pb-4">
@@ -502,7 +542,7 @@
                                 <span id="stat-vega" class="font-bold bg-slate-100 px-2 rounded">--</span>
                             </div>
                             <p class="text-xs text-slate-500">
-                                <strong>Pedagogy:</strong> Impact of a 1% rise in VIX. Positive = profit from fear.
+                                <strong>Pedagogy:</strong> Impact of a 1% rise in VIX.
                             </p>
                         </div>
                     </div>
@@ -510,21 +550,21 @@
                 <div class="space-y-6">
                     <div class="mw-card">
                         <h3 class="font-bold text-lg mb-4">Max Pain (Options OpEx)</h3>
-                        <p class="text-xs text-slate-500 mb-3">Niveaux de prix où les vendeurs d'options (Smart Money)
-                            gagnent le plus. Le prix tend vers ces niveaux à l'expiration.</p>
+                        <p class="text-xs text-slate-500 mb-3">Price levels where option sellers (Smart Money) profit
+                            the most.</p>
                         <div id="container-maxpain">
                             <div id="list-maxpain" class="flex flex-col gap-2"></div>
                         </div>
                     </div>
                     <div class="mw-card">
-                        <h3 class="font-bold text-lg mb-4">Calendrier Evenements</h3>
+                        <h3 class="font-bold text-lg mb-4">Event Calendar</h3>
                         <div id="event-calendar-list" class="flex flex-col gap-2"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB: STRATEGY -->
+        <!-- TAB: STRATEGY (MERGED) -->
         <div id="tab-strategy" class="tab-content hidden">
             <div class="mw-card prose max-w-none text-slate-700">
                 <h3 class="font-bold text-2xl text-slate-900 mb-6">Strategy: Adaptive Fractal Multi-Asset</h3>
@@ -535,14 +575,14 @@
                         strategies (60/40) fail when correlations converge to 1. We adapt dynamically.</p>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-8 mt-8">
+                <div class="grid md:grid-cols-3 gap-8 mt-8 mb-12">
                     <div>
                         <div class="bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center text-xl mb-4">
                             🛡️</div>
                         <h4 class="font-bold text-lg mb-2">1. Defense (The Shield)</h4>
                         <p class="text-sm mb-2">Protect first, attack later.</p>
                         <ul class="text-xs list-disc pl-4 space-y-1 text-slate-600">
-                            <li>Daily VIX + SPY Trend analysis.</li>
+                            <li>Analysis of VIX + SPY Trend daily.</li>
                             <li>"Crash Mode": Sell Stocks -> Cash/Gold.</li>
                             <li>Dynamic Stop Loss (ATR) on every position.</li>
                         </ul>
@@ -570,32 +610,10 @@
                         </ul>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- TAB: TIMELINE -->
-        <div id="tab-timeline" class="tab-content hidden">
-            <div class="mw-card">
-                <h3 class="font-bold text-lg mb-6 flex items-center gap-2"><i
-                        class="fa-solid fa-clock-rotate-left text-purple-600"></i> Decision Timeline</h3>
-                <p class="text-sm text-slate-500 mb-6">Chronological tracking of regime shifts (Pivots), panic
-                    detections, and systemic signals.</p>
-                <div id="timeline-container" class="space-y-4">
-                    <!-- JS Populated -->
-                    <div class="text-center text-slate-400 py-8">Loading events...</div>
-                </div>
-            </div>
-        </div>
+                <h2 class="text-2xl font-bold mb-6 text-indigo-800 border-t pt-8">🔬 Methodology "Adaptive Fractal"</h2>
 
-        </div>
-        </div>
-
-        <!-- TAB: METHODOLOGY -->
-        <div id="tab-methodology" class="tab-content hidden">
-            <div class="mw-card">
-                <h2 class="text-2xl font-bold mb-6 text-indigo-800">🔬 Methodology "Adaptive Fractal"</h2>
-
-                <!-- Global Diagram -->
+                <!-- Diagramme Global -->
                 <div class="mb-8">
                     <h3 class="font-bold text-lg mb-4">System Architecture</h3>
                     <div class="mermaid text-center bg-slate-50 p-4 rounded-lg">
@@ -604,16 +622,18 @@
                         UNIVERSE -->|Filter Liquidity & Vol| CANDIDATES[3. Candidates]
                         CANDIDATES -->|Fractal Dimension V| SIGNAL{4. Signal Generation}
                         SIGNAL -->|Trend H>0.6| BULL[Bull Regime]
-                        SIGNAL -->|MeanRev H<0.4| BEAR[Bear Regime] SIGNAL -->|Chaos V~1.5| NEUTRAL[Cash / Hedging]
-                            BULL --> ALLOC[5. Allocation & Risk Parity]
-                            BEAR --> ALLOC
-                            NEUTRAL --> ALLOC
-                            ALLOC --> EXEC[6. Execution]
+                        SIGNAL -->|MeanRev H&lt;0.4| BEAR[Bear Regime]
+                        SIGNAL -->|Chaos V~1.5| NEUTRAL[Cash / Hedging]
+                        BULL --> ALLOC[5. Allocation & Risk Parity]
+                        BEAR --> ALLOC
+                        NEUTRAL --> ALLOC
+                        ALLOC --> EXEC[6. Execution]
                     </div>
                     <p class="text-sm text-slate-500 mt-2 text-center">Full decision engine flow diagram.</p>
                 </div>
 
-                <!-- Discovery Section -->
+                <!-- More methodology content... -->
+                <!-- Section Découverte -->
                 <div class="grid md:grid-cols-2 gap-8 mb-8">
                     <div>
                         <h3 class="font-bold text-lg mb-2 text-blue-700">1. Universe Discovery</h3>
@@ -639,7 +659,7 @@
                     </div>
                 </div>
 
-                <!-- Fractal Section -->
+                <!-- Section Fractal -->
                 <div class="mt-8 mb-8">
                     <h3 class="font-bold text-lg mb-2 text-purple-700">2. The Core: Fractal Dimension (Hurst)</h3>
                     <p class="text-slate-600 mb-4">We do not use moving averages (too slow). We measure the "roughness"
@@ -672,14 +692,42 @@
                             Normal --> VolatilitySpike: VIX > 25
                             VolatilitySpike --> DeRisking: Sell 50%
                             DeRisking --> Cash: VIX > 40
-                            Cash --> Normal: VIX < 20 Normal --> DrawdownProtocol: DD > 8%
-                                DrawdownProtocol --> HardStop: DD > 15%
-                                HardStop --> [*]: Full Liquidation
+                            Cash --> Normal: VIX &lt; 20
+                            Normal --> DrawdownProtocol: DD > 8%
+                            DrawdownProtocol --> HardStop: DD > 15%
+                            HardStop --> [*]: Full Liquidation
                         </div>
                     </div>
 
                 </div>
             </div>
+
+            <!-- TAB: TIMELINE -->
+            <div id="tab-timeline" class="tab-content hidden">
+                <div class="mw-card">
+                    <h3 class="font-bold text-lg mb-6 flex items-center gap-2"><i
+                            class="fa-solid fa-clock-rotate-left text-purple-600"></i> Decision Timeline</h3>
+                    <p class="text-sm text-slate-500 mb-6">Chronological tracking of regime shifts (Pivots), panic
+                        detections, and systemic signals.</p>
+
+                    <h4 class="font-bold text-sm text-slate-700 mb-3 uppercase tracking-wider">Calendar View (Daily)
+                    </h4>
+                    <div id="calendar-view" class="mb-8">
+                        <!-- JS Grid -->
+                    </div>
+
+                    <h4 class="font-bold text-sm text-slate-700 mb-3 uppercase tracking-wider border-t pt-4">Event List
+                    </h4>
+                    <div id="timeline-container" class="space-y-4">
+                        <!-- JS Populated -->
+                        <div class="text-center text-slate-400 py-8">Loading events...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+
 
     </main>
 
@@ -701,19 +749,10 @@
             const btn = document.querySelector(`[data-tab="${tabId}"]`);
             if (btn) btn.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
 
-            if (tabId === 'methodology') {
+            if (tabId === 'strategy') {
                 mermaid.init();
             }
         }
-
-        // Handle Period Buttons
-        document.querySelectorAll('.period-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                // Remove active from all
-                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600'));
-                this.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-600');
-            });
-        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
