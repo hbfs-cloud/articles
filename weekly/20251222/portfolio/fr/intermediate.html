@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch | Portefeuille Systematic - Intermédiaire</title>
+    <meta property="og:title" content="💼 Portefeuille Quantitatif - Comprendre la Performance">
+    <meta property="og:description" content="+32.9% YTD | Découvre comment fonctionne notre stratégie">
+
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="../../assets/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .explainer-box {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .concept-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .concept-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .concept-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .position-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .position-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .trade-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border-left: 4px solid var(--accent);
+        }
+
+        .section-intro {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="mobile-header">
+        <a href="#" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH</a>
+        <button class="mobile-menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i
+                class="fa-solid fa-bars"></i></button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar-nav" id="sidebar">
+            <a href="../../../../index.html" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW">
+                MARKET WATCH</a>
+            <nav style="flex:1; overflow-y:auto;">
+                <div class="nav-section">
+                    <div class="nav-title">📊 Portefeuille</div>
+                    <a href="#overview" class="nav-link active"><i class="fa-solid fa-chart-pie"></i> Performance</a>
+                    <a href="#strategy" class="nav-link"><i class="fa-solid fa-lightbulb"></i> La Stratégie</a>
+                    <a href="#positions" class="nav-link"><i class="fa-solid fa-wallet"></i> Ce qu'on détient</a>
+                    <a href="#ideas" class="nav-link"><i class="fa-solid fa-crosshairs"></i> Idées de la semaine</a>
+                    <a href="#start" class="nav-link"><i class="fa-solid fa-rocket"></i> Commencer</a>
+                </div>
+                <div class="nav-section" style="margin-top:1rem;">
+                    <div class="nav-title">← Retour</div>
+                    <a href="../../intermediate/fr/index.html" class="nav-link"><i class="fa-solid fa-newspaper"></i>
+                        Rapport Hebdo</a>
+                </div>
+            </nav>
+            <div class="level-selector">
+                <a href="beginner.html" class="level-btn">Débutant</a>
+                <div class="level-btn active">Interm.</div>
+                <a href="expert.html" class="level-btn">Expert</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- HERO -->
+            <section id="overview" class="animate-in">
+                <div class="header-meta">Portefeuille Systematic • 22 Décembre 2025</div>
+
+                <h1 style="font-size:2.2rem; line-height:1.2; margin:1rem 0 1.5rem;">
+                    💼 Comment on fait +32.9% cette année
+                </h1>
+
+                <p class="section-intro">
+                    On teste une stratégie d'investissement automatisée. Elle a gagné <strong>32.9%</strong> depuis
+                    janvier. Voici comment elle fonctionne et les trades de la semaine.
+                </p>
+
+                <!-- KEY STATS - SIMPLIFIED -->
+                <div
+                    style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:2.5rem;">
+                    <div class="stat-card">
+                        <div class="value" style="color:#059669;">+32.9%</div>
+                        <div class="label">Gain depuis janvier</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" style="color:#dc2626;">-17.3%</div>
+                        <div class="label">Pire moment (Max DD)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" style="color:#2563eb;">1.19</div>
+                        <div class="label">Sharpe (qualité)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">130</div>
+                        <div class="label">Trades cette année</div>
+                    </div>
+                </div>
+
+                <!-- EQUITY CURVE -->
+                <div class="chart-container">
+                    <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-chart-line text-blue"></i> Évolution du
+                        Capital</h3>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">
+                        On a commencé avec $161,000 → Aujourd'hui on a $213,975 (+$52,975)
+                    </p>
+                    <div style="height:280px;"><canvas id="equityChart"></canvas></div>
+                </div>
+            </section>
+
+            <!-- STRATEGY EXPLAINER -->
+            <section id="strategy" style="margin-top:4rem;">
+                <h2>🧠 Comment fonctionne la stratégie ?</h2>
+                <p class="section-intro">
+                    En 4 étapes simples, voici ce que fait notre système chaque jour.
+                </p>
+
+                <div class="explainer-box">
+                    <div class="concept-item">
+                        <div class="concept-icon">🔍</div>
+                        <div>
+                            <h4>1. Scanner 932 actifs chaque jour</h4>
+                            <p style="font-size:0.9rem; margin-top:0.5rem;">Le système analyse 300 actions US liquides +
+                                ETFs + Or/Argent/Crypto/Pétrole. Filtres : Prix > SMA200, RSI 30-80, Momentum positif,
+                                Volume correct.</p>
+                        </div>
+                    </div>
+                    <div class="concept-item">
+                        <div class="concept-icon">⚖️</div>
+                        <div>
+                            <h4>2. Noter et classer chaque opportunité</h4>
+                            <p style="font-size:0.9rem; margin-top:0.5rem;">Chaque action reçoit un score basé sur :
+                                Risque (volatilité), Récompense (momentum 60/120j), Timing (RSI + alignement SMA). Max
+                                15 positions.</p>
+                        </div>
+                    </div>
+                    <div class="concept-item">
+                        <div class="concept-icon">📈</div>
+                        <div>
+                            <h4>3. Entrer en 2 étapes (DCA)</h4>
+                            <p style="font-size:0.9rem; margin-top:0.5rem;">On n'achète jamais tout d'un coup !
+                                <strong>Entry 1/2 :</strong> 50% au signal initial. <strong>Entry 2/2 :</strong> 50%
+                                quelques jours après si le setup tient.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="concept-item">
+                        <div class="concept-icon">🛡️</div>
+                        <div>
+                            <h4>4. Gérer le risque automatiquement</h4>
+                            <p style="font-size:0.9rem; margin-top:0.5rem;">
+                                🔻 <strong>Trailing Stop ATR :</strong> Stop dynamique (2-4× ATR selon volatilité)<br>
+                                📤 <strong>RSI Exit à 88+ :</strong> Vente si surachat extrême<br>
+                                💰 <strong>Profit Lock +15% :</strong> Vend 70% pour sécuriser<br>
+                                🚨 <strong>Portfolio DD > 15% :</strong> Liquidation totale !
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-box">
+                    <strong>💡 Pourquoi +32.9% ?</strong> Le secret c'est d'accepter de perdre souvent mais petit.
+                    <strong>Win Rate : seulement 28%</strong> mais les gains moyens sont de <strong>+35%</strong>. On
+                    coupe les pertes vite (trailing stop ATR) et on laisse les gains courir (profit lock progressif).
+                </div>
+            </section>
+
+            <!-- WHAT WE OWN -->
+            <section id="positions" style="margin-top:4rem;">
+                <h2>💼 Ce qu'on détient maintenant</h2>
+                <p class="section-intro">
+                    13 actions dans le portefeuille. Voici les principales :
+                </p>
+
+                <div class="position-list">
+                    <div class="position-item">
+                        <span style="font-size:1.5rem;">🪙</span>
+                        <div>
+                            <strong>Or (B + GLD)</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">~24% du portefeuille</div>
+                        </div>
+                    </div>
+                    <div class="position-item">
+                        <span style="font-size:1.5rem;">💻</span>
+                        <div>
+                            <strong>Tech (SNDK, WDC)</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">~23% du portefeuille</div>
+                        </div>
+                    </div>
+                    <div class="position-item">
+                        <span style="font-size:1.5rem;">🔍</span>
+                        <div>
+                            <strong>Google (GOOGL)</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">~10% du portefeuille</div>
+                        </div>
+                    </div>
+                    <div class="position-item">
+                        <span style="font-size:1.5rem;">🏥</span>
+                        <div>
+                            <strong>Santé (UTHR)</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">~11% du portefeuille</div>
+                        </div>
+                    </div>
+                    <div class="position-item">
+                        <span style="font-size:1.5rem;">🎮</span>
+                        <div>
+                            <strong>Gaming (EA)</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">~10% du portefeuille</div>
+                        </div>
+                    </div>
+                    <div class="position-item">
+                        <span style="font-size:1.5rem;">💵</span>
+                        <div>
+                            <strong>Cash</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">~3% pour opportunités</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PIE CHART -->
+                <div class="chart-container" style="margin-top:2rem;">
+                    <h4><i class="fa-solid fa-chart-pie text-blue"></i> Répartition visuelle</h4>
+                    <div style="height:280px;"><canvas id="allocChart"></canvas></div>
+                </div>
+            </section>
+
+            <!-- IDEAS THIS WEEK -->
+            <section id="ideas" style="margin-top:4rem;">
+                <h2>🎯 3 Idées de Trade cette semaine</h2>
+                <p class="section-intro">
+                    Les 3 meilleures opportunités détectées par le système. Entrée, stop loss et objectif inclus.
+                </p>
+
+                <div style="display:grid; gap:1.5rem;">
+                    <!-- Trade 1 -->
+                    <div class="trade-card" style="border-left-color:#f59e0b;">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <h3>🪙 NGD (New Gold) - Mineur d'or</h3>
+                                <p style="font-size:0.9rem; color:var(--text-muted);">Stratégie : Rotation</p>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="background:#f0fdf4; padding:8px 16px; border-radius:8px;">
+                                    <div style="font-size:0.7rem; color:#059669;">R:R Ratio</div>
+                                    <div style="font-size:1.2rem; font-weight:700; color:#059669;">1.7:1</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1rem 0;">
+                            <div style="text-align:center; padding:0.75rem; background:#eff6ff; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Entrée</div>
+                                <div style="font-weight:700;">$8.33</div>
+                            </div>
+                            <div style="text-align:center; padding:0.75rem; background:#fef2f2; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Stop Loss</div>
+                                <div style="font-weight:700; color:#dc2626;">$7.35 (-12%)</div>
+                            </div>
+                            <div style="text-align:center; padding:0.75rem; background:#f0fdf4; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Objectif</div>
+                                <div style="font-weight:700; color:#059669;">$10.00 (+20%)</div>
+                            </div>
+                        </div>
+                        <p style="font-size:0.9rem; line-height:1.6;">
+                            <strong>Pourquoi ?</strong> L'or monte beaucoup cette année. Les mineurs d'or (comme NGD)
+                            montent encore plus quand l'or monte.
+                        </p>
+                    </div>
+
+                    <!-- Trade 2 -->
+                    <div class="trade-card" style="border-left-color:#2563eb;">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <h3>✈️ AAL (American Airlines)</h3>
+                                <p style="font-size:0.9rem; color:var(--text-muted);">Stratégie : Breakout</p>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="background:#f0fdf4; padding:8px 16px; border-radius:8px;">
+                                    <div style="font-size:0.7rem; color:#059669;">R:R Ratio</div>
+                                    <div style="font-size:1.2rem; font-weight:700; color:#059669;">1.9:1</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1rem 0;">
+                            <div style="text-align:center; padding:0.75rem; background:#eff6ff; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Entrée</div>
+                                <div style="font-weight:700;">$15.99</div>
+                            </div>
+                            <div style="text-align:center; padding:0.75rem; background:#fef2f2; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Stop Loss</div>
+                                <div style="font-weight:700; color:#dc2626;">$14.46 (-10%)</div>
+                            </div>
+                            <div style="text-align:center; padding:0.75rem; background:#f0fdf4; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Objectif</div>
+                                <div style="font-weight:700; color:#059669;">$18.87 (+18%)</div>
+                            </div>
+                        </div>
+                        <p style="font-size:0.9rem; line-height:1.6;">
+                            <strong>Pourquoi ?</strong> Le prix du pétrole a baissé this year (-23%), donc les
+                            compagnies aériennes dépensent moins en fuel = plus de profits.
+                        </p>
+                    </div>
+
+                    <!-- Trade 3 -->
+                    <div class="trade-card" style="border-left-color:#10b981;">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <h3>⛏️ HL (Hecla Mining) - Argent</h3>
+                                <p style="font-size:0.9rem; color:var(--text-muted);">Stratégie : Momentum</p>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="background:#f0fdf4; padding:8px 16px; border-radius:8px;">
+                                    <div style="font-size:0.7rem; color:#059669;">R:R Ratio</div>
+                                    <div style="font-size:1.2rem; font-weight:700; color:#059669;">1.7:1</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1rem 0;">
+                            <div style="text-align:center; padding:0.75rem; background:#eff6ff; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Entrée</div>
+                                <div style="font-weight:700;">$19.02</div>
+                            </div>
+                            <div style="text-align:center; padding:0.75rem; background:#fef2f2; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Stop Loss</div>
+                                <div style="font-weight:700; color:#dc2626;">$16.13 (-15%)</div>
+                            </div>
+                            <div style="text-align:center; padding:0.75rem; background:#f0fdf4; border-radius:8px;">
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Objectif</div>
+                                <div style="font-weight:700; color:#059669;">$23.78 (+25%)</div>
+                            </div>
+                        </div>
+                        <p style="font-size:0.9rem; line-height:1.6;">
+                            <strong>Pourquoi ?</strong> L'argent a monté de +130% cette année. HL est le plus gros
+                            producteur d'argent aux USA.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HOW TO START -->
+            <section id="start" style="margin-top:4rem; margin-bottom:4rem;">
+                <h2>🚀 Comment commencer ?</h2>
+                <p class="section-intro">
+                    Tu veux tester la stratégie ? Voici comment démarrer avec un petit capital ($5K-$10K).
+                </p>
+
+                <div class="explainer-box" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+                    <h4 style="color:#059669; margin-bottom:1rem;">📋 Plan pour $5,000</h4>
+                    <ol style="padding-left:1.2rem; line-height:2; font-size:0.95rem;">
+                        <li><strong>Attends le 27 décembre</strong> - Les marchés sont bizarres pendant les fêtes</li>
+                        <li><strong>Achète GLD ($1,000)</strong> - Un ETF sur l'or, simple et sûr</li>
+                        <li><strong>Achète GOOGL ($1,000)</strong> - Google, une valeur tech solide</li>
+                        <li><strong>Choisis 1 trade de la semaine ($800)</strong> - NGD ou AAL</li>
+                        <li><strong>Garde $2,200 en cash</strong> - Pour les prochaines opportunités</li>
+                    </ol>
+                </div>
+
+                <div class="mw-card" style="margin-top:2rem; background:#fef2f2; border-left:4px solid #ef4444;">
+                    <h4 style="color:#dc2626;">⚠️ Règle d'or</h4>
+                    <p style="font-size:0.9rem; margin-top:0.5rem;">
+                        N'investis que ce que tu peux perdre. La stratégie a perdu jusqu'à -17% à un moment. Si ça
+                        t'empêche de dormir, réduis la taille.
+                    </p>
+                </div>
+
+                <div class="upsell-banner" style="margin-top:2rem;">
+                    <h3>📊 Envie de plus de détails ?</h3>
+                    <p>La version Expert contient l'historique complet des trades, les graphiques de drawdown, et le
+                        plan pour $50K-$100K.</p>
+                    <a href="expert.html">Voir la version Expert →</a>
+                </div>
+            </section>
+
+            <footer
+                style="padding:2rem 0; text-align:center; border-top:1px solid #e2e8f0; color:var(--text-muted); font-size:0.85rem;">
+                <p><a href="../../intermediate/fr/index.html" style="color:var(--accent);">← Retour au Rapport
+                        Hebdo</a></p>
+            </footer>
+        </main>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar-context">
+            <div class="mw-card" style="border:2px solid var(--success); background:#f0fdf4;">
+                <h4 style="font-size:0.85rem;"><i class="fa-solid fa-trophy text-green"></i> Cette Année</h4>
+                <div style="text-align:center; margin-top:8px;">
+                    <div style="font-size:2rem; font-weight:800; color:#059669;">+32.9%</div>
+                    <div style="font-size:0.75rem;">vs S&P 500 +13%</div>
+                </div>
+            </div>
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">
+                "Couper les pertes vite, laisser courir les gains"
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // Equity Chart
+        new Chart(document.getElementById('equityChart'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+                datasets: [{
+                    label: 'Capital',
+                    data: [161000, 166305, 168749, 162241, 162229, 163588, 172012, 171645, 200089, 220686, 198779, 213975],
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37,99,235,0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => '$' + ctx.raw.toLocaleString() } }
+                },
+                scales: {
+                    y: { ticks: { callback: (v) => '$' + (v / 1000).toFixed(0) + 'K' }, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Allocation Chart
+        new Chart(document.getElementById('allocChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Or', 'Tech', 'Santé', 'Google', 'Gaming', 'Autres', 'Cash'],
+                datasets: [{
+                    data: [24, 23, 16, 10, 10, 14, 3],
+                    backgroundColor: ['#f59e0b', '#2563eb', '#10b981', '#7c3aed', '#8b5cf6', '#94a3b8', '#e2e8f0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+                cutout: '60%'
+            }
+        });
+    </script>
+</body>
+
+</html>
