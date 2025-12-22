@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Watch | Portefeuille Débutant - Data Live</title>
+    <title>Market Watch | Portefeuille Débutant - Dashboard</title>
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
     <link rel="stylesheet" href="../../assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -27,180 +29,714 @@
 
         .hero-stat {
             text-align: center;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 1.25rem;
+            background: white;
+            border: 1px solid #e2e8f0;
             border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
         }
 
         .hero-stat .value {
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-size: clamp(1.5rem, 2.5vw, 2.2rem);
             font-weight: 800;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            word-break: break-all;
+            color: #0f172a;
+            margin: 4px 0;
         }
 
         .hero-stat .label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 4px;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
-        .period-tab {
+        .hero-stat .subtext {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tab:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #2563eb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .period-btn {
             padding: 6px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.8rem;
             font-weight: 600;
+            background: white;
+            border: 1px solid #e2e8f0;
             color: #64748b;
             transition: all 0.2s;
         }
 
-        .period-tab:hover {
-            background: #e2e8f0;
+        .period-btn:hover {
+            border-color: #cbd5e1;
+            color: #334155;
         }
 
-        .period-tab.active {
+        .period-btn.active {
             background: #2563eb;
             color: white;
+            border-color: #2563eb;
         }
     </style>
 </head>
 
-<body>
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <h1 style="font-size:2rem; font-weight:800; margin-bottom:2rem; text-align:center;">📊 Portefeuille Débutant
-            (Live)</h1>
+<body class="bg-slate-50 min-h-screen">
 
-        <!-- Top Stats -->
-        <div
-            style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:2rem;">
-            <div class="hero-stat">
-                <div class="value" id="stat-total-return">--%</div>
-                <div class="label">Performance YTD</div>
+    <!-- Top Bar -->
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <a href="../../beginner/fr/index.html" class="text-slate-400 hover:text-slate-700 transition-colors"><i
+                        class="fa-solid fa-arrow-left"></i></a>
+                <h1 class="text-xl font-bold text-slate-900 border-l-2 border-slate-200 pl-4">📊 Portefeuille Débutant
+                </h1>
             </div>
-            <div class="hero-stat">
-                <div class="value" id="stat-cagr">--%</div>
-                <div class="label">CAGR (An.)</div>
-            </div>
-            <div class="hero-stat">
-                <div class="value" id="stat-max-dd">--%</div>
-                <div class="label">Max Drawdown</div>
-            </div>
-            <div class="hero-stat">
-                <div class="value" id="stat-sharpe">--</div>
-                <div class="label">Ratio Sharpe</div>
-            </div>
-            <div class="hero-stat">
-                <div class="value" id="stat-balance">--</div>
-                <div class="label">Balance Actuelle</div>
+
+            <!-- GLOBAL TIMEFRAME SELECTOR -->
+            <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+                <span class="text-xs font-bold text-slate-500 px-2 uppercase hidden md:block">Période:</span>
+                <button class="period-btn" onclick="loadData('1m')">1M</button>
+                <button class="period-btn" onclick="loadData('3m')">3M</button>
+                <button class="period-btn" onclick="loadData('6m')">6M</button>
+                <button class="period-btn active" onclick="loadData('current')">YTD</button>
+                <button class="period-btn" onclick="loadData('3y')">3 Ans</button>
+                <button class="period-btn" onclick="loadData('5y')">5 Ans</button>
             </div>
         </div>
+    </nav>
 
-        <!-- Equity Curve -->
-        <div class="mw-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h3 style="font-weight:700;">Courbe de Performance</h3>
-                <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
-                    <button class="period-tab" onclick="loadData('1w')">1S</button>
-                    <button class="period-tab" onclick="loadData('2w')">2S</button>
-                    <button class="period-tab" onclick="loadData('1m')">1M</button>
-                    <button class="period-tab" onclick="loadData('3m')">3M</button>
-                    <button class="period-tab" onclick="loadData('6m')">6M</button>
-                    <button class="period-tab" onclick="loadData('1y')">1A</button>
-                    <button class="period-tab active" onclick="loadData('current')">YTD</button>
-                    <button class="period-tab" onclick="loadData('3y')">3A</button>
-                    <button class="period-tab" onclick="loadData('5y')">5A</button>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')"><i
+                    class="fa-solid fa-chart-pie mr-2"></i>Dashboard</div>
+            <div class="nav-tab" data-tab="positions" onclick="switchTab('positions')"><i
+                    class="fa-solid fa-wallet mr-2"></i>Positions</div>
+            <div class="nav-tab" data-tab="logs" onclick="switchTab('logs')"><i
+                    class="fa-solid fa-list-check mr-2"></i>Journal</div>
+            <div class="nav-tab" data-tab="risk" onclick="switchTab('risk')"><i
+                    class="fa-solid fa-shield-halved mr-2"></i>Risques</div>
+            <div class="nav-tab" data-tab="strategy" onclick="switchTab('strategy')"><i
+                    class="fa-solid fa-brain mr-2"></i>Stratégie</div>
+            <div class="nav-tab" data-tab="timeline" onclick="switchTab('timeline')"><i
+                    class="fa-solid fa-clock-rotate-left mr-2"></i>Chronologie</div>
+            <div class="nav-tab" data-tab="methodology" onclick="switchTab('methodology')"><i
+                    class="fa-solid fa-flask mr-2"></i>Méthodologie</div>
+        </div>
+
+        <!-- TAB: DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content">
+            <!-- Pedagogical Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="hero-stat">
+                    <div class="label">Performance</div>
+                    <div class="value text-blue-600" id="stat-total-return">--%</div>
+                    <div class="subtext">vs SPY +12% (Alpha)</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="label">Win Rate</div>
+                    <div class="value text-emerald-600" id="stat-winrate">--%</div>
+                    <div class="subtext">Trades Gagnants (>55% obj)</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="label">Profit Factor</div>
+                    <div class="value text-purple-600" id="stat-profitfactor">--</div>
+                    <div class="subtext">Gains / Pertes (>1.5 excellent)</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="label">Max Drawdown</div>
+                    <div class="value text-rose-600" id="stat-max-dd">--%</div>
+                    <div class="subtext">Pire Baisse (Risk Control)</div>
                 </div>
             </div>
-            <div style="height:400px; width:100%;">
-                <canvas id="equityCurveChart"></canvas>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <!-- Equity Curve (2 cols) -->
+                <div class="mw-card md:col-span-2 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg">Courbe de Performance</h3>
+                        <div class="text-xs text-slate-400">Capital Départ: €100k</div>
+                    </div>
+                    <div class="flex-1 min-h-[300px] relative">
+                        <canvas id="equityCurveChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Quick Info -->
+                <div class="mw-card flex flex-col justify-center">
+                    <h3 class="font-bold text-sm text-slate-500 uppercase mb-4 text-center">Meilleurs Trades</h3>
+                    <div class="text-center mb-6">
+                        <div class="text-xs text-slate-400 uppercase">Max Gain</div>
+                        <div id="stat-maxwin" class="text-2xl font-bold text-emerald-600">--</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-slate-400 uppercase">Max Perte</div>
+                        <div id="stat-maxloss" class="text-2xl font-bold text-rose-600">--</div>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-slate-100 text-center">
+                        <div class="text-xs text-slate-400 uppercase">Balance Actuelle</div>
+                        <div id="stat-balance" class="text-xl font-bold text-slate-800">--</div>
+                        <div class="text-xs text-slate-400 mt-1">Mise à jour: 22 Déc 2025 • Impact FX inclus</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Detailed Metrics Grid -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem;">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Main Allocation Radar -->
+                <div class="mw-card">
+                    <h4 class="font-bold flex items-center gap-2 mb-4"><span
+                            class="bg-purple-100 text-purple-700 p-1 rounded">🕸️</span> Allocation Tactique</h4>
+                    <p class="text-xs text-slate-500 mb-4">Répartition dynamique du risque par classe d'actif.</p>
+                    <div class="h-64 relative"><canvas id="radarChart"></canvas></div>
+                    <div class="mt-6">
+                        <h5 class="font-bold text-xs text-slate-500 uppercase mb-2 text-center">Exposition Régionale
+                        </h5>
+                        <div id="region-allocation" class="pt-2 border-t border-slate-100"></div>
+                    </div>
+                    <!-- Time Allocation -->
+                    <div class="mw-card">
+                        <h4 class="font-bold flex items-center gap-2 mb-4"><span
+                                class="bg-amber-100 text-amber-700 p-1 rounded">⏳</span> Exposition Temporelle</h4>
+                        <p class="text-xs text-slate-500 mb-4">Moyenne historique du temps passé par classe d'actif.</p>
+                        <div class="h-64 relative"><canvas id="timeAllocationChart"></canvas></div>
+                    </div>
+                </div>
+                <!-- Benchmarks -->
+                <div class="mw-card">
+                    <h4 class="font-bold flex items-center gap-2 mb-4"><span
+                            class="bg-green-100 text-green-700 p-1 rounded">🚀</span> Comparatif Benchmarks</h4>
+                    <p class="text-xs text-slate-500 mb-4">Performance relative ajustée à la volatilité.</p>
+                    <div id="benchmark-list" class="flex flex-col gap-3"></div>
+                </div>
+            </div>
 
-            <!-- Risk Metrics -->
-            <div class="mw-card">
-                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
-                    <span
-                        style="background:#fee2e2; color:#dc2626; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">⚠️</span>
-                    Analyse de Risque
-                </h4>
-                <div style="display:grid; gap:0.75rem;">
-                    <div
-                        style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
-                        <span class="text-slate-500">VaR 99% (Monte Carlo)</span>
-                        <span id="stat-var99" class="font-bold text-slate-900">--</span>
-                    </div>
-                    <div
-                        style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
-                        <span class="text-slate-500">Beta vs SPY</span>
-                        <span id="stat-beta" class="font-bold text-slate-900">--</span>
-                    </div>
-                    <div
-                        style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
-                        <span class="text-slate-500">Vega Exposure</span>
-                        <span id="stat-vega" class="font-bold text-slate-900">--</span>
+            <!-- COMPARATIVE DRAWDOWN CHART -->
+            <div class="mw-card mt-6">
+                <h3 class="font-bold text-lg mb-4">Drawdown Comparatif (Stress Test)</h3>
+                <p class="text-xs text-slate-500 mb-4">Comparaison de la profondeur des baisses (Drawdown) entre le
+                    Portefeuille et les indices majeurs.</p>
+                <div class="h-64 relative w-full">
+                    <canvas id="drawdownComparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- MONTHLY HEATMAP -->
+            <div class="mw-card mt-6">
+                <h3 class="font-bold text-lg mb-4">Performance Mensuelle</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-center border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase">
+                                <th class="p-2 text-left">Year</th>
+                                <th class="p-2">Total</th>
+                                <th class="p-2">Jan</th>
+                                <th class="p-2">Feb</th>
+                                <th class="p-2">Mar</th>
+                                <th class="p-2">Apr</th>
+                                <th class="p-2">May</th>
+                                <th class="p-2">Jun</th>
+                                <th class="p-2">Jul</th>
+                                <th class="p-2">May</th>
+                                <th class="p-2">Sep</th>
+                                <th class="p-2">Oct</th>
+                                <th class="p-2">Nov</th>
+                                <th class="p-2">Dec</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthly-heatmap-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- EDUCATIONAL METRICS -->
+            <div class="mt-8">
+                <h3 class="font-bold text-lg mb-4 text-indigo-800">📚 Comprendre vos Métriques (Expert)</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Sharpe -->
+                    <div class="mw-card border-l-4 border-purple-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold">Sharpe Ratio</h4>
+                                <p class="text-xs text-slate-500">Rendement obtenu pour chaque unité de risque.</p>
+                            </div>
+                            <div class="text-xl font-bold text-purple-600" id="edu-sharpe">--</div>
+                        </div>
+                        <div class="mt-3 text-sm bg-slate-50 p-2 rounded">
+                            <ul class="space-y-1 text-xs">
+                                <li>🏦 <strong>Standard Marché:</strong> 0.5 - 1.0</li>
+                                <li>🏆 <strong>Hedge Funds Top Tier:</strong> > 1.5</li>
+                                <li id="verdict-sharpe" class="font-bold text-emerald-600">--</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div id="container-maxpain" style="margin-top:1rem;">
-                        <div style="font-size:0.85rem; font-weight:600; color:#64748b; margin-bottom:0.5rem;">Points
-                            Douleur Max (Positions)</div>
-                        <div id="list-maxpain" style="display:flex; flex-direction:column; gap:0.5rem;">
-                            <!-- JS populated -->
+                    <!-- Max Drawdown -->
+                    <div class="mw-card border-l-4 border-rose-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold">Max Drawdown (DD)</h4>
+                                <p class="text-xs text-slate-500">Pire baisse historique du sommet au creux.</p>
+                            </div>
+                            <div class="text-xl font-bold text-rose-600" id="edu-dd">--</div>
+                        </div>
+                        <div class="mt-3 text-sm bg-slate-50 p-2 rounded">
+                            <ul class="space-y-1 text-xs">
+                                <li>⚠️ <strong>Danger Zone:</strong> > -20%</li>
+                                <li>🛡️ <strong>Standard Conservateur:</strong>
+                                    < -15%</li>
+                                <li id="verdict-dd" class="font-bold text-emerald-600">--</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- VaR (Estimated) -->
+                    <div class="mw-card border-l-4 border-amber-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold">VaR (Value at Risk) 95%</h4>
+                                <p class="text-xs text-slate-500">Perte max attendue sur 1 jour (95% confiance).</p>
+                            </div>
+                            <div class="text-xl font-bold text-amber-600" id="edu-var">--</div>
+                        </div>
+                        <div class="mt-3 text-sm bg-slate-50 p-2 rounded">
+                            <p class="text-xs">Si VaR = -2%, cela signifie que 19 jours sur 20, la perte ne dépassera
+                                pas 2%.</p>
+                        </div>
+                    </div>
+
+                    <!-- Winrate -->
+                    <div class="mw-card border-l-4 border-emerald-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold">Win Rate</h4>
+                                <p class="text-xs text-slate-500">% de transactions gagnantes.</p>
+                            </div>
+                            <div class="text-xl font-bold text-emerald-600" id="edu-winrate">--</div>
+                        </div>
+                        <div class="mt-3 text-sm bg-slate-50 p-2 rounded">
+                            <ul class="space-y-1 text-xs">
+                                <li>🎲 <strong>Casino:</strong>
+                                    < 50%</li>
+                                <li>👑 <strong>Pro:</strong> 55% - 60%</li>
+                                <li id="verdict-winrate" class="font-bold text-emerald-600">--</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Radar / Allocation -->
-            <div class="mw-card">
-                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
-                    <span
-                        style="background:#f3e8ff; color:#9333ea; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">🕸️</span>
-                    Allocation Tactique
-                </h4>
-                <div style="height:250px; position:relative;">
-                    <canvas id="radarChart"></canvas>
+                <!-- SENSIBILITE (DELTA) TABLE -->
+                <div class="mw-card mt-6">
+                    <h4 class="font-bold mb-4">⚡ Sensibilité & Delta par Classe d'Actif</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-2">Classe</th>
+                                    <th class="p-2">Secteur</th>
+                                    <th class="p-2">Delta (Est.)</th>
+                                    <th class="p-2">Risque</th>
+                                    <th class="p-2 text-right">Allocation</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr>
+                                    <td class="p-2 font-bold">Crypto</td>
+                                    <td class="p-2">Blockchain</td>
+                                    <td class="p-2 text-red-600">3.5 (Explosif)</td>
+                                    <td class="p-2">🔥🔥 High</td>
+                                    <td class="p-2 text-right font-mono" id="alloc-crypto">--%</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-bold">Equity</td>
+                                    <td class="p-2">Tech / AI</td>
+                                    <td class="p-2 text-orange-600">1.8 (Agressif)</td>
+                                    <td class="p-2">🔥 Med-High</td>
+                                    <td class="p-2 text-right font-mono" id="alloc-tech">--%</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-bold">Commodities</td>
+                                    <td class="p-2">Gold / Silver</td>
+                                    <td class="p-2 text-yellow-600">0.8 (Indépendant)</td>
+                                    <td class="p-2">🛡️ Defensive</td>
+                                    <td class="p-2 text-right font-mono" id="alloc-gold">--%</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-bold">Cash</td>
+                                    <td class="p-2">Liquidity</td>
+                                    <td class="p-2 text-slate-400">0.0 (Neutre)</td>
+                                    <td class="p-2">✅ Risk-Free</td>
+                                    <td class="p-2 text-right font-mono" id="alloc-cash">--%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <!-- Region Allocation Container -->
-                <div id="region-allocation" style="margin-top:1rem;"></div>
             </div>
+        </div>
 
-            <!-- Benchmarks -->
+        <!-- TAB: POSITIONS -->
+        <div id="tab-positions" class="tab-content hidden">
             <div class="mw-card">
-                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
-                    <span
-                        style="background:#dcfce7; color:#16a34a; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">🚀</span>
-                    Performance Relative & Stabilité
-                </h4>
-                <div id="benchmark-list" style="display:flex; flex-direction:column; gap:0.75rem;">
-                    <!-- JS populated -->
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-lg flex items-center gap-2"><i
+                            class="fa-solid fa-wallet text-blue-600"></i> Positions Courantes</h3>
+                    <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Fin de Période</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                                <th class="px-4 py-3">Symbole</th>
+                                <th class="px-4 py-3">Classe d'Actif / Région</th>
+                                <th class="px-4 py-3 text-right">Qté</th>
+                                <th class="px-4 py-3 text-right">Prix Moyen</th>
+                                <th class="px-4 py-3 text-right">Prix Actuel</th>
+                                <th class="px-4 py-3 text-right">P&L Latent</th>
+                                <th class="px-4 py-3 text-right">Poids %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-table-body">
+                            <!-- JS populated -->
+                            <tr>
+                                <td colspan="7" class="text-center py-8 text-slate-400">Sélectionnez une période pour
+                                    voir les positions finales.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <!-- Event Calendar -->
+        <!-- TAB: LOGS -->
+        <div id="tab-logs" class="tab-content hidden">
             <div class="mw-card">
-                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
-                    <span
-                        style="background:#dbeafe; color:#2563eb; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">📅</span>
-                    Calendrier des Risques
-                </h4>
-                <div id="event-calendar-list" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+                <h3 class="font-bold text-lg mb-6 flex items-center gap-2"><i
+                        class="fa-solid fa-list-check text-slate-600"></i> Journal d'Exécution</h3>
+                <p class="text-sm text-slate-500 mb-4">Liste des 100 dernières actions effectuées sur la période
+                    sélectionnée.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                                <th class="px-4 py-3">Date</th>
+                                <th class="px-4 py-3">Symbole</th>
+                                <th class="px-4 py-3">Action</th>
+                                <th class="px-4 py-3 text-right">Prix</th>
+                                <th class="px-4 py-3 text-right">Qté</th>
+                                <th class="px-4 py-3 text-right">P&L Réalisé</th>
+                                <th class="px-4 py-3">Raison / Algo Note</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body">
+                            <!-- JS populated -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
+        </div>
+
+        <!-- TAB: RISK -->
+        <div id="tab-risk" class="tab-content hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="mw-card">
+                    <h3 class="font-bold text-lg mb-4">Métriques de Risque (Expliquées)</h3>
+                    <div class="space-y-6">
+                        <div class="border-b border-slate-100 pb-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700">VaR 99% (Value at Risk)</span>
+                                <span id="stat-var99" class="font-bold bg-slate-100 px-2 rounded">--</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                <strong>Pédagogie:</strong> Perte maximale journalière estimée avec 99% de confiance. Si
+                                le chiffre est -2%, cela signifie que statistiquement, le portefeuille ne devrait pas
+                                perdre plus de 2% en un jour (sauf cygne noir).
+                            </p>
+                        </div>
+                        <div class="border-b border-slate-100 pb-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700">Beta Portfolio</span>
+                                <span id="stat-beta" class="font-bold bg-slate-100 px-2 rounded">--</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                <strong>Pédagogie:</strong> Mesure la volatilité par rapport au SPY. Un Beta de 0.5
+                                signifie que si le marché baisse de 1%, le portefeuille ne baisse que de 0.5%
+                                (Théoriquement). < 1 est défensif. </p>
+                        </div>
+                        <div class="border-b border-slate-100 pb-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700">Vega (Sensibilité Vol)</span>
+                                <span id="stat-vega" class="font-bold bg-slate-100 px-2 rounded">--</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                <strong>Pédagogie:</strong> Impact d'une hausse de 1% de la volatilité implicite (VIX)
+                                sur le portefeuille. Positif = on gagne de l'argent quand la peur monte.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="mw-card">
+                        <h3 class="font-bold text-lg mb-4">Max Pain (Options OpEx)</h3>
+                        <p class="text-xs text-slate-500 mb-3">Niveaux de prix où les vendeurs d'options (Smart Money)
+                            gagnent le plus. Le prix tend vers ces niveaux à l'expiration.</p>
+                        <div id="container-maxpain">
+                            <div id="list-maxpain" class="flex flex-col gap-2"></div>
+                        </div>
+                    </div>
+                    <div class="mw-card">
+                        <h3 class="font-bold text-lg mb-4">Calendrier Evenements</h3>
+                        <div id="event-calendar-list" class="flex flex-col gap-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: STRATEGY -->
+        <div id="tab-strategy" class="tab-content hidden">
+            <div class="mw-card prose max-w-none text-slate-700">
+                <h3 class="font-bold text-2xl text-slate-900 mb-6">Stratégie: Adaptive Fractal Multi-Asset</h3>
+
+                <div class="p-4 bg-blue-50 border-l-4 border-blue-500 mb-6 rounded-r-lg">
+                    <h4 class="font-bold text-blue-900 m-0">Philosophie d'Investissement</h4>
+                    <p class="text-sm text-blue-800 mt-2">Le marché change de "Régime" (Bull, Bear, Volatil). Une
+                        stratégie statique (60/40) échoue quand corrélations convergent vers 1. Notre stratégie s'adapte
+                        dynamiquement.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8 mt-8">
+                    <div>
+                        <div class="bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center text-xl mb-4">
+                            🛡️</div>
+                        <h4 class="font-bold text-lg mb-2">1. Défense (Le Bouclier)</h4>
+                        <p class="text-sm mb-2">Avant d'attaquer, on protège.</p>
+                        <ul class="text-xs list-disc pl-4 space-y-1 text-slate-600">
+                            <li>Analyse VIX + SPY Trend journalièrement.</li>
+                            <li>Si "Crash Mode": Vente Actions -> Cash/Or.</li>
+                            <li>Stop Loss dynamique (ATR) sur chaque position.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center text-xl mb-4">
+                            ⚔️</div>
+                        <h4 class="font-bold text-lg mb-2">2. Attaque (Le Glaive)</h4>
+                        <p class="text-sm mb-2">On cherche le Momentum.</p>
+                        <ul class="text-xs list-disc pl-4 space-y-1 text-slate-600">
+                            <li>Scan 50+ actifs (US, EU, HK, Crypto).</li>
+                            <li>Score: Momentum + Faible Volatilité.</li>
+                            <li>Entrée progressive (DCA) pour lisser le prix.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center text-xl mb-4">
+                            ⚖️</div>
+                        <h4 class="font-bold text-lg mb-2">3. Équilibre (La Balance)</h4>
+                        <p class="text-sm mb-2">Allocation Tactique.</p>
+                        <ul class="text-xs list-disc pl-4 space-y-1 text-slate-600">
+                            <li>Pondération par le risque (Parité de Risque).</li>
+                            <li>Rotation sectorielle (Tech vs Energie vs Or).</li>
+                            <li>Exposition Multi-Devises (USD, EUR, HKD).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: TIMELINE -->
+        <div id="tab-timeline" class="tab-content hidden">
+            <div class="mw-card">
+                <h3 class="font-bold text-lg mb-6 flex items-center gap-2"><i
+                        class="fa-solid fa-clock-rotate-left text-purple-600"></i> Chronologie des Décisions</h3>
+                <p class="text-sm text-slate-500 mb-6">Suivi chronologique des changements de régimes (Pivots),
+                    détections de panique et signaux systémiques.</p>
+                <div id="timeline-container" class="space-y-4">
+                    <!-- JS Populated -->
+                    <div class="text-center text-slate-400 py-8">Chargement des événements...</div>
+                </div>
+            </div>
+        </div>
 
         </div>
-    </div>
+        </div>
+
+        <!-- TAB: METHODOLOGIE -->
+        <div id="tab-methodology" class="tab-content hidden">
+            <div class="mw-card">
+                <h2 class="text-2xl font-bold mb-6 text-indigo-800">🔬 Méthodologie "Adaptive Fractal"</h2>
+
+                <!-- Diagramme Global -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-lg mb-4">Architecture du Système</h3>
+                    <div class="mermaid text-center bg-slate-50 p-4 rounded-lg">
+                        graph TD
+                        DATA[1. Data Ingestion] -->|Clean & Adjust| UNIVERSE[2. Universe Discovery]
+                        UNIVERSE -->|Filter Liquidity & Vol| CANDIDATES[3. Candidats]
+                        CANDIDATES -->|Fractal Dimension V| SIGNAL{4. Signal Generation}
+                        SIGNAL -->|Trend H>0.6| BULL[Bull Regime]
+                        SIGNAL -->|MeanRev H<0.4| BEAR[Bear Regime] SIGNAL -->|Chaos V~1.5| NEUTRAL[Cash / Hedging]
+                            BULL --> ALLOC[5. Allocation & Risk Parity]
+                            BEAR --> ALLOC
+                            NEUTRAL --> ALLOC
+                            ALLOC --> EXEC[6. Execution]
+                    </div>
+                    <p class="text-sm text-slate-500 mt-2 text-center">Diagramme de flux complet du moteur de décision.
+                    </p>
+                </div>
+
+                <!-- Section Découverte -->
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 text-blue-700">1. Découverte de l'Univers</h3>
+                        <p class="text-slate-600 mb-4 text-sm">Le système scanne dynamiquement +5000 ETFs et Actions. Il
+                            ne se base pas sur une liste statique, mais "découvre" les actifs qui bougent.</p>
+                        <ul class="list-disc pl-5 text-sm space-y-2 text-slate-700">
+                            <li><strong>Liquidité:</strong> Volume quotidien > $10M.</li>
+                            <li><strong>Cohérence:</strong> Pas de penny stocks.</li>
+                            <li><strong>Secteurs:</strong> Focus sur Tech, Industrial, Commodities.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-900 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto">
+                        // Go Code snippet (Simplified)
+                        <br>func ScanUniverse() []Symbol {
+                        <br> universe := []Symbol{}
+                        <br> for _, s := range AllSymbols {
+                        <br> if s.Volume > 10_000_000 && s.Price > 5 {
+                        <br> universe = append(universe, s)
+                        <br> }
+                        <br> }
+                        <br> return universe
+                        <br>}
+                    </div>
+                </div>
+
+                <!-- Section Fractal -->
+                <div class="mt-8 mb-8">
+                    <h3 class="font-bold text-lg mb-2 text-purple-700">2. Le Cœur : Dimension Fractale (Hurst)</h3>
+                    <p class="text-slate-600 mb-4">Nous n'utilisons pas de moyennes mobiles (trop lentes). Nous mesurons
+                        la "rugosité" de la courbe de prix.</p>
+
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-emerald-50 p-4 rounded border-l-4 border-emerald-500">
+                            <div class="font-bold text-emerald-800">Trend (H > 0.6)</div>
+                            <div class="text-xs text-emerald-700 mt-2">Le mouvement va continuer. On achète les
+                                pullbacks.</div>
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded border-l-4 border-amber-500">
+                            <div class="font-bold text-amber-800">Chaos (H ~ 0.5)</div>
+                            <div class="text-xs text-amber-700 mt-2">Mouvement aléatoire ("Brownian Motion"). On reste
+                                Cash.</div>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded border-l-4 border-rose-500">
+                            <div class="font-bold text-rose-800">Mean Reversion (H < 0.4)</div>
+                                    <div class="text-xs text-rose-700 mt-2">Le prix va revenir à sa moyenne. On short
+                                        les extensions.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Management -->
+                    <div class="mt-8 border-t border-slate-100 pt-6">
+                        <h3 class="font-bold text-lg mb-4 text-red-700">3. Gestion des Risques (Emergency Protocols)
+                        </h3>
+                        <div class="mermaid text-center bg-slate-50 p-4 rounded-lg">
+                            stateDiagram-v2
+                            [*] --> Normal
+                            Normal --> VolatilitySpike: VIX > 25
+                            VolatilitySpike --> DeRisking: Sell 50%
+                            DeRisking --> Cash: VIX > 40
+                            Cash --> Normal: VIX < 20 Normal --> DrawdownProtocol: DD > 8%
+                                DrawdownProtocol --> HardStop: DD > 15%
+                                HardStop --> [*]: Liquidation Totale
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+    </main>
 
     <script src="../../common/js/data-loader.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => loadData('current'));
+        // Tab Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active', 'bg-white', 'text-blue-600', 'shadow-sm'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                // Reset styles
+                if (!el.classList.contains('active')) {
+                    el.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                }
+            });
+
+            const btn = document.querySelector(`[data-tab="${tabId}"]`);
+            if (btn) btn.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+
+            if (tabId === 'methodology') {
+                mermaid.init();
+            }
+        }
+
+        // Handle Period Buttons
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                // Remove active from all
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600'));
+                this.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Default to Current (YTD)
+            loadData('current');
+            mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+        });
     </script>
 </body>
 
