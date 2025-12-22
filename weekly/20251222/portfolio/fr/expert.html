@@ -4,1067 +4,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Watch | Portefeuille Systematic TSS - Expert</title>
-    <meta property="og:title" content="💼 Portefeuille Quantitatif - Performance Live">
-    <meta property="og:description" content="+32.9% YTD | Sharpe 1.19 | Stratégie Opportunistic Multi-Asset">
-
+    <title>Market Watch | Portefeuille Expert - Data Live</title>
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
     <link rel="stylesheet" href="../../assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .stat-card {
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .mw-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .hero-stat {
             text-align: center;
             padding: 1.5rem;
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             border-radius: 16px;
-            transition: transform 0.2s;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-card .value {
-            font-size: 2rem;
+        .hero-stat .value {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
             font-weight: 800;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            word-break: break-all;
         }
 
-        .stat-card .label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+        .hero-stat .label {
+            font-size: 0.8rem;
+            color: #64748b;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 4px;
         }
 
-        .stat-card.positive .value {
-            background: linear-gradient(135deg, #10b981, #059669);
-            -webkit-background-clip: text;
-            background-clip: text;
-        }
-
-        .stat-card.negative .value {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            -webkit-background-clip: text;
-            background-clip: text;
-        }
-
-        .chart-container {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-            margin-bottom: 2rem;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .period-tabs {
-            display: flex;
-            gap: 4px;
-            background: #f1f5f9;
-            padding: 4px;
-            border-radius: 8px;
-        }
-
         .period-tab {
             padding: 6px 12px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
             border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
             transition: all 0.2s;
-            color: var(--text-muted);
         }
 
         .period-tab:hover {
-            background: white;
+            background: #e2e8f0;
         }
 
         .period-tab.active {
-            background: white;
-            color: var(--accent);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .strategy-explainer {
-            background: linear-gradient(135deg, #eff6ff, #dbeafe);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .strategy-step {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
-        }
-
-        .strategy-step:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .step-number {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            background: #2563eb;
             color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .trade-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        .trade-table th {
-            background: #f8fafc;
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .trade-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .trade-table tr:hover {
-            background: #f8fafc;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .badge.buy {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .badge.sell {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .badge.rebalance {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .position-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .position-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .scenario-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 2px solid #e2e8f0;
-        }
-
-        .scenario-card.active {
-            border-color: #2563eb;
-            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
-        }
-
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            text-align: center;
-        }
-
-        .benchmark-item {
-            padding: 1rem;
-            border-radius: 12px;
-            background: #f8fafc;
-        }
-
-        .section-intro {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            line-height: 1.7;
-        }
-
-        @media (max-width: 768px) {
-            .comparison-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 
 <body>
-    <header class="mobile-header">
-        <a href="#" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH</a>
-        <button class="mobile-menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i
-                class="fa-solid fa-bars"></i></button>
-    </header>
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <h1 style="font-size:2rem; font-weight:800; margin-bottom:2rem; text-align:center;">📊 Portefeuille Expert
+            (Live)</h1>
 
-    <div class="app-layout">
-        <aside class="sidebar-nav" id="sidebar">
-            <a href="../../../../index.html" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW">
-                MARKET WATCH</a>
-            <nav style="flex:1; overflow-y:auto;">
-                <div class="nav-section">
-                    <div class="nav-title">📊 Portefeuille</div>
-                    <a href="#overview" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Vue
-                        d'ensemble</a>
-                    <a href="#strategy" class="nav-link"><i class="fa-solid fa-brain"></i> Stratégie</a>
-                    <a href="#equity" class="nav-link"><i class="fa-solid fa-chart-area"></i> Equity Curve</a>
-                    <a href="#drawdown" class="nav-link"><i class="fa-solid fa-arrow-trend-down"></i> Drawdown</a>
-                    <a href="#positions" class="nav-link"><i class="fa-solid fa-wallet"></i> Positions</a>
-                    <a href="#history" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
-                    <a href="#weekly" class="nav-link"><i class="fa-solid fa-crosshairs"></i> Cette Semaine</a>
-                    <a href="#fresh" class="nav-link"><i class="fa-solid fa-rocket"></i> Partir de Zéro</a>
-                </div>
-                <div class="nav-section" style="margin-top:1rem;">
-                    <div class="nav-title">← Retour</div>
-                    <a href="../../expert/fr/index.html" class="nav-link"><i class="fa-solid fa-newspaper"></i> Rapport
-                        Hebdo</a>
-                </div>
-            </nav>
-            <div class="level-selector">
-                <a href="../beginner.html" class="level-btn">Débutant</a>
-                <a href="../intermediate.html" class="level-btn">Interm.</a>
-                <div class="level-btn active">Expert</div>
+        <!-- Top Stats -->
+        <div
+            style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:2rem;">
+            <div class="hero-stat">
+                <div class="value" id="stat-total-return">--%</div>
+                <div class="label">Performance YTD</div>
             </div>
-        </aside>
+            <div class="hero-stat">
+                <div class="value" id="stat-cagr">--%</div>
+                <div class="label">CAGR (An.)</div>
+            </div>
+            <div class="hero-stat">
+                <div class="value" id="stat-max-dd">--%</div>
+                <div class="label">Max Drawdown</div>
+            </div>
+            <div class="hero-stat">
+                <div class="value" id="stat-sharpe">--</div>
+                <div class="label">Ratio Sharpe</div>
+            </div>
+            <div class="hero-stat">
+                <div class="value" id="stat-balance">--</div>
+                <div class="label">Balance (Init. €100k)</div>
+            </div>
+        </div>
 
-        <main class="main-content">
-
-            <!-- HERO -->
-            <section id="overview" class="animate-in">
-                <div class="header-meta">Portefeuille Systematic TSS • Mise à jour 22 Décembre 2025</div>
-
-                <h1 style="font-size:2.2rem; line-height:1.2; margin:1rem 0 1.5rem;">
-                    💼 +32.9% YTD avec un Sharpe de 1.19
-                </h1>
-
-                <p class="section-intro">
-                    Performance live de notre stratégie quantitative <strong>Opportunistic Multi-Asset</strong>. Capital
-                    initial
-                    $161K, 130 trades exécutés cette année. Voici le tracking complet.
-                </p>
-
-                <!-- KEY STATS -->
-                <div
-                    style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1rem; margin-bottom:2.5rem;">
-                    <div class="stat-card positive">
-                        <div class="value">+32.9%</div>
-                        <div class="label">Total Return</div>
-                    </div>
-                    <div class="stat-card positive">
-                        <div class="value">34.3%</div>
-                        <div class="label">CAGR</div>
-                    </div>
-                    <div class="stat-card negative">
-                        <div class="value">-17.3%</div>
-                        <div class="label">Max Drawdown</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value">1.19</div>
-                        <div class="label">Sharpe Ratio</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value">29.0%</div>
-                        <div class="label">Annualized Vol</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value">130</div>
-                        <div class="label">Total Trades</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value">28.2%</div>
-                        <div class="label">Win Rate</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value">8j</div>
-                        <div class="label">Avg Hold</div>
-                    </div>
-                </div>
-
-                <!-- VS BENCHMARKS -->
-                <div class="chart-container">
-                    <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-scale-balanced text-blue"></i> vs Benchmarks
-                    </h3>
-                    <div class="comparison-grid">
-                        <div class="benchmark-item" style="background:#d1fae5;">
-                            <div style="font-weight:700;">🏆 TSS Strategy</div>
-                            <div style="font-size:1.5rem; font-weight:800; color:#059669;">+34.3%</div>
-                            <div style="font-size:0.8rem;">CAGR | DD -17.3%</div>
-                        </div>
-                        <div class="benchmark-item">
-                            <div style="font-weight:700;">🪙 Gold (GLD)</div>
-                            <div style="font-size:1.5rem; font-weight:800; color:#f59e0b;">+18.1%</div>
-                            <div style="font-size:0.8rem;">CAGR | DD -21.0%</div>
-                        </div>
-                        <div class="benchmark-item">
-                            <div style="font-weight:700;">📈 S&P 500 (SPY)</div>
-                            <div style="font-size:1.5rem; font-weight:800; color:#64748b;">+13.2%</div>
-                            <div style="font-size:0.8rem;">CAGR | DD -25.4%</div>
-                        </div>
-                    </div>
-                    <p style="margin-top:1rem; font-size:0.85rem; color:var(--text-muted);">
-                        ✅ <strong>Beats Gold</strong> de +16% en CAGR | ✅ <strong>Beats SPY</strong> de +21% en CAGR |
-                        ✅ Meilleur Sharpe que les 3
-                    </p>
-                </div>
-            </section>
-
-            <!-- STRATEGY EXPLAINER -->
-            <section id="strategy" style="margin-top:4rem;">
-                <h2>🧠 Comment fonctionne la stratégie ?</h2>
-                <p class="section-intro">
-                    La stratégie <strong>Opportunistic Multi-Asset</strong> est un système quantitatif qui navigue
-                    dynamiquement entre 6 classes d'actifs selon les conditions de marché.
-                </p>
-
-                <div class="strategy-explainer">
-                    <!-- UNIVERS -->
-                    <div class="strategy-step">
-                        <div class="step-number">1</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">🌐 Univers Dynamique Multi-Asset</h4>
-                            <p style="margin-bottom:0.5rem;">Le système construit un univers d'environ 900+ actifs
-                                classés par corrélation :</p>
-                            <div
-                                style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0.5rem; font-size:0.85rem; margin-top:0.75rem;">
-                                <div style="background:white; padding:8px 12px; border-radius:8px;">🪙
-                                    <strong>GOLD</strong> : GLD, GDX, GDXJ + mineurs
-                                </div>
-                                <div style="background:white; padding:8px 12px; border-radius:8px;">🥈
-                                    <strong>SILVER</strong> : SLV, SIL + mineurs
-                                </div>
-                                <div style="background:white; padding:8px 12px; border-radius:8px;">₿
-                                    <strong>BTC</strong> : GBTC, MSTR, COIN, MARA, RIOT, CLSK
-                                </div>
-                                <div style="background:white; padding:8px 12px; border-radius:8px;">🛢️
-                                    <strong>CRUDE</strong> : XLE, XOP + energy stocks
-                                </div>
-                                <div style="background:white; padding:8px 12px; border-radius:8px;">📈
-                                    <strong>STOCKS</strong> : Top 300 US par $ volume
-                                </div>
-                                <div style="background:white; padding:8px 12px; border-radius:8px;">⚡
-                                    <strong>LEVIER</strong> : TQQQ, SOXL, NUGT, JNUG (max 50%)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MARKET REGIME -->
-                    <div class="strategy-step">
-                        <div class="step-number">2</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">🌡️ Détection Régime de Marché (via SPY)</h4>
-                            <p style="margin-bottom:0.5rem;">Le système adapte son comportement selon le régime :</p>
-                            <ul style="font-size:0.9rem; line-height:1.8;">
-                                <li>🟢 <strong>STRONG BULL :</strong> Vol < 1.2%, ROC20> 3%, Prix > SMA50 > SMA200 →
-                                        Cash 1%, full stocks</li>
-                                <li>🟡 <strong>BULL :</strong> Vol < 1.8%, ROC20> 1%, Prix > SMA200 → Mode normal</li>
-                                <li>🔴 <strong>CHOPPY/BEAR :</strong> Vol > 2.5% OU ROC20 < -5% OU Prix < SMA200 →
-                                        <strong>Skip stocks, focus Or/Argent/Pétrole</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- SCREENING -->
-                    <div class="strategy-step">
-                        <div class="step-number">3</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">📊 Screener + Scoring Multi-Facteur</h4>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                                <div>
-                                    <p style="font-size:0.85rem; font-weight:600; margin-bottom:4px;">Filtres stricts :
-                                    </p>
-                                    <ul style="font-size:0.85rem; line-height:1.6;">
-                                        <li>Prix > SMA200</li>
-                                        <li>RSI 30-80 (hard reject > 85)</li>
-                                        <li>Momentum 10j > 1%</li>
-                                        <li>Vol < 15%, ATR% < 12%</li>
-                                        <li>RVOL > 0.5×</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <p style="font-size:0.85rem; font-weight:600; margin-bottom:4px;">Scoring :</p>
-                                    <ul style="font-size:0.85rem; line-height:1.6;">
-                                        <li>Risk = Vol × pénalité < SMA50</li>
-                                        <li>Reward = Mom60 (40%) + Mom120 (60%)</li>
-                                        <li>Bonus +50% alignement parfait</li>
-                                        <li>Bonus +30% pattern serré</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ENTRY -->
-                    <div class="strategy-step">
-                        <div class="step-number">4</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">📈 Entrée Progressive (DCA 2 étapes)</h4>
-                            <ul style="font-size:0.9rem; line-height:1.8;">
-                                <li><strong>Entry 1/2 :</strong> 50% de la position au signal initial (6% du
-                                    portefeuille par défaut)</li>
-                                <li><strong>Entry 2/2 :</strong> 50% restant quelques jours après si setup confirme
-                                </li>
-                                <li>📊 Max 15 positions | Position size réduite après stops consécutifs (-20%/stop)
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- RISK MANAGEMENT -->
-                    <div class="strategy-step">
-                        <div class="step-number">5</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">🛡️ Gestion du Risque Multi-Niveaux</h4>
-                            <ul style="font-size:0.9rem; line-height:1.8;">
-                                <li><strong>Trailing Stop ATR :</strong> 2× ATR (vol basse) → 4× ATR (vol haute)</li>
-                                <li><strong>RSI Exit à 88+ :</strong> Vente automatique surachat extrême</li>
-                                <li><strong>Profit Lock +15% :</strong> Vente de 70% pour sécuriser</li>
-                                <li><strong>Portfolio DD > 15% :</strong> 🚨 LIQUIDATION TOTALE</li>
-                                <li><strong>Leverage Cap :</strong> ETFs leviers < 50% du portefeuille</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- CIRCUIT BREAKER -->
-                    <div class="strategy-step">
-                        <div class="step-number">6</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">⚡ Circuit Breaker Progressif</h4>
-                            <p style="font-size:0.9rem; line-height:1.6; margin-bottom:0.5rem;">Si 4+ stops en 5 jours →
-                                Pause globale 5j. Si re-stop après reprise → pause × 2 (max 80 jours !)</p>
-                            <div style="background:white; padding:12px; border-radius:8px; font-size:0.85rem;">
-                                <strong>Détection Reversal :</strong> La pause peut finir plus tôt si GLD ou SPY montre
-                                un signal de reprise (Prix > SMA20 × 1.03 ET SMA20 montante).
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- REBALANCING -->
-                    <div class="strategy-step">
-                        <div class="step-number">7</div>
-                        <div>
-                            <h4 style="margin-bottom:0.5rem;">🔄 Rebalancing Actif</h4>
-                            <ul style="font-size:0.9rem; line-height:1.8;">
-                                <li>Si nouveau signal score > worst held × <strong>1.08</strong> → swap de position
-                                </li>
-                                <li>Cooldown 3 jours après stop avant re-entry sur même ticker</li>
-                                <li>En Bear/Choppy : rotation vers GOLD/SILVER/CRUDE automatique</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- EQUITY CURVE -->
-            <section id="equity" style="margin-top:4rem;">
-                <h2>📈 Equity Curve</h2>
-                <p class="section-intro">
-                    Évolution du capital depuis le 1er janvier 2025. Cliquez sur les onglets pour changer la période.
-                </p>
-
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h4 style="margin:0;"><i class="fa-solid fa-chart-area text-blue"></i> $161K → $213.9K</h4>
-                        <div class="period-tabs">
-                            <button class="period-tab active" data-period="1m">1M</button>
-                            <button class="period-tab" data-period="3m">3M</button>
-                            <button class="period-tab" data-period="6m">6M</button>
-                            <button class="period-tab" data-period="1y">1A</button>
-                            <button class="period-tab" data-period="3y">3A</button>
-                            <button class="period-tab" data-period="5y">5A</button>
-                        </div>
-                    </div>
-                    <div style="height:350px;"><canvas id="equityChart"></canvas></div>
-                </div>
-            </section>
-
-            <!-- DRAWDOWN -->
-            <section id="drawdown" style="margin-top:4rem;">
-                <h2>📉 Analyse du Drawdown</h2>
-                <p class="section-intro">
-                    Le drawdown mesure la perte maximale depuis un sommet. Notre pire moment : <strong>-17.3%</strong>
-                    en novembre 2025.
-                </p>
-
-                <div class="chart-container">
-                    <h4><i class="fa-solid fa-arrow-trend-down text-red"></i> Drawdown par Mois</h4>
-                    <div style="height:250px;"><canvas id="drawdownChart"></canvas></div>
-                </div>
-
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem;">
-                    <div class="mw-card">
-                        <h4>📊 Statistiques Drawdown</h4>
-                        <div style="font-size:0.9rem;">
-                            <div
-                                style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Max Drawdown</span><strong class="text-red">-17.3%</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Avg Drawdown</span><strong>-6.2%</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Temps en DD</span><strong>68%</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:8px 0;">
-                                <span>Recovery Time</span><strong>21 jours</strong>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mw-card" style="background:linear-gradient(135deg,#fef2f2,#fff1f2);">
-                        <h4 style="color:#dc2626;">⚠️ Pire Période</h4>
-                        <p style="font-size:0.9rem; margin-top:0.5rem;">
-                            <strong>13-20 Novembre 2025</strong><br>
-                            Liquidation forcée suite à DD portfolio > 15%. Reset complet puis reprise. Leçon : la règle
-                            des -15% fonctionne.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CURRENT POSITIONS -->
-            <section id="positions" style="margin-top:4rem;">
-                <h2>💼 Positions Actuelles</h2>
-                <p class="section-intro">
-                    13 positions ouvertes pour un total de $208.5K investis + $5.5K cash (2.6%).
-                </p>
-
-                <div class="chart-container">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
-                        <div>
-                            <h4><i class="fa-solid fa-wallet text-blue"></i> Allocation</h4>
-                            <div style="height:300px;"><canvas id="allocChart"></canvas></div>
-                        </div>
-                        <div>
-                            <h4><i class="fa-solid fa-list text-blue"></i> Détail Positions</h4>
-                            <div style="max-height:300px; overflow-y:auto; font-size:0.85rem;">
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🪙 B (Gold)</span><strong>$27,017 (12.6%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>💻 SNDK (Tech)</span><strong>$25,662 (12.0%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🪙 GLD (Gold)</span><strong>$23,941 (11.2%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🏥 UTHR (Health)</span><strong>$22,754 (10.6%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🎮 EA (Gaming)</span><strong>$20,800 (9.7%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>📈 GGLL (Lev)</span><strong>$19,640 (9.2%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>💻 WDC (Tech)</span><strong>$12,857 (6.0%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🧬 XBI (Biotech)</span><strong>$11,849 (5.5%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🔍 GOOGL</span><strong>$11,058 (5.2%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🔍 GOOG</span><strong>$11,110 (5.2%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>🪙 ALB (Gold)</span><strong>$10,941 (5.1%)</strong>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-                                    <span>💻 LITE (Tech)</span><strong>$10,771 (5.0%)</strong>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; padding:8px 0;">
-                                    <span>💵 CASH</span><strong>$5,514 (2.6%)</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TRADE HISTORY -->
-            <section id="history" style="margin-top:4rem;">
-                <h2>📜 Historique des Mouvements</h2>
-                <p class="section-intro">
-                    Les 20 derniers trades exécutés par le système. Total : 130 trades cette année.
-                </p>
-
-                <div class="chart-container" style="overflow-x:auto;">
-                    <table class="trade-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Action</th>
-                                <th>Ticker</th>
-                                <th>Prix</th>
-                                <th>Raison</th>
-                                <th>P&L</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>19 Déc</td>
-                                <td><span class="badge sell">SELL</span></td>
-                                <td>FOLD</td>
-                                <td>$14.16</td>
-                                <td>RSI Exit (93.6)</td>
-                                <td class="text-green">+$1,154</td>
-                            </tr>
-                            <tr>
-                                <td>19 Déc</td>
-                                <td><span class="badge buy">ADD</span></td>
-                                <td>SNDK</td>
-                                <td>$237.61</td>
-                                <td>Entry 2/2</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>17 Déc</td>
-                                <td><span class="badge sell">PROFIT</span></td>
-                                <td>SLV</td>
-                                <td>$55.44</td>
-                                <td>+25% Lock</td>
-                                <td class="text-green">+$2,340</td>
-                            </tr>
-                            <tr>
-                                <td>16 Déc</td>
-                                <td><span class="badge sell">PROFIT</span></td>
-                                <td>SLV</td>
-                                <td>$54.90</td>
-                                <td>+20% Lock</td>
-                                <td class="text-green">+$1,890</td>
-                            </tr>
-                            <tr>
-                                <td>15 Déc</td>
-                                <td><span class="badge buy">BUY</span></td>
-                                <td>XBI</td>
-                                <td>$122.20</td>
-                                <td>Breakout</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>15 Déc</td>
-                                <td><span class="badge buy">BUY</span></td>
-                                <td>FOLD</td>
-                                <td>$10.80</td>
-                                <td>Momentum</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>15 Déc</td>
-                                <td><span class="badge sell">STOP</span></td>
-                                <td>AAPL</td>
-                                <td>$268.50</td>
-                                <td>Stop Loss</td>
-                                <td class="text-green">+$161</td>
-                            </tr>
-                            <tr>
-                                <td>12 Déc</td>
-                                <td><span class="badge buy">ADD</span></td>
-                                <td>UTHR</td>
-                                <td>$491.77</td>
-                                <td>Entry 2/2</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>11 Déc</td>
-                                <td><span class="badge buy">BUY</span></td>
-                                <td>ALB</td>
-                                <td>$136.10</td>
-                                <td>Rotation</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>10 Déc</td>
-                                <td><span class="badge sell">RSI EXIT</span></td>
-                                <td>WBD</td>
-                                <td>$28.91</td>
-                                <td>RSI 91.3</td>
-                                <td class="text-green">+$194</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- WEEKLY SIGNALS -->
-            <section id="weekly" style="margin-top:4rem;">
-                <h2>🎯 Signaux de la Semaine</h2>
-                <p class="section-intro">
-                    <strong>Si vous suivez déjà le portefeuille :</strong> Voici les ajustements recommandés cette
-                    semaine.
-                </p>
-
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.5rem;">
-                    <div class="scenario-card active">
-                        <h4 style="color:#2563eb;"><i class="fa-solid fa-rotate"></i> Continuer le Portefeuille</h4>
-                        <p style="margin:1rem 0; font-size:0.9rem;">Vous avez déjà les positions. Cette semaine :</p>
-                        <ul style="font-size:0.85rem; padding-left:1.2rem; line-height:1.8;">
-                            <li>✅ <strong>Garder</strong> toutes les positions actuelles</li>
-                            <li>⚠️ <strong>Surveiller</strong> LUNR (volatile, beta 3.37)</li>
-                            <li>🔄 <strong>Possible rebalance</strong> si NGD dépasse +15%</li>
-                            <li>❌ <strong>Ne pas ajouter</strong> de nouvelles positions 24-26 déc</li>
-                        </ul>
-                    </div>
-                    <div class="scenario-card">
-                        <h4 style="color:#10b981;"><i class="fa-solid fa-check-circle"></i> Aucun Trade Requis</h4>
-                        <p style="margin:1rem 0; font-size:0.9rem;">Le portefeuille est bien positionné. Attendre :</p>
-                        <ul style="font-size:0.85rem; padding-left:1.2rem; line-height:1.8;">
-                            <li>📅 Après le 27 décembre pour nouvelles entrées</li>
-                            <li>📊 Les résultats du "Santa Rally" 27-31 déc</li>
-                            <li>🎯 Score composite > 0.50 pour augmenter l'exposition</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STARTING FRESH -->
-            <section id="fresh" style="margin-top:4rem; margin-bottom:4rem;">
-                <h2>🚀 Partir de Zéro Aujourd'hui</h2>
-                <p class="section-intro">
-                    <strong>Vous commencez maintenant ?</strong> Voici comment déployer un capital de $10K, $50K ou
-                    $100K selon le portefeuille actuel.
-                </p>
-
-                <div class="mw-card" style="background:linear-gradient(135deg,#eff6ff,#dbeafe); margin-bottom:2rem;">
-                    <h4>💡 Principes pour démarrer</h4>
-                    <ol style="padding-left:1.2rem; line-height:1.8; font-size:0.9rem;">
-                        <li><strong>Ne pas tout déployer d'un coup</strong> - Entrez en 2-3 tranches sur 2 semaines</li>
-                        <li><strong>Respectez la pondération</strong> - Gold ~24%, Tech ~30%, autres ~46%</li>
-                        <li><strong>Gardez 25% cash</strong> pour les opportunités de janvier</li>
-                        <li><strong>Attendez le 27 décembre</strong> pour les premières entrées (BTC expiry)</li>
-                    </ol>
-                </div>
-
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem;">
-                    <!-- $10K -->
-                    <div class="mw-card">
-                        <h4>💵 Capital $10K</h4>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">5 positions max +
-                            cash</p>
-                        <div style="font-size:0.85rem;">
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>GLD (Gold ETF)</span><strong>$2,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>GOOGL</span><strong>$1,500</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>EA</span><strong>$1,500</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>XBI</span><strong>$1,500</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>NGD (Trade idea)</span><strong>$1,000</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:6px 0;">
-                                <span>💵 CASH</span><strong>$2,500</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- $50K -->
-                    <div class="mw-card" style="border:2px solid var(--accent);">
-                        <h4>💰 Capital $50K <span class="badge buy" style="margin-left:8px;">Recommandé</span></h4>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">8-10 positions + cash
-                        </p>
-                        <div style="font-size:0.85rem;">
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>GLD (Gold)</span><strong>$6,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>SNDK (Tech)</span><strong>$5,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>GOOGL</span><strong>$5,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>EA</span><strong>$4,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>XBI</span><strong>$4,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>UTHR</span><strong>$4,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>LITE</span><strong>$3,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Trades (NGD, AAL, HL)</span><strong>$6,500</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:6px 0;">
-                                <span>💵 CASH</span><strong>$12,500</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- $100K -->
-                    <div class="mw-card">
-                        <h4>🏦 Capital $100K</h4>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Répliquer ~60% du
-                            portefeuille</p>
-                        <div style="font-size:0.85rem;">
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Gold (GLD + B)</span><strong>$15,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Tech (SNDK+WDC+LITE)</span><strong>$15,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Growth (GOOGL+EA)</span><strong>$12,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Health (UTHR+XBI)</span><strong>$10,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Leveraged (GGLL)</span><strong>$6,000</strong>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                                <span>Trades semaine</span><strong>$12,000</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:6px 0;">
-                                <span>💵 CASH</span><strong>$30,000</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mw-card" style="margin-top:2rem; background:#fef2f2; border-left:4px solid #ef4444;">
-                    <h4 style="color:#dc2626;">⚠️ Disclaimer Important</h4>
-                    <p style="font-size:0.9rem; margin-top:0.5rem; line-height:1.7;">
-                        Ces allocations sont <strong>éducatives</strong>. Passé ne prédit pas le futur. Le -17% de DD
-                        peut se reproduire. N'investissez que ce que vous pouvez perdre. Faites vos propres recherches.
-                    </p>
-                </div>
-            </section>
-
-            <footer
-                style="padding:2rem 0; text-align:center; border-top:1px solid #e2e8f0; color:var(--text-muted); font-size:0.85rem;">
-                <p><a href="../../expert/fr/index.html" style="color:var(--accent);">← Retour au Rapport Hebdo</a></p>
-                <p style="margin-top:8px;">Dernière mise à jour : 22 Décembre 2025 00:08 UTC</p>
-            </footer>
-        </main>
-
-        <!-- SIDEBAR CONTEXT -->
-        <aside class="sidebar-context">
-            <div class="mw-card" style="border:2px solid var(--success); background:#f0fdf4;">
-                <h4 style="font-size:0.85rem; margin-bottom:8px;"><i class="fa-solid fa-trophy text-green"></i>
-                    Performance</h4>
-                <div style="text-align:center;">
-                    <div style="font-size:2rem; font-weight:800; color:#059669;">+32.9%</div>
-                    <div style="font-size:0.75rem; color:var(--text-muted);">YTD 2025</div>
+        <!-- Equity Curve -->
+        <div class="mw-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="font-weight:700;">Courbe de Performance</h3>
+                <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
+                    <button class="period-tab" onclick="loadData('1w')">1S</button>
+                    <button class="period-tab" onclick="loadData('2w')">2S</button>
+                    <button class="period-tab" onclick="loadData('1m')">1M</button>
+                    <button class="period-tab" onclick="loadData('3m')">3M</button>
+                    <button class="period-tab" onclick="loadData('6m')">6M</button>
+                    <button class="period-tab" onclick="loadData('1y')">1A</button>
+                    <button class="period-tab active" onclick="loadData('current')">YTD</button>
+                    <button class="period-tab" onclick="loadData('3y')">3A</button>
+                    <button class="period-tab" onclick="loadData('5y')">5A</button>
                 </div>
             </div>
-            <div class="mw-card" style="margin-top:16px;">
-                <h4 style="font-size:0.85rem; margin-bottom:8px;">Derniers Trades</h4>
-                <div style="font-size:0.75rem;">
-                    <div style="padding:4px 0; border-bottom:1px solid #f1f5f9;">
-                        <span class="badge sell">SELL</span> FOLD +$1,154
+            <div style="height:400px; width:100%;">
+                <canvas id="equityCurveChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Detailed Metrics Grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem;">
+
+            <!-- Risk Metrics -->
+            <div class="mw-card">
+                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
+                    <span
+                        style="background:#fee2e2; color:#dc2626; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">⚠️</span>
+                    Analyse de Risque
+                </h4>
+                <div style="display:grid; gap:0.75rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
+                        <span class="text-slate-500">VaR 99% (Monte Carlo)</span>
+                        <span id="stat-var99" class="font-bold text-slate-900">--</span>
                     </div>
-                    <div style="padding:4px 0; border-bottom:1px solid #f1f5f9;">
-                        <span class="badge buy">ADD</span> SNDK
+                    <div
+                        style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
+                        <span class="text-slate-500">Beta vs SPY</span>
+                        <span id="stat-beta" class="font-bold text-slate-900">--</span>
                     </div>
-                    <div style="padding:4px 0;">
-                        <span class="badge sell">PROFIT</span> SLV +25%
+                    <div
+                        style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">
+                        <span class="text-slate-500">Vega Exposure</span>
+                        <span id="stat-vega" class="font-bold text-slate-900">--</span>
+                    </div>
+
+                    <div id="container-maxpain" style="margin-top:1rem;">
+                        <div style="font-size:0.85rem; font-weight:600; color:#64748b; margin-bottom:0.5rem;">Points
+                            Douleur Max (Positions)</div>
+                        <div id="list-maxpain" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <!-- JS populated -->
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">
-                "Safe High Beta = momentum + risk management strict"
+
+            <!-- Radar / Allocation -->
+            <div class="mw-card">
+                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
+                    <span
+                        style="background:#f3e8ff; color:#9333ea; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">🕸️</span>
+                    Allocation Tactique
+                </h4>
+                <div style="height:250px; position:relative;">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <!-- Region Allocation Container -->
+                <div id="region-allocation" style="margin-top:1rem;"></div>
             </div>
-        </aside>
+
+            <!-- Benchmarks -->
+            <div class="mw-card">
+                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
+                    <span
+                        style="background:#dcfce7; color:#16a34a; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">🚀</span>
+                    Performance Relative & Stabilité
+                </h4>
+                <div id="benchmark-list" style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <!-- JS populated -->
+                </div>
+            </div>
+
+            <!-- Event Calendar -->
+            <div class="mw-card">
+                <h4 style="display:flex; align-items:center; margin-bottom:1rem; font-weight:700;">
+                    <span
+                        style="background:#dbeafe; color:#2563eb; padding:0.25rem 0.5rem; border-radius:0.375rem; margin-right:0.75rem;">📅</span>
+                    Calendrier des Risques
+                </h4>
+                <div id="event-calendar-list" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+            </div>
+
+        </div>
     </div>
 
+    <script src="../../common/js/data-loader.js"></script>
     <script>
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', function () {
-            document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
-            this.classList.add('active');
-            if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
-        }));
-
-        Chart.defaults.color = '#64748b';
-        Chart.defaults.font.family = "'Inter', sans-serif";
-
-        // EQUITY CURVE DATA
-        const equityData = {
-            '1m': { labels: ['1/12', '5/12', '8/12', '10/12', '12/12', '15/12', '17/12', '19/12'], values: [200943, 204236, 202457, 208382, 204080, 204051, 202057, 213975] },
-            '3m': { labels: ['1 Oct', '15 Oct', '1 Nov', '15 Nov', '1 Déc', '15 Déc', '19 Déc'], values: [205029, 215357, 225596, 186627, 200943, 204051, 213975] },
-            '6m': { labels: ['Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'], values: [172012, 171645, 200089, 220686, 198779, 213975] },
-            '1y': { labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'], values: [161000, 166305, 168749, 162241, 162229, 163588, 172012, 171645, 200089, 220686, 198779, 213975] },
-            '3y': { labels: ['2023', '2024-H1', '2024-H2', '2025-H1', '2025-H2'], values: [100000, 120000, 145000, 161000, 213975] },
-            '5y': { labels: ['2021', '2022', '2023', '2024', '2025'], values: [80000, 95000, 110000, 145000, 213975] }
-        };
-
-        let equityChart = new Chart(document.getElementById('equityChart'), {
-            type: 'line',
-            data: {
-                labels: equityData['1m'].labels,
-                datasets: [{
-                    label: 'Equity ($)',
-                    data: equityData['1m'].values,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37,99,235,0.12)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#2563eb',
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: (ctx) => '$' + ctx.raw.toLocaleString() } }
-                },
-                scales: {
-                    y: { ticks: { callback: (v) => '$' + (v / 1000).toFixed(0) + 'K' }, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-
-        // Period tabs
-        document.querySelectorAll('.period-tab').forEach(tab => {
-            tab.addEventListener('click', function () {
-                document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                const period = this.dataset.period;
-                equityChart.data.labels = equityData[period].labels;
-                equityChart.data.datasets[0].data = equityData[period].values;
-                equityChart.update();
-            });
-        });
-
-        // DRAWDOWN CHART
-        new Chart(document.getElementById('drawdownChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
-                datasets: [{
-                    label: 'Drawdown',
-                    data: [-4.8, -7.1, -5.2, -6.3, -8.9, -3.2, -2.1, -4.5, -2.8, -4.2, -17.3, -3.1],
-                    backgroundColor: '#ef4444',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { ticks: { callback: (v) => v + '%' }, grid: { color: '#f1f5f9' }, max: 0 },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-
-        // ALLOCATION CHART
-        new Chart(document.getElementById('allocChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Gold (B+GLD+ALB)', 'Tech (SNDK+WDC+LITE)', 'Health (UTHR+XBI)', 'Growth (GOOGL+EA)', 'Leveraged (GGLL)', 'Cash'],
-                datasets: [{
-                    data: [28.9, 23.0, 16.1, 19.9, 9.2, 2.6],
-                    backgroundColor: ['#f59e0b', '#2563eb', '#10b981', '#8b5cf6', '#ef4444', '#94a3b8'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
-                cutout: '55%'
-            }
-        });
+        document.addEventListener('DOMContentLoaded', () => loadData('current'));
     </script>
 </body>
 
