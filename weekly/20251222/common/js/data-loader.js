@@ -56,7 +56,7 @@ function updateStats(stats) {
 
     // Update balance if needed
     if (document.getElementById('stat-balance')) {
-        document.getElementById('stat-balance').innerText = '$' + Math.round(stats.final_balance).toLocaleString();
+        document.getElementById('stat-balance').innerText = '€' + Math.round(stats.final_balance).toLocaleString();
     }
 }
 
@@ -102,7 +102,7 @@ function updateChart(curveData) {
                     intersect: false,
                     callbacks: {
                         label: function (context) {
-                            return ' $' + context.parsed.y.toLocaleString();
+                            return ' €' + context.parsed.y.toLocaleString();
                         }
                     }
                 }
@@ -123,7 +123,7 @@ function updateChart(curveData) {
                     grid: { color: '#f1f5f9' },
                     ticks: {
                         callback: function (value) {
-                            return '$' + value.toLocaleString();
+                            return '€' + value.toLocaleString();
                         }
                     }
                 }
