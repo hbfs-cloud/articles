@@ -58,6 +58,28 @@ function updateStats(stats) {
     if (document.getElementById('stat-balance')) {
         document.getElementById('stat-balance').innerText = '€' + Math.round(stats.final_balance).toLocaleString();
     }
+
+    // Update Risk Metrics
+    if (stats.risk_metrics) {
+        updateElement('stat-var99', '-' + Math.abs(stats.risk_metrics.var_99_monte_carlo_pct).toFixed(2) + '%'); // Display as negative loss
+        updateElement('stat-beta', stats.risk_metrics.beta.toFixed(2));
+        updateElement('stat-vega', stats.risk_metrics.greeks.vega.toFixed(2));
+        updateElement('stat-maxpain', '$' + stats.risk_metrics.max_pain_spy.toFixed(0));
+    }
+
+    // Update Event Calendar
+    const eventList = document.getElementById('event-calendar-list');
+    if (eventList && stats.event_calendar) {
+        eventList.innerHTML = stats.event_calendar.map(evt => `
+            <div class="flex items-center justify-between p-3 rounded-lg ${evt.impact === 'High' ? 'bg-red-50 border border-red-100' : 'bg-gray-50 border border-gray-100'}">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold ${evt.impact === 'High' ? 'text-red-600' : 'text-gray-500'} uppercase tracking-wider">${evt.date}</span>
+                    <span class="text-sm font-semibold text-gray-900">${evt.event}</span>
+                </div>
+                <span class="text-xs font-bold px-2 py-1 rounded-full ${evt.impact === 'High' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-700'}">${evt.impact}</span>
+            </div>
+        `).join('');
+    }
 }
 
 function updateChart(curveData) {
