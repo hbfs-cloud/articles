@@ -104,6 +104,91 @@ function updateStats(stats) {
             </div>
         `).join('');
     }
+
+    // Update Radar Chart
+    if (stats.allocation_radar && document.getElementById('radarChart')) {
+        const ctxRadar = document.getElementById('radarChart');
+        if (window.radarChartInstance) window.radarChartInstance.destroy();
+
+        window.radarChartInstance = new Chart(ctxRadar, {
+            type: 'radar',
+            data: {
+                labels: Object.keys(stats.allocation_radar),
+                datasets: [{
+                    label: 'Allocation %',
+                    data: Object.values(stats.allocation_radar),
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#6366f1',
+                    pointRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    r: {
+                        ticks: { display: false, backdropColor: 'transparent' },
+                        grid: { color: '#e2e8f0' },
+                        angleLines: { color: '#e2e8f0' },
+                        suggestedMin: 0
+                    }
+                }
+            }
+        });
+    }
+
+    // Update Benchmarks & Stability
+    if (stats.benchmarks) {
+        const benchList = document.getElementById('benchmark-list');
+        if (benchList) {
+            const portRet = stats.total_return_pct;
+            const portVol = stats.risk_metrics.volatility_annualized;
+
+            let html = `
+             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:0.5rem; font-size:0.75rem; font-weight:bold; color:#64748b; margin-bottom:0.5rem; padding-bottom:0.25rem; border-bottom:1px solid #f1f5f9;">
+                <span>Asset</span>
+                <span style="text-align:right;">Return</span>
+                <span style="text-align:right;">Vol (Risk)</span>
+             </div>
+             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:0.5rem; background:#eff6ff; padding:0.5rem; border-radius:0.375rem; border:1px solid #dbeafe; margin-bottom:0.5rem; align-items:center;">
+                <span style="color:#1d4ed8; font-weight:bold;">Portfolio</span>
+                <span style="text-align:right; color:#1d4ed8; font-weight:bold;">${portRet > 0 ? '+' : ''}${portRet.toFixed(1)}%</span>
+                <span style="text-align:right; color:#334155; font-weight:bold;">${portVol.toFixed(1)}%</span>
+             </div>
+             `;
+
+            const refs = ['SPY', 'GLD', 'BTC-USD', 'SI=F', 'CL=F'];
+            const inflation = { sym: 'Inflation (CPI)', ret: 2.5, vol: 1.2 };
+
+            const list = refs.map(sym => {
+                const d = stats.benchmarks[sym];
+                return d ? { sym, ret: d.return_pct, vol: d.volatility_pct } : null;
+            }).filter(x => x);
+            list.push(inflation);
+
+            list.forEach(item => {
+                const symName = item.sym === 'BTC-USD' ? 'Bitcoin' : (item.sym === 'GLD' ? 'Gold' : (item.sym === 'SPY' ? 'S&P 500' : (item.sym === 'SI=F' ? 'Silver' : (item.sym === 'CL=F' ? 'Crude Oil' : item.sym))));
+                const alpha = portRet - item.ret;
+                const alphaColor = alpha >= 0 ? '#16a34a' : '#ef4444';
+                const alphaSign = alpha >= 0 ? '+' : '';
+
+                html += `
+                 <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:0.5rem; padding:0.25rem 0.5rem; align-items:center; font-size:0.85rem;">
+                    <span style="font-weight:500; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${symName}</span>
+                    <div style="text-align:right; display:flex; flex-direction:column;">
+                        <span style="color:#0f172a;">${item.ret > 0 ? '+' : ''}${item.ret.toFixed(1)}%</span>
+                        <span style="font-size:0.7rem; color:${alphaColor}; font-family:monospace;">α ${alphaSign}${alpha.toFixed(1)}%</span>
+                    </div>
+                    <span style="text-align:right; color:#64748b; font-family:monospace;">${item.vol.toFixed(1)}%</span>
+                 </div>`;
+            });
+
+            benchList.innerHTML = html;
+        }
+    }
 }
 
 function updateChart(curveData) {
