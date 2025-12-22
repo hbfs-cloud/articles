@@ -1,7 +1,7 @@
 
 let equityChartInstance = null;
 let currentCurrencyRate = 1.0; // Default USD
-let currentCurrencySymbol = "$";
+let currentCurrencySymbol = "€";
 
 document.addEventListener('DOMContentLoaded', () => {
     // Load default period (1Y)
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadPeriod(period) {
     try {
-        const response = await fetch(`../../common/data/portfolio_${period}.json`);
+        const response = await fetch(`../../common/data/portfolio_${period}.json?v=${new Date().getTime()}`);
         if (!response.ok) throw new Error("Data not found");
 
         const data = await response.json();
@@ -282,3 +282,4 @@ function updateChart(curveData) {
         }
     });
 }
+window.loadData = loadPeriod;
