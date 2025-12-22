@@ -25,6 +25,7 @@
             font-size: 2.5rem;
             font-weight: 800;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -532,36 +533,32 @@
             <section id="portfolio" style="margin-top:4rem;">
                 <h2><span class="emoji-badge">💼</span>Portefeuille Systematic TSS</h2>
                 <p class="section-intro">
-                    Performance live de notre stratégie quantitative. <strong>Capital $161K</strong>, backtest depuis
-                    janvier 2025.
+                    Performance live de notre stratégie quantitative "Opportunistic Multi-Asset". <strong>Capital de
+                        base $100,000</strong>.
                 </p>
 
                 <!-- STATS GRID -->
                 <div
                     style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1rem; margin-bottom:2rem;">
                     <div class="hero-stat">
-                        <div class="value">+32.9%</div>
+                        <div class="value" id="stat-total-return">...</div>
                         <div class="label">Total Return</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="value">34.3%</div>
+                        <div class="value" id="stat-cagr">...</div>
                         <div class="label">CAGR</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="value">-17.3%</div>
+                        <div class="value" id="stat-max-dd">...</div>
                         <div class="label">Max DD</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="value">1.19</div>
+                        <div class="value" id="stat-sharpe">...</div>
                         <div class="label">Sharpe</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="value">28.2%</div>
-                        <div class="label">Win Rate</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="value">130</div>
-                        <div class="label">Trades</div>
+                        <div class="value" id="stat-balance">...</div>
+                        <div class="label">Balance</div>
                     </div>
                 </div>
 
@@ -569,16 +566,30 @@
                 <div class="chart-card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                         <h4 style="margin:0;"><i class="fa-solid fa-chart-area text-blue"></i> Equity Curve</h4>
-                        <div class="period-tabs" style="display:flex; gap:4px;">
-                            <button class="period-tab active" data-period="1m">1M</button>
-                            <button class="period-tab" data-period="3m">3M</button>
-                            <button class="period-tab" data-period="6m">6M</button>
-                            <button class="period-tab" data-period="1y">1A</button>
-                            <button class="period-tab" data-period="3y">3A</button>
-                            <button class="period-tab" data-period="5y">5A</button>
+                        <div class="period-tabs" style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <button class="period-btn"
+                                style="padding:4px 12px; border-radius:6px; font-size:0.9rem; cursor:pointer; border:none;"
+                                data-period="1m">1M</button>
+                            <button class="period-btn"
+                                style="padding:4px 12px; border-radius:6px; font-size:0.9rem; cursor:pointer; border:none;"
+                                data-period="3m">3M</button>
+                            <button class="period-btn"
+                                style="padding:4px 12px; border-radius:6px; font-size:0.9rem; cursor:pointer; border:none;"
+                                data-period="6m">6M</button>
+                            <button class="period-btn active"
+                                style="padding:4px 12px; border-radius:6px; font-size:0.9rem; cursor:pointer; border:none; background:#2563eb; color:white;"
+                                data-period="1y">1A</button>
+                            <button class="period-btn"
+                                style="padding:4px 12px; border-radius:6px; font-size:0.9rem; cursor:pointer; border:none;"
+                                data-period="3y">3A</button>
+                            <button class="period-btn"
+                                style="padding:4px 12px; border-radius:6px; font-size:0.9rem; cursor:pointer; border:none;"
+                                data-period="5y">5A</button>
                         </div>
                     </div>
-                    <div style="height:280px;"><canvas id="equityCurveChart"></canvas></div>
+                    <div style="height:350px;"><canvas id="equityCurveChart"></canvas></div>
+                    <p style="text-align:right; font-size:0.8rem; color:#94a3b8; margin-top:0.5rem;">* Performances
+                        brutes hors frais</p>
                 </div>
 
                 <!-- CURRENT ALLOCATION -->
@@ -1154,6 +1165,7 @@
             else { const u = new SpeechSynthesisUtterance(summaryText); u.lang = 'fr-FR'; u.rate = 0.95; u.onend = () => { isPlaying = false; document.getElementById('audioLabel').textContent = 'Écouter'; }; speechSynth.speak(u); isPlaying = true; document.getElementById('audioLabel').textContent = 'Pause'; }
         }
     </script>
+    <script src="../../common/js/data-loader.js"></script>
 </body>
 
 </html>
