@@ -63,8 +63,32 @@ function updateStats(stats) {
     if (stats.risk_metrics) {
         updateElement('stat-var99', '-' + Math.abs(stats.risk_metrics.var_99_monte_carlo_pct).toFixed(2) + '%'); // Display as negative loss
         updateElement('stat-beta', stats.risk_metrics.beta.toFixed(2));
-        updateElement('stat-vega', stats.risk_metrics.greeks.vega.toFixed(2));
-        updateElement('stat-maxpain', '$' + stats.risk_metrics.max_pain_spy.toFixed(0));
+        if (stats.risk_metrics.greeks) {
+            updateElement('stat-vega', stats.risk_metrics.greeks.vega.toFixed(2));
+        }
+
+        // Update Max Pain List
+        const mpList = document.getElementById('list-maxpain');
+        if (mpList && stats.risk_metrics.max_pain_list) {
+            mpList.innerHTML = stats.risk_metrics.max_pain_list.slice(0, 5).map(p => {
+                const pnlClass = p.pnl_pct >= 0 ? '#16a34a' : '#dc2626'; // Green / Red hex
+                const pnlSign = p.pnl_pct >= 0 ? '+' : '';
+                return `
+                <div style="border-bottom:1px dashed #f1f5f9; padding-bottom:4px; margin-bottom:4px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; color:#334155;">${p.flag || ''} ${p.ticker}</span>
+                        <span style="font-weight:700; color:#9333ea;">$${p.max_pain}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#64748b;">
+                        <span>Price $${p.price.toFixed(0)} <span style="font-size:0.65rem; color:#cbd5e1;">(${p.expiry.split(' ')[0] || ''})</span></span>
+                        <span style="font-weight:600; color:${pnlClass};">${pnlSign}${p.pnl_pct.toFixed(1)}%</span>
+                    </div>
+                </div>`;
+            }).join('');
+        } else {
+            // Fallback for old data structure
+            updateElement('stat-maxpain', '$' + (stats.risk_metrics.max_pain_spy || 0).toFixed(0));
+        }
     }
 
     // Update Event Calendar
