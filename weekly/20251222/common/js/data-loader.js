@@ -138,6 +138,26 @@ function updateStats(stats) {
                 }
             }
         });
+
+        // Update Regions
+        if (stats.allocation_region) {
+            const regionDiv = document.getElementById('region-allocation');
+            if (regionDiv) {
+                let rHtml = '<div style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;">';
+                const sortedR = Object.entries(stats.allocation_region).sort((a, b) => b[1] - a[1]);
+                sortedR.forEach(([r, v]) => {
+                    if (v > 0.5) {
+                        const flag = r === 'US' ? '🇺🇸' : (r === 'HK' ? '🇭🇰' : (r === 'EU' ? '🇪🇺' : (r === 'COMMOD' ? '🌍' : '')));
+                        rHtml += `
+                         <span style="font-size:0.75rem; background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0; display:flex; align-items:center;">
+                            <span style="margin-right:4px;">${flag}</span> <strong>${r}</strong> <span style="margin-left:4px; color:#0f172a;">${v.toFixed(1)}%</span>
+                         </span>`;
+                    }
+                });
+                rHtml += '</div>';
+                regionDiv.innerHTML = rHtml;
+            }
+        }
     }
 
     // Update Benchmarks & Stability
