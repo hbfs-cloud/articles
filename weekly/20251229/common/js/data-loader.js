@@ -583,7 +583,17 @@ function updatePendingOrders(positions, opportunities) {
             const sym = op.Signal.Ticker;
             const pos = posMap[sym] || posMap[sym + '.US'] || posMap[sym + '.HK'];
             const isHeld = !!pos;
-            const date = op.Signal.Date.split('T')[0];
+            const dateStr = op.Signal.Date.split('T')[0];
+            const signalDate = new Date(dateStr);
+            const todayDate = new Date();
+            // Calculate difference in days
+            const diffTime = Math.abs(todayDate - signalDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // FILTER: Only show signals less than 5 days old
+            if (diffDays > 5) return;
+
+            const date = dateStr;
             const currency = sym.includes('.HK') ? 'HK$' : (sym.includes('.PA') ? '€' : '$');
 
             if (!grouped[sym]) {
