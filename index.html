@@ -30,6 +30,7 @@
             margin-bottom: 1rem;
             background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
             /* Darker gradient for text */
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -309,8 +310,8 @@
                 actionable, and noise-free.</p>
 
             <!-- LIVE PORTFOLIO BUTTON -->
-            <a href="#" class="btn-action" id="btn-portfolio" style="margin-bottom:3rem;"><i
-                    class="fa-solid fa-chart-line"></i> View Live Portfolio</a>
+            <a href="weekly/20251229/portfolio/fr/expert.html" class="btn-action" id="btn-portfolio"
+                style="margin-bottom:3rem;"><i class="fa-solid fa-chart-line"></i> Voir Portfolio Live</a>
         </div>
     </div>
 
@@ -330,39 +331,12 @@
                     and Q1 Volatility.</p>
 
                 <div class="actions">
-                    <a href="weekly/20251229/expert/en/index.html" class="btn-read-primary" id="btn-read-en">Read Report
-                        (EN)</a>
-                    <a href="weekly/20251229/expert/fr/index.html" class="btn-read-secondary" id="btn-read-fr">Lire le
-                        Rapport (FR)</a>
+                    <a href="weekly/20251229/index.html" class="btn-read-primary" id="btn-read-fr"
+                        style="width:100%;">Lire le Rapport (Expert)</a>
                 </div>
             </div>
 
-            <!-- Previous Week (Dec 22) -->
-            <div class="report-card" style="opacity:0.9;">
-                <span class="badge"
-                    style="background:rgba(0,0,0,0.05); color:var(--text-muted); margin-bottom:1rem; display:inline-block;">Archive</span>
-                <h2 style="color:var(--text-primary);">Vol. 42 (Dec 22)</h2>
-                <div class="report-card-meta">Dec 22 - 26, 2025</div>
 
-                <p>Micron's AI Triumph, Nike's China struggles, and the Bank of Japan's historic pivot. Bitcoin expiry
-                    analysis.</p>
-
-                <div class="actions">
-                    <a href="weekly/20251222/expert/en/index.html" class="btn-read-secondary">Reference</a>
-                    <a href="weekly/20251222/expert/fr/index.html" class="btn-read-secondary">Reference (FR)</a>
-                </div>
-            </div>
-
-            <!-- Older Archive -->
-            <div class="report-card" style="opacity:0.6;">
-                <span class="badge"
-                    style="background:rgba(0,0,0,0.05); color:var(--text-muted); margin-bottom:1rem; display:inline-block;">Archive</span>
-                <h2 style="color:var(--text-secondary);">Previous Weeks</h2>
-                <p>Access the full library of past reports, performance tracking, and deep-dive thematic research.</p>
-                <div class="actions">
-                    <a href="#" class="btn-read-secondary" style="width:100%; cursor:not-allowed;">Browse Archive</a>
-                </div>
-            </div>
 
         </div>
     </div>
@@ -373,60 +347,17 @@
     </footer>
 
     <script>
-        const TEXT_CONTENT = {
-            en: {
-                hero_h1: "Institutional Intelligence.",
-                hero_p: "Weekly deep-dive analysis into Macro, Equities, and Crypto. Clear, actionable, and noise-free.",
-                card_title: "Weekly Dispatch",
-                report_meta: "Dec 29 - Jan 02, 2026 • Vol. 43",
-                card_desc: "2025 Review: The Year of Metal and Europe's Revenge. Focus on 2026 China Silver Shock and Q1 Volatility.",
-                btn_read_en: "Read Report (EN)",
-                btn_read_fr: "Lire le Rapport (FR)",
-                expert_en_link: "weekly/20251229/expert/en/index.html",
-                expert_fr_link: "weekly/20251229/expert/fr/index.html",
-                portfolio_text: "View Live Portfolio"
-            },
-            fr: {
-                hero_h1: "Intelligence Institutionnelle.",
-                hero_p: "Analyses hebdomadaires approfondies Macro, Actions et Crypto. Clair, actionnable et sans bruit.",
-                card_title: "Dépêche Hebdo",
-                report_meta: "29 Déc - 02 Jan 2026 • Vol. 43",
-                card_desc: "Bilan 2025 : L'Année du Métal et la Revanche de l'Europe. Focus sur le choc d'offre chinois (argent) et la volatilité Q1.",
-                btn_read_en: "Read Report (EN)",
-                btn_read_fr: "Lire le Rapport (FR)",
-                expert_en_link: "weekly/20251229/expert/en/index.html",
-                expert_fr_link: "weekly/20251229/expert/fr/index.html",
-                portfolio_text: "Voir Portfolio Live"
-            }
-        };
+        // Simple redirection script since we only have one main FR report now
+        const reportLink = "weekly/20251229/index.html";
+        const portfolioLink = "weekly/20251229/portfolio/fr/expert.html";
 
+        document.getElementById('btn-read-fr').href = reportLink;
+        document.getElementById('btn-portfolio').href = portfolioLink;
+
+        // Optional: keep language toggle for UI text only, but links remain same
         function switchLang(lang) {
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('hero-h1').textContent = TEXT_CONTENT[lang].hero_h1;
-            document.getElementById('hero-p').textContent = TEXT_CONTENT[lang].hero_p;
-            document.getElementById('card-title').textContent = TEXT_CONTENT[lang].card_title;
-            document.getElementById('report-meta').textContent = TEXT_CONTENT[lang].report_meta;
-            document.getElementById('card-desc').textContent = TEXT_CONTENT[lang].card_desc;
-
-            document.getElementById('btn-read-en').textContent = TEXT_CONTENT[lang].btn_read_en;
-            document.getElementById('btn-read-en').href = TEXT_CONTENT[lang].expert_en_link;
-            document.getElementById('btn-read-fr').textContent = TEXT_CONTENT[lang].btn_read_fr;
-            document.getElementById('btn-read-fr').href = TEXT_CONTENT[lang].expert_fr_link;
-
-            const pfBtn = document.getElementById('btn-portfolio');
-            if (pfBtn) {
-                pfBtn.innerHTML = '<i class="fa-solid fa-chart-line"></i> ' + TEXT_CONTENT[lang].portfolio_text;
-                pfBtn.href = "weekly/20251229/portfolio/" + lang + "/expert.html";
-            }
-
             document.getElementById('btn-' + lang).classList.add('active');
-        }
-
-        const userLang = navigator.language || navigator.userLanguage;
-        if (userLang.startsWith('fr')) {
-            switchLang('fr');
-        } else {
-            switchLang('en');
         }
     </script>
 </body>
