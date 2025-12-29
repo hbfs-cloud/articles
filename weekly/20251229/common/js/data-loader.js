@@ -590,8 +590,8 @@ function updatePendingOrders(positions, opportunities) {
             const diffTime = Math.abs(todayDate - signalDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // FILTER: Show signals up to 60 days old (Weekly Report context)
-            if (diffDays > 60) return;
+            // FILTER: Show signals up to 30 days old (Fast Cut philosophy)
+            if (diffDays > 30) return;
 
             const date = dateStr;
             const currency = sym.includes('.HK') ? 'HK$' : (sym.includes('.PA') ? '€' : '$');
