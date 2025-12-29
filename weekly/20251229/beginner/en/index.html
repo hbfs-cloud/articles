@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch | Beginner EN - Dec 2025</title>
+    <meta property="og:title" content="🚀 Understanding the Market This Week">
+    <meta property="og:description" content="The essentials in 5 minutes: why it's moving, what to do, what to avoid.">
+
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="../../assets/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .emoji-hero {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .simple-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .simple-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .good-bad {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .good-card {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border-left: 4px solid #10b981;
+        }
+
+        .bad-card {
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border-left: 4px solid #ef4444;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 1rem;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .action-item i {
+            font-size: 1.25rem;
+            margin-top: 2px;
+        }
+
+        .action-item.do i {
+            color: #10b981;
+        }
+
+        .action-item.dont i {
+            color: #ef4444;
+        }
+
+        .section-intro {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            margin-bottom: 2rem;
+        }
+
+        .learn-box {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .learn-box h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+            color: #1d4ed8;
+        }
+
+        .upsell-banner {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .upsell-banner a {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 10px 24px;
+            background: white;
+            color: #2563eb;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .mood-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #10b981;
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="mobile-header">
+        <a href="#" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH</a>
+        <button class="mobile-menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i
+                class="fa-solid fa-bars"></i></button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar-nav" id="sidebar">
+            <a href="../../../../index.html" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET
+                WATCH</a>
+            <nav style="flex:1; overflow-y:auto;">
+                <div class="nav-section">
+                    <div class="nav-title">Menu</div>
+                    <a href="#hero" class="nav-link active"><i class="fa-solid fa-star"></i> The Essentials</a>
+                    <a href="#winners" class="nav-link"><i class="fa-solid fa-trophy"></i> Winners/Losers</a>
+                    <a href="#action" class="nav-link"><i class="fa-solid fa-list-check"></i> What To Do</a>
+                    <a href="#learn" class="nav-link"><i class="fa-solid fa-book-open"></i> Learn</a>
+                </div>
+                <div class="mw-card" style="padding:1.25rem; text-align:center; margin-top:1rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">MARKET MOOD</div>
+                    <div style="height:80px; position:relative;"><canvas id="moodChart"></canvas></div>
+                    <div style="font-weight:700; color:#10b981; margin-top:-10px;">😊 OPTIMISTIC</div>
+                </div>
+            </nav>
+            <div class="level-selector">
+                <div class="level-btn active">Beginner</div>
+                <a href="../../intermediate/en/index.html" class="level-btn">Interm.</a>
+                <a href="../../expert/en/index.html" class="level-btn">Expert</a>
+            </div>
+            <div style="text-align:center; margin-top:10px; font-size:0.8rem;"><a href="../fr/index.html"
+                    style="color:var(--text-muted);">🇫🇷 Français</a></div>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- HERO -->
+            <section id="hero" class="animate-in">
+                <div class="header-meta">December 29, 2025 • For Beginners</div>
+
+                <div style="display:flex; align-items:center; gap:16px; margin:12px 0 24px;">
+                    <span
+                        style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-muted);"><i
+                            class="fa-regular fa-clock"></i> 5 min</span>
+                    <button onclick="toggleAudio()"
+                        style="display:flex; align-items:center; gap:6px; padding:6px 14px; border:1px solid #e2e8f0; border-radius:20px; background:white; cursor:pointer; font-size:0.8rem;"><i
+                            class="fa-solid fa-headphones"></i> <span id="audioLabel">Listen</span></button>
+                </div>
+
+                <div class="emoji-hero">🎄📈</div>
+                <h1 style="font-size:2rem; line-height:1.2; margin-bottom:1rem;">
+                    Markets Before Christmas: AI Wins, China Loses
+                </h1>
+
+                <p class="section-intro">
+                    This week, the market is <span class="mood-badge">😊 Optimistic</span>.
+                    AI companies are exploding, but brands selling in China (Nike, Luxury) are crashing.
+                </p>
+
+                <div style="margin-top:1.5rem; margin-bottom:1.5rem;">
+                    <a href="../../portfolio/en/beginner.html"
+                        style="display:inline-flex; align-items:center; gap:0.5rem; background:#10b981; color:white; padding:0.75rem 1.5rem; border-radius:9999px; font-weight:700; text-decoration:none; box-shadow:0 4px 6px -1px rgba(16,185,129,0.2); transition: transform 0.2s;">
+                        <i class="fa-solid fa-chart-line"></i> View Live Portfolio
+                    </a>
+                </div>
+
+                <!-- SIMPLE CHART -->
+                <div class="chart-card">
+                    <h4><i class="fa-solid fa-chart-bar text-blue"></i> This Week at a Glance</h4>
+                    <div style="height:180px;"><canvas id="weekChart"></canvas></div>
+                </div>
+            </section>
+
+            <!-- WINNERS/LOSERS -->
+            <section id="winners" style="margin-top:3rem;">
+                <h2>🏆 Winners vs Losers</h2>
+                <p class="section-intro">Who won, who lost, and why it matters to you.</p>
+
+                <div class="good-bad">
+                    <div class="good-card">
+                        <h3 style="color:#059669; margin-bottom:1rem;">✅ The Winners</h3>
+                        <div style="margin-bottom:1rem;">
+                            <strong style="font-size:1.1rem;">🚀 Micron (MU): +21%</strong>
+                            <p style="margin-top:0.5rem; font-size:0.9rem;">They make chips for AI. Everyone wants them
+                                → price goes up.</p>
+                        </div>
+                        <div>
+                            <strong style="font-size:1.1rem;">🪙 Gold: +60% this year</strong>
+                            <p style="margin-top:0.5rem; font-size:0.9rem;">When people fear money losing value, they
+                                buy Gold.</p>
+                        </div>
+                    </div>
+                    <div class="bad-card">
+                        <h3 style="color:#dc2626; margin-bottom:1rem;">❌ The Losers</h3>
+                        <div style="margin-bottom:1rem;">
+                            <strong style="font-size:1.1rem;">💀 Nike (NKE): -10%</strong>
+                            <p style="margin-top:0.5rem; font-size:0.9rem;">Chinese people aren't buying Nike → sales
+                                drop → price falls.</p>
+                        </div>
+                        <div>
+                            <strong style="font-size:1.1rem;">👜 Luxury (LVMH): -8%</strong>
+                            <p style="margin-top:0.5rem; font-size:0.9rem;">Same problem: wealthy Chinese are spending
+                                less.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACTION PLAN -->
+            <section id="action" style="margin-top:4rem;">
+                <h2>📝 Your Action Plan</h2>
+                <p class="section-intro">3 things to do, 3 things NOT to do this week.</p>
+
+                <h3 style="color:#059669; margin-bottom:1rem;">✅ DO</h3>
+                <div class="action-item do">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <div><strong>Don't buy anything on December 26 morning</strong><br><span
+                            style="font-size:0.9rem; color:var(--text-muted);">It's a "trap" day for Bitcoin. Wait until
+                            afternoon.</span></div>
+                </div>
+                <div class="action-item do">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <div><strong>Keep 25% of your money in cash</strong><br><span
+                            style="font-size:0.9rem; color:var(--text-muted);">Ready to invest if prices drop
+                            hard.</span></div>
+                </div>
+                <div class="action-item do">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <div><strong>Bet on Tech and Defense</strong><br><span
+                            style="font-size:0.9rem; color:var(--text-muted);">These sectors will do well in
+                            2026.</span></div>
+                </div>
+
+                <h3 style="color:#dc2626; margin:2rem 0 1rem;">❌ DON'T</h3>
+                <div class="action-item dont">
+                    <i class="fa-solid fa-times-circle"></i>
+                    <div><strong>Avoid Nike, LVMH, luxury brands</strong><br><span
+                            style="font-size:0.9rem; color:var(--text-muted);">China isn't buying. It'll fall
+                            more.</span></div>
+                </div>
+                <div class="action-item dont">
+                    <i class="fa-solid fa-times-circle"></i>
+                    <div><strong>Don't rush into Bitcoin</strong><br><span
+                            style="font-size:0.9rem; color:var(--text-muted);">Wait after December 27 to see
+                            direction.</span></div>
+                </div>
+                <div class="action-item dont">
+                    <i class="fa-solid fa-times-circle"></i>
+                    <div><strong>Don't trade on December 25</strong><br><span
+                            style="font-size:0.9rem; color:var(--text-muted);">Markets are closed. Enjoy Christmas!
+                            🎄</span></div>
+                </div>
+
+                <!-- CALENDAR -->
+                <div class="mw-card" style="margin-top:2rem;">
+                    <h3 style="margin-bottom:1rem;">📅 This Week</h3>
+                    <div
+                        style="display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:0.5rem; text-align:center;">
+                        <div style="padding:0.75rem; background:#f8fafc; border-radius:12px;">
+                            <div style="font-weight:700; font-size:0.9rem;">Mon 22</div>
+                            <div style="font-size:0.7rem;">📊</div>
+                        </div>
+                        <div style="padding:0.75rem; background:#f8fafc; border-radius:12px;">
+                            <div style="font-weight:700; font-size:0.9rem;">Tue 23</div>
+                            <div style="font-size:0.7rem;">📊</div>
+                        </div>
+                        <div style="padding:0.75rem; background:#fef3c7; border-radius:12px;">
+                            <div style="font-weight:700; font-size:0.9rem;">Wed 24</div>
+                            <div style="font-size:0.7rem;">⚡ 1PM</div>
+                        </div>
+                        <div style="padding:0.75rem; background:#fee2e2; border-radius:12px;">
+                            <div style="font-weight:700; font-size:0.9rem;">Thu 25</div>
+                            <div style="font-size:0.7rem;">🎄 Closed</div>
+                        </div>
+                        <div style="padding:0.75rem; background:#fee2e2; border-radius:12px;">
+                            <div style="font-weight:700; font-size:0.9rem;">Fri 26</div>
+                            <div style="font-size:0.7rem;">⚠️ Trap</div>
+                        </div>
+                        <div style="padding:0.75rem; background:#dcfce7; border-radius:12px;">
+                            <div style="font-weight:700; font-size:0.9rem;">Sat 27</div>
+                            <div style="font-size:0.7rem;">🎅 Go!</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LEARN -->
+            <section id="learn" style="margin-top:4rem;">
+                <h2>📚 2 Words to Remember</h2>
+                <p class="section-intro">Get smarter in 1 minute.</p>
+
+                <div class="learn-box">
+                    <h4><i class="fa-solid fa-graduation-cap"></i> "Debasement"</h4>
+                    <p>It's when your money <strong>loses value</strong> because there's too much of it.</p>
+                    <p style="margin-top:0.75rem;"><strong>🍹 Imagine:</strong> You dilute your juice with too much
+                        water → less flavor. Gold keeps the "flavor" (value).</p>
+                </div>
+
+                <div class="learn-box">
+                    <h4><i class="fa-solid fa-graduation-cap"></i> "Expiry"</h4>
+                    <p>Options are <strong>bets with a deadline</strong>.</p>
+                    <p style="margin-top:0.75rem;"><strong>🎰 December 26:</strong> Big players fight to win their bet →
+                        prices move weirdly. Stay out.</p>
+                </div>
+
+                <!-- UPSELL TO INTERMEDIATE -->
+                <div class="upsell-banner">
+                    <h3>🧠 Want to understand the "why"?</h3>
+                    <p>Intermediate level explains the mechanics behind the movements.</p>
+                    <a href="../../intermediate/en/index.html">Go to Intermediate Level →</a>
+                </div>
+            </section>
+
+            <footer
+                style="padding:2rem 0; text-align:center; border-top:1px solid #e2e8f0; color:var(--text-muted); font-size:0.85rem; margin-top:2rem;">
+                <p>Next report: <strong>January 3, 2026</strong></p>
+                <p style="margin-top:8px; font-size:0.75rem;">Remember: Not losing money > making it fast 🧠</p>
+            </footer>
+        </main>
+
+        <!-- SIDEBAR CONTEXT -->
+        <aside class="sidebar-context">
+            <div class="mw-card" style="border:2px solid var(--accent);">
+                <h4 style="font-size:0.85rem; margin-bottom:10px;"><i class="fa-solid fa-calendar-days text-blue"></i>
+                    This Week</h4>
+                <div style="font-size:0.8rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                        <strong>Wed 24</strong><span style="color:#92400e;">⚡ 1PM</span>
+                    </div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Thu 25</strong><span class="text-red">🎄</span>
+                    </div>
+                    <div
+                        style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e2e8f0; background:#fef2f2;">
+                        <strong>Fri 26</strong><span class="text-red">⚠️</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:6px 0;"><strong>Sat
+                            27</strong><span class="text-green">🎅</span></div>
+                </div>
+            </div>
+            <div class="mw-card" style="margin-top:16px;">
+                <h4 style="font-size:0.85rem; margin-bottom:8px;">💡 Ideal Portfolio</h4>
+                <div style="height:130px;"><canvas id="allocChart"></canvas></div>
+            </div>
+            <div class="mw-card" style="margin-top:16px; font-style:italic; font-size:0.8rem; background:#f8fafc;">"Not
+                losing money is more important than making it fast."</div>
+        </aside>
+    </div>
+
+    <script>
+        document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', function () { document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active')); this.classList.add('active'); if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open'); }));
+
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // Mood Chart
+        new Chart(document.getElementById('moodChart'), {
+            type: 'doughnut',
+            data: { labels: ['Optimism', 'Fear'], datasets: [{ data: [75, 25], backgroundColor: ['#10b981', '#e2e8f0'], borderWidth: 0, circumference: 180, rotation: 270 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '80%' }
+        });
+
+        // Week Chart
+        new Chart(document.getElementById('weekChart'), {
+            type: 'bar',
+            data: { labels: ['Tech 🚀', 'Gold 🪙', 'S&P 500', 'Nike 💀', 'Luxury'], datasets: [{ data: [21, 5, 2, -10, -8], backgroundColor: ['#10b981', '#fbbf24', '#3b82f6', '#ef4444', '#ef4444'], borderRadius: 8 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { display: false } }, x: { grid: { display: false } } } }
+        });
+
+        // Allocation Chart
+        new Chart(document.getElementById('allocChart'), {
+            type: 'pie',
+            data: { labels: ['Tech', 'Cash', 'Defense', 'Crypto'], datasets: [{ data: [50, 25, 15, 10], backgroundColor: ['#2563eb', '#94a3b8', '#10b981', '#f59e0b'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
+
+        // Audio
+        let speechSynth = window.speechSynthesis, isPlaying = false;
+        const summaryText = "Beginner summary. The market is optimistic this week. Tech companies are winning, like Micron with plus 21%. Nike and luxury are losing because of China. What to do: don't buy anything on December 26 morning, it's a trap. Keep 25% in cash. Bet on tech and defense. What not to do: avoid Nike and luxury. Don't rush into Bitcoin. Remember: not losing money is more important than making it fast.";
+        function toggleAudio() {
+            if (isPlaying) { speechSynth.cancel(); isPlaying = false; document.getElementById('audioLabel').textContent = 'Listen'; }
+            else { const u = new SpeechSynthesisUtterance(summaryText); u.lang = 'en-US'; u.rate = 0.9; u.onend = () => { isPlaying = false; document.getElementById('audioLabel').textContent = 'Listen'; }; speechSynth.speak(u); isPlaying = true; document.getElementById('audioLabel').textContent = 'Pause'; }
+        }
+    </script>
+</body>
+
+</html>
