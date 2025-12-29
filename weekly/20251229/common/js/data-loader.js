@@ -428,7 +428,7 @@ function updateDrawdownComparisonChart(data) {
 
 function updateLogs(logs) {
     window.allLogs = logs;
-    renderLogs(logs.slice().reverse().slice(0, 100));
+    renderLogs(logs.slice().reverse());
 }
 
 window.filterLogs = function (mode) {
@@ -446,7 +446,7 @@ window.filterLogs = function (mode) {
         activeBtn.classList.add('bg-blue-600', 'text-white');
     }
 
-    if (mode === 'list') { renderLogs(logs.slice().reverse().slice(0, 100)); return; }
+    if (mode === 'list') { renderLogs(logs.slice().reverse()); return; }
 
     if (mode === 'by_symbol') {
         const map = {};
