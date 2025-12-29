@@ -4,22 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Watch | Expert EN - Dec 29 2025</title>
+    <title>Market Watch Expert EN | 2025 Review - Metals & Europe</title>
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
     <link rel="stylesheet" href="../../assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .hero-stat {
+        /* Hero Stats Cards */
+        .hero-stat-card {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             border-radius: 16px;
             padding: 1.5rem;
             text-align: center;
+            border: 1px solid #e2e8f0;
         }
 
-        .hero-stat .value {
-            font-size: 2rem;
+        .hero-stat-value {
+            font-size: 2.5rem;
             font-weight: 800;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             -webkit-background-clip: text;
@@ -27,327 +29,882 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .hero-stat .label {
+        .hero-stat-label {
             font-size: 0.75rem;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 4px;
+            margin-top: 8px;
+            font-weight: 600;
         }
 
-        .mw-card {
+        /* Trade Cards */
+        .trade-card {
             background: white;
             border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            padding: 2rem;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border-left: 5px solid var(--accent);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .concept-card {
-            background: linear-gradient(135deg, #eff6ff, #f0f9ff);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border-left: 4px solid #2563eb;
-            margin-bottom: 1.5rem;
+        .trade-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
 
-        .risk-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.75rem;
+        .trade-ticker {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .trade-company {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .trade-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #10b981;
+            margin: 1rem 0;
+        }
+
+        .trade-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .trade-metric {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .trade-metric-label {
+            font-size: 0.7rem;
+            color: #64748b;
             text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
         }
 
-        .risk-high {
-            background: #fef2f2;
-            color: #b91c1c;
+        .trade-metric-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
         }
 
-        .risk-medium {
-            background: #fffbeb;
-            color: #b45309;
+        /* Why Box - Explainer */
+        .why-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-left: 4px solid #10b981;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
         }
 
-        .risk-low {
-            background: #f0fdf4;
+        .why-box h4 {
             color: #15803d;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .why-box ul {
+            margin: 0;
+            padding-left: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .why-box li {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Best Trade Highlight */
+        .trade-card.best-trade {
+            border-left-color: #10b981;
+            background: linear-gradient(to right, #f0fdf4, white);
+        }
+
+        /* Risky Trade Warning */
+        .trade-card.risky-trade {
+            border-left-color: #ef4444;
+            background: linear-gradient(to right, #fef2f2, white);
+        }
+
+        /* Definition/Pedagogy Box */
+        .pedagogy-box {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-left: 4px solid #3b82f6;
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #1e40af;
+            margin-top: 0;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Alert Box */
+        .alert-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-left: 4px solid #dc2626;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+
+        .alert-box h4 {
+            color: #991b1b;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        /* Section Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 2rem 0;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        @media (max-width: 768px) {
+            .trade-card {
+                padding: 1.5rem;
+            }
+
+            .trade-ticker {
+                font-size: 1.5rem;
+            }
+
+            .trade-price {
+                font-size: 2rem;
+            }
+
+            .trade-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-container {
+                height: 300px;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- Mobile Header -->
     <header class="mobile-header">
-        <a href="#" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH</a>
-        <button class="mobile-menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i
-                class="fa-solid fa-bars"></i></button>
+        <a href="../../../../index.html" class="brand">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH
+        </a>
+        <button class="mobile-menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+            <i class="fa-solid fa-bars"></i>
+        </button>
     </header>
 
     <div class="app-layout">
+        <!-- Sidebar Navigation -->
         <aside class="sidebar-nav" id="sidebar">
-            <a href="../../../../index.html" class="brand"><img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET
-                WATCH</a>
+            <a href="../../../../index.html" class="brand">
+                <img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH
+            </a>
             <nav style="flex:1; overflow-y:auto;">
                 <div class="nav-section">
                     <div class="nav-title">Navigation</div>
-                    <a href="#hero" class="nav-link active"><i class="fa-solid fa-bolt"></i> Overview</a>
-                    <a href="#strategy" class="nav-link"><i class="fa-solid fa-chess"></i> Strategy</a>
-                    <a href="#geopolitics" class="nav-link"><i class="fa-solid fa-earth-americas"></i> Macro/Geo</a>
-                    <a href="#concepts" class="nav-link"><i class="fa-solid fa-graduation-cap"></i> Education 360</a>
-                    <a href="#fiscality" class="nav-link"><i class="fa-solid fa-file-invoice-dollar"></i>
-                        Tax/Fiscality</a>
-                </div>
-                <!-- Portfolio Link -->
-                <div class="mw-card"
-                    style="padding:1rem; border:1px solid #2563eb; background:#eff6ff; margin-top:1rem; text-align:center;">
-                    <div style="font-size:0.7rem; color:#2563eb; font-weight:700;">PORTFOLIO LIVE</div>
-                    <a href="../../portfolio/en/expert.html"
-                        style="display:block; margin-top:8px; font-weight:700; color:#1e3a8a; text-decoration:none;">Access
-                        Dashboard <i class="fa-solid fa-arrow-right"></i></a>
+                    <a href="#hero" class="nav-link active"><i class="fa-solid fa-home"></i> Executive Summary</a>
+                    <a href="#trades" class="nav-link"><i class="fa-solid fa-lightbulb"></i> 6 Detailed Trades</a>
+                    <a href="#metals" class="nav-link"><i class="fa-solid fa-coins"></i> Precious Metals</a>
+                    <a href="#bitcoin" class="nav-link"><i class="fa-brands fa-bitcoin"></i> Bitcoin Post-Expiry</a>
+                    <a href="#oil" class="nav-link"><i class="fa-solid fa-oil-well"></i> Oil</a>
+                    <a href="#europe" class="nav-link"><i class="fa-solid fa-flag"></i> European Markets</a>
+                    <a href="#geopolitics" class="nav-link"><i class="fa-solid fa-earth-americas"></i> Geopolitics</a>
+                    <a href="#afcon" class="nav-link"><i class="fa-solid fa-futbol"></i> AFCON 2025</a>
+                    <a href="#liquidity" class="nav-link"><i class="fa-solid fa-droplet"></i> Liquidity</a>
+                    <a href="#credit" class="nav-link"><i class="fa-solid fa-credit-card"></i> Credit</a>
+                    <a href="#correlations" class="nav-link"><i class="fa-solid fa-link"></i> Correlations</a>
+                    <a href="#positioning" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Position Sizing</a>
+                    <a href="#risks" class="nav-link"><i class="fa-solid fa-triangle-exclamation"></i> Risk Matrix</a>
+                    <a href="#pedagogy" class="nav-link"><i class="fa-solid fa-graduation-cap"></i> Pedagogical
+                        Section</a>
+                    <a href="#lessons" class="nav-link"><i class="fa-solid fa-star"></i> 10 Lessons 2025</a>
+                    <a href="#preview2026" class="nav-link"><i class="fa-solid fa-crystal-ball"></i> Preview 2026</a>
                 </div>
             </nav>
+
+            <!-- Level Selector -->
             <div class="level-selector">
                 <a href="../../beginner/en/index.html" class="level-btn">Beginner</a>
                 <a href="../../intermediate/en/index.html" class="level-btn">Interm.</a>
                 <div class="level-btn active">Expert</div>
             </div>
-            <div style="text-align:center; margin-top:10px;"><a href="../fr/index.html"
-                    style="color:var(--text-muted);">🇫🇷 Français</a></div>
+
+            <!-- Language Switch -->
+            <div style="text-align:center; margin-top:1rem; padding-top:1rem; border-top:var(--border);">
+                <a href="../fr/index.html" style="color:var(--text-muted); text-decoration:none; font-size:0.9rem;">
+                    <i class="fa-solid fa-language"></i> Français
+                </a>
+            </div>
         </aside>
 
         <main class="main-content">
-            <section id="hero" class="animate-in">
-                <div class="header-meta">December 29, 2025 • Expert Analysis</div>
-                <h1 style="font-size:2.5rem; line-height:1.2; margin-bottom:1.5rem;">BoJ Hawkish, Record Triple Witching
-                    & Bitcoin Magnet</h1>
-                <p class="section-intro">Market enters "Risk-On" phase (Score 0.48) despite tensions. Active rotation
-                    towards "Old Economy" accelerates.</p>
-
-                <div style="margin-top:1.5rem; margin-bottom:1.5rem;">
-                    <a href="../../portfolio/en/expert.html"
-                        style="display:inline-flex; align-items:center; gap:0.5rem; background:#2563eb; color:white; padding:0.75rem 1.5rem; border-radius:9999px; font-weight:700; text-decoration:none; box-shadow:0 4px 6px -1px rgba(37,99,235,0.2); transition: transform 0.2s;">
-                        <i class="fa-solid fa-chart-line"></i> View Live Portfolio
-                    </a>
-                </div>
-
-                <div class="meta-info">
-                    <span><i class="fa-regular fa-clock"></i> 12 min read</span>
-                    <span><i class="fa-solid fa-layer-group"></i> Level: Expert</span>
-                    <span><i class="fa-solid fa-robot"></i> AI Score: Risk-On (0.48)</span>
-                </div>
-
+            <!-- HERO SECTION -->
+            <section id="hero" style="margin-bottom:4rem;">
                 <div
-                    style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:2.5rem;">
-                    <div class="hero-stat">
-                        <div class="value">24,288</div>
-                        <div class="label">DAX Target</div>
+                    style="color:var(--accent); font-weight:700; font-size:0.9rem; margin-bottom:0.5rem; letter-spacing:1.5px;">
+                    DECEMBER 29, 2025 • INSTITUTIONAL EXPERT ANALYSIS
+                </div>
+                <h1 style="font-size:3rem; margin-bottom:1.5rem; line-height:1.2;">
+                    🎯 2025 Review: The Year of Metal & Europe's Revenge
+                </h1>
+                <p
+                    style="font-size:1.3rem; color:var(--text-secondary); max-width:1000px; line-height:1.7; margin-bottom:2rem;">
+                    Silver explodes <strong>+158% YTD</strong> (best year since 1979), Gold jumps <strong>+72%</strong>.
+                    China restricts silver exports from <strong style="color:#dc2626;">January 1st, 2026</strong> =
+                    massive supply shock.
+                    Meanwhile, S&P 500 shows +17.7% in USD but only <strong>+4% in EUR</strong> for European investors,
+                    while <strong>Poland (+46%)</strong> and <strong>Spain (+45%)</strong> crush US indices.
+                </p>
+
+                <!-- Key Stats Grid -->
+                <div
+                    style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.5rem; margin:3rem 0;">
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-value">+158%</div>
+                        <div class="hero-stat-label">Silver YTD 2025</div>
                     </div>
-                    <div class="hero-stat">
-                        <div class="value">0.75%</div>
-                        <div class="label">BoJ Rate (+25bps)</div>
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-value">+72%</div>
+                        <div class="hero-stat-label">Gold YTD 2025</div>
                     </div>
-                    <div class="hero-stat">
-                        <div class="value">$27B</div>
-                        <div class="label">BTC Options</div>
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-value">+46%</div>
+                        <div class="hero-stat-label">Poland (WIG)</div>
                     </div>
-                    <div class="hero-stat">
-                        <div class="value">$77-79</div>
-                        <div class="label">Silver ($)</div>
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-value">+4%</div>
+                        <div class="hero-stat-label">S&P 500 in EUR</div>
+                    </div>
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-value">$88K</div>
+                        <div class="hero-stat-label">Bitcoin (post-$27B expiry)</div>
+                    </div>
+                    <div class="hero-stat-card">
+                        <div class="hero-stat-value">-20%</div>
+                        <div class="hero-stat-label">Oil WTI YTD</div>
+                    </div>
+                </div>
+
+                <!-- Quick Navigation -->
+                <div
+                    style="background:linear-gradient(135deg,#eff6ff,#dbeafe); padding:2rem; border-radius:16px; margin:2rem 0;">
+                    <h3 style="margin-top:0; color:#1e40af;">📋 Quick Navigation</h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem;">
+                        <a href="#trades" style="color:#1e40af; text-decoration:none; font-weight:600;">
+                            <i class="fa-solid fa-lightbulb"></i> 6 Detailed Trades
+                        </a>
+                        <a href="#metals" style="color:#1e40af; text-decoration:none; font-weight:600;">
+                            <i class="fa-solid fa-coins"></i> Precious Metals
+                        </a>
+                        <a href="#europe" style="color:#1e40af; text-decoration:none; font-weight:600;">
+                            <i class="fa-solid fa-flag"></i> Europe (+45%)
+                        </a>
+                        <a href="#pedagogy" style="color:#1e40af; text-decoration:none; font-weight:600;">
+                            <i class="fa-solid fa-graduation-cap"></i> Pedagogical Section
+                        </a>
+                        <a href="#lessons" style="color:#1e40af; text-decoration:none; font-weight:600;">
+                            <i class="fa-solid fa-star"></i> 10 Lessons 2025
+                        </a>
+                        <a href="#preview2026" style="color:#1e40af; text-decoration:none; font-weight:600;">
+                            <i class="fa-solid fa-crystal-ball"></i> Preview 2026
+                        </a>
                     </div>
                 </div>
             </section>
 
-            <!-- WATCHLIST -->
-            <section class="mw-card" style="border-left:4px solid #ef4444;">
-                <h3 style="color:#b91c1c; margin-bottom:1rem;">⚠️ What to Watch (Risk Monitor)</h3>
-                <ul class="fa-ul" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                    <li><span class="fa-li"><i
-                                class="fa-solid fa-triangle-exclamation text-red"></i></span><strong>Bitcoin Options Dec
-                            26:</strong> $27B expiring. "Gravitational" volatility towards $85k-100k expected.</li>
-                    <li><span class="fa-li"><i class="fa-solid fa-triangle-exclamation text-red"></i></span><strong>Yen
-                            Carry Trade:</strong> Post-BoJ unwinding. Global liquidity pressure, rising US yields.</li>
-                    <li><span class="fa-li"><i class="fa-solid fa-triangle-exclamation text-red"></i></span><strong>AI
-                            Bubble?:</strong> DeepSeek (China) questions ROI. Repricing risk for pure-plays.</li>
-                    <li><span class="fa-li"><i class="fa-solid fa-triangle-exclamation text-red"></i></span><strong>Oil
-                            Price:</strong> WTI $56.52 (-23% YTD). Global demand weakness signal (China).</li>
-                </ul>
+            <!-- WHAT WORRIES US -->
+            <section style="margin-bottom:4rem;">
+                <div class="alert-box">
+                    <h4><i class="fa-solid fa-triangle-exclamation"></i> ⚠️ What Worries Us - Risk Watchlist 2026</h4>
+                    <ul class="fa-ul" style="margin:0;">
+                        <li style="margin-bottom:1rem;"><span class="fa-li"><i class="fa-solid fa-exclamation-circle"
+                                    style="color:#dc2626;"></i></span>
+                            <strong>China Restrictions (Jan 1st):</strong> Silver, antimony, superalloys = major supply
+                            shocks expected.
+                        </li>
+                        <li style="margin-bottom:1rem;"><span class="fa-li"><i class="fa-solid fa-exclamation-circle"
+                                    style="color:#dc2626;"></i></span>
+                            <strong>Yen Carry Trade Unwinding:</strong> BoJ normalization = global liquidity pressure.
+                        </li>
+                        <li style="margin-bottom:1rem;"><span class="fa-li"><i class="fa-solid fa-exclamation-circle"
+                                    style="color:#dc2626;"></i></span>
+                            <strong>US Consumer Delinquencies:</strong> Credit cards & auto loans at 2010-2011 highs.
+                        </li>
+                        <li style="margin-bottom:1rem;"><span class="fa-li"><i class="fa-solid fa-exclamation-circle"
+                                    style="color:#dc2626;"></i></span>
+                            <strong>Fed RRP Exhausted:</strong> ~$150B (-97% from peak) = less buffer for market stress.
+                        </li>
+                        <li style="margin-bottom:1rem;"><span class="fa-li"><i class="fa-solid fa-exclamation-circle"
+                                    style="color:#dc2626;"></i></span>
+                            <strong>Ukraine Peace:</strong> If deal reached = oil crash, major geopolitical
+                            reconfiguration.
+                        </li>
+                        <li style="margin-bottom:0;"><span class="fa-li"><i class="fa-solid fa-exclamation-circle"
+                                    style="color:#dc2626;"></i></span>
+                            <strong>Tight HY Spreads:</strong> Historical bottom 5% = 100% negative asymmetry.
+                        </li>
+                    </ul>
+                </div>
             </section>
 
-            <!-- STRATEGY & DATES -->
-            <section id="strategy" class="grid md:grid-cols-2 gap-8">
-                <div>
-                    <h2>🎯 Weekly Strategy</h2>
-                    <div class="mw-card">
-                        <ul class="fa-ul space-y-3">
-                            <li><span class="fa-li"><i class="fa-solid fa-check text-green"></i></span><strong>Maintain
-                                    70-75% Invested:</strong> Risk-On confirmed (Score 0.48).</li>
-                            <li><span class="fa-li"><i class="fa-solid fa-check text-green"></i></span><strong>Freeze
-                                    Positions Dec 24-26:</strong> Low liquidity.</li>
-                            <li><span class="fa-li"><i
-                                        class="fa-solid fa-crosshairs text-blue"></i></span><strong>Bitcoin Dec
-                                    27:</strong> Entry post-expiry if breakout >$92k confirmed.</li>
-                            <li><span class="fa-li"><i
-                                        class="fa-solid fa-arrow-trend-up text-purple"></i></span><strong>Santa
-                                    Rally:</strong> Monitor window Dec 24 - Jan 5 (Probability 65%).</li>
+            <!-- CRITICAL DATES -->
+            <section style="margin-bottom:4rem;">
+                <h2><i class="fa-solid fa-calendar"></i> Critical Dates - Early 2026</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">Date</th>
+                            <th style="width:30%;">Event</th>
+                            <th>Recommended Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Mon Dec 30</strong></td>
+                            <td><strong style="color:#2563eb;">FOMC Minutes</strong></td>
+                            <td>Major catalyst - Fed 2026 strategy component. Watch Treasury reaction.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tue Dec 31</strong></td>
+                            <td>Last 2025 Session</td>
+                            <td>Institutional window dressing. Low volume. Year-end tax optimization.</td>
+                        </tr>
+                        <tr style="background:#fee2e2;">
+                            <td><strong>Wed Jan 1</strong></td>
+                            <td><strong style="color:#dc2626;">🔴 MARKETS CLOSED</strong></td>
+                            <td><strong>China silver restrictions effective.</strong> Supply shock expected at Jan 2
+                                open.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Thu Jan 2</strong></td>
+                            <td>Markets Reopen</td>
+                            <td>First 2026 flows. Watch silver price. Position on PAAS/HL if gap up.</td>
+                        </tr>
+                        <tr style="background:#dbeafe;">
+                            <td><strong>Fri Jan 3</strong></td>
+                            <td><strong style="color:#2563eb;">December NFP (US Jobs)</strong></td>
+                            <td>Critical employment data to calibrate Fed rate expectations. Consensus: +150K.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 6 DETAILED TRADES -->
+            <section id="trades" style="margin-bottom:4rem;">
+                <h2><i class="fa-solid fa-lightbulb"></i> 6 Institutional Trade Ideas - Complete Analysis</h2>
+                <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:2rem;">
+                    Our top 6 opportunities for Q1 2026, with detailed setup, institutional rationale,
+                    and precise risk management. <strong>Do not all-in on these trades</strong> - max recommended
+                    allocation: 40% of portfolio.
+                </p>
+
+                <!-- TRADE 1: PAAS -->
+                <div class="trade-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem;">
+                        <div>
+                            <div class="trade-ticker">
+                                $PAAS <span class="trade-company" style="display:block; margin-top:0.5rem;">Pan American
+                                    Silver</span>
+                            </div>
+                            <div style="display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap;">
+                                <span class="badge"
+                                    style="background:#3b82f6; color:white; font-weight:700;">Breakout</span>
+                                <span class="badge"
+                                    style="background:#fbbf24; color:#78350f; font-weight:700;">Silver</span>
+                                <span class="badge" style="background:#10b981; color:white; font-weight:700;">Precious
+                                    Metals</span>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="trade-price">$48.41</div>
+                            <div style="font-size:0.9rem; color:#64748b;">Entry Price</div>
+                        </div>
+                    </div>
+
+                    <div class="trade-metrics">
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Take Profit</div>
+                            <div class="trade-metric-value" style="color:#10b981;">$55-60</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Stop Loss</div>
+                            <div class="trade-metric-value" style="color:#ef4444;">$41.64</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Timeline</div>
+                            <div class="trade-metric-value">2-4 weeks</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Confidence</div>
+                            <div class="trade-metric-value">35%</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Position Size</div>
+                            <div class="trade-metric-value" style="color:#2563eb;">6.7%</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Risk:Reward</div>
+                            <div class="trade-metric-value" style="color:#10b981;">1:2.5</div>
+                        </div>
+                    </div>
+
+                    <div class="why-box">
+                        <h4><i class="fa-solid fa-question-circle"></i> Why this trade?</h4>
+                        <ul>
+                            <li><strong>MASSIVE Macro Catalyst:</strong> China silver export restrictions effective
+                                <strong style="color:#dc2626;">Jan 1st, 2026</strong>. China produces 12% of global
+                                silver and exports 1,200 tons/year. Expected 15-20% global supply reduction =
+                                unprecedented squeeze.</li>
+                            <li><strong>Technical Confirmation:</strong> Breakout above $46 with volume 2.5x average.
+                                14d RSI at 68 (strong momentum without brutal overbought).</li>
+                            <li><strong>Operational Leverage:</strong> When silver price rises 10%, silver miners
+                                typically rise 15-20% due to margin expansion.</li>
+                            <li><strong>Sentiment:</strong> COMEX/London inventories at multi-year lows. BNP Paribas
+                                target: $100/oz silver end of 2026.</li>
+                        </ul>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:1.25rem; border-radius:12px; margin-top:1.5rem;">
+                        <div style="font-weight:700; color:#475569; margin-bottom:0.75rem;">Risk Management:</div>
+                        <div
+                            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; font-size:0.9rem;">
+                            <div><strong style="color:#dc2626;">Max Loss:</strong> -14% (-$6.77) if SL hit</div>
+                            <div><strong style="color:#10b981;">Upside Target:</strong> +14% to +24%</div>
+                            <div><strong style="color:#2563eb;">Beta:</strong> 1.51 (volatile, follows silver)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRADE 2: EXAS -->
+                <div class="trade-card best-trade">
+                    <div
+                        style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); padding:1rem; border-radius:12px; margin-bottom:1.5rem;">
+                        <div style="text-align:center;">
+                            <span style="font-size:1.5rem; font-weight:800; color:#15803d;">⭐ BEST SCORE</span>
+                            <div style="font-size:0.85rem; color:#166534; margin-top:0.25rem;">Optimal Risk/Reward -
+                                Confidence 48%</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem;">
+                        <div>
+                            <div class="trade-ticker">
+                                $EXAS <span class="trade-company" style="display:block; margin-top:0.5rem;">Exact
+                                    Sciences</span>
+                            </div>
+                            <div style="display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap;">
+                                <span class="badge"
+                                    style="background:#10b981; color:white; font-weight:700;">Momentum</span>
+                                <span class="badge"
+                                    style="background:#8b5cf6; color:white; font-weight:700;">Healthcare</span>
+                                <span class="badge" style="background:#f59e0b; color:white; font-weight:700;">Top
+                                    Pick</span>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="trade-price">$101.36</div>
+                            <div style="font-size:0.9rem; color:#64748b;">Entry Price</div>
+                        </div>
+                    </div>
+
+                    <div class="trade-metrics">
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Take Profit</div>
+                            <div class="trade-metric-value" style="color:#10b981;">$110-115</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Stop Loss</div>
+                            <div class="trade-metric-value" style="color:#ef4444;">$100.43</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Timeline</div>
+                            <div class="trade-metric-value">2-3 weeks</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Confidence</div>
+                            <div class="trade-metric-value" style="color:#10b981; font-size:1.8rem;">48%</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Position Size</div>
+                            <div class="trade-metric-value" style="color:#2563eb;">6.7%</div>
+                        </div>
+                        <div class="trade-metric">
+                            <div class="trade-metric-label">Risk:Reward</div>
+                            <div class="trade-metric-value" style="color:#10b981; font-size:1.8rem;">1:10+</div>
+                        </div>
+                    </div>
+
+                    <div class="why-box">
+                        <h4><i class="fa-solid fa-lightbulb"></i> Why BEST Choice?</h4>
+                        <ul>
+                            <li><strong>Solid Sector:</strong> Healthcare = resilient in all economic conditions. Demand
+                                independent of cycles.</li>
+                            <li><strong>MINIMAL Risk:</strong> Stop Loss at $100.43 = only <strong
+                                    style="color:#10b981;">-0.9% risk</strong>! Exceptional asymmetry.</li>
+                            <li><strong>Potential Upside:</strong> +8% to +13% in 2-3 weeks. Conservative target $110,
+                                bullish $115.</li>
+                            <li><strong>Confirmed Momentum:</strong> +18% over last 2 weeks, uptrend intact. Solid
+                                technical support at $100.</li>
+                            <li><strong>Negative Beta:</strong> -0.22 = uncorrelated to market = excellent portfolio
+                                diversifier.</li>
                         </ul>
                     </div>
                 </div>
-                <div>
-                    <h2>📅 Critical Dates & Actions</h2>
-                    <div class="mw-card" style="padding:0;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <tr style="border-bottom:1px solid #e2e8f0;">
-                                <td style="padding:12px;"><strong>Mon 30</strong></td>
-                                <td>Final pre-holiday positioning.</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e2e8f0; background:#fffbeb;">
-                                <td style="padding:12px;"><strong>Tue 31</strong></td>
-                                <td><strong>Final Trading Day 2025. Year-End Positioning.</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e2e8f0; background:#fef2f2;">
-                                <td style="padding:12px;"><strong>Wed 01</strong></td>
-                                <td>🎉 <strong>Markets Closed</strong> (New Year). Crypto 24/7.</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e2e8f0; background:#fef2f2;">
-                                <td style="padding:12px;"><strong>Thu 02</strong></td>
-                                <td>📊 Resumption. First 2026 Flows. FOMC Minutes Impact.</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px;"><strong>Fri 03</strong></td>
-                                <td>NFP December Data Release. Critical Employment Numbers.</td>
-                            </tr>
+
+                <!-- TRADE 3,4,5,6 Condensed -->
+                <div class="trade-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <div class="trade-ticker">$HL <span class="trade-company">Hecla Mining</span></div>
+                        </div>
+                        <div class="trade-price">$19.02</div>
+                    </div>
+                    <p style="margin-top:1rem;"><strong>Rationale:</strong> Largest US silver miner. Same catalyst as
+                        PAAS. 40% silver production. High beta (2.03).</p>
+                    <div
+                        style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:1rem; text-align:center;">
+                        <div><strong>TP:</strong> $22-24</div>
+                        <div><strong>SL:</strong> $16.13</div>
+                        <div><strong>Score:</strong> 36%</div>
+                        <div><strong>Size:</strong> 6.7%</div>
+                    </div>
+                </div>
+
+                <div class="trade-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <div class="trade-ticker">$NGD <span class="trade-company">New Gold Inc.</span></div>
+                        </div>
+                        <div class="trade-price">$8.33</div>
+                    </div>
+                    <p style="margin-top:1rem;"><strong>Rationale:</strong> Gold+Silver diversification. Lower beta
+                        (1.76) than pure silver plays. #2 Best Score (40%).</p>
+                    <div
+                        style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:1rem; text-align:center;">
+                        <div><strong>TP:</strong> $9.50-10</div>
+                        <div><strong>SL:</strong> $7.35</div>
+                        <div><strong>Score:</strong> 40%</div>
+                        <div><strong>Size:</strong> 6.7%</div>
+                    </div>
+                </div>
+
+                <div class="trade-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <div class="trade-ticker">$AAL <span class="trade-company">American Airlines</span></div>
+                        </div>
+                        <div class="trade-price">$15.99</div>
+                    </div>
+                    <p style="margin-top:1rem;"><strong>Rationale:</strong> Low oil ($57) boosts margins. Q1 strong
+                        travel demand. Breakout >$15.50.</p>
+                    <div
+                        style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:1rem; text-align:center;">
+                        <div><strong>TP:</strong> $18-19</div>
+                        <div><strong>SL:</strong> $14.46</div>
+                        <div><strong>Score:</strong> 35%</div>
+                        <div><strong>Size:</strong> 6.7%</div>
+                    </div>
+                </div>
+
+                <div class="trade-card risky-trade">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <div class="trade-ticker">$LUNR <span class="trade-company">Intuitive Machines</span></div>
+                            <span class="badge" style="background:#dc2626; color:white; font-size:0.7rem;">HIGH
+                                RISK</span>
+                        </div>
+                        <div class="trade-price" style="color:#dc2626;">$12.55</div>
+                    </div>
+                    <p style="margin-top:1rem;"><strong>Rationale:</strong> NASA Artemis contracts. Exploding space
+                        sector. <strong style="color:#dc2626;">Beta 3.37 = EXTREME VOLATILITY</strong>. Max 4% size.</p>
+                    <div
+                        style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:1rem; text-align:center;">
+                        <div><strong>TP:</strong> $15-17</div>
+                        <div><strong>SL:</strong> $10.33</div>
+                        <div><strong>Score:</strong> 41%</div>
+                        <div><strong>Size:</strong> 4.0%</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AFCON 2025 -->
+            <section id="afcon" style="margin-bottom:4rem;">
+                <h2><i class="fa-solid fa-futbol"></i> 🌍 AFCON 2025 - African Football Economy</h2>
+                <p style="font-size:1.1rem; color:var(--text-secondary); margin-bottom:2rem;">
+                    The African Cup of Nations in Morocco (Dec 21 - Jan 18) is more than a tournament:
+                    it is a major economic showcase and a dress rehearsal for the 2030 World Cup.
+                </p>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(350px,1fr)); gap:2rem;">
+                    <div>
+                        <h3>Tournament Overview</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Element</th>
+                                    <th>Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Dates</strong></td>
+                                    <td>Dec 21 2025 - Jan 18 2026</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Host</strong></td>
+                                    <td>🇲🇦 Morocco</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Stadiums</strong></td>
+                                    <td>9 stadiums, 6 cities</td>
+                                </tr>
+                                <tr style="background:#f0fdf4;">
+                                    <td><strong>Preparation</strong></td>
+                                    <td><span class="badge" style="background:#10b981; color:white;">World Cup 2030
+                                            Infra</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h3>Economic Impact</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Expected Revenue</td>
+                                    <td style="font-weight:800; color:#10b981;">$500M+</td>
+                                </tr>
+                                <tr>
+                                    <td>Tourists</td>
+                                    <td>500,000+</td>
+                                </tr>
+                                <tr>
+                                    <td>Jobs Created</td>
+                                    <td>20,000+</td>
+                                </tr>
+                                <tr>
+                                    <td>Infrastructure</td>
+                                    <td style="font-weight:800; color:#3b82f6;">$2B+ invested</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- GEOPOLITICS & MACRO -->
-            <section id="geopolitics" style="margin-top:3rem;">
-                <h2>🌍 Geopolitics & Commodities</h2>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="mw-card">
-                        <h3><i class="fa-solid fa-oil-well"></i> Oil & Tensions</h3>
-                        <p><strong>WTI $56.52 (-23% YTD).</strong> Lowest since 2021.</p>
-                        <ul class="mt-2 text-sm text-slate-600 list-disc pl-4">
-                            <li><strong>Venezuela:</strong> Trump imposes total blockade. "Skipper" tanker seizure.
-                                Major escalation.</li>
-                            <li><strong>Demand:</strong> China slowing, weighing on entire energy complex.</li>
-                        </ul>
-                        <div class="mt-3 p-3 bg-red-50 rounded text-red-800 text-sm font-bold">Action: Avoid Oil Majors,
-                            Prefer Defense.</div>
-                    </div>
-                    <div class="mw-card">
-                        <h3><i class="fa-solid fa-coins"></i> Ratios: Metals & Crypto</h3>
-                        <div class="grid grid-cols-3 gap-2 text-center mt-2">
-                            <div class="bg-yellow-50 p-2 rounded">
-                                <div class="text-xs text-slate-500">Gold (YTD)</div>
-                                <div class="font-bold text-yellow-700">+60%</div>
-                            </div>
-                            <div class="bg-gray-100 p-2 rounded">
-                                <div class="text-xs text-slate-500">Silver (YTD)</div>
-                                <div class="font-bold text-slate-700">+130%</div>
-                            </div>
-                            <div class="bg-orange-50 p-2 rounded">
-                                <div class="text-xs text-slate-500">BTC (YTD)</div>
-                                <div class="font-bold text-orange-700">-9%</div>
-                            </div>
-                        </div>
-                        <p class="mt-3 text-sm"><strong>Gold/Silver Ratio:</strong> Freefall (Silver outperforms).
-                            "Debasement Trade" favors hard assets.</p>
-                    </div>
-                </div>
-
-                <div class="mw-card mt-4">
-                    <h3>🇪🇺 Europe vs Mercosur</h3>
-                    <p>Deal delayed to Jan 2026. Farmers' protests (France/Italy) blocking the deal. Impact: Volatility
-                        in EU Agri-Food sector.</p>
-                </div>
+            <!-- METALS -->
+            <section id="metals" style="margin-bottom:4rem;">
+                <h2><i class="fa-solid fa-coins"></i> 🥇 Precious Metals - Historic Year 2025</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Metal</th>
+                            <th>Price Dec 29</th>
+                            <th>YTD Perf</th>
+                            <th>Best Year Since</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background:#fef3c7;">
+                            <td><strong>Platinum</strong></td>
+                            <td>~$2,400/oz</td>
+                            <td style="color:#10b981; font-weight:800;">+172%</td>
+                            <td><strong>All-time Record</strong></td>
+                        </tr>
+                        <tr style="background:#f8fafc;">
+                            <td><strong>Silver</strong></td>
+                            <td>~$77-79/oz</td>
+                            <td style="color:#10b981; font-weight:800;">~158%</td>
+                            <td>1979</td>
+                        </tr>
+                        <tr style="background:#fef9c3;">
+                            <td><strong>Gold</strong></td>
+                            <td>~$4,530/oz</td>
+                            <td style="color:#10b981; font-weight:800;">+72-74%</td>
+                            <td>1979</td>
+                        </tr>
+                    </tbody>
+                </table>
             </section>
 
-            <!-- EDUCATION -->
-            <section id="concepts" style="margin-top:3rem;">
-                <h2>🎓 Advanced Education Section</h2>
+            <!-- EUROPE -->
+            <section id="europe" style="margin-bottom:4rem;">
+                <h2><i class="fa-solid fa-flag"></i> 🇪🇺 European Markets - The Revenge</h2>
+                <p style="font-size:1.1rem; color:var(--text-secondary); margin-bottom:2rem;">
+                    Europe crushed US indices in 2025 for European investors.
+                    <strong style="color:#10b981;">Poland (+46%)</strong> and <strong style="color:#10b981;">Spain
+                        (+45%)</strong>
+                    beat the S&P 500 (<strong>+4% in EUR</strong>) by 41 points!
+                </p>
 
-                <div class="concept-card">
-                    <h3>1. Santa Rally: Myth or Reality?</h3>
-                    <p>Statistically, the S&P 500 gains on average <strong>+1.3%</strong> during the last 5 trading days
-                        of the year and the first 2 of January.</p>
-                    <p class="mt-2"><strong>Why?</strong> Tax optimism, year-end bonuses, and crucially <em>low
-                            liquidity</em> allowing prices to drift up on low volume. <br><strong>Action:</strong> Do
-                        not short this period. Follow the flow.</p>
-                </div>
-
-                <div class="concept-card" style="border-left-color: #7c3aed;">
-                    <h3>2. Options Expiry "Gravitational Pull"</h3>
-                    <p>On Jan 02, $27B of Bitcoin options expire. Major strike prices ($85k, $100k) act as magnets.
-                    </p>
-                    <p class="mt-2">Market Makers must "hedge" positions by buying/selling the underlying to stay Delta
-                        Neutral. This compresses price. Once expired (Jan 02, 8am UTC), the magnet vanishes. Real
-                        movement often starts then.</p>
-                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Index</th>
+                            <th>Country</th>
+                            <th>YTD Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background:#f0fdf4;">
+                            <td><strong>WIG</strong></td>
+                            <td>🇵🇱 Poland</td>
+                            <td style="color:#10b981; font-weight:800;">+45%</td>
+                        </tr>
+                        <tr style="background:#f0fdf4;">
+                            <td><strong>IBEX 35</strong></td>
+                            <td>🇪🇸 Spain</td>
+                            <td style="color:#10b981; font-weight:800;">+45-46%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FTSE MIB</strong></td>
+                            <td>🇮🇹 Italy</td>
+                            <td style="color:#10b981;">+30-34%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DAX</strong></td>
+                            <td>🇩🇪 Germany</td>
+                            <td style="color:#10b981;">+21-22%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>S&P 500</strong></td>
+                            <td>🇺🇸 USA (in EUR)</td>
+                            <td style="color:#ef4444; font-weight:800;">+4%</td>
+                        </tr>
+                    </tbody>
+                </table>
             </section>
 
-            <!-- FISCALITY -->
-            <section id="fiscality" style="margin-top:3rem;">
-                <h2>⚖️ Year-End Management & Taxation</h2>
-                <div class="mw-card bg-slate-50">
-                    <p class="mb-4">Last week to optimize your 2025 taxes (Tax Loss Harvesting).</p>
-
-                    <h4 class="font-bold mb-2">Checklist Dec 23-31:</h4>
-                    <ul class="fa-ul space-y-2">
-                        <li><span class="fa-li"><i class="fa-solid fa-square-check"></i></span><strong>Sell
-                                Losers:</strong> Realize latent losses (e.g., China, Luxury) to offset taxable gains.
-                        </li>
-                        <li><span class="fa-li"><i class="fa-solid fa-square-check"></i></span><strong>Avoid "Wash
-                                Sale":</strong> Do not buy back same ticker within 30 days (check local rules).</li>
-                        <li><span class="fa-li"><i
-                                    class="fa-solid fa-square-check"></i></span><strong>Rebalance:</strong> If asset
-                            exceeds target (e.g., Gold > 15%), trim profits and reallocate to underweighted classes
-                            (e.g., Cash for 2026).</li>
-                    </ul>
-                </div>
-            </section>
-
-            <!-- PREVIEW 2026 -->
-            <section style="margin-top:3rem;">
-                <h2>🔮 Preview 2026: Themes & Sectors</h2>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="mw-card">
-                        <h3 class="text-green-700">✅ Favorite Sectors</h3>
-                        <ul class="list-disc pl-5 mt-2 space-y-1">
-                            <li><strong>Semiconductors (MU, NVDA):</strong> Pricing power intact.</li>
-                            <li><strong>EU Defense (RHM):</strong> Structural spending.</li>
-                            <li><strong>EU Banks:</strong> Attractive valuations.</li>
-                            <li><strong>Gold/Silver:</strong> Continued debasement.</li>
-                        </ul>
-                    </div>
-                    <div class="mw-card">
-                        <h3 class="text-red-700">❌ To Avoid</h3>
-                        <ul class="list-disc pl-5 mt-2 space-y-1">
-                            <li><strong>China Exposure (Luxury, Auto):</strong> Structural risk.</li>
-                            <li><strong>Unprofitable SaaS:</strong> High rates = death.</li>
-                            <li><strong>Consumer Discretionary:</strong> Imported Inflation (Tariffs).</li>
-                        </ul>
-                    </div>
-                </div>
+            <!-- SOURCES -->
+            <section id="sources" style="margin-bottom:4rem;">
+                <h2><i class="fa-solid fa-book"></i> 📚 Verified Sources</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Source</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gold Price/YTD</td>
+                            <td>TradingEconomics, Yahoo Finance</td>
+                            <td>Dec 29</td>
+                        </tr>
+                        <tr>
+                            <td>Silver Price/YTD</td>
+                            <td>TradingEconomics, Fortune, Bloomberg</td>
+                            <td>Dec 29</td>
+                        </tr>
+                        <tr>
+                            <td>DAX YTD</td>
+                            <td>STOXX Official</td>
+                            <td>Dec 29</td>
+                        </tr>
+                        <tr>
+                            <td>Poland WIG YTD</td>
+                            <td>TradingEconomics</td>
+                            <td>Dec 29</td>
+                        </tr>
+                        <tr>
+                            <td>Bitcoin</td>
+                            <td>CoinDesk, Coinbase</td>
+                            <td>Dec 29</td>
+                        </tr>
+                    </tbody>
+                </table>
             </section>
 
             <!-- FOOTER -->
             <footer
-                style="margin-top:4rem; padding-top:2rem; border-top:1px solid #e2e8f0; text-align:center; color:#64748b; font-size:0.9rem;">
-                <p><strong>Next Full Analysis: Jan 5, 2026</strong> (2025 Review + Q1 2026 Outlook).</p>
-                <p class="mt-2 text-xs">Disclaimer: Educational purpose only. Not financial advice.</p>
+                style="margin-top:4rem; padding:3rem 0; border-top:2px solid #e2e8f0; text-align:center; background:linear-gradient(180deg, white, #f8fafc);">
+                <div style="max-width:800px; margin:0 auto; padding:0 2rem;">
+                    <p style="font-size:1.1rem; color:var(--text-primary); margin-bottom:1rem;">
+                        <strong>Next Update: January 3, 2026</strong> (2025 Full Review + Q1 2026 Outlook).
+                    </p>
+                    <div
+                        style="display:flex; justify-content:center; gap:2rem; margin-bottom:2rem; font-size:1.5rem; color:var(--text-muted);">
+                        <i class="fa-brands fa-twitter"></i>
+                        <i class="fa-brands fa-linkedin"></i>
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+                        <em>Disclaimer: This report is for educational purposes only. It does not constitute financial
+                            advice.
+                            Market Watch is not responsible for any losses incurred. Trading involves risk.</em>
+                    </p>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:1rem;">
+                        &copy; 2025 Market Watch. All rights reserved. • <a href="#"
+                            style="color:var(--accent);">Privacy Policy</a>
+                    </p>
+                </div>
             </footer>
         </main>
     </div>
-
-    <script src="../../common/js/data-loader.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData('current');
-        });
-    </script>
 </body>
 
 </html>

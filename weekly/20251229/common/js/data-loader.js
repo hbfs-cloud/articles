@@ -568,68 +568,101 @@ function updatePositions(positions, tradeLogs) {
 function updatePendingOrders(positions, opportunities) {
     const container = document.getElementById('pending-orders-body');
     if (!container) return;
-    const pendingOrders = [];
-    const today = new Date().toISOString().split('T')[0];
+
+    // 1. Group by Symbol
     const posMap = {};
     positions.forEach(p => {
         const baseSym = p.symbol.split('.')[0];
         posMap[baseSym] = p; posMap[p.symbol] = p;
     });
 
+    const grouped = {};
+
     if (opportunities && opportunities.length > 0) {
         opportunities.forEach(op => {
             const sym = op.Signal.Ticker;
             const pos = posMap[sym] || posMap[sym + '.US'] || posMap[sym + '.HK'];
             const isHeld = !!pos;
+            const date = op.Signal.Date.split('T')[0];
+            const currency = sym.includes('.HK') ? 'HK$' : (sym.includes('.PA') ? '€' : '$');
+
+            if (!grouped[sym]) {
+                grouped[sym] = {
+                    symbol: sym,
+                    date: date,
+                    orders: []
+                };
+            }
+
+            // Leg 1: Stop Loss (if exists)
             if (op.Signal.StopLoss) {
-                pendingOrders.push({
-                    date: op.Signal.Date.split('T')[0],
-                    symbol: sym,
+                const currentPrice = isHeld ? pos.current_price : op.Signal.Price;
+                const distPct = ((op.Signal.StopLoss - currentPrice) / currentPrice) * 100;
+
+                grouped[sym].orders.push({
                     type: isHeld ? 'ACTIVE SL' : 'ENTRY SL',
-                    typeClass: isHeld ? 'text-rose-700 bg-rose-100 border border-rose-200' : 'text-rose-600 bg-rose-50',
                     price: op.Signal.StopLoss,
-                    currency: sym.includes('.HK') ? 'HK$' : (sym.includes('.PA') ? '€' : '$'),
-                    shares: isHeld ? pos.shares : Math.round(5000 / op.Signal.Price),
-                    triggerPct: (((op.Signal.StopLoss - op.Signal.Price) / op.Signal.Price) * 100).toFixed(1) + '%',
-                    status: (isHeld && pos.current_price <= op.Signal.StopLoss) ? 'HIT' : 'MONITORED'
+                    qty: isHeld ? pos.shares : Math.round(5000 / op.Signal.Price),
+                    dist: distPct.toFixed(1) + '%',
+                    status: (isHeld && pos.current_price <= op.Signal.StopLoss) ? 'HIT' : 'MONITORED',
+                    class: 'text-rose-600 bg-rose-50 border-rose-200 border',
+                    currency: currency
                 });
             }
+
+            // Leg 2: Entry Limit (if not held)
             if (!isHeld) {
-                pendingOrders.push({
-                    date: op.Signal.Date.split('T')[0],
-                    symbol: sym,
+                grouped[sym].orders.push({
                     type: 'LIMIT BUY',
-                    typeClass: 'text-indigo-600 bg-indigo-50 border border-indigo-100',
                     price: op.Signal.Price,
-                    currency: sym.includes('.HK') ? 'HK$' : '$',
-                    shares: Math.round(5000 / op.Signal.Price),
-                    triggerPct: 'BREAKOUT',
-                    status: 'PENDING'
+                    qty: Math.round(5000 / op.Signal.Price),
+                    dist: '0.0%',
+                    status: 'PENDING',
+                    class: 'text-emerald-700 bg-emerald-50 border-emerald-200 border',
+                    currency: currency
                 });
             }
+
+            // Leg 3: Take Profit (if exists in signal - usually implicitly 2R or similar, but let's check input)
+            // Using implied Target if available or standard hardcoded logic if needed. 
+            // For now, only SL and Entry are reliable in current JSON struct.
         });
     }
 
-    positions.forEach(p => {
-        const baseSym = p.symbol.split('.')[0];
-        const hasOps = opportunities.some(op => op.Signal.Ticker === baseSym || op.Signal.Ticker === p.symbol);
-        if (!hasOps) {
-            pendingOrders.push({ date: today, symbol: p.symbol, type: 'TRAILING SL', typeClass: 'text-amber-600 bg-amber-50', price: p.avg_entry * 0.92, currency: p.currency || '$', shares: p.shares, triggerPct: '-8.0%', status: 'ACTIVE' });
-        }
-        pendingOrders.push({ date: today, symbol: p.symbol, type: 'TARGET TP', typeClass: 'text-emerald-700 bg-emerald-50', price: p.avg_entry * 1.25, currency: p.currency || '$', shares: Math.floor(p.shares * 0.5), triggerPct: '+25.0%', status: 'PENDING' });
-    });
+    // 2. Render
+    const sortedKeys = Object.keys(grouped).sort((a, b) => grouped[b].date.localeCompare(grouped[a].date));
 
-    pendingOrders.sort((a, b) => a.type.localeCompare(b.type));
-    container.innerHTML = pendingOrders.slice(0, 15).map(o => `
-        <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-            <td class="py-2 px-3 text-[10px] text-slate-400">${o.date}</td>
-            <td class="py-2 px-3 font-bold text-slate-900">${o.symbol}</td>
-            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${o.typeClass}">${o.type}</span></td>
-            <td class="py-2 px-3 text-right font-mono text-xs">${o.currency}${o.price.toFixed(2)}</td>
-            <td class="py-2 px-3 text-right font-mono text-xs text-slate-500">${o.shares}</td>
-            <td class="py-2 px-3 text-center text-xs font-bold ${o.triggerPct.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'}">${o.triggerPct}</td>
-            <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded text-[9px] font-bold ${o.status === 'HIT' ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-400'}">${o.status}</span></td>
-        </tr>`).join('');
+    container.innerHTML = sortedKeys.map(sym => {
+        const group = grouped[sym];
+
+        // Helper to stack items
+        const renderLegs = (fieldFn) => group.orders.map(o => `
+            <div class="h-6 flex items-center justify-end ${fieldFn.className || ''}">${fieldFn(o)}</div>
+        `).join('');
+
+        const types = group.orders.map(o => `
+            <div class="h-6 flex items-center">
+                <span class="${o.class} text-[10px] font-bold px-2 rounded-sm whitespace-nowrap">${o.type}</span>
+            </div>
+        `).join('');
+
+        const prices = renderLegs(o => `<span class="font-mono text-slate-700">${o.currency}${o.price.toFixed(2)}</span>`);
+        const qtys = renderLegs(o => `<span class="font-mono text-slate-500">${o.qty}</span>`);
+        const dists = renderLegs(o => `<span class="${parseFloat(o.dist) < 0 ? 'text-rose-500' : 'text-slate-500'} text-xs">${o.dist}</span>`);
+        const statuses = renderLegs(o => `<span class="text-[10px] font-bold text-slate-400">${o.status}</span>`);
+
+        return `
+         <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+            <td class="py-3 px-4 font-bold text-slate-700 whitespace-nowrap align-top">${group.date}</td>
+            <td class="py-3 px-4 font-bold text-slate-900 align-top">${group.symbol}</td>
+            <td class="py-3 px-4 align-top space-y-1">${types}</td>
+            <td class="py-3 px-4 text-right align-top space-y-1">${prices}</td>
+            <td class="py-3 px-4 text-right align-top space-y-1">${qtys}</td>
+            <td class="py-3 px-4 text-center align-top space-y-1">${dists}</td>
+            <td class="py-3 px-4 text-center align-top space-y-1">${statuses}</td>
+         </tr>
+        `;
+    }).join('');
 }
 
 function updateTimeline(events) {
