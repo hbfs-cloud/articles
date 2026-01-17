@@ -294,39 +294,100 @@
         /* Responsive improvements */
         @media (max-width: 768px) {
             .metric-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.75rem !important;
             }
 
             .calendar-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Hide calendar header on mobile */
+            .calendar-days-header {
+                display: none !important;
+            }
+
+            /* Calendar days as vertical list on mobile */
+            .calendar-days-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                grid-template-columns: none !important;
+            }
+
+            .calendar-days-grid > div {
+                min-height: auto !important;
+                border-right: none !important;
+                padding: 1rem !important;
             }
 
             .treemap-container, .sankey-container, .radar-container {
-                height: 300px;
+                height: 250px;
             }
 
             .alert-banner {
                 flex-direction: column;
                 text-align: center;
+                padding: 1rem !important;
+            }
+
+            /* Allocation donut */
+            .allocation-donut {
+                height: 280px;
+            }
+
+            /* Football field scroll */
+            .football-field {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .field-row {
+                min-width: 500px;
+            }
+
+            /* Hide mobile class */
+            .hide-mobile {
+                display: none !important;
             }
         }
 
         @media (max-width: 480px) {
             .metric-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 0.5rem;
+                grid-template-columns: 1fr !important;
+                gap: 0.5rem !important;
             }
 
             .metric-card {
-                padding: 1rem;
+                padding: 0.75rem !important;
             }
 
             .metric-value {
-                font-size: 1.25rem;
+                font-size: 1.1rem !important;
+            }
+
+            .metric-label {
+                font-size: 0.7rem !important;
             }
 
             .calendar-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr !important;
+            }
+
+            .treemap-container, .sankey-container, .radar-container {
+                height: 200px;
+            }
+
+            .allocation-donut {
+                height: 250px;
+            }
+
+            /* Data tables on small screens */
+            .data-table {
+                font-size: 0.75rem;
+            }
+
+            .data-table th, .data-table td {
+                padding: 0.4rem 0.5rem;
             }
         }
     </style>
@@ -405,7 +466,7 @@
                 </div>
 
                 <!-- Days Header -->
-                <div style="display:grid; grid-template-columns:repeat(7, 1fr); background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                <div class="calendar-days-header hide-mobile" style="display:grid; grid-template-columns:repeat(7, 1fr); background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                     <div style="padding:0.75rem; text-align:center; font-weight:700; font-size:0.75rem; color:#64748b; text-transform:uppercase;">Lun</div>
                     <div style="padding:0.75rem; text-align:center; font-weight:700; font-size:0.75rem; color:#64748b; text-transform:uppercase;">Mar</div>
                     <div style="padding:0.75rem; text-align:center; font-weight:700; font-size:0.75rem; color:#64748b; text-transform:uppercase;">Mer</div>
@@ -416,7 +477,7 @@
                 </div>
 
                 <!-- Calendar Days -->
-                <div style="display:grid; grid-template-columns:repeat(7, 1fr);">
+                <div class="calendar-days-grid" style="display:grid; grid-template-columns:repeat(7, 1fr);">
 
                     <!-- Lundi 19 - MLK Day + Netflix -->
                     <div style="min-height:140px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; padding:0.5rem; background:linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);">
@@ -1639,6 +1700,17 @@
             <!-- Rotation Sectorielle -->
             <h3 style="margin-top:2rem;"><i class="fa-solid fa-arrows-spin" style="color:#8b5cf6;"></i> Rotation Sectorielle (17 jan)</h3>
 
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin:1rem 0;">
+                <p style="color:#475569; font-size:0.9rem; line-height:1.7; margin:0;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#8b5cf6;"></i>
+                    <strong>Qu'est-ce que la rotation sectorielle?</strong><br>
+                    L'argent ne disparait pas, il se deplace. Quand certains secteurs montent, d'autres baissent. Aujourd'hui:<br>
+                    <strong>Leaders (+4% a +6%)</strong>: Equipements telecom, renouvelables, argent, uranium = les investisseurs cherchent des valeurs refuges et le theme energie propre.<br>
+                    <strong>Retardataires (-3% a -7%)</strong>: Jeux, pub, auto = secteurs cycliques sensibles a la consommation discretionnaire.<br>
+                    <strong>Signal:</strong> Cette rotation "defensive" suggere une certaine prudence du marche malgre le regime "Risk-On".
+                </p>
+            </div>
+
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem; margin:1.5rem 0;">
                 <!-- Leaders -->
                 <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.5rem;">
@@ -1739,6 +1811,17 @@
         <!-- ========================================== -->
         <div class="content-card" id="earnings">
             <h2><i class="fa-solid fa-building-columns" style="color:#8b5cf6;"></i> Earnings Critiques Semaine 20-24 Janvier</h2>
+
+            <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+                <p style="color:#5b21b6; font-size:0.9rem; line-height:1.7; margin:0;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#8b5cf6;"></i>
+                    <strong>Comment trader les earnings:</strong><br>
+                    <strong>Avant l'annonce:</strong> La volatilite implicite des options est elevee. Les "straddles" (achat call + put) sont chers.<br>
+                    <strong>Le chiffre cle:</strong> Ce n'est pas juste le BPA (EPS) qui compte, mais la SURPRISE vs consensus et surtout la GUIDANCE (previsions futures).<br>
+                    <strong>Reaction typique:</strong> Une entreprise peut battre les attentes ET baisser si la guidance decoit. C'est le "buy the rumor, sell the news".<br>
+                    <strong>Netflix lundi soir</strong> = Marches fermes (MLK Day), donc la reaction se jouera mardi a l'ouverture.
+                </p>
+            </div>
 
             <!-- NETFLIX -->
             <div style="background:linear-gradient(135deg, #1e1e1e 0%, #0f0f0f 100%); color:white; border-radius:16px; padding:2rem; margin:2rem 0; border:2px solid #e50914;">
@@ -2069,6 +2152,17 @@
         <div class="content-card" id="crypto">
             <h2><i class="fa-brands fa-bitcoin" style="color:#f59e0b;"></i> Crypto</h2>
 
+            <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+                <p style="color:#9a3412; font-size:0.9rem; line-height:1.7; margin:0;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#f59e0b;"></i>
+                    <strong>Bitcoin pour les debutants:</strong><br>
+                    <strong>A $95,291</strong>, le Bitcoin est proche du haut de son range de 2 mois ($87K-$95K). S'il casse les $98K, cela pourrait declencher un rallye vers de nouveaux sommets.<br>
+                    <strong>$87B d'inflows ETF</strong> = Depuis l'approbation des ETF Bitcoin en janvier 2024, les investisseurs institutionnels ont injecte $87 milliards. C'est un signe de legitimation massive.<br>
+                    <strong>Moins de 0.5% des portefeuilles conseilles</strong> sont en crypto - il reste un enorme potentiel d'adoption.<br>
+                    <strong>Risque principal:</strong> La fin du mandat de Powell (mai 2026) cree de l'incertitude sur la politique monetaire.
+                </p>
+            </div>
+
             <!-- BITCOIN -->
             <div style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border-radius:16px; padding:2rem; margin:2rem 0;">
                 <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
@@ -2152,6 +2246,16 @@
         <div class="content-card">
             <h2><i class="fa-solid fa-gas-pump" style="color:#0ea5e9;"></i> Petrole & Energie</h2>
 
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+                <p style="color:#0369a1; font-size:0.9rem; line-height:1.7; margin:0;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#0ea5e9;"></i>
+                    <strong>Pourquoi le petrole est important:</strong><br>
+                    <strong>WTI a $59.34</strong> = Le petrole americain reste bas. C'est une bonne nouvelle pour l'inflation (essence moins chere) mais mauvais signe pour les producteurs petroliers.<br>
+                    <strong>Pourquoi le petrole ne monte pas malgre les tensions?</strong> L'offre mondiale depasse la demande de 2 millions de barils/jour. Le Venezuela post-Maduro pourrait ajouter 2-3M bpd a terme - tres bearish.<br>
+                    <strong>Cuivre -2.68%</strong> = Le cuivre est un indicateur de la sante economique mondiale ("Dr. Copper"). Sa baisse suggere un ralentissement de l'activite industrielle, notamment en Chine.
+                </p>
+            </div>
+
             <div class="metric-grid">
                 <div class="metric-card">
                     <div class="metric-value" style="color:#0f172a;">$59.34</div>
@@ -2199,6 +2303,17 @@
         <!-- ========================================== -->
         <div class="content-card">
             <h2><i class="fa-solid fa-money-bill-transfer" style="color:#16a34a;"></i> Devises & Taux</h2>
+
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+                <p style="color:#166534; font-size:0.9rem; line-height:1.7; margin:0;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#16a34a;"></i>
+                    <strong>Comprendre les devises et les taux:</strong><br>
+                    <strong>DXY a 99.38</strong> = L'indice du dollar mesure sa force face a un panier de devises (euro, yen, livre...). Sous 100, le dollar est considere "faible" - bon pour l'or et les matieres premieres.<br>
+                    <strong>EUR/USD a 1.16</strong> = 1 euro vaut 1.16 dollars. Avec les tarifs US sur l'Europe, l'euro pourrait baisser (vers 1.14-1.15).<br>
+                    <strong>10Y Treasury a 4.23%</strong> = C'est le rendement de reference pour les credits immobiliers. Chaque hausse de 0.1% augmente vos mensualites. +7 bps cette semaine = les credits deviennent plus chers.<br>
+                    <strong>Courbe pentifiee</strong> = Les taux longs montent plus que les courts. Historiquement, c'est le signe que l'economie reste robuste (pas de recession imminente).
+                </p>
+            </div>
 
             <div class="metric-grid">
                 <div class="metric-card">
@@ -2391,6 +2506,16 @@
         <!-- ========================================== -->
         <div class="content-card" id="outlook">
             <h2><i class="fa-solid fa-binoculars" style="color:#0ea5e9;"></i> Projections Semaine 20-24 Janvier</h2>
+
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+                <p style="color:#0369a1; font-size:0.9rem; line-height:1.7; margin:0;">
+                    <i class="fa-solid fa-graduation-cap" style="color:#0ea5e9;"></i>
+                    <strong>Comment utiliser ces projections:</strong><br>
+                    <strong>Range</strong> = Zone dans laquelle on s'attend a voir le prix evoluer cette semaine. Si le prix sort du range, c'est un signal fort (breakout ou breakdown).<br>
+                    <strong>Bias</strong> = Notre opinion sur la direction la plus probable. "Haussier" signifie qu'on pense que le prix montera, "Baissier" qu'il baissera.<br>
+                    <strong>Action:</strong> Achetez pres du support (bas du range), vendez pres de la resistance (haut du range). Si le prix casse le support, sortez vos positions.
+                </p>
+            </div>
 
             <h3>Ranges Attendus</h3>
             <table class="data-table">
