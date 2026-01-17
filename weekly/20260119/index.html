@@ -352,21 +352,50 @@
         }
 
         @media (max-width: 480px) {
+            /* All tables scrollable */
+            .data-table,
+            table {
+                display: block !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                white-space: nowrap !important;
+                font-size: 0.7rem !important;
+                margin: 0.5rem -0.75rem !important;
+                width: calc(100% + 1.5rem) !important;
+            }
+
+            .data-table th, .data-table td,
+            table th, table td {
+                padding: 0.35rem 0.5rem !important;
+                white-space: nowrap !important;
+            }
+
+            /* Grids single column */
+            .metric-grid,
+            .calendar-grid,
+            .risk-matrix,
+            [style*="grid-template-columns"],
+            [style*="display:grid"],
+            [style*="display: grid"] {
+                display: block !important;
+            }
+
             .metric-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.5rem !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.35rem !important;
             }
 
             .metric-card {
-                padding: 0.75rem !important;
+                padding: 0.5rem !important;
             }
 
             .metric-value {
-                font-size: 1.1rem !important;
+                font-size: 1rem !important;
             }
 
             .metric-label {
-                font-size: 0.7rem !important;
+                font-size: 0.6rem !important;
             }
 
             .calendar-grid {
@@ -374,41 +403,70 @@
             }
 
             .treemap-container, .sankey-container, .radar-container {
-                height: 200px;
+                height: 200px !important;
             }
 
             .allocation-donut {
-                height: 250px;
+                height: 220px !important;
             }
 
-            /* Data tables on small screens */
-            .data-table {
-                font-size: 0.75rem;
-                display: block !important;
+            /* Football field */
+            .football-field {
                 overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
+                -webkit-overflow-scrolling: touch !important;
+                margin: 0.5rem -0.75rem !important;
+                width: calc(100% + 1.5rem) !important;
             }
 
-            /* Wrapper for all tables */
-            .table-wrapper {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-                margin: 0 -1rem;
-                padding: 0 1rem;
+            .field-row {
+                min-width: 280px !important;
+                flex-wrap: nowrap !important;
             }
 
-            /* All inline grids become single column */
-            [style*="grid-template-columns"] {
-                grid-template-columns: 1fr !important;
+            .field-label {
+                min-width: 70px !important;
+                font-size: 0.65rem !important;
             }
 
-            /* Flex wrap for mobile */
-            [style*="display:flex"] {
+            /* Flex wrap */
+            [style*="display:flex"],
+            [style*="display: flex"] {
                 flex-wrap: wrap !important;
             }
 
-            .data-table th, .data-table td {
-                padding: 0.4rem 0.5rem;
+            /* Reduce all paddings */
+            [style*="padding:1.5rem"],
+            [style*="padding: 1.5rem"],
+            [style*="padding:2rem"],
+            [style*="padding: 2rem"] {
+                padding: 0.75rem !important;
+            }
+
+            [style*="padding:1.25rem"],
+            [style*="padding: 1.25rem"],
+            [style*="padding:1rem"],
+            [style*="padding: 1rem"] {
+                padding: 0.5rem !important;
+            }
+
+            /* Reduce gaps */
+            [style*="gap:1.5rem"],
+            [style*="gap: 1.5rem"],
+            [style*="gap:1rem"],
+            [style*="gap: 1rem"] {
+                gap: 0.5rem !important;
+            }
+
+            /* Leaders/Laggards boxes */
+            div[style*="background:#f0fdf4"],
+            div[style*="background:#fef2f2"] {
+                padding: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Info boxes */
+            div[style*="border:1px solid"] {
+                padding: 0.5rem !important;
             }
         }
     </style>
@@ -476,8 +534,8 @@
                 <p style="color:#1e40af; font-size:0.9rem; line-height:1.7; margin:0;">
                     <i class="fa-solid fa-graduation-cap" style="color:#3b82f6;"></i>
                     <strong>Comment utiliser ce calendrier:</strong><br>
-                    <strong>Lundi 19 (MLK Day)</strong> = Marches US fermes, mais Netflix publie ses resultats apres la cloture. La reaction se jouera mardi.<br>
-                    <strong>Mardi 20</strong> = Inauguration Trump. Les marches peuvent reagir aux premieres annonces (tarifs, nominations).<br>
+                    <strong>Lundi 19 (MLK Day)</strong> = Marches US fermes. Pas de trading.<br>
+                    <strong>Mardi 20</strong> = Netflix Q4 apres cloture + Inauguration Trump. Double evenement majeur.<br>
                     <strong>Mercredi-Jeudi</strong> = Earnings majeurs (GE Aerospace, American Express). Ce sont des indicateurs de la sante economique.<br>
                     <strong>Couleurs:</strong> Rouge = evenement critique (peut faire bouger le marche de +/-2%), Orange = important, Gris = marche ferme.
                 </p>
@@ -512,28 +570,28 @@
                 <!-- Calendar Days -->
                 <div class="calendar-days-grid" style="display:grid; grid-template-columns:repeat(7, 1fr);">
 
-                    <!-- Lundi 19 - MLK Day + Netflix -->
+                    <!-- Lundi 19 - MLK Day -->
                     <div style="min-height:140px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; padding:0.5rem; background:linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);">
                         <div style="font-weight:800; font-size:1.25rem; color:#64748b;">19</div>
                         <div style="margin-top:0.5rem;">
                             <div style="background:#64748b; color:white; font-size:0.65rem; padding:0.25rem 0.5rem; border-radius:4px; margin-bottom:0.25rem; font-weight:600;">
                                 <i class="fa-solid fa-lock"></i> MLK DAY
                             </div>
-                            <div style="background:#dc2626; color:white; font-size:0.65rem; padding:0.25rem 0.5rem; border-radius:4px; font-weight:600;">
-                                <i class="fa-solid fa-tv"></i> Netflix Q4
-                            </div>
-                            <div style="font-size:0.6rem; color:#64748b; margin-top:0.25rem;">Apres cloture</div>
+                            <div style="font-size:0.6rem; color:#64748b; margin-top:0.25rem;">Marches fermes</div>
                         </div>
                     </div>
 
-                    <!-- Mardi 20 -->
+                    <!-- Mardi 20 - Inauguration + Netflix -->
                     <div style="min-height:140px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; padding:0.5rem;">
                         <div style="font-weight:800; font-size:1.25rem; color:#0f172a;">20</div>
                         <div style="margin-top:0.5rem;">
                             <div style="background:#f59e0b; color:white; font-size:0.65rem; padding:0.25rem 0.5rem; border-radius:4px; margin-bottom:0.25rem; font-weight:600;">
                                 <i class="fa-solid fa-flag-usa"></i> Inauguration
                             </div>
-                            <div style="font-size:0.6rem; color:#64748b; margin-top:0.25rem;">Trump 2nd term</div>
+                            <div style="background:#dc2626; color:white; font-size:0.65rem; padding:0.25rem 0.5rem; border-radius:4px; font-weight:600;">
+                                <i class="fa-solid fa-tv"></i> Netflix Q4
+                            </div>
+                            <div style="font-size:0.6rem; color:#64748b; margin-top:0.25rem;">Apres cloture</div>
                         </div>
                     </div>
 
@@ -686,7 +744,7 @@
                         <td><span style="background:#64748b; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">FERME</span></td>
                     </tr>
                     <tr style="background:#fef2f2;">
-                        <td><strong>Lun 19</strong></td>
+                        <td><strong>Mar 20</strong></td>
                         <td>01:00</td>
                         <td><i class="fa-solid fa-tv"></i> <strong>Netflix Q4 Earnings</strong> - EPS $0.55e, Rev $11.97B</td>
                         <td><span style="background:#dc2626; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">CRITICAL</span></td>
@@ -1081,7 +1139,7 @@
         <div class="content-card" style="background:linear-gradient(135deg, #fef2f2, #fff7ed); border-left:4px solid #dc2626;">
             <h2 style="margin-top:0;"><i class="fa-solid fa-bullseye" style="color:#dc2626;"></i> Ce qui compte cette semaine</h2>
             <ol style="font-size:1.05rem; line-height:2;">
-                <li><strong>Lundi 20 jan - MLK Day:</strong> Marches US fermes. Netflix Q4 apres cloture - barometre consumer</li>
+                <li><strong>Lundi 19 jan - MLK Day:</strong> Marches US fermes. Netflix Q4 mardi 20 apres cloture - barometre consumer</li>
                 <li><strong>Tarifs Europe:</strong> Surveillez reactions EU, annonces de ripostes potentielles</li>
                 <li><strong>Earnings:</strong> GE Aerospace (mer), American Express, Verizon (jeu) - sante economique</li>
                 <li><strong>FOMC 27-28 jan:</strong> Preparation positions avant la reunion - Fed divisee, Powell sous pression</li>
@@ -1852,7 +1910,7 @@
                     <strong>Avant l'annonce:</strong> La volatilite implicite des options est elevee. Les "straddles" (achat call + put) sont chers.<br>
                     <strong>Le chiffre cle:</strong> Ce n'est pas juste le BPA (EPS) qui compte, mais la SURPRISE vs consensus et surtout la GUIDANCE (previsions futures).<br>
                     <strong>Reaction typique:</strong> Une entreprise peut battre les attentes ET baisser si la guidance decoit. C'est le "buy the rumor, sell the news".<br>
-                    <strong>Netflix lundi soir</strong> = Marches fermes (MLK Day), donc la reaction se jouera mardi a l'ouverture.
+                    <strong>Netflix mardi 20 soir</strong> = La reaction se jouera mercredi a l'ouverture.
                 </p>
             </div>
 
