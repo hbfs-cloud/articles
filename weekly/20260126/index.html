@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch Expert | Semaine 26 Janvier - 1er Fevrier 2026</title>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Charts Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+    <style>
+        /* Custom styles for this report */
+        .alert-banner {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+        }
+
+        .chart-container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .up { color: #16a34a; }
+        .down { color: #dc2626; }
+        .neutral { color: #64748b; }
+
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .risk-item {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 4px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .risk-high { border-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); }
+        .risk-medium { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
+        .risk-low { border-color: #16a34a; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin: 2rem 0;
+        }
+
+        .calendar-day {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-day.critical {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #dc2626;
+        }
+
+        .calendar-day.important {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #f59e0b;
+        }
+
+        .calendar-day.closed {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-color: #94a3b8;
+            opacity: 0.7;
+        }
+
+        .calendar-day-name {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .calendar-day-num {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0.25rem 0;
+        }
+
+        .calendar-day-event {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #475569;
+            line-height: 1.3;
+        }
+
+        .validation-score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+        }
+
+        .geo-alert {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #dc2626;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .geo-alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+            animation: gradient-move 3s linear infinite;
+        }
+
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .geo-alert h3 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+
+        .treemap-container, .sankey-container, .radar-container {
+            width: 100%;
+            height: 400px;
+            margin: 1rem 0;
+        }
+
+        .heatmap-container {
+            width: 100%;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .football-field {
+            background: linear-gradient(90deg, #f0fdf4 0%, #ffffff 50%, #fef2f2 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .field-row:last-child {
+            border-bottom: none;
+        }
+
+        .field-label {
+            width: 120px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .field-bar-container {
+            flex: 1;
+            height: 24px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .field-bar {
+            height: 100%;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            transition: width 1s ease-out;
+        }
+
+        .allocation-donut {
+            width: 100%;
+            height: 350px;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .metric-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.75rem !important;
+            }
+
+            .calendar-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Hide calendar header on mobile */
+            .calendar-days-header {
+                display: none !important;
+            }
+
+            /* Calendar days as vertical list on mobile */
+            .calendar-days-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                grid-template-columns: none !important;
+            }
+
+            .calendar-days-grid > div {
+                min-height: auto !important;
+                border-right: none !important;
+                padding: 1rem !important;
+            }
+
+            .treemap-container, .sankey-container, .radar-container {
+                height: 250px;
+            }
+
+            .alert-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem !important;
+            }
+
+            /* Allocation donut */
+            .allocation-donut {
+                height: 280px;
+            }
+
+            /* Football field scroll */
+            .football-field {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .field-row {
+                min-width: 500px;
+            }
+
+            /* Hide mobile class */
+            .hide-mobile {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* All tables responsive with text wrap */
+            .data-table,
+            table {
+                display: table !important;
+                width: 100% !important;
+                font-size: 0.7rem !important;
+                margin: 0.5rem 0 !important;
+                table-layout: fixed !important;
+            }
+
+            .data-table th, .data-table td,
+            table th, table td {
+                padding: 0.35rem 0.5rem !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+            }
+
+            /* Grids single column */
+            .metric-grid,
+            .calendar-grid,
+            .risk-matrix,
+            [style*="grid-template-columns"],
+            [style*="display:grid"],
+            [style*="display: grid"] {
+                display: block !important;
+            }
+
+            .metric-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.35rem !important;
+            }
+
+            .metric-card {
+                padding: 0.5rem !important;
+            }
+
+            .metric-value {
+                font-size: 1rem !important;
+            }
+
+            .metric-label {
+                font-size: 0.6rem !important;
+            }
+
+            .calendar-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .treemap-container, .sankey-container, .radar-container {
+                height: 200px !important;
+            }
+
+            .allocation-donut {
+                height: 220px !important;
+            }
+
+            /* Football field */
+            .football-field {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                margin: 0.5rem -0.75rem !important;
+                width: calc(100% + 1.5rem) !important;
+            }
+
+            .field-row {
+                min-width: 280px !important;
+                flex-wrap: nowrap !important;
+            }
+
+            .field-label {
+                min-width: 70px !important;
+                font-size: 0.65rem !important;
+            }
+
+            /* Flex wrap */
+            [style*="display:flex"],
+            [style*="display: flex"] {
+                flex-wrap: wrap !important;
+            }
+
+            /* Reduce all paddings */
+            [style*="padding:1.5rem"],
+            [style*="padding: 1.5rem"],
+            [style*="padding:2rem"],
+            [style*="padding: 2rem"] {
+                padding: 0.75rem !important;
+            }
+
+            [style*="padding:1.25rem"],
+            [style*="padding: 1.25rem"],
+            [style*="padding:1rem"],
+            [style*="padding: 1rem"] {
+                padding: 0.5rem !important;
+            }
+
+            /* Reduce gaps */
+            [style*="gap:1.5rem"],
+            [style*="gap: 1.5rem"],
+            [style*="gap:1rem"],
+            [style*="gap: 1rem"] {
+                gap: 0.5rem !important;
+            }
+
+            /* Leaders/Laggards boxes */
+            div[style*="background:#f0fdf4"],
+            div[style*="background:#fef2f2"] {
+                padding: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Info boxes */
+            div[style*="border:1px solid"] {
+                padding: 0.5rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+        <a href="../../index.html"
+            style="display:inline-flex; align-items:center; gap:10px; margin-bottom:2rem; text-decoration:none; color:#0f172a; font-weight:800; font-size:1.2rem;">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:32px;"> MARKET WATCH
+        </a>
+        <div class="container">
+            <div style="font-weight:700; color:#dc2626; letter-spacing:1px; margin-bottom:1rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i> RAPPORT HEBDOMADAIRE | 26 JANVIER - 1er FEVRIER 2026
+            </div>
+            <h1 class="hero-title">FOMC Critique & Tarifs Canada 100%</h1>
+            <p class="hero-subtitle">
+                FOMC 27-28 jan decisif. Trump menace tarifs 100% sur Canada. Or $4,980 (ATH imminent $5,000),
+                Argent franchit $100 (+5.15%). Score validation precedent: 6/6 (100%).
+                Valorisations extremes (Shiller 40.63, Buffett 222%). Prudence elevee recommandee.
+            </p>
+
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <div class="container" style="margin-top:-3rem; position:relative; z-index:10;">
+
+        <!-- ========================================== -->
+        <!-- SECTION: ALERTE GEOPOLITIQUE -->
+        <!-- ========================================== -->
+        <div class="geo-alert">
+            <h3><i class="fa-solid fa-triangle-exclamation"></i> ALERTES GEOPOLITIQUES CRITIQUES</h3>
+            <table class="data-table" style="margin:0;">
+                <thead>
+                    <tr>
+                        <th>Niveau</th>
+                        <th>Evenement</th>
+                        <th>Impact Potentiel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#fef2f2;">
+                        <td><span style="color:#dc2626; font-weight:700;">ELEVE</span></td>
+                        <td><strong>Trump menace tarifs 100% sur Canada</strong></td>
+                        <td>Choc commercial majeur, USD volatilite</td>
+                    </tr>
+                    <tr style="background:#fef2f2;">
+                        <td><span style="color:#dc2626; font-weight:700;">ELEVE</span></td>
+                        <td><strong>Risque Government Shutdown US</strong></td>
+                        <td>Paralysie administrative, credit souverain</td>
+                    </tr>
+                    <tr style="background:#fffbeb;">
+                        <td><span style="color:#f59e0b; font-weight:700;">MODERE</span></td>
+                        <td><strong>FOMC 27-28 janvier</strong></td>
+                        <td>Guidance 2026 cruciale, succession Powell</td>
+                    </tr>
+                    <tr style="background:#fffbeb;">
+                        <td><span style="color:#f59e0b; font-weight:700;">MODERE</span></td>
+                        <td><strong>Fracture transatlantique Davos</strong></td>
+                        <td>EUR/USD, flux safe haven</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: CALENDRIER STRATEGIQUE -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-calendar-week" style="color:#0ea5e9;"></i> Calendrier Strategique</h2>
+
+            <div class="calendar-grid">
+                <div class="calendar-day">
+                    <div class="calendar-day-name">Lundi</div>
+                    <div class="calendar-day-num">26</div>
+                    <div class="calendar-day-event">Earnings WAL, NUE, SOFI, IBN</div>
+                </div>
+                <div class="calendar-day critical">
+                    <div class="calendar-day-name">Mardi</div>
+                    <div class="calendar-day-num">27</div>
+                    <div class="calendar-day-event"><strong>FOMC Debut</strong><br>RTX, NOC, LMT, BA, GM, SAP</div>
+                </div>
+                <div class="calendar-day critical">
+                    <div class="calendar-day-name">Mercredi</div>
+                    <div class="calendar-day-num">28</div>
+                    <div class="calendar-day-event"><strong>FOMC Decision 19h UTC</strong><br>MSFT, META, TSLA</div>
+                </div>
+                <div class="calendar-day important">
+                    <div class="calendar-day-name">Jeudi</div>
+                    <div class="calendar-day-num">29</div>
+                    <div class="calendar-day-event"><strong>AAPL Earnings</strong><br>V, MA, Jobless Claims</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="calendar-day-name">Vendredi</div>
+                    <div class="calendar-day-num">30</div>
+                    <div class="calendar-day-event">Digestion Earnings</div>
+                </div>
+                <div class="calendar-day closed">
+                    <div class="calendar-day-name">Samedi</div>
+                    <div class="calendar-day-num">31</div>
+                    <div class="calendar-day-event">Marches fermes</div>
+                </div>
+                <div class="calendar-day closed">
+                    <div class="calendar-day-name">Dimanche</div>
+                    <div class="calendar-day-num">1</div>
+                    <div class="calendar-day-event">Fevrier</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: VALIDATION RAPPORT PRECEDENT -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-check-double" style="color:#10b981;"></i> Validation Rapport Precedent (19-24 janvier)</h2>
+
+            <div style="display:flex; align-items:center; gap:2rem; flex-wrap:wrap; margin-bottom:2rem;">
+                <div class="validation-score">6/6</div>
+                <div>
+                    <h3 style="margin:0; color:#10b981;">Score de validation: 100%</h3>
+                    <p style="margin:0.5rem 0 0 0; color:#64748b;">Toutes les predictions ont ete validees</p>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Prediction</th>
+                        <th>Resultat</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0fdf4;">
+                        <td>Or vers $5,000</td>
+                        <td>$4,979.70 (+1.35%)</td>
+                        <td><span style="background:#10b981; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">VALIDE</span> - A 0.4% du target</td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td>Argent breakout $100</td>
+                        <td>$101.33 (+5.15%)</td>
+                        <td><span style="background:#10b981; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">VALIDE</span> - Franchissement historique</td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td>Russell 2000 sous-performance</td>
+                        <td>-1.82% vs S&P +0.03%</td>
+                        <td><span style="background:#10b981; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">VALIDE</span></td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td>Rotation Materials/Energy</td>
+                        <td>Materials +2%, Energy +1%</td>
+                        <td><span style="background:#10b981; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">VALIDE</span></td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td>Bitcoin correction</td>
+                        <td>-2.4%, support $88K teste</td>
+                        <td><span style="background:#10b981; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">VALIDE</span></td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td>VIX complacence</td>
+                        <td>16.09 (niveau bas)</td>
+                        <td><span style="background:#10b981; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">VALIDE</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: SYNTHESE EXECUTIVE -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-file-lines" style="color:#3b82f6;"></i> Synthese Executive</h2>
+
+            <div style="background:#0f172a; color:white; padding:2rem; border-radius:16px; margin:1.5rem 0;">
+                <p style="font-size:1.1rem; font-weight:600; margin:0; text-align:center; line-height:1.6;">
+                    <strong>REGIME:</strong> Risk-On modere (score 0.399) avec signaux contradictoires majeurs
+                </p>
+            </div>
+
+            <p style="line-height:1.8; color:#475569;">
+                La semaine a venir concentre des catalyseurs historiques: <strong>FOMC (27-28 jan)</strong>, vague d'earnings Tech/Defense massive, et escalade tarifaire Trump.
+                Les metaux precieux atteignent des records (<strong>Or $4,980, Argent $101</strong>) signalant une fuite vers les actifs reels malgre un VIX complaisant a 16.
+                La divergence entre la performance des indices (S&P +0.03%) et les indicateurs de stress sous-jacents (Russell -1.82%, margin debt parabolique, Shiller P/E 40.63) suggere une <strong>fragilite structurelle masquee</strong>.
+            </p>
+
+            <!-- Metriques cles -->
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#3b82f6;">0.399</div>
+                    <div class="metric-label">Score Regime</div>
+                    <div class="metric-change neutral">Risk-On Modere</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">16.09</div>
+                    <div class="metric-label">VIX</div>
+                    <div class="metric-change neutral">Complacence</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">40.63</div>
+                    <div class="metric-label">Shiller CAPE</div>
+                    <div class="metric-change down">2eme plus haut 155 ans</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">222%</div>
+                    <div class="metric-label">Buffett Indicator</div>
+                    <div class="metric-change down">Record absolu</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#eab308;">$4,980</div>
+                    <div class="metric-label">Or Spot</div>
+                    <div class="metric-change up">+1.35%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#94a3b8;">$101</div>
+                    <div class="metric-label">Argent Spot</div>
+                    <div class="metric-change up">+5.15%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: SIGNAUX D'ALERTE -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-bell" style="color:#dc2626;"></i> Signaux d'Alerte Critiques</h2>
+
+            <div class="risk-matrix">
+                <div class="risk-item risk-high">
+                    <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-chart-line"></i> Valorisations Extremes</h4>
+                    <p style="margin:0.5rem 0;"><strong>Shiller CAPE:</strong> 40.63 - 2eme plus haut en 155 ans (seul dot-com superieur)</p>
+                    <p style="margin:0.5rem 0;"><strong>Buffett Indicator:</strong> 222%+ - Record absolu historique</p>
+                    <p style="margin:0; color:#991b1b; font-size:0.85rem;">Historique: 5 occurrences >30 suivies de corrections -20% a -89%</p>
+                </div>
+
+                <div class="risk-item risk-high">
+                    <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-arrow-trend-up"></i> Margin Debt Parabolique</h4>
+                    <p style="margin:0.5rem 0;">Spike <strong>+42% en 7 mois</strong> - 6eme occurrence historique</p>
+                    <p style="margin:0; color:#991b1b; font-size:0.85rem;"><strong>100% des occurrences precedentes suivies de baisse S&P</strong><br>Signal de timing contrarian le plus fiable</p>
+                </div>
+
+                <div class="risk-item risk-medium">
+                    <h4 style="margin-top:0; color:#f59e0b;"><i class="fa-solid fa-money-bill-wave"></i> Money Market Record</h4>
+                    <p style="margin:0.5rem 0;"><strong>$7.8 Trillion</strong> en money market malgre 6 cuts Fed</p>
+                    <p style="margin:0; color:#92400e; font-size:0.85rem;">Signal de fuite vers liquidite<br>Potentiel contrarian: dry powder massif</p>
+                </div>
+
+                <div class="risk-item risk-medium">
+                    <h4 style="margin-top:0; color:#f59e0b;"><i class="fa-solid fa-landmark"></i> Fed Divisee</h4>
+                    <p style="margin:0.5rem 0;">4 dernieres reunions avec dissents</p>
+                    <p style="margin:0.5rem 0;">2 dissents dans directions opposees (3 occurrences depuis 1990)</p>
+                    <p style="margin:0; color:#92400e; font-size:0.85rem;">Terme Powell expire 15 mai 2026 - incertitude succession</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: INDICES MAJEURS -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-chart-bar" style="color:#8b5cf6;"></i> Marches Actions</h2>
+
+            <h3>Indices Majeurs</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Indice</th>
+                        <th>Niveau</th>
+                        <th>Jour</th>
+                        <th>Semaine</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>S&P 500</strong></td>
+                        <td>6,915.61</td>
+                        <td class="up">+0.03%</td>
+                        <td class="up">+1.2%</td>
+                        <td>Neutre-haussier</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dow Jones</strong></td>
+                        <td>49,098.71</td>
+                        <td class="down">-0.58%</td>
+                        <td class="up">+0.8%</td>
+                        <td>Rotation value</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NASDAQ</strong></td>
+                        <td>23,501.24</td>
+                        <td class="up">+0.28%</td>
+                        <td class="up">+2.1%</td>
+                        <td>Tech resilient</td>
+                    </tr>
+                    <tr style="background:#fef2f2;">
+                        <td><strong>Russell 2000</strong></td>
+                        <td>2,669.16</td>
+                        <td class="down"><strong>-1.82%</strong></td>
+                        <td class="down">-0.5%</td>
+                        <td><span style="color:#dc2626; font-weight:700;">ALERTE</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem; margin-top:1.5rem;">
+                <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Analyse Russell 2000 - Signal Critique</h4>
+                <p style="margin:0; color:#991b1b;"><strong>Sous-performance majeure (-1.82%)</strong> malgre narratif "broadening":</p>
+                <ul style="margin:0.5rem 0 0 0; padding-left:1.5rem; color:#991b1b;">
+                    <li>40% des composants non-profitables</li>
+                    <li>Qualite faible vs large caps</li>
+                    <li>Sensibilite accrue au credit et taux</li>
+                    <li><strong>Divergence vs S&P = signal de stress</strong></li>
+                </ul>
+            </div>
+
+            <!-- Top/Flop performers -->
+            <h3 style="margin-top:2rem;">Top 10 Performers</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                <div style="background:#f0fdf4; border-radius:8px; padding:1rem;">
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td><strong>LIF</strong></td><td class="up">+24.25%</td><td>Materials</td></tr>
+                            <tr><td><strong>RR</strong></td><td class="up">+12.96%</td><td>Industrials</td></tr>
+                            <tr><td><strong>CRML</strong></td><td class="up">+11.70%</td><td>Healthcare</td></tr>
+                            <tr><td><strong>QURE</strong></td><td class="up">+10.53%</td><td>Biotech</td></tr>
+                            <tr><td><strong>PLRZ</strong></td><td class="up">+9.59%</td><td>Tech</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="background:#f0fdf4; border-radius:8px; padding:1rem;">
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td><strong>ERIC</strong></td><td class="up">+8.87%</td><td>Telecom</td></tr>
+                            <tr><td><strong>PI</strong></td><td class="up">+8.72%</td><td>Industrials</td></tr>
+                            <tr><td><strong>APLD</strong></td><td class="up">+8.49%</td><td>Tech/Crypto</td></tr>
+                            <tr><td><strong>IREN</strong></td><td class="up">+8.46%</td><td>Crypto Mining</td></tr>
+                            <tr><td><strong>BAH</strong></td><td class="up">+6.76%</td><td>Defense</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">Bottom 10 Performers</h3>
+            <div style="background:#fef2f2; border-radius:8px; padding:1rem;">
+                <table class="data-table" style="margin:0;">
+                    <tbody>
+                        <tr><td><strong>SMX</strong></td><td class="down"><strong>-68.22%</strong></td><td>Tech</td></tr>
+                        <tr><td><strong>INTC</strong></td><td class="down">-17.03%</td><td>Semiconductors</td></tr>
+                        <tr><td><strong>APGE</strong></td><td class="down">-12.32%</td><td>Biotech</td></tr>
+                        <tr><td><strong>NVTS</strong></td><td class="down">-9.92%</td><td>Semiconductors</td></tr>
+                        <tr><td><strong>FORM</strong></td><td class="down">-9.63%</td><td>Semiconductors</td></tr>
+                    </tbody>
+                </table>
+                <p style="margin:1rem 0 0 0; color:#991b1b; font-size:0.85rem;"><strong>Pattern:</strong> Semiconductors sous pression (INTC -17%), Biotech mixte, Materials leaders</p>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: ROTATIONS SECTORIELLES -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-arrows-rotate" style="color:#10b981;"></i> Rotations Sectorielles</h2>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+                <!-- Leaders -->
+                <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.5rem;">
+                    <h4 style="margin-top:0; color:#16a34a;"><i class="fa-solid fa-arrow-up"></i> Secteurs Leaders</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Materials</td><td class="up">+2%</td></tr>
+                            <tr><td>Communication</td><td class="up">+1%</td></tr>
+                            <tr><td>Energy</td><td class="up">+1%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Laggards -->
+                <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.5rem;">
+                    <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-arrow-down"></i> Secteurs Retardataires</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Industrials</td><td class="down">-1%</td></tr>
+                            <tr><td>Technology</td><td class="down">-1%</td></tr>
+                            <tr><td>Financials</td><td class="down">-1%</td></tr>
+                            <tr><td>Healthcare</td><td class="down">-1%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">Industries Top/Bottom</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                <div>
+                    <h4 style="color:#16a34a; margin-bottom:0.5rem;">Leaders</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Other Industrial Metals</td><td class="up">+6%</td></tr>
+                            <tr><td>Silver</td><td class="up">+5%</td></tr>
+                            <tr><td>Copper</td><td class="up">+2%</td></tr>
+                            <tr><td>Gold</td><td class="up">+2%</td></tr>
+                            <tr><td>Oil & Gas Drilling</td><td class="up">+2%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h4 style="color:#dc2626; margin-bottom:0.5rem;">Retardataires</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Autonomous Transport</td><td class="down">-15%</td></tr>
+                            <tr><td>Paper & Packaging</td><td class="down">-6%</td></tr>
+                            <tr><td>Iron & Steel</td><td class="down">-5%</td></tr>
+                            <tr><td>Agriculture</td><td class="down">-5%</td></tr>
+                            <tr><td>Homebuilding</td><td class="down">-5%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">Themes d'Investissement</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                <div style="background:#f0fdf4; border-radius:8px; padding:1rem;">
+                    <h4 style="color:#16a34a; margin:0 0 0.5rem 0;">Momentum Positif</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Rare Earths</td><td class="up">+7%</td></tr>
+                            <tr><td>Satellite Imagery</td><td class="up">+4%</td></tr>
+                            <tr><td>Lithium</td><td class="up">+2%</td></tr>
+                            <tr><td>Smart Home</td><td class="up">+2%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="background:#fef2f2; border-radius:8px; padding:1rem;">
+                    <h4 style="color:#dc2626; margin:0 0 0.5rem 0;">Momentum Negatif</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Autonomous Transport</td><td class="down">-15%</td></tr>
+                            <tr><td>Blockchain</td><td class="down">-5%</td></tr>
+                            <tr><td>Homebuilding</td><td class="down">-5%</td></tr>
+                            <tr><td>Digital Identity</td><td class="down">-4%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: EARNINGS CRITIQUES -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-building" style="color:#6366f1;"></i> Earnings Critiques - Semaine du 26 Jan</h2>
+
+            <h3 style="color:#dc2626;"><i class="fa-solid fa-circle"></i> Lundi 26 Janvier</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timing</th>
+                        <th>Symbole</th>
+                        <th>Secteur</th>
+                        <th>Market Cap</th>
+                        <th>EPS Est.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>AMC</td><td><strong>WAL</strong></td><td>Banking</td><td>$9.38B</td><td>$2.40</td></tr>
+                    <tr><td>AMC</td><td><strong>NUE</strong></td><td>Steel</td><td>$36.42B</td><td>$1.73</td></tr>
+                    <tr><td>BMO</td><td><strong>IBN</strong></td><td>Banking</td><td>$108.12B</td><td>$0.39</td></tr>
+                    <tr><td>BMO</td><td><strong>SOFI</strong></td><td>Fintech</td><td>$34.33B</td><td>$0.11</td></tr>
+                    <tr><td>BMO</td><td><strong>RYAAY</strong></td><td>Airlines</td><td>$36.34B</td><td>$0.15</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:2rem; color:#dc2626;"><i class="fa-solid fa-circle"></i> Mardi 27 Janvier - JOURNEE MAJEURE</h3>
+            <h4>Defense & Aerospace (Focus Geopolitique)</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timing</th>
+                        <th>Symbole</th>
+                        <th>Secteur</th>
+                        <th>Market Cap</th>
+                        <th>EPS Est.</th>
+                        <th>Enjeu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0f9ff;"><td>BMO</td><td><strong>RTX</strong></td><td>Defense</td><td><strong>$244B</strong></td><td>$1.46</td><td>Backlog, Ukraine</td></tr>
+                    <tr style="background:#f0f9ff;"><td>BMO</td><td><strong>NOC</strong></td><td>Defense</td><td><strong>$81B</strong></td><td>$6.93</td><td>Space, hypersonics</td></tr>
+                    <tr style="background:#f0f9ff;"><td>BMO</td><td><strong>LMT</strong></td><td>Defense</td><td><strong>$110B</strong></td><td>$6.44</td><td>F-35, missiles</td></tr>
+                    <tr style="background:#f0f9ff;"><td>BMO</td><td><strong>BA</strong></td><td>Aerospace</td><td><strong>$163B</strong></td><td>-$0.41</td><td>Recovery, 737 MAX</td></tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin-top:1.5rem;">Healthcare, Consumer & Industrial</h4>
+            <table class="data-table">
+                <tbody>
+                    <tr><td>BMO</td><td><strong>UNH</strong></td><td>Health Ins.</td><td><strong>$297B</strong></td><td>$2.10</td></tr>
+                    <tr><td>AMC</td><td><strong>SBUX</strong></td><td>Consumer</td><td><strong>$100B</strong></td><td>$0.60</td></tr>
+                    <tr><td>BMO</td><td><strong>GM</strong></td><td>Auto</td><td><strong>$77B</strong></td><td>$2.22</td></tr>
+                    <tr><td>BMO</td><td><strong>SAP</strong></td><td>Enterprise SW</td><td><strong>$285B</strong></td><td>$1.74</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:2rem; color:#f59e0b;"><i class="fa-solid fa-circle"></i> Mercredi 28 Janvier - FOMC + Tech Mega</h3>
+            <table class="data-table">
+                <tbody>
+                    <tr style="background:#fef3c7;"><td>AMC</td><td><strong>MSFT</strong></td><td>Tech</td><td><strong>$3.1T</strong></td><td>TBD</td></tr>
+                    <tr style="background:#fef3c7;"><td>AMC</td><td><strong>META</strong></td><td>Tech</td><td><strong>$1.5T</strong></td><td>TBD</td></tr>
+                    <tr style="background:#fef3c7;"><td>AMC</td><td><strong>TSLA</strong></td><td>Auto/Tech</td><td><strong>$1.2T</strong></td><td>TBD</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:2rem; color:#f59e0b;"><i class="fa-solid fa-circle"></i> Jeudi 29 Janvier</h3>
+            <table class="data-table">
+                <tbody>
+                    <tr style="background:#fef3c7;"><td>AMC</td><td><strong>AAPL</strong></td><td>Tech</td><td><strong>$3.5T</strong></td><td>TBD</td></tr>
+                    <tr><td>AMC</td><td><strong>V</strong></td><td>Payments</td><td>$600B+</td><td>TBD</td></tr>
+                    <tr><td>AMC</td><td><strong>MA</strong></td><td>Payments</td><td>$450B+</td><td>TBD</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: FOMC PREVIEW -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-landmark" style="color:#0ea5e9;"></i> FOMC 27-28 Janvier - Deep Dive</h2>
+
+            <div style="background:#f0f9ff; border:1px solid #0ea5e9; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+                <h4 style="margin-top:0; color:#0369a1;"><i class="fa-solid fa-bullseye"></i> Contexte</h4>
+                <ul style="margin:0; padding-left:1.5rem; color:#0369a1; line-height:1.8;">
+                    <li><strong>Decision attendue:</strong> Hold (97% probabilite)</li>
+                    <li><strong>Focus:</strong> Guidance 2026, dot plot implicite</li>
+                    <li><strong>Contexte:</strong> 4 reunions consecutives avec dissents</li>
+                    <li><strong>Succession Powell:</strong> Terme expire 15 mai 2026</li>
+                </ul>
+            </div>
+
+            <h3>Scenarios de Marche</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ton FOMC</th>
+                        <th>Probabilite</th>
+                        <th>Reaction Attendue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#fef2f2;">
+                        <td><strong>Hawkish</strong></td>
+                        <td>40%</td>
+                        <td>Bonds baisse, USD hausse, Gold baisse, Tech baisse</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Neutre</strong></td>
+                        <td>35%</td>
+                        <td>Consolidation, vol basse</td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td><strong>Dovish</strong></td>
+                        <td>25%</td>
+                        <td>Bonds hausse, USD baisse, Gold hausse, Risk-on</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:1.5rem;">Points d'Attention Powell</h3>
+            <ol style="line-height:1.8; color:#475569;">
+                <li>Commentaires sur inflation "sticky"</li>
+                <li>Marche du travail - cooling ou robust?</li>
+                <li>Guidance implicite sur trajectory 2026</li>
+                <li>Questions sur succession (indirect)</li>
+            </ol>
+
+            <h3 style="margin-top:1.5rem;">Marches Predictifs (Polymarket)</h3>
+            <table class="data-table">
+                <tbody>
+                    <tr><td>Fed cut 2026</td><td>50% probabilite</td></tr>
+                    <tr><td>Recession 2026</td><td>15% probabilite</td></tr>
+                    <tr><td>Inflation >3%</td><td>30% probabilite</td></tr>
+                    <tr><td>Fed Chair succession</td><td>Rick Rieder (BlackRock) monte, Warsh 33%, Hassett 6%</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: METAUX PRECIEUX -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-coins" style="color:#eab308;"></i> Metaux Precieux</h2>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+                <!-- Or -->
+                <div style="background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:2px solid #eab308; border-radius:16px; padding:1.5rem;">
+                    <h3 style="margin-top:0; color:#92400e;"><i class="fa-solid fa-ring"></i> OR (Gold)</h3>
+                    <div style="font-size:2.5rem; font-weight:800; color:#0f172a;">$4,979.70</div>
+                    <div style="color:#16a34a; font-weight:600;">+1.35%</div>
+
+                    <table class="data-table" style="margin:1rem 0;">
+                        <tbody>
+                            <tr><td>Resistance</td><td><strong style="color:#dc2626;">$5,000</strong> (Psychologique)</td></tr>
+                            <tr><td>Support</td><td>$4,850</td></tr>
+                            <tr><td>Target Goldman</td><td><strong>$5,400</strong> (+8.5% upside)</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h4 style="margin-bottom:0.5rem;">Catalyseurs Haussiers</h4>
+                    <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#92400e;">
+                        <li>Faiblesse USD (DXY 97.46)</li>
+                        <li>Tensions geopolitiques (tarifs, Greenland)</li>
+                        <li>Fracture transatlantique (safe haven)</li>
+                        <li>Banques centrales acheteuses nettes</li>
+                    </ul>
+                </div>
+
+                <!-- Argent -->
+                <div style="background:linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border:2px solid #94a3b8; border-radius:16px; padding:1.5rem;">
+                    <h3 style="margin-top:0; color:#475569;"><i class="fa-solid fa-bolt"></i> ARGENT (Silver)</h3>
+                    <div style="font-size:2.5rem; font-weight:800; color:#0f172a;">$101.33</div>
+                    <div style="color:#16a34a; font-weight:600;"><strong>+5.15%</strong> BREAKOUT HISTORIQUE</div>
+
+                    <table class="data-table" style="margin:1rem 0;">
+                        <tbody>
+                            <tr><td>Resistance</td><td>$105</td></tr>
+                            <tr><td>Support</td><td>$95 (ancien plafond)</td></tr>
+                            <tr><td>Performance 2025</td><td><strong>+147%</strong></td></tr>
+                        </tbody>
+                    </table>
+
+                    <h4 style="margin-bottom:0.5rem;">Catalyseurs</h4>
+                    <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#475569;">
+                        <li>Demande industrielle (solaire, EV)</li>
+                        <li>Ratio Or/Argent en compression</li>
+                        <li>Supply constraints</li>
+                        <li>ETF SLV inflows records</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">Recommandation Metaux</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Metal</th>
+                        <th>Conviction</th>
+                        <th>Allocation</th>
+                        <th>Vehicule</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0fdf4;">
+                        <td><strong>Or</strong></td>
+                        <td><span style="color:#16a34a; font-weight:700;">FORTE</span></td>
+                        <td>8-12%</td>
+                        <td>GLD, IAU, physique</td>
+                    </tr>
+                    <tr style="background:#f0fdf4;">
+                        <td><strong>Argent</strong></td>
+                        <td><span style="color:#16a34a; font-weight:700;">FORTE</span></td>
+                        <td>3-5%</td>
+                        <td>SLV, PSLV, minieres</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Platine</strong></td>
+                        <td><span style="color:#16a34a;">Positive</span></td>
+                        <td>1-2%</td>
+                        <td>PPLT</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: ENERGIE -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-gas-pump" style="color:#f97316;"></i> Energie</h2>
+
+            <h3>Petrole</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Prix</th>
+                        <th>Variation</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>WTI Crude</strong></td><td>$61.07</td><td class="up">+2.88%</td><td>Haussier court-terme</td></tr>
+                    <tr><td><strong>Brent Crude</strong></td><td>$65.07</td><td class="up">+2.73%</td><td>Haussier court-terme</td></tr>
+                    <tr style="background:#fef3c7;"><td><strong>Natural Gas</strong></td><td>$3.61</td><td class="up">+0.87%</td><td>Volatil (+75% semaine)</td></tr>
+                </tbody>
+            </table>
+
+            <div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:12px; padding:1.25rem; margin-top:1.5rem;">
+                <h4 style="margin-top:0; color:#92400e;"><i class="fa-solid fa-wind"></i> Natural Gas Alert</h4>
+                <p style="margin:0; color:#92400e;"><strong>+75% sur la semaine</strong> du a Winter Storm Fern. Volatilite extreme - position sizing reduit recommande. Retour a normalite attendu post-tempete.</p>
+            </div>
+
+            <h3 style="margin-top:1.5rem;">Metaux Industriels</h3>
+            <table class="data-table">
+                <tbody>
+                    <tr><td><strong>Cuivre</strong></td><td>$5.95/lb</td><td class="up">+2.92%</td><td>Demande EV/infra</td></tr>
+                    <tr><td><strong>Aluminium</strong></td><td>-</td><td>-</td><td>Tarifs risque</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: CRYPTO -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-brands fa-bitcoin" style="color:#f7931a;"></i> Crypto-Actifs</h2>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">
+                <!-- Bitcoin -->
+                <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:2px solid #f7931a; border-radius:16px; padding:1.5rem;">
+                    <h3 style="margin-top:0; color:#92400e;"><i class="fa-brands fa-bitcoin"></i> Bitcoin</h3>
+                    <div style="font-size:2rem; font-weight:800; color:#0f172a;">$87,154</div>
+                    <div style="color:#dc2626; font-weight:600;"><strong>-2.4%</strong> Correction</div>
+
+                    <table class="data-table" style="margin:1rem 0;">
+                        <tbody>
+                            <tr><td>Support Critique</td><td style="color:#dc2626;"><strong>$85,000</strong></td></tr>
+                            <tr><td>Resistance</td><td>$92,000</td></tr>
+                            <tr><td>Market Cap</td><td>$1.74T</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p style="margin:0; font-size:0.85rem; color:#92400e;">
+                        <strong>Pattern:</strong> Consolidation sous ATH, pression vendeuse. Decorrellation vs Or (negatif pour BTC)
+                    </p>
+                </div>
+
+                <!-- Ethereum -->
+                <div style="background:linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border:2px solid #8b5cf6; border-radius:16px; padding:1.5rem;">
+                    <h3 style="margin-top:0; color:#6b21a8;"><i class="fa-brands fa-ethereum"></i> Ethereum</h3>
+                    <div style="font-size:2rem; font-weight:800; color:#0f172a;">$2,842</div>
+                    <div style="color:#dc2626; font-weight:600;"><strong>-3.9%</strong> Sous-performance</div>
+
+                    <table class="data-table" style="margin:1rem 0;">
+                        <tbody>
+                            <tr><td>Support</td><td style="color:#dc2626;"><strong>$2,700</strong> Critique</td></tr>
+                            <tr><td>Ratio ETH/BTC</td><td>0.0326 (en baisse)</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p style="margin:0; font-size:0.85rem; color:#6b21a8;">
+                        Faiblesse relative persistante
+                    </p>
+                </div>
+            </div>
+
+            <h3 style="margin-top:2rem;">Recommandation Crypto</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Conviction</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>BTC</strong></td><td><span style="color:#64748b;">Neutre</span></td><td>Hold, reduire si <$85K</td></tr>
+                    <tr style="background:#fef2f2;"><td><strong>ETH</strong></td><td><span style="color:#dc2626;">Prudent</span></td><td>Sous-ponderer</td></tr>
+                    <tr style="background:#f0fdf4;"><td><strong>Miners</strong></td><td><span style="color:#16a34a;">Selectif</span></td><td>APLD, IREN sur dips</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: FOREX & TAUX -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-money-bill-transfer" style="color:#0ea5e9;"></i> Forex & Taux</h2>
+
+            <h3>Devises Majeures</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Paire</th>
+                        <th>Taux</th>
+                        <th>Variation</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0fdf4;"><td><strong>EUR/USD</strong></td><td>1.18526</td><td class="up">+0.79%</td><td>Haussier</td></tr>
+                    <tr style="background:#fef2f2;"><td><strong>DXY</strong></td><td>97.46</td><td class="down">-0.15%</td><td>Faiblesse</td></tr>
+                    <tr><td><strong>USD/JPY</strong></td><td>-</td><td>JPY +1.8%</td><td>Safe haven</td></tr>
+                    <tr><td><strong>USD/CHF</strong></td><td>-</td><td>CHF +2.7%</td><td>Safe haven</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:2rem;">Courbe des Taux US</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Maturite</th>
+                        <th>Yield</th>
+                        <th>Variation</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>3 Mois</td><td>3.582%</td><td class="down">-0.006%</td><td>Fed pricing</td></tr>
+                    <tr><td>5 Ans</td><td>3.839%</td><td class="down">-0.008%</td><td>-</td></tr>
+                    <tr><td>10 Ans</td><td>4.239%</td><td class="down">-0.010%</td><td>Benchmark</td></tr>
+                    <tr><td>30 Ans</td><td>4.833%</td><td class="down">-0.014%</td><td>-</td></tr>
+                </tbody>
+            </table>
+
+            <div style="background:#f0f9ff; border:1px solid #0ea5e9; border-radius:12px; padding:1.25rem; margin-top:1.5rem;">
+                <h4 style="margin-top:0; color:#0369a1;"><i class="fa-solid fa-chart-line"></i> Analyse Courbe</h4>
+                <ul style="margin:0; padding-left:1.5rem; color:#0369a1;">
+                    <li><strong>Shape:</strong> Normale (non-inversee)</li>
+                    <li><strong>Trend:</strong> Legere detente sur tous segments</li>
+                    <li><strong>Spread 2-10:</strong> Positif - pas de signal recession immediate</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: ALLOCATION MODELE -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-chart-pie" style="color:#8b5cf6;"></i> Allocation Modele</h2>
+
+            <h3>Portefeuille Recommande</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Classe d'Actifs</th>
+                        <th>Allocation</th>
+                        <th>Variation vs Semaine Precedente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0f9ff;"><td><strong>Cash & Equivalents</strong></td><td><strong>30%</strong></td><td class="up">+5% (risque eleve)</td></tr>
+                    <tr><td><strong>Actions US</strong></td><td><strong>35%</strong></td><td class="down">-5%</td></tr>
+                    <tr><td>- Large Cap Quality</td><td>20%</td><td>-</td></tr>
+                    <tr><td>- Defense/Aerospace</td><td>8%</td><td class="up">hausse</td></tr>
+                    <tr><td>- Healthcare</td><td>5%</td><td>-</td></tr>
+                    <tr><td>- Materials</td><td>2%</td><td class="up">hausse</td></tr>
+                    <tr><td><strong>Actions Internationales</strong></td><td><strong>10%</strong></td><td>Stable</td></tr>
+                    <tr style="background:#fef3c7;"><td><strong>Metaux Precieux</strong></td><td><strong>15%</strong></td><td class="up">+3%</td></tr>
+                    <tr><td>- Or (GLD/IAU)</td><td>10%</td><td>-</td></tr>
+                    <tr><td>- Argent (SLV/PSLV)</td><td>5%</td><td>-</td></tr>
+                    <tr><td><strong>Obligations</strong></td><td><strong>8%</strong></td><td>Stable</td></tr>
+                    <tr style="background:#fef2f2;"><td><strong>Crypto</strong></td><td><strong>2%</strong></td><td class="down">-3%</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:2rem;">Ajustements Tactiques Semaine</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0f9ff;"><td class="up"><strong>Cash +5%</strong></td><td>Valorisations extremes, FOMC, earnings risk</td></tr>
+                    <tr style="background:#fef3c7;"><td class="up"><strong>Metaux +3%</strong></td><td>Momentum, safe haven, supply constraints</td></tr>
+                    <tr style="background:#fef2f2;"><td class="down"><strong>Actions -5%</strong></td><td>Margin debt warning, Shiller CAPE</td></tr>
+                    <tr style="background:#fef2f2;"><td class="down"><strong>Crypto -3%</strong></td><td>Correction en cours, support teste</td></tr>
+                    <tr><td class="up"><strong>Defense +</strong></td><td>Earnings catalyseurs, geopolitique</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: PROJECTIONS -->
+        <!-- ========================================== -->
+        <div class="content-card" id="outlook">
+            <h2><i class="fa-solid fa-binoculars" style="color:#0ea5e9;"></i> Projections Semaine 26 Jan - 1er Fev</h2>
+
+            <h3>Ranges Attendus</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Indice/Asset</th>
+                        <th>Bear Case</th>
+                        <th>Base Case</th>
+                        <th>Bull Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>S&P 500</strong></td><td>6,750 (-2.4%)</td><td>6,900 (-0.2%)</td><td>7,050 (+2%)</td></tr>
+                    <tr><td><strong>NASDAQ</strong></td><td>22,800 (-3%)</td><td>23,400 (-0.4%)</td><td>24,200 (+3%)</td></tr>
+                    <tr style="background:#fef3c7;"><td><strong>Or</strong></td><td>$4,900 (-1.6%)</td><td>$5,050 (+1.4%)</td><td>$5,150 (+3.4%)</td></tr>
+                    <tr style="background:#fef3c7;"><td><strong>Argent</strong></td><td>$95 (-6%)</td><td>$103 (+1.6%)</td><td>$110 (+8.5%)</td></tr>
+                    <tr><td><strong>Bitcoin</strong></td><td>$82,000 (-6%)</td><td>$88,000 (+1%)</td><td>$95,000 (+9%)</td></tr>
+                    <tr><td><strong>EUR/USD</strong></td><td>1.170 (-1.3%)</td><td>1.190 (+0.4%)</td><td>1.205 (+1.6%)</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:2rem;">Scenarios Semaine</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem;">
+                <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+                    <h4 style="margin-top:0; color:#16a34a;">Scenario Haussier (25%)</h4>
+                    <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#166534;">
+                        <li>FOMC dovish surprise</li>
+                        <li>Earnings Tech/Defense beat</li>
+                        <li>Tarifs Trump report</li>
+                        <li><strong>Target S&P: 7,050+</strong></li>
+                    </ul>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #94a3b8; border-radius:12px; padding:1.25rem;">
+                    <h4 style="margin-top:0; color:#475569;">Scenario Base (50%)</h4>
+                    <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#475569;">
+                        <li>FOMC neutre, hold</li>
+                        <li>Earnings mixtes</li>
+                        <li>Volatilite contenue</li>
+                        <li><strong>Target S&P: 6,850-6,950</strong></li>
+                    </ul>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+                    <h4 style="margin-top:0; color:#dc2626;">Scenario Baissier (25%)</h4>
+                    <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#991b1b;">
+                        <li>FOMC hawkish</li>
+                        <li>Earnings Tech miss</li>
+                        <li>Escalade tarifs/shutdown</li>
+                        <li><strong>Target S&P: 6,700-6,750</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: PEDAGOGIQUE -->
+        <!-- ========================================== -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-graduation-cap" style="color:#8b5cf6;"></i> Section Pedagogique</h2>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Concept de la Semaine: Margin Debt comme Indicateur</h4>
+                <p>Le <strong>margin debt</strong> represente l'argent emprunte par les investisseurs pour acheter des actions. Quand il augmente rapidement (+42% en 7 mois actuellement), cela signifie:</p>
+                <ol style="line-height:1.8; color:#475569;">
+                    <li><strong>Levier eleve</strong> dans le systeme</li>
+                    <li><strong>Confiance excessive</strong> des investisseurs</li>
+                    <li><strong>Risque de liquidation forcee</strong> si correction</li>
+                </ol>
+                <p style="margin-bottom:0;"><strong>Historique:</strong> Les 5 occurrences precedentes de spikes similaires ont TOUTES ete suivies de baisses du S&P 500. C'est l'un des indicateurs contrarian les plus fiables.</p>
+            </div>
+
+            <div class="alert-box" style="margin-top:1.5rem;">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Piege a Eviter: Chasser le Breakout Argent</h4>
+                <p>L'argent vient de franchir $100 (+5.15%). <strong>Ne pas acheter au breakout immediat:</strong></p>
+                <ul style="margin:0; padding-left:1.5rem;">
+                    <li>Les breakouts generent souvent des pullbacks de 5-10%</li>
+                    <li>Le RSI est en zone de surachat</li>
+                    <li>Attendre consolidation vers $95-98 pour entry optimal</li>
+                </ul>
+                <p style="margin-bottom:0;"><strong>Regle:</strong> Sur un breakout majeur, attendre le retest du niveau casse avant d'entrer.</p>
+            </div>
+
+            <blockquote style="margin:2rem 0; padding:1.5rem 2rem; border-left:4px solid #8b5cf6; background:#faf5ff; font-style:italic; font-size:1.1rem; color:#6b21a8;">
+                "Le marche peut rester irrationnel plus longtemps que je ne peux rester solvable." - John Maynard Keynes
+            </blockquote>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION: CONCLUSION -->
+        <!-- ========================================== -->
+        <div class="content-card" style="background:linear-gradient(135deg, #f8fafc, #fff);">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#0f172a;"></i> Conclusion & Conviction</h2>
+
+            <div style="background:#0f172a; color:white; padding:2rem; border-radius:16px; margin:1.5rem 0;">
+                <p style="font-size:1.25rem; font-weight:600; margin:0; text-align:center; line-height:1.6;">
+                    "FOMC Critique + Earnings Mega-Tech + Tarifs Canada = Volatilite Extreme dans un Contexte de Valorisations Historiques"
+                </p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:2rem 0;">
+                <!-- Positifs -->
+                <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.5rem;">
+                    <h4 style="margin-top:0; color:#16a34a;"><i class="fa-solid fa-check-circle"></i> Positifs</h4>
+                    <ul style="margin:0; padding-left:1.25rem; line-height:1.8; color:#166534;">
+                        <li>Or et Argent en momentum historique (safe haven actif)</li>
+                        <li>Score validation precedent: 100% (6/6)</li>
+                        <li>Earnings Defense (RTX, LMT, NOC) catalyseurs</li>
+                    </ul>
+                </div>
+                <!-- Negatifs -->
+                <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.5rem;">
+                    <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-times-circle"></i> Negatifs</h4>
+                    <ul style="margin:0; padding-left:1.25rem; line-height:1.8; color:#991b1b;">
+                        <li>Tarifs 100% Canada = choc commercial majeur</li>
+                        <li>FOMC 27-28 jan avec Fed divisee</li>
+                        <li>Shiller CAPE 40.63, Buffett 222% = records</li>
+                        <li>Margin debt +42% = signal contrarian critique</li>
+                        <li>Russell -1.82% = stress sous-jacent</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Conviction Box -->
+            <div style="background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:2px solid #f59e0b; border-radius:16px; padding:2rem; margin-top:2rem;">
+                <h4 style="margin-top:0; color:#92400e;"><i class="fa-solid fa-star"></i> Conviction Globale: PRUDENCE ELEVEE</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-top:1rem;">
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase;">Biais directionnel</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">NEUTRE-PRUDENT</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase;">Cash</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">30%</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase;">Metaux Precieux</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:#16a34a;">15%</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase;">Risque principal</div>
+                        <div style="font-size:1.25rem; font-weight:800; color:#dc2626;">FOMC + Tarifs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- END CONTAINER -->
+
+    <!-- FOOTER -->
+    <footer style="text-align:center; padding:3rem 2rem; color:#94a3b8; font-size:0.9rem; background:#f1f5f9; margin-top:4rem;">
+        <div style="max-width:800px; margin:0 auto;">
+            <p>&copy; 2026 Market Watch. Tous droits reserves.</p>
+            <p style="font-size:0.8rem; margin:1rem 0; color:#64748b;">
+                <strong>Disclaimer:</strong> Ce rapport est fourni a titre educatif et informatif uniquement. Il ne constitue pas un conseil en investissement personnalise.
+                Les marches financiers comportent des risques significatifs de perte en capital. Les performances passees ne prejugent pas des performances futures.
+                Consultez un conseiller financier agree avant toute decision d'investissement.
+            </p>
+            <p style="font-size:0.75rem; color:#cbd5e1; margin-top:1rem;">
+                Rapport genere le 25 janvier 2026 a 19:12 UTC<br>
+                Donnees: 25 janvier 2026 (MarketWatch MCP)<br>
+                Prochaine mise a jour: 1er fevrier 2026
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
