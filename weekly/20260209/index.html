@@ -22,10 +22,138 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
     <style>
-        /* Minimal custom styles - main styles in report.css */
+        /* Custom styles for this report */
+        .alert-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        }
+
+        .chart-container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
         .up { color: #16a34a; }
         .down { color: #dc2626; }
         .neutral { color: #64748b; }
+
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .risk-item {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 4px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .risk-high { border-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); }
+        .risk-medium { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
+        .risk-low { border-color: #16a34a; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin: 2rem 0;
+        }
+
+        .calendar-day {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-day.critical {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #dc2626;
+        }
+
+        .calendar-day.important {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #f59e0b;
+        }
 
         .geo-alert {
             background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
@@ -33,11 +161,104 @@
             border-radius: 16px;
             padding: 2rem;
             margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .geo-alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+            animation: gradient-move 3s linear infinite;
+        }
+
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
 
         .allocation-donut {
             width: 100%;
             height: 350px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metric-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.75rem !important;
+            }
+
+            .calendar-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .calendar-days-header {
+                display: none !important;
+            }
+
+            .calendar-days-grid {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .calendar-days-grid > div {
+                min-height: auto !important;
+                border-right: none !important;
+                padding: 1rem !important;
+            }
+
+            .alert-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem !important;
+            }
+
+            .allocation-donut {
+                height: 280px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .data-table, table {
+                display: table !important;
+                width: 100% !important;
+                font-size: 0.7rem !important;
+                table-layout: fixed !important;
+            }
+
+            .data-table th, .data-table td,
+            table th, table td {
+                padding: 0.35rem 0.5rem !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+            }
+
+            .metric-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.35rem !important;
+            }
+
+            .metric-card {
+                padding: 0.5rem !important;
+            }
+
+            .metric-value {
+                font-size: 1rem !important;
+            }
+
+            .metric-label {
+                font-size: 0.6rem !important;
+            }
+
+            .allocation-donut {
+                height: 220px !important;
+            }
         }
     </style>
 </head>
