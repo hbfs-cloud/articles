@@ -221,9 +221,32 @@
             .allocation-donut {
                 height: 280px;
             }
+
+            /* Fix all inline grids */
+            .content-card [style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            .risk-matrix {
+                grid-template-columns: 1fr !important;
+            }
+
+            .geo-alert [style*="grid-template-columns"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
         }
 
         @media (max-width: 480px) {
+            /* Prevent horizontal overflow */
+            body {
+                overflow-x: hidden !important;
+            }
+
+            .container, .content-card {
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+            }
+
             .data-table, table {
                 display: table !important;
                 width: 100% !important;
@@ -258,6 +281,55 @@
 
             .allocation-donut {
                 height: 220px !important;
+            }
+
+            /* Force single column for all grids on small mobile */
+            .content-card [style*="grid-template-columns"],
+            .geo-alert [style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Flex wraps */
+            [style*="display:flex"][style*="gap"] {
+                flex-wrap: wrap !important;
+            }
+
+            /* 2-column grids for smaller items */
+            .content-card [style*="minmax(150px"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        /* Mobile-specific classes */
+        .mobile-stack {
+            display: grid;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-stack {
+                grid-template-columns: 1fr !important;
+            }
+            .mobile-2col {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mobile-2col {
+                grid-template-columns: 1fr !important;
+            }
+            .mini-calendar {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.5rem !important;
+            }
+            .earnings-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .trade-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            .sectors-grid {
+                grid-template-columns: 1fr !important;
             }
         }
     </style>
@@ -319,7 +391,7 @@
         <div class="content-card" id="calendar" style="padding:2rem;">
             <h2 style="margin-top:0;"><i class="fa-solid fa-calendar-days" style="color:#3b82f6;"></i> Cette Semaine en 1 Coup d'Oeil</h2>
 
-            <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0.5rem; margin:1.5rem 0;">
+            <div class="mini-calendar" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0.5rem; margin:1.5rem 0;">
                 <div style="background:#f8fafc; border-radius:12px; padding:1rem; text-align:center;">
                     <div style="font-weight:700; color:#64748b; font-size:0.75rem; text-transform:uppercase;">Lun 10</div>
                     <div style="margin-top:0.5rem; font-size:0.85rem; color:#64748b;">Calme</div>
@@ -567,7 +639,7 @@
             </table>
 
             <!-- SECTEURS SIMPLE -->
-            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin-top:1.5rem;">
+            <div class="sectors-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin-top:1.5rem;">
                 <div style="background:#f0fdf4; padding:1rem; border-radius:12px;">
                     <strong style="color:#16a34a;"><i class="fa-solid fa-arrow-up"></i> Ca monte:</strong>
                     Banques +4%, Materiaux +3%, Industrie +3%
@@ -751,7 +823,7 @@
             </div>
 
             <!-- EARNINGS GRID -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:1.5rem 0;">
+            <div class="earnings-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:1.5rem 0;">
 
                 <!-- CISCO -->
                 <div style="background:#ffffff; border:2px solid #0891b2; border-radius:16px; padding:1.5rem; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
@@ -978,7 +1050,7 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="trade-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
                     <div style="text-align:center; background:#fef3c7; padding:1rem; border-radius:8px;">
                         <div style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase;">Entry</div>
                         <div style="font-size:1.5rem; font-weight:800; color:#eab308;">$4,980-$5,020</div>
@@ -1029,7 +1101,7 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="trade-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
                     <div style="text-align:center; background:#fff7ed; padding:1rem; border-radius:8px;">
                         <div style="font-size:0.75rem; font-weight:700; color:#c2410c; text-transform:uppercase;">Entry (COPX)</div>
                         <div style="font-size:1.5rem; font-weight:800; color:#f97316;">$42-$44</div>
@@ -1084,7 +1156,7 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="trade-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
                     <div style="text-align:center; background:#f0fdf4; padding:1rem; border-radius:8px;">
                         <div style="font-size:0.75rem; font-weight:700; color:#166534; text-transform:uppercase;">Entry</div>
                         <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">$265-$270</div>
