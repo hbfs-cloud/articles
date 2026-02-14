@@ -267,10 +267,16 @@ Format visuel avec classes CSS dédiées :
 - **Style** : headers directs, emojis en headers de risk-cards, bullet points courts, pas de paragraphes longs
 - **Mobile** : utiliser les classes CSS responsive (auto-fit, minmax), jamais de grid fixe inline
 - **Pas de `<style>` inline** : tout doit être dans report.css avec les classes ticker-analysis
-- **Chart Finviz obligatoire** : chaque analyse doit inclure le chart Finviz cliquable + modal (voir Header ci-dessus)
+- **Charts obligatoires** : chaque analyse et chaque metric-card dans le weekly doivent être cliquables
+  - **US Stocks/ETFs** → Finviz : `https://charts2.finviz.com/chart.ashx?t={TICKER}&ty=c&ta=1&p=d&s=l`
+  - **Crypto** (BTC-USD, ETH-USD, SOL-USD...) → TradingView iframe embed (COINBASE:{SYMBOL}USD)
+  - **Non-US Stocks** → Yahoo Finance chart (pas de Finviz)
+  - **Modal** : fond dark #0f172a, 3 liens externes (Finviz/TradingView/Yahoo Finance)
+- **Weekly : metric-cards cliquables** : chaque metric-card avec un ticker doit avoir `onclick="openChartModal('SYMBOL','Label')"` et `cursor:pointer`
 - **Logos tickers** : utiliser `https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg` avec fallback gradient+initiales
 - **Liens** : jamais de `/index.html` — GitHub Pages résout automatiquement
 - **Landing page** : chaque nouvelle analyse doit être ajoutée dans index.html avec logo, chart button, et lien
+- **Alert-banner** : toujours forcer `color: white !important` sur le texte et les `<p>` internes
 
 ---
 
