@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch Expert | Analyse ASST (Strive Inc.) | 14 Février 2026</title>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        .ticker-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .ticker-symbol {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            color: #f97316;
+        }
+        .ticker-name {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+        .ticker-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-top: 1.5rem;
+        }
+        .ticker-meta {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .ticker-meta span { display: flex; align-items: center; gap: 0.35rem; }
+        .score-card {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .score-value { font-size: 3rem; font-weight: 900; }
+        .score-label { font-size: 1.1rem; font-weight: 600; margin-top: 0.5rem; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0,0,0,0.1); }
+        .metric-value { font-size: 1.75rem; font-weight: 800; line-height: 1.2; }
+        .metric-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
+        .metric-change { font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem; }
+        .up { color: #16a34a; }
+        .down { color: #dc2626; }
+        .neutral { color: #64748b; }
+        .chart-container { background: #fff; border-radius: 16px; padding: 1.5rem; margin: 2rem 0; border: 1px solid #e2e8f0; }
+        .risk-matrix { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 2rem 0; }
+        .risk-item { background: #fff; border-radius: 12px; padding: 1.25rem; border-left: 4px solid; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .risk-high { border-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); }
+        .risk-medium { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
+        .risk-low { border-color: #16a34a; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); }
+        .trade-box {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+        }
+        .trade-box h3 { color: #f97316; margin: 0 0 1.5rem; }
+        .trade-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; }
+        .trade-level { text-align: center; padding: 1rem; border-radius: 12px; }
+        .trade-level .label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .trade-level .value { font-size: 1.5rem; font-weight: 800; margin-top: 0.25rem; }
+        @media (max-width: 768px) {
+            .metric-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
+            .ticker-meta { flex-direction: column; align-items: center; }
+            .trade-levels { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 480px) {
+            .metric-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.35rem !important; }
+            .metric-card { padding: 0.5rem !important; border-radius: 8px !important; }
+            .metric-value { font-size: 1rem !important; }
+            .metric-label { font-size: 0.6rem !important; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- ============================================================ -->
+    <!-- SECTION 1 : HEADER -->
+    <!-- ============================================================ -->
+    <div class="ticker-header">
+        <a href="https://market-watch.xyz" style="display:inline-flex; align-items:center; gap:10px; margin-bottom:2rem; text-decoration:none; color:white; font-weight:800; font-size:1.1rem;">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; filter:brightness(10);"> MARKET WATCH
+        </a>
+        <div class="ticker-symbol">ASST</div>
+        <div class="ticker-name">Strive, Inc. &mdash; NASDAQ</div>
+        <div class="ticker-price">
+            $8.50 <span style="font-size:1.2rem; color:#16a34a;">+$0.04 (+0.47%)</span>
+        </div>
+        <div class="ticker-meta">
+            <span><i class="fas fa-calendar"></i> 14 Février 2026</span>
+            <span><i class="fas fa-building"></i> Financial Services / Asset Mgmt</span>
+            <span><i class="fas fa-chart-bar"></i> Vol: 3.65M</span>
+            <span><i class="fas fa-dollar-sign"></i> MCap: $446M</span>
+            <span><i class="fas fa-coins"></i> 13,132 BTC en trésorerie</span>
+        </div>
+        <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem;">
+            <span class="badge badge-red">BITCOIN TREASURY</span>
+            <span class="badge badge-blue">REVERSE SPLIT 1:20</span>
+            <span class="badge badge-purple">RSI 30.9 &mdash; OVERSOLD</span>
+            <span class="badge badge-green">P/B 0.36x</span>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Navigation -->
+        <div class="nav-grid">
+            <a href="#activite" class="nav-item">Activité</a>
+            <a href="#news" class="nav-item">News</a>
+            <a href="#fondamentaux" class="nav-item">Fondamentaux</a>
+            <a href="#insiders" class="nav-item">Insiders</a>
+            <a href="#short" class="nav-item">Short Interest</a>
+            <a href="#options" class="nav-item">Options</a>
+            <a href="#technique" class="nav-item">Technique</a>
+            <a href="#secteur" class="nav-item">Secteur</a>
+            <a href="#macro" class="nav-item">Macro</a>
+            <a href="#risques" class="nav-item">Risques</a>
+            <a href="#trade" class="nav-item">Trade Idea</a>
+            <a href="#note" class="nav-item">Note Globale</a>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2 : ACTIVITÉ -->
+        <!-- ============================================================ -->
+        <div id="activite" class="content-card">
+            <h2>Activité de l'Entreprise</h2>
+
+            <p><strong>Strive, Inc.</strong> (anciennement Asset Entities Inc.) est une <strong>Bitcoin treasury company</strong> cotée au NASDAQ, fondée par <strong>Vivek Ramaswamy</strong>. La société est la première entreprise cotée en bourse à combiner la gestion d'actifs traditionnelle avec une stratégie de trésorerie Bitcoin agressive, dans la lignée de MicroStrategy (MSTR).</p>
+
+            <h3>Segments Principaux</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem; margin:1.5rem 0;">
+                <div style="background:#fff7ed; border:1px solid #f97316; border-radius:16px; padding:1.5rem;">
+                    <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fab fa-bitcoin"></i> Trésorerie Bitcoin</h4>
+                    <p style="font-size:0.9rem; margin:0;"><strong>13,131.82 BTC</strong> détenus au 11/02/2026 &mdash; 11ème plus grand détenteur corporatif public de Bitcoin au monde. Valeur : ~$916M au cours actuel ($69,882/BTC). Acquis via l'acquisition de Semler Scientific et achats directs.</p>
+                </div>
+                <div style="background:#eff6ff; border:1px solid #3b82f6; border-radius:16px; padding:1.5rem;">
+                    <h4 style="color:#3b82f6; margin:0 0 0.75rem;"><i class="fas fa-chart-pie"></i> Gestion d'Actifs (Strive AM)</h4>
+                    <p style="font-size:0.9rem; margin:0;"><strong>Strive Asset Management LLC</strong> est une filiale 100% détenue, basée à Dallas, TX. Gestionnaire d'investissement fournissant des services aux fonds d'investissement. Fondée en 2022. Gère des ETFs.</p>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:16px; padding:1.5rem;">
+                    <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fas fa-heartbeat"></i> Semler Scientific (Acquis)</h4>
+                    <p style="font-size:0.9rem; margin:0;">Acquisition complétée le <strong>16 janvier 2026</strong>. Semler développe des dispositifs de <strong>détection précoce de maladies</strong>. Avik Roy nommé CSO pour monétiser et développer cette activité MedTech.</p>
+                </div>
+            </div>
+
+            <div class="didactic-box">
+                <h4>Qu'est-ce qu'une "Bitcoin Treasury Company" ?</h4>
+                <p>C'est une entreprise cotée qui utilise sa trésorerie pour accumuler du Bitcoin plutôt que de garder des dollars. Le pionnier est <strong>MicroStrategy (MSTR)</strong>, dirigé par Michael Saylor. L'idée : le Bitcoin est un actif de réserve supérieur au cash en raison de sa rareté programmée (21M max). Strive pousse le concept plus loin en combinant trésorerie BTC + gestion d'actifs + MedTech. Le risque : le cours de l'action est ultra-corrélé au prix du Bitcoin.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3 : NEWS RÉCENTES -->
+        <!-- ============================================================ -->
+        <div id="news" class="content-card">
+            <h2>Actualités Récentes</h2>
+
+            <div style="display:flex; flex-direction:column; gap:1rem;">
+                <div style="background:#f8fafc; padding:1.25rem; border-radius:12px; border-left:4px solid #f97316;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="badge badge-red">SEC 8-K</span>
+                        <span style="font-size:0.8rem; color:#64748b;">13 Fév 2026</span>
+                    </div>
+                    <h4 style="margin:0 0 0.5rem;">Strive détient $127.2M de cash + 13,131.8 BTC</h4>
+                    <p style="font-size:0.85rem; color:#475569; margin:0;">Dividende SATA Stock augmenté de 12.25% à 12.50%. 53.17M actions Class A, 9.88M Class B et 4.27M preferred outstanding.</p>
+                </div>
+                <div style="background:#f8fafc; padding:1.25rem; border-radius:12px; border-left:4px solid #3b82f6;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="badge badge-blue">CORPORATE</span>
+                        <span style="font-size:0.8rem; color:#64748b;">3 Fév 2026</span>
+                    </div>
+                    <h4 style="margin:0 0 0.5rem;">Reverse Stock Split 1:20 effectif le 6 février</h4>
+                    <p style="font-size:0.85rem; color:#475569; margin:0;">Chaque 20 actions deviennent 1 action. Actions Class A autorisées réduites de 444 Md à 22.2 Md. Nouveau CUSIP : 862945 300.</p>
+                </div>
+                <div style="background:#f8fafc; padding:1.25rem; border-radius:12px; border-left:4px solid #16a34a;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="badge badge-green">ANALYSTE</span>
+                        <span style="font-size:0.8rem; color:#64748b;">30 Jan 2026</span>
+                    </div>
+                    <h4 style="margin:0 0 0.5rem;">Maxim Group réitère Buy &mdash; PT $30 (post-split)</h4>
+                    <p style="font-size:0.85rem; color:#475569; margin:0;">Seul analyste couvrant le titre. Price target de $1.50 pré-split = $30 post-split. Upside théorique de +253% vs cours actuel.</p>
+                </div>
+                <div style="background:#f8fafc; padding:1.25rem; border-radius:12px; border-left:4px solid #f97316;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="badge badge-red">BTC TREASURY</span>
+                        <span style="font-size:0.8rem; color:#64748b;">28 Jan 2026</span>
+                    </div>
+                    <h4 style="margin:0 0 0.5rem;">Achat de 333.89 BTC à $89,851 en moyenne</h4>
+                    <p style="font-size:0.85rem; color:#475569; margin:0;">Complétion de l'échange de $90M en notes convertibles et remboursement de $20M de prêt Coinbase. Offre SATA Stock lève ~$109.2M net.</p>
+                </div>
+                <div style="background:#f8fafc; padding:1.25rem; border-radius:12px; border-left:4px solid #dc2626;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="badge badge-red">MARCHÉ</span>
+                        <span style="font-size:0.8rem; color:#64748b;">11 Fév 2026</span>
+                    </div>
+                    <h4 style="margin:0 0 0.5rem;">Sentiment baissier crypto : BTC sous $67K, ASST -2.3%</h4>
+                    <p style="font-size:0.85rem; color:#475569; margin:0;">Open interest BTC futures en chute à $15.6 Md. Funding rates négatifs sur Binance (-6%) et Bybit (-0.5%). Deleveraging massif.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4 : FONDAMENTAUX -->
+        <!-- ============================================================ -->
+        <div id="fondamentaux" class="content-card">
+            <h2>Fondamentaux</h2>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Métrique</th>
+                        <th>Valeur</th>
+                        <th>Interprétation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Revenus (TTM)</strong></td>
+                        <td>$5.5M</td>
+                        <td class="neutral">Minimal &mdash; l'activité AM et MedTech sont naissantes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Croissance CA</strong></td>
+                        <td class="up">+56.8%</td>
+                        <td>Croissance forte mais sur base très faible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EBITDA</strong></td>
+                        <td class="down">-$60.4M</td>
+                        <td class="down">Cash burn significatif &mdash; pas encore rentable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Marge Opérationnelle</strong></td>
+                        <td class="down">-30.6%</td>
+                        <td>Investissements lourds dans la croissance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cash & Equiv.</strong></td>
+                        <td class="up">$127.2M</td>
+                        <td>Trésorerie solide (8-K du 13/02)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bitcoin Trésorerie</strong></td>
+                        <td class="up">13,131.8 BTC (~$918M)</td>
+                        <td>11ème plus gros détenteur corporate mondial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dette Totale</strong></td>
+                        <td>$3.6M</td>
+                        <td class="up">Très faible endettement</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Book Value</strong></td>
+                        <td>$23.38 / action</td>
+                        <td>Action trade à 36% de la book value</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P/B (Price-to-Book)</strong></td>
+                        <td class="up"><strong>0.36x</strong></td>
+                        <td class="up">FORTEMENT sous-évalué vs actifs nets</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EV / Revenue</strong></td>
+                        <td>42.5x</td>
+                        <td class="down">Élevé car revenu minimal (pas le bon ratio ici)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Enterprise Value</strong></td>
+                        <td>$234M</td>
+                        <td>EV bien inférieure à la valeur BTC seule ($918M)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Target Analyste</strong></td>
+                        <td class="up">$30.00 (Maxim Group)</td>
+                        <td>Upside +253% vs cours actuel</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box">
+                <h4>Le Paradoxe de Valorisation ASST</h4>
+                <p>Strive détient <strong>13,132 BTC d'une valeur de ~$918M</strong> + $127M de cash = <strong>$1.045 Md d'actifs liquides</strong>. Pourtant, la capitalisation boursière n'est que de <strong>$446M</strong> &mdash; un discount de <strong>57% sur la NAV</strong>. Ce discount reflète : (1) la dilution massive (reverse split 1:20), (2) le bear market crypto, (3) l'incertitude sur la stratégie BTC dans un marché baissier, et (4) le cash burn opérationnel de -$60M/an.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5 : INSIDERS & INSTITUTIONS -->
+        <!-- ============================================================ -->
+        <div id="insiders" class="content-card">
+            <h2>Insiders & Institutions</h2>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#3b82f6;">24.9%</div>
+                    <div class="metric-label">Détention Institutionnelle</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f97316;">1.9%</div>
+                    <div class="metric-label">Détention Insiders</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#64748b;">15.1M</div>
+                    <div class="metric-label">Float</div>
+                </div>
+            </div>
+
+            <h3>Top Insiders</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Rôle</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Vivek Ramaswamy</strong></td>
+                        <td>10% Owner / Fondateur</td>
+                        <td>113.9M</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Derek Dunlop</strong></td>
+                        <td>CXO / 10% Owner</td>
+                        <td>48.1M</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Eric Semler</strong></td>
+                        <td>Director (ex-Semler Scientific)</td>
+                        <td>20.4M</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Benjamin Pham</strong></td>
+                        <td>CFO</td>
+                        <td>15.1M</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Mouvements Institutionnels Récents</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Institution</th>
+                        <th>Type</th>
+                        <th>Mouvement</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>FMR LLC (Fidelity)</strong></td>
+                        <td>13G</td>
+                        <td class="down">-49M actions (-75.5%)</td>
+                        <td><span class="badge badge-red">Sortie massive</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>MMCAP International</strong></td>
+                        <td>13G</td>
+                        <td class="down">-18M actions (-48.8%)</td>
+                        <td><span class="badge badge-red">Réduction</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integrated Core (Asia)</strong></td>
+                        <td>13G</td>
+                        <td class="down">-10.9M actions (-48.7%)</td>
+                        <td><span class="badge badge-red">Réduction</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Jane Street Group</strong></td>
+                        <td>13G</td>
+                        <td class="down">-6.5M actions (-14.1%)</td>
+                        <td><span class="badge badge-red">Réduction</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Healthcare Ontario</strong></td>
+                        <td>13G</td>
+                        <td class="down">-7.4M actions (-24.9%)</td>
+                        <td><span class="badge badge-red">Réduction</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box">
+                <h4>Signal d'Alerte : Sortie Institutionnelle Massive</h4>
+                <p>Les 5 plus gros mouvements institutionnels récents sont <strong>tous des ventes</strong>. Fidelity (FMR) a liquidé 75% de sa position. Ce signal est très négatif et confirme le manque de confiance institutionnelle dans le titre à court terme.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6 : SHORT INTEREST -->
+        <!-- ============================================================ -->
+        <div id="short" class="content-card">
+            <h2>Short Interest</h2>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">9.37M</div>
+                    <div class="metric-label">Actions Short</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">18.2%</div>
+                    <div class="metric-label">% du Float</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">1.78</div>
+                    <div class="metric-label">Days to Cover</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">1.23%</div>
+                    <div class="metric-label">Cost to Borrow</div>
+                </div>
+            </div>
+
+            <h3>Évolution du Short Interest</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Short Interest</th>
+                        <th>% Float</th>
+                        <th>Days to Cover</th>
+                        <th>Tendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>30 Jan 2026</td>
+                        <td>9,373,000</td>
+                        <td class="down">57%</td>
+                        <td>2.35</td>
+                        <td><span class="badge badge-red">Record</span></td>
+                    </tr>
+                    <tr>
+                        <td>15 Jan 2026</td>
+                        <td>6,954,000</td>
+                        <td>42%</td>
+                        <td>1.03</td>
+                        <td class="down">+35% en 2 sem</td>
+                    </tr>
+                    <tr>
+                        <td>31 Déc 2025</td>
+                        <td>6,626,000</td>
+                        <td>40%</td>
+                        <td>2.29</td>
+                        <td class="down">En hausse</td>
+                    </tr>
+                    <tr>
+                        <td>15 Déc 2025</td>
+                        <td>5,740,000</td>
+                        <td>35%</td>
+                        <td>1.21</td>
+                        <td class="down">En hausse</td>
+                    </tr>
+                    <tr>
+                        <td>28 Nov 2025</td>
+                        <td>4,449,000</td>
+                        <td>30%</td>
+                        <td>1.05</td>
+                        <td class="neutral">Modéré</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4>Potentiel Short Squeeze ?</h4>
+                <p>Avec 18.2% du float shorté (57% du float ajusté selon certaines sources), ASST a un profil de short squeeze intéressant. <strong>Cependant</strong>, le CTB est très bas (1.23%) et 750K actions sont disponibles à emprunter, ce qui signifie que les shorts ne sont pas sous pression de marge. Le CTB a atteint 1,015% en octobre 2025 (seulement 4,000 actions disponibles) &mdash; un vrai squeeze potentiel. Aujourd'hui, les conditions ne sont pas réunies pour un squeeze imminent, mais le short interest croissant est un catalyseur latent.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7 : OPTIONS -->
+        <!-- ============================================================ -->
+        <div id="options" class="content-card">
+            <h2>Dérivés (Options)</h2>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">147,921</div>
+                    <div class="metric-label">Call OI</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">21,553</div>
+                    <div class="metric-label">Put OI</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">6.86</div>
+                    <div class="metric-label">Call/Put Ratio</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">$1.00</div>
+                    <div class="metric-label">Max Pain (20/02)</div>
+                </div>
+            </div>
+
+            <p style="margin-top:1.5rem;">Le ratio Call/Put de <strong>6.86</strong> est extrêmement haussier &mdash; il y a presque 7 fois plus d'open interest sur les calls que les puts. Cependant, le <strong>Max Pain à $1.00</strong> (expiration 20 février) est un artefact du reverse split 1:20 : les strikes pré-split n'ont pas été réajustés. Ce niveau n'est pas exploitable.</p>
+
+            <div class="didactic-box">
+                <h4>Biais Directionnel des Options</h4>
+                <p><strong>Haussier à moyen terme.</strong> Le Call/Put ratio de 6.86 indique que les spéculateurs parient massivement sur un rebond. Le volume options (5,550 contrats) représente 1.5% du volume actions, ce qui est relativement actif pour un titre de cette taille. La combinaison d'un Call/Put ratio élevé avec un RSI oversold peut signaler un retournement à venir, mais la prudence est de mise vu le bear market crypto.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 8 : TECHNIQUE -->
+        <!-- ============================================================ -->
+        <div id="technique" class="content-card">
+            <h2>Analyse Technique (Journalier)</h2>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Indicateur</th>
+                        <th>Valeur</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>RSI (14)</strong></td>
+                        <td>30.93</td>
+                        <td><span class="badge badge-purple">Quasi Oversold</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>MACD</strong></td>
+                        <td>-2.727</td>
+                        <td class="down">Très baissier</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MACD Signal</strong></td>
+                        <td>-2.118</td>
+                        <td class="down">MACD < Signal = Sell</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMA 20</strong></td>
+                        <td>$12.76</td>
+                        <td class="down">Prix 33% en dessous</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMA 50</strong></td>
+                        <td>$17.82</td>
+                        <td class="down">Prix 52% en dessous</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMA 200</strong></td>
+                        <td>$40.37</td>
+                        <td class="down">Prix 79% en dessous</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ATR (14)</strong></td>
+                        <td>$1.61</td>
+                        <td>Volatilité ~19% du prix</td>
+                    </tr>
+                    <tr>
+                        <td><strong>OBV</strong></td>
+                        <td>-16.5M</td>
+                        <td class="down">Distribution massive</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VWAP ancré</strong></td>
+                        <td>$32.85</td>
+                        <td class="down">Prix -74.6% sous VWAP</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Wyckoff</strong></td>
+                        <td colspan="2"><span class="badge badge-red">Phase Markdown</span> &mdash; Distribution complétée, tendance baissière active</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Supports & Résistances</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Niveau</th>
+                        <th>Force</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-green">Support</span></td>
+                        <td>$7.57</td>
+                        <td>Récent</td>
+                        <td>Low intraday du 12/02</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-green">Support</span></td>
+                        <td>$9.35</td>
+                        <td>Moyen</td>
+                        <td>Low du 06/02</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-red">Résistance</span></td>
+                        <td>$13.61</td>
+                        <td>Fort (POC)</td>
+                        <td>Point de Contrôle volume profile (43.7% du vol)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-red">Résistance</span></td>
+                        <td>$19.20</td>
+                        <td>60</td>
+                        <td>Ancien support devenu résistance</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-red">Résistance</span></td>
+                        <td>$27.44</td>
+                        <td>Fort (VAH)</td>
+                        <td>Value Area High &mdash; 41.9% du volume</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Évolution Intraday 15m &mdash; 13 Février 2026</h3>
+            <p>La séance du 13/02 montre un <strong>rebond progressif</strong> depuis l'ouverture à $7.85 jusqu'à un pic à $8.81 en fin de séance (+12.2% intraday). Le volume s'est concentré en fin de journée (569K sur le 15m de 16h30), suggérant un intérêt acheteur croissant. Le titre a clôturé à $8.33 avant de se stabiliser à $8.50 en after-hours.</p>
+
+            <div class="alert-box">
+                <h4>Signal AmericanBulls : SELL (depuis le 03/02 à $14.46)</h4>
+                <p>Le signal de vente est actif depuis le 3 février. Depuis ce signal, le titre a chuté de 42.4%. Le prochain signal d'achat potentiel nécessitera un retournement confirmé du MACD et du RSI au-dessus de 30. La probabilité de breakout (CBPM) est estimée à 35% avec une confiance moyenne.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 9 : SECTEUR / PAIRS -->
+        <!-- ============================================================ -->
+        <div id="secteur" class="content-card">
+            <h2>Secteur & Comparables</h2>
+
+            <p>ASST est une <strong>Bitcoin treasury company</strong>, un sous-secteur unique à la croisée de la finance, du crypto et du MedTech. Ses pairs naturels sont les autres entreprises à trésorerie BTC et les plateformes crypto.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Nom</th>
+                        <th>Prix</th>
+                        <th>MCap</th>
+                        <th>Vs 52W High</th>
+                        <th>P/E</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#fff7ed;">
+                        <td><strong>ASST</strong></td>
+                        <td>Strive Inc.</td>
+                        <td>$8.50</td>
+                        <td>$446M</td>
+                        <td class="down">N/A (post-split)</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MSTR</strong></td>
+                        <td>MicroStrategy</td>
+                        <td>$133.88</td>
+                        <td>$44.5B</td>
+                        <td class="down">-70.7%</td>
+                        <td>1.9x (fwd)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>COIN</strong></td>
+                        <td>Coinbase</td>
+                        <td>$164.32</td>
+                        <td>$44.3B</td>
+                        <td class="down">-63.1%</td>
+                        <td>36.9x</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MARA</strong></td>
+                        <td>Marathon Digital</td>
+                        <td>$7.92</td>
+                        <td>$3.0B</td>
+                        <td class="down">-66.2%</td>
+                        <td>3.1x</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RIOT</strong></td>
+                        <td>Riot Platforms</td>
+                        <td>$15.22</td>
+                        <td>$5.7B</td>
+                        <td class="down">-36.4%</td>
+                        <td>29.3x</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CLSK</strong></td>
+                        <td>CleanSpark</td>
+                        <td>$9.85</td>
+                        <td>$2.5B</td>
+                        <td class="down">-58.3%</td>
+                        <td>N/A</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4>Positionnement Sectoriel</h4>
+                <p>Tout le secteur crypto/BTC est en bear market. MSTR a perdu 70.7% depuis son plus haut, COIN -63%. ASST se distingue par son <strong>P/B de 0.36x</strong> (le plus bas du groupe) et sa trésorerie BTC proportionnellement massive par rapport à sa capitalisation. Le risque : ASST a une corrélation très faible avec les indices (SPY 0.03, QQQ 0.04) mais élevée avec le prix du Bitcoin. C'est un pure play crypto déguisé en société d'asset management.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 10 : MACRO -->
+        <!-- ============================================================ -->
+        <div id="macro" class="content-card">
+            <h2>Contexte Macro</h2>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Actif</th>
+                        <th>Prix</th>
+                        <th>Var. Jour</th>
+                        <th>Impact sur ASST</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bitcoin (BTC)</strong></td>
+                        <td>$69,882</td>
+                        <td class="down">-44% vs ATH</td>
+                        <td><span class="badge badge-red">Corrélation directe</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ethereum (ETH)</strong></td>
+                        <td>$2,089</td>
+                        <td class="down">-58% vs ATH</td>
+                        <td>Sentiment crypto global</td>
+                    </tr>
+                    <tr>
+                        <td><strong>S&P 500</strong></td>
+                        <td>6,836</td>
+                        <td class="neutral">+0.05%</td>
+                        <td>Corrélation faible (0.03)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VIX</strong></td>
+                        <td>20.60</td>
+                        <td class="up">Élevé</td>
+                        <td>Risk-off pèse sur les small-caps spéculatives</td>
+                    </tr>
+                    <tr>
+                        <td><strong>10Y Treasury</strong></td>
+                        <td>4.056%</td>
+                        <td class="down">-4.8 bps</td>
+                        <td>Taux en baisse = potentiellement positif pour BTC</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DXY (Dollar)</strong></td>
+                        <td>96.88</td>
+                        <td class="neutral">Stable</td>
+                        <td>Dollar faible = haussier pour BTC</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="didactic-box">
+                <h4>Impact Macro sur ASST</h4>
+                <p>ASST est essentiellement un <strong>leveraged bet sur le Bitcoin</strong>. La corrélation SPY/QQQ est quasi nulle (0.03-0.04), mais l'action bouge en tandem avec BTC. Les facteurs macro favorables : CPI 2.4% (inflation en baisse), taux en recul, Fed dovish à venir. Les facteurs défavorables : bear market crypto confirmé, stablecoins en fuite (-$14 Md), deleveraging institutionnel massif. Le BTC doit stabiliser au-dessus de $65K pour qu'ASST trouve un plancher.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 11 : RISQUES CLÉS -->
+        <!-- ============================================================ -->
+        <div id="risques" class="content-card">
+            <h2>Risques Clés</h2>
+
+            <div class="risk-matrix">
+                <div class="risk-item risk-high">
+                    <h4 style="color:#dc2626; margin:0 0 0.5rem;">Bear Market Bitcoin</h4>
+                    <p style="font-size:0.85rem; margin:0;">BTC en baisse de 44% depuis son ATH. Si BTC casse $60K, ASST pourrait perdre 30-50% supplémentaires. La trésorerie BTC de $918M serait réduite proportionnellement.</p>
+                    <p style="font-size:0.75rem; color:#991b1b; margin:0.5rem 0 0;"><strong>Niveau : Critique | Impact : Très Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-high">
+                    <h4 style="color:#dc2626; margin:0 0 0.5rem;">Dilution Continue</h4>
+                    <p style="font-size:0.85rem; margin:0;">La société a levé $762.6M via PIPE + warrants, émis $109.2M de preferred stock. Le reverse split 1:20 masque la dilution massive. 22.2 Md d'actions Class A autorisées = risque de dilution future.</p>
+                    <p style="font-size:0.75rem; color:#991b1b; margin:0.5rem 0 0;"><strong>Niveau : Élevé | Impact : Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-high">
+                    <h4 style="color:#dc2626; margin:0 0 0.5rem;">Cash Burn & Viabilité</h4>
+                    <p style="font-size:0.85rem; margin:0;">EBITDA de -$60.4M pour seulement $5.5M de revenus. Dividende preferred stock à 12.5% (coût annuel ~$48M). Le cash burn pourrait forcer la vente de BTC.</p>
+                    <p style="font-size:0.75rem; color:#991b1b; margin:0.5rem 0 0;"><strong>Niveau : Élevé | Impact : Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">Sortie Institutionnelle</h4>
+                    <p style="font-size:0.85rem; margin:0;">Fidelity a liquidé 75% de sa position. 5 des 5 plus gros mouvements institutionnels sont des ventes. La confiance institutionnelle est au plus bas.</p>
+                    <p style="font-size:0.75rem; color:#92400e; margin:0.5rem 0 0;"><strong>Niveau : Élevé | Impact : Moyen</strong></p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">Short Interest Croissant</h4>
+                    <p style="font-size:0.85rem; margin:0;">De 664K en oct 2025 à 9.37M en jan 2026. Les shorts parient sur une chute continue. Si BTC rebondit, un short squeeze violent est possible (catalyseur haussier).</p>
+                    <p style="font-size:0.75rem; color:#92400e; margin:0.5rem 0 0;"><strong>Niveau : Moyen | Impact : Double sens</strong></p>
+                </div>
+                <div class="risk-item risk-low">
+                    <h4 style="color:#16a34a; margin:0 0 0.5rem;">Régulation Crypto</h4>
+                    <p style="font-size:0.85rem; margin:0;">Le Clarity Act est bloqué au Congrès. Une régulation favorable serait un catalyseur haussier majeur pour tout le secteur. Risque de régulation hostile faible sous l'administration actuelle.</p>
+                    <p style="font-size:0.75rem; color:#166534; margin:0.5rem 0 0;"><strong>Niveau : Faible | Impact : Variable</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 12 : TRADE IDEA -->
+        <!-- ============================================================ -->
+        <div id="trade" class="content-card">
+            <h2>Trade Idea (Swing)</h2>
+
+            <div class="trade-box">
+                <h3><i class="fas fa-crosshairs"></i> Setup : Long Contrarian sur Discount NAV</h3>
+                <div class="trade-levels">
+                    <div class="trade-level" style="background:rgba(59,130,246,0.2);">
+                        <div class="label">Entrée</div>
+                        <div class="value" style="color:#3b82f6;">$8.00 - $8.50</div>
+                    </div>
+                    <div class="trade-level" style="background:rgba(220,38,38,0.2);">
+                        <div class="label">Stop Loss</div>
+                        <div class="value" style="color:#dc2626;">$6.80</div>
+                    </div>
+                    <div class="trade-level" style="background:rgba(22,163,74,0.2);">
+                        <div class="label">TP1</div>
+                        <div class="value" style="color:#16a34a;">$11.00</div>
+                    </div>
+                    <div class="trade-level" style="background:rgba(22,163,74,0.2);">
+                        <div class="label">TP2</div>
+                        <div class="value" style="color:#16a34a;">$13.60</div>
+                    </div>
+                    <div class="trade-level" style="background:rgba(22,163,74,0.2);">
+                        <div class="label">TP3</div>
+                        <div class="value" style="color:#16a34a;">$19.00</div>
+                    </div>
+                    <div class="trade-level" style="background:rgba(249,115,22,0.2);">
+                        <div class="label">R/R</div>
+                        <div class="value" style="color:#f97316;">1:1.5 / 1:3 / 1:6.3</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem; font-size:0.9rem; color:#cbd5e1;">
+                    <p><strong>Thèse :</strong> ASST trade à 0.36x sa book value avec $1.045 Md d'actifs liquides (BTC + cash) pour une MCap de $446M. Le discount de 57% sur la NAV est excessif. Si BTC stabilise au-dessus de $65K, le titre devrait converger vers le POC ($13.61) au minimum.</p>
+                    <p><strong>Catalyseurs :</strong> (1) Rebond BTC vers $75-80K, (2) Short squeeze (18.2% SI), (3) Résultats Semler Scientific / monétisation MedTech, (4) Réduction du discount NAV.</p>
+                    <p><strong>Invalidation :</strong> BTC sous $60K = stop out immédiat. La cassure du support $7.57 invalide la structure.</p>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <h4>Avertissement : Trade Spéculatif</h4>
+                <p>Ce trade est <strong>hautement spéculatif</strong>. ASST est un penny stock post-reverse-split avec une volatilité de ~19% journalier (ATR $1.61). La taille de position doit être limitée à <strong>1-2% du portefeuille maximum</strong>. Le titre est en phase de Wyckoff Markdown avec un OBV négatif &mdash; on joue ici un retournement contrarian basé sur le discount de valorisation.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- NOTE GLOBALE -->
+        <!-- ============================================================ -->
+        <div id="note" class="content-card">
+            <h2>Note Globale</h2>
+
+            <div class="score-card">
+                <div class="score-value">C+</div>
+                <div class="score-label">Spéculatif &mdash; Conviction Limitée</div>
+            </div>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f97316;">C+</div>
+                    <div class="metric-label">Conviction</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">Haussier</div>
+                    <div class="metric-label">Biais</div>
+                    <div class="metric-change neutral">Contrarian</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">35%</div>
+                    <div class="metric-label">Confiance</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">Spéculatif</div>
+                    <div class="metric-label">Profil</div>
+                </div>
+            </div>
+
+            <h3>Key Takeaways</h3>
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1.5rem; margin:1.5rem 0;">
+                <div style="background:#f0fdf4; padding:1.5rem; border-radius:16px;">
+                    <h4 style="color:#16a34a; margin:0 0 1rem;">Points Positifs</h4>
+                    <ul style="font-size:0.9rem; padding-left:1.5rem; margin:0;">
+                        <li>P/B de 0.36x &mdash; discount de 57% sur la NAV</li>
+                        <li>13,132 BTC + $127M cash = $1.045 Md d'actifs</li>
+                        <li>RSI 30.9 &mdash; zone de survente technique</li>
+                        <li>Call/Put ratio de 6.86 = paris haussiers</li>
+                        <li>Seul analyste : Buy $30 (+253%)</li>
+                        <li>Short squeeze latent (18.2% SI)</li>
+                    </ul>
+                </div>
+                <div style="background:#fef2f2; padding:1.5rem; border-radius:16px;">
+                    <h4 style="color:#dc2626; margin:0 0 1rem;">Risques Majeurs</h4>
+                    <ul style="font-size:0.9rem; padding-left:1.5rem; margin:0;">
+                        <li>Bear market BTC &mdash; corrélation directe</li>
+                        <li>Cash burn de -$60M/an pour $5.5M de CA</li>
+                        <li>Fidelity a liquidé 75% de sa position</li>
+                        <li>Reverse split 1:20 = destruction de confiance</li>
+                        <li>Phase Wyckoff Markdown active</li>
+                        <li>Dividende preferred 12.5% = coût ~$48M/an</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background:#0f172a; color:white; padding:2rem; border-radius:16px; margin-top:2rem;">
+                <h3 style="color:#f97316; margin:0 0 1rem;">Mindset Tip</h3>
+                <p style="font-size:0.95rem; color:#cbd5e1; margin:0;">ASST est le type même du titre "couteau qui tombe". Le discount de 57% sur la NAV est tentant, mais il existe pour une raison : le marché anticipe que (1) le BTC va encore baisser, réduisant la NAV, et (2) la dilution va continuer. <strong>Ne jamais attraper un couteau qui tombe avec plus de 2% du portefeuille.</strong> Si vous entrez, utilisez un stop strict et acceptez que vous jouez un scénario contrarian avec une probabilité de succès modérée (~35%). Le meilleur catalyseur serait un rebond du BTC au-dessus de $80K.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SOURCES -->
+        <!-- ============================================================ -->
+        <div class="content-card" style="background:#f8fafc;">
+            <h2>Sources & Méthodologie</h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase;">Données de Marché</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li>Market Watch Gateway (temps réel)</li>
+                        <li>Yahoo Finance</li>
+                        <li>StockAnalysis.com</li>
+                        <li>AmericanBulls (signaux)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase;">SEC Filings</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li><a href="https://www.sec.gov/cgi-bin/viewer?action=view&cik=0001920406&accession_number=0001628280-26-007897">8-K (13 Fév 2026) &mdash; BTC Holdings</a></li>
+                        <li><a href="https://www.sec.gov/cgi-bin/viewer?action=view&cik=0001920406&accession_number=0000950103-26-001560">8-K (3 Fév 2026) &mdash; Reverse Split</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase;">Analyses</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li><a href="https://finance.yahoo.com/news/maxim-group-reiterates-buy-rating-195823958.html">Maxim Group &mdash; Buy $30 PT</a></li>
+                        <li><a href="https://finance.yahoo.com/m/3a27c9d9-c588-3d73-8a30-1691fd86cbf0/bearish-sentiment-prevails-as.html">CoinDesk &mdash; Crypto Sentiment</a></li>
+                        <li>Fintel / ChartExchange (Short Data)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:2rem; text-align:center;"><strong>Disclaimer :</strong> Ce rapport est fourni à titre informatif uniquement. Il ne constitue pas un conseil en investissement. ASST est un titre hautement spéculatif avec un risque de perte totale. Consultez un conseiller financier agréé avant toute décision d'investissement.</p>
+        </div>
+
+        <!-- FOOTER -->
+        <footer style="text-align:center; padding:2rem 0; color:#94a3b8; font-size:0.85rem;">
+            <p>&copy; 2026 Market Watch &mdash; Intelligence Institutionnelle</p>
+            <p style="font-size:0.75rem;">Analyse générée le 14 février 2026 &bull; Données au 14/02/2026 via MarketWatch Gateway</p>
+            <p style="margin-top:1rem;"><a href="https://market-watch.xyz" style="color:#3b82f6;">Retour à l'accueil</a></p>
+        </footer>
+
+    </div>
+
+</body>
+
+</html>

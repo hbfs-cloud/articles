@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch Expert | Semaine 16 - 21 Février 2026</title>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Charts Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+    <style>
+        .alert-banner {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+        }
+
+        .chart-container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value { font-size: 1.75rem; font-weight: 800; line-height: 1.2; }
+        .metric-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
+        .metric-change { font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem; }
+        .up { color: #16a34a; }
+        .down { color: #dc2626; }
+        .neutral { color: #64748b; }
+
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .risk-item {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 4px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .risk-high { border-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); }
+        .risk-medium { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
+        .risk-low { border-color: #16a34a; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin: 2rem 0;
+        }
+
+        .calendar-day {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-day.critical {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #dc2626;
+        }
+
+        .calendar-day.important {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #f59e0b;
+        }
+
+        .geo-alert {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #dc2626;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .geo-alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+            animation: gradient-move 3s linear infinite;
+        }
+
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .allocation-donut { width: 100%; height: 350px; }
+
+        @media (max-width: 768px) {
+            .metric-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
+            .calendar-grid { grid-template-columns: 1fr !important; }
+            .calendar-days-header { display: none !important; }
+            .calendar-days-grid { display: flex !important; flex-direction: column !important; }
+            .calendar-days-grid > div { min-height: auto !important; border-right: none !important; border-bottom: 1px solid #e2e8f0 !important; padding: 1rem !important; }
+        }
+
+        @media (max-width: 480px) {
+            .metric-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.35rem !important; }
+            .metric-card { padding: 0.5rem !important; border-radius: 8px !important; }
+            .metric-value { font-size: 1rem !important; }
+            .metric-label { font-size: 0.6rem !important; }
+            .metric-change { font-size: 0.55rem !important; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+        <a href="https://market-watch.xyz" class="brand" style="display:inline-flex; align-items:center; gap:10px; margin-bottom:2rem; text-decoration:none; color:#0f172a; font-weight:800; font-size:1.2rem;">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:32px;"> MARKET WATCH
+        </a>
+        <div class="container">
+            <h1 class="hero-title">La Grande Rotation & Genève : Semaine Charnière</h1>
+            <p class="hero-subtitle">Semaine 8 &bull; 16 - 21 Février 2026 &bull; Intelligence Institutionnelle</p>
+            <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:2rem;">
+                <span class="badge badge-red">ROTATION SECTORIELLE MAJEURE</span>
+                <span class="badge badge-blue">FOMC MINUTES MERCREDI</span>
+                <span class="badge badge-green">OR > $5,000</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- NAVIGATION GRID -->
+        <div class="nav-grid">
+            <a href="#alertes" class="nav-item">Alertes</a>
+            <a href="#calendrier" class="nav-item">Calendrier</a>
+            <a href="#synthese" class="nav-item">Synthèse</a>
+            <a href="#compte-rendu" class="nav-item">Bilan S-1</a>
+            <a href="#marches" class="nav-item">Marchés</a>
+            <a href="#metaux" class="nav-item">Métaux</a>
+            <a href="#crypto" class="nav-item">Crypto</a>
+            <a href="#earnings" class="nav-item">Earnings</a>
+            <a href="#geopolitique" class="nav-item">Géopolitique</a>
+            <a href="#rotation" class="nav-item">Rotation</a>
+            <a href="#risques" class="nav-item">Risques</a>
+            <a href="#allocation" class="nav-item">Allocation</a>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ALERTES -->
+        <!-- ============================================================ -->
+        <div id="alertes" class="content-card">
+            <div class="alert-banner">
+                <span style="font-size:2rem;">&#9888;&#65039;</span>
+                <div>
+                    <strong style="font-size:1.1rem;">ALERTE ROTATION HISTORIQUE &mdash; MAG 7 EN BEAR MARKET</strong>
+                    <p style="margin:0.5rem 0 0; font-size:0.9rem; opacity:0.9;">Amazon et Microsoft officiellement en bear market (-20% depuis les sommets). Le Nasdaq a perdu $1,500 milliards en 2026. Capital en fuite vers l'Europe (+12% YTD), les small-caps et les métaux précieux. Semaine courte (Presidents' Day lundi).</p>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4>Qu'est-ce qu'une rotation sectorielle ?</h4>
+                <p>Une rotation sectorielle se produit lorsque les investisseurs déplacent massivement leur capital d'un secteur (ici la tech/AI) vers d'autres secteurs jugés plus attractifs (value, small-caps, Europe, métaux). C'est un signal de changement de régime de marché, souvent déclenché par des valorisations excessives ou un changement de narrative. La rotation actuelle est la plus importante depuis 2001.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CALENDRIER DE LA SEMAINE -->
+        <!-- ============================================================ -->
+        <div id="calendrier" class="content-card">
+            <h2>Calendrier de la Semaine</h2>
+            <p>La semaine sera raccourcie par le Presidents' Day lundi. Les minutes du FOMC mercredi et les earnings de Walmart jeudi seront les catalyseurs majeurs, avec les PMIs flash vendredi qui donneront le pouls de l'économie réelle.</p>
+
+            <!-- Calendar Header (desktop only) -->
+            <div class="calendar-days-header" style="display:grid; grid-template-columns:repeat(5,1fr); gap:0.75rem; margin-bottom:0.5rem;">
+                <div style="text-align:center; font-weight:700; color:#64748b; font-size:0.8rem;">LUN 16</div>
+                <div style="text-align:center; font-weight:700; color:#64748b; font-size:0.8rem;">MAR 17</div>
+                <div style="text-align:center; font-weight:700; color:#dc2626; font-size:0.8rem;">MER 18</div>
+                <div style="text-align:center; font-weight:700; color:#f59e0b; font-size:0.8rem;">JEU 19</div>
+                <div style="text-align:center; font-weight:700; color:#f59e0b; font-size:0.8rem;">VEN 20</div>
+            </div>
+
+            <div class="calendar-days-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:0.75rem;">
+                <!-- Lundi -->
+                <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:12px; padding:1rem;">
+                    <div style="font-weight:700; margin-bottom:0.5rem;">Lun 16 Fév</div>
+                    <span class="badge badge-blue" style="margin-bottom:0.5rem; display:inline-block;">FERMÉ</span>
+                    <p style="font-size:0.85rem; margin:0;">Presidents' Day &mdash; Marchés US fermés</p>
+                    <p style="font-size:0.8rem; margin:0.5rem 0 0; color:#64748b;">Eurogroup Meetings (EUR)</p>
+                </div>
+                <!-- Mardi -->
+                <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1rem;">
+                    <div style="font-weight:700; margin-bottom:0.5rem;">Mar 17 Fév</div>
+                    <span class="badge badge-red" style="margin-bottom:0.5rem; display:inline-block;">EARNINGS</span>
+                    <p style="font-size:0.85rem; margin:0;"><strong>Empire State Mfg Index</strong></p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Carvana (CVNA) earnings</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Arista Networks (ANET)</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Medtronic (MDT)</p>
+                </div>
+                <!-- Mercredi -->
+                <div style="background:#fef2f2; border:2px solid #dc2626; border-radius:12px; padding:1rem;">
+                    <div style="font-weight:700; color:#dc2626; margin-bottom:0.5rem;">Mer 18 Fév</div>
+                    <span class="badge badge-red" style="margin-bottom:0.5rem; display:inline-block;">CRITIQUE</span>
+                    <p style="font-size:0.85rem; margin:0;"><strong>FOMC Minutes (14h EST)</strong></p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Détails de la réunion du 28 jan</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Analog Devices (ADI)</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Genève : Talks Ukraine-Russie</p>
+                </div>
+                <!-- Jeudi -->
+                <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1rem;">
+                    <div style="font-weight:700; color:#f59e0b; margin-bottom:0.5rem;">Jeu 19 Fév</div>
+                    <span class="badge badge-red" style="margin-bottom:0.5rem; display:inline-block;">EARNINGS</span>
+                    <p style="font-size:0.85rem; margin:0;"><strong>Walmart (WMT) &mdash; BMO</strong></p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Jobless Claims</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Philly Fed Mfg Index</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Alibaba (BABA)</p>
+                </div>
+                <!-- Vendredi -->
+                <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1rem;">
+                    <div style="font-weight:700; color:#f59e0b; margin-bottom:0.5rem;">Ven 20 Fév</div>
+                    <span class="badge badge-blue" style="margin-bottom:0.5rem; display:inline-block;">PMI</span>
+                    <p style="font-size:0.85rem; margin:0;"><strong>Flash PMIs (US, EU, UK)</strong></p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">UoM Consumer Sentiment</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Existing Home Sales</p>
+                    <p style="font-size:0.8rem; margin:0.25rem 0 0; color:#64748b;">Deere & Co (DE)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- EXECUTIVE SUMMARY -->
+        <!-- ============================================================ -->
+        <div id="synthese" class="content-card">
+            <h2>Synthèse Exécutive</h2>
+            <p>Le CPI de janvier est tombé à 2,4% YoY &mdash; le plus bas depuis le printemps 2021 &mdash; mais les marchés n'ont pas réagi positivement. Le S&P 500 (6,836) et le Nasdaq (22,547) terminent la semaine en baisse malgré l'inflation favorable, plombés par la dislocation des Magnificent Seven et les craintes de disruption AI. L'or bondit à $5,046 (+1.98%). Le VIX remonte à 20.6 (régime "élevé"). Le Bitcoin reste fragile à $69,882, en baisse de 44% depuis son ATH.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#1e293b;">6,836</div>
+                    <div class="metric-label">S&P 500</div>
+                    <div class="metric-change neutral">+0.05% jour / -1.0% sem</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#1e293b;">22,547</div>
+                    <div class="metric-label">Nasdaq</div>
+                    <div class="metric-change down">-0.22% jour / -2.2% sem</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#1e293b;">49,501</div>
+                    <div class="metric-label">Dow Jones</div>
+                    <div class="metric-change neutral">+0.10% jour / Dow 50K perdu</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">2,630</div>
+                    <div class="metric-label">Russell 2000</div>
+                    <div class="metric-change up">+1.3% sem</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#eab308;">$5,046</div>
+                    <div class="metric-label">Or (XAU)</div>
+                    <div class="metric-change up">+1.98% jour / > $5K</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#94a3b8;">$69.72</div>
+                    <div class="metric-label">Argent (SLV)</div>
+                    <div class="metric-change up">+2.9% jour / volatile</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f97316;">$69,882</div>
+                    <div class="metric-label">Bitcoin</div>
+                    <div class="metric-change down">-44% depuis ATH $126K</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">20.60</div>
+                    <div class="metric-label">VIX</div>
+                    <div class="metric-change up">Régime élevé</div>
+                </div>
+            </div>
+
+            <div class="didactic-box">
+                <h4>Le Paradoxe de la Semaine</h4>
+                <p>L'inflation tombe à son plus bas niveau en 5 ans (CPI 2,4%), ce qui devrait être haussier pour les actions (les taux pourraient baisser). Pourtant, les marchés chutent. Pourquoi ? Parce que le marché est dominé par la <strong>peur de la disruption AI</strong> : les investisseurs craignent que l'intelligence artificielle détruise les modèles d'affaires des entreprises SaaS, de la logistique et de l'immobilier commercial. C'est un changement de narrative fondamental.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- COMPTE RENDU SEMAINE PRECEDENTE -->
+        <!-- ============================================================ -->
+        <div id="compte-rendu" class="content-card">
+            <h2>Bilan de la Semaine Précédente</h2>
+            <p>Notre rapport précédent ("NFP & CPI : La Semaine Qui Décidera 2026") anticipait une semaine pivot autour du CPI. Voici le bilan de nos anticipations.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Anticipation</th>
+                        <th>Résultat</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CPI déterminant pour la direction</td>
+                        <td>CPI 2,4% (sous consensus 2,5%) &mdash; inflation en baisse</td>
+                        <td><span class="badge badge-green">VALIDÉ</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dow 50K comme sommet intermédiaire</td>
+                        <td>Dow a franchi 50K puis rechute sous $49,600</td>
+                        <td><span class="badge badge-green">VALIDÉ</span></td>
+                    </tr>
+                    <tr>
+                        <td>Nasdaq sous pression (CTA ventes)</td>
+                        <td>Nasdaq -2.2% sur la semaine, $1,500 Md perdus YTD</td>
+                        <td><span class="badge badge-green">VALIDÉ</span></td>
+                    </tr>
+                    <tr>
+                        <td>Rotation vers small-caps</td>
+                        <td>Russell 2000 surperforme (+1.3% vs Nasdaq -2.2%)</td>
+                        <td><span class="badge badge-green">VALIDÉ</span></td>
+                    </tr>
+                    <tr>
+                        <td>Or test $5,000</td>
+                        <td>Or repasse au-dessus de $5,000 après le CPI</td>
+                        <td><span class="badge badge-green">VALIDÉ</span></td>
+                    </tr>
+                    <tr>
+                        <td>Bitcoin fragile</td>
+                        <td>BTC range $65K-$70K, pas de rebond significatif</td>
+                        <td><span class="badge badge-green">VALIDÉ</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="margin-top:1.5rem;"><strong>Score de validation : 6/6</strong> &mdash; Le scénario de rotation + inflation en baisse s'est matérialisé exactement comme anticipé. La divergence entre inflation favorable et marchés actions en baisse confirme que le driver principal n'est plus la Fed mais la disruption AI.</p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CONTEXTE MACRO -->
+        <!-- ============================================================ -->
+        <div id="marches" class="content-card">
+            <h2>Contexte Macro & Marchés Financiers</h2>
+
+            <h3>Inflation : Le Signal Positif Ignoré</h3>
+            <p>Le CPI de janvier est tombé à <strong>2,4% YoY</strong> (vs 2,5% attendu et 2,7% en décembre). Le CPI core est resté à 0,3% MoM, en ligne avec le consensus. C'est le niveau d'inflation le plus bas depuis le printemps 2021 &mdash; un signal clair que la politique monétaire restrictive fonctionne.</p>
+            <p>Malgré cela, les marchés ont à peine réagi : les rendements des Treasuries ont baissé de ~5 bps sur les 2 ans et 10 ans, mais les indices actions ont terminé la semaine en négatif. Plus de 50% des traders anticipent désormais une baisse de 25 bps d'ici juin, mais la majorité des paris restent sur <strong>deux baisses maximum en 2026</strong>.</p>
+
+            <div class="alert-box">
+                <h4>Fed Watch &mdash; Minutes FOMC Mercredi 18</h4>
+                <p>Les minutes de la réunion du 28 janvier seront scrutées pour comprendre le degré de division au sein du FOMC. La Fed a maintenu les taux à 3,50%-3,75% après trois baisses en 2025. Le dot plot de décembre suggère une seule baisse supplémentaire en 2026. Les marchés de prédiction donnent 50% de probabilité d'un cut d'ici juin et seulement 15% de probabilité de récession.</p>
+            </div>
+
+            <h3>Marchés Actions US</h3>
+            <p>La semaine a été marquée par une rotation violente hors de la tech. Les sept géants (Magnificent Seven) ont tous terminé en baisse jeudi, avec Amazon et Microsoft officiellement en <strong>bear market</strong> (-20% depuis leurs sommets). Le S&P North American Technology Software Index a plongé de près de 24% depuis fin 2025 &mdash; c'est le "SaaSpocalypse".</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Indice</th>
+                        <th>Clôture 13/02</th>
+                        <th>Var. Jour</th>
+                        <th>Var. Semaine</th>
+                        <th>YTD</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>S&P 500</strong></td>
+                        <td>6,836</td>
+                        <td class="up">+0.05%</td>
+                        <td class="down">-1.0%</td>
+                        <td class="down">~-0.2%</td>
+                        <td><span class="badge badge-red">Pressure</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nasdaq Comp.</strong></td>
+                        <td>22,547</td>
+                        <td class="down">-0.22%</td>
+                        <td class="down">-2.2%</td>
+                        <td class="down">~-2.8%</td>
+                        <td><span class="badge badge-red">Bear Signal</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dow Jones</strong></td>
+                        <td>49,501</td>
+                        <td class="up">+0.10%</td>
+                        <td class="down">-0.8%</td>
+                        <td class="up">~+3.2%</td>
+                        <td><span class="badge badge-blue">50K perdu</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Russell 2000</strong></td>
+                        <td>2,647</td>
+                        <td class="up">+1.18%</td>
+                        <td class="up">+1.3%</td>
+                        <td class="up">~+5.9%</td>
+                        <td><span class="badge badge-green">Leader</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>VIX</strong></td>
+                        <td>20.60</td>
+                        <td colspan="3" class="up">Régime élevé &mdash; zone de prudence</td>
+                        <td><span class="badge badge-red">Alerte</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4>Le "SaaSpocalypse" &mdash; Pourquoi le Software s'effondre</h4>
+                <p>Les investisseurs réalisent que l'IA (agents autonomes comme Claude Code, Devin, etc.) peut remplacer des catégories entières de logiciels SaaS. Salesforce (-28% YTD), Workday (-22%), et des dizaines d'autres sont en chute libre. Le capital fuit vers les bénéficiaires physiques de l'IA : les fournisseurs d'énergie (cuivre, power grids), le hardware, et les data centers. Freeport-McMoRan et BHP Group profitent de la hausse du cuivre vers $15,000/tonne.</p>
+            </div>
+
+            <h3>Europe & International : Le Découplage Historique</h3>
+            <p>Pendant que Wall Street souffre sous le poids des Magnificent Seven en bear market, <strong>l'ensemble des marchés développés hors-US est en feu</strong>. Le découplage est le plus important depuis la crise dot-com de 2001. L'Europe, l'Asie et les émergents surperforment massivement le Nasdaq, avec la Corée du Sud qui vient de toucher un <strong>nouveau record 52 semaines</strong>.</p>
+
+            <div class="alert-box">
+                <h4>Signal Fort : EWY (Corée du Sud) au Plus Haut 52 Semaines</h4>
+                <p>L'ETF iShares MSCI South Korea (EWY) a touché $134.32 le 13 février &mdash; son <strong>plus haut de l'année</strong>. Depuis son plus bas à $48.49, c'est une hausse de +176%. Samsung, SK Hynix et la filière semiconducteurs coréenne profitent de la demande AI mondiale. C'est le signal le plus haussier d'Asie en ce moment.</p>
+            </div>
+
+            <h4>Marchés Développés &mdash; Indices Majeurs</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Marché</th>
+                        <th>ETF</th>
+                        <th>Prix</th>
+                        <th>Var. Jour</th>
+                        <th>Vs 52W High</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Europe (EAFE)</strong></td>
+                        <td>EFA</td>
+                        <td>$104.24</td>
+                        <td class="up">+0.6%</td>
+                        <td>-1.0%</td>
+                        <td><span class="badge badge-green">Proche ATH</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Émergents</strong></td>
+                        <td>EEM</td>
+                        <td>$61.12</td>
+                        <td class="up">+0.4%</td>
+                        <td>-1.3%</td>
+                        <td><span class="badge badge-green">Forte</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chine</strong></td>
+                        <td>FXI</td>
+                        <td>$38.33</td>
+                        <td class="down">-0.9%</td>
+                        <td>-8.7%</td>
+                        <td><span class="badge badge-blue">Neutre</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Europe Détaillée &mdash; Tous Proches des Sommets</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Pays</th>
+                        <th>ETF</th>
+                        <th>Prix</th>
+                        <th>Var. Jour</th>
+                        <th>52W High</th>
+                        <th>Écart</th>
+                        <th>P/E</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Allemagne</strong></td>
+                        <td>EWG</td>
+                        <td>$43.97</td>
+                        <td class="neutral">+0.02%</td>
+                        <td>$44.62</td>
+                        <td class="up">-1.5%</td>
+                        <td>18.7x</td>
+                        <td><span class="badge badge-green">Leader EU</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Royaume-Uni</strong></td>
+                        <td>EWU</td>
+                        <td>$47.25</td>
+                        <td class="up">+0.51%</td>
+                        <td>$47.52</td>
+                        <td class="up">-0.6%</td>
+                        <td>20.8x</td>
+                        <td><span class="badge badge-green">Quasi ATH</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>France</strong></td>
+                        <td>EWQ</td>
+                        <td>$46.70</td>
+                        <td class="neutral">+0.04%</td>
+                        <td>$47.23</td>
+                        <td class="up">-1.1%</td>
+                        <td>19.9x</td>
+                        <td><span class="badge badge-green">Forte</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p><strong>Catalyseurs européens :</strong> La défense mène le rallye (Thales +4.2%, Safran +2.1%, Dassault Aviation en forte hausse) portée par les budgets militaires OTAN. Les 3 ETFs européens tradent à moins de 1.5% de leurs plus hauts historiques &mdash; un signal de force remarquable pendant que le Nasdaq perd $1,500 Md.</p>
+
+            <h4>Asie-Pacifique &mdash; Corée du Sud en Tête</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Pays</th>
+                        <th>ETF</th>
+                        <th>Prix</th>
+                        <th>Var. Jour</th>
+                        <th>52W High</th>
+                        <th>Écart</th>
+                        <th>P/E</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f0fdf4;">
+                        <td><strong>Corée du Sud</strong></td>
+                        <td>EWY</td>
+                        <td>$133.97</td>
+                        <td class="up">+2.42%</td>
+                        <td>$134.32</td>
+                        <td class="up"><strong>ATH!</strong></td>
+                        <td>20.0x</td>
+                        <td><span class="badge badge-green">52W HIGH</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Japon</strong></td>
+                        <td>EWJ</td>
+                        <td>$93.85</td>
+                        <td class="up">+0.51%</td>
+                        <td>$94.28</td>
+                        <td class="up">-0.5%</td>
+                        <td>19.3x</td>
+                        <td><span class="badge badge-green">Quasi ATH</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Taïwan</strong></td>
+                        <td>EWT</td>
+                        <td>$73.05</td>
+                        <td class="up">+0.68%</td>
+                        <td>$73.88</td>
+                        <td class="up">-1.1%</td>
+                        <td>22.8x</td>
+                        <td><span class="badge badge-green">Forte</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hong Kong</strong></td>
+                        <td>EWH</td>
+                        <td>$23.15</td>
+                        <td class="down">-0.77%</td>
+                        <td>$23.85</td>
+                        <td class="neutral">-2.9%</td>
+                        <td>19.9x</td>
+                        <td><span class="badge badge-blue">Consolidation</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inde</strong></td>
+                        <td>INDA</td>
+                        <td>$52.89</td>
+                        <td class="down">-0.41%</td>
+                        <td>$56.01</td>
+                        <td class="down">-5.6%</td>
+                        <td>24.3x</td>
+                        <td><span class="badge badge-red">Correction</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Australie</strong></td>
+                        <td>EWA</td>
+                        <td>$29.16</td>
+                        <td class="up">+0.21%</td>
+                        <td>$29.58</td>
+                        <td class="up">-1.4%</td>
+                        <td>22.8x</td>
+                        <td><span class="badge badge-green">Forte</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Émergents &mdash; Brésil Fort, Inde en Correction</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Pays</th>
+                        <th>ETF</th>
+                        <th>Prix</th>
+                        <th>Var. Jour</th>
+                        <th>52W High</th>
+                        <th>P/E</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Brésil</strong></td>
+                        <td>EWZ</td>
+                        <td>$38.06</td>
+                        <td class="down">-1.12%</td>
+                        <td>$39.45</td>
+                        <td>12.9x</td>
+                        <td><span class="badge badge-green">Value</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inde</strong></td>
+                        <td>INDA</td>
+                        <td>$52.89</td>
+                        <td class="down">-0.41%</td>
+                        <td>$56.01</td>
+                        <td>24.3x</td>
+                        <td><span class="badge badge-red">Sous pression</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4>Pourquoi les Marchés Internationaux Surperforment</h4>
+                <p><strong>1. Rotation hors US :</strong> Les capitaux fuient les Magnificent Seven surévalués vers des marchés à valorisations raisonnables (P/E 13-20x vs 25-35x pour le Nasdaq).
+                <br><strong>2. Semi-conducteurs asiatiques :</strong> Samsung, SK Hynix (Corée), TSMC (Taïwan) profitent de la demande AI sans les capex excessifs des géants US.
+                <br><strong>3. Défense européenne :</strong> La hausse des budgets OTAN (contexte Ukraine-Russie) profite à Thales, Safran, BAE Systems, Rheinmetall.
+                <br><strong>4. Brésil value play :</strong> À seulement 12.9x les bénéfices, le Brésil est le marché le moins cher de notre tableau &mdash; un refuge value naturel.
+                <br><strong>5. Inde : seul point faible</strong> &mdash; INDA est à -5.6% de son plus haut, affecté par les tensions sur les marges des géants IT indiens (TCS, Infosys) liées à la disruption AI.</p>
+            </div>
+
+            <p>La Chine déploie une "National Team" d'investisseurs étatiques pour calmer la spéculation AI sur ses marchés. Hong Kong (EWH) consolide à -2.9% du plus haut, ce qui reste une correction modérée après le rallye DeepSeek.</p>
+
+            <h3>Obligations & Taux</h3>
+            <p>Les rendements des Treasuries ont reculé après le CPI favorable. Le TLT (20Y+ bonds) a gagné +0.55% à $89.72. Les marchés obligataires valident le scénario désinflationniste, créant une divergence avec les actions tech qui, elles, sont vendues pour des raisons structurelles (disruption AI) et non monétaires.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Maturité</th>
+                        <th>Rendement</th>
+                        <th>Var. Jour</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>13 Semaines</strong></td>
+                        <td>3.593%</td>
+                        <td class="down">-0.5 bps</td>
+                        <td>Stable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5 Ans</strong></td>
+                        <td>3.609%</td>
+                        <td class="down">-5.9 bps</td>
+                        <td>En baisse</td>
+                    </tr>
+                    <tr>
+                        <td><strong>10 Ans</strong></td>
+                        <td>4.056%</td>
+                        <td class="down">-4.8 bps</td>
+                        <td>Pivot 4% en vue</td>
+                    </tr>
+                    <tr>
+                        <td><strong>30 Ans</strong></td>
+                        <td>4.698%</td>
+                        <td class="down">-3.3 bps</td>
+                        <td>Courbe s'aplatit</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EUR/USD</strong></td>
+                        <td>1.1871</td>
+                        <td class="neutral">flat</td>
+                        <td>Dollar stable (DXY 96.88)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Matières Premières & Énergie</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Actif</th>
+                        <th>Prix</th>
+                        <th>Var. Jour</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>WTI Crude</strong></td>
+                        <td>$62.89</td>
+                        <td class="neutral">+0.08%</td>
+                        <td>Stable, ventes vénézuéliennes > $1 Md</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Brent Crude</strong></td>
+                        <td>$67.75</td>
+                        <td class="up">+0.34%</td>
+                        <td>Spread WTI-Brent $4.86</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gaz Naturel</strong></td>
+                        <td>$3.24</td>
+                        <td class="up">+0.81%</td>
+                        <td>Demande hivernale</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cuivre</strong></td>
+                        <td>$5.80/lb</td>
+                        <td class="up">+0.30%</td>
+                        <td>Demande AI data centers (FCX, BHP gagnants)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Uranium</strong></td>
+                        <td>En hausse</td>
+                        <td class="up">+</td>
+                        <td>Standard Uranium lance programme Corvo</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- METAUX PRECIEUX -->
+        <!-- ============================================================ -->
+        <div id="metaux" class="content-card">
+            <h2>Métaux Précieux : L'Or Reprend $5,000</h2>
+            <p>Après le crash historique de fin janvier (-11% pour l'or, -31% pour l'argent), les métaux précieux ont amorcé une recovery spectaculaire. L'or a bondi de 6% en une seule séance &mdash; le gain journalier le plus fort en près de 20 ans &mdash; pour repasser au-dessus de $5,000. Goldman Sachs a annoncé que les "hard assets" entrent dans une "phase de rareté".</p>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="metric-card" style="border-color:#eab308;">
+                    <div class="metric-value" style="color:#eab308;">$5,046</div>
+                    <div class="metric-label">Or (XAU/USD)</div>
+                    <div class="metric-change up">+1.98% jour / Recovery depuis $4,745</div>
+                </div>
+                <div class="metric-card" style="border-color:#94a3b8;">
+                    <div class="metric-value" style="color:#64748b;">$77.96</div>
+                    <div class="metric-label">Argent (SI Futures)</div>
+                    <div class="metric-change up">+3.02% jour / Recovery post-crash</div>
+                </div>
+                <div class="metric-card" style="border-color:#eab308;">
+                    <div class="metric-value" style="color:#eab308;">$462.62</div>
+                    <div class="metric-label">GLD ETF</div>
+                    <div class="metric-change up">+2.49% jour / 52WH: $509.70</div>
+                </div>
+            </div>
+
+            <h3>Prévisions Institutionnelles</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Institution</th>
+                        <th>Target Or 2026</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>JPMorgan</strong></td>
+                        <td class="up">$6,300</td>
+                        <td>Prévision la plus agressive</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deutsche Bank</strong></td>
+                        <td class="up">$6,000</td>
+                        <td>"Atteignable cette année"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Goldman Sachs</strong></td>
+                        <td class="up">$5,400</td>
+                        <td>Phase de rareté des hard assets</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bank of America</strong></td>
+                        <td class="up">$6,000</td>
+                        <td>"Perte de confiance dans les investissements classiques"</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="didactic-box">
+                <h4>Pourquoi l'or monte malgré la baisse de l'inflation ?</h4>
+                <p><strong>Demande des banques centrales :</strong> 585 tonnes achetées par trimestre en 2026 (record). 95% des banques centrales prévoient d'augmenter leurs réserves dans les 12 mois. <strong>Géopolitique :</strong> Venezuela, Ukraine-Russie, tensions Chine-Taïwan, Groenland. <strong>Dé-dollarisation :</strong> Les pays BRICS+ accélèrent leurs achats d'or comme alternative au dollar. L'or est le "thermomètre de la méfiance géopolitique".</p>
+            </div>
+
+            <h3>Argent : Recovery Après Flash Crash</h3>
+            <p>L'argent reste le métal le plus volatil. Le crash de janvier (-31% en une séance) a été causé par une hausse des marges CME de 11% à 15%, déclenchant des liquidations forcées en cascade. Le marché se stabilise autour de $100-105, mais la recovery est fragile. Le déficit physique d'argent entre dans sa 6ème année consécutive &mdash; les fondamentaux restent intacts malgré la volatilité extrême.</p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CRYPTO -->
+        <!-- ============================================================ -->
+        <div id="crypto" class="content-card">
+            <h2>Crypto : Bear Market Confirmé</h2>
+            <p>Le Bitcoin est en bear market officiel, en baisse de 44% depuis son ATH de $126,198 atteint en octobre 2025. L'Ethereum souffre encore plus (-58% depuis son ATH). Les stablecoins ont perdu $14 milliards de capitalisation depuis décembre, dont $7 milliards en une seule semaine &mdash; un signe clair de fuite des capitaux.</p>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f97316;">$69,882</div>
+                    <div class="metric-label">Bitcoin</div>
+                    <div class="metric-change down">-44% vs ATH $126K</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#6366f1;">$2,089</div>
+                    <div class="metric-label">Ethereum</div>
+                    <div class="metric-change down">-58% vs ATH $4,953</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#14b8a6;">$87.42</div>
+                    <div class="metric-label">Solana</div>
+                    <div class="metric-change down">-65% vs ATH $253</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#64748b;">$1.47</div>
+                    <div class="metric-label">XRP</div>
+                    <div class="metric-change down">-60% vs ATH $3.65</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#64748b;">$0.103</div>
+                    <div class="metric-label">DOGE</div>
+                    <div class="metric-change down">-66% vs ATH $0.306</div>
+                </div>
+            </div>
+
+            <h3>Les 4 Facteurs du Bear Market Crypto</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:1.5rem 0;">
+                <div style="background:#fef2f2; padding:1.25rem; border-radius:12px; border-left:4px solid #dc2626;">
+                    <h4 style="margin:0 0 0.5rem; color:#dc2626; font-size:0.9rem;">1. Débouclage Institutionnel</h4>
+                    <p style="font-size:0.85rem; margin:0;">Les basis trades (spot ETF + short futures) ne rapportent plus que 5% vs 17% avant. Les hedge funds dénouent massivement.</p>
+                </div>
+                <div style="background:#fef2f2; padding:1.25rem; border-radius:12px; border-left:4px solid #dc2626;">
+                    <h4 style="margin:0 0 0.5rem; color:#dc2626; font-size:0.9rem;">2. Fuite des Stablecoins</h4>
+                    <p style="font-size:0.85rem; margin:0;">-$14 Md depuis décembre. Tether et USDC perdent de la capitalisation &mdash; l'argent quitte l'écosystème crypto.</p>
+                </div>
+                <div style="background:#fef2f2; padding:1.25rem; border-radius:12px; border-left:4px solid #dc2626;">
+                    <h4 style="margin:0 0 0.5rem; color:#dc2626; font-size:0.9rem;">3. Contagion AI/Tech</h4>
+                    <p style="font-size:0.85rem; margin:0;">La faiblesse des valeurs tech US contamine le crypto. Les mineurs qui pivotent vers l'AI doivent vendre leurs BTC.</p>
+                </div>
+                <div style="background:#fef2f2; padding:1.25rem; border-radius:12px; border-left:4px solid #dc2626;">
+                    <h4 style="margin:0 0 0.5rem; color:#dc2626; font-size:0.9rem;">4. Incertitude Réglementaire</h4>
+                    <p style="font-size:0.85rem; margin:0;">Le Clarity Act (réglementation crypto) est bloqué au Congrès. Les marchés détestent l'incertitude.</p>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <h4>Niveau Critique &mdash; Support BTC $60,000</h4>
+                <p>Le Bitcoin a brièvement touché $60,074 le 6 février (son 52-semaines low). Si ce support cède, le prochain niveau technique est $55,000. Le rebond actuel à $69,900 reste fragile &mdash; les volumes sont faibles et le sentiment est négatif. Un passage sous $60K pourrait déclencher une cascade de liquidations estimée à $3-5 Md.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- EARNINGS -->
+        <!-- ============================================================ -->
+        <div id="earnings" class="content-card">
+            <h2>Earnings de la Semaine</h2>
+            <p>Les résultats de la semaine dernière ont montré un paradoxe : les entreprises battent les estimations mais sont vendues à cause des dépenses AI excessives. Amazon et Microsoft ont chuté malgré des résultats solides, sanctionnés par des capex AI jugés "hors de contrôle" ($200 Md pour Amazon, $37.5 Md pour Microsoft sur un trimestre). Cette semaine, l'attention se tourne vers Walmart et Alibaba.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Entreprise</th>
+                        <th>Ticker</th>
+                        <th>Consensus EPS</th>
+                        <th>Enjeu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mar 17</td>
+                        <td><strong>Carvana</strong></td>
+                        <td>CVNA</td>
+                        <td>Croissance attendue</td>
+                        <td>Baromètre conso auto</td>
+                    </tr>
+                    <tr>
+                        <td>Mar 17</td>
+                        <td><strong>Arista Networks</strong></td>
+                        <td>ANET</td>
+                        <td>&mdash;</td>
+                        <td>Infrastructure réseau AI</td>
+                    </tr>
+                    <tr>
+                        <td>Mar 17</td>
+                        <td><strong>Medtronic</strong></td>
+                        <td>MDT</td>
+                        <td>&mdash;</td>
+                        <td>Healthcare / AI médicale</td>
+                    </tr>
+                    <tr>
+                        <td>Mer 18</td>
+                        <td><strong>Analog Devices</strong></td>
+                        <td>ADI</td>
+                        <td>&mdash;</td>
+                        <td>Semiconducteurs analogiques</td>
+                    </tr>
+                    <tr style="background:#fffbeb;">
+                        <td>Jeu 19</td>
+                        <td><strong>Walmart</strong></td>
+                        <td>WMT</td>
+                        <td>$0.73 (+10.6% YoY)</td>
+                        <td>Baromètre consommateur #1</td>
+                    </tr>
+                    <tr style="background:#fffbeb;">
+                        <td>Jeu 19</td>
+                        <td><strong>Alibaba</strong></td>
+                        <td>BABA</td>
+                        <td>&mdash;</td>
+                        <td>Indicateur Chine + AI</td>
+                    </tr>
+                    <tr>
+                        <td>Ven 20</td>
+                        <td><strong>Deere & Co</strong></td>
+                        <td>DE</td>
+                        <td>&mdash;</td>
+                        <td>Agriculture / Cycle industriel</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4>Focus : Walmart &mdash; Le Vrai Baromètre</h4>
+                <p>Walmart est le plus grand employeur privé au monde et le meilleur indicateur de la santé du consommateur américain. Ses résultats Q3 étaient solides : $179.5 Md de CA (+5.9% YoY), e-commerce +27%, EPS de $0.62 (beat de 3.33%). Les analystes attendent $190.35 Md de CA pour Q4. Avec 32 Buy et 2 Hold, le consensus est massivement haussier avec un PT moyen de $127.19. Un miss de Walmart serait un signal de récession.</p>
+            </div>
+
+            <p><strong>Semaine d'après :</strong> NVIDIA (NVDA) reporte mercredi 25 février &mdash; c'est LE catalyseur qui pourrait stabiliser ou effondrer le secteur tech.</p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- GEOPOLITIQUE -->
+        <!-- ============================================================ -->
+        <div id="geopolitique" class="content-card">
+            <h2>Géopolitique : 3 Fronts Actifs</h2>
+            <p>Le paysage géopolitique reste extrêmement chargé avec trois théâtres majeurs actifs simultanément. Ces tensions soutiennent l'or, perturbent les chaînes d'approvisionnement, et créent des risques de queue (tail risks) difficiles à couvrir.</p>
+
+            <div class="geo-alert">
+                <h3 style="margin-top:0.5rem; color:#dc2626;">Ukraine-Russie : Négociations de Genève</h3>
+                <p>Après les pourparlers d'Abu Dhabi (4-5 février), une nouvelle ronde de négociations US-Ukraine-Russie est prévue <strong>à Genève cette semaine</strong>. Les avancées sont modestes mais réelles :</p>
+                <ul>
+                    <li><strong>Reprise du dialogue militaire :</strong> US et Russie ont rétabli les lignes de communication militaires pour la première fois en 4 ans</li>
+                    <li><strong>Échange de prisonniers :</strong> 157 soldats russes et 150 ukrainiens échangés</li>
+                    <li><strong>Deadline US :</strong> Washington veut un accord avant l'été (juin), selon Zelenskyy</li>
+                    <li><strong>Point de blocage :</strong> Aucun terrain d'entente sur la centrale nucléaire de Zaporizhzhia</li>
+                </ul>
+                <p><strong>Impact marché :</strong> Un cessez-le-feu réduirait la prime géopolitique sur l'énergie et l'or, mais pourrait booster les marchés européens qui intègrent déjà une normalisation progressive.</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem; margin-top:2rem;">
+                <div style="background:#fff7ed; border:1px solid #f59e0b; border-radius:16px; padding:1.5rem;">
+                    <h4 style="margin:0 0 1rem; color:#f59e0b;">Venezuela : Transition Fragile</h4>
+                    <p style="font-size:0.9rem;">La présidente intérimaire Delcy Rodríguez annonce une loi d'amnistie et la fermeture de la prison Helicoide. 17 prisonniers politiques libérés, mais le procureur a demandé l'arrestation de Guanipa 12h après sa libération. Les ventes de pétrole vénézuélien dépassent $1 Md depuis la capture de Maduro. Les familles de prisonniers entament une grève de la faim.</p>
+                    <p style="font-size:0.85rem; color:#64748b; margin:0;"><strong>Impact :</strong> Stabilisation de l'offre pétrolière mais risque d'instabilité politique persistant.</p>
+                </div>
+                <div style="background:#eff6ff; border:1px solid #3b82f6; border-radius:16px; padding:1.5rem;">
+                    <h4 style="margin:0 0 1rem; color:#3b82f6;">Guerre Commerciale US-Chine : Escalade Contrôlée</h4>
+                    <p style="font-size:0.9rem;">Trump a imposé 10% de tarifs supplémentaires sur la Chine le 1er février (en plus des tarifs existants ~145%). La Chine a répliqué avec 15% sur le charbon et le GNL, 10% sur le pétrole et les machines agricoles. Parallèlement, l'accord de réduction tarifaire de novembre 2025 est prolongé jusqu'en novembre 2026. Le taux tarifaire moyen US atteint 13.5% &mdash; le plus haut depuis 1946.</p>
+                    <p style="font-size:0.85rem; color:#64748b; margin:0;"><strong>Impact :</strong> Les CEO auto alertent sur la "menace existentielle" de la compétition chinoise.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ROTATION SECTORIELLE -->
+        <!-- ============================================================ -->
+        <div id="rotation" class="content-card">
+            <h2>La Grande Rotation de 2026</h2>
+            <p>Nous assistons à la rotation sectorielle la plus significative depuis l'éclatement de la bulle dot-com en 2001. Le capital fuit massivement la tech/AI vers l'économie réelle, les small-caps, et les marchés internationaux. Ce mouvement est structurel et pourrait durer des trimestres.</p>
+
+            <div class="alert-box">
+                <h4>Régime de Marché : EARLY RISK-OFF (Score 0.56)</h4>
+                <p>Notre screener automatique détecte un régime <strong>"Early Risk-Off"</strong> &mdash; la volatilité monte (VIX score 1.0), le dollar se renforce (DXY score 1.0), le crédit se tend (score 1.0), tandis que le SPX résiste partiellement (score 0.63). Ce régime favorise les stratégies défensives : <strong>pre-squeeze</strong> (poids 0.35) et <strong>short squeeze</strong> (poids 0.40), avec une tolérance au risque abaissée à 0.30.</p>
+            </div>
+
+            <h3>Top & Bottom Performers de la Semaine</h3>
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1.5rem; margin:1.5rem 0;">
+                <div style="background:#f0fdf4; padding:1.5rem; border-radius:16px;">
+                    <h4 style="margin:0 0 1rem; color:#16a34a;">Top Performers</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td><strong>MGA</strong> (Magna Intl)</td><td class="up">+18.87%</td><td>Auto parts / Value</td></tr>
+                            <tr><td><strong>COIN</strong> (Coinbase)</td><td class="up">+16.46%</td><td>Rebond crypto</td></tr>
+                            <tr><td><strong>ICLR</strong> (ICON PLC)</td><td class="up">+16.13%</td><td>CRO / Pharma</td></tr>
+                            <tr><td><strong>EWY</strong> (Corée Sud)</td><td class="up">+10.8% sem</td><td>52W High!</td></tr>
+                            <tr><td><strong>EWZ</strong> (Brésil)</td><td class="up">+3.6% sem</td><td>Value EM</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="background:#fef2f2; padding:1.5rem; border-radius:16px;">
+                    <h4 style="margin:0 0 1rem; color:#dc2626;">Bottom Performers</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td><strong>SMX</strong> (SMX Security)</td><td class="down">-68.22%</td><td>Micro-cap crash</td></tr>
+                            <tr><td><strong>IRON</strong> (Disc Medicine)</td><td class="down">-21.91%</td><td>Biotech</td></tr>
+                            <tr><td><strong>BFAM</strong> (Bright Horizons)</td><td class="down">-18.25%</td><td>Childcare</td></tr>
+                            <tr><td><strong>DKNG</strong> (DraftKings)</td><td class="down">-13.51%</td><td>Sports betting</td></tr>
+                            <tr><td><strong>MSFT</strong> (Microsoft)</td><td class="down">Bear Market</td><td>-20% depuis ATH</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3>Rotation par Secteur &mdash; Signaux Quantitatifs</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Secteur</th>
+                        <th>Perf. 5J</th>
+                        <th>Perf. 21J</th>
+                        <th>Flux</th>
+                        <th>Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Utilities</strong></td>
+                        <td class="up">+3%</td>
+                        <td class="up">+5%</td>
+                        <td class="up">Entrée massive</td>
+                        <td><span class="badge badge-green">Défensif leader</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Matériaux</strong></td>
+                        <td class="up">+2%</td>
+                        <td class="up">+4%</td>
+                        <td class="up">Entrée</td>
+                        <td><span class="badge badge-green">Cuivre + Or</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Financials</strong></td>
+                        <td class="up">+2%</td>
+                        <td class="up">+3%</td>
+                        <td class="up">Entrée</td>
+                        <td><span class="badge badge-green">Banques régionales</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Industrials</strong></td>
+                        <td class="up">+1%</td>
+                        <td class="up">+2%</td>
+                        <td class="neutral">Stable</td>
+                        <td><span class="badge badge-blue">Infrastructure</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Consumer Disc.</strong></td>
+                        <td class="down">-1%</td>
+                        <td class="down">-3%</td>
+                        <td class="down">Sortie</td>
+                        <td><span class="badge badge-red">AMZN pèse</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tech / Software</strong></td>
+                        <td class="down">-2%</td>
+                        <td class="down">-6%</td>
+                        <td class="down">Fuite massive</td>
+                        <td><span class="badge badge-red">SaaSpocalypse</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Thèmes en Vogue</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:1.5rem 0;">
+                <div style="background:#f0fdf4; padding:1rem; border-radius:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">+5%</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#64748b;">Carbon Trading</div>
+                </div>
+                <div style="background:#f0fdf4; padding:1rem; border-radius:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">+5%</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#64748b;">Digital Identity</div>
+                </div>
+                <div style="background:#f0fdf4; padding:1rem; border-radius:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">+4%</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#64748b;">EdTech</div>
+                </div>
+                <div style="background:#f0fdf4; padding:1rem; border-radius:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">+4%</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#64748b;">Blockchain Finance</div>
+                </div>
+                <div style="background:#f0fdf4; padding:1rem; border-radius:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">+6%</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#64748b;">Or &amp; Argent</div>
+                </div>
+                <div style="background:#f0fdf4; padding:1rem; border-radius:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">+10%</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#64748b;">Financial Data</div>
+                </div>
+            </div>
+
+            <h3>Perdants vs Gagnants Structurels</h3>
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1.5rem; margin:2rem 0;">
+                <div style="background:#fef2f2; padding:1.5rem; border-radius:16px;">
+                    <h4 style="margin:0 0 1rem; color:#dc2626;">Les Perdants (Sortie de Capitaux)</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Salesforce (CRM)</td><td class="down">-28% YTD</td></tr>
+                            <tr><td>Workday (WDAY)</td><td class="down">-22% YTD</td></tr>
+                            <tr><td>Software Index</td><td class="down">-24% depuis pic</td></tr>
+                            <tr><td>Amazon (AMZN)</td><td class="down">-13.5% YTD / Bear</td></tr>
+                            <tr><td>Microsoft (MSFT)</td><td class="down">Bear Market (-20%)</td></tr>
+                            <tr><td>Nasdaq Composite</td><td class="down">-$1,500 Md en 2026</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="background:#f0fdf4; padding:1.5rem; border-radius:16px;">
+                    <h4 style="margin:0 0 1rem; color:#16a34a;">Les Gagnants (Entrée de Capitaux)</h4>
+                    <table class="data-table" style="margin:0;">
+                        <tbody>
+                            <tr><td>Small-cap Value</td><td class="up">+5.94% YTD</td></tr>
+                            <tr><td>Small-cap Growth</td><td class="up">+6.02% YTD</td></tr>
+                            <tr><td>Europe (EFA)</td><td class="up">Proche ATH</td></tr>
+                            <tr><td>Corée du Sud (EWY)</td><td class="up">+176% depuis 52W Low!</td></tr>
+                            <tr><td>Aéro/Défense (XAR)</td><td class="up">+54% sur 1 an</td></tr>
+                            <tr><td>Or (GLD)</td><td class="up">+11% depuis crash</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3>Marchés de Prédiction &mdash; Sentiment Institutionnel</h3>
+            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">60%</div>
+                    <div class="metric-label">Bullish S&P</div>
+                    <div class="metric-change neutral">Consensus haussier prudent</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#3b82f6;">50%</div>
+                    <div class="metric-label">Fed Cut Juin</div>
+                    <div class="metric-change neutral">1 cut d'ici été</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">15%</div>
+                    <div class="metric-label">Récession 2026</div>
+                    <div class="metric-change up">Faible probabilité</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">30%</div>
+                    <div class="metric-label">Inflation &gt; 3%</div>
+                    <div class="metric-change neutral">Risque modéré</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4>Comprendre la Rotation : Pourquoi Maintenant ?</h4>
+                <p><strong>1. Valorisations extrêmes :</strong> Les Mag 7 représentent 34.3% du S&P 500, un niveau de concentration jamais vu. Le Shiller CAPE à 40+ et le Buffett Indicator à 220%+ signalent un excès historique.
+                <br><strong>2. Disruption de la disruption :</strong> L'IA ne détruit pas que les emplois &mdash; elle détruit les SaaS qui devaient eux-mêmes disrupter l'économie traditionnelle. C'est un retournement ironique.
+                <br><strong>3. Capex sans retour visible :</strong> Amazon annonce $200 Md de capex 2026, Microsoft $37.5 Md par trimestre. Les investisseurs exigent des retours et ne les voient pas encore.
+                <br><strong>4. Régime Early Risk-Off :</strong> Notre screener détecte un basculement vers un régime de prudence. Le VIX à 20.6, le DXY en hausse et les spreads de crédit qui se tendent confirment que les institutionnels réduisent le risque.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MATRICE DES RISQUES -->
+        <!-- ============================================================ -->
+        <div id="risques" class="content-card">
+            <h2>Matrice des Risques</h2>
+            <p>Voici l'évaluation des principaux risques pour la semaine à venir. La matrice intègre la probabilité d'occurrence et l'impact potentiel sur les marchés.</p>
+
+            <div class="risk-matrix">
+                <div class="risk-item risk-high">
+                    <h4 style="color:#dc2626; margin:0 0 0.5rem;">Effondrement Mag 7</h4>
+                    <p style="font-size:0.85rem; margin:0;">AMZN et MSFT en bear market. Si NVDA déçoit le 25/02, l'ensemble de la tech pourrait perdre 10-15% supplémentaires. Le S&P 500 est otage de ces 7 valeurs (34% de l'indice).</p>
+                    <p style="font-size:0.75rem; color:#991b1b; margin:0.5rem 0 0;"><strong>Probabilité : 40% | Impact : Très Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-high">
+                    <h4 style="color:#dc2626; margin:0 0 0.5rem;">Crypto sous $60K</h4>
+                    <p style="font-size:0.85rem; margin:0;">BTC à $69,900 mais le support $60K a été testé. Une cassure entraînerait $3-5 Md de liquidations forcées et un effet de contagion sur les mineurs et les ETF crypto.</p>
+                    <p style="font-size:0.75rem; color:#991b1b; margin:0.5rem 0 0;"><strong>Probabilité : 30% | Impact : Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">FOMC Minutes Hawkish</h4>
+                    <p style="font-size:0.85rem; margin:0;">Si les minutes révèlent plus de division que prévu sur la trajectoire des taux, le marché pourrait repricer vers zéro cut en 2026, impactant les obligations et les actions de croissance.</p>
+                    <p style="font-size:0.75rem; color:#92400e; margin:0.5rem 0 0;"><strong>Probabilité : 25% | Impact : Moyen-Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">Escalade Tarifs Chine</h4>
+                    <p style="font-size:0.85rem; margin:0;">Le taux tarifaire moyen US est au plus haut depuis 1946. Une nouvelle escalade pourrait perturber les chaînes d'approvisionnement tech et faire remonter l'inflation.</p>
+                    <p style="font-size:0.75rem; color:#92400e; margin:0.5rem 0 0;"><strong>Probabilité : 20% | Impact : Moyen</strong></p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">Walmart Miss</h4>
+                    <p style="font-size:0.85rem; margin:0;">Un miss de Walmart jeudi signalerait un affaiblissement du consommateur américain &mdash; le dernier pilier de la croissance US. Impact psychologique majeur sur le sentiment.</p>
+                    <p style="font-size:0.75rem; color:#92400e; margin:0.5rem 0 0;"><strong>Probabilité : 15% | Impact : Moyen-Élevé</strong></p>
+                </div>
+                <div class="risk-item risk-low">
+                    <h4 style="color:#16a34a; margin:0 0 0.5rem;">Accord Genève (Upside)</h4>
+                    <p style="font-size:0.85rem; margin:0;">Un progrès significatif dans les négociations Ukraine-Russie serait haussier pour l'Europe, l'énergie et réduirait la prime géopolitique sur l'or.</p>
+                    <p style="font-size:0.75rem; color:#166534; margin:0.5rem 0 0;"><strong>Probabilité : 10% | Impact : Positif Élevé</strong></p>
+                </div>
+            </div>
+
+            <h3>Signaux Faibles & Cygnes Noirs Potentiels</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div style="background:#0f172a; color:white; padding:1.5rem; border-radius:16px;">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">Crise de Confiance Fed</h4>
+                    <p style="font-size:0.85rem; color:#cbd5e1; margin:0;">Le Motley Fool titre sur une "crise de confiance" envers la Fed. Le S&P 500 a gagné 16%+ trois années consécutives &mdash; un événement survenu seulement 3 fois en 98 ans. Statistiquement, un retour à la moyenne est imminent.</p>
+                </div>
+                <div style="background:#0f172a; color:white; padding:1.5rem; border-radius:16px;">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">74% des Institutionnels = Correction</h4>
+                    <p style="font-size:0.85rem; color:#cbd5e1; margin:0;">Sondage Natixis : 74% des money managers institutionnels anticipent une correction majeure en 2026. Les raisons : bulle tech, géopolitique, facteurs macro. Le consensus baissier est rarement aussi unanime.</p>
+                </div>
+                <div style="background:#0f172a; color:white; padding:1.5rem; border-radius:16px;">
+                    <h4 style="color:#f59e0b; margin:0 0 0.5rem;">AI = Destruction SaaS</h4>
+                    <p style="font-size:0.85rem; color:#cbd5e1; margin:0;">Le "SaaSpocalypse" pourrait s'étendre au-delà du software : logistique, immobilier commercial, et transports sont les prochains secteurs menacés par la disruption AI. L'IBD titre "marché dangereux".</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ALLOCATION TACTIQUE -->
+        <!-- ============================================================ -->
+        <div id="allocation" class="content-card">
+            <h2>Allocation Tactique Recommandée</h2>
+            <p>Dans un environnement de rotation sectorielle, d'inflation en baisse et de risque géopolitique élevé, nous recommandons une allocation défensive avec surpondération des actifs réels et des marchés internationaux.</p>
+
+            <div class="chart-container">
+                <div class="chart-title">Allocation Modèle &mdash; Semaine du 16 Février</div>
+                <div id="allocationChart" class="allocation-donut"></div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Classe d'Actifs</th>
+                        <th>Poids</th>
+                        <th>Var. vs S-1</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cash / Money Market</strong></td>
+                        <td>30%</td>
+                        <td class="down">-7%</td>
+                        <td>Réduit pour déployer vers métaux et value</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Métaux Précieux (Or + Argent)</strong></td>
+                        <td>18%</td>
+                        <td class="up">+8%</td>
+                        <td>Or > $5K, JPM target $6,300, hedge géopolitique</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Value / Dividendes US</strong></td>
+                        <td>15%</td>
+                        <td>=</td>
+                        <td>Bénéficiaire rotation hors tech</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Europe / International</strong></td>
+                        <td>12%</td>
+                        <td class="up">+4%</td>
+                        <td>EFA proche ATH, Asie +12% YTD</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Small-Caps US</strong></td>
+                        <td>10%</td>
+                        <td class="up">+5%</td>
+                        <td>Russell +5.9% YTD, rotation favorable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hedges (VIX, Puts)</strong></td>
+                        <td>8%</td>
+                        <td>=</td>
+                        <td>Protection queue de distribution</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Énergie</strong></td>
+                        <td>5%</td>
+                        <td>=</td>
+                        <td>Pétrole stable, cuivre en hausse</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Crypto</strong></td>
+                        <td>2%</td>
+                        <td class="down">-3%</td>
+                        <td>Bear market confirmé, allocation minimale</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="didactic-box">
+                <h4>Changements Clés vs Semaine Dernière</h4>
+                <p><strong>Hausse métaux (+8%) :</strong> Goldman annonce la "phase de rareté" des hard assets. L'or au-dessus de $5K avec des targets $6,000-6,300 justifie une surpondération.
+                <br><strong>Hausse Europe/Intl (+4%) et Small-Caps (+5%) :</strong> La rotation est confirmée et accélère. L'Asie surperforme le Nasdaq de 15 points en 2026.
+                <br><strong>Baisse Cash (-7%) :</strong> Redéployé vers les gagnants de la rotation.
+                <br><strong>Baisse Crypto (-3%) :</strong> Bear market confirmé, pas de catalyseur haussier visible.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- OUTLOOK -->
+        <!-- ============================================================ -->
+        <div class="content-card">
+            <h2>Outlook Semaine Prochaine</h2>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:2rem 0;">
+                <div style="background:#f0fdf4; padding:1.5rem; border-radius:16px; border:1px solid #16a34a;">
+                    <h4 style="color:#16a34a; margin:0 0 1rem;">Scénario Haussier (25%)</h4>
+                    <ul style="font-size:0.9rem; padding-left:1.5rem; margin:0;">
+                        <li>FOMC minutes dovish &rarr; repricing vers 2 cuts</li>
+                        <li>Walmart beat fort &rarr; confiance consommateur intacte</li>
+                        <li>Progrès Genève &rarr; prime géopolitique en baisse</li>
+                        <li>S&P 500 &rarr; 6,900-6,950</li>
+                    </ul>
+                </div>
+                <div style="background:#eff6ff; padding:1.5rem; border-radius:16px; border:1px solid #3b82f6;">
+                    <h4 style="color:#3b82f6; margin:0 0 1rem;">Scénario Central (50%)</h4>
+                    <ul style="font-size:0.9rem; padding-left:1.5rem; margin:0;">
+                        <li>FOMC minutes sans surprise</li>
+                        <li>Rotation continue : small-caps up, tech flat</li>
+                        <li>Or maintient $5,000+</li>
+                        <li>Semaine courte = volumes faibles</li>
+                        <li>S&P 500 &rarr; 6,750-6,850</li>
+                    </ul>
+                </div>
+                <div style="background:#fef2f2; padding:1.5rem; border-radius:16px; border:1px solid #dc2626;">
+                    <h4 style="color:#dc2626; margin:0 0 1rem;">Scénario Baissier (25%)</h4>
+                    <ul style="font-size:0.9rem; padding-left:1.5rem; margin:0;">
+                        <li>FOMC hawkish + Walmart miss</li>
+                        <li>Escalade tarifs Chine ou Ukraine</li>
+                        <li>BTC casse $65K &rarr; contagion</li>
+                        <li>S&P 500 &rarr; 6,600-6,700</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background:#0f172a; color:white; padding:2rem; border-radius:16px; margin-top:2rem;">
+                <h3 style="color:white; margin:0 0 1rem;">Ce Qu'il Faut Surveiller</h3>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                    <div>
+                        <p style="color:#f59e0b; font-weight:700; margin:0 0 0.5rem;">Macro</p>
+                        <ul style="font-size:0.85rem; color:#cbd5e1; padding-left:1.25rem; margin:0;">
+                            <li>FOMC Minutes (mer 18)</li>
+                            <li>PMIs Flash (ven 20)</li>
+                            <li>Jobless Claims (jeu 19)</li>
+                            <li>Empire State Mfg (mar 17)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p style="color:#f59e0b; font-weight:700; margin:0 0 0.5rem;">Earnings</p>
+                        <ul style="font-size:0.85rem; color:#cbd5e1; padding-left:1.25rem; margin:0;">
+                            <li>Walmart (jeu 19) &mdash; #1</li>
+                            <li>Alibaba (jeu 19)</li>
+                            <li>Arista Networks (mar 17)</li>
+                            <li><strong>Pré-NVDA le 25/02</strong></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p style="color:#f59e0b; font-weight:700; margin:0 0 0.5rem;">Géopolitique</p>
+                        <ul style="font-size:0.85rem; color:#cbd5e1; padding-left:1.25rem; margin:0;">
+                            <li>Genève : Talks Ukraine (mer)</li>
+                            <li>Venezuela : amnistie</li>
+                            <li>Tarifs Chine : réponse</li>
+                            <li>OTAN : budgets défense</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p style="color:#f59e0b; font-weight:700; margin:0 0 0.5rem;">Niveaux Clés</p>
+                        <ul style="font-size:0.85rem; color:#cbd5e1; padding-left:1.25rem; margin:0;">
+                            <li>S&P 500 : 6,750 support</li>
+                            <li>Or : $5,000 pivot</li>
+                            <li>BTC : $65,000 support</li>
+                            <li>VIX : 20 = alerte</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SOURCES -->
+        <!-- ============================================================ -->
+        <div class="content-card" style="background:#f8fafc;">
+            <h2>Sources & Méthodologie</h2>
+            <p>Ce rapport utilise exclusivement des données de marché en temps réel et des sources vérifiées. Tous les chiffres sont à jour au 14 février 2026.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Données de Marché</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li>Market Watch Gateway (temps réel)</li>
+                        <li>Yahoo Finance</li>
+                        <li>StockAnalysis.com</li>
+                        <li>FRED (St. Louis Fed)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Analyses & News</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li><a href="https://www.cnbc.com/2026/02/12/stock-market-today-live-updates.html">CNBC &mdash; S&P 500 CPI Report</a></li>
+                        <li><a href="https://finance.yahoo.com/news/live/stock-market-today-cpi-inflation-cools-more-than-expected-putting-pressure-on-sp-500-dow-nasdaq-234823957.html">Yahoo Finance &mdash; Market Recap</a></li>
+                        <li><a href="https://www.bloomberg.com/news/articles/2026-02-13/russia-and-ukraine-say-new-us-led-talks-will-be-held-in-geneva">Bloomberg &mdash; Ukraine-Russia Geneva Talks</a></li>
+                        <li><a href="https://fortune.com/2026/02/02/why-bitcoin-is-in-a-bear-market/">Fortune &mdash; Bitcoin Bear Market</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Recherche Institutionnelle</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li><a href="https://www.jpmorgan.com/insights/global-research/commodities/gold-prices">JPMorgan &mdash; Gold $6,300 Target</a></li>
+                        <li><a href="https://www.financemagnates.com/trending/why-gold-is-surging-above-5000-the-new-gold-price-predictions-from-jpmorgan-and-deutsche-bank-target-6000/">Deutsche Bank &mdash; Gold $6,000</a></li>
+                        <li><a href="https://www.morningstar.com/markets/markets-brief-big-2026-sector-rotation-ai-disrupts-disruptors">Morningstar &mdash; Sector Rotation</a></li>
+                        <li><a href="https://www.vaneck.com/us/en/blogs/digital-assets/matthew-sigel-what-triggered-bitcoins-major-selloff-in-february-2026/">VanEck &mdash; Bitcoin Selloff Analysis</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Géopolitique</h4>
+                    <ul style="font-size:0.85rem; color:#475569; padding-left:1.25rem;">
+                        <li><a href="https://www.cbsnews.com/news/more-russia-ukraine-peace-talks-set-next-week-abu-dhabi-zelenskyy/">CBS News &mdash; Ukraine Peace Talks</a></li>
+                        <li><a href="https://www.crisisgroup.org/anb/latin-america-caribbean/venezuela-united-states/proposed-amnesty-and-jail-closure-stir-hopes-venezuelan-spring">ICG &mdash; Venezuelan Spring</a></li>
+                        <li><a href="https://asiatimes.com/2026/01/china-slashes-hundreds-of-tariffs-in-strategic-trade-war-twist/">Asia Times &mdash; China Tariffs</a></li>
+                        <li><a href="https://247wallst.com/investing/2026/02/14/amazon-and-microsoft-enter-bear-markets-whats-breaking-the-magnificent-7/">24/7 Wall St &mdash; Mag 7 Bear Market</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:2rem; text-align:center;"><strong>Disclaimer :</strong> Ce rapport est fourni à titre informatif uniquement. Il ne constitue pas un conseil en investissement. Les performances passées ne garantissent pas les résultats futurs. Consultez un conseiller financier agréé avant toute décision d'investissement.</p>
+        </div>
+
+        <!-- FOOTER -->
+        <footer style="text-align:center; padding:2rem 0; color:#94a3b8; font-size:0.85rem;">
+            <p>&copy; 2026 Market Watch &mdash; Intelligence Institutionnelle</p>
+            <p style="font-size:0.75rem;">Rapport généré le 14 février 2026 &bull; Données au 14/02/2026 15:33 UTC via MarketWatch Gateway</p>
+        </footer>
+
+    </div>
+
+    <!-- CHARTS SCRIPTS -->
+    <script>
+        // Allocation Donut Chart with ApexCharts
+        if (document.getElementById('allocationChart')) {
+            var options = {
+                series: [30, 18, 15, 12, 10, 8, 5, 2],
+                chart: {
+                    type: 'donut',
+                    height: 350
+                },
+                labels: ['Cash', 'Métaux', 'Value/Div', 'Europe/Intl', 'Small-Caps', 'Hedges', 'Énergie', 'Crypto'],
+                colors: ['#64748b', '#eab308', '#10b981', '#8b5cf6', '#3b82f6', '#ef4444', '#f59e0b', '#f97316'],
+                legend: {
+                    position: 'bottom'
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '60%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    formatter: function() {
+                                        return '100%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            height: 280
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }]
+            };
+            var chart = new ApexCharts(document.getElementById('allocationChart'), options);
+            chart.render();
+        }
+    </script>
+
+</body>
+
+</html>
