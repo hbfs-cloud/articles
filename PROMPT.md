@@ -39,67 +39,179 @@ Rapport de niveau institutionnel à destination de retail qui couvre tous les gr
 ## 2. ANALYSE INDIVIDUELLE (Ticker Analysis)
 
 ### Objectif
-Analyse complète d'un ticker spécifique, de niveau institutionnel, couvrant fondamentaux, technique, sentiment et trade ideas.
+Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy inspiré SLNH : headers avec emojis, bullet points courts, verdicts clairs par section. L'objectif est qu'un lecteur comprenne rapidement ce que fait la boîte, son setup, ses risques et si c'est un trade intéressant.
 
-### 12 Sections Obligatoires
+### 15 Sections Obligatoires
 
-#### 1. Header
-- Ticker, exchange, date
-- Prix, variation jour, market cap, volume, float, short interest
+#### 1. Header (`.ticker-header`)
+- Ticker, exchange, date, lien retour site
+- Prix actuel, variation jour, variation semaine
+- Métriques clés en `.ticker-metrics` : MCap, Volume, Float, Short Interest, Beta, 52W Range
+- Badges : secteur, exchange, thème
 
-#### 2. Activité
-- Description de l'entreprise et de son business
-- Segments principaux avec métriques clés
-- Secteur et classification
+#### 2. Verdict Express (`.score-card` + `.verdict-grid`)
+**Section la plus importante** — doit suffire à elle seule pour comprendre le titre.
+- **Score-card** : Note globale (A+ à D), conviction, biais, confiance %
+- **Ce que fait la boîte** : 2-3 phrases max, business model clair
+- **Setup actuel** : haussier / baissier / neutre avec justification courte (alert-box)
+- **Verdict-grid** (2 colonnes) :
+  - 3 raisons d'acheter (`.verdict-pro`) — bullet points avec emojis verts
+  - 3 raisons d'éviter (`.verdict-con`) — bullet points avec emojis rouges
 
-#### 3. Actualités Récentes
-- 4-6 news récentes avec dates
-- Impact sur le cours
+#### 3. Activité
+- Business model en 2-3 phrases
+- Segments principaux avec métriques
+- Secteur, classification, thème d'investissement
+- Ce qui différencie l'entreprise (moat ou absence de moat)
 
-#### 4. Fondamentaux
-- Table: Revenus, EBITDA, Résultat net, EPS, Marges, Cash, Dette, P/B, P/E, Target analystes
-- Interprétation de chaque ligne
+#### 4. Actualités Récentes (`.news-list`)
+- 4-6 news récentes avec dates et source
+- Format `.news-item` : date + titre + impact (positif/négatif/neutre)
+- Impact sur le cours en 1 phrase
 
-#### 5. Insiders & Institutions
-- % insiders, noms des principaux
-- % institutions, top 3 holders
-- Mouvements récents (achats/ventes)
+#### 5. Fondamentaux
+- Table `.data-table` : Revenus, EBITDA, Résultat net, EPS, Marges (brute, opé, nette), Cash, Dette, P/B, P/E, Target analystes
+- Interprétation clé de chaque métrique importante
+- Comparaison sectorielle si pertinent
+- Alert-box si cash runway < 12 mois
 
-#### 6. Short Interest
-- Actions short, % du float, days to cover, CTB
-- Potentiel squeeze si > 20%
+#### 6. Insiders & Institutions
+- % insiders, noms des principaux + rôles
+- % institutions, top 3-5 holders avec % détenu
+- Mouvements récents (achats/ventes) avec montants
+- Signal : insiders achètent = bullish, vendent = bearish
 
-#### 7. Dérivés (Options)
-- Call/Put OI, ratio, Max Pain, IV moyenne
-- Biais directionnel
+#### 7. Structure du Capital & Dilution (CRITIQUE)
+**Section dédiée à la structure capitalistique** — crucial pour les small/mid caps.
+Utiliser des `.risk-card` pour chaque élément :
+- **Actions en circulation** vs authorized shares (marge de dilution)
+- **Warrants** : nombre, strike price, date d'expiration, dilution potentielle %
+- **Preferred Stock** : séries, conversion ratio, droits de liquidation
+- **Convertibles** : montant, taux de conversion, trigger price
+- **ATM Programs** : montant autorisé, montant utilisé, reste disponible
+- **Shelf Registrations** : S-3 actifs, montant enregistré
+- **Historique de dilution** : nb de shares il y a 1/2/5 ans vs aujourd'hui
+- Verdict : risque de dilution faible / modéré / élevé / critique
 
-#### 8. Technique (Journalier)
-- Table: RSI14, MACD, Signal, EMAs (20/50/200), ATR, OBV, Wyckoff phase
-- Supports et résistances
-- Structure et signal
+#### 8. Short Interest & Squeeze
+- Actions short, % du float, days to cover, CTB (cost to borrow)
+- Historique SI sur 3-6 mois (tendance)
+- Analyse du potentiel squeeze : score et conditions requises
+- Dark pool activity si disponible
+- CTB élevé = shorts sous pression = potentiel squeeze
 
-#### 9. Secteur / Pairs
-- Table de corrélation avec 4-5 pairs
-- Performance relative YTD
-- Positionnement dans le secteur
+#### 9. Dérivés (Options)
+- Call/Put OI, ratio C/P, Max Pain, IV moyenne
+- Biais directionnel (skew)
+- Unusual options activity si détectée
+- Impact du max pain sur le prix court terme
 
-#### 10. Macro
-- Table: BTC, ETH, SPX, VIX (ou actifs pertinents)
-- Beta et corrélations
-- Impact macro sur le titre
+#### 10. Technique (Journalier)
+- Table : RSI14, MACD, Signal, EMAs (20/50/200), ATR, OBV
+- Phase Wyckoff (Accumulation / Markup / Distribution / Markdown)
+- Supports et résistances clés (3 niveaux chaque)
+- Structure de prix : tendance, pattern, divergences
+- Signal global : achat / vente / neutre
 
-#### 11. Risques Clés
-- Table: 5-6 risques avec niveau, impact, source
-- Risques spécifiques au titre
+#### 11. Secteur / Pairs
+- Table de corrélation avec 4-5 pairs du secteur
+- Performance relative YTD vs pairs et indice sectoriel
+- Positionnement : leader / suiveur / retardataire
+- Beta sectoriel
 
-#### 12. Trade Idea (Swing)
-- Entrée, Stop, TP1/TP2/TP3, R/R
-- Catalyseurs identifiés
+#### 12. Macro
+- Table : BTC, ETH, SPX, VIX, DXY, TLT (ou actifs pertinents)
+- Beta et corrélations avec indices macro
+- Régime de marché actuel (risk-on / risk-off / neutre)
+- Impact macro spécifique sur le titre
 
-### Note Globale
-- Conviction (A+ à D), Biais, Confiance (%), Profil
-- Key Takeaways (points positifs et risques)
-- Mindset Tip
+#### 13. Analyse des Risques (REFONTE COMPLÈTE — Style SLNH)
+**Section critique** — format punchy avec risk-cards colorées.
+
+Chaque risque = une `.risk-card` avec :
+- Header emoji + titre clair
+- 2-3 bullet points max, factuels et directs
+- `.risk-verdict` en bas : verdict clair en 1 phrase
+- Couleur de bordure selon sévérité : `-critical` (rouge), `-high` (orange), `-medium` (jaune), `-low` (vert)
+
+**8 Catégories de risque obligatoires à évaluer** :
+
+**a) Dilution & Warrants**
+- Nombre de warrants, strikes, dates d'expiration
+- Dilution potentielle en % du float
+- Impact mécanique : à quel prix les warrants s'exercent et créent de la pression vendeuse
+- Verdict : dilution imminente ou non
+
+**b) Fonds Toxiques / Death Spiral**
+- Présence de PIPE deals, convertibles toxiques
+- Fonds connus pour shorter après financement (Hudson Bay, Armistice, etc.)
+- Historique de financements dilutifs avec ces fonds
+- Verdict : présence ou absence de fonds toxiques
+
+**c) ATM Offerings & Shelf Registrations**
+- Programme ATM actif ? Montant autorisé vs utilisé
+- S-3 shelf registration actif ? Capacité restante
+- Historique d'utilisation (fréquence, montants)
+- Verdict : risque d'ATM surprise ou non
+
+**d) Short Interest & Pression Vendeuse**
+- SI % du float, tendance, CTB
+- Shorts institutionnels identifiés si possible
+- Mécaniques : fails-to-deliver, threshold list
+- Verdict : pression short en augmentation ou diminution
+
+**e) Cash Burn & Viabilité**
+- Cash actuel, burn rate trimestriel
+- Runway en mois au rythme actuel
+- Timeline vers breakeven ou prochain financement
+- Verdict : viable X mois, besoin de financement avant Y
+
+**f) Execution Risk**
+- Projets annoncés vs livrés (track record)
+- Dépendance à des événements futurs (approbation FDA, contrat, etc.)
+- Management : expérience, turnover, crédibilité
+- Verdict : exécution fiable ou risquée
+
+**g) Régulation / Légal**
+- Enquêtes en cours, litiges, risques réglementaires
+- Changements de régulation anticipés
+- Verdict : risque légal faible / modéré / élevé
+
+**h) Concentration / Dépendance**
+- Dépendance à 1 client, 1 produit, 1 marché, 1 actif
+- Risque de corrélation (ex: BTC pour les miners)
+- Diversification des revenus
+- Verdict : concentration élevée / modérée / faible
+
+Terminer par un **résumé des risques** en pedagogy-box : "Pourquoi le prix est bas / élevé" en 3-4 phrases.
+
+#### 14. Trade Idea (`.trade-box`)
+Format visuel avec classes CSS dédiées :
+- `.trade-levels` grid avec 4 cartes :
+  - `.trade-entry` : prix d'entrée + zone
+  - `.trade-stop` : stop loss + % de perte
+  - `.trade-tp` : target(s) + % de gain
+  - `.trade-rr` : ratio risk/reward
+- **Thèse** en `.pedagogy-box` : pourquoi ce trade, en 2-3 phrases
+- **Catalyseurs** : liste à puces des événements déclencheurs
+- **Invalidation** en `.alert-box` : conditions qui annulent le trade
+- **Timeline** : horizon du trade (swing, position, long terme)
+
+#### 15. Note Globale
+- Conviction : A+ (très haute) à D (très faible)
+- Biais : Haussier / Baissier / Neutre
+- Confiance : % basé sur la qualité des données
+- Profil : Spéculatif / Croissance / Value / Momentum / Contrarian
+- **Key Takeaways** : 3 points positifs + 3 risques majeurs
+- **Mindset Tip** : conseil psychologique pour le trader (FOMO, patience, sizing, etc.)
+
+### Directives Analyse Ticker
+- **Lisibilité** : un lecteur doit comprendre le titre en 2 minutes avec le Verdict Express seul
+- **Honnêteté** : ne pas minimiser les risques, surtout dilution et cash burn
+- **Données** : tous les chiffres doivent être à jour via MCP Gateway
+- **Style** : headers directs, emojis en headers de risk-cards, bullet points courts, pas de paragraphes longs
+- **Mobile** : utiliser les classes CSS responsive (auto-fit, minmax), jamais de grid fixe inline
+- **Pas de `<style>` inline** : tout doit être dans report.css avec les classes ticker-analysis
 
 ---
 
@@ -126,7 +238,7 @@ Analyse complète d'un ticker spécifique, de niveau institutionnel, couvrant fo
 </html>
 ```
 
-### Classes CSS Clés
+### Classes CSS Clés — Weekly
 - `.content-card` - Conteneur de section principal
 - `.data-table` - Tables de données
 - `.metric-grid` / `.metric-card` - Grilles de métriques
@@ -139,6 +251,27 @@ Analyse complète d'un ticker spécifique, de niveau institutionnel, couvrant fo
 - `.badge` (.badge-red, .badge-blue, .badge-green, .badge-purple)
 - `.up` / `.down` / `.neutral` - Couleurs de variation
 - `.calendar-days-grid` - Grille calendrier responsive
+
+### Classes CSS Clés — Ticker Analysis
+- `.ticker-header` - Hero dark pour pages ticker (gradient slate)
+- `.ticker-symbol` / `.ticker-name` / `.ticker-price` / `.ticker-meta` - Éléments du header
+- `.ticker-metrics` / `.ticker-metric` - Grille de métriques dans le header (auto-fit responsive)
+- `.score-card` - Carte de score globale (conviction, biais, confiance)
+- `.verdict-grid` - Grille 2 colonnes pour/contre
+- `.verdict-pro` / `.verdict-con` - Colonnes arguments positifs/négatifs
+- `.news-list` / `.news-item` - Liste de news avec dates
+- `.risk-card` - Carte de risque style SLNH (bordure gauche colorée)
+  - `.risk-card-critical` - Bordure rouge (#dc2626)
+  - `.risk-card-high` - Bordure orange (#ea580c)
+  - `.risk-card-medium` - Bordure jaune (#ca8a04)
+  - `.risk-card-low` - Bordure verte (#16a34a)
+  - `.risk-verdict` - Verdict en bas de la risk-card
+- `.trade-box` - Conteneur Trade Idea (fond slate-50)
+- `.trade-levels` - Grille des niveaux de trade (4 colonnes)
+  - `.trade-level.trade-entry` - Fond bleu (entrée)
+  - `.trade-level.trade-stop` - Fond rouge (stop loss)
+  - `.trade-level.trade-tp` - Fond vert (take profit)
+  - `.trade-level.trade-rr` - Fond violet (risk/reward)
 
 ### Couleurs
 - Hausse: #16a34a (vert)
