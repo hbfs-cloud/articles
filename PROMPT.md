@@ -85,10 +85,24 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 ### 15 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
-- Ticker, exchange, date, lien retour site
+- Ticker, exchange, date, lien retour site (`href="/"`)
+- Brand link : `color:#0f172a`, pas de `filter:brightness` sur le logo
 - Prix actuel, variation jour, variation semaine
 - Métriques clés en `.ticker-metrics` : MCap, Volume, Float, Short Interest, Beta, 52W Range
 - Badges : secteur, exchange, thème
+- Bouton **Historique** : `border:1px solid #cbd5e1; color:#64748b` → ouvre modal avec versions datées
+- **Chart Finviz cliquable** : juste après le header, avant `<div class="container">`
+  ```html
+  <div style="max-width:900px; margin:0 auto; padding:0 1rem;">
+      <div onclick="openChartModal()" style="cursor:pointer; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
+          <img src="https://charts2.finviz.com/chart.ashx?t={TICKER}&ty=c&ta=1&p=d&s=l" alt="{TICKER} Chart" style="width:100%; display:block;">
+          <div style="background:#f8fafc; padding:6px 12px; font-size:0.7rem; color:#64748b;">
+              <span><i class="fa-solid fa-chart-line"></i> Cliquer pour agrandir</span>
+          </div>
+      </div>
+  </div>
+  ```
+- **Modal Chart** avant `</body>` : fond dark `#0f172a`, chart agrandi + 3 liens (Finviz, TradingView, Yahoo Finance), fermeture par clic overlay ou Escape
 
 #### 2. Verdict Express (`.score-card` + `.verdict-grid`)
 **Section la plus importante** — doit suffire à elle seule pour comprendre le titre.
@@ -253,6 +267,10 @@ Format visuel avec classes CSS dédiées :
 - **Style** : headers directs, emojis en headers de risk-cards, bullet points courts, pas de paragraphes longs
 - **Mobile** : utiliser les classes CSS responsive (auto-fit, minmax), jamais de grid fixe inline
 - **Pas de `<style>` inline** : tout doit être dans report.css avec les classes ticker-analysis
+- **Chart Finviz obligatoire** : chaque analyse doit inclure le chart Finviz cliquable + modal (voir Header ci-dessus)
+- **Logos tickers** : utiliser `https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg` avec fallback gradient+initiales
+- **Liens** : jamais de `/index.html` — GitHub Pages résout automatiquement
+- **Landing page** : chaque nouvelle analyse doit être ajoutée dans index.html avec logo, chart button, et lien
 
 ---
 
