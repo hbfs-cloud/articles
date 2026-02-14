@@ -13,6 +13,13 @@ articles/
 │   │   ├── index.html            # Article HTML complet
 │   │   └── assets/report.css     # CSS spécifique au rapport
 │   └── assets/                   # Assets partagés weekly
+├── analyses/                     # Analyses individuelles par ticker
+│   ├── {TICKER}/                 # Dossier par ticker (ex: SNDK/)
+│   │   ├── index.html            # Version courante de l'analyse
+│   │   ├── assets/report.css     # CSS spécifique
+│   │   └── archive/              # Versions précédentes archivées
+│   │       └── YYYYMMDD/         # Date de l'ancienne analyse
+│   │           └── index.html    # Ancienne version
 ├── CLAUDE.md                     # Ce fichier (instructions pour Claude)
 ├── PROMPT.md                     # Prompts détaillés pour chaque type d'analyse
 └── CNAME                         # DNS: market-watch.xyz
@@ -45,13 +52,20 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 7. Langue: Français, ton institutionnel mais accessible
 
 ### "Analyse [TICKER]" (ex: "Analyse BMNR", "Analyse BTC")
-1. Collecter via MCP:
+1. **Si l'analyse existe déjà** : archiver l'ancienne version
+   - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
+   - Déplacer l'ancien `index.html` dans l'archive
+   - Copier le CSS dans l'archive
+   - La nouvelle analyse devra inclure l'historique dans la modale Historique
+2. Collecter via MCP:
    - `GetInstruments` symbols=[TICKER]
    - `QueryData` types: quote,bars_daily,bars_intraday,financials,earnings_quarterly,holders,stats,support_resistance,volume_profile,sentiment_overall,trading_signals,analyst_actions,insider_transactions,ctb,news
    - `QueryData` types: options_chain si applicable
-2. Recherche web pour actualités récentes
-3. Générer l'analyse complète en 12 sections (voir PROMPT.md pour le template)
-4. Format: Article HTML dans un nouveau dossier ou section de l'article weekly
+3. Recherche web pour actualités récentes
+4. Générer l'analyse complète en 15 sections (voir PROMPT.md pour le template)
+5. Format: Article HTML dans `analyses/{TICKER}/`
+6. Mettre à jour la modale Historique avec les versions archivées
+7. Mettre à jour index.html principal si nécessaire
 
 ## Conventions
 - **Langue**: Français avec accents corrects
