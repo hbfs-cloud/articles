@@ -1,6 +1,17 @@
-# PROMPT
+# TODO
 
-Il faut un nouveau rapport pour la semaine en repartant de celui ci svp, utilise bien que des données à jour et utilise bien marketwatch, ne te focalise pas uniquement sur le dernier prix mais regarde bien l’évolution des prix en 15m
-petit rapport, on veux un report de niveau institutionnel à destination de retail qui couvre tout les grands marchés US, EU, Asia, etc... qui donne une vision globale de la macro, micro et géopolitique et sur tout les assets Stocks, ETF, Gold, Silver, Crypto etc... et qui permette d'avoir tout en tête pour la semaine à venir, tout les gros sujets importants doivent être couvert, comme la guerre au Venezuela, Ukraine, Chine, etc... les gros mouvements et déplacement des gros flux d'argent, matrice des risques, ce qu'il faut surveiller, compte rendu sur le précédent report, detection de signe noir ou signaux faibles, dates et décisions importantes à venir, dynamique sectoriel, etc... tout doit y passer; tout les chiffres cités doivent être à jour et on doit avoir la liste des sources à la fin svp je veux un report markdown comme celui d'origine svp
-les sujets de la semaines derniers ne sont peut-être les plus importants a venir, il faut que tu sois proactif, n'oublie pas les earnings egalement et l'actualité économique en général
-dans chacun des sections, il faut des phrases explicatives et didactique pour expliquer le contenu
+## Fait
+- [x] Weekly report 20260216 - "La Grande Rotation & Genève : Semaine Charnière"
+- [x] Mise à jour index.html (nouvelle carte + archive)
+- [x] Création CLAUDE.md (instructions projet pour Claude)
+- [x] Création PROMPT.md (templates weekly + analyse ticker)
+- [x] Migration des prompts de TODO.md vers PROMPT.md et CLAUDE.md
+- [x] Enrichissement weekly 20260216 : marchés internationaux détaillés (10 ETFs pays), régime AutoScreener (early_risk_off), top/bottom performers, thèmes, marchés de prédiction
+- [x] Ajouter section analyses individuelles (ticker) sur index.html (index des 10 dernières)
+- [x] Premier article d'analyse individuelle : ASST (Strive Inc.) - 12 sections complètes
+- [x] Analyse ASST : Header, Activité, News, Fondamentaux, Insiders, Short Interest, Options, Technique, Secteur, Macro, Risques, Trade Idea, Note Globale
+
+## À Faire
+- [ ] Ajouter page d'index dédiée aux analyses ticker (/analyses/index.html)
+- [ ] Automatiser le workflow: "nouvelle analyse weekly" = tout se fait automatiquement
+- [ ] Automatiser le workflow: "analyse [TICKER]" = analyse complète automatique
