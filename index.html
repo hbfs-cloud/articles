@@ -365,8 +365,169 @@
             margin: 0 auto 1rem;
         }
 
+        /* Search Dialog */
+        .search-trigger {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.5rem;
+            z-index: 50;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: 0.2s;
+        }
+        .search-trigger:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.1);
+        }
+        .search-trigger kbd {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.7rem;
+            font-family: inherit;
+            color: #94a3b8;
+        }
+        .search-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1200;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 12vh;
+        }
+        .search-overlay.visible { display: flex; }
+        .search-dialog {
+            background: white;
+            border-radius: 16px;
+            width: 94%;
+            max-width: 520px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: searchIn 0.15s ease-out;
+        }
+        @keyframes searchIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .search-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .search-input-wrap i { color: #94a3b8; font-size: 1rem; }
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            font-family: inherit;
+            color: #0f172a;
+            background: transparent;
+        }
+        .search-input::placeholder { color: #cbd5e1; }
+        .search-results {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .search-results:empty::after {
+            content: 'Aucun résultat';
+            display: block;
+            text-align: center;
+            padding: 2rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #0f172a;
+            transition: background 0.1s;
+        }
+        .search-item:hover, .search-item.active {
+            background: #f1f5f9;
+        }
+        .search-item-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            object-fit: contain;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .search-item-fallback {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.65rem;
+            flex-shrink: 0;
+        }
+        .search-item-info { flex: 1; min-width: 0; }
+        .search-item-ticker {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .search-item-name {
+            font-size: 0.75rem;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .search-item-arrow {
+            color: #cbd5e1;
+            font-size: 0.75rem;
+        }
+        .search-hint {
+            padding: 10px 16px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            display: flex;
+            gap: 1rem;
+        }
+        .search-hint kbd {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px;
+            padding: 0 4px;
+            font-family: inherit;
+            font-size: 0.65rem;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
+            .search-trigger kbd { display: none; }
+            .search-trigger { padding: 8px 12px; font-size: 0; }
+            .search-trigger i { font-size: 1rem; }
+
             .hero-section {
                 padding: 4rem 1rem;
             }
@@ -450,6 +611,13 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+
+    <!-- Search Trigger -->
+    <button class="search-trigger" onclick="openSearch()">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Rechercher...
+        <kbd>⌘K</kbd>
+    </button>
 
     <div class="hero-section">
         <a href="#" class="brand"
@@ -1565,7 +1733,111 @@
         document.getElementById('chartModal').classList.remove('visible');
     }
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeChart();
+        if (e.key === 'Escape') { closeChart(); closeSearch(); }
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+    });
+    </script>
+
+    <!-- Search Dialog -->
+    <div id="searchOverlay" class="search-overlay" onclick="if(event.target===this)closeSearch()">
+        <div class="search-dialog">
+            <div class="search-input-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="searchInput" class="search-input" type="text" placeholder="Ticker ou nom (ex: WULF, Silver, Crypto...)" autocomplete="off">
+                <kbd style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px; padding:2px 6px; font-size:0.7rem; color:#94a3b8; cursor:pointer;" onclick="closeSearch()">Esc</kbd>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+            <div class="search-hint">
+                <span><kbd>&uarr;&darr;</kbd> naviguer</span>
+                <span><kbd>Enter</kbd> ouvrir</span>
+                <span><kbd>Esc</kbd> fermer</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    var searchData = [];
+    var searchIdx = -1;
+
+    // Build search index from DOM
+    document.querySelectorAll('.grid-cards .report-card .ticker-card-header').forEach(function(hdr) {
+        var card = hdr.closest('.report-card');
+        var sym = hdr.querySelector('.ticker-symbol');
+        var exch = hdr.querySelector('.ticker-exchange');
+        var h2 = card.querySelector('h2');
+        var link = card.querySelector('.actions a');
+        var desc = card.querySelector('p');
+        if (sym && link) {
+            searchData.push({
+                ticker: sym.textContent.trim(),
+                exchange: exch ? exch.textContent.trim() : '',
+                name: h2 ? h2.textContent.trim() : '',
+                desc: desc ? desc.textContent.trim() : '',
+                href: link.getAttribute('href')
+            });
+        }
+    });
+
+    function openSearch() {
+        document.getElementById('searchOverlay').classList.add('visible');
+        var inp = document.getElementById('searchInput');
+        inp.value = '';
+        inp.focus();
+        renderResults('');
+        searchIdx = -1;
+    }
+    function closeSearch() {
+        document.getElementById('searchOverlay').classList.remove('visible');
+    }
+
+    function renderResults(q) {
+        var el = document.getElementById('searchResults');
+        q = q.toLowerCase().trim();
+        var filtered = q === '' ? searchData : searchData.filter(function(d) {
+            return d.ticker.toLowerCase().indexOf(q) !== -1
+                || d.name.toLowerCase().indexOf(q) !== -1
+                || d.exchange.toLowerCase().indexOf(q) !== -1
+                || d.desc.toLowerCase().indexOf(q) !== -1;
+        });
+        el.innerHTML = filtered.map(function(d, i) {
+            return '<a class="search-item' + (i === searchIdx ? ' active' : '') + '" href="' + d.href + '" data-idx="' + i + '">'
+                + '<img src="https://assets.parqet.com/logos/symbol/' + d.ticker + '?format=jpg" class="search-item-logo" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+                + '<div class="search-item-fallback" style="display:none;">' + d.ticker + '</div>'
+                + '<div class="search-item-info">'
+                + '<div class="search-item-ticker">' + d.ticker + ' <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">' + d.exchange + '</span></div>'
+                + '<div class="search-item-name">' + d.name + '</div>'
+                + '</div>'
+                + '<span class="search-item-arrow"><i class="fa-solid fa-arrow-right"></i></span>'
+                + '</a>';
+        }).join('');
+        return filtered;
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        searchIdx = -1;
+        renderResults(this.value);
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', function(e) {
+        var items = document.querySelectorAll('#searchResults .search-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            searchIdx = Math.min(searchIdx + 1, items.length - 1);
+            items.forEach(function(el, i) { el.classList.toggle('active', i === searchIdx); });
+            if (items[searchIdx]) items[searchIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            searchIdx = Math.max(searchIdx - 1, 0);
+            items.forEach(function(el, i) { el.classList.toggle('active', i === searchIdx); });
+            if (items[searchIdx]) items[searchIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (searchIdx >= 0 && items[searchIdx]) {
+                window.location.href = items[searchIdx].getAttribute('href');
+            } else if (items.length > 0) {
+                window.location.href = items[0].getAttribute('href');
+            }
+        }
     });
     </script>
 
