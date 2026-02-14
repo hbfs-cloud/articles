@@ -21,8 +21,47 @@ Rapport de niveau institutionnel à destination de retail qui couvre tous les gr
 12. **Rotation Sectorielle / Dynamique** - Gagnants vs perdants, flux de capitaux
 13. **Matrice des Risques** - 5-6 risques avec probabilité et impact + signaux faibles / cygnes noirs
 14. **Allocation Tactique** - Donut chart + table avec rationale et changements vs semaine précédente
-15. **Outlook** - 3 scénarios (haussier/central/baissier) avec probabilités + "Ce qu'il faut surveiller"
-16. **Sources** - Toutes les sources organisées par catégorie avec liens
+15. **Trades de la Semaine** (NOUVEAU) - 3 positions longues swing argumentées (voir détail ci-dessous)
+16. **Outlook** - 3 scénarios (haussier/central/baissier) avec probabilités + "Ce qu'il faut surveiller"
+17. **Sources** - Toutes les sources organisées par catégorie avec liens
+
+### Section 15 — Trades de la Semaine (Détail)
+
+Chaque rapport hebdomadaire doit proposer **3 trades en position longue (swing)**, motivés et argumentés.
+
+#### Format par trade
+- **Titre** : Ticker + Nom + Thème (ex: "NEM — Newmont Corp — Gold Miner")
+- **Grille visuelle** (4 cartes metric-card) :
+  - Entrée (zone de prix, bleu)
+  - Stop Loss (niveau + % de perte, rouge)
+  - Target 1 (niveau + % de gain, vert)
+  - Target 2 (extension, violet)
+- **Thèse** (pedagogy-box) : 1 paragraphe expliquant le raisonnement macro + technique + catalyseur. Doit inclure le R/R.
+- **Catalyseurs** : événements de la semaine qui peuvent déclencher le mouvement
+
+#### Critères de sélection
+- Alignés avec la macro dominante (rotation, régime risk-on/off, thèmes)
+- Signal technique récent (BUY AmericanBulls, RSI, breakout S/R)
+- Données à jour via MCP Gateway (quote, trading_signals, support_resistance)
+- R/R minimum 1:1.5
+- Diversifiés (pas 3 trades sur le même secteur)
+
+#### Bilan des Trades S-1
+Si le rapport précédent contenait des trades, **inclure un bilan obligatoire** en début de section :
+
+```html
+<h3>Bilan Trades Semaine Précédente</h3>
+<table class="data-table">
+    <thead><tr><th>Trade</th><th>Entrée</th><th>Résultat</th><th>P/L</th><th>Statut</th></tr></thead>
+    <tbody>
+        <tr><td>NEM</td><td>$122-126</td><td>$130</td><td class="up">+5%</td><td><span class="badge badge-green">TP1 touché</span></td></tr>
+        <!-- ... -->
+    </tbody>
+</table>
+```
+
+Statuts possibles : TP1 touché, TP2 touché, Stop touché, En cours, Invalidé.
+Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé").
 
 ### Directives
 - Utiliser des données à jour via le MCP Gateway MarketWatch
@@ -33,6 +72,8 @@ Rapport de niveau institutionnel à destination de retail qui couvre tous les gr
 - Boxes pédagogiques (pedagogy-box, didactic-box) pour expliquer les concepts
 - Boxes d'alerte (alert-box) pour les risques importants
 - Toujours inclure le disclaimer en fin de rapport
+- Les Top & Bottom Performers doivent montrer la **performance de toute la semaine** (5 jours), pas juste la dernière séance
+- Les liens internes ne doivent **jamais** contenir `/index.html` — GitHub Pages résout automatiquement
 
 ---
 
