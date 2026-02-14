@@ -180,14 +180,89 @@ Utiliser des `.risk-card` pour chaque élément :
 - Régime de marché actuel (risk-on / risk-off / neutre)
 - Impact macro spécifique sur le titre
 
-#### 13. Analyse des Risques (REFONTE COMPLÈTE — Style SLNH)
-**Section critique** — format punchy avec risk-cards colorées.
+#### 13. Analyse des Risques (REFONTE UX — World-Class)
+**Section critique** — format premium avec risk-summary, risk-grid et risk-cards enrichies.
 
-Chaque risque = une `.risk-card` avec :
-- Header emoji + titre clair
-- 2-3 bullet points max, factuels et directs
-- `.risk-verdict` en bas : verdict clair en 1 phrase
-- Couleur de bordure selon sévérité : `-critical` (rouge), `-high` (orange), `-medium` (jaune), `-low` (vert)
+**Structure obligatoire** :
+
+```html
+<div id="risques" class="content-card">
+    <h2>Analyse des Risques</h2>
+
+    <!-- 1. Risk Summary (header dark avec gauge) -->
+    <div class="risk-summary">
+        <div class="risk-gauge" style="border-color:{COLOR};">
+            <div class="risk-gauge-score" style="color:{COLOR};">{N}/10</div>
+            <div class="risk-gauge-label">Risque</div>
+        </div>
+        <div class="risk-summary-detail">
+            <h3>Profil de risque : {Faible|Modéré|Élevé|Très Élevé}</h3>
+            <p>{Résumé 1-2 phrases du profil de risque global}</p>
+            <div class="risk-tags">
+                <span class="risk-tag risk-tag-{severity}">{Tag court}</span>
+                <!-- 3-5 tags max -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Risk Grid (2 colonnes responsive) -->
+    <div class="risk-grid">
+
+        <div class="risk-card risk-card-{critical|high|medium|low}">
+            <div class="risk-card-header">
+                <div class="risk-card-icon"><i class="fa-solid fa-{icon}"></i></div>
+                <h4>{Titre du risque}</h4>
+                <span class="risk-severity">{Critique|Élevé|Moyen|Faible}</span>
+            </div>
+            <div class="risk-card-body">
+                <ul>
+                    <li>{Point factuel}</li>
+                    <!-- 2-4 bullet points -->
+                </ul>
+                <div class="risk-meters">
+                    <div class="risk-meter">
+                        <div class="risk-meter-label">Probabilité</div>
+                        <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:{N}%;"></div></div>
+                    </div>
+                    <div class="risk-meter">
+                        <div class="risk-meter-label">Impact</div>
+                        <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:{N}%;"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="risk-verdict"><i class="fa-solid fa-{icon}"></i> {Verdict en 1 phrase}</div>
+        </div>
+        <!-- ... autres risk-cards ... -->
+
+    </div>
+
+    <div class="pedagogy-box">
+        <h4>{Synthèse / Pourquoi le prix est X}</h4>
+        <p>{Explication 3-4 phrases}</p>
+    </div>
+</div>
+```
+
+**Score gauge** : 1-3 = Faible (#22c55e), 4-5 = Modéré (#3b82f6), 6-7 = Élevé (#f59e0b), 8-10 = Très Élevé (#ef4444)
+
+**Severity classes** : `.risk-card-critical` (rouge), `.risk-card-high` (orange/amber), `.risk-card-medium` (bleu), `.risk-card-low` (vert)
+
+**Verdict icons** : critical → `fa-skull-crossbones`, high → `fa-triangle-exclamation`, medium → `fa-circle-info`, low → `fa-circle-check`
+
+**Risk-card icons** (Font Awesome, adapter au contenu) :
+- Prix/Corrélation → `fa-chart-line`
+- Géopolitique → `fa-globe`
+- Valorisation → `fa-scale-balanced`
+- Cash/Dilution/Finance → `fa-money-bill-trend-up`
+- Concurrence → `fa-building`
+- Tech/Pipeline/FDA → `fa-flask`
+- Cyclicité → `fa-arrows-spin`
+- Management → `fa-user-tie`
+- Spin-off → `fa-code-branch`
+- Liquidité → `fa-water`
+- Short/Squeeze → `fa-arrow-down-up-across-line`
+- Crypto/Mining → `fa-microchip`
+- Rally/Momentum → `fa-rocket`
 
 **8 Catégories de risque obligatoires à évaluer** :
 
@@ -260,6 +335,76 @@ Format visuel avec classes CSS dédiées :
 - **Key Takeaways** : 3 points positifs + 3 risques majeurs
 - **Mindset Tip** : conseil psychologique pour le trader (FOMO, patience, sizing, etc.)
 
+### Historisation des Analyses (OBLIGATOIRE)
+
+Quand on **régénère** une analyse qui existe déjà :
+
+1. **Archiver l'ancienne version** :
+   - Créer le dossier `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
+   - Déplacer `analyses/{TICKER}/index.html` → `analyses/{TICKER}/archive/{YYYYMMDD}/index.html`
+   - Copier `analyses/{TICKER}/assets/report.css` → `analyses/{TICKER}/archive/{YYYYMMDD}/report.css`
+   - Le CSS de l'archive peut être copié tel quel ou être un lien relatif `../../assets/report.css`
+
+2. **Mettre à jour la modale Historique** dans le **nouveau** `index.html` :
+   - Ajouter une entrée dans `#historyList` pour chaque version archivée
+   - Format d'une entrée :
+   ```html
+   <a href="archive/{YYYYMMDD}/" style="display:flex; align-items:center; gap:1rem; padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:10px; text-decoration:none; color:#0f172a; transition:all 0.2s;">
+       <div style="width:40px; height:40px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+           <i class="fa-solid fa-file-lines" style="color:#64748b;"></i>
+       </div>
+       <div>
+           <div style="font-weight:600; font-size:0.9rem;">{DD} {Mois} {YYYY}</div>
+           <div style="font-size:0.75rem; color:#64748b;">Analyse {TICKER} — Version précédente</div>
+       </div>
+   </a>
+   ```
+   - Les entrées sont triées par date décroissante (plus récente en premier)
+   - L'analyse courante est toujours marquée comme "Version actuelle" (non cliquable, badge vert)
+
+3. **Structure du bouton Historique** (dans le header) :
+   ```html
+   <button onclick="document.getElementById('historyModal').style.display='flex'"
+       style="background:none; border:1px solid #cbd5e1; color:#64748b; cursor:pointer;
+       margin-left:0.75rem; padding:4px 10px; border-radius:6px; font-size:0.75rem;">
+       <i class="fa-solid fa-clock-rotate-left"></i> Historique
+   </button>
+   ```
+
+4. **Structure de la modale Historique** :
+   ```html
+   <div id="historyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+       z-index:1000; align-items:center; justify-content:center;"
+       onclick="if(event.target===this)this.style.display='none'">
+       <div style="background:white; border-radius:16px; padding:2rem; max-width:420px; width:90%;
+           box-shadow:0 25px 50px rgba(0,0,0,0.25);">
+           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+               <h3 style="margin:0; font-size:1.2rem; color:#0f172a;">Historique — {TICKER}</h3>
+               <button onclick="document.getElementById('historyModal').style.display='none'"
+                   style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&times;</button>
+           </div>
+           <div id="historyList" style="display:flex; flex-direction:column; gap:0.75rem;">
+               <!-- Version actuelle (non cliquable) -->
+               <div style="display:flex; align-items:center; gap:1rem; padding:0.75rem 1rem;
+                   border:1px solid #22c55e; border-radius:10px; background:#f0fdf4;">
+                   <div style="width:40px; height:40px; border-radius:8px; background:#dcfce7;
+                       display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                       <i class="fa-solid fa-star" style="color:#22c55e;"></i>
+                   </div>
+                   <div>
+                       <div style="font-weight:600; font-size:0.9rem;">{DD} {Mois} {YYYY} <span
+                           style="background:#22c55e; color:white; font-size:0.65rem; padding:2px 6px;
+                           border-radius:4px; margin-left:6px;">ACTUEL</span></div>
+                       <div style="font-size:0.75rem; color:#64748b;">Analyse {TICKER} — Version actuelle</div>
+                   </div>
+               </div>
+               <!-- Versions archivées (liens cliquables) -->
+               <!-- ... entrées archive/{YYYYMMDD}/ ... -->
+           </div>
+       </div>
+   </div>
+   ```
+
 ### Directives Analyse Ticker
 - **Lisibilité** : un lecteur doit comprendre le titre en 2 minutes avec le Verdict Express seul
 - **Honnêteté** : ne pas minimiser les risques, surtout dilution et cash burn
@@ -277,6 +422,7 @@ Format visuel avec classes CSS dédiées :
 - **Liens** : jamais de `/index.html` — GitHub Pages résout automatiquement
 - **Landing page** : chaque nouvelle analyse doit être ajoutée dans index.html avec logo, chart button, et lien
 - **Alert-banner** : toujours forcer `color: white !important` sur le texte et les `<p>` internes
+- **Historisation** : toujours archiver l'ancienne version avant de régénérer (voir section Historisation ci-dessus)
 
 ---
 
@@ -325,12 +471,20 @@ Format visuel avec classes CSS dédiées :
 - `.verdict-grid` - Grille 2 colonnes pour/contre
 - `.verdict-pro` / `.verdict-con` - Colonnes arguments positifs/négatifs
 - `.news-list` / `.news-item` - Liste de news avec dates
-- `.risk-card` - Carte de risque style SLNH (bordure gauche colorée)
-  - `.risk-card-critical` - Bordure rouge (#dc2626)
-  - `.risk-card-high` - Bordure orange (#ea580c)
-  - `.risk-card-medium` - Bordure jaune (#ca8a04)
-  - `.risk-card-low` - Bordure verte (#16a34a)
-  - `.risk-verdict` - Verdict en bas de la risk-card
+- `.risk-summary` - Header dark avec gauge score + tags
+  - `.risk-gauge` - Cercle avec score /10
+  - `.risk-summary-detail` - Texte profil + tags
+  - `.risk-tags` / `.risk-tag` - Tags de risque colorés (`.risk-tag-critical/high/medium/low`)
+- `.risk-grid` - Grille 2 colonnes responsive
+- `.risk-card` - Carte de risque enrichie (bordure gauche colorée)
+  - `.risk-card-critical` (rouge), `.risk-card-high` (orange), `.risk-card-medium` (bleu), `.risk-card-low` (vert)
+  - `.risk-card-header` - Header avec icône + titre + badge sévérité
+  - `.risk-card-icon` - Icône Font Awesome colorée
+  - `.risk-severity` - Badge de sévérité (Critique/Élevé/Moyen/Faible)
+  - `.risk-card-body` - Corps avec bullet points + meters
+  - `.risk-meters` / `.risk-meter` - Barres de probabilité et impact
+  - `.risk-meter-bar` / `.risk-meter-fill` - Barre de progression visuelle
+  - `.risk-verdict` - Footer coloré avec icône et verdict
 - `.trade-box` - Conteneur Trade Idea (fond slate-50)
 - `.trade-levels` - Grille des niveaux de trade (4 colonnes)
   - `.trade-level.trade-entry` - Fond bleu (entrée)
