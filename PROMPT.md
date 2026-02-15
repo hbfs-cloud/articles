@@ -817,3 +817,210 @@ function filterCards() {
     });
 }
 ```
+
+---
+
+## 5. SCANNER QUOTIDIEN
+
+### Objectif
+Article quotidien généré par le scanner algorithmique. Détecte automatiquement les meilleurs setups du jour en fonction du régime de marché (Risk-On, Neutral, Early Risk-Off, Risk-Off, Recovery). Supporte le multilangue et multi-niveau comme les analyses individuelles.
+
+### Structure URL
+```
+scanner/
+├── YYYYMMDD/
+│   ├── index.html                # Default = expert/fr
+│   ├── assets/report.css         # CSS spécifique (thème dark)
+│   ├── variants.json             # Manifest des variantes
+│   ├── expert/
+│   │   ├── en/index.html
+│   │   └── ar/index.html
+│   └── beginner/
+│       ├── fr/index.html
+│       ├── en/index.html
+│       └── ar/index.html
+```
+
+### Collecte des Données
+1. **`RunAutoScreener`** : Détection du régime de marché + candidats auto-adaptatifs
+2. **`RunScreener`** avec DSL personnalisé : 3 stratégies complémentaires
+   - Oversold bounce : `rsi14<35 && vol>sma(vol,20)*1.5`
+   - Momentum expansion : `close>sma(close,20) && vol>sma(vol,20)*2 && rsi14>50 && rsi14<75`
+   - Breakout squeeze : `close>sma(close,50) && atr(14)>atr(28)*1.2`
+3. **`QueryData`** types: quote pour les 10 tickers retenus
+4. **WebSearch** pour les catalyseurs récents de chaque ticker
+
+### Sections de l'Article Scanner
+
+#### Thème Dark
+Le scanner utilise un thème dark (fond `#0f172a`, texte `#f1f5f9`) distinct du thème light des analyses individuelles.
+
+#### Sections Obligatoires
+1. **Hero** : Date, badge régime de marché (couleur selon régime), stats clés (nb setups, score moyen, stratégie dominante)
+2. **Régime de Marché** : Description du régime détecté, composantes (VIX, SPX, DXY, crédit, liquidité, TLT), pondérations des stratégies
+3. **Navigation Grid** : Liens internes vers chaque setup
+4. **10 Setup Cards** : Pour chaque ticker :
+   - Header avec ticker, nom, prix, variation
+   - Badges : stratégie détectée, fiabilité, signal technique
+   - **Description du setup** : ce qu'on voit techniquement (pattern, volumes, indicateurs)
+   - **Confirmations** : ce qui valide le setup
+   - **Invalidations** : ce qui annule le setup
+   - **Alertes à placer** : niveaux de prix à surveiller
+   - **Niveaux clés** : entrée, stop, target(s)
+   - Score composite avec breakdown (technique, volume, momentum, risque)
+   - Chart ApexCharts intégré
+5. **Synthèse** : Tableau récapitulatif des 10 setups
+6. **Méthodologie** : Explication du scoring et des stratégies
+7. **Disclaimer** : Avertissement standard
+
+#### Niveaux de Complexité
+- **Expert** : Toutes les sections, jargon technique complet, Wyckoff, RSI divergences, volume profile
+- **Beginner** :
+  - Langage simple : "le prix rebondit" au lieu de "RSI en survente"
+  - Pas de jargon technique non expliqué
+  - Score simplifié en étoiles (1-5)
+  - Moins de métriques, plus d'explications
+  - "Acheter si..." / "Éviter si..." au lieu de "Entry zone" / "Stop loss"
+
+### Directives Scanner
+- Un scan par jour ouvré (lun-ven)
+- 10 setups maximum par scan
+- Diversification sectorielle obligatoire
+- Inclure le régime de marché dans le titre et le badge hero
+- Charts ApexCharts pour chaque setup (bar chart avec volume)
+- Score composite 0-100 pour chaque setup
+- Ajouter la carte dans le tab Scanner de index.html
+
+---
+
+## 6. PORTFOLIO (Stratégies Systématiques)
+
+### Objectif
+Tab sur la landing page affichant les stratégies algorithmiques systématiques actives avec performance vs benchmarks.
+
+### Structure
+Le Portfolio est directement dans `index.html` (pas d'article séparé), dans le tab `#tab-portfolio`.
+
+### Sections
+1. **Benchmark Reference Bar** : S&P 500, STOXX 600, Gold, Silver, Bitcoin — avec prix et variation
+2. **Tier 1** (priorité haute) : Stratégies à forte conviction
+3. **Tier 2** (priorité moyenne) : Stratégies secondaires
+4. **Tier 3** (exploration) : Stratégies expérimentales
+
+### Format d'une Stratégie Card
+```html
+<div style="background:white; border-radius:12px; border:1px solid #e2e8f0; padding:1.5rem; position:relative;">
+    <div style="position:absolute; top:12px; right:12px;">
+        <span class="badge badge-{color}">{Tier}</span>
+    </div>
+    <h3 style="font-size:1.1rem; font-weight:700; margin:0 0 0.5rem;">{Nom Stratégie}</h3>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin:0 0 1rem;">{Description}</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:8px;">
+        <!-- Métriques : Type, CAGR, Sharpe, Max DD, Win Rate -->
+    </div>
+    <div style="margin-top:12px; padding-top:12px; border-top:1px solid #f1f5f9; font-size:0.75rem; color:var(--text-muted);">
+        vs {Benchmark} : <span class="up/down">{Delta}</span>
+    </div>
+</div>
+```
+
+### Métriques Obligatoires par Stratégie
+- **Type d'asset** : US Stocks, EU Stocks, Crypto, Metals, Forex, etc.
+- **CAGR** : Rendement annualisé
+- **Sharpe** : Ratio de Sharpe
+- **Max DD** : Drawdown maximum
+- **Win Rate** : Taux de réussite
+- **vs Benchmark** : Surperformance par rapport à l'indice de référence pertinent
+
+### Directives Portfolio
+- Comparer chaque stratégie au bon benchmark (S&P 500 pour US, STOXX 600 pour EU, BTC pour crypto, etc.)
+- Tier badges colorés : Tier 1 = vert, Tier 2 = bleu, Tier 3 = violet
+- Disclaimer obligatoire : "Les performances passées ne garantissent pas les résultats futurs"
+- Pas d'article séparé, tout dans index.html
+
+---
+
+## 7. LANDING PAGE (index.html)
+
+### Tabs Système
+La landing page utilise un système de tabs :
+
+| Tab | data-tab | Icône | Contenu |
+|-----|----------|-------|---------|
+| Hebdo | `weekly` | `fa-calendar-week` | Rapports hebdomadaires (tous visibles) |
+| Analyses | `analyses` | `fa-chart-column` | Analyses individuelles avec filtre grade + recherche |
+| Scanner | `scanner` | `fa-radar` | Scans quotidiens algorithmiques |
+| Portfolio | `portfolio` | `fa-briefcase` | Stratégies systématiques |
+
+### URL State
+- Tab actif dans URL : `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
+- Grade filter dans URL : `?grade=A`
+- Combinable : `?tab=analyses&grade=B`
+- Default (pas de param) = tab weekly
+
+### Recherche
+- Filtre uniquement sur le **symbole ticker** (pas nom, ni description, ni exchange)
+- Champ de recherche dans le tab analyses uniquement
+
+### OG Meta Tags
+Toutes les pages (landing, weekly, analyses, scanner) incluent des OG tags :
+```html
+<meta property="og:title" content="...">
+<meta property="og:description" content="...">
+<meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+<meta property="og:url" content="https://articles.market-watch.xyz/...">
+<meta property="og:type" content="article">
+```
+
+### Charts Interactifs
+- **US Stocks/ETFs** → Finviz embed dans modal
+- **Indices** (VIX, DXY, TNX, SPX, NDX, DJI) → TradingView widget embed
+- **Crypto** → TradingView COINBASE:{SYMBOL}USD
+- **Modal** : fond dark `#0f172a`, 3 liens externes (Finviz/TradingView/Yahoo Finance)
+
+---
+
+## 8. CHARTING — Apache ECharts & ApexCharts
+
+### Bibliothèques Utilisées
+- **Apache ECharts** (`echarts.min.js`) : Radar, Treemap, Line, Pie, Gauge — principalement dans les weekly reports
+- **ApexCharts** (`apexcharts.min.js`) : Bar, Line, Area, Donut — principalement dans les analyses et scanner
+
+### Types de Charts Utilisés
+
+#### ECharts (weekly reports)
+| Type | Usage | Section |
+|------|-------|---------|
+| `radar` | Score multi-facteurs (technique, fondamental, sentiment) | Synthèse, Risques |
+| `treemap` | Rotation sectorielle / Heatmap secteurs | Rotation Sectorielle |
+| `line` | Indices performance, prévisions analystes, yield curve | Macro, Outlook |
+| `pie` | Allocation tactique (donut) | Allocation |
+
+#### ApexCharts (analyses, scanner)
+| Type | Usage | Section |
+|------|-------|---------|
+| `bar` | Volume, comparaison peers, scores | Scanner setups, Technique |
+| `line` | Prix historiques, performance | Technique |
+| `area` | Intraday, trends | Technique |
+| `donut` | Répartition holders, allocation | Insiders |
+
+### Potentiel ECharts Non Exploité
+ECharts offre des types de charts avancés qui pourraient enrichir les articles :
+- **Candlestick** : Charts OHLCV interactifs (alternative aux images Finviz)
+- **Heatmap** : Corrélation matrix, calendrier de performance
+- **Sankey** : Flux de capitaux (sector rotation flows)
+- **Gauge** : Score de risque, RSI gauge, conviction gauge
+- **Graph/Force** : Relations entre tickers (corrélation network)
+- **Sunburst** : Hiérarchie secteur → industrie → ticker
+- **Boxplot** : Distribution des returns, volatilité
+- **Parallel** : Comparaison multi-facteurs entre tickers
+- **Calendar** : Performance heatmap par jour
+- **Map** : Exposition géographique du portfolio
+- **3D** : Surface plots pour options (volatility surface)
+
+### Directives Charting
+- Toujours inclure les libs dans `<head>` : `<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>` et/ou `<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>`
+- Charts responsives : utiliser `window.addEventListener('resize', ...)` avec ECharts
+- Thème cohérent : palette de couleurs alignée avec le design global
+- Interactivité : tooltips, zoom, click events sur les data points
+- Fallback : message "Chart not available" si les données manquent
