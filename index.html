@@ -3709,12 +3709,17 @@
 
     <script>
     // Grade filter
+    function setGradeFilter(grade) {
+        document.querySelectorAll('#gradeFilter .filter-chip').forEach(function(b) { b.classList.remove('active'); });
+        var target = document.querySelector('#gradeFilter .filter-chip[data-grade="' + grade + '"]');
+        if (target) target.classList.add('active');
+        filterCards();
+        var url = new URL(window.location);
+        if (grade === 'all') { url.searchParams.delete('grade'); } else { url.searchParams.set('grade', grade); }
+        history.replaceState(null, '', url);
+    }
     document.querySelectorAll('#gradeFilter .filter-chip').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('#gradeFilter .filter-chip').forEach(function(b) { b.classList.remove('active'); });
-            this.classList.add('active');
-            filterCards();
-        });
+        btn.addEventListener('click', function() { setGradeFilter(this.dataset.grade); });
     });
 
     function filterCards() {
@@ -3742,7 +3747,9 @@
             if (g !== 'all' && counts[g]) btn.textContent = g + ' (' + counts[g] + ')';
         });
     })();
-    filterCards(); // Init count on load
+    // Init from URL param
+    var urlGrade = new URLSearchParams(window.location.search).get('grade');
+    if (urlGrade) { setGradeFilter(urlGrade); } else { filterCards(); }
 
     var searchData = [];
     var searchIdx = -1;
