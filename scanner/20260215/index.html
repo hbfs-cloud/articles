@@ -197,19 +197,15 @@
         </a>
 
         <!-- Language & Level Switcher -->
-        <div class="article-switcher">
-            <div class="level-switcher">
-                <a href="/scanner/20260215/beginner/fr" class="level-tab" data-level="beginner">
-                    <i class="fa-solid fa-seedling"></i> Beginner
-                </a>
-                <a href="/scanner/20260215/" class="level-tab active" data-level="expert">
-                    <i class="fa-solid fa-chart-line"></i> Expert
-                </a>
+        <div class="article-switcher" style="margin:1.5rem 0; display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+            <div class="level-switcher" style="display:flex; gap:0.25rem; background:rgba(0,0,0,0.06); border-radius:8px; padding:3px;">
+                <button class="level-tab active" data-level="expert" style="padding:6px 14px; border:none; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer; background:white; color:#0f172a; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:0.2s;"><i class="fa-solid fa-chart-line" style="margin-right:4px;"></i>Expert</button>
+                <button class="level-tab" data-level="beginner" style="padding:6px 14px; border:none; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:0.2s;"><i class="fa-solid fa-seedling" style="margin-right:4px;"></i>Beginner</button>
             </div>
-            <div class="lang-switcher">
-                <a href="/scanner/20260215/" class="lang-flag active" title="Francais">&#x1F1EB;&#x1F1F7;</a>
-                <a href="/scanner/20260215/expert/en" class="lang-flag" title="English">&#x1F1EC;&#x1F1E7;</a>
-                <a href="/scanner/20260215/expert/ar" class="lang-flag" title="العربية">&#x1F1F8;&#x1F1E6;</a>
+            <div class="lang-switcher" style="display:flex; gap:0.5rem; align-items:center;">
+                <a class="lang-flag active" data-lang="fr" title="Français" style="font-size:1.3rem; text-decoration:none; opacity:1; cursor:pointer; transition:0.2s;">🇫🇷</a>
+                <a class="lang-flag" data-lang="en" title="English" style="font-size:1.3rem; text-decoration:none; opacity:0.4; cursor:pointer; transition:0.2s;">🇬🇧</a>
+                <a class="lang-flag" data-lang="ar" title="العربية" style="font-size:1.3rem; text-decoration:none; opacity:0.4; cursor:pointer; transition:0.2s;">🇸🇦</a>
             </div>
         </div>
 
@@ -1831,55 +1827,32 @@
     });
     </script>
 
-    <!-- ============================================================ -->
-    <!-- VARIANTS.JSON DYNAMIC SWITCHER -->
-    <!-- ============================================================ -->
+    <!-- Variants Switcher Script -->
     <script>
-    (function() {
-        var currentLevel = document.documentElement.dataset.level || 'expert';
-        var currentLang = document.documentElement.lang || 'fr';
-        var basePath = '/scanner/20260215/';
-
-        fetch(basePath + 'variants.json')
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                var switcher = document.querySelector('.article-switcher');
-                if (!switcher || !data.variants) return;
-
-                var levels = {};
-                data.variants.forEach(function(v) {
-                    if (!levels[v.level]) levels[v.level] = [];
-                    levels[v.level].push(v.lang);
+    (function(){
+        fetch('variants.json').then(function(r){return r.json()}).then(function(data){
+            var current = data.default || { level: 'expert', lang: 'fr' };
+            // Level tabs
+            document.querySelectorAll('.level-tab').forEach(function(tab){
+                tab.addEventListener('click',function(){
+                    var level = this.dataset.level;
+                    var lang = document.querySelector('.lang-flag.active');
+                    var langCode = lang ? lang.dataset.lang : current.lang;
+                    var variant = data.variants.find(function(v){return v.level===level && v.lang===langCode});
+                    if(variant) window.location.href = variant.path + '/';
                 });
-
-                var levelHtml = '';
-                var levelIcons = { beginner: 'fa-seedling', intermediate: 'fa-chart-simple', expert: 'fa-chart-line' };
-                var levelOrder = ['beginner', 'intermediate', 'expert'];
-                levelOrder.forEach(function(lvl) {
-                    if (!levels[lvl]) return;
-                    var targetLang = levels[lvl].indexOf(currentLang) !== -1 ? currentLang : levels[lvl][0];
-                    var active = lvl === currentLevel ? ' active' : '';
-                    var href = lvl === 'expert' && targetLang === 'fr' ? basePath : basePath + lvl + '/' + targetLang;
-                    levelHtml += '<a href="' + href + '" class="level-tab' + active + '" data-level="' + lvl + '">'
-                        + '<i class="fa-solid ' + (levelIcons[lvl] || 'fa-circle') + '"></i> '
-                        + lvl.charAt(0).toUpperCase() + lvl.slice(1) + '</a>';
+            });
+            // Lang flags
+            document.querySelectorAll('.lang-flag').forEach(function(flag){
+                flag.addEventListener('click',function(){
+                    var lang = this.dataset.lang;
+                    var levelTab = document.querySelector('.level-tab.active');
+                    var level = levelTab ? levelTab.dataset.level : current.level;
+                    var variant = data.variants.find(function(v){return v.level===level && v.lang===lang});
+                    if(variant) window.location.href = variant.path + '/';
                 });
-
-                var langFlags = { fr:'\uD83C\uDDEB\uD83C\uDDF7', en:'\uD83C\uDDEC\uD83C\uDDE7', ar:'\uD83C\uDDF8\uD83C\uDDE6', de:'\uD83C\uDDE9\uD83C\uDDEA', es:'\uD83C\uDDEA\uD83C\uDDF8' };
-                var langNames = { fr:'Francais', en:'English', ar:'\u0627\u0644\u0639\u0631\u0628\u064A\u0629', de:'Deutsch', es:'Espanol' };
-                var langHtml = '';
-                var currentLevelLangs = data.variants.filter(function(v) { return v.level === currentLevel; });
-                currentLevelLangs.forEach(function(v) {
-                    var active = v.lang === currentLang ? ' active' : '';
-                    var href = v.level === 'expert' && v.lang === 'fr' ? basePath : basePath + v.level + '/' + v.lang;
-                    langHtml += '<a href="' + href + '" class="lang-flag' + active
-                        + '" title="' + (langNames[v.lang] || v.lang) + '">' + (langFlags[v.lang] || v.lang) + '</a>';
-                });
-
-                switcher.innerHTML = '<div class="level-switcher">' + levelHtml + '</div>'
-                    + '<div class="lang-switcher">' + langHtml + '</div>';
-            })
-            .catch(function() { /* No variants.json = single variant, keep static switcher */ });
+            });
+        }).catch(function(){});
     })();
     </script>
 
