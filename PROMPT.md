@@ -456,7 +456,7 @@ Quand on **régénère** une analyse qui existe déjà :
 - `.risk-matrix` / `.risk-item` (.risk-high, .risk-medium, .risk-low)
 - `.pedagogy-box` - Explication pédagogique (bleu)
 - `.didactic-box` - Explication didactique (vert)
-- `.alert-box` - Alerte important (rouge)
+- `.alert-box` - Alerte important (fond rose clair #fef2f2, texte sombre. JAMAIS color:white sur les h4/p)
 - `.geo-alert` - Alerte géopolitique (rouge avec animation)
 - `.alert-banner` - Bannière d'alerte animée
 - `.badge` (.badge-red, .badge-blue, .badge-green, .badge-purple)
@@ -501,3 +501,319 @@ Quand on **régénère** une analyse qui existe déjà :
 - Info: #3b82f6
 - Background: #f8fafc
 - Text: #0f172a (primary), #475569 (body), #64748b (muted)
+
+---
+
+## 4. MULTILANGUE & MULTI-COMPLEXITÉ
+
+### Architecture URL
+
+```
+analyses/AAPL/
+├── index.html                    # Default = expert/fr (rétrocompatible)
+├── assets/report.css             # CSS partagé (toutes variantes)
+├── variants.json                 # Manifest des variantes disponibles
+├── expert/
+│   ├── fr/index.html             # Français expert (copie du root)
+│   ├── en/index.html             # English expert
+│   ├── ar/index.html             # العربية expert
+│   ├── de/index.html             # Deutsch expert
+│   └── es/index.html             # Español expert
+├── intermediate/
+│   ├── fr/index.html
+│   └── en/index.html
+└── beginner/
+    ├── fr/index.html
+    └── en/index.html
+```
+
+- **URL propres** : `articles.market-watch.xyz/analyses/AAPL/expert/en` (pas de trailing slash ni index.html)
+- **Default** : `analyses/AAPL/` → toujours expert/fr (rétrocompatible avec les 141 articles existants)
+- **CSS partagé** : toutes les variantes linkent vers `../../assets/report.css` (ou `../../../assets/report.css` selon le niveau)
+
+### variants.json (Manifest)
+
+Chaque dossier ticker contient un `variants.json` listant les variantes disponibles :
+
+```json
+{
+  "ticker": "AAPL",
+  "default": { "level": "expert", "lang": "fr" },
+  "variants": [
+    { "level": "expert", "lang": "fr", "path": "expert/fr" },
+    { "level": "expert", "lang": "en", "path": "expert/en" },
+    { "level": "expert", "lang": "ar", "path": "expert/ar" },
+    { "level": "intermediate", "lang": "fr", "path": "intermediate/fr" },
+    { "level": "beginner", "lang": "fr", "path": "beginner/fr" }
+  ],
+  "grade": "B+",
+  "date": "2026-02-15"
+}
+```
+
+### Langues Supportées
+
+| Code | Drapeau | Nom        | Direction |
+|------|---------|------------|-----------|
+| fr   | 🇫🇷     | Français   | ltr       |
+| en   | 🇬🇧     | English    | ltr       |
+| ar   | 🇸🇦     | العربية    | rtl       |
+| de   | 🇩🇪     | Deutsch    | ltr       |
+| es   | 🇪🇸     | Español    | ltr       |
+| zh   | 🇨🇳     | 中文       | ltr       |
+| ja   | 🇯🇵     | 日本語     | ltr       |
+
+### Niveaux de Complexité
+
+| Niveau        | Public cible              | Contenu                                                    |
+|---------------|---------------------------|------------------------------------------------------------|
+| **beginner**  | Débutants en bourse       | Langage simple, explications de chaque concept, pas de jargon. Sections simplifiées (6-8 au lieu de 15). Pas d'options, pas de Wyckoff. Focus sur "Qu'est-ce que c'est" et "Acheter ou pas". |
+| **intermediate** | Investisseurs particuliers | Toutes les sections mais explications supplémentaires pour les concepts techniques. Jargon avec définitions. |
+| **expert**    | Traders / Institutionnels | Article actuel complet, 15 sections, jargon technique, Wyckoff, Greeks, CTB, etc. |
+
+### Sections par Niveau
+
+#### Beginner (6-8 sections)
+1. Header (simplifié : prix, variation, MCap)
+2. Verdict Express (verdict clair : Acheter / Attendre / Éviter)
+3. L'Entreprise (qu'est-ce qu'elle fait, en termes simples)
+4. Actualités (2-3 news les plus importantes)
+5. Santé Financière (revenus, est-ce rentable, tendance)
+6. Risques Principaux (3 risques max, expliqués simplement)
+7. Faut-il Investir ? (recommandation claire avec zones de prix)
+8. Sources
+
+#### Intermediate (12 sections)
+1-6 : Identique à Expert mais avec des `pedagogy-box` supplémentaires
+7. Structure du Capital (simplifié)
+8. Short Interest (avec explication du concept)
+9. Technique (RSI, supports/résistances, tendance — pas de Wyckoff)
+10. Secteur
+11. Trade Idea
+12. Note Globale + Sources
+
+#### Expert (15 sections — contenu actuel)
+Identique au template Section 2 ci-dessus, sans changement.
+
+### Switcher Langue/Niveau (Template HTML)
+
+Le switcher est placé **dans le ticker-header**, juste après le brand link :
+
+```html
+<!-- Language & Level Switcher -->
+<div class="article-switcher">
+    <div class="level-switcher">
+        <a href="/analyses/AAPL/beginner/fr" class="level-tab" data-level="beginner">
+            <i class="fa-solid fa-seedling"></i> Beginner
+        </a>
+        <a href="/analyses/AAPL/intermediate/fr" class="level-tab" data-level="intermediate">
+            <i class="fa-solid fa-chart-simple"></i> Intermediate
+        </a>
+        <a href="/analyses/AAPL/expert/fr" class="level-tab active" data-level="expert">
+            <i class="fa-solid fa-chart-line"></i> Expert
+        </a>
+    </div>
+    <div class="lang-switcher">
+        <a href="/analyses/AAPL/expert/fr" class="lang-flag active" title="Français">🇫🇷</a>
+        <a href="/analyses/AAPL/expert/en" class="lang-flag" title="English">🇬🇧</a>
+        <a href="/analyses/AAPL/expert/ar" class="lang-flag" title="العربية">🇸🇦</a>
+    </div>
+</div>
+```
+
+Le switcher est **dynamique** : il lit `variants.json` via fetch et génère les liens automatiquement. Script à inclure avant `</body>` :
+
+```html
+<script>
+(function() {
+    var currentLevel = document.documentElement.dataset.level || 'expert';
+    var currentLang = document.documentElement.lang || 'fr';
+    var ticker = document.querySelector('.ticker-symbol').textContent.trim();
+    var basePath = '/analyses/' + ticker + '/';
+
+    fetch(basePath + 'variants.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var switcher = document.querySelector('.article-switcher');
+            if (!switcher || !data.variants) return;
+
+            // Build level tabs
+            var levels = {};
+            data.variants.forEach(function(v) {
+                if (!levels[v.level]) levels[v.level] = [];
+                levels[v.level].push(v.lang);
+            });
+
+            var levelHtml = '';
+            var levelIcons = { beginner: 'fa-seedling', intermediate: 'fa-chart-simple', expert: 'fa-chart-line' };
+            var levelOrder = ['beginner', 'intermediate', 'expert'];
+            levelOrder.forEach(function(lvl) {
+                if (!levels[lvl]) return;
+                var targetLang = levels[lvl].indexOf(currentLang) !== -1 ? currentLang : levels[lvl][0];
+                var active = lvl === currentLevel ? ' active' : '';
+                var href = basePath + lvl + '/' + targetLang;
+                levelHtml += '<a href="' + href + '" class="level-tab' + active + '" data-level="' + lvl + '">'
+                    + '<i class="fa-solid ' + (levelIcons[lvl] || 'fa-circle') + '"></i> '
+                    + lvl.charAt(0).toUpperCase() + lvl.slice(1) + '</a>';
+            });
+
+            // Build lang flags
+            var langFlags = { fr:'🇫🇷', en:'🇬🇧', ar:'🇸🇦', de:'🇩🇪', es:'🇪🇸', zh:'🇨🇳', ja:'🇯🇵' };
+            var langNames = { fr:'Français', en:'English', ar:'العربية', de:'Deutsch', es:'Español', zh:'中文', ja:'日本語' };
+            var langHtml = '';
+            var currentLevelLangs = data.variants.filter(function(v) { return v.level === currentLevel; });
+            currentLevelLangs.forEach(function(v) {
+                var active = v.lang === currentLang ? ' active' : '';
+                langHtml += '<a href="' + basePath + v.level + '/' + v.lang + '" class="lang-flag' + active
+                    + '" title="' + (langNames[v.lang] || v.lang) + '">' + (langFlags[v.lang] || v.lang) + '</a>';
+            });
+
+            switcher.innerHTML = '<div class="level-switcher">' + levelHtml + '</div>'
+                + '<div class="lang-switcher">' + langHtml + '</div>';
+        })
+        .catch(function() { /* No variants.json = single variant article, hide switcher */ });
+})();
+</script>
+```
+
+### CSS Switcher (ajouter à report.css)
+
+```css
+.article-switcher {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+.level-switcher {
+    display: flex;
+    gap: 0.25rem;
+    background: rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 3px;
+}
+.level-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.level-tab:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.08); }
+.level-tab.active { background: rgba(255,255,255,0.15); color: #fff; }
+.lang-switcher {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.lang-flag {
+    font-size: 1.3rem;
+    text-decoration: none;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+.lang-flag:hover { opacity: 0.8; transform: scale(1.15); }
+.lang-flag.active { opacity: 1; transform: scale(1.1); }
+```
+
+### RTL Support (Arabe)
+
+Pour les pages `ar`, ajouter :
+```html
+<html lang="ar" dir="rtl" data-level="expert">
+```
+Et dans le CSS :
+```css
+[dir="rtl"] .ticker-header,
+[dir="rtl"] .content-card,
+[dir="rtl"] .verdict-grid { direction: rtl; text-align: right; }
+[dir="rtl"] .article-switcher { flex-direction: row-reverse; }
+```
+
+### Discord Bot — Commande Analyse Multilingue
+
+**Syntaxe** : `TICKER [level] [lang1,lang2,...]`
+
+Exemples :
+- `AAPL` → expert fr (défaut)
+- `AAPL expert fr,en,ar` → 3 langues en expert
+- `AAPL beginner fr,en` → 2 langues en beginner
+- `AAPL expert,intermediate fr,en` → 4 variantes (2 niveaux × 2 langues)
+
+**Parsing dans bot.js** :
+```javascript
+function parseAnalyseCommand(text) {
+    var parts = text.trim().split(/\s+/);
+    var ticker = parts[0].toUpperCase();
+    var levels = ['expert'];
+    var langs = ['fr'];
+
+    for (var i = 1; i < parts.length; i++) {
+        var p = parts[i].toLowerCase();
+        if (['beginner','intermediate','expert'].some(l => p.includes(l))) {
+            levels = p.split(',').filter(l => ['beginner','intermediate','expert'].includes(l));
+        } else if (p.match(/^[a-z]{2}(,[a-z]{2})*$/)) {
+            langs = p.split(',');
+        }
+    }
+
+    return { ticker, levels, langs };
+}
+```
+
+**Prompt généré** (envoyé à Claude Code) :
+```
+analyse AAPL level=expert langs=fr,en,ar
+```
+
+Le CLAUDE.md du projet articles doit interpréter cette syntaxe et générer toutes les variantes demandées.
+
+### Index Page — Filtres Langue/Niveau/Grade
+
+Le `index.html` principal inclut des filtres au-dessus de la grille des analyses individuelles :
+
+```html
+<div class="filter-bar">
+    <div class="filter-group">
+        <label>Grade</label>
+        <div class="filter-chips" id="gradeFilter">
+            <button class="filter-chip active" data-grade="all">Tous</button>
+            <button class="filter-chip" data-grade="A">A</button>
+            <button class="filter-chip" data-grade="B">B</button>
+            <button class="filter-chip" data-grade="C">C</button>
+            <button class="filter-chip" data-grade="D">D</button>
+            <button class="filter-chip" data-grade="F">F</button>
+        </div>
+    </div>
+</div>
+```
+
+Script de filtrage :
+```javascript
+document.querySelectorAll('.filter-chip').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var group = this.closest('.filter-chips');
+        group.querySelectorAll('.filter-chip').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        filterCards();
+    });
+});
+
+function filterCards() {
+    var gradeFilter = document.querySelector('#gradeFilter .filter-chip.active').dataset.grade;
+    document.querySelectorAll('.grid-cards .report-card[data-grade]').forEach(function(card) {
+        var grade = card.dataset.grade;
+        var gradeMatch = gradeFilter === 'all' || grade.startsWith(gradeFilter);
+        card.style.display = gradeMatch ? '' : 'none';
+    });
+}
+```

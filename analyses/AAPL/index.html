@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-level="expert">
 
 <head>
     <meta charset="UTF-8">
@@ -34,7 +34,7 @@
     <!-- HEADER -->
     <!-- ============================================================ -->
     <div class="ticker-header">
-        <a href="/analyses" style="display:inline-flex; align-items:center; gap:10px; margin-bottom:1.5rem; text-decoration:none; color:#0f172a; font-weight:800; font-size:1.1rem;">
+        <a href="/" style="display:inline-flex; align-items:center; gap:10px; margin-bottom:1.5rem; text-decoration:none; color:#0f172a; font-weight:800; font-size:1.1rem;">
             <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px;"> MARKET WATCH
         </a>
         <div class="ticker-symbol">AAPL</div>
@@ -71,7 +71,18 @@
             <span class="badge badge-blue">SERVICES GROWTH</span>
             <span class="badge badge-purple">APPLE INTELLIGENCE</span>
         </div>
-        <div style="margin-top:1rem; font-size:0.8rem; color:#64748b;">
+        <!-- Language & Level Switcher -->
+        <div class="article-switcher">
+            <div class="level-switcher">
+                <a href="/analyses/AAPL" class="level-tab active" data-level="expert">
+                    <i class="fa-solid fa-chart-line"></i> Expert
+                </a>
+            </div>
+            <div class="lang-switcher">
+                <a href="/analyses/AAPL" class="lang-flag active" title="Français">🇫🇷</a>
+            </div>
+        </div>
+        <div style="margin-top:0.5rem; font-size:0.8rem; color:#64748b;">
             15 Février 2026 &bull; Données temps réel via MarketWatch Gateway
             <button onclick="document.getElementById('historyModal').style.display='flex'" style="background:none; border:1px solid #cbd5e1; color:#64748b; cursor:pointer; margin-left:0.75rem; padding:4px 10px; border-radius:6px; font-size:0.75rem; vertical-align:middle;" title="Historique des analyses">
                 <i class="fa-solid fa-clock-rotate-left"></i> Historique
@@ -841,6 +852,59 @@
     function openChartModal(){document.getElementById('chartModal').style.display='flex'}
     function closeChartModal(){document.getElementById('chartModal').style.display='none'}
     document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChartModal()});
+    </script>
+
+    <!-- Variants Switcher Script -->
+    <script>
+    (function() {
+        var currentLevel = document.documentElement.dataset.level || 'expert';
+        var currentLang = document.documentElement.lang || 'fr';
+        var tickerEl = document.querySelector('.ticker-symbol');
+        if (!tickerEl) return;
+        var ticker = tickerEl.textContent.trim();
+        var basePath = '/analyses/' + ticker + '/';
+
+        fetch(basePath + 'variants.json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var switcher = document.querySelector('.article-switcher');
+                if (!switcher || !data.variants) return;
+
+                var levels = {};
+                data.variants.forEach(function(v) {
+                    if (!levels[v.level]) levels[v.level] = [];
+                    levels[v.level].push(v.lang);
+                });
+
+                var levelIcons = { beginner: 'fa-seedling', intermediate: 'fa-chart-simple', expert: 'fa-chart-line' };
+                var levelLabels = { beginner: 'Beginner', intermediate: 'Intermediate', expert: 'Expert' };
+                var levelOrder = ['beginner', 'intermediate', 'expert'];
+                var levelHtml = '';
+                levelOrder.forEach(function(lvl) {
+                    if (!levels[lvl]) return;
+                    var targetLang = levels[lvl].indexOf(currentLang) !== -1 ? currentLang : levels[lvl][0];
+                    var active = lvl === currentLevel ? ' active' : '';
+                    var href = basePath + lvl + '/' + targetLang;
+                    levelHtml += '<a href="' + href + '" class="level-tab' + active + '">'
+                        + '<i class="fa-solid ' + (levelIcons[lvl] || 'fa-circle') + '"></i> '
+                        + levelLabels[lvl] + '</a>';
+                });
+
+                var langFlags = { fr:'\u{1F1EB}\u{1F1F7}', en:'\u{1F1EC}\u{1F1E7}', ar:'\u{1F1F8}\u{1F1E6}', de:'\u{1F1E9}\u{1F1EA}', es:'\u{1F1EA}\u{1F1F8}', zh:'\u{1F1E8}\u{1F1F3}', ja:'\u{1F1EF}\u{1F1F5}' };
+                var langNames = { fr:'Français', en:'English', ar:'\u0627\u0644\u0639\u0631\u0628\u064A\u0629', de:'Deutsch', es:'Español', zh:'\u4E2D\u6587', ja:'\u65E5\u672C\u8A9E' };
+                var langHtml = '';
+                var currentLevelLangs = data.variants.filter(function(v) { return v.level === currentLevel; });
+                currentLevelLangs.forEach(function(v) {
+                    var active = v.lang === currentLang ? ' active' : '';
+                    langHtml += '<a href="' + basePath + v.level + '/' + v.lang + '" class="lang-flag' + active
+                        + '" title="' + (langNames[v.lang] || v.lang) + '">' + (langFlags[v.lang] || v.lang) + '</a>';
+                });
+
+                switcher.innerHTML = '<div class="level-switcher">' + levelHtml + '</div>'
+                    + '<div class="lang-switcher">' + langHtml + '</div>';
+            })
+            .catch(function() { /* No variants = single variant, keep default switcher */ });
+    })();
     </script>
 
 </body>
