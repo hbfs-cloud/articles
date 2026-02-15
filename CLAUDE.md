@@ -68,29 +68,52 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 7. Langue: Français, ton institutionnel mais accessible
 
 ### "Analyse [TICKER]" (ex: "Analyse BMNR", "Analyse BTC")
-### "analyse TICKER [level=expert] [langs=fr,en,ar]"
+Par défaut, génère **toutes les 6 variantes** (expert + beginner) × (fr + en + ar).
+L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` ou `analyse AAPL beginner en`.
+
 1. **Parser les paramètres** :
-   - `level` : beginner, intermediate, expert (défaut: expert)
-   - `langs` : liste de langues séparées par des virgules (défaut: fr)
-   - Peut aussi accepter : `AAPL expert fr,en,ar` ou `AAPL beginner fr`
+   - `level` : beginner, expert (défaut: **les deux**)
+   - `langs` : fr, en, ar (défaut: **les trois**)
+   - Combinaisons par défaut = 6 variantes : expert/fr, expert/en, expert/ar, beginner/fr, beginner/en, beginner/ar
 2. **Si l'analyse existe déjà** : archiver l'ancienne version
    - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
    - Déplacer l'ancien `index.html` dans l'archive
    - Copier le CSS dans l'archive
-3. Collecter via MCP:
+3. **Collecter via MCP** :
    - `GetInstruments` symbols=[TICKER]
    - `QueryData` types: quote,bars_daily,bars_intraday,financials,earnings_quarterly,holders,stats,support_resistance,volume_profile,sentiment_overall,trading_signals,analyst_actions,insider_transactions,ctb,news
    - `QueryData` types: options_chain si applicable
 4. Recherche web pour actualités récentes
-5. **Générer toutes les variantes demandées** :
-   - Pour chaque combinaison (level × lang), créer `analyses/{TICKER}/{level}/{lang}/index.html`
-   - Le root `analyses/{TICKER}/index.html` est toujours la version expert/fr
-   - Adapter le contenu selon le niveau (voir PROMPT.md Section 4)
+5. **Générer la version expert/fr d'abord** (= `analyses/{TICKER}/index.html`, le root)
+   - Inclure le switcher langue/niveau dans le hero
+   - Utiliser ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
+6. **Générer les 5 autres variantes** en parallèle (via agents) :
+   - `analyses/{TICKER}/expert/en/index.html` — traduction anglaise expert
+   - `analyses/{TICKER}/expert/ar/index.html` — traduction arabe expert (dir="rtl")
+   - `analyses/{TICKER}/beginner/fr/index.html` — version simplifiée FR
+   - `analyses/{TICKER}/beginner/en/index.html` — version simplifiée EN
+   - `analyses/{TICKER}/beginner/ar/index.html` — version simplifiée AR (dir="rtl")
+   - Adapter le contenu selon le niveau (beginner = plus pédagogique, moins de jargon)
    - Adapter la langue (traduire tout le contenu)
-   - Inclure le switcher langue/niveau dans chaque variante
-6. **Créer/mettre à jour `variants.json`** dans le dossier ticker
-7. Mettre à jour la modale Historique avec les versions archivées
-8. Mettre à jour index.html principal (carte avec data-grade + badge)
+   - Chaque variante inclut le switcher pour naviguer entre les versions
+7. **Créer/mettre à jour `variants.json`** dans le dossier ticker :
+   ```json
+   {
+     "ticker": "AAPL",
+     "default": { "level": "expert", "lang": "fr" },
+     "variants": [
+       { "level": "expert", "lang": "fr", "path": "." },
+       { "level": "expert", "lang": "en", "path": "expert/en" },
+       { "level": "expert", "lang": "ar", "path": "expert/ar" },
+       { "level": "beginner", "lang": "fr", "path": "beginner/fr" },
+       { "level": "beginner", "lang": "en", "path": "beginner/en" },
+       { "level": "beginner", "lang": "ar", "path": "beginner/ar" }
+     ],
+     "date": "YYYY-MM-DD"
+   }
+   ```
+8. Mettre à jour la modale Historique avec les versions archivées
+9. Mettre à jour index.html principal (carte avec data-grade + badge)
 
 ### "Scanner" / "Scan du jour"
 1. Collecter via MCP:
@@ -119,3 +142,23 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 - **Données**: Toujours citer les sources, disclaimer en bas
 - **Badges**: badge-red (alerte), badge-blue (info), badge-green (positif), badge-purple (spécial)
 - **Classes CSS**: content-card, data-table, metric-grid/metric-card, risk-matrix/risk-item, pedagogy-box, didactic-box, alert-box, geo-alert, calendar-days-grid
+
+## Tâches Planifiées (Scheduled Tasks)
+
+Les tâches planifiées sont gérées via cron et documentées dans `scripts/scheduled-tasks.json`.
+
+### Commandes utilisateur
+- **"Liste les tâches planifiées"** / **"scheduled tasks"** : Lire `scripts/scheduled-tasks.json` et afficher les tâches actives avec leur schedule, description et dernier run. Vérifier aussi via `crontab -l`.
+- **"Logs du scanner"** : Lire le dernier fichier dans `scripts/logs/`.
+
+### Tâches actives
+
+| Tâche | Schedule | Script | Description |
+|-------|----------|--------|-------------|
+| Scanner Quotidien | Lun-Ven 23h00 | `scripts/daily-scanner.sh` | Génère le scanner du jour via Claude CLI, met à jour index.html, commit & push |
+
+### Architecture
+- **Cron** : Gère le scheduling (`crontab -l` pour vérifier)
+- **Script** : `scripts/daily-scanner.sh` appelle `claude -p` avec le prompt de génération
+- **Logs** : `scripts/logs/scanner-YYYYMMDD.log`
+- **Manifest** : `scripts/scheduled-tasks.json` (source de vérité pour "lister les tâches")
