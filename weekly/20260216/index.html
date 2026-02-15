@@ -1889,22 +1889,22 @@
         }]
     });
 
-    // 6. Crypto Drawdown from ATH
+    // 6. Crypto Drawdown from ATH (positive values displayed as negative)
     initEC('cryptoDrawdownChart', {
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + ': ' + p[0].value + '% depuis ATH'; } },
-        grid: { left: '3%', right: '6%', bottom: '3%', top: '8%', containLabel: true },
-        xAxis: { type: 'value', max: 0, min: -70, axisLabel: { formatter: '{value}%', color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } }, inverse: true },
-        yAxis: { type: 'category', data: ['Bitcoin', 'Ethereum', 'XRP', 'Solana', 'DOGE'], axisLabel: { color: '#1e293b', fontSize: 12, fontWeight: 600 }, axisTick: { show: false }, axisLine: { show: false }, position: 'right' },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + ': -' + p[0].value + '% depuis ATH'; } },
+        grid: { left: '3%', right: '8%', bottom: '3%', top: '8%', containLabel: true },
+        xAxis: { type: 'value', max: 70, min: 0, axisLabel: { formatter: function(v) { return '-' + v + '%'; }, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+        yAxis: { type: 'category', data: ['Bitcoin', 'Ethereum', 'XRP', 'Solana', 'DOGE'], axisLabel: { color: '#1e293b', fontSize: 12, fontWeight: 600 }, axisTick: { show: false }, axisLine: { show: false } },
         series: [{
             type: 'bar', barWidth: '55%',
             data: [
-                { value: -44, itemStyle: { color: '#f97316' } },
-                { value: -58, itemStyle: { color: '#6366f1' } },
-                { value: -60, itemStyle: { color: '#64748b' } },
-                { value: -65, itemStyle: { color: '#14b8a6' } },
-                { value: -66, itemStyle: { color: '#a855f7' } }
+                { value: 44, itemStyle: { color: '#f97316' } },
+                { value: 58, itemStyle: { color: '#6366f1' } },
+                { value: 60, itemStyle: { color: '#64748b' } },
+                { value: 65, itemStyle: { color: '#14b8a6' } },
+                { value: 66, itemStyle: { color: '#a855f7' } }
             ],
-            label: { show: true, position: 'left', formatter: '{c}%', fontSize: 12, fontWeight: 700, color: '#dc2626' }
+            label: { show: true, position: 'right', formatter: function(p) { return '-' + p.value + '%'; }, fontSize: 12, fontWeight: 700, color: '#dc2626' }
         }]
     });
 
@@ -1932,32 +1932,34 @@
         }]
     });
 
-    // 8. Sector Rotation Radar
+    // 8. Sector Rotation Radar (values shifted +7 to keep all positive, max=14)
+    // Raw 5J: Utilities +3%, Matériaux +2%, Financials +2%, Industrials +1%, Energy +1.5%, Healthcare +0.5%, Consumer -1%, Tech -2%
+    // Raw 21J: Utilities +5%, Matériaux +4%, Financials +3%, Industrials +2%, Energy +2.5%, Healthcare +1%, Consumer -3%, Tech -6%
     initEC('sectorRadarChart', {
-        tooltip: {},
-        legend: { data: ['5 Jours', '21 Jours'], bottom: 0, textStyle: { color: '#64748b', fontSize: 12 } },
+        tooltip: { formatter: function(p) { var names = ['Utilities','Matériaux','Financials','Industrials','Energy','Healthcare','Consumer','Tech']; var s = '<b>' + p.name + '</b>'; p.value.forEach(function(v,i) { s += '<br/>' + names[i] + ': ' + (v > 7 ? '+' : '') + (v - 7) + '%'; }); return s; } },
+        legend: { data: ['Perf. 5 Jours', 'Perf. 21 Jours'], bottom: 0, textStyle: { color: '#64748b', fontSize: 12 } },
         radar: {
             indicator: [
-                { name: 'Utilities', max: 6 },
-                { name: 'Matériaux', max: 6 },
-                { name: 'Financials', max: 6 },
-                { name: 'Industrials', max: 6 },
-                { name: 'Energy', max: 6 },
-                { name: 'Healthcare', max: 6 },
-                { name: 'Consumer', max: 6 },
-                { name: 'Tech', max: 6 }
+                { name: 'Utilities\n+3% / +5%', max: 14 },
+                { name: 'Matériaux\n+2% / +4%', max: 14 },
+                { name: 'Financials\n+2% / +3%', max: 14 },
+                { name: 'Industrials\n+1% / +2%', max: 14 },
+                { name: 'Energy\n+1.5% / +2.5%', max: 14 },
+                { name: 'Healthcare\n+0.5% / +1%', max: 14 },
+                { name: 'Consumer\n-1% / -3%', max: 14 },
+                { name: 'Tech\n-2% / -6%', max: 14 }
             ],
-            shape: 'polygon',
+            shape: 'polygon', radius: '65%',
             splitArea: { areaStyle: { color: ['#f8fafc', '#ffffff', '#f8fafc', '#ffffff'] } },
             axisLine: { lineStyle: { color: '#e2e8f0' } },
             splitLine: { lineStyle: { color: '#e2e8f0' } },
-            axisName: { color: '#1e293b', fontWeight: 600, fontSize: 11 }
+            axisName: { color: '#1e293b', fontWeight: 600, fontSize: 10 }
         },
         series: [{
             type: 'radar',
             data: [
-                { value: [3, 2, 2, 1, 1.5, 0.5, -1, -2].map(function(v) { return v + 3; }), name: '5 Jours', lineStyle: { color: '#3b82f6', width: 2 }, areaStyle: { color: 'rgba(59,130,246,0.15)' }, itemStyle: { color: '#3b82f6' } },
-                { value: [5, 4, 3, 2, 2, 1, -3, -6].map(function(v) { return v + 3; }), name: '21 Jours', lineStyle: { color: '#8b5cf6', width: 2 }, areaStyle: { color: 'rgba(139,92,246,0.15)' }, itemStyle: { color: '#8b5cf6' } }
+                { value: [10, 9, 9, 8, 8.5, 7.5, 6, 5], name: 'Perf. 5 Jours', lineStyle: { color: '#3b82f6', width: 2.5 }, areaStyle: { color: 'rgba(59,130,246,0.2)' }, itemStyle: { color: '#3b82f6' }, symbol: 'circle', symbolSize: 6 },
+                { value: [12, 11, 10, 9, 9.5, 8, 4, 1], name: 'Perf. 21 Jours', lineStyle: { color: '#8b5cf6', width: 2.5 }, areaStyle: { color: 'rgba(139,92,246,0.15)' }, itemStyle: { color: '#8b5cf6' }, symbol: 'diamond', symbolSize: 7 }
             ]
         }]
     });
