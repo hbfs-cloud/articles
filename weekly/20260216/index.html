@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" dir="ltr" data-level="expert">
 
 <head>
     <meta charset="UTF-8">
@@ -201,7 +201,20 @@
                 <span class="badge badge-blue">FOMC MINUTES MERCREDI</span>
                 <span class="badge badge-green">OR > $5,000</span>
             </div>
-            <div style="margin-top:1.5rem;">
+            <!-- Language & Level Switcher -->
+            <div class="article-switcher" style="margin-top:1.5rem; display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+                <div class="level-switcher" style="display:flex; gap:0.25rem; background:rgba(255,255,255,0.15); border-radius:8px; padding:3px;">
+                    <button class="level-tab active" data-level="expert" style="padding:4px 12px; border:none; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; background:white; color:#0f172a;">Expert</button>
+                    <button class="level-tab" data-level="beginner" style="padding:4px 12px; border:none; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; background:transparent; color:#64748b;">Beginner</button>
+                </div>
+                <div class="lang-switcher" style="display:flex; gap:0.5rem; align-items:center;">
+                    <a class="lang-flag active" data-lang="fr" title="Français" style="font-size:1.2rem; text-decoration:none; opacity:1; cursor:pointer;">🇫🇷</a>
+                    <a class="lang-flag" data-lang="en" title="English" style="font-size:1.2rem; text-decoration:none; opacity:0.5; cursor:pointer;">🇬🇧</a>
+                    <a class="lang-flag" data-lang="ar" title="العربية" style="font-size:1.2rem; text-decoration:none; opacity:0.5; cursor:pointer;">🇸🇦</a>
+                </div>
+            </div>
+
+            <div style="margin-top:1rem;">
                 <button onclick="document.getElementById('weeklyHistoryModal').style.display='flex'" style="background:none; border:1px solid #cbd5e1; color:#64748b; cursor:pointer; padding:6px 14px; border-radius:8px; font-size:0.8rem; font-family:inherit; transition:0.2s;" onmouseover="this.style.borderColor='#2563eb';this.style.color='#2563eb'" onmouseout="this.style.borderColor='#cbd5e1';this.style.color='#64748b'">
                     <i class="fa-solid fa-clock-rotate-left"></i> Historique des rapports
                 </button>
@@ -1777,6 +1790,35 @@
     }
     function closeChartModal(){document.getElementById('chartModal').style.display='none';}
     document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChartModal();});
+    </script>
+
+    <!-- Variants Switcher Script -->
+    <script>
+    (function(){
+        fetch('variants.json').then(function(r){return r.json()}).then(function(data){
+            var current = data.default;
+            // Level tabs
+            document.querySelectorAll('.level-tab').forEach(function(tab){
+                tab.addEventListener('click',function(){
+                    var level = this.dataset.level;
+                    var lang = document.querySelector('.lang-flag.active');
+                    var langCode = lang ? lang.dataset.lang : current.lang;
+                    var variant = data.variants.find(function(v){return v.level===level && v.lang===langCode});
+                    if(variant) window.location.href = variant.path + '/';
+                });
+            });
+            // Lang flags
+            document.querySelectorAll('.lang-flag').forEach(function(flag){
+                flag.addEventListener('click',function(){
+                    var lang = this.dataset.lang;
+                    var levelTab = document.querySelector('.level-tab.active');
+                    var level = levelTab ? levelTab.dataset.level : current.level;
+                    var variant = data.variants.find(function(v){return v.level===level && v.lang===lang});
+                    if(variant) window.location.href = variant.path + '/';
+                });
+            });
+        }).catch(function(){});
+    })();
     </script>
 
 </body>
