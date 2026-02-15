@@ -145,20 +145,19 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
 
 ## Tâches Planifiées (Scheduled Tasks)
 
-Les tâches planifiées sont gérées via cron et documentées dans `scripts/scheduled-tasks.json`.
+Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bot`), pas via cron.
 
-### Commandes utilisateur
-- **"Liste les tâches planifiées"** / **"scheduled tasks"** : Lire `scripts/scheduled-tasks.json` et afficher les tâches actives avec leur schedule, description et dernier run. Vérifier aussi via `crontab -l`.
-- **"Logs du scanner"** : Lire le dernier fichier dans `scripts/logs/`.
+### Architecture
+- **Bot Discord** : `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/`
+- **Schedules** : `claude-discord-bot/schedules.json` (source de vérité)
+- **Commandes Discord** :
+  - `every weekday at 23:00 articles scan du jour` — Scanner quotidien Lun-Ven 23h
+  - `every sunday at 18:00 articles nouvelle analyse weekly` — Weekly hebdo
+  - `schedules` / `list` — Lister toutes les tâches planifiées
+  - `pause #1` / `resume #1` / `cancel #1` / `run #1` — Gérer les tâches
 
 ### Tâches actives
 
-| Tâche | Schedule | Script | Description |
-|-------|----------|--------|-------------|
-| Scanner Quotidien | Lun-Ven 23h00 | `scripts/daily-scanner.sh` | Génère le scanner du jour via Claude CLI, met à jour index.html, commit & push |
-
-### Architecture
-- **Cron** : Gère le scheduling (`crontab -l` pour vérifier)
-- **Script** : `scripts/daily-scanner.sh` appelle `claude -p` avec le prompt de génération
-- **Logs** : `scripts/logs/scanner-YYYYMMDD.log`
-- **Manifest** : `scripts/scheduled-tasks.json` (source de vérité pour "lister les tâches")
+| Tâche | Schedule | Commande Discord |
+|-------|----------|-----------------|
+| Scanner Quotidien | Lun-Ven 23h00 | `every weekday at 23:00 articles scan du jour` |
