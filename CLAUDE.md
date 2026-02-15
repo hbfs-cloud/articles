@@ -29,6 +29,13 @@ articles/
 │   │   └── archive/              # Versions précédentes
 │   │       └── YYYYMMDD/
 │   │           └── index.html
+├── scanner/                      # Scans quotidiens algorithmiques
+│   └── YYYYMMDD/                 # Format de nommage: date du scan
+│       ├── index.html            # Default = expert/fr
+│       ├── assets/report.css     # CSS spécifique (thème dark)
+│       ├── variants.json         # Manifest des variantes
+│       ├── expert/{en,ar}/       # Variantes expert
+│       └── beginner/{fr,en,ar}/  # Variantes débutant
 ├── CLAUDE.md                     # Ce fichier (instructions pour Claude)
 ├── PROMPT.md                     # Prompts détaillés pour chaque type d'analyse
 └── CNAME                         # DNS: market-watch.xyz
@@ -84,6 +91,23 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 6. **Créer/mettre à jour `variants.json`** dans le dossier ticker
 7. Mettre à jour la modale Historique avec les versions archivées
 8. Mettre à jour index.html principal (carte avec data-grade + badge)
+
+### "Scanner" / "Scan du jour"
+1. Collecter via MCP:
+   - `RunAutoScreener` pour détection du régime + candidats
+   - `RunScreener` avec 3 DSL complémentaires (oversold, momentum, breakout)
+   - `QueryData` types: quote pour les 10 tickers retenus
+2. WebSearch pour catalyseurs récents
+3. Créer `scanner/YYYYMMDD/index.html` (thème dark)
+4. Créer les variantes multilangue/multiniveau
+5. Mettre à jour le tab Scanner dans index.html
+6. Voir PROMPT.md Section 5 pour le template complet
+
+### Landing Page (index.html) — Tabs
+4 tabs principaux : **Hebdo** (weekly), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
+- URL state : `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
+- Grade filter : `?grade=A` (tab analyses uniquement)
+- Recherche : symbole ticker uniquement
 
 ## Conventions
 - **Langue**: Français par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
