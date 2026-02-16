@@ -124,6 +124,9 @@ Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé"
 
 ## 2. ANALYSE INDIVIDUELLE (Ticker Analysis)
 
+### Référence
+**L'analyse POET (`analyses/POET/`) est la référence absolue** pour la charte graphique, la structure HTML, les classes CSS, les ECharts, le switcher langue/niveau, et les 6 variantes (expert/fr, expert/en, expert/ar, beginner/fr, beginner/en, beginner/ar). Toute nouvelle analyse doit suivre ce modèle en termes de qualité, longueur (~1600+ lignes pour expert/fr), structure des sections, et style visuel.
+
 ### Objectif
 Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy inspiré SLNH : headers avec emojis, bullet points courts, verdicts clairs par section. L'objectif est qu'un lecteur comprenne rapidement ce que fait la boîte, son setup, ses risques et si c'est un trade intéressant.
 
