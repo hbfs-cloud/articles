@@ -22,8 +22,53 @@ Rapport de niveau institutionnel à destination de retail qui couvre tous les gr
 13. **Matrice des Risques** - 5-6 risques avec probabilité et impact + signaux faibles / cygnes noirs
 14. **Allocation Tactique** - Donut chart + table avec rationale et changements vs semaine précédente
 15. **Trades de la Semaine** (NOUVEAU) - 3 positions longues swing argumentées (voir détail ci-dessous)
-16. **Outlook** - 3 scénarios (haussier/central/baissier) avec probabilités + "Ce qu'il faut surveiller"
-17. **Sources** - Toutes les sources organisées par catégorie avec liens
+16. **Leaders Thématiques & Sectoriels** - Top tickers par thème/secteur, saisonnalités, corrélations clés (voir détail ci-dessous)
+17. **Outlook** - 3 scénarios (haussier/central/baissier) avec probabilités + "Ce qu'il faut surveiller"
+18. **Sources** - Toutes les sources organisées par catégorie avec liens
+
+### Section 16 — Leaders Thématiques & Sectoriels (Détail)
+
+Vue synthétique des forces en présence sur le marché. **Format ultra-light** pour ne pas saturer le contexte : uniquement tickers + métriques essentielles.
+
+#### Collecte des Données
+- `GetReferentialData` category=theme → liste des thèmes
+- `GetReferentialData` theme={theme} pour les 5-6 thèmes les plus actifs (AI, Cloud, Cybersecurity, Clean Energy, etc.)
+- `GetReferentialData` category=sector → rotation sectorielle
+- `GetReferentialData` sector={sector} pour les 3 secteurs les plus forts et 3 les plus faibles
+- `QueryData` types=seasonality symbols={top tickers}
+- `GetReferentialData` correlated_with={SPY,BTC-USD,GLD,TLT}
+
+#### Sous-sections
+
+**a) Leaders par Thème (table ultra-compacte)**
+Table `.data-table` avec colonnes : Thème | #1 Ticker | Perf 1M | #2 Ticker | Perf 1M | #3 Ticker | Perf 1M
+- 6-8 thèmes max (AI, Semiconductors, Cloud, Cybersecurity, Clean Energy, Cannabis, Space, etc.)
+- Uniquement le ticker + perf 1M, pas de description longue
+- Badge vert/rouge pour la tendance du thème
+
+**b) Rotation Sectorielle — Podium (table ultra-compacte)**
+Table `.data-table` avec colonnes : Secteur | Leader | Perf 1W | Perf 1M | Flow (In/Out)
+- Top 3 secteurs en inflows + Bottom 3 en outflows
+- Badge 🟢 In / 🔴 Out pour les flux
+
+**c) Saisonnalités Actives**
+Table `.data-table` avec colonnes : Ticker | Pattern | Win Rate | Avg Return | Période
+- 4-6 patterns saisonniers actifs cette semaine (ex: "AAPL tend à monter 72% du temps en mars")
+- Données via `QueryData` types=seasonality
+- Ne retenir que les patterns avec win rate > 65%
+
+**d) Corrélations Clés (matrice compacte)**
+Table `.data-table` avec colonnes : Pair | Corrélation | Signal
+- 8-10 paires les plus pertinentes (SPY/QQQ, BTC/ETH, GLD/SLV, USD/TLT, etc.)
+- Mentionner les décorrélations anormales (si BTC et SPY divergent soudainement = signal)
+- Signal : "Normal", "Divergence", "Breakout corrélation"
+
+#### Directives Section 16
+- **COMPACT** : uniquement tickers + chiffres, pas de paragraphes explicatifs (sauf 1 pedagogy-box de synthèse à la fin)
+- Ne pas répéter les données déjà présentes dans la section Rotation Sectorielle (#12) — complémentaire
+- Pedagogy-box finale : "Ce que les leaders nous disent" (3 phrases max sur ce que la configuration actuelle signale)
+
+---
 
 ### Section 15 — Trades de la Semaine (Détail)
 
@@ -82,7 +127,7 @@ Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé"
 ### Objectif
 Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy inspiré SLNH : headers avec emojis, bullet points courts, verdicts clairs par section. L'objectif est qu'un lecteur comprenne rapidement ce que fait la boîte, son setup, ses risques et si c'est un trade intéressant.
 
-### 15 Sections Obligatoires
+### 17 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
 - Ticker, exchange, date, lien retour site (`href="/"`)
@@ -180,7 +225,189 @@ Utiliser des `.risk-card` pour chaque élément :
 - Régime de marché actuel (risk-on / risk-off / neutre)
 - Impact macro spécifique sur le titre
 
-#### 13. Analyse des Risques (REFONTE UX — World-Class)
+#### 13. Bottom Estimation & Setups Avancés (EXPERT ONLY)
+**Section réservée au mode expert** — analyse de précision pour l'estimation des points bas et la détection de setups en formation.
+
+**a) Estimation du Bottom (`.content-card` avec gauge ECharts)**
+
+Utiliser toutes les données disponibles pour triangler une zone de bottom probable :
+
+- **Volume Profile** : identifier le Point of Control (POC) et les Value Areas (VA High/Low) via `QueryData` types=volume_profile. Le bottom probable se situe souvent au VAL ou en dessous.
+- **Support & Résistance** : `QueryData` types=support_resistance — croiser les niveaux S/R avec le volume profile
+- **Fibonacci Retracements** : calculer les niveaux 0.382, 0.5, 0.618, 0.786 depuis le dernier swing high
+- **Moyennes mobiles clés** : SMA 200, EMA 50, VWAP — zones de confluence
+- **RSI historique** : identifier les niveaux de RSI auxquels le titre a historiquement rebondi (RSI floor)
+- **ATR-based target** : projeter un bottom via ATR × multiplicateur depuis le dernier support
+- **Options Max Pain** : `QueryData` types=options_chain — le max pain agit comme un aimant
+- **Analyse Wyckoff** : phase actuelle (Spring ? Test ? Sign of Strength ?)
+- **Divergences** : RSI/MACD bullish divergences sur daily et weekly
+
+**Format de sortie** :
+```html
+<div class="bottom-estimate">
+    <h4>Zone de Bottom Estimée</h4>
+    <div class="bottom-levels">
+        <div class="bottom-level bottom-optimistic">
+            <span class="label">Scénario Optimiste</span>
+            <span class="price">${prix}</span>
+            <span class="basis">Confluence SMA200 + Fib 0.382</span>
+        </div>
+        <div class="bottom-level bottom-base">
+            <span class="label">Scénario Central</span>
+            <span class="price">${prix}</span>
+            <span class="basis">POC + Fib 0.618 + RSI floor</span>
+        </div>
+        <div class="bottom-level bottom-pessimistic">
+            <span class="label">Scénario Pessimiste</span>
+            <span class="price">${prix}</span>
+            <span class="basis">VAL + Fib 0.786 + Spring Wyckoff</span>
+        </div>
+    </div>
+    <div class="bottom-confidence">Confiance : {N}% — basée sur {N} confluences</div>
+</div>
+```
+
+**Barres de confluence** : plus il y a de niveaux techniques qui convergent vers une zone, plus la confiance est élevée. Afficher visuellement les confluences avec des barres horizontales (ECharts bar chart horizontal).
+
+**b) Setups en Formation**
+
+Lister les setups techniques en cours de formation (pas encore déclenchés) :
+- **Pattern en formation** : triangle, wedge, cup & handle, head & shoulders (inverse), flag
+- **Accumulation Wyckoff** : PS, SC, AR, ST, Spring — identifier la phase
+- **Compression de volatilité** : Bollinger Bands squeeze, ATR en contraction → breakout imminent
+- **Divergences en construction** : RSI/MACD qui divergent du prix
+- **Volume dry-up** : volume qui décroît dans un range = accumulation silencieuse
+
+Pour chaque setup :
+```html
+<div class="setup-card">
+    <div class="setup-header">
+        <span class="setup-pattern">{Pattern}</span>
+        <span class="setup-status badge badge-blue">En formation</span>
+        <span class="setup-timeframe">{Timeframe}</span>
+    </div>
+    <div class="setup-body">
+        <p><strong>Trigger :</strong> {condition de déclenchement}</p>
+        <p><strong>Target :</strong> {objectif si déclenché}</p>
+        <p><strong>Invalidation :</strong> {condition d'annulation}</p>
+    </div>
+    <div class="setup-progress">
+        <div class="progress-bar" style="width:{N}%"></div>
+        <span>Formation : {N}% complète</span>
+    </div>
+</div>
+```
+
+#### 14. Détection de Manipulations & Signaux Sociaux (EXPERT ONLY)
+**Section critique** — analyse forensique des anomalies de marché et surveillance des réseaux sociaux.
+
+**a) Anomalies de Marché & Manipulations Potentielles**
+
+Collecter et croiser les données suivantes :
+- `QueryData` types=dark_pool — activité dark pool anormale
+- `QueryData` types=ftd_threshold — Failures-to-Deliver (FTD) élevés = manipulation potentielle
+- `QueryData` types=ctb,ctb_history — Cost to Borrow anormal (spikes = squeeze en préparation ou manipulation short)
+- `QueryData` types=unusual_options — options unusuelles (gros blocks, sweeps) = informed trading
+- `QueryData` types=insider_transactions — insiders qui vendent massivement avant une annonce
+- `QueryData` types=bars_intraday — spikes de volume intraday inexpliqués (dark pool prints, block trades)
+
+**Signaux de manipulation à détecter** :
+
+| Signal | Données | Interprétation |
+|--------|---------|----------------|
+| **Spoofing/Layering** | Spikes de volume sans mouvement de prix | Ordres fictifs pour manipuler le carnet |
+| **Wash Trading** | Volume anormalement élevé vs float | Échanges entre entités liées |
+| **Short Ladder Attack** | Baisses rapides sur faible volume | Shorts coordonnés avec petits lots |
+| **FTD Accumulation** | FTDs > 0.5% du float | Naked shorting potentiel |
+| **Dark Pool Divergence** | Dark pool price vs lit market | Accumulation/distribution cachée |
+| **Insider Front-Running** | Insiders trade avant news | Délit d'initié potentiel |
+| **Options Sweeps** | Gros block calls/puts OTM | Informed trading avant catalyseur |
+
+**Format de sortie** :
+```html
+<div class="manipulation-alert">
+    <div class="alert-header">
+        <i class="fa-solid fa-magnifying-glass-dollar"></i>
+        <h4>Anomalie Détectée : {Type}</h4>
+        <span class="badge badge-{severity}">{Sévérité}</span>
+    </div>
+    <div class="alert-body">
+        <p><strong>Données :</strong> {chiffres factuels}</p>
+        <p><strong>Interprétation :</strong> {ce que ça pourrait signifier}</p>
+        <p><strong>Historique :</strong> {est-ce récurrent ou nouveau ?}</p>
+    </div>
+</div>
+```
+
+**IMPORTANT** : Ne jamais accuser directement. Utiliser des formulations prudentes : "pattern compatible avec...", "anomalie qui pourrait suggérer...", "historiquement associé à...". Citer les données factuelles et laisser le lecteur tirer ses conclusions.
+
+**b) Analyse Tendances Réseaux Sociaux**
+
+Collecter via :
+- `QueryData` types=sentiment_stocktwits,sentiment_reddit,sentiment_youtube — sentiment multi-plateforme
+- `QueryData` types=stocktwits_messages — messages récents pour analyse qualitative
+- WebSearch "{TICKER} reddit wallstreetbets" / "{TICKER} stocktwits pump" / "{TICKER} twitter fintwit"
+
+**Éléments à analyser** :
+
+| Métrique | Source | Signal |
+|----------|--------|--------|
+| **Volume de mentions** | StockTwits, Reddit, YouTube | Spike soudain = attention (pump ou catalyseur réel) |
+| **Ratio Bull/Bear** | StockTwits sentiment | > 80% bulls après +50% = euphorie dangereuse |
+| **Comptes suspects** | Reddit, StockTwits | Comptes récents qui postent massivement = pump coordonné |
+| **YouTube pumpers** | YouTube sentiment | Vidéos "NEXT 100X" avec thumbnails clickbait = red flag |
+| **Hashtag velocity** | WebSearch | Hashtags trending soudainement sans catalyseur fondamental |
+| **Divergence prix/sentiment** | Croisement données | Prix monte mais sentiment neutre = institutionnel. Prix stable mais sentiment explose = pump retail |
+
+**Détection Pump & Dump** :
+
+Critères d'alerte (au moins 3 sur 6 = alerte P&D) :
+1. Volume de mentions multiplié par > 5x en 48h sans news fondamentale
+2. Comptes de moins de 30 jours représentent > 40% des posts
+3. Promesses de rendement spécifiques ("going to $X")
+4. Prix a déjà monté de > 30% quand le buzz commence (= distribution)
+5. Float faible (< 20M shares) facilitant la manipulation
+6. Absence de couverture institutionnelle/analyste
+
+**Format de sortie** :
+```html
+<div class="social-radar">
+    <h4><i class="fa-solid fa-satellite-dish"></i> Radar Social</h4>
+    <div class="social-metrics">
+        <div class="social-metric">
+            <i class="fa-brands fa-reddit"></i>
+            <span class="platform">Reddit</span>
+            <span class="mentions">{N} mentions/24h</span>
+            <span class="trend badge badge-{color}">{↑X% | Stable | ↓X%}</span>
+        </div>
+        <!-- StockTwits, YouTube, Twitter/X -->
+    </div>
+    <div class="pump-dump-score">
+        <h4>Score Pump & Dump : {N}/6</h4>
+        <div class="pd-checklist">
+            <div class="pd-item {pass|fail}"><i class="fa-solid fa-{check|xmark}"></i> {Critère}</div>
+            <!-- 6 critères -->
+        </div>
+        <div class="pd-verdict badge badge-{green|orange|red}">{Clean | Suspect | Alerte P&D}</div>
+    </div>
+</div>
+```
+
+**Verdicts possibles** :
+- **Score 0-1/6** → `badge-green` "Clean" — Activité sociale normale
+- **Score 2-3/6** → `badge-purple` "Suspect" — Surveiller de près, ne pas FOMO
+- **Score 4-6/6** → `badge-red` "Alerte P&D" — Très probablement une tentative de pump & dump
+
+**c) Synthèse Intégrité du Marché**
+
+Pedagogy-box finale combinant les deux sous-sections :
+- "Le marché de {TICKER} est {propre / sous surveillance / suspect}"
+- Résumé des anomalies détectées (ou absence d'anomalie)
+- Conseil actionnable : "Trader normalement" / "Taille réduite, stops serrés" / "Éviter jusqu'à normalisation"
+
+---
+
+#### 15. Analyse des Risques (REFONTE UX — World-Class)
 **Section critique** — format premium avec risk-summary, risk-grid et risk-cards enrichies.
 
 **Structure obligatoire** :
@@ -315,7 +542,7 @@ Utiliser des `.risk-card` pour chaque élément :
 
 Terminer par un **résumé des risques** en pedagogy-box : "Pourquoi le prix est bas / élevé" en 3-4 phrases.
 
-#### 14. Trade Idea (`.trade-box`)
+#### 16. Trade Idea (`.trade-box`)
 Format visuel avec classes CSS dédiées :
 - `.trade-levels` grid avec 4 cartes :
   - `.trade-entry` : prix d'entrée + zone
@@ -327,7 +554,7 @@ Format visuel avec classes CSS dédiées :
 - **Invalidation** en `.alert-box` : conditions qui annulent le trade
 - **Timeline** : horizon du trade (swing, position, long terme)
 
-#### 15. Note Globale
+#### 17. Note Globale
 - Conviction : A+ (très haute) à D (très faible)
 - Biais : Haussier / Baissier / Neutre
 - Confiance : % basé sur la qualité des données
@@ -569,7 +796,7 @@ Chaque dossier ticker contient un `variants.json` listant les variantes disponib
 |---------------|---------------------------|------------------------------------------------------------|
 | **beginner**  | Débutants en bourse       | Langage simple, explications de chaque concept, pas de jargon. Sections simplifiées (6-8 au lieu de 15). Pas d'options, pas de Wyckoff. Focus sur "Qu'est-ce que c'est" et "Acheter ou pas". |
 | **intermediate** | Investisseurs particuliers | Toutes les sections mais explications supplémentaires pour les concepts techniques. Jargon avec définitions. |
-| **expert**    | Traders / Institutionnels | Article actuel complet, 15 sections, jargon technique, Wyckoff, Greeks, CTB, etc. |
+| **expert**    | Traders / Institutionnels | Article actuel complet, 17 sections, jargon technique, Wyckoff, Greeks, CTB, bottom estimation, manipulation detection, social radar. |
 
 ### Sections par Niveau
 
@@ -592,8 +819,8 @@ Chaque dossier ticker contient un `variants.json` listant les variantes disponib
 11. Trade Idea
 12. Note Globale + Sources
 
-#### Expert (15 sections — contenu actuel)
-Identique au template Section 2 ci-dessus, sans changement.
+#### Expert (17 sections — contenu actuel)
+Identique au template Section 2 ci-dessus. Inclut les sections avancées 13 (Bottom Estimation & Setups) et 14 (Manipulations & Signaux Sociaux) qui sont **exclusives au mode expert**.
 
 ### Switcher Langue/Niveau (Template HTML)
 
