@@ -341,22 +341,38 @@ Collecter et croiser les données suivantes :
 
 **IMPORTANT** : Ne jamais accuser directement. Utiliser des formulations prudentes : "pattern compatible avec...", "anomalie qui pourrait suggérer...", "historiquement associé à...". Citer les données factuelles et laisser le lecteur tirer ses conclusions.
 
-**b) Analyse Tendances Réseaux Sociaux**
+**b) Analyse Tendances Réseaux Sociaux (MULTI-PLATEFORME OBLIGATOIRE)**
 
 Collecter via :
 - `QueryData` types=sentiment_stocktwits,sentiment_reddit,sentiment_youtube — sentiment multi-plateforme
 - `QueryData` types=stocktwits_messages — messages récents pour analyse qualitative
-- WebSearch "{TICKER} reddit wallstreetbets" / "{TICKER} stocktwits pump" / "{TICKER} twitter fintwit"
+- WebSearch "{TICKER} reddit wallstreetbets mentions" — historique Reddit/WSB, score bullish, upvotes
+- WebSearch "{TICKER} stock Twitter X fintwit" — activité X/Twitter, cashtag $TICKER
+- WebSearch "{TICKER} google trends stock interest" — spikes de recherche Google, corrélation avec le prix
+- WebSearch "{TICKER} stock forum discussion hype" — InvestorsHub, Seeking Alpha, Yahoo Finance forums
+- Vérifier ChartExchange (`chartexchange.com/symbol/{exchange}-{ticker}/trends/reddit/`) et ApeWisdom (`apewisdom.io/stocks/{TICKER}/`) pour les données Reddit quantitatives
+
+**6 Plateformes à couvrir systématiquement** :
+
+| Plateforme | Icône FA | Données à collecter |
+|------------|----------|---------------------|
+| **StockTwits** | `fa-brands fa-rocketchat` | Messages/24h, ratio bull/bear, comptes actifs, thèmes dominants |
+| **Reddit / WSB** | `fa-brands fa-reddit` | Mentions/24h, upvotes, score bullish (ApeWisdom), ranking WSB |
+| **X / Twitter** | `fa-brands fa-x-twitter` | Cashtag activity, FinTwit mentions, influencers, spikes |
+| **Google Trends** | `fa-brands fa-google` | Search interest spikes, corrélation avec les mouvements de prix |
+| **YouTube** | `fa-brands fa-youtube` | Nombre de vidéos récentes, titres clickbait, thumbnails pump |
+| **Forums** | `fa-solid fa-building` | InvestorsHub, Seeking Alpha, Yahoo Finance — qualité des discussions |
 
 **Éléments à analyser** :
 
 | Métrique | Source | Signal |
 |----------|--------|--------|
-| **Volume de mentions** | StockTwits, Reddit, YouTube | Spike soudain = attention (pump ou catalyseur réel) |
+| **Volume de mentions** | StockTwits, Reddit, YouTube, X | Spike soudain = attention (pump ou catalyseur réel) |
 | **Ratio Bull/Bear** | StockTwits sentiment | > 80% bulls après +50% = euphorie dangereuse |
-| **Comptes suspects** | Reddit, StockTwits | Comptes récents qui postent massivement = pump coordonné |
+| **Comptes suspects** | Reddit, StockTwits, X | Comptes récents qui postent massivement = pump coordonné |
 | **YouTube pumpers** | YouTube sentiment | Vidéos "NEXT 100X" avec thumbnails clickbait = red flag |
-| **Hashtag velocity** | WebSearch | Hashtags trending soudainement sans catalyseur fondamental |
+| **Google Trends spike** | Google Trends | Spike de recherche sans catalyseur fondamental = buzz artificiel |
+| **Cashtag velocity** | X/Twitter | $TICKER trending soudainement = attention retail massive |
 | **Divergence prix/sentiment** | Croisement données | Prix monte mais sentiment neutre = institutionnel. Prix stable mais sentiment explose = pump retail |
 
 **Détection Pump & Dump** :
@@ -372,15 +388,51 @@ Critères d'alerte (au moins 3 sur 6 = alerte P&D) :
 **Format de sortie** :
 ```html
 <div class="social-radar">
-    <h4><i class="fa-solid fa-satellite-dish"></i> Radar Social</h4>
-    <div class="social-metrics">
-        <div class="social-metric">
-            <i class="fa-brands fa-reddit"></i>
-            <span class="platform">Reddit</span>
-            <span class="mentions">{N} mentions/24h</span>
-            <span class="trend badge badge-{color}">{↑X% | Stable | ↓X%}</span>
+    <h4><i class="fa-solid fa-satellite-dish"></i> Radar Social — Analyse Multi-Plateforme</h4>
+    <!-- Grid de 6 cartes : une par plateforme -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem;">
+        <div class="social-metric-card">
+            <i class="fa-brands fa-rocketchat"></i>
+            <div class="platform">StockTwits</div>
+            <div class="mentions">{N} msgs/48h</div>
+            <span class="badge badge-{color}">{trend}</span>
+            <div class="detail">{ratio bull/bear}</div>
         </div>
-        <!-- StockTwits, YouTube, Twitter/X -->
+        <div class="social-metric-card">
+            <i class="fa-brands fa-reddit"></i>
+            <div class="platform">Reddit / WSB</div>
+            <div class="mentions">{N} mentions/24h</div>
+            <span class="badge badge-{color}">{trend}</span>
+            <div class="detail">Bullish score {N}/100 • {N} upvotes</div>
+        </div>
+        <div class="social-metric-card">
+            <i class="fa-brands fa-x-twitter"></i>
+            <div class="platform">X / Twitter</div>
+            <div class="mentions">{cashtag activity}</div>
+            <span class="badge badge-{color}">{trend}</span>
+            <div class="detail">{FinTwit mentions, spikes}</div>
+        </div>
+        <div class="social-metric-card">
+            <i class="fa-brands fa-google"></i>
+            <div class="platform">Google Trends</div>
+            <div class="mentions">{spike info}</div>
+            <span class="badge badge-{color}">{trend}</span>
+            <div class="detail">{corrélation prix}</div>
+        </div>
+        <div class="social-metric-card">
+            <i class="fa-brands fa-youtube"></i>
+            <div class="platform">YouTube</div>
+            <div class="mentions">{nb vidéos récentes}</div>
+            <span class="badge badge-{color}">{trend}</span>
+            <div class="detail">{clickbait check}</div>
+        </div>
+        <div class="social-metric-card">
+            <i class="fa-solid fa-building"></i>
+            <div class="platform">Analystes</div>
+            <div class="mentions">{N} couvrent</div>
+            <span class="badge badge-{color}">{consensus}</span>
+            <div class="detail">Targets: ${min}-${max}</div>
+        </div>
     </div>
     <div class="pump-dump-score">
         <h4>Score Pump & Dump : {N}/6</h4>
@@ -398,11 +450,62 @@ Critères d'alerte (au moins 3 sur 6 = alerte P&D) :
 - **Score 2-3/6** → `badge-purple` "Suspect" — Surveiller de près, ne pas FOMO
 - **Score 4-6/6** → `badge-red` "Alerte P&D" — Très probablement une tentative de pump & dump
 
-**c) Synthèse Intégrité du Marché**
+**c) SEC Filings & Détection de Fonds Hostiles (EXPERT ONLY)**
 
-Pedagogy-box finale combinant les deux sous-sections :
+**Collecte obligatoire** :
+- `QueryData` types=sec_filings symbols={TICKER} days=90 — dépôts SEC récents
+- WebSearch "{TICKER} SEC filing 13D 13G activist investor hostile fund" — recherche de Schedule 13D (activiste) vs 13G (passif)
+- WebSearch "{TICKER} short seller report Hindenburg Citron Muddy Waters Kerrisdale" — rapports de short sellers activistes
+- `QueryData` types=insider_transactions — corrélation avec les dépôts
+
+**Filings à surveiller** :
+
+| Filing | Signification | Signal |
+|--------|---------------|--------|
+| **Schedule 13D** | Investisseur > 5% avec **intention d'influencer** la direction | **ALERTE HOSTILE** — activiste, prise de contrôle potentielle, proxy fight |
+| **Schedule 13G** | Investisseur > 5% **passif** | Neutre à positif — accumulation institutionnelle sans intention hostile |
+| **Schedule 13G/A** | Amendement d'un 13G existant | Vérifier si le % augmente ou diminue |
+| **Form 4** | Transactions insiders (CEO, CFO, board) | Ventes massives avant news = red flag. Achats = signal positif |
+| **8-K** | Événement matériel (offering, acquisition, changement direction) | Vérifier le contenu : dilutif ? Restructuration ? |
+| **S-3 / S-1** | Registration statement (nouvelle émission d'actions) | Signal de dilution potentielle |
+| **DEF 14A (Proxy)** | Assemblée générale, votes | Proxy fight = activiste en cours |
+| **SC TO-T** | Tender Offer (OPA) | Prise de contrôle hostile en cours |
+
+**Short Sellers Activistes à surveiller** :
+- Hindenburg Research (fermé jan 2025, mais archives toujours actives)
+- Citron Research (Andrew Left — problèmes légaux SEC)
+- Muddy Waters Research (Carson Block)
+- Kerrisdale Capital
+- Spruce Point Capital
+- Grizzly Research
+- Iceberg Research
+- Blue Orca Capital
+
+**Format de sortie** :
+```html
+<h3><i class="fa-solid fa-file-shield"></i> SEC Filings & Surveillance Fonds Hostiles</h3>
+<div class="data-table">
+    <table>
+        <thead><tr><th>Date</th><th>Filing</th><th>Émetteur</th><th>Détail</th><th>Signal</th></tr></thead>
+        <tbody>
+            <tr><td>{date}</td><td><span class="badge badge-{color}">{type}</span></td><td>{nom}</td><td>{détail}</td><td>{interprétation}</td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="pedagogy-box">
+    <h4><i class="fa-solid fa-shield-halved"></i> Verdict Fonds Hostiles</h4>
+    <p><strong>{Aucun fonds hostile détecté / Activiste identifié / Short seller report publié}</strong> — {détail et implications}</p>
+</div>
+```
+
+**IMPORTANT** : Toujours vérifier la **nature du filing** (13D = hostile, 13G = passif). Un 13G qui se convertit en 13D est un signal d'alerte majeur. Les rapports de short sellers doivent être mentionnés avec les contre-arguments si disponibles.
+
+**d) Synthèse Intégrité du Marché**
+
+Pedagogy-box finale combinant les trois sous-sections :
 - "Le marché de {TICKER} est {propre / sous surveillance / suspect}"
 - Résumé des anomalies détectées (ou absence d'anomalie)
+- Status SEC filings : présence/absence de fonds hostiles, short seller reports
 - Conseil actionnable : "Trader normalement" / "Taille réduite, stops serrés" / "Éviter jusqu'à normalisation"
 
 ---
@@ -650,6 +753,117 @@ Quand on **régénère** une analyse qui existe déjà :
 - **Landing page** : chaque nouvelle analyse doit être ajoutée dans index.html avec logo, chart button, et lien
 - **Alert-banner** : toujours forcer `color: white !important` sur le texte et les `<p>` internes
 - **Historisation** : toujours archiver l'ancienne version avant de régénérer (voir section Historisation ci-dessus)
+- **Sources inline obligatoires** : chaque donnée chiffrée ou factuelle doit avoir un lien cliquable vers sa source, directement dans le texte (pas seulement en fin d'article). Voir la directive "Sources Inline & Références" ci-dessous.
+
+### Sources Inline & Références — RÈGLE OBLIGATOIRE
+
+**Principe** : Chaque donnée chiffrée, chaque fait, chaque citation dans l'analyse doit être **traçable** via un lien cliquable vers la source originale, **directement à l'endroit où l'information apparaît** dans le texte.
+
+**Ne pas se limiter à un bloc "Sources" en fin d'article.** Le lecteur doit pouvoir vérifier n'importe quel chiffre sans scroller.
+
+#### Classe CSS `.source-ref`
+
+Ajouter dans `report.css` :
+```css
+.source-ref {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    color: #64748b;
+    text-decoration: none;
+    border-bottom: 1px dotted #cbd5e1;
+    padding-bottom: 1px;
+    transition: color 0.2s, border-color 0.2s;
+    margin-left: 0.25rem;
+}
+.source-ref:hover {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+.source-ref .source-icon {
+    font-size: 0.6rem;
+    opacity: 0.7;
+}
+.source-ref .source-name {
+    font-weight: 500;
+}
+.source-ref .source-date {
+    opacity: 0.6;
+    font-style: italic;
+}
+```
+
+#### Utilisation dans le HTML
+
+**Inline après un chiffre ou un fait** :
+```html
+<p>POET a levé <strong>$150M</strong> via un registered direct offering sursouscrit
+<a href="https://finance.yahoo.com/news/poet-technologies-closes-150m-offering" class="source-ref" target="_blank" rel="noopener">
+    <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+    <span class="source-name">Yahoo Finance</span>
+    <span class="source-date">· oct 2025</span>
+</a>, portant sa trésorerie à $300M+.</p>
+```
+
+**Après un tableau ou une section de données** :
+```html
+<div class="source-refs" style="display:flex; flex-wrap:wrap; gap:0.5rem 1rem; margin-top:0.75rem; padding-top:0.5rem; border-top:1px solid #e2e8f0;">
+    <a href="https://fintel.io/so/us/poet" class="source-ref" target="_blank" rel="noopener">
+        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+        <span class="source-name">Fintel 13F</span>
+        <span class="source-date">· fév 2026</span>
+    </a>
+    <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=POET" class="source-ref" target="_blank" rel="noopener">
+        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+        <span class="source-name">SEC EDGAR</span>
+        <span class="source-date">· fév 2026</span>
+    </a>
+    <a href="https://finance.yahoo.com/quote/POET/" class="source-ref" target="_blank" rel="noopener">
+        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+        <span class="source-name">Yahoo Finance</span>
+        <span class="source-date">· live</span>
+    </a>
+</div>
+```
+
+#### Quand utiliser `.source-ref`
+
+| Contexte | Placement | Exemple |
+|----------|-----------|---------|
+| **Chiffre clé dans un paragraphe** | Inline, juste après le chiffre | "Revenue $298K `[source-ref]`" |
+| **Tableau de données** | `.source-refs` sous le tableau | Sources: SEC EDGAR, Yahoo Finance |
+| **Fait d'actualité / News** | Inline dans le texte de la news | "Partenariat avec Mitsubishi `[source-ref]`" |
+| **Données techniques** (S/R, volume) | `.source-refs` sous le chart | Sources: MarketWatch Gateway |
+| **SEC Filings** | Inline dans chaque ligne du tableau | Lien vers le filing exact sur SEC.gov |
+| **Sentiment social** | Inline ou sous la carte plateforme | Lien vers StockTwits, Reddit, etc. |
+| **Données institutionnelles (13F)** | Inline dans le tableau | Lien vers Fintel, WhaleWisdom |
+
+#### Sources courantes et URLs
+
+| Source | URL Pattern | Usage |
+|--------|-------------|-------|
+| **Yahoo Finance** | `finance.yahoo.com/quote/{TICKER}/` | Quote, stats, financials |
+| **SEC EDGAR** | `sec.gov/cgi-bin/browse-edgar?CIK={TICKER}` | Filings officiels |
+| **Fintel** | `fintel.io/so/us/{ticker}` | 13F, short interest, CTB |
+| **StockTwits** | `stocktwits.com/symbol/{TICKER}` | Sentiment social |
+| **ChartExchange** | `chartexchange.com/symbol/nasdaq-{ticker}/` | Reddit trends, dark pool |
+| **Finviz** | `finviz.com/quote.ashx?t={TICKER}` | Overview, chart, news |
+| **WhaleWisdom** | `whalewisdom.com/stock/{ticker}` | 13F holdings |
+| **TipRanks** | `tipranks.com/stocks/{ticker}/forecast` | Analyst consensus |
+| **MarketBeat** | `marketbeat.com/stocks/NASDAQ/{TICKER}/` | Insider trades, analysts |
+| **Reddit WSB** | `reddit.com/r/wallstreetbets/search/?q={TICKER}` | WSB mentions |
+
+#### Directives Sources
+
+- **OBLIGATOIRE** : au minimum 1 `source-ref` par section `content-card`
+- **IDÉAL** : 2-4 `source-ref` par section (inline + bloc sous tableau)
+- **target="_blank" rel="noopener"** : toujours, pour ouvrir dans un nouvel onglet
+- **Date de référence** : toujours indiquer la date ou "live" pour les données temps réel
+- **Ne pas inventer d'URLs** : utiliser uniquement des URLs vérifiées ou les patterns ci-dessus
+- **Le bloc Sources en fin d'article reste obligatoire** : il sert de récapitulatif, mais ne remplace pas les refs inline
+- **Beginner** : moins de source-refs (1 par section max, pour ne pas surcharger), mais toujours présentes
+- **Expert** : source-refs abondantes (2-4 par section)
 
 ---
 
@@ -777,6 +991,26 @@ Chaque dossier ticker contient un `variants.json` listant les variantes disponib
   "date": "2026-02-15"
 }
 ```
+
+### ACCENTS & ORTHOGRAPHE FRANÇAISE — RÈGLE CRITIQUE
+
+**OBLIGATOIRE** : Tout contenu en langue française (lang="fr") **DOIT** utiliser les accents corrects. C'est une erreur bloquante de produire du français sans accents.
+
+**Accents courants à ne JAMAIS oublier** :
+- é (é aigu) : été, élevé, spéculatif, réseaux, événement, énergie, résumé, sécurité, intégrité, évaluation, actualités, légitimité, phénomène, précédent, différent, créé, débutant, données, archivées, généralement, électricité, présenté, intérieur, géants, intéressant, numéro, mentionné, décevant, prévisions, sécrètement, négatif, spécial, modéré, développé, également
+- è (è grave) : très, accès, après, succès, critère, critères, deuxième, troisième, lumière, première
+- ê (ê circon.) : être, même, fenêtre, intérêt, prêt, forêt
+- à (à grave) : à, déjà, là, voilà
+- ô (ô circon.) : contrôle, rôle, côté, hôpital
+- ç (cédille) : ça, français, façon, reçu, leçon, façade
+- ù (ù grave) : où
+- î (î circon.) : connaître, apparaître, maîtrise
+
+**Vérification obligatoire** : Après génération, scanner le HTML pour les mots français courants sans accent (ex: `etait` au lieu de `était`, `reseaux` au lieu de `réseaux`, `Donnees` au lieu de `Données`). Corriger systématiquement.
+
+**Dans les attributs HTML** : utiliser les entités HTML si nécessaire (`&eacute;`, `&egrave;`, etc.) mais le charset UTF-8 permet les caractères directs dans le contenu.
+
+---
 
 ### Langues Supportées
 
