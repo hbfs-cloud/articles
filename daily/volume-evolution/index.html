@@ -434,8 +434,8 @@
 
                 <!-- Global Volume Chart -->
                 <div class="chart-wrapper">
-                    <h4><i class="fa-solid fa-chart-area" style="color:#2563eb;margin-right:0.5rem"></i>Volume Global Annuel par R&eacute;gion (2024-2025, en Trillions $)</h4>
-                    <div id="chart-global-volume" style="width:100%;height:400px"></div>
+                    <h4><i class="fa-solid fa-chart-area" style="color:#2563eb;margin-right:0.5rem"></i>&Eacute;volution Mensuelle des Volumes par R&eacute;gion (Jan 2024 &mdash; F&eacute;v 2026, en Trillions $)</h4>
+                    <div id="chart-global-volume" style="width:100%;height:450px"></div>
                 </div>
 
                 <div class="insight-box">
@@ -970,73 +970,149 @@
     <!-- ============================================================= -->
     <script>
     // =================================================================
-    // CHART 1: Global Volume by Region (Stacked Bar)
+    // CHART 1: Monthly Volume by Region (Stacked Area) Jan 2024 – Feb 2026
     // =================================================================
+    // US: $42.6T total 2024, ~$50T est. 2025. Monthly = annual/12 with seasonal variation.
+    // EU (Euronext+DB): €4.0T 2024 (~$4.2T), ~€4.2T 2025. Steady with slight growth.
+    // APAC ECM: $250B 2024, $334B 2025. Lumpy (big deal months spike).
+    // Crypto Perp CEX: ~$58.5T 2024, $86.2T 2025. Huge Q4 2025 spike, Oct ATH month.
     (function() {
         var dom = document.getElementById('chart-global-volume');
         if (!dom) return;
         var chart = echarts.init(dom);
+
+        var months = [
+            'Jan 24','Fév 24','Mar 24','Avr 24','Mai 24','Jun 24',
+            'Jul 24','Aoû 24','Sep 24','Oct 24','Nov 24','Déc 24',
+            'Jan 25','Fév 25','Mar 25','Avr 25','Mai 25','Jun 25',
+            'Jul 25','Aoû 25','Sep 25','Oct 25','Nov 25','Déc 25',
+            'Jan 26','Fév 26'
+        ];
+
+        // US monthly (T$) — $42.6T/12 ≈ $3.55T base, seasonal: Jan low, Mar/Jun/Sep/Dec higher (options expiry), Nov election spike
+        var us = [3.2, 3.3, 3.7, 3.4, 3.3, 3.6, 3.4, 3.5, 3.6, 3.8, 4.2, 3.6,
+                  3.8, 3.5, 4.0, 3.9, 3.8, 4.1, 3.9, 4.2, 4.1, 4.5, 4.4, 4.0,
+                  4.3, 4.1];
+
+        // EU monthly (T$) — ~$4.2T/12 ≈ $0.35T base, slight uptick 2025
+        var eu = [0.32, 0.33, 0.36, 0.34, 0.33, 0.35, 0.30, 0.28, 0.35, 0.37, 0.36, 0.33,
+                  0.34, 0.35, 0.38, 0.36, 0.35, 0.37, 0.32, 0.30, 0.37, 0.39, 0.38, 0.35,
+                  0.37, 0.36];
+
+        // APAC ECM monthly (T$) — lumpy, big months when mega IPOs happen
+        var apac = [0.015, 0.012, 0.025, 0.018, 0.016, 0.022, 0.020, 0.015, 0.028, 0.030, 0.025, 0.024,
+                    0.020, 0.018, 0.032, 0.025, 0.022, 0.035, 0.028, 0.025, 0.038, 0.042, 0.030, 0.019,
+                    0.028, 0.022];
+
+        // Crypto Perp CEX monthly (T$) — huge ramp Q3-Q4 2025, Oct ATH month, then decline
+        var crypto = [3.8, 4.2, 5.5, 4.0, 3.5, 3.8, 4.2, 4.8, 4.5, 5.0, 5.8, 4.4,
+                      5.2, 4.8, 6.0, 5.5, 5.8, 6.5, 7.2, 8.8, 7.8, 9.5, 8.2, 5.3,
+                      6.0, 5.5];
+
         var option = {
             tooltip: {
                 trigger: 'axis',
-                axisPointer: { type: 'shadow' },
+                axisPointer: { type: 'cross', label: { backgroundColor: '#334155' } },
                 formatter: function(params) {
-                    var s = '<strong>' + params[0].axisValue + '</strong><br/>';
+                    var s = '<strong style="font-size:13px">' + params[0].axisValue + '</strong><br/>';
+                    var total = 0;
                     params.forEach(function(p) {
-                        s += '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + p.color + ';margin-right:6px"></span>' + p.seriesName + ': ' + p.value + 'T<br/>';
+                        total += p.value;
+                        s += '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + p.color + ';margin-right:6px"></span>' + p.seriesName + ': <strong>$' + p.value.toFixed(2) + 'T</strong><br/>';
                     });
+                    s += '<hr style="margin:4px 0;border-color:#e2e8f0"/><strong>Total: $' + total.toFixed(2) + 'T</strong>';
                     return s;
                 }
             },
             legend: {
                 bottom: 0,
-                textStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
+                textStyle: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' }
             },
-            grid: { left: '4%', right: '4%', bottom: '15%', top: '8%', containLabel: true },
+            grid: { left: '3%', right: '4%', bottom: '14%', top: '10%', containLabel: true },
             xAxis: {
                 type: 'category',
-                data: ['2024', '2025 (est.)'],
-                axisLabel: { fontFamily: 'Inter', fontSize: 13, fontWeight: 700, color: '#334155' },
+                data: months,
+                boundaryGap: false,
+                axisLabel: {
+                    fontFamily: 'Inter', fontSize: 10, color: '#94a3b8', rotate: 45,
+                    interval: function(index) { return index % 3 === 0; }
+                },
                 axisLine: { lineStyle: { color: '#e2e8f0' } },
                 axisTick: { show: false }
             },
             yAxis: {
                 type: 'value',
-                name: 'Trillions $',
-                nameTextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#94a3b8' },
-                axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}T' },
+                name: 'Trillions $/mois',
+                nameTextStyle: { fontFamily: 'Inter', fontSize: 10, color: '#94a3b8' },
+                axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b', formatter: '${value}T' },
                 splitLine: { lineStyle: { color: '#f1f5f9' } },
                 axisLine: { show: false }
             },
+            // Mark key events
+            dataZoom: [
+                { type: 'inside', start: 0, end: 100 }
+            ],
             series: [
                 {
-                    name: 'US (Stocks Traded)',
-                    type: 'bar',
+                    name: 'US (Actions)',
+                    type: 'line',
                     stack: 'total',
-                    data: [42.6, 50],
-                    itemStyle: { color: '#2563eb', borderRadius: [0, 0, 0, 0] },
-                    barWidth: '45%'
+                    areaStyle: { opacity: 0.35 },
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { width: 2 },
+                    data: us,
+                    itemStyle: { color: '#2563eb' },
+                    emphasis: { focus: 'series' }
                 },
                 {
                     name: 'Europe (Euronext+DB)',
-                    type: 'bar',
+                    type: 'line',
                     stack: 'total',
-                    data: [4.2, 4.4],
-                    itemStyle: { color: '#10b981' }
+                    areaStyle: { opacity: 0.35 },
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { width: 2 },
+                    data: eu,
+                    itemStyle: { color: '#10b981' },
+                    emphasis: { focus: 'series' }
                 },
                 {
                     name: 'APAC (ECM)',
-                    type: 'bar',
+                    type: 'line',
                     stack: 'total',
-                    data: [0.25, 0.334],
-                    itemStyle: { color: '#f59e0b' }
+                    areaStyle: { opacity: 0.35 },
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { width: 2 },
+                    data: apac,
+                    itemStyle: { color: '#f59e0b' },
+                    emphasis: { focus: 'series' }
                 },
                 {
                     name: 'Crypto (Perp CEX)',
-                    type: 'bar',
+                    type: 'line',
                     stack: 'total',
-                    data: [58.5, 86.2],
-                    itemStyle: { color: '#f97316', borderRadius: [4, 4, 0, 0] }
+                    areaStyle: { opacity: 0.35 },
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { width: 2 },
+                    data: crypto,
+                    itemStyle: { color: '#f97316' },
+                    emphasis: { focus: 'series' }
+                }
+            ],
+            // Visual annotations for key events
+            graphic: [
+                {
+                    type: 'text',
+                    left: '10%', top: '5%',
+                    style: { text: 'Halving BTC\nAvr 2024', fontSize: 9, fill: '#94a3b8', fontFamily: 'Inter', textAlign: 'center' }
+                },
+                {
+                    type: 'text',
+                    right: '25%', top: '3%',
+                    style: { text: 'BTC ATH $126K\nOct 2025', fontSize: 9, fill: '#f97316', fontFamily: 'Inter', fontWeight: 'bold', textAlign: 'center' }
                 }
             ]
         };
@@ -1156,7 +1232,7 @@
             grid: { left: '4%', right: '4%', bottom: '15%', top: '8%', containLabel: true },
             xAxis: {
                 type: 'category',
-                data: ['2022', '2023', '2024'],
+                data: ['2022', '2023', '2024', '2025 (est.)'],
                 axisLabel: { fontFamily: 'Inter', fontSize: 13, fontWeight: 700, color: '#334155' },
                 axisLine: { lineStyle: { color: '#e2e8f0' } },
                 axisTick: { show: false }
@@ -1173,7 +1249,7 @@
                 {
                     name: 'Euronext',
                     type: 'bar',
-                    data: [2500, 2600, 2700],
+                    data: [2500, 2600, 2700, 2810],
                     itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#10b981'},{offset:1,color:'#6ee7b7'}]), borderRadius: [4,4,0,0] },
                     barWidth: '30%',
                     label: { show: true, position: 'top', formatter: '€{c}B', fontSize: 11, fontWeight: 700, fontFamily: 'Inter', color: '#065f46' }
@@ -1181,7 +1257,7 @@
                 {
                     name: 'Deutsche Börse (Xetra)',
                     type: 'bar',
-                    data: [1100, 1200, 1300],
+                    data: [1100, 1200, 1300, 1350],
                     itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#3b82f6'},{offset:1,color:'#93c5fd'}]), borderRadius: [4,4,0,0] },
                     barWidth: '30%',
                     label: { show: true, position: 'top', formatter: '€{c}B', fontSize: 11, fontWeight: 700, fontFamily: 'Inter', color: '#1e3a8a' }
