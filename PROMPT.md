@@ -1314,6 +1314,74 @@ scanner/
 3. **`QueryData`** types: quote pour les 10 tickers retenus
 4. **WebSearch** pour les catalyseurs récents de chaque ticker
 
+### Diversification Géographique & Setups A+ Europe/Asie/ETFs
+
+**OBLIGATOIRE** : Le scanner doit inclure des setups de qualité A+ sur les marchés européens, asiatiques et les ETFs, pas uniquement des actions US.
+
+#### Objectif
+Détecter les meilleures opportunités J+1 (next day) sur tous les marchés majeurs pour une vision globale et diversifiée.
+
+#### Univers de Screening
+
+**Marchés Européens** :
+- **Actions individuelles** : DAX (Allemagne), CAC 40 (France), FTSE 100 (UK), IBEX 35 (Espagne), FTSE MIB (Italie)
+- **ETFs Europe** : VGK (Vanguard FTSE Europe), EWG (iShares Germany), EWQ (iShares France), EWU (iShares UK), EWP (iShares Spain), EWI (iShares Italy)
+- **Exemples tickers** : SAP, Siemens, TotalEnergies, BBVA, UniCredit, ASML, LVMH, Airbus, Stellantis, Nestlé
+
+**Marchés Asiatiques** :
+- **Actions individuelles** : KOSPI (Corée), Nikkei 225 (Japon), Hang Seng (Hong Kong), SSE (Shanghai)
+- **ETFs Asie** : EWJ (iShares Japan), EWY (iShares South Korea), EWH (iShares Hong Kong), FXI (iShares China), MCHI (iShares MSCI China)
+- **Exemples tickers** : Samsung, TSMC, Sony, Toyota, Alibaba, Tencent, POSCO, SK Hynix
+
+**ETFs Sectoriels & Thématiques** (US & Global) :
+- **Secteurs** : XLF (Financials), XLE (Energy), XLK (Tech), XLV (Healthcare), XLI (Industrials), XLY (Consumer Discretionary), XLP (Consumer Staples), XLRE (Real Estate), XLU (Utilities), XLB (Materials)
+- **Thématiques** : ARKK (Innovation), ICLN (Clean Energy), TAN (Solar), LIT (Lithium), BOTZ (Robotics), HACK (Cybersecurity), CLOU (Cloud), JETS (Airlines), DRIV (Auto)
+- **Commodités** : GLD (Gold), SLV (Silver), USO (Oil), UNG (Natural Gas), DBA (Agriculture)
+- **Crypto** : BITO (Bitcoin ETF), ETHE (Ethereum ETF)
+
+#### Méthodologie de Sélection
+
+1. **Screening multi-région** : Utiliser `RunScreener` avec les symboles des 3 zones (US, EU, Asia, ETFs)
+2. **Critères A+** :
+   - Score composite ≥ 85/100
+   - Confluence technique : ≥ 3 signaux alignés (RSI, volume, S/R, pattern)
+   - Catalyseur identifiable (earnings, news, breakout technique)
+   - Liquidité suffisante (volume moyen > $10M/jour pour actions, > $50M/jour pour ETFs)
+3. **Diversification** : Minimum 2 setups Europe + 1 setup Asie + 2 ETFs parmi les 10 candidats retenus
+4. **Horizon J+1** : Setups avec potentiel de mouvement dans les prochaines 24-48h (pas swing long terme)
+
+#### Présentation dans le Scanner
+
+Pour chaque setup Europe/Asie/ETF, **ajouter un badge géographique** :
+
+```html
+<div class="setup-badges">
+    <span class="badge badge-blue">Europe 🇪🇺</span>  <!-- EU -->
+    <span class="badge badge-purple">Asia 🌏</span>   <!-- Asie -->
+    <span class="badge badge-green">ETF 📊</span>     <!-- ETF -->
+    <span class="badge badge-{color}">{Stratégie}</span>
+</div>
+```
+
+**Exemple de répartition idéale sur 10 setups** :
+- 5 US (stocks individuelles)
+- 2 Europe (actions ou ETFs Europe)
+- 1 Asie (action ou ETF Asie)
+- 2 ETFs thématiques/sectoriels
+
+#### Mise à jour Index.html
+
+Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la couverture géographique** dans la description :
+
+```html
+<p style="font-size:0.85rem; color:var(--text-muted);">
+    {Description du régime}. {Stratégies}. 10 setups analysés : {Tickers US} (US), {Tickers EU} (Europe), {Tickers Asia} (Asie), {ETFs}.
+</p>
+```
+
+**Exemple** :
+> "Rotation défensive confirmée. Hausse VIX +4.2%. 10 setups analysés : XOM, HRL, UNH (US), SAP, BBVA (EU), EWJ (Asie), GLD, XLE (ETFs)."
+
 ### Sections de l'Article Scanner
 
 #### Thème Dark
