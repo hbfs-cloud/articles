@@ -175,7 +175,7 @@
             white-space: nowrap;
         }
 
-        /* Main tabs */
+        /* Main tabs — Desktop: classic horizontal | Mobile: icon grid */
         .main-tabs {
             display: flex;
             gap: 0;
@@ -219,8 +219,62 @@
             background: var(--accent);
             color: #fff;
         }
+        .main-tab .tab-icon { font-size: 1em; margin-right: 6px; }
+        .main-tab .tab-label { }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
+
+        /* Mobile tabs: icon grid */
+        @media (max-width: 768px) {
+            .main-tabs {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 0.5rem;
+                border-bottom: none;
+                margin: 2rem 0 0;
+                padding: 0.5rem;
+                background: var(--bg-panel);
+                border-radius: 16px;
+                border: var(--border);
+            }
+            .main-tab {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                padding: 12px 6px;
+                border-radius: 12px;
+                font-size: 0.65rem;
+                min-height: 64px;
+                transition: all 0.2s;
+            }
+            .main-tab .tab-icon {
+                font-size: 1.3rem;
+                margin-right: 0;
+                display: block;
+                line-height: 1;
+            }
+            .main-tab .tab-label {
+                display: block;
+                font-size: 0.65rem;
+                letter-spacing: 0.02em;
+            }
+            .main-tab .tab-count {
+                display: none;
+            }
+            .main-tab.active {
+                background: linear-gradient(135deg, #eff6ff, #dbeafe);
+                color: var(--accent);
+                box-shadow: 0 2px 8px rgba(37,99,235,0.12);
+            }
+            .main-tab.active::after {
+                display: none;
+            }
+            .main-tab:hover {
+                background: #f1f5f9;
+            }
+        }
 
         .filter-bar {
             margin: 1.5rem 0;
@@ -811,10 +865,29 @@
 
         <!-- TABS -->
         <div class="main-tabs">
-            <button class="main-tab active" data-tab="weekly"><i class="fa-solid fa-calendar-week" style="margin-right:6px;"></i>Hebdo<span class="tab-count" id="weeklyCount">8</span></button>
-            <button class="main-tab" data-tab="analyses"><i class="fa-solid fa-chart-column" style="margin-right:6px;"></i>Analyses<span class="tab-count" id="analysesCount"></span></button>
-            <button class="main-tab" data-tab="scanner"><i class="fa-solid fa-radar" style="margin-right:6px;"></i>Scanner</button>
-            <button class="main-tab" data-tab="portfolio"><i class="fa-solid fa-briefcase" style="margin-right:6px;"></i>Portfolio</button>
+            <button class="main-tab active" data-tab="weekly">
+                <i class="fa-solid fa-calendar-week tab-icon"></i>
+                <span class="tab-label">Hebdo</span>
+                <span class="tab-count" id="weeklyCount">8</span>
+            </button>
+            <button class="main-tab" data-tab="daily">
+                <i class="fa-solid fa-sun tab-icon"></i>
+                <span class="tab-label">Daily</span>
+                <span class="tab-count" id="dailyCount">1</span>
+            </button>
+            <button class="main-tab" data-tab="analyses">
+                <i class="fa-solid fa-chart-column tab-icon"></i>
+                <span class="tab-label">Analyses</span>
+                <span class="tab-count" id="analysesCount"></span>
+            </button>
+            <button class="main-tab" data-tab="scanner">
+                <i class="fa-solid fa-satellite-dish tab-icon"></i>
+                <span class="tab-label">Scanner</span>
+            </button>
+            <button class="main-tab" data-tab="portfolio">
+                <i class="fa-solid fa-briefcase tab-icon"></i>
+                <span class="tab-label">Portfolio</span>
+            </button>
         </div>
 
         <!-- ============================================================ -->
@@ -913,6 +986,33 @@
 
             </div>
         </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: DAILY BRIEFING -->
+        <!-- ============================================================ -->
+        <div class="tab-panel" id="tab-daily">
+            <div style="margin:2rem 0 1rem; text-align:center;">
+                <h2 style="font-size:1.8rem; font-weight:800; margin:0;"><i class="fa-solid fa-sun" style="color:#f59e0b; margin-right:8px;"></i>Briefing Quotidien</h2>
+                <p style="color:var(--text-muted); margin:0.5rem 0 0; font-size:0.95rem;">Synthèse matinale des marchés US, Europe, Asie-Pacifique et Crypto — 7h00 chaque jour</p>
+            </div>
+
+            <div class="grid-cards" style="margin-top:1rem;">
+                <!-- 17 Feb 2026 -->
+                <div class="report-card">
+                    <span class="badge badge-red" style="margin-bottom:1rem; display:inline-block;">DERNIER BRIEFING</span>
+                    <div class="report-card-meta">17 Février 2026 — Lundi</div>
+                    <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Presidents' Day & Talks de Genève</h2>
+                    <p style="font-size:0.85rem; color:var(--text-muted);">Marchés US fermés (Presidents' Day). Talks Ukraine-Russie Round 3 à Genève. FOMC Minutes mercredi. Core PCE vendredi. BTC $67,987 sous pression. Or recule à $4,955. Semaine macro chargée.</p>
+                    <div class="actions" style="flex-direction:column; gap:0.5rem; margin-top:1rem;">
+                        <a href="daily/20260217/" class="btn-read-primary" style="width:100%;">Lire le Briefing</a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.85rem;">
+                <p><i class="fa-solid fa-circle-info" style="margin-right:4px;"></i> Le briefing quotidien est publié chaque matin à 7h00. Il couvre les 4 grandes zones (US, EU, AP, Crypto), les événements du jour, et propose une formation et des idées de trading.</p>
+            </div>
+        </div><!-- /tab-daily -->
 
         <!-- ============================================================ -->
         <!-- TAB: ANALYSES INDIVIDUELLES -->
