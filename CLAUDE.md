@@ -29,6 +29,11 @@ articles/
 │   │   └── archive/              # Versions précédentes
 │   │       └── YYYYMMDD/
 │   │           └── index.html
+├── daily/                        # Briefings quotidiens
+│   └── YYYYMMDD/                 # Format de nommage: date du briefing
+│       ├── index.html            # Default = expert/fr
+│       ├── assets/report.css     # CSS spécifique
+│       └── variants.json         # Manifest des variantes (optionnel)
 ├── scanner/                      # Scans quotidiens algorithmiques
 │   └── YYYYMMDD/                 # Format de nommage: date du scan
 │       ├── index.html            # Default = expert/fr
@@ -115,6 +120,49 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
 8. Mettre à jour la modale Historique avec les versions archivées
 9. Mettre à jour index.html principal (carte avec data-grade + badge)
 
+### "Analyse Daily" / "Briefing du jour"
+Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Crypto. Le weekend, focus crypto et géopolitique.
+
+1. **Collecter via MCP** :
+   - `GetMarketOverview` (deep) pour snapshot global (indices, commodities, crypto, rates, regime, sentiment, news)
+   - `QueryData` types: quote,bars_daily pour SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD
+2. **WebSearch** pour :
+   - Calendrier économique du jour/semaine (CPI, FOMC, PMI, GDP, etc.)
+   - Actualités géopolitiques majeures (Ukraine, Chine, tariffs, etc.)
+   - Earnings calendar du jour
+3. **Créer `daily/YYYYMMDD/index.html`** avec les sections :
+   - Hero + badges clés du jour
+   - Navigation Grid
+   - Alerte du jour (événement #1)
+   - Dashboard Rapide (4x4 métriques avec badges couleur)
+   - Bilan de la veille / semaine passée
+   - Agenda du jour & semaine (calendrier Lun-Ven)
+   - Marchés US (indices, secteurs, movers)
+   - Marchés Europe (DAX, CAC, FTSE)
+   - Marchés Asie-Pacifique (Nikkei, HSI, ASX)
+   - Crypto (BTC, ETH, alts, niveaux clés)
+   - Géopolitique (impacts marché)
+   - **Formation du Jour** — leçon pédagogique liée à un événement (ex: "Comprendre le Core PCE", "Lire un carnet d'ordres", "L'impact du VIX")
+   - **Idées de Trading** — 2-3 trades swing argumentés avec entrée/stop/target/R:R
+   - Ce qu'il faut surveiller aujourd'hui
+   - Sources & Disclaimer
+4. **Copier le report.css** du scanner comme base CSS
+5. **Mettre à jour le tab Daily** dans index.html (ajouter la carte du jour)
+
+#### Spécificités Weekend (Sam-Dim)
+- Focus crypto (marchés 24/7) : analyse technique détaillée BTC, ETH, alts
+- Focus géopolitique : impacts attendus sur l'ouverture lundi
+- Pas de sections US/EU/AP marchés fermés
+- Formation : sujet plus long/approfondi (ex: "Introduction au Volume Profile")
+
+#### Plan de Formation Progressive
+Les "Formation du Jour" suivent un cursus progressif :
+- **Semaine 1** : Bases (indices, lire un graphe, bid/ask, VIX)
+- **Semaine 2** : Technique (RSI, MACD, supports/résistances, moyennes mobiles)
+- **Semaine 3** : Fondamentaux (P/E, EPS, marges, free cash flow, earnings)
+- **Semaine 4** : Avancé (options basics, vol implicite, corrélations, régimes)
+- Puis cycle recommence avec des sujets plus avancés
+
 ### "Scanner" / "Scan du jour"
 1. Collecter via MCP:
    - `RunAutoScreener` pour détection du régime + candidats
@@ -127,10 +175,11 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
 6. Voir PROMPT.md Section 5 pour le template complet
 
 ### Landing Page (index.html) — Tabs
-4 tabs principaux : **Hebdo** (weekly), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
-- URL state : `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
+5 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
+- URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
 - Grade filter : `?grade=A` (tab analyses uniquement)
 - Recherche : symbole ticker uniquement
+- Mobile : les tabs s'affichent en grille d'icones (5 colonnes) au lieu de texte horizontal
 
 ## Conventions
 - **Langue**: Français par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
@@ -151,6 +200,7 @@ Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bo
 - **Bot Discord** : `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/`
 - **Schedules** : `claude-discord-bot/schedules.json` (source de vérité)
 - **Commandes Discord** :
+  - `every day at 07:00 articles analyse daily` — Briefing quotidien 7h (tous les jours)
   - `every weekday at 23:00 articles scan du jour` — Scanner quotidien Lun-Ven 23h
   - `every sunday at 18:00 articles nouvelle analyse weekly` — Weekly hebdo
   - `schedules` / `list` — Lister toutes les tâches planifiées
@@ -160,4 +210,5 @@ Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bo
 
 | Tâche | Schedule | Commande Discord |
 |-------|----------|-----------------|
+| Briefing Daily | Tous les jours 7h00 | `every day at 07:00 articles analyse daily` |
 | Scanner Quotidien | Lun-Ven 23h00 | `every weekday at 23:00 articles scan du jour` |
