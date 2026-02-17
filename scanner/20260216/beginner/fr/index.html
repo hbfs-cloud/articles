@@ -340,18 +340,21 @@
                     </div>
                 </div>
 
-                <!-- Explications -->
+                <!-- Types d'Opportunités (Pie Chart) -->
                 <div>
-                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-question-circle" style="color:#8b5cf6;"></i> Qu'est-ce que Ça Signifie ?</h3>
-                    <div class="pedagogy-box" style="margin:0;">
-                        <h4>Trois Types d'Opportunités Aujourd'hui :</h4>
-                        <ul style="margin:0.5rem 0 0 1.25rem; padding-left:0;">
-                            <li><strong>Rebond Technique (40%)</strong> : Actions qui ont trop baissé et pourraient remonter rapidement</li>
-                            <li><strong>Élan Positif (30%)</strong> : Actions qui montent fort et pourraient continuer</li>
-                            <li><strong>Sortie de Range (30%)</strong> : Actions coincées dans une zone de prix qui vont bientôt bouger fortement</li>
-                        </ul>
-                    </div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-chart-pie" style="color:#8b5cf6;"></i> Types d'Opportunités</h3>
+                    <div id="pieStrategyTypes" class="echart-box" style="height:280px;"></div>
                 </div>
+            </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4>📊 Qu'est-ce que Ça Signifie ?</h4>
+                <p><strong>Trois Types d'Opportunités Aujourd'hui :</strong></p>
+                <ul style="margin:0.5rem 0 0 1.25rem; padding-left:0;">
+                    <li><strong>Rebond Technique (40%)</strong> : Actions qui ont trop baissé et pourraient remonter rapidement</li>
+                    <li><strong>Élan Positif (30%)</strong> : Actions qui montent fort et pourraient continuer</li>
+                    <li><strong>Sortie de Range (30%)</strong> : Actions coincées dans une zone de prix qui vont bientôt bouger fortement</li>
+                </ul>
             </div>
         </div>
 
@@ -468,6 +471,32 @@
                     <li><strong>★★★★☆ (4 étoiles)</strong> : Bonne opportunité, risque bien maîtrisé</li>
                     <li><strong>★★★☆☆ (3 étoiles)</strong> : Opportunité acceptable, à surveiller de près</li>
                 </ul>
+            </div>
+
+            <!-- Visual Overview Charts -->
+            <h3 style="font-size:1.1rem; margin-top:2.5rem; margin-bottom:0.75rem;"><i class="fa-solid fa-chart-column" style="color:#3b82f6;"></i> Comparaison Visuelle des 10 Actions</h3>
+            <div id="barScores" class="echart-box" style="height:350px; margin-top:1rem;"></div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4>📊 Comment Lire ce Graphique ?</h4>
+                <p>Plus la barre est haute, meilleure est l'opportunité. Les actions <strong>XOM</strong> et <strong>AXTI</strong> ont les scores les plus élevés (barre la plus haute), ce qui signifie que selon notre analyse, elles présentent le meilleur rapport qualité/risque aujourd'hui.</p>
+            </div>
+
+            <div class="regime-grid" style="margin-top:2rem;">
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-radar" style="color:#8b5cf6;"></i> Profil Moyen des 10 Actions</h3>
+                    <div id="radarOverview" class="echart-box" style="height:350px;"></div>
+                </div>
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-sitemap" style="color:#f59e0b;"></i> Répartition par Secteur</h3>
+                    <div id="treemapSectors" class="echart-box" style="height:350px;"></div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4>📊 Comprendre ces Graphiques</h4>
+                <p><strong>Profil Radar :</strong> Montre la qualité moyenne sur 6 critères. Plus la zone est grande, mieux c'est. Ici, on voit que les actions sélectionnées sont fortes sur la tendance et la qualité, mais un peu plus faibles sur le volume (ce qui est normal pour un jour férié).</p>
+                <p style="margin-top:0.5rem;"><strong>Répartition Sectorielle :</strong> Montre comment les 10 actions se répartissent entre les secteurs. Plus le rectangle est grand, plus le secteur est représenté. On voit une diversification entre énergie, santé, alimentation et technologie.</p>
             </div>
         </div>
 
@@ -1281,6 +1310,122 @@
 
     <!-- Charts Scripts -->
     <script>
+        // ========== ECHARTS INITIALIZATION ==========
+
+        // 1. Pie Chart: Strategy Types
+        const pieStrategyTypes = echarts.init(document.getElementById('pieStrategyTypes'));
+        pieStrategyTypes.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+            legend: { bottom: 10, left: 'center', textStyle: { fontSize: 11 } },
+            series: [{
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                label: { show: true, formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                emphasis: { label: { show: true, fontSize: 13, fontWeight: 'bold' } },
+                data: [
+                    { value: 40, name: 'Rebond Technique', itemStyle: { color: '#dc2626' } },
+                    { value: 30, name: 'Élan Positif', itemStyle: { color: '#16a34a' } },
+                    { value: 30, name: 'Sortie de Range', itemStyle: { color: '#3b82f6' } }
+                ]
+            }]
+        });
+
+        // 2. Bar Chart: Scores Comparison
+        const barScores = echarts.init(document.getElementById('barScores'));
+        barScores.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '10%', right: '10%', bottom: '10%', top: '5%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: ['XOM', 'AXTI', 'HRL', 'ZS', 'LASR', 'NEOG', 'UNH', 'MO', 'IMXI', 'CAG'],
+                axisLabel: { fontSize: 12, fontWeight: 600, color: '#0f172a' }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Note (★)',
+                max: 5,
+                axisLabel: { fontSize: 11 }
+            },
+            series: [{
+                type: 'bar',
+                data: [
+                    { value: 5, itemStyle: { color: '#16a34a' } },
+                    { value: 5, itemStyle: { color: '#16a34a' } },
+                    { value: 4, itemStyle: { color: '#3b82f6' } },
+                    { value: 4, itemStyle: { color: '#3b82f6' } },
+                    { value: 4, itemStyle: { color: '#3b82f6' } },
+                    { value: 4, itemStyle: { color: '#3b82f6' } },
+                    { value: 4, itemStyle: { color: '#3b82f6' } },
+                    { value: 4, itemStyle: { color: '#3b82f6' } },
+                    { value: 3, itemStyle: { color: '#f59e0b' } },
+                    { value: 3, itemStyle: { color: '#f59e0b' } }
+                ],
+                label: { show: true, position: 'top', formatter: '{c}★', fontSize: 11, fontWeight: 600 },
+                barWidth: '60%'
+            }]
+        });
+
+        // 3. Radar: Overview Profile (simplified for beginners)
+        const radarOverview = echarts.init(document.getElementById('radarOverview'));
+        radarOverview.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Tendance', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Force', max: 100 },
+                    { name: 'Stabilité', max: 100 },
+                    { name: 'Risque/Gain', max: 100 },
+                    { name: 'Qualité', max: 100 }
+                ],
+                radius: '65%',
+                axisName: { fontSize: 11, color: '#475569', fontWeight: 600 }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [82, 68, 79, 86, 88, 85],
+                    name: 'Profil Moyen',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.2)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+        // 4. Treemap: Sectoral Distribution
+        const treemapSectors = echarts.init(document.getElementById('treemapSectors'));
+        treemapSectors.setOption({
+            tooltip: { formatter: '{b}: {c}%' },
+            series: [{
+                type: 'treemap',
+                width: '100%',
+                height: '100%',
+                roam: false,
+                label: { show: true, formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                itemStyle: { borderWidth: 2, borderColor: '#fff', gapWidth: 2 },
+                data: [
+                    { name: 'Énergie', value: 20, itemStyle: { color: '#f59e0b' } },
+                    { name: 'Santé', value: 20, itemStyle: { color: '#3b82f6' } },
+                    { name: 'Alimentation', value: 20, itemStyle: { color: '#16a34a' } },
+                    { name: 'Électronique', value: 10, itemStyle: { color: '#8b5cf6' } },
+                    { name: 'Cybersécurité', value: 10, itemStyle: { color: '#ec4899' } },
+                    { name: 'Laser Tech', value: 10, itemStyle: { color: '#06b6d4' } },
+                    { name: 'Fintech', value: 5, itemStyle: { color: '#84cc16' } },
+                    { name: 'Tabac', value: 5, itemStyle: { color: '#64748b' } }
+                ]
+            }]
+        });
+
+        // Responsive resize
+        window.addEventListener('resize', function() {
+            pieStrategyTypes.resize();
+            barScores.resize();
+            radarOverview.resize();
+            treemapSectors.resize();
+        });
+
         // Sparkline charts for each ticker
         function createSparkline(elementId, data, color) {
             if (!document.getElementById(elementId)) return;

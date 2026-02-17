@@ -436,6 +436,24 @@
                 <h4 style="color:#16a34a;">How to Read This Table</h4>
                 <p>The <strong>summary table</strong> shows the 10 stocks ranked from best (top) to worst (bottom). The "Rating" column uses stars (★) to show quality: 5 stars = excellent, 3 stars = okay. The "Risk/Reward" shows how much you could gain vs. how much you could lose. For example, 1:2.7 means for every $1 you risk, you could gain $2.70. Look for ratios above 1:2.</p>
             </div>
+
+            <!-- Visual Overview -->
+            <div class="regime-grid" style="margin-top:2.5rem;">
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-radar" style="color:#8b5cf6;"></i> Average Profile of 10 Stocks</h3>
+                    <div id="radarOverview" class="echart-box" style="height:350px;"></div>
+                </div>
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-sitemap" style="color:#f59e0b;"></i> Distribution by Sector</h3>
+                    <div id="treemapSectors" class="echart-box" style="height:350px;"></div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4>📊 Understanding These Charts</h4>
+                <p><strong>Radar Chart:</strong> Shows the average quality across 6 criteria. The bigger the blue area, the better. Here we see strong scores for Trend and Quality, but slightly lower Volume (normal for a market holiday).</p>
+                <p style="margin-top:0.5rem;"><strong>Sector Distribution:</strong> Shows how the 10 stocks are spread across different industries. Bigger boxes = more stocks in that sector. We have good diversity between Energy, Healthcare, Food, and Technology.</p>
+            </div>
         </div>
 
         <!-- ============================================================ -->
@@ -1565,6 +1583,66 @@
                 ],
                 label: { show: true, position: 'top', fontWeight: 600 }
             }]
+        });
+
+        // Radar: Overview Profile (simplified for beginners)
+        const radarOverview = echarts.init(document.getElementById('radarOverview'));
+        radarOverview.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Trend', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Strength', max: 100 },
+                    { name: 'Stability', max: 100 },
+                    { name: 'Risk/Reward', max: 100 },
+                    { name: 'Quality', max: 100 }
+                ],
+                radius: '65%',
+                axisName: { fontSize: 11, color: '#475569', fontWeight: 600 }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [82, 68, 79, 86, 88, 85],
+                    name: 'Average Profile',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.2)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+        // Treemap: Sectoral Distribution
+        const treemapSectors = echarts.init(document.getElementById('treemapSectors'));
+        treemapSectors.setOption({
+            tooltip: { formatter: '{b}: {c}%' },
+            series: [{
+                type: 'treemap',
+                width: '100%',
+                height: '100%',
+                roam: false,
+                label: { show: true, formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                itemStyle: { borderWidth: 2, borderColor: '#fff', gapWidth: 2 },
+                data: [
+                    { name: 'Energy', value: 20, itemStyle: { color: '#f59e0b' } },
+                    { name: 'Healthcare', value: 20, itemStyle: { color: '#3b82f6' } },
+                    { name: 'Food', value: 20, itemStyle: { color: '#16a34a' } },
+                    { name: 'Electronics', value: 10, itemStyle: { color: '#8b5cf6' } },
+                    { name: 'Cybersecurity', value: 10, itemStyle: { color: '#ec4899' } },
+                    { name: 'Laser Tech', value: 10, itemStyle: { color: '#06b6d4' } },
+                    { name: 'Fintech', value: 5, itemStyle: { color: '#84cc16' } },
+                    { name: 'Tobacco', value: 5, itemStyle: { color: '#64748b' } }
+                ]
+            }]
+        });
+
+        // Responsive resize for all ECharts
+        window.addEventListener('resize', function() {
+            pieChart.resize();
+            barChart.resize();
+            radarOverview.resize();
+            treemapSectors.resize();
         });
 
         // ========== SETUP SPARKLINES (ApexCharts) ==========
