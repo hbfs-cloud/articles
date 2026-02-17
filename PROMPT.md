@@ -130,6 +130,31 @@ Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé"
 ### Objectif
 Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy inspiré SLNH : headers avec emojis, bullet points courts, verdicts clairs par section. L'objectif est qu'un lecteur comprenne rapidement ce que fait la boîte, son setup, ses risques et si c'est un trade intéressant.
 
+### ECharts Obligatoires par Section
+
+**IMPORTANT** : Chaque analyse ticker doit inclure ces visualisations ECharts interactives :
+
+1. **Section 1 (Hero)** : ECharts **Gauge** — Score global de conviction (0-100)
+2. **Section 3 (Verdict Express)** : ECharts **Radar** — Profil fondamental (6 axes: Marges, ROE, Croissance Rev, Cash Flow, Valuation, Momentum)
+3. **Section 5 (Analyse Technique)** :
+   - ECharts **Candlestick** — Prix OHLCV + volume derniers 90 jours (interactif, zoom, tooltip)
+   - ECharts **Heatmap** — Calendrier de performance quotidienne 90j
+4. **Section 6 (Performance & Benchmarks)** :
+   - ECharts **Line** — Comparaison vs SPY/QQQ/Sector ETF (YTD + 1Y)
+   - ECharts **Boxplot** — Distribution des returns vs peers (quartiles)
+5. **Section 8 (Risques)** :
+   - ECharts **Radar** — Profil de risque (6 axes: Dilution, Burn Rate, Beta, Short Interest, Insider Selling, Macro Risk)
+   - ECharts **Gauge** — Score de risque global (0-10)
+6. **Section 11 (Comparaison Concurrents)** :
+   - ECharts **Parallel Coordinates** — Comparaison multi-facteurs (revenus, marges, P/E, croissance, beta)
+   - ECharts **Treemap** — Capitalisation boursière du secteur (taille = market cap, couleur = YTD %)
+7. **Section 13 (Bottom Estimation - EXPERT)** :
+   - ECharts **Gauge** — Probabilité de bottom (0-100%)
+   - ECharts **Calendar Heatmap** — Performance quotidienne 90j pour patterns saisonniers
+   - ECharts **Bar Horizontal** — Barres de confluence technique
+
+**Résultat** : ~8-10 charts ECharts par analyse = expérience ultra-visuelle et interactive
+
 ### 17 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
@@ -231,7 +256,13 @@ Utiliser des `.risk-card` pour chaque élément :
 #### 13. Bottom Estimation & Setups Avancés (EXPERT ONLY)
 **Section réservée au mode expert** — analyse de précision pour l'estimation des points bas et la détection de setups en formation.
 
-**a) Estimation du Bottom (`.content-card` avec gauge ECharts)**
+**a) Estimation du Bottom (`.content-card`)**
+
+**ECharts Gauge** : Probabilité de bottom (0-100%) avec couleur selon conviction (rouge <30%, orange 30-60%, vert >60%)
+
+**ECharts Heatmap** : Calendrier de performance derniers 90 jours (calendar heatmap) pour identifier patterns saisonniers
+
+**ECharts Bar Horizontal** : Barres de confluence montrant la convergence de niveaux techniques
 
 Utiliser toutes les données disponibles pour triangler une zone de bottom probable :
 
@@ -1595,20 +1626,30 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
 #### Sections Obligatoires
 1. **Hero** : Date, badge régime de marché (couleur selon régime), stats clés (nb setups, score moyen, stratégie dominante)
 2. **Régime de Marché** : Description du régime détecté, composantes (VIX, SPX, DXY, crédit, liquidité, TLT), pondérations des stratégies
-3. **Navigation Grid** : Liens internes vers chaque setup
-4. **10 Setup Cards** : Pour chaque ticker :
+   - **ECharts Pie** : Répartition des stratégies (%)
+   - **ECharts Gauge** : Score moyen des setups (0-100)
+3. **Vue d'Ensemble Visuelle** (NOUVELLE SECTION OBLIGATOIRE) :
+   - **ECharts Radar** : Profil agrégé des 10 setups (axes: Technique, Volume, Momentum, Risque, R/R, Conviction)
+   - **ECharts Treemap** : Répartition sectorielle des 10 setups (taille = score, couleur = variation)
+   - **ECharts Heatmap** : Matrice de corrélations entre les 10 tickers (si applicable)
+4. **Navigation Grid** : Liens internes vers chaque setup
+5. **10 Setup Cards** : Pour chaque ticker :
    - Header avec ticker, nom, prix, variation
    - Badges : stratégie détectée, fiabilité, signal technique
+   - **ECharts Gauge** : Score composite 0-100 (visuel)
+   - **ECharts Radar** : Profil du setup (6 axes: technique, volume, momentum, risque, liquidité, conviction)
    - **Description du setup** : ce qu'on voit techniquement (pattern, volumes, indicateurs)
    - **Confirmations** : ce qui valide le setup
    - **Invalidations** : ce qui annule le setup
    - **Alertes à placer** : niveaux de prix à surveiller
    - **Niveaux clés** : entrée, stop, target(s)
-   - Score composite avec breakdown (technique, volume, momentum, risque)
-   - Chart ApexCharts intégré
-5. **Synthèse** : Tableau récapitulatif des 10 setups
-6. **Méthodologie** : Explication du scoring et des stratégies
-7. **Disclaimer** : Avertissement standard
+   - **ApexCharts Bar** : Prix + volume derniers 30 jours (bar chart avec volume)
+6. **Synthèse** :
+   - Tableau récapitulatif des 10 setups
+   - **ECharts Bar** : Scores composites comparatifs (horizontal bar chart)
+   - **ECharts Sankey** (optionnel) : Flux Secteur → Stratégie → Setup
+7. **Méthodologie** : Explication du scoring et des stratégies
+8. **Disclaimer** : Avertissement standard
 
 #### Niveaux de Complexité
 - **Expert** : Toutes les sections, jargon technique complet, Wyckoff, RSI divergences, volume profile
