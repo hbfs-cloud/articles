@@ -943,8 +943,213 @@ Ajouter dans `report.css` :
 - Or: #eab308
 - Crypto: #f97316
 - Info: #3b82f6
-- Background: #f8fafc
+- Background: #f8fafc (TOUJOURS light, jamais de dark theme)
 - Text: #0f172a (primary), #475569 (body), #64748b (muted)
+
+### Responsive Design — RÈGLES CRITIQUES
+
+**PROBLÈME FRÉQUENT** : Tableaux avec text wrap, badges qui débordent, polices trop grandes sur mobile.
+
+#### Breakpoints
+- **Desktop** : > 768px (par défaut)
+- **Tablet** : ≤ 768px
+- **Mobile** : ≤ 480px
+
+#### Tableaux (CRITIQUE)
+**TOUJOURS** appliquer ces règles pour TOUS les tableaux :
+
+```css
+/* Desktop - taille normale */
+.data-table {
+    font-size: 0.95rem;
+}
+
+/* Tablet - réduction modérée */
+@media (max-width: 768px) {
+    .data-table,
+    table {
+        font-size: 0.8rem !important;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 0.5rem 0.75rem !important;
+    }
+}
+
+/* Mobile - réduction agressive */
+@media (max-width: 480px) {
+    .data-table,
+    table {
+        font-size: 0.7rem !important;
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 0.35rem 0.5rem !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+    }
+    /* Badges dans tableaux - plus petits */
+    .data-table .badge {
+        font-size: 0.55rem !important;
+        padding: 0.1rem 0.3rem !important;
+    }
+}
+```
+
+**OBLIGATOIRE** : Wrapper tous les tableaux avec `overflow-x: auto` :
+```html
+<div style="overflow-x:auto; margin-top:1.5rem;">
+    <table class="data-table">
+        ...
+    </table>
+</div>
+```
+
+#### Grilles
+**TOUJOURS** utiliser `minmax(min(100%, XXXpx), 1fr)` pour éviter débordement :
+
+```css
+/* BON ✓ */
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+    gap: 2rem;
+}
+
+/* MAUVAIS ✗ - déborde sur mobile */
+.grid-cards {
+    grid-template-columns: repeat(3, 1fr); /* Fixe, pas responsive */
+}
+```
+
+#### Cartes (report-card, content-card, setup-card)
+```css
+@media (max-width: 768px) {
+    .report-card,
+    .content-card,
+    .setup-card {
+        padding: 1.25rem !important;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .report-card,
+    .content-card,
+    .setup-card {
+        padding: 0.75rem !important;
+        border-radius: 12px;
+        margin-bottom: 0.75rem !important;
+    }
+}
+```
+
+#### Badges
+```css
+@media (max-width: 480px) {
+    .badge {
+        padding: 0.15rem 0.4rem !important;
+        font-size: 0.6rem !important;
+    }
+}
+```
+
+#### Navigation & Metric Grids
+```css
+/* Desktop */
+.nav-grid,
+.metric-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    .nav-grid,
+    .metric-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .nav-grid {
+        gap: 0.35rem !important;
+    }
+    .nav-item {
+        padding: 0.5rem 0.25rem !important;
+        font-size: 0.7rem !important;
+    }
+    .metric-grid {
+        gap: 0.35rem !important;
+    }
+    .metric-card {
+        padding: 0.5rem !important;
+    }
+    .metric-value {
+        font-size: 1rem !important;
+    }
+    .metric-label {
+        font-size: 0.6rem !important;
+    }
+}
+```
+
+#### Typography
+```css
+@media (max-width: 480px) {
+    h2 { font-size: 1rem !important; }
+    h3 { font-size: 0.9rem !important; }
+    h4 { font-size: 0.85rem !important; }
+    p, li { font-size: 0.8rem !important; line-height: 1.5 !important; }
+}
+```
+
+#### Landing Page Cards (index.html)
+```css
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .grid-cards {
+        gap: 1.5rem !important;
+        grid-template-columns: 1fr !important;
+    }
+    .report-card {
+        padding: 1.5rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-cards {
+        gap: 1rem !important;
+        padding: 0 0.5rem !important;
+    }
+    .report-card {
+        padding: 1rem !important;
+        border-radius: 12px !important;
+    }
+    .report-card h3 {
+        font-size: 1.1rem !important;
+    }
+    .report-card .date {
+        font-size: 0.75rem !important;
+    }
+}
+```
+
+#### Test sur Mobile
+Avant de valider un article :
+1. ✓ Ouvrir Chrome DevTools → Toggle device toolbar (Cmd+Shift+M)
+2. ✓ Tester iPhone SE (375px) et iPhone 12 Pro (390px)
+3. ✓ Vérifier : pas de débordement horizontal, pas de text wrap dans badges, tableaux lisibles
+4. ✓ Scroller horizontalement les tableaux si nécessaire (overflow-x:auto)
 
 ---
 
@@ -1384,8 +1589,8 @@ Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la couvertur
 
 ### Sections de l'Article Scanner
 
-#### Thème Dark
-Le scanner utilise un thème dark (fond `#0f172a`, texte `#f1f5f9`) distinct du thème light des analyses individuelles.
+#### Thème
+Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`) comme toutes les autres pages. **JAMAIS de thème dark.**
 
 #### Sections Obligatoires
 1. **Hero** : Date, badge régime de marché (couleur selon régime), stats clés (nb setups, score moyen, stratégie dominante)
