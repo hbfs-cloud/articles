@@ -12,6 +12,744 @@
     <meta property="og:url" content="https://market-watch.xyz/scanner/20260216/">
     <meta property="og:type" content="article">
     <!-- Google Tag Manager -->
+
+    <!-- ============================================================ -->
+    <!-- ECHARTS INITIALIZATION -->
+    <!-- ============================================================ -->
+    <script>
+        // Pie Chart: Strategy Weights
+        const pieChart = echarts.init(document.getElementById('pieChart'));
+        pieChart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+            series: [{
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                label: { show: true, position: 'outside', formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                data: [
+                    { value: 40, name: 'Oversold Bounce', itemStyle: { color: '#dc2626' } },
+                    { value: 30, name: 'Momentum Expansion', itemStyle: { color: '#16a34a' } },
+                    { value: 30, name: 'Breakout Squeeze', itemStyle: { color: '#3b82f6' } }
+                ]
+            }]
+        });
+
+        // Gauge: Average Score
+        const gaugeAvgScore = echarts.init(document.getElementById('gaugeAvgScore'));
+        gaugeAvgScore.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                splitNumber: 10,
+                axisLine: {
+                    lineStyle: {
+                        width: 30,
+                        color: [
+                            [0.7, '#f59e0b'],
+                            [0.85, '#22c55e'],
+                            [1, '#16a34a']
+                        ]
+                    }
+                },
+                pointer: { itemStyle: { color: 'auto' } },
+                axisTick: { distance: -30, length: 8, lineStyle: { color: '#fff', width: 2 } },
+                splitLine: { distance: -30, length: 30, lineStyle: { color: '#fff', width: 4 } },
+                axisLabel: { color: 'auto', distance: 40, fontSize: 12 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    color: 'auto',
+                    fontSize: 30,
+                    offsetCenter: [0, '70%']
+                },
+                data: [{ value: 81.7, name: 'Score Moyen' }]
+            }],
+            tooltip: { formatter: 'Score Moyen des 10 Setups: {c}/100' }
+        });
+
+        // Radar: Aggregated Profile
+        const radarAgg = echarts.init(document.getElementById('radarAggregated'));
+        radarAgg.setOption({
+            title: { text: '', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'R/R', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                splitArea: { areaStyle: { color: ['rgba(59, 130, 246, 0.05)', 'rgba(59, 130, 246, 0.1)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [83, 76, 79, 85, 81, 81],
+                    name: 'Moyenne Setups',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+        // Treemap: Sectoral Distribution
+        const treemap = echarts.init(document.getElementById('treemapSectors'));
+        treemap.setOption({
+            title: { text: '', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
+            tooltip: { formatter: '{b}: {c}%' },
+            series: [{
+                type: 'treemap',
+                data: [
+                    { name: 'Energy\n(XOM)', value: 20, itemStyle: { color: '#16a34a' } },
+                    { name: 'Healthcare\n(UNH,HRL)', value: 20, itemStyle: { color: '#3b82f6' } },
+                    { name: 'Semiconductors\n(AXTI)', value: 15, itemStyle: { color: '#8b5cf6' } },
+                    { name: 'Cybersecurity\n(ZS)', value: 15, itemStyle: { color: '#f59e0b' } },
+                    { name: 'Consumer Staples\n(HRL,MO,CAG)', value: 15, itemStyle: { color: '#dc2626' } },
+                    { name: 'Industrial\n(LASR,NEOG)', value: 10, itemStyle: { color: '#10b981' } },
+                    { name: 'Financial\n(IMXI)', value: 5, itemStyle: { color: '#6366f1' } }
+                ],
+                label: {
+                    show: true,
+                    formatter: '{b}\n{c}%',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#fff'
+                },
+                upperLabel: { show: false },
+                itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 }
+            }]
+        });
+
+
+        // Setup XOM: Gauge
+        const gaugeSetupXOM = echarts.init(document.getElementById('gaugeSetupXOM'));
+        gaugeSetupXOM.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 92, name: 'Exxon' }]
+            }],
+            tooltip: { formatter: 'Score Exxon: {c}/100' }
+        });
+
+        // Setup XOM: Radar
+        const radarSetupXOM = echarts.init(document.getElementById('radarSetupXOM'));
+        radarSetupXOM.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [90, 88, 95, 94, 92, 92],
+                    name: 'Exxon',
+                    areaStyle: { color: 'rgba(22, 163, 74, 0.3)' },
+                    lineStyle: { color: '#16a34a', width: 2 },
+                    itemStyle: { color: '#16a34a' }
+                }]
+            }]
+        });
+
+
+        // Setup AXTI: Gauge
+        const gaugeSetupAXTI = echarts.init(document.getElementById('gaugeSetupAXTI'));
+        gaugeSetupAXTI.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#3b82f6',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 91, name: 'AXT' }]
+            }],
+            tooltip: { formatter: 'Score AXT: {c}/100' }
+        });
+
+        // Setup AXTI: Radar
+        const radarSetupAXTI = echarts.init(document.getElementById('radarSetupAXTI'));
+        radarSetupAXTI.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [94, 86, 88, 96, 90, 91],
+                    name: 'AXT',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+
+        // Setup HRL: Gauge
+        const gaugeSetupHRL = echarts.init(document.getElementById('gaugeSetupHRL'));
+        gaugeSetupHRL.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 85, name: 'Hormel' }]
+            }],
+            tooltip: { formatter: 'Score Hormel: {c}/100' }
+        });
+
+        // Setup HRL: Radar
+        const radarSetupHRL = echarts.init(document.getElementById('radarSetupHRL'));
+        radarSetupHRL.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [88, 82, 80, 90, 88, 85],
+                    name: 'Hormel',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Setup ZS: Gauge
+        const gaugeSetupZS = echarts.init(document.getElementById('gaugeSetupZS'));
+        gaugeSetupZS.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 83, name: 'Zscaler' }]
+            }],
+            tooltip: { formatter: 'Score Zscaler: {c}/100' }
+        });
+
+        // Setup ZS: Radar
+        const radarSetupZS = echarts.init(document.getElementById('radarSetupZS'));
+        radarSetupZS.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [85, 78, 88, 82, 80, 83],
+                    name: 'Zscaler',
+                    areaStyle: { color: 'rgba(22, 163, 74, 0.3)' },
+                    lineStyle: { color: '#16a34a', width: 2 },
+                    itemStyle: { color: '#16a34a' }
+                }]
+            }]
+        });
+
+
+        // Setup LASR: Gauge
+        const gaugeSetupLASR = echarts.init(document.getElementById('gaugeSetupLASR'));
+        gaugeSetupLASR.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#3b82f6',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 80, name: 'nLIGHT' }]
+            }],
+            tooltip: { formatter: 'Score nLIGHT: {c}/100' }
+        });
+
+        // Setup LASR: Radar
+        const radarSetupLASR = echarts.init(document.getElementById('radarSetupLASR'));
+        radarSetupLASR.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [82, 76, 78, 86, 82, 80],
+                    name: 'nLIGHT',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+
+        // Setup NEOG: Gauge
+        const gaugeSetupNEOG = echarts.init(document.getElementById('gaugeSetupNEOG'));
+        gaugeSetupNEOG.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 78, name: 'Neogen' }]
+            }],
+            tooltip: { formatter: 'Score Neogen: {c}/100' }
+        });
+
+        // Setup NEOG: Radar
+        const radarSetupNEOG = echarts.init(document.getElementById('radarSetupNEOG'));
+        radarSetupNEOG.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [80, 74, 76, 84, 78, 78],
+                    name: 'Neogen',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Setup UNH: Gauge
+        const gaugeSetupUNH = echarts.init(document.getElementById('gaugeSetupUNH'));
+        gaugeSetupUNH.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 77, name: 'UnitedHealth' }]
+            }],
+            tooltip: { formatter: 'Score UnitedHealth: {c}/100' }
+        });
+
+        // Setup UNH: Radar
+        const radarSetupUNH = echarts.init(document.getElementById('radarSetupUNH'));
+        radarSetupUNH.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [79, 72, 82, 80, 85, 77],
+                    name: 'UnitedHealth',
+                    areaStyle: { color: 'rgba(22, 163, 74, 0.3)' },
+                    lineStyle: { color: '#16a34a', width: 2 },
+                    itemStyle: { color: '#16a34a' }
+                }]
+            }]
+        });
+
+
+        // Setup MO: Gauge
+        const gaugeSetupMO = echarts.init(document.getElementById('gaugeSetupMO'));
+        gaugeSetupMO.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 74, name: 'Altria' }]
+            }],
+            tooltip: { formatter: 'Score Altria: {c}/100' }
+        });
+
+        // Setup MO: Radar
+        const radarSetupMO = echarts.init(document.getElementById('radarSetupMO'));
+        radarSetupMO.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [76, 70, 72, 82, 76, 74],
+                    name: 'Altria',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Setup IMXI: Gauge
+        const gaugeSetupIMXI = echarts.init(document.getElementById('gaugeSetupIMXI'));
+        gaugeSetupIMXI.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#3b82f6',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 70, name: 'Intermex' }]
+            }],
+            tooltip: { formatter: 'Score Intermex: {c}/100' }
+        });
+
+        // Setup IMXI: Radar
+        const radarSetupIMXI = echarts.init(document.getElementById('radarSetupIMXI'));
+        radarSetupIMXI.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [72, 66, 68, 78, 72, 70],
+                    name: 'Intermex',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+
+        // Setup CAG: Gauge
+        const gaugeSetupCAG = echarts.init(document.getElementById('gaugeSetupCAG'));
+        gaugeSetupCAG.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 67, name: 'Conagra' }]
+            }],
+            tooltip: { formatter: 'Score Conagra: {c}/100' }
+        });
+
+        // Setup CAG: Radar
+        const radarSetupCAG = echarts.init(document.getElementById('radarSetupCAG'));
+        radarSetupCAG.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [70, 62, 64, 76, 70, 67],
+                    name: 'Conagra',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            pieChart.resize();
+            gaugeAvgScore.resize();
+            radarAgg.resize();
+            treemap.resize();
+            gaugeSetupXOM.resize();
+            radarSetupXOM.resize();
+            gaugeSetupAXTI.resize();
+            radarSetupAXTI.resize();
+            gaugeSetupHRL.resize();
+            radarSetupHRL.resize();
+            gaugeSetupZS.resize();
+            radarSetupZS.resize();
+            gaugeSetupLASR.resize();
+            radarSetupLASR.resize();
+            gaugeSetupNEOG.resize();
+            radarSetupNEOG.resize();
+            gaugeSetupUNH.resize();
+            radarSetupUNH.resize();
+            gaugeSetupMO.resize();
+            radarSetupMO.resize();
+            gaugeSetupIMXI.resize();
+            radarSetupIMXI.resize();
+            gaugeSetupCAG.resize();
+            radarSetupCAG.resize();
+        });
+    </script>
+
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -174,8 +912,65 @@
         .down { color: #dc2626; }
         .neutral { color: #64748b; }
 
+        
         @media (max-width: 768px) {
             .setup-header { flex-direction: column; align-items: flex-start; }
+            .setup-header-price { text-align: left; }
+            .regime-grid { grid-template-columns: 1fr; }
+            .data-table { font-size: 0.8rem !important; }
+            .data-table th,
+            .data-table td { padding: 0.5rem 0.75rem !important; }
+            .setup-card { padding: 1.25rem !important; }
+        }
+
+        @media (max-width: 480px) {
+            .data-table,
+            table {
+                font-size: 0.65rem !important;
+                table-layout: auto !important;
+                width: 100% !important;
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .data-table thead,
+            .data-table tbody,
+            .data-table tr {
+                display: table;
+                width: 100%;
+                table-layout: fixed;
+            }
+            .data-table th,
+            .data-table td {
+                padding: 0.25rem 0.35rem !important;
+                white-space: nowrap !important;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 0.65rem !important;
+            }
+            /* Hide "Région" or "Strategy" column on mobile if needed */
+            .data-table th:nth-child(2),
+            .data-table td:nth-child(2) {
+                font-size: 0.6rem !important;
+            }
+            .data-table .badge,
+            .badge {
+                font-size: 0.5rem !important;
+                padding: 0.1rem 0.25rem !important;
+            }
+            .data-table small {
+                font-size: 0.55rem !important;
+                display: block;
+                margin-top: 2px;
+            }
+            .setup-card {
+                padding: 0.75rem !important;
+                border-radius: 12px !important;
+                margin-bottom: 0.75rem !important;
+            }
+            .setup-header-info h3 { font-size: 1.1rem !important; }
+            .setup-header-price .price { font-size: 1.2rem !important; }
+        }
             .setup-header-price { text-align: left; }
             .regime-grid { grid-template-columns: 1fr; }
         }
@@ -255,6 +1050,7 @@
         <!-- Navigation -->
         <div class="nav-grid">
             <a href="#regime" class="nav-item">Régime</a>
+            <a href="#vue-ensemble" class="nav-item">Vue d'Ensemble</a>
             <a href="#synthese" class="nav-item">Synthèse</a>
             <a href="#setup-XOM" class="nav-item">XOM</a>
             <a href="#setup-AXTI" class="nav-item">AXTI</a>
@@ -300,12 +1096,12 @@
                                 <span style="font-weight:800; color:#dc2626;">96.88 (bearish)</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #e2e8f0;">
-                                <span style="font-weight:600; color:#0f172a;">TLT (20Y Treasury)</span>
-                                <span style="font-weight:800; color:#16a34a;">Recovering</span>
+                                <span style="font-weight:600; color:#0f172a;">Gold</span>
+                                <span style="font-weight:800; color:#f59e0b;">$5040 (structural rally)</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; padding:0.5rem 0;">
-                                <span style="font-weight:600; color:#0f172a;">Gold (XAU)</span>
-                                <span style="font-weight:800; color:#f59e0b;">$5040 (structural bull)</span>
+                                <span style="font-weight:600; color:#0f172a;">Oil (WTI)</span>
+                                <span style="font-weight:800; color:#16a34a;">$78.50 (+1.2%)</span>
                             </div>
                         </div>
                     </div>
@@ -316,11 +1112,46 @@
                     <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-chess" style="color:#8b5cf6;"></i> Pondérations Stratégies</h3>
                     <div id="pieChart" class="echart-box" style="height:280px;"></div>
                 </div>
+
+                <!-- Gauge: Score Moyen -->
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-gauge-high" style="color:#16a34a;"></i> Score Moyen Global</h3>
+                    <div id="gaugeAvgScore" class="echart-box" style="height:280px;"></div>
+                </div>
             </div>
 
             <div class="pedagogy-box" style="margin-top:1.5rem;">
                 <h4 style="color:#2563eb;">Comment lire le régime ROTATION RISK-OFF</h4>
                 <p>En phase de <strong>Rotation Risk-Off</strong>, les investisseurs se repositionnent des actifs risqués (tech, croissance) vers les valeurs défensives (santé, consommation de base, utilities, énergie). Ce mouvement est déclenché par une hausse de la volatilité et une cassure technique du S&P 500. L'or en rallye structurel ($5040) confirme la demande pour les actifs refuges. Dans ce contexte, les stratégies <strong>Oversold Bounce</strong> (40%) profitent des surventes excessives, les <strong>Momentum Expansion</strong> (30%) capturent les mouvements directionnels forts, et les <strong>Breakout Squeeze</strong> (30%) exploitent les compressions de volatilité. Le dollar baissier offre un support additionnel aux matières premières et aux valeurs internationales.</p>
+            </div>
+        </div>
+
+
+        <!-- ============================================================ -->
+        <!-- VUE D'ENSEMBLE VISUELLE -->
+        <!-- ============================================================ -->
+        <div id="vue-ensemble" class="content-card">
+            <h2><i class="fa-solid fa-chart-pie" style="color:#8b5cf6;"></i> Vue d'Ensemble Visuelle</h2>
+
+            <p>Visualisation consolidée des 10 setups détectés ce jour. Le radar montre le profil agrégé moyen sur 6 dimensions clés. Le treemap illustre la répartition sectorielle du portefeuille.</p>
+
+            <div class="regime-grid" style="margin-top:1.5rem;">
+                <!-- Radar Agrégé -->
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Agrégé des 10 Setups</h3>
+                    <div id="radarAggregated" class="echart-box" style="height:400px;"></div>
+                </div>
+
+                <!-- Treemap Sectoriel -->
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-sitemap" style="color:#f59e0b;"></i> Répartition Sectorielle</h3>
+                    <div id="treemapSectors" class="echart-box" style="height:400px;"></div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4 style="color:#2563eb;">Interprétation du Profil Agrégé</h4>
+                <p>Le <strong>radar agrégé</strong> montre la moyenne des scores sur 6 axes : <strong>Technique</strong> (83/100, patterns et indicateurs solides), <strong>Volume</strong> (76/100, flux mixtes), <strong>Momentum</strong> (79/100, tendances modérées), <strong>Risque</strong> (85/100, volatilité maîtrisée), <strong>R/R</strong> (81/100, ratio risque/rendement favorable), et <strong>Conviction</strong> (81/100, confiance institutionnelle). Ce profil équilibré reflète un contexte de rotation défensive avec opportunités sectorielles ciblées. Le <strong>treemap sectoriel</strong> révèle une diversification optimale : 20% Energy (XOM), 20% Healthcare (UNH,HRL), 15% Semiconductors (AXTI), 15% Cybersecurity (ZS), 15% Consumer Staples (HRL,MO,CAG), 10% Industrial (LASR,NEOG), 5% Financial (IMXI). Cette allocation capture la transition vers les secteurs défensifs et cycliques value, tout en maintenant une exposition technologique sélective.</p>
             </div>
         </div>
 
@@ -466,7 +1297,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">92</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">92</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#16a34a;"></i> Score Composite</h4>
+                    <div id="gaugeSetupXOM" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupXOM" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">90</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">88</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">95</div><div class="sf-label">Momentum</div></div>
@@ -576,7 +1417,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">91</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">91</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#3b82f6;"></i> Score Composite</h4>
+                    <div id="gaugeSetupAXTI" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupAXTI" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">94</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">86</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">88</div><div class="sf-label">Momentum</div></div>
@@ -686,7 +1537,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">85</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">85</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Score Composite</h4>
+                    <div id="gaugeSetupHRL" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupHRL" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">88</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">82</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">80</div><div class="sf-label">Momentum</div></div>
@@ -795,7 +1656,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">83</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">83</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#16a34a;"></i> Score Composite</h4>
+                    <div id="gaugeSetupZS" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupZS" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">85</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">78</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">88</div><div class="sf-label">Momentum</div></div>
@@ -904,7 +1775,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">80</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">80</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#3b82f6;"></i> Score Composite</h4>
+                    <div id="gaugeSetupLASR" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupLASR" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">82</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">76</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">78</div><div class="sf-label">Momentum</div></div>
@@ -1013,7 +1894,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">78</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">78</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Score Composite</h4>
+                    <div id="gaugeSetupNEOG" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupNEOG" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">80</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">74</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">76</div><div class="sf-label">Momentum</div></div>
@@ -1123,7 +2014,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">77</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">77</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#16a34a;"></i> Score Composite</h4>
+                    <div id="gaugeSetupUNH" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupUNH" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">79</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">72</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">82</div><div class="sf-label">Momentum</div></div>
@@ -1233,7 +2134,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">74</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">74</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Score Composite</h4>
+                    <div id="gaugeSetupMO" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupMO" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">76</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">70</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">72</div><div class="sf-label">Momentum</div></div>
@@ -1342,7 +2253,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">70</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">70</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#3b82f6;"></i> Score Composite</h4>
+                    <div id="gaugeSetupIMXI" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupIMXI" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">72</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">66</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">68</div><div class="sf-label">Momentum</div></div>
@@ -1452,7 +2373,17 @@
             </div>
 
             <div class="score-breakdown">
-                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">67</div><div class="sf-label">Composite</div></div>
+                <div class="score-factor"><div class="sf-value" style="color:#3b82f6;">67</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Score Composite</h4>
+                    <div id="gaugeSetupCAG" class="echart-box" style="height:250px;"></div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem; margin-bottom:0.5rem;"><i class="fa-solid fa-radar" style="color:#3b82f6;"></i> Profil Technique</h4>
+                    <div id="radarSetupCAG" class="echart-box" style="height:250px;"></div>
+                </div>
+            </div><div class="sf-label">Composite</div></div>
                 <div class="score-factor"><div class="sf-value">70</div><div class="sf-label">Technique</div></div>
                 <div class="score-factor"><div class="sf-value">62</div><div class="sf-label">Volume</div></div>
                 <div class="score-factor"><div class="sf-value">64</div><div class="sf-label">Momentum</div></div>
@@ -1619,6 +2550,744 @@
     <!-- ============================================================ -->
     <!-- CHARTS SCRIPTS -->
     <!-- ============================================================ -->
+
+    <!-- ============================================================ -->
+    <!-- ECHARTS INITIALIZATION -->
+    <!-- ============================================================ -->
+    <script>
+        // Pie Chart: Strategy Weights
+        const pieChart = echarts.init(document.getElementById('pieChart'));
+        pieChart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+            series: [{
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                label: { show: true, position: 'outside', formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                data: [
+                    { value: 40, name: 'Oversold Bounce', itemStyle: { color: '#dc2626' } },
+                    { value: 30, name: 'Momentum Expansion', itemStyle: { color: '#16a34a' } },
+                    { value: 30, name: 'Breakout Squeeze', itemStyle: { color: '#3b82f6' } }
+                ]
+            }]
+        });
+
+        // Gauge: Average Score
+        const gaugeAvgScore = echarts.init(document.getElementById('gaugeAvgScore'));
+        gaugeAvgScore.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                splitNumber: 10,
+                axisLine: {
+                    lineStyle: {
+                        width: 30,
+                        color: [
+                            [0.7, '#f59e0b'],
+                            [0.85, '#22c55e'],
+                            [1, '#16a34a']
+                        ]
+                    }
+                },
+                pointer: { itemStyle: { color: 'auto' } },
+                axisTick: { distance: -30, length: 8, lineStyle: { color: '#fff', width: 2 } },
+                splitLine: { distance: -30, length: 30, lineStyle: { color: '#fff', width: 4 } },
+                axisLabel: { color: 'auto', distance: 40, fontSize: 12 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    color: 'auto',
+                    fontSize: 30,
+                    offsetCenter: [0, '70%']
+                },
+                data: [{ value: 81.7, name: 'Score Moyen' }]
+            }],
+            tooltip: { formatter: 'Score Moyen des 10 Setups: {c}/100' }
+        });
+
+        // Radar: Aggregated Profile
+        const radarAgg = echarts.init(document.getElementById('radarAggregated'));
+        radarAgg.setOption({
+            title: { text: '', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'R/R', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                splitArea: { areaStyle: { color: ['rgba(59, 130, 246, 0.05)', 'rgba(59, 130, 246, 0.1)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [83, 76, 79, 85, 81, 81],
+                    name: 'Moyenne Setups',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+        // Treemap: Sectoral Distribution
+        const treemap = echarts.init(document.getElementById('treemapSectors'));
+        treemap.setOption({
+            title: { text: '', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
+            tooltip: { formatter: '{b}: {c}%' },
+            series: [{
+                type: 'treemap',
+                data: [
+                    { name: 'Energy\n(XOM)', value: 20, itemStyle: { color: '#16a34a' } },
+                    { name: 'Healthcare\n(UNH,HRL)', value: 20, itemStyle: { color: '#3b82f6' } },
+                    { name: 'Semiconductors\n(AXTI)', value: 15, itemStyle: { color: '#8b5cf6' } },
+                    { name: 'Cybersecurity\n(ZS)', value: 15, itemStyle: { color: '#f59e0b' } },
+                    { name: 'Consumer Staples\n(HRL,MO,CAG)', value: 15, itemStyle: { color: '#dc2626' } },
+                    { name: 'Industrial\n(LASR,NEOG)', value: 10, itemStyle: { color: '#10b981' } },
+                    { name: 'Financial\n(IMXI)', value: 5, itemStyle: { color: '#6366f1' } }
+                ],
+                label: {
+                    show: true,
+                    formatter: '{b}\n{c}%',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#fff'
+                },
+                upperLabel: { show: false },
+                itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 }
+            }]
+        });
+
+
+        // Setup XOM: Gauge
+        const gaugeSetupXOM = echarts.init(document.getElementById('gaugeSetupXOM'));
+        gaugeSetupXOM.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 92, name: 'Exxon' }]
+            }],
+            tooltip: { formatter: 'Score Exxon: {c}/100' }
+        });
+
+        // Setup XOM: Radar
+        const radarSetupXOM = echarts.init(document.getElementById('radarSetupXOM'));
+        radarSetupXOM.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [90, 88, 95, 94, 92, 92],
+                    name: 'Exxon',
+                    areaStyle: { color: 'rgba(22, 163, 74, 0.3)' },
+                    lineStyle: { color: '#16a34a', width: 2 },
+                    itemStyle: { color: '#16a34a' }
+                }]
+            }]
+        });
+
+
+        // Setup AXTI: Gauge
+        const gaugeSetupAXTI = echarts.init(document.getElementById('gaugeSetupAXTI'));
+        gaugeSetupAXTI.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#3b82f6',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 91, name: 'AXT' }]
+            }],
+            tooltip: { formatter: 'Score AXT: {c}/100' }
+        });
+
+        // Setup AXTI: Radar
+        const radarSetupAXTI = echarts.init(document.getElementById('radarSetupAXTI'));
+        radarSetupAXTI.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [94, 86, 88, 96, 90, 91],
+                    name: 'AXT',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+
+        // Setup HRL: Gauge
+        const gaugeSetupHRL = echarts.init(document.getElementById('gaugeSetupHRL'));
+        gaugeSetupHRL.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 85, name: 'Hormel' }]
+            }],
+            tooltip: { formatter: 'Score Hormel: {c}/100' }
+        });
+
+        // Setup HRL: Radar
+        const radarSetupHRL = echarts.init(document.getElementById('radarSetupHRL'));
+        radarSetupHRL.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [88, 82, 80, 90, 88, 85],
+                    name: 'Hormel',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Setup ZS: Gauge
+        const gaugeSetupZS = echarts.init(document.getElementById('gaugeSetupZS'));
+        gaugeSetupZS.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 83, name: 'Zscaler' }]
+            }],
+            tooltip: { formatter: 'Score Zscaler: {c}/100' }
+        });
+
+        // Setup ZS: Radar
+        const radarSetupZS = echarts.init(document.getElementById('radarSetupZS'));
+        radarSetupZS.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [85, 78, 88, 82, 80, 83],
+                    name: 'Zscaler',
+                    areaStyle: { color: 'rgba(22, 163, 74, 0.3)' },
+                    lineStyle: { color: '#16a34a', width: 2 },
+                    itemStyle: { color: '#16a34a' }
+                }]
+            }]
+        });
+
+
+        // Setup LASR: Gauge
+        const gaugeSetupLASR = echarts.init(document.getElementById('gaugeSetupLASR'));
+        gaugeSetupLASR.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#3b82f6',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 80, name: 'nLIGHT' }]
+            }],
+            tooltip: { formatter: 'Score nLIGHT: {c}/100' }
+        });
+
+        // Setup LASR: Radar
+        const radarSetupLASR = echarts.init(document.getElementById('radarSetupLASR'));
+        radarSetupLASR.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [82, 76, 78, 86, 82, 80],
+                    name: 'nLIGHT',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+
+        // Setup NEOG: Gauge
+        const gaugeSetupNEOG = echarts.init(document.getElementById('gaugeSetupNEOG'));
+        gaugeSetupNEOG.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 78, name: 'Neogen' }]
+            }],
+            tooltip: { formatter: 'Score Neogen: {c}/100' }
+        });
+
+        // Setup NEOG: Radar
+        const radarSetupNEOG = echarts.init(document.getElementById('radarSetupNEOG'));
+        radarSetupNEOG.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [80, 74, 76, 84, 78, 78],
+                    name: 'Neogen',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Setup UNH: Gauge
+        const gaugeSetupUNH = echarts.init(document.getElementById('gaugeSetupUNH'));
+        gaugeSetupUNH.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 77, name: 'UnitedHealth' }]
+            }],
+            tooltip: { formatter: 'Score UnitedHealth: {c}/100' }
+        });
+
+        // Setup UNH: Radar
+        const radarSetupUNH = echarts.init(document.getElementById('radarSetupUNH'));
+        radarSetupUNH.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [79, 72, 82, 80, 85, 77],
+                    name: 'UnitedHealth',
+                    areaStyle: { color: 'rgba(22, 163, 74, 0.3)' },
+                    lineStyle: { color: '#16a34a', width: 2 },
+                    itemStyle: { color: '#16a34a' }
+                }]
+            }]
+        });
+
+
+        // Setup MO: Gauge
+        const gaugeSetupMO = echarts.init(document.getElementById('gaugeSetupMO'));
+        gaugeSetupMO.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 74, name: 'Altria' }]
+            }],
+            tooltip: { formatter: 'Score Altria: {c}/100' }
+        });
+
+        // Setup MO: Radar
+        const radarSetupMO = echarts.init(document.getElementById('radarSetupMO'));
+        radarSetupMO.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [76, 70, 72, 82, 76, 74],
+                    name: 'Altria',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Setup IMXI: Gauge
+        const gaugeSetupIMXI = echarts.init(document.getElementById('gaugeSetupIMXI'));
+        gaugeSetupIMXI.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#3b82f6',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 70, name: 'Intermex' }]
+            }],
+            tooltip: { formatter: 'Score Intermex: {c}/100' }
+        });
+
+        // Setup IMXI: Radar
+        const radarSetupIMXI = echarts.init(document.getElementById('radarSetupIMXI'));
+        radarSetupIMXI.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [72, 66, 68, 78, 72, 70],
+                    name: 'Intermex',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+
+        // Setup CAG: Gauge
+        const gaugeSetupCAG = echarts.init(document.getElementById('gaugeSetupCAG'));
+        gaugeSetupCAG.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                radius: '80%',
+                axisLine: { lineStyle: { width: 20, color: [[0.7, '#f59e0b'], [0.85, '#22c55e'], [1, '#16a34a']] } },
+                pointer: { itemStyle: { color: 'auto' }, length: '60%' },
+                axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1.5 } },
+                splitLine: { distance: -20, length: 20, lineStyle: { color: '#fff', width: 3 } },
+                axisLabel: { color: 'auto', distance: 30, fontSize: 10 },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    offsetCenter: [0, '75%']
+                },
+                data: [{ value: 67, name: 'Conagra' }]
+            }],
+            tooltip: { formatter: 'Score Conagra: {c}/100' }
+        });
+
+        // Setup CAG: Radar
+        const radarSetupCAG = echarts.init(document.getElementById('radarSetupCAG'));
+        radarSetupCAG.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'Technique', max: 100 },
+                    { name: 'Volume', max: 100 },
+                    { name: 'Momentum', max: 100 },
+                    { name: 'Risque', max: 100 },
+                    { name: 'Liquidité', max: 100 },
+                    { name: 'Conviction', max: 100 }
+                ],
+                radius: '65%',
+                splitArea: { areaStyle: { color: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0.05)'] } },
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                splitLine: { lineStyle: { color: '#cbd5e1' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [70, 62, 64, 76, 70, 67],
+                    name: 'Conagra',
+                    areaStyle: { color: 'rgba(220, 38, 38, 0.3)' },
+                    lineStyle: { color: '#dc2626', width: 2 },
+                    itemStyle: { color: '#dc2626' }
+                }]
+            }]
+        });
+
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            pieChart.resize();
+            gaugeAvgScore.resize();
+            radarAgg.resize();
+            treemap.resize();
+            gaugeSetupXOM.resize();
+            radarSetupXOM.resize();
+            gaugeSetupAXTI.resize();
+            radarSetupAXTI.resize();
+            gaugeSetupHRL.resize();
+            radarSetupHRL.resize();
+            gaugeSetupZS.resize();
+            radarSetupZS.resize();
+            gaugeSetupLASR.resize();
+            radarSetupLASR.resize();
+            gaugeSetupNEOG.resize();
+            radarSetupNEOG.resize();
+            gaugeSetupUNH.resize();
+            radarSetupUNH.resize();
+            gaugeSetupMO.resize();
+            radarSetupMO.resize();
+            gaugeSetupIMXI.resize();
+            radarSetupIMXI.resize();
+            gaugeSetupCAG.resize();
+            radarSetupCAG.resize();
+        });
+    </script>
+
     <script>
         // ========== REGIME CHARTS ==========
 
