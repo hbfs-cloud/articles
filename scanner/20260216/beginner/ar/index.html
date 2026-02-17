@@ -478,6 +478,24 @@
                 <strong>الهدف</strong>: السعر المتوقع للبيع مع ربح.<br>
                 <strong>نسبة الربح/الخسارة</strong>: مثلاً 1:2 يعني إذا خسرت $1 يمكن أن تربح $2 (نسبة جيدة).</p>
             </div>
+
+            <!-- Visual Overview -->
+            <div class="regime-grid" style="margin-top:2.5rem;">
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-radar" style="color:#8b5cf6;"></i> الملف المتوسط للأسهم العشرة</h3>
+                    <div id="radarOverview" class="echart-box" style="height:350px;"></div>
+                </div>
+                <div>
+                    <h3 style="font-size:1.1rem; margin-bottom:0.75rem;"><i class="fa-solid fa-sitemap" style="color:#f59e0b;"></i> التوزيع حسب القطاع</h3>
+                    <div id="treemapSectors" class="echart-box" style="height:350px;"></div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4>📊 فهم الرسوم البيانية</h4>
+                <p><strong>الرسم الراداري:</strong> يعرض متوسط الجودة على 6 معايير. كلما كانت المنطقة الزرقاء أكبر، كان أفضل. هنا نرى أن الأسهم المختارة قوية في الاتجاه والجودة، لكن أضعف قليلاً في الحجم (طبيعي ليوم عطلة).</p>
+                <p style="margin-top:0.5rem;"><strong>التوزيع القطاعي:</strong> يظهر كيف تتوزع الأسهم العشرة بين القطاعات المختلفة. المربعات الأكبر = تمثيل أكبر للقطاع. نرى تنوعاً جيداً بين الطاقة والصحة والغذاء والتكنولوجيا.</p>
+            </div>
         </div>
 
         <!-- ============================================================ -->
@@ -1227,6 +1245,66 @@
                 ],
                 label: { show: true, position: 'top', fontWeight: 600 }
             }]
+        });
+
+        // Radar: Overview Profile (simplified for beginners) - RTL compatible
+        const radarOverview = echarts.init(document.getElementById('radarOverview'));
+        radarOverview.setOption({
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator: [
+                    { name: 'الاتجاه', max: 100 },
+                    { name: 'الحجم', max: 100 },
+                    { name: 'القوة', max: 100 },
+                    { name: 'الاستقرار', max: 100 },
+                    { name: 'الربح/الخطر', max: 100 },
+                    { name: 'الجودة', max: 100 }
+                ],
+                radius: '65%',
+                axisName: { fontSize: 11, color: '#475569', fontWeight: 600 }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [82, 68, 79, 86, 88, 85],
+                    name: 'الملف المتوسط',
+                    areaStyle: { color: 'rgba(59, 130, 246, 0.2)' },
+                    lineStyle: { color: '#3b82f6', width: 2 },
+                    itemStyle: { color: '#3b82f6' }
+                }]
+            }]
+        });
+
+        // Treemap: Sectoral Distribution (Arabic labels)
+        const treemapSectors = echarts.init(document.getElementById('treemapSectors'));
+        treemapSectors.setOption({
+            tooltip: { formatter: '{b}: {c}%' },
+            series: [{
+                type: 'treemap',
+                width: '100%',
+                height: '100%',
+                roam: false,
+                label: { show: true, formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                itemStyle: { borderWidth: 2, borderColor: '#fff', gapWidth: 2 },
+                data: [
+                    { name: 'الطاقة', value: 20, itemStyle: { color: '#f59e0b' } },
+                    { name: 'الصحة', value: 20, itemStyle: { color: '#3b82f6' } },
+                    { name: 'الغذاء', value: 20, itemStyle: { color: '#16a34a' } },
+                    { name: 'الإلكترونيات', value: 10, itemStyle: { color: '#8b5cf6' } },
+                    { name: 'الأمن السيبراني', value: 10, itemStyle: { color: '#ec4899' } },
+                    { name: 'تكنولوجيا الليزر', value: 10, itemStyle: { color: '#06b6d4' } },
+                    { name: 'التقنية المالية', value: 5, itemStyle: { color: '#84cc16' } },
+                    { name: 'التبغ', value: 5, itemStyle: { color: '#64748b' } }
+                ]
+            }]
+        });
+
+        // Responsive resize for all ECharts
+        window.addEventListener('resize', function() {
+            pieChart.resize();
+            barChart.resize();
+            radarOverview.resize();
+            treemapSectors.resize();
         });
 
         // ========== SETUP SPARKLINES (ApexCharts) ==========
