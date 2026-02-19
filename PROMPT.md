@@ -1723,12 +1723,21 @@ Le Portfolio est directement dans `index.html` (pas d'article séparé), dans le
 ### Tabs Système
 La landing page utilise un système de tabs :
 
-| Tab | data-tab | Icône | Contenu |
-|-----|----------|-------|---------|
-| Hebdo | `weekly` | `fa-calendar-week` | Rapports hebdomadaires (tous visibles) |
-| Analyses | `analyses` | `fa-chart-column` | Analyses individuelles avec filtre grade + recherche |
-| Scanner | `scanner` | `fa-radar` | Scans quotidiens algorithmiques |
-| Portfolio | `portfolio` | `fa-briefcase` | Stratégies systématiques |
+| Tab | data-tab | Icône | Count ID | Contenu |
+|-----|----------|-------|----------|---------|
+| Hebdo | `weekly` | `fa-calendar-week` | `weeklyCount` | Rapports hebdomadaires (tous visibles) |
+| Daily | `daily` | `fa-sun` | `dailyCount` | Briefings quotidiens |
+| Analyses | `analyses` | `fa-chart-column` | `analysesCount` | Analyses individuelles avec filtre grade + recherche |
+| Scanner | `scanner` | `fa-satellite-dish` | `scannerCount` | Scans quotidiens algorithmiques |
+| Portfolio | `portfolio` | `fa-briefcase` | — | Stratégies systématiques |
+
+### IMPORTANT — Compteurs de Tabs
+Chaque tab (sauf Portfolio) affiche un badge compteur (`<span class="tab-count" id="{id}">N</span>`).
+**À chaque ajout d'un article (daily, scanner, weekly, analyse), le compteur correspondant DOIT être mis à jour dans `index.html`.**
+- `weeklyCount` = nombre de cartes dans `#tab-weekly`
+- `dailyCount` = nombre de cartes dans `#tab-daily`
+- `scannerCount` = nombre de cartes dans `#tab-scanner`
+- `analysesCount` = calculé dynamiquement par JS (pas besoin de le mettre à jour manuellement)
 
 ### URL State
 - Tab actif dans URL : `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
