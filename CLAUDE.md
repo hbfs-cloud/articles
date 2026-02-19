@@ -105,6 +105,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
 5. **Générer la version expert/fr d'abord** (= `analyses/{TICKER}/index.html`, le root)
    - Inclure le switcher langue/niveau dans le hero
    - Utiliser ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
+   - **OBLIGATOIRE** : Inclure une section **Trade Idea** quand c'est pertinent (voir ci-dessous)
 6. **Générer les 5 autres variantes** en parallèle (via agents) :
    - `analyses/{TICKER}/expert/en/index.html` — traduction anglaise expert
    - `analyses/{TICKER}/expert/ar/index.html` — traduction arabe expert (dir="rtl")
@@ -130,8 +131,20 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
      "date": "YYYY-MM-DD"
    }
    ```
-8. Mettre à jour la modale Historique avec les versions archivées
-9. Mettre à jour index.html principal (carte avec data-grade + badge)
+8. **Section Trade Idea** (obligatoire quand pertinent — actions, ETF, crypto tradables) :
+   - Utiliser la classe CSS `trade-box` avec `trade-levels` (entry, stop, TP1, TP2, R/R)
+   - **Entrée** : zone de prix avec justification technique (support, EMA, pullback, breakout)
+   - **Stop Loss** : niveau d'invalidation technique clair (sous support, 52W low, EMA 200)
+   - **TP1 / TP2** : objectifs échelonnés avec raisonnement (consensus, résistance, retracement)
+   - **R/R** : ratio risk/reward minimum 1:1.5
+   - **Thèse du trade** : dans un `pedagogy-box`, expliquer le setup en 3-4 phrases
+   - **Signaux de renforcement** : 4 triggers bullish dans un bloc vert (`background:#f0fdf4; border:1px solid #16a34a`)
+   - **Signaux d'annulation** : 4 triggers d'invalidation dans un bloc rouge (`background:#fef2f2; border:1px solid #dc2626`)
+   - **Timing & Sizing** : dans un `alert-box`, préciser horizon (swing/moyen terme), catalyseurs calendrier, sizing (% portefeuille), beta, entrée échelonnée
+   - Ajouter un lien `<a href="#trade" class="nav-item">Trade Idea</a>` dans la navigation
+   - **Non pertinent pour** : indices (STOXX600, KOSPI), thématiques (STABLECOINS), devises (EURUSD) sauf si trade FX explicite
+9. Mettre à jour la modale Historique avec les versions archivées
+10. Mettre à jour index.html principal (carte avec data-grade + badge)
 
 ### "Analyse Daily" / "Briefing du jour"
 Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Crypto. Le weekend, focus crypto et géopolitique.
@@ -202,6 +215,7 @@ Les "Formation du Jour" suivent un cursus progressif :
 - **Charts**: ApexCharts + ECharts
 - **Responsive**: Mobile-first, breakpoints 768px et 480px
 - **Données**: Toujours citer les sources, disclaimer en bas
+- **Accents** (**OBLIGATOIRE**) : Toujours utiliser les caractères accentués français (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç). Ne JAMAIS écrire "resultat" → écrire "résultat", "benefice" → "bénéfice", "marche" → "marché", "premiere" → "première", etc. Les entités HTML (`&eacute;`, `&agrave;`) sont acceptables dans le HTML mais les caractères UTF-8 directs sont préférés.
 - **Badges**: badge-red (alerte), badge-blue (info), badge-green (positif), badge-purple (spécial)
 - **Classes CSS**: content-card, data-table, metric-grid/metric-card, risk-matrix/risk-item, pedagogy-box, didactic-box, alert-box, geo-alert, calendar-days-grid
 - **Compteurs de tabs** (**OBLIGATOIRE**) : À chaque ajout d'article, **toujours** mettre à jour le compteur du tab correspondant dans `index.html` :
