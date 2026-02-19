@@ -191,6 +191,11 @@ Les "Formation du Jour" suivent un cursus progressif :
 - **Données**: Toujours citer les sources, disclaimer en bas
 - **Badges**: badge-red (alerte), badge-blue (info), badge-green (positif), badge-purple (spécial)
 - **Classes CSS**: content-card, data-table, metric-grid/metric-card, risk-matrix/risk-item, pedagogy-box, didactic-box, alert-box, geo-alert, calendar-days-grid
+- **Compteurs de tabs** (**OBLIGATOIRE**) : À chaque ajout d'article, **toujours** mettre à jour le compteur du tab correspondant dans `index.html` :
+  - `<span class="tab-count" id="weeklyCount">N</span>` — nombre de cartes dans `#tab-weekly`
+  - `<span class="tab-count" id="dailyCount">N</span>` — nombre de cartes dans `#tab-daily`
+  - `<span class="tab-count" id="scannerCount">N</span>` — nombre de cartes dans `#tab-scanner`
+  - `analysesCount` est calculé dynamiquement par JS (pas de mise à jour manuelle)
 
 ## Tâches Planifiées (Scheduled Tasks)
 
