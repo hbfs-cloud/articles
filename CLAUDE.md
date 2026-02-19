@@ -41,6 +41,19 @@ articles/
 │       ├── variants.json         # Manifest des variantes
 │       ├── expert/{en,ar}/       # Variantes expert
 │       └── beginner/{fr,en,ar}/  # Variantes débutant
+├── lab/                          # Output Evidence.dev (fichiers statiques commités)
+│   ├── index.html                # Dashboard (built by Evidence)
+│   ├── explorer/index.html       # Stock Explorer
+│   ├── sectors/index.html        # Sector Deep Dive
+│   ├── regions/index.html        # Geographic Analysis
+│   ├── valuations/index.html     # Valuation Lab
+│   ├── earnings/index.html       # Earnings Tracker
+│   └── _app/...                  # Assets Evidence (JS, CSS, DuckDB WASM)
+├── lab-src/                      # Source Evidence (pas servi par GH Pages)
+│   ├── pages/                    # 6 pages Markdown + SQL
+│   ├── sources/market/stocks.csv # Dataset 146 stocks
+│   ├── evidence.config.yaml
+│   └── package.json
 ├── CLAUDE.md                     # Ce fichier (instructions pour Claude)
 ├── PROMPT.md                     # Prompts détaillés pour chaque type d'analyse
 └── CNAME                         # DNS: market-watch.xyz
