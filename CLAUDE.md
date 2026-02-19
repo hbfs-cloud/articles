@@ -215,6 +215,7 @@ Les "Formation du Jour" suivent un cursus progressif :
 - **Charts**: ApexCharts + ECharts
 - **Responsive**: Mobile-first, breakpoints 768px et 480px
 - **Données**: Toujours citer les sources, disclaimer en bas
+- **Logo société** (**OBLIGATOIRE**) : Toujours inclure le logo de la société dans le `ticker-header`, entre le lien MARKET WATCH et le `ticker-symbol`. Format : `<img src="https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg" alt="{NOM}" style="width:72px; height:72px; border-radius:16px; object-fit:contain; background:white; border:1px solid #e2e8f0; padding:8px; margin:0 auto 0.75rem;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` suivi d'un fallback `<div>` avec les initiales. Pour les tickers européens, utiliser le ticker court (AIR, AF, ENX) et non AIR.PA.
 - **Accents** (**OBLIGATOIRE**) : Toujours utiliser les caractères accentués français (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç). Ne JAMAIS écrire "resultat" → écrire "résultat", "benefice" → "bénéfice", "marche" → "marché", "premiere" → "première", etc. Les entités HTML (`&eacute;`, `&agrave;`) sont acceptables dans le HTML mais les caractères UTF-8 directs sont préférés.
 - **Badges**: badge-red (alerte), badge-blue (info), badge-green (positif), badge-purple (spécial)
 - **Classes CSS**: content-card, data-table, metric-grid/metric-card, risk-matrix/risk-item, pedagogy-box, didactic-box, alert-box, geo-alert, calendar-days-grid
