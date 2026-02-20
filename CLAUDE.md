@@ -41,6 +41,11 @@ articles/
 │       ├── variants.json         # Manifest des variantes
 │       ├── expert/{en,ar}/       # Variantes expert
 │       └── beginner/{fr,en,ar}/  # Variantes débutant
+│   └── retrospective/            # Rétrospective hebdomadaire du scanner
+│       ├── index.html            # Latest = dernière rétrospective
+│       ├── assets/report.css     # CSS
+│       ├── variants.json         # Manifest avec archives
+│       └── archive/YYYYMMDD/     # Versions précédentes
 ├── lab/                          # Output Evidence.dev (fichiers statiques commités)
 │   ├── index.html                # Dashboard (built by Evidence)
 │   ├── explorer/index.html       # Stock Explorer
@@ -200,6 +205,23 @@ Les "Formation du Jour" suivent un cursus progressif :
 5. Mettre à jour le tab Scanner dans index.html
 6. Voir PROMPT.md Section 5 pour le template complet
 
+### "Rétrospective Scanner" / "Rétro scanner"
+Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note le scanner.
+
+1. **Lister les scans récents** : Lire tous les `scanner/YYYYMMDD/index.html` des 10 derniers jours
+2. **Extraire les setups** : Pour chaque scan, extraire les 10 tickers avec entry/stop/TP/stratégie
+3. **Collecter les prix actuels** via MCP :
+   - `QueryData` types=quote,bars_daily symbols={tous les tickers}
+   - Calculer : hit rate TP1, hit rate TP2, stop rate, P&L moyen
+4. **Archiver la version précédente** (si existante) :
+   - Déplacer `scanner/retrospective/index.html` → `scanner/retrospective/archive/YYYYMMDD/`
+5. **Créer `scanner/retrospective/index.html`** avec :
+   - Note globale (A+ à F), dashboard rapide, tableau de tous les setups
+   - Analyse par stratégie, top 3 / flop 3, leçons & améliorations
+   - Bouton Historique pour naviguer les versions précédentes
+6. **Mettre à jour le tab Scanner** dans index.html (ajouter la carte rétrospective)
+7. Voir PROMPT.md Section 5bis pour le template complet
+
 ### Landing Page (index.html) — Tabs
 5 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
 - URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
@@ -235,6 +257,7 @@ Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bo
 - **Commandes Discord** :
   - `every day at 07:00 articles analyse daily` — Briefing quotidien 7h (tous les jours)
   - `every weekday at 23:00 articles scan du jour` — Scanner quotidien Lun-Ven 23h
+  - `every friday at 23:00 articles rétrospective scanner` — Rétrospective scanner hebdo Ven 23h
   - `every sunday at 18:00 articles nouvelle analyse weekly` — Weekly hebdo
   - `schedules` / `list` — Lister toutes les tâches planifiées
   - `pause #1` / `resume #1` / `cancel #1` / `run #1` — Gérer les tâches
@@ -245,3 +268,4 @@ Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bo
 |-------|----------|-----------------|
 | Briefing Daily | Tous les jours 7h00 | `every day at 07:00 articles analyse daily` |
 | Scanner Quotidien | Lun-Ven 23h00 | `every weekday at 23:00 articles scan du jour` |
+| Rétrospective Scanner | Vendredi 23h00 | `every friday at 23:00 articles rétrospective scanner` |

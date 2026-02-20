@@ -1671,6 +1671,103 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
 
 ---
 
+## 5bis. RÉTROSPECTIVE SCANNER HEBDOMADAIRE
+
+### Objectif
+Article de rétrospective publié chaque vendredi soir (23h) qui passe en revue **tous les scans des 10 derniers jours**, évalue la qualité des setups, mesure l'écart entre prévisions et résultats réels, et note le scanner globalement. Les enseignements sont réutilisés pour affiner les prochains scans.
+
+### Structure URL
+```
+scanner/
+├── retrospective/
+│   ├── index.html                # Latest = dernier article de rétrospective
+│   ├── assets/report.css         # CSS (thème light, comme le scanner)
+│   ├── variants.json             # Manifest (incluant archive)
+│   └── archive/
+│       └── YYYYMMDD/             # Versions précédentes
+│           └── index.html
+```
+
+### Collecte des Données
+
+1. **Lister les scans des 10 derniers jours** : Lire tous les `scanner/YYYYMMDD/index.html` publiés dans les 10 derniers jours
+2. **Extraire de chaque scan** :
+   - Régime de marché détecté
+   - Les 10 setups avec : ticker, stratégie, entry, stop, target(s), R/R, score, direction (long/short)
+3. **Collecter les prix actuels** via MCP :
+   - `QueryData` types=quote,bars_daily symbols={tous les tickers des scans}
+   - Pour chaque ticker : prix à la date du scan (entry day), high/low depuis, prix actuel
+4. **Calculer les résultats** :
+   - **Hit rate** : % de setups dont le TP1 a été atteint
+   - **Stop rate** : % de setups dont le stop a été touché
+   - **En cours** : setups ni TP ni stop touchés
+   - **P&L moyen** : rendement moyen si entrée au prix indiqué
+   - **R/R réalisé** vs R/R prévu
+   - **Meilleur setup** et **Pire setup** de la période
+5. **Analyser les patterns** :
+   - Quelle stratégie (oversold, momentum, breakout) a le meilleur taux de réussite ?
+   - Quel régime de marché a produit les meilleurs setups ?
+   - Y a-t-il un biais sectoriel ? Géographique ?
+   - Les scores composites corrèlent-ils avec les résultats ?
+
+### Sections Obligatoires
+
+1. **Hero** : "Rétrospective Scanner — Semaine du DD/MM au DD/MM", badge avec note globale (A+ à F)
+2. **Dashboard Rapide** :
+   - Note globale du scanner (A+ à F) avec critères
+   - Hit rate TP1 (%), Hit rate TP2 (%), Stop rate (%)
+   - P&L moyen, Meilleur trade, Pire trade
+   - ECharts Gauge : Taux de réussite global
+3. **Tableau Récapitulatif** : Table avec TOUS les setups des 10 jours
+   - Colonnes : Date | Ticker | Stratégie | Entry | Stop | TP1 | TP2 | Résultat | P&L | Statut (TP1 ✅, TP2 ✅, Stop ❌, En cours ⏳)
+   - Codage couleur : vert (TP atteint), rouge (stop touché), gris (en cours)
+4. **Analyse par Stratégie** :
+   - Oversold bounce : hit rate, P&L moyen, commentaire
+   - Momentum expansion : hit rate, P&L moyen, commentaire
+   - Breakout squeeze : hit rate, P&L moyen, commentaire
+   - ECharts Bar : Comparaison des hit rates par stratégie
+5. **Analyse par Régime** :
+   - Quel régime a dominé la période ?
+   - Corrélation régime → performance des setups
+6. **Top 3 Setups** : Les 3 meilleurs setups avec analyse détaillée de pourquoi ils ont fonctionné
+7. **Flop 3 Setups** : Les 3 pires setups avec analyse de ce qui n'a pas fonctionné
+8. **Leçons & Améliorations** :
+   - Ce que le scanner a bien fait
+   - Ce que le scanner a raté
+   - Ajustements proposés pour les prochains scans (pondérations, filtres, seuils)
+   - Pedagogy-box : leçon pour le lecteur tirée des résultats
+9. **Historique des Notes** : Tableau des rétrospectives précédentes avec note, hit rate, P&L moyen
+10. **Sources & Disclaimer**
+
+### Notation du Scanner
+
+| Note | Hit Rate TP1 | P&L Moyen | Critère |
+|------|-------------|-----------|---------|
+| **A+** | > 70% | > +3% | Exceptionnel |
+| **A** | 60-70% | > +2% | Très bon |
+| **B+** | 50-60% | > +1% | Bon |
+| **B** | 40-50% | > 0% | Correct |
+| **C** | 30-40% | -1% à 0% | Médiocre |
+| **D** | 20-30% | < -1% | Mauvais |
+| **F** | < 20% | < -3% | Échec |
+
+### Gestion des Versions
+- `scanner/retrospective/index.html` = toujours la **dernière** rétrospective
+- Lors de la création d'une nouvelle rétrospective :
+  1. Déplacer l'actuelle dans `scanner/retrospective/archive/YYYYMMDD/`
+  2. Créer la nouvelle en `scanner/retrospective/index.html`
+  3. Le bouton Historique dans le header permet de naviguer entre les versions
+- Mettre à jour `variants.json` avec la liste des archives
+
+### Feedback Loop
+Les leçons de chaque rétrospective sont utilisées pour affiner les scans suivants :
+- Si une stratégie sous-performe → réduire son poids dans `RunAutoScreener`
+- Si un secteur génère trop de faux signaux → ajuster les filtres
+- Si les stops sont trop serrés → élargir les seuils ATR
+- Mentionner explicitement dans le prochain scan : "Suite à la rétrospective du DD/MM, nous avons ajusté..."
+
+---
+
 ## 6. PORTFOLIO (Stratégies Systématiques)
 
 ### Objectif
