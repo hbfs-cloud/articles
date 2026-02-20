@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rétrospective Scanner Hebdomadaire | 10-20 Février 2026 | Market Watch</title>
+    <!-- Open Graph -->
+    <meta property="og:title" content="Rétrospective Scanner Hebdomadaire | 10-20 Février 2026 | Market Watch">
+    <meta property="og:description" content="Bilan complet des 40 setups scannés du 10 au 20 février 2026 — Hit rate 62.5%, note C+ — Audit qualité des données">
+    <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+    <meta property="og:url" content="https://market-watch.xyz/scanner/retrospective/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <style>
+        /* Retrospective-specific styles */
+        .retro-grade {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            font-size: 1.75rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+        .status-tp { background: #f0fdf4; color: #16a34a; }
+        .status-stop { background: #fef2f2; color: #dc2626; }
+        .status-progress { background: #eff6ff; color: #2563eb; }
+        .status-invalid { background: #fefce8; color: #a16207; }
+        .status-near { background: #ecfdf5; color: #059669; }
+
+        .top-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .top-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        .top-card-rank {
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .top-card-ticker {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .top-card-perf {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .scan-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .scan-tab.active {
+            border-color: #2563eb;
+            color: #2563eb;
+            background: #eff6ff;
+        }
+        .scan-tab:hover {
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .scan-panel { display: none; }
+        .scan-panel.active { display: block; }
+
+        .issue-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .issue-card-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .issue-card-body {
+            padding: 1.25rem;
+        }
+        .issue-severity {
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .timeline-item:last-child { border-bottom: none; }
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 0.35rem;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        /* Duplicate detection highlight */
+        .dup-highlight {
+            background: #fefce8;
+            border: 1px dashed #f59e0b;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.75rem 0;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #2563eb; }
+
+        @media (max-width: 768px) {
+            .scan-tabs-container {
+                flex-wrap: wrap !important;
+            }
+            .scan-tab {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .retro-grade {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+                border-radius: 12px;
+            }
+            .top-card { padding: 0.75rem !important; }
+            .top-card-perf { font-size: 1.1rem !important; }
+            .top-card-ticker { font-size: 1rem !important; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- ============================================================ -->
+    <!-- HEADER -->
+    <!-- ============================================================ -->
+    <div style="background:#ffffff; border-bottom:1px solid #e2e8f0; padding:0.75rem 2rem;">
+        <div style="max-width:1000px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
+            <a href="https://market-watch.xyz/" style="text-decoration:none; font-weight:800; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:0.5rem;">
+                <i class="fa-solid fa-chart-line" style="color:#2563eb;"></i> MARKET WATCH
+            </a>
+            <div style="display:flex; gap:1rem; align-items:center;">
+                <a href="https://market-watch.xyz/?tab=scanner" style="text-decoration:none; font-size:0.85rem; color:#64748b; font-weight:600;">
+                    <i class="fa-solid fa-radar"></i> Scanner
+                </a>
+                <span style="font-size:0.75rem; color:#94a3b8;">20 Fév 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- HERO SECTION -->
+    <!-- ============================================================ -->
+    <div class="hero-section" style="padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+        <div style="max-width:800px; margin:0 auto; text-align:center;">
+            <a href="https://market-watch.xyz/?tab=scanner" class="back-link" style="margin-bottom:1.5rem;">
+                <i class="fa-solid fa-arrow-left"></i> Retour au Scanner
+            </a>
+            <div style="display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+                <span class="badge badge-purple"><i class="fa-solid fa-microscope"></i> Rétrospective</span>
+                <span class="badge badge-blue"><i class="fa-solid fa-calendar-week"></i> 10-20 Fév 2026</span>
+                <span class="badge badge-red"><i class="fa-solid fa-shield-halved"></i> Early Risk-Off</span>
+            </div>
+            <h1 class="hero-title" style="font-size:2.75rem;">Rétrospective Scanner Hebdomadaire</h1>
+            <p class="hero-subtitle">Audit complet des 40 setups générés entre le 10 et le 20 février 2026. Performance réelle, qualité des données et recommandations d'amélioration.</p>
+
+            <div style="display:flex; align-items:center; justify-content:center; gap:2rem; flex-wrap:wrap; margin-top:2rem;">
+                <div style="text-align:center;">
+                    <div class="retro-grade">C+</div>
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.5rem;">Note globale</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:2.5rem; font-weight:900; color:#16a34a;">62.5%</div>
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Hit rate (setups valides)</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:2.5rem; font-weight:900; color:#dc2626;">25%</div>
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Taux d'erreur données</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:2.5rem; font-weight:900; color:#0f172a;">40</div>
+                    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Setups analysés</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- NAVIGATION GRID -->
+    <!-- ============================================================ -->
+    <div class="container" style="margin-top:-3rem;">
+        <div class="nav-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+            <a href="#dashboard" class="nav-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="#scan15" class="nav-item"><i class="fa-solid fa-calendar-day"></i> Scan 15 Fév</a>
+            <a href="#scan17" class="nav-item"><i class="fa-solid fa-calendar-day"></i> Scan 17 Fév</a>
+            <a href="#scan1920" class="nav-item"><i class="fa-solid fa-calendar-days"></i> Scan 19-20 Fév</a>
+            <a href="#top3" class="nav-item"><i class="fa-solid fa-trophy"></i> Top 3</a>
+            <a href="#flop3" class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Flop 3</a>
+            <a href="#data-quality" class="nav-item" style="border-color:#dc2626; color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Qualité Données</a>
+            <a href="#duplicates" class="nav-item"><i class="fa-solid fa-clone"></i> Doublons</a>
+            <a href="#lessons" class="nav-item"><i class="fa-solid fa-lightbulb"></i> Leçons</a>
+            <a href="#sources" class="nav-item"><i class="fa-solid fa-book"></i> Sources</a>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ALERT BANNER — DATA QUALITY WARNING -->
+        <!-- ============================================================ -->
+        <div class="alert-box" style="display:flex; align-items:center; gap:1rem; padding:1.25rem 1.5rem; margin-bottom:2rem; flex-wrap:wrap;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem; color:#dc2626;"></i>
+            <div style="flex:1; min-width:200px;">
+                <h4 style="color:#dc2626 !important; margin:0 0 0.25rem; font-size:0.9rem;">Alerte qualité des données</h4>
+                <p style="margin:0; font-size:0.85rem; color:#64748b;">5 setups sur 20 (scans du 15 et 17 fév) présentaient des prix d'entrée incohérents avec le marché réel. Ce problème de données obsolètes fausse le taux de réussite apparent et constitue le défaut le plus critique du scanner.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: DASHBOARD RAPIDE -->
+        <!-- ============================================================ -->
+        <div id="dashboard" class="content-card">
+            <h2><i class="fa-solid fa-gauge-high" style="color:#2563eb;"></i> Dashboard Rapide</h2>
+
+            <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#0f172a;">4</div>
+                    <div class="metric-label">Scans analysés</div>
+                    <div class="metric-change neutral">15, 17, 19, 20 Fév</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#0f172a;">40</div>
+                    <div class="metric-label">Setups totaux</div>
+                    <div class="metric-change neutral">10 par scan</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">5</div>
+                    <div class="metric-label">TP1 atteints</div>
+                    <div class="metric-change up">Scan du 15 Fév</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">2</div>
+                    <div class="metric-label">Stops touchés</div>
+                    <div class="metric-change down">ACM, ACHC</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#2563eb;">8</div>
+                    <div class="metric-label">En cours</div>
+                    <div class="metric-change neutral">Scans 17-20 Fév</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">5</div>
+                    <div class="metric-label">Entrées invalides</div>
+                    <div class="metric-change down">Données obsolètes</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">62.5%</div>
+                    <div class="metric-label">Hit rate (valides)</div>
+                    <div class="metric-change up">5/8 setups</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#f59e0b;">C+</div>
+                    <div class="metric-label">Note globale</div>
+                    <div class="metric-change down">Données plombent la note</div>
+                </div>
+            </div>
+
+            <!-- ECharts Gauge: Hit Rate -->
+            <h3 style="margin-top:2rem;"><i class="fa-solid fa-bullseye" style="color:#16a34a;"></i> Taux de réussite — Setups valides uniquement</h3>
+            <div class="chart-container">
+                <div id="gauge-hitrate" style="width:100%; height:300px;"></div>
+            </div>
+
+            <!-- ECharts Bar: Performance par scan -->
+            <h3><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> Résultats par scan</h3>
+            <div class="chart-container">
+                <div id="bar-scans" style="width:100%; height:350px;"></div>
+            </div>
+
+            <!-- Score moyen par scan -->
+            <h3><i class="fa-solid fa-star" style="color:#f59e0b;"></i> Score moyen des setups</h3>
+            <div class="chart-container">
+                <div id="bar-scores" style="width:100%; height:300px;"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: TABLEAU COMPLET DES 40 SETUPS -->
+        <!-- ============================================================ -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-list-check" style="color:#0f172a;"></i> Les 40 setups en détail</h2>
+            <p>Vue consolidée de l'ensemble des setups générés par le scanner entre le 10 et le 20 février 2026. Les setups avec des prix d'entrée incohérents sont signalés en jaune.</p>
+
+            <!-- Scan Tabs -->
+            <div class="scan-tabs-container" style="display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+                <button class="scan-tab active" onclick="switchScan('all')"><i class="fa-solid fa-layer-group"></i> Tous (40)</button>
+                <button class="scan-tab" onclick="switchScan('feb15')"><i class="fa-solid fa-calendar-day"></i> 15 Fév (10)</button>
+                <button class="scan-tab" onclick="switchScan('feb17')"><i class="fa-solid fa-calendar-day"></i> 17 Fév (10)</button>
+                <button class="scan-tab" onclick="switchScan('feb19')"><i class="fa-solid fa-calendar-day"></i> 19 Fév (10)</button>
+                <button class="scan-tab" onclick="switchScan('feb20')"><i class="fa-solid fa-calendar-day"></i> 20 Fév (10)</button>
+            </div>
+
+            <!-- Scan Feb 15 -->
+            <div id="scan15" class="scan-panel active">
+                <h3 style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="background:#2563eb; color:white; padding:0.25rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:800;">15 FÉV</span>
+                    Scan du 15 février 2026
+                    <span class="badge badge-blue">Early Risk-Off</span>
+                    <span class="badge badge-purple">Score moy. 74.2</span>
+                </h3>
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ticker</th>
+                                <th>Direction</th>
+                                <th>Entrée</th>
+                                <th>Stop</th>
+                                <th>TP1</th>
+                                <th>Prix actuel (19/02)</th>
+                                <th>P&L</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background:#fefce8;">
+                                <td>1</td>
+                                <td><strong>ADBE</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$430-435</td>
+                                <td>$415</td>
+                                <td>$460</td>
+                                <td>$259.21</td>
+                                <td style="color:#a16207; font-weight:700;">N/A</td>
+                                <td><span class="status-tag status-invalid"><i class="fa-solid fa-triangle-exclamation"></i> Invalide</span></td>
+                            </tr>
+                            <tr style="background:#fefce8;">
+                                <td>2</td>
+                                <td><strong>ADP</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$303-308</td>
+                                <td>$293</td>
+                                <td>$325</td>
+                                <td>$215.97</td>
+                                <td style="color:#a16207; font-weight:700;">N/A</td>
+                                <td><span class="status-tag status-invalid"><i class="fa-solid fa-triangle-exclamation"></i> Invalide</span></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><strong>ABBV</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$196-200</td>
+                                <td>$188</td>
+                                <td>$215</td>
+                                <td>$224.35</td>
+                                <td style="color:#16a34a; font-weight:700;">+14%</td>
+                                <td><span class="status-tag status-tp"><i class="fa-solid fa-check-circle"></i> TP1 atteint</span></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><strong>AA</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$38-39</td>
+                                <td>$35</td>
+                                <td>$45</td>
+                                <td>$59.69</td>
+                                <td style="color:#16a34a; font-weight:700;">+53%</td>
+                                <td><span class="status-tag status-tp"><i class="fa-solid fa-check-circle"></i> TP1 atteint</span></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td><strong>ACAD</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$16.50-17</td>
+                                <td>$15</td>
+                                <td>$21</td>
+                                <td>$24.33</td>
+                                <td style="color:#16a34a; font-weight:700;">+43%</td>
+                                <td><span class="status-tag status-tp"><i class="fa-solid fa-check-circle"></i> TP1 atteint</span></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td><strong>AAP</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$42-43</td>
+                                <td>$39</td>
+                                <td>$50</td>
+                                <td>$55.98</td>
+                                <td style="color:#16a34a; font-weight:700;">+33%</td>
+                                <td><span class="status-tag status-tp"><i class="fa-solid fa-check-circle"></i> TP1 atteint</span></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td><strong>ACM</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$111-114</td>
+                                <td>$105</td>
+                                <td>$125</td>
+                                <td>$96.58</td>
+                                <td style="color:#dc2626; font-weight:700;">-14%</td>
+                                <td><span class="status-tag status-stop"><i class="fa-solid fa-xmark-circle"></i> Stop touché</span></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td><strong>ACHC</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$27-29</td>
+                                <td>$25</td>
+                                <td>$35</td>
+                                <td>$16.86</td>
+                                <td style="color:#dc2626; font-weight:700;">-42%</td>
+                                <td><span class="status-tag status-stop"><i class="fa-solid fa-xmark-circle"></i> Stop touché</span></td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td><strong>ACMR</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$22-23</td>
+                                <td>$20</td>
+                                <td>$30</td>
+                                <td>$65.35</td>
+                                <td style="color:#16a34a; font-weight:700;">+184%</td>
+                                <td><span class="status-tag status-tp"><i class="fa-solid fa-check-circle"></i> TP1 atteint</span></td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td><strong>AAON</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$97-100</td>
+                                <td>$92</td>
+                                <td>$112</td>
+                                <td>$101.02</td>
+                                <td style="color:#2563eb; font-weight:700;">+1%</td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> En cours</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pedagogy-box" style="margin-top:1.5rem;">
+                    <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-chart-pie"></i> Bilan du 15 février</h4>
+                    <p style="margin:0; font-size:0.9rem; color:#334155;">Sur 10 setups, <strong>2 avaient des prix d'entrée totalement incohérents</strong> (ADBE à $430 alors que le titre cotait ~$260, ADP à $303 vs ~$216 réel). En excluant ces entrées invalides, le hit rate est de <strong>5/8 soit 62.5%</strong> — un taux honorable. Les meilleures performances viennent de petites/moyennes caps (ACMR +184%, AA +53%). Le scanner a montré un vrai talent de stock-picking sur les setups avec des données correctes.</p>
+                </div>
+            </div>
+
+            <!-- Scan Feb 17 -->
+            <div id="scan17" class="scan-panel active">
+                <h3 style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="background:#8b5cf6; color:white; padding:0.25rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:800;">17 FÉV</span>
+                    Scan du 17 février 2026
+                    <span class="badge badge-blue">Early Risk-Off</span>
+                    <span class="badge badge-purple">Score moy. 91.5</span>
+                </h3>
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ticker</th>
+                                <th>Direction</th>
+                                <th>Entrée</th>
+                                <th>Stop</th>
+                                <th>TP1</th>
+                                <th>Prix actuel (19/02)</th>
+                                <th>P&L</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><strong>ABBV</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$229-233</td>
+                                <td>$221</td>
+                                <td>$245</td>
+                                <td>$224.35</td>
+                                <td style="color:#dc2626; font-weight:700;">-3%</td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> En cours</span></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><strong>ABT</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$111-114</td>
+                                <td>$106</td>
+                                <td>$125</td>
+                                <td>$112.19</td>
+                                <td style="color:#2563eb; font-weight:700;">+1%</td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> En cours</span></td>
+                            </tr>
+                            <tr style="background:#fefce8;">
+                                <td>3</td>
+                                <td><strong>JNJ</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$150-154</td>
+                                <td>$144</td>
+                                <td>$170</td>
+                                <td>$246.91</td>
+                                <td style="color:#a16207; font-weight:700;">N/A</td>
+                                <td><span class="status-tag status-invalid"><i class="fa-solid fa-triangle-exclamation"></i> Invalide</span></td>
+                            </tr>
+                            <tr style="background:#fefce8;">
+                                <td>4</td>
+                                <td><strong>PG</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$170-174</td>
+                                <td>$164</td>
+                                <td>$185</td>
+                                <td>$158.56</td>
+                                <td style="color:#a16207; font-weight:700;">N/A</td>
+                                <td><span class="status-tag status-invalid"><i class="fa-solid fa-triangle-exclamation"></i> Invalide</span></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td><strong>XLV</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$157-160</td>
+                                <td>$153</td>
+                                <td>$170</td>
+                                <td>$157.26</td>
+                                <td style="color:#2563eb; font-weight:700;">0%</td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> En cours</span></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td><strong>GLD</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$460-465</td>
+                                <td>$452</td>
+                                <td>$480</td>
+                                <td>$459.56</td>
+                                <td style="color:#dc2626; font-weight:700;">-1%</td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> En cours</span></td>
+                            </tr>
+                            <tr style="background:#fefce8;">
+                                <td>7</td>
+                                <td><strong>ASML</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$920-935</td>
+                                <td>$890</td>
+                                <td>$1000</td>
+                                <td>$1 458.93</td>
+                                <td style="color:#a16207; font-weight:700;">N/A</td>
+                                <td><span class="status-tag status-invalid"><i class="fa-solid fa-triangle-exclamation"></i> Invalide</span></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td><strong>TSM</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$365-375</td>
+                                <td>$350</td>
+                                <td>$400</td>
+                                <td>$360.39</td>
+                                <td style="color:#dc2626; font-weight:700;">-3%</td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> En cours</span></td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td><strong>VGK</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$84-86</td>
+                                <td>$81</td>
+                                <td>$90</td>
+                                <td>$89.14</td>
+                                <td style="color:#16a34a; font-weight:700;">+5%</td>
+                                <td><span class="status-tag status-near"><i class="fa-solid fa-arrow-up"></i> Proche TP1</span></td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td><strong>TLT</strong></td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>$85.50-87</td>
+                                <td>$83</td>
+                                <td>$90</td>
+                                <td>$89.62</td>
+                                <td style="color:#16a34a; font-weight:700;">+4%</td>
+                                <td><span class="status-tag status-near"><i class="fa-solid fa-arrow-up"></i> Proche TP1</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pedagogy-box" style="margin-top:1.5rem;">
+                    <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-chart-pie"></i> Bilan du 17 février</h4>
+                    <p style="margin:0; font-size:0.9rem; color:#334155;">Score moyen le plus élevé de la semaine (91.5), mais <strong>3 setups sur 10 avec des données invalides</strong> (JNJ, PG, ASML). L'erreur sur ASML est la plus flagrante : entrée suggérée à $920-935 alors que le titre cotait $1 459. Sur les 7 setups valides, 2 approchent leur TP1 (VGK, TLT) et 5 sont en cours. <strong>Aucun stop touché pour l'instant</strong> — le scan est encore jeune (3 jours).</p>
+                </div>
+            </div>
+
+            <!-- Scan Feb 19-20 -->
+            <div id="scan1920" class="scan-panel active">
+                <h3 style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="background:#f59e0b; color:white; padding:0.25rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:800;">19-20 FÉV</span>
+                    Scans des 19 et 20 février 2026
+                    <span class="badge badge-blue">Early Risk-Off</span>
+                    <span class="badge badge-red"><i class="fa-solid fa-clone"></i> 6 doublons</span>
+                </h3>
+
+                <div class="alert-box" style="padding:1rem 1.25rem; margin-bottom:1.5rem;">
+                    <h4 style="color:#dc2626 !important; margin:0 0 0.5rem;"><i class="fa-solid fa-clone"></i> Détection de doublons</h4>
+                    <p style="margin:0; font-size:0.85rem; color:#64748b;">Les scans du 19 et du 20 février partagent <strong>6 tickers identiques</strong> (COLD, OMC, NICE, DE, AG, ETSY) avec des prix d'entrée identiques. Cela suggère un problème de rafraîchissement des données ou une duplication du code. Seuls 4 nouveaux tickers apparaissent dans le scan du 20 (LITE, FIX, GEV, CAT).</p>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ticker</th>
+                                <th>Scan</th>
+                                <th>Direction</th>
+                                <th>Entrée</th>
+                                <th>Prix actuel</th>
+                                <th>Doublon ?</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="dup-highlight">
+                                <td>1</td>
+                                <td><strong>COLD</strong></td>
+                                <td>19 + 20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>Identique</td>
+                                <td>—</td>
+                                <td><span class="badge badge-red"><i class="fa-solid fa-clone"></i> OUI</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr class="dup-highlight">
+                                <td>2</td>
+                                <td><strong>OMC</strong></td>
+                                <td>19 + 20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>Identique</td>
+                                <td>—</td>
+                                <td><span class="badge badge-red"><i class="fa-solid fa-clone"></i> OUI</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr class="dup-highlight">
+                                <td>3</td>
+                                <td><strong>NICE</strong></td>
+                                <td>19 + 20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>Identique</td>
+                                <td>—</td>
+                                <td><span class="badge badge-red"><i class="fa-solid fa-clone"></i> OUI</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr class="dup-highlight">
+                                <td>4</td>
+                                <td><strong>DE</strong></td>
+                                <td>19 + 20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>Identique</td>
+                                <td>—</td>
+                                <td><span class="badge badge-red"><i class="fa-solid fa-clone"></i> OUI</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr class="dup-highlight">
+                                <td>5</td>
+                                <td><strong>AG</strong></td>
+                                <td>19 + 20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>Identique</td>
+                                <td>—</td>
+                                <td><span class="badge badge-red"><i class="fa-solid fa-clone"></i> OUI</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr class="dup-highlight">
+                                <td>6</td>
+                                <td><strong>ETSY</strong></td>
+                                <td>19 + 20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>Identique</td>
+                                <td>—</td>
+                                <td><span class="badge badge-red"><i class="fa-solid fa-clone"></i> OUI</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td><strong>FNF</strong></td>
+                                <td>19</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-blue">Unique 19</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td><strong>DECK</strong></td>
+                                <td>19</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-blue">Unique 19</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td><strong>EL</strong></td>
+                                <td>19</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-blue">Unique 19</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td><strong>FIS</strong></td>
+                                <td>19</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-blue">Unique 19</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>11</td>
+                                <td><strong>LITE</strong></td>
+                                <td>20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-green">Nouveau 20</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>12</td>
+                                <td><strong>FIX</strong></td>
+                                <td>20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-green">Nouveau 20</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>13</td>
+                                <td><strong>GEV</strong></td>
+                                <td>20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-green">Nouveau 20</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                            <tr>
+                                <td>14</td>
+                                <td><strong>CAT</strong></td>
+                                <td>20</td>
+                                <td><span class="badge badge-green">Long</span></td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="badge badge-green">Nouveau 20</span></td>
+                                <td><span class="status-tag status-progress"><i class="fa-solid fa-clock"></i> Trop tôt</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pedagogy-box" style="margin-top:1.5rem;">
+                    <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-chart-pie"></i> Bilan des 19-20 février</h4>
+                    <p style="margin:0; font-size:0.9rem; color:#334155;">Trop tôt pour évaluer les performances (publiés le jour même ou la veille). Le problème majeur est la <strong>duplication de 60% des tickers</strong> entre deux scans consécutifs. Sur les 20 setups combinés, seuls 14 sont uniques. Le scanner du 20 février n'apporte que 4 nouvelles idées. Ce manque de renouvellement réduit considérablement la valeur ajoutée du scan quotidien.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: TOP 3 SETUPS -->
+        <!-- ============================================================ -->
+        <div id="top3" class="content-card">
+            <h2><i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Top 3 — Meilleures performances</h2>
+            <p>Les trois setups ayant délivré les meilleures performances sur la période. Tous issus du scan du 15 février, confirmant la capacité du scanner à identifier des opportunités de qualité quand les données sont fiables.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin-top:1.5rem;">
+                <!-- #1 ACMR -->
+                <div class="top-card" style="border-top:4px solid #f59e0b;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                        <div class="top-card-rank" style="color:#f59e0b;">1</div>
+                        <div>
+                            <div class="top-card-ticker">ACMR</div>
+                            <div style="font-size:0.8rem; color:#64748b;">ACM Research</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <div class="top-card-perf" style="color:#16a34a;">+184%</div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.8rem;">
+                        <div style="background:#f8fafc; padding:0.5rem; border-radius:8px; text-align:center;">
+                            <div style="color:#64748b; font-size:0.65rem; text-transform:uppercase;">Entrée</div>
+                            <div style="font-weight:800; color:#0f172a;">$22-23</div>
+                        </div>
+                        <div style="background:#f0fdf4; padding:0.5rem; border-radius:8px; text-align:center;">
+                            <div style="color:#64748b; font-size:0.65rem; text-transform:uppercase;">Actuel</div>
+                            <div style="font-weight:800; color:#16a34a;">$65.35</div>
+                        </div>
+                    </div>
+                    <p style="font-size:0.85rem; margin-top:1rem; color:#475569;">Mouvement explosif de la small cap semi-conducteurs. Le scanner a identifié le titre au niveau de la 200 DMA avec un RSI survendu. Triple des objectifs initiaux.</p>
+                </div>
+
+                <!-- #2 AA -->
+                <div class="top-card" style="border-top:4px solid #94a3b8;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                        <div class="top-card-rank" style="color:#94a3b8;">2</div>
+                        <div>
+                            <div class="top-card-ticker">AA</div>
+                            <div style="font-size:0.8rem; color:#64748b;">Alcoa Corporation</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <div class="top-card-perf" style="color:#16a34a;">+53%</div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.8rem;">
+                        <div style="background:#f8fafc; padding:0.5rem; border-radius:8px; text-align:center;">
+                            <div style="color:#64748b; font-size:0.65rem; text-transform:uppercase;">Entrée</div>
+                            <div style="font-weight:800; color:#0f172a;">$38-39</div>
+                        </div>
+                        <div style="background:#f0fdf4; padding:0.5rem; border-radius:8px; text-align:center;">
+                            <div style="color:#64748b; font-size:0.65rem; text-transform:uppercase;">Actuel</div>
+                            <div style="font-weight:800; color:#16a34a;">$59.69</div>
+                        </div>
+                    </div>
+                    <p style="font-size:0.85rem; margin-top:1rem; color:#475569;">Entrée au niveau de la 200 DMA ($38) sur le leader de l'aluminium. Rebond puissant porté par la hausse des matières premières et les tensions commerciales.</p>
+                </div>
+
+                <!-- #3 ACAD -->
+                <div class="top-card" style="border-top:4px solid #cd7f32;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                        <div class="top-card-rank" style="color:#cd7f32;">3</div>
+                        <div>
+                            <div class="top-card-ticker">ACAD</div>
+                            <div style="font-size:0.8rem; color:#64748b;">Acadia Pharmaceuticals</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <div class="top-card-perf" style="color:#16a34a;">+43%</div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.8rem;">
+                        <div style="background:#f8fafc; padding:0.5rem; border-radius:8px; text-align:center;">
+                            <div style="color:#64748b; font-size:0.65rem; text-transform:uppercase;">Entrée</div>
+                            <div style="font-weight:800; color:#0f172a;">$16.50-17</div>
+                        </div>
+                        <div style="background:#f0fdf4; padding:0.5rem; border-radius:8px; text-align:center;">
+                            <div style="color:#64748b; font-size:0.65rem; text-transform:uppercase;">Actuel</div>
+                            <div style="font-weight:800; color:#16a34a;">$24.33</div>
+                        </div>
+                    </div>
+                    <p style="font-size:0.85rem; margin-top:1rem; color:#475569;">Small cap biotech identifiée sur support RSI. TP1 à $21 dépassé largement. Le scanner excelle sur les petites capitalisations en régime risk-off avec des niveaux techniques clairs.</p>
+                </div>
+            </div>
+
+            <div class="didactic-box" style="margin-top:1.5rem;">
+                <h4 style="color:#16a34a !important;"><i class="fa-solid fa-lightbulb"></i> Point commun des winners</h4>
+                <p style="margin:0; font-size:0.9rem; color:#334155;">Les trois meilleures performances partagent des caractéristiques communes : (1) <strong>petites et moyennes capitalisations</strong> — plus volatiles donc plus de potentiel, (2) <strong>entrée sur support technique clair</strong> (200 DMA, RSI survendu), (3) <strong>données de prix correctes</strong> au moment du scan. Cela suggère que le scanner est particulièrement efficace sur les small/mid caps avec des niveaux techniques bien définis.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: FLOP 3 SETUPS -->
+        <!-- ============================================================ -->
+        <div id="flop3" class="content-card">
+            <h2><i class="fa-solid fa-arrow-trend-down" style="color:#dc2626;"></i> Flop 3 — Pires résultats</h2>
+            <p>Les trois setups les plus problématiques de la semaine. Deux relèvent d'erreurs de données (entrées impossibles) plutôt que d'erreurs d'analyse, ce qui pose un problème fondamental de fiabilité.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin-top:1.5rem;">
+                <!-- Flop #1 ACHC -->
+                <div class="top-card" style="border-top:4px solid #dc2626;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                        <div class="top-card-rank" style="color:#dc2626;"><i class="fa-solid fa-skull-crossbones"></i></div>
+                        <div>
+                            <div class="top-card-ticker">ACHC</div>
+                            <div style="font-size:0.8rem; color:#64748b;">Acadia Healthcare</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <div class="top-card-perf" style="color:#dc2626;">-42%</div>
+                        </div>
+                    </div>
+                    <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.75rem; font-size:0.85rem; color:#991b1b;">
+                        <strong>Vrai échec d'analyse.</strong> Entrée $27-29, stop $25, mais le titre est tombé à $16.86. Le stop a été pulvérisé. Secteur healthcare en difficulté structurelle — le scanner n'a pas intégré les fondamentaux dégradés.
+                    </div>
+                </div>
+
+                <!-- Flop #2 ADBE -->
+                <div class="top-card" style="border-top:4px solid #f59e0b;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                        <div class="top-card-rank" style="color:#f59e0b;"><i class="fa-solid fa-database"></i></div>
+                        <div>
+                            <div class="top-card-ticker">ADBE</div>
+                            <div style="font-size:0.8rem; color:#64748b;">Adobe Inc.</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <span class="status-tag status-invalid"><i class="fa-solid fa-triangle-exclamation"></i> Invalide</span>
+                        </div>
+                    </div>
+                    <div style="background:#fefce8; border:1px solid #fde68a; border-radius:8px; padding:0.75rem; font-size:0.85rem; color:#92400e;">
+                        <strong>Erreur de données.</strong> Entrée suggérée à $430-435 alors qu'ADBE cotait ~$260 au moment du scan. Le scanner a utilisé un prix obsolète (probablement un historique pré-split ou un cache non rafraîchi). Setup inexécutable.
+                    </div>
+                </div>
+
+                <!-- Flop #3 ACM -->
+                <div class="top-card" style="border-top:4px solid #f59e0b;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                        <div class="top-card-rank" style="color:#f59e0b;"><i class="fa-solid fa-database"></i></div>
+                        <div>
+                            <div class="top-card-ticker">ACM</div>
+                            <div style="font-size:0.8rem; color:#64748b;">AECOM</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <div class="top-card-perf" style="color:#dc2626;">-14%</div>
+                        </div>
+                    </div>
+                    <div style="background:#fefce8; border:1px solid #fde68a; border-radius:8px; padding:0.75rem; font-size:0.85rem; color:#92400e;">
+                        <strong>Données incohérentes.</strong> Entrée $111-114 alors qu'ACM cotait ~$96-98. Le prix d'entrée était au-dessus du marché réel — le setup partait perdant dès le départ. Un investisseur qui aurait suivi le scan à la lettre aurait acheté bien trop cher.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: QUALITE DES DONNEES (CRITIQUE) -->
+        <!-- ============================================================ -->
+        <div id="data-quality" class="content-card" style="border:2px solid #dc2626;">
+            <h2><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Qualité des données — Problème critique</h2>
+            <p>Cette section est la plus importante de la rétrospective. La qualité des données d'entrée conditionne directement la fiabilité du scanner. Les problèmes identifiés sont systémiques et doivent être corrigés en priorité.</p>
+
+            <!-- Severity banner -->
+            <div style="background:linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color:white; padding:1.5rem; border-radius:16px; margin:1.5rem 0;">
+                <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                    <div style="font-size:3rem;"><i class="fa-solid fa-bug"></i></div>
+                    <div style="flex:1; min-width:200px;">
+                        <h3 style="color:white; margin:0 0 0.5rem; font-size:1.25rem;">5 setups sur 20 avec des prix d'entrée faux</h3>
+                        <p style="color:#fecaca; margin:0; font-size:0.9rem;">Taux d'erreur de 25% sur les scans du 15 et 17 février. Un investisseur suivant aveuglément le scanner aurait tenté d'exécuter des ordres à des prix inexistants sur le marché.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory of errors -->
+            <h3><i class="fa-solid fa-clipboard-list" style="color:#dc2626;"></i> Inventaire des erreurs de prix</h3>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Scan</th>
+                            <th>Prix d'entrée suggéré</th>
+                            <th>Prix réel au moment du scan</th>
+                            <th>Écart</th>
+                            <th>Cause probable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ADBE</strong></td>
+                            <td>15 Fév</td>
+                            <td style="color:#dc2626; font-weight:700;">$430-435</td>
+                            <td style="color:#16a34a; font-weight:700;">~$260</td>
+                            <td style="font-weight:700;">+65%</td>
+                            <td>Cache/données historiques non mises à jour</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ADP</strong></td>
+                            <td>15 Fév</td>
+                            <td style="color:#dc2626; font-weight:700;">$303-308</td>
+                            <td style="color:#16a34a; font-weight:700;">~$216</td>
+                            <td style="font-weight:700;">+40%</td>
+                            <td>Cache/données historiques non mises à jour</td>
+                        </tr>
+                        <tr>
+                            <td><strong>JNJ</strong></td>
+                            <td>17 Fév</td>
+                            <td style="color:#dc2626; font-weight:700;">$150-154</td>
+                            <td style="color:#16a34a; font-weight:700;">~$247</td>
+                            <td style="font-weight:700;">-39%</td>
+                            <td>Données pré-split ou API fallback</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PG</strong></td>
+                            <td>17 Fév</td>
+                            <td style="color:#dc2626; font-weight:700;">$170-174</td>
+                            <td style="color:#16a34a; font-weight:700;">~$159</td>
+                            <td style="font-weight:700;">+7%</td>
+                            <td>Données d'un prix futur/prédictif ?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ASML</strong></td>
+                            <td>17 Fév</td>
+                            <td style="color:#dc2626; font-weight:700;">$920-935</td>
+                            <td style="color:#16a34a; font-weight:700;">~$1 459</td>
+                            <td style="font-weight:700;">-36%</td>
+                            <td>Prix pré-split (ASML a split en 2025)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Root cause analysis -->
+            <h3><i class="fa-solid fa-magnifying-glass" style="color:#f59e0b;"></i> Analyse des causes racines</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin:1.5rem 0;">
+                <div class="issue-card">
+                    <div class="issue-card-header">
+                        <i class="fa-solid fa-database" style="color:#dc2626; font-size:1.2rem;"></i>
+                        <h4 style="margin:0; font-size:0.95rem; font-weight:700; color:#0f172a; flex:1;">Cache de données obsolète</h4>
+                        <span class="issue-severity" style="background:#fef2f2; color:#dc2626;">Critique</span>
+                    </div>
+                    <div class="issue-card-body">
+                        <p style="font-size:0.85rem; color:#475569; margin:0;">Le scanner semble utiliser des données en cache qui ne sont pas rafraîchies avant chaque exécution. Les prix d'ADBE et ADP correspondent à des niveaux historiques, pas aux prix du jour.</p>
+                        <div style="margin-top:0.75rem;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.25rem;">Impact</div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width:90%; background:#dc2626;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="issue-card">
+                    <div class="issue-card-header">
+                        <i class="fa-solid fa-code-branch" style="color:#f59e0b; font-size:1.2rem;"></i>
+                        <h4 style="margin:0; font-size:0.95rem; font-weight:700; color:#0f172a; flex:1;">Absence de validation croisée</h4>
+                        <span class="issue-severity" style="background:#fffbeb; color:#b45309;">Élevé</span>
+                    </div>
+                    <div class="issue-card-body">
+                        <p style="font-size:0.85rem; color:#475569; margin:0;">Aucune vérification n'est faite entre le prix d'entrée calculé et le prix spot actuel. Un simple contrôle d'écart > 10% aurait filtré les 5 setups invalides.</p>
+                        <div style="margin-top:0.75rem;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.25rem;">Impact</div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width:80%; background:#f59e0b;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="issue-card">
+                    <div class="issue-card-header">
+                        <i class="fa-solid fa-arrows-rotate" style="color:#f59e0b; font-size:1.2rem;"></i>
+                        <h4 style="margin:0; font-size:0.95rem; font-weight:700; color:#0f172a; flex:1;">Données post-split non ajustées</h4>
+                        <span class="issue-severity" style="background:#fffbeb; color:#b45309;">Élevé</span>
+                    </div>
+                    <div class="issue-card-body">
+                        <p style="font-size:0.85rem; color:#475569; margin:0;">ASML ($920 vs $1 459) et JNJ ($150 vs $247) suggèrent que le scanner utilise des données non ajustées pour les splits récents. Les API financières peuvent retourner des prix pré-ajustement.</p>
+                        <div style="margin-top:0.75rem;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.25rem;">Impact</div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width:70%; background:#f59e0b;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <h3><i class="fa-solid fa-wrench" style="color:#2563eb;"></i> Correctifs recommandés</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.25rem;">
+                    <h4 style="color:#1d4ed8 !important; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-1" style="margin-right:0.25rem;"></i> Validation de cohérence prix</h4>
+                    <p style="margin:0; font-size:0.85rem; color:#334155;">Ajouter un contrôle automatique : si l'écart entre le prix d'entrée calculé et le dernier prix spot dépasse 10%, le setup est rejeté et marqué comme suspect. Priorité : <strong>P0 (immédiat)</strong>.</p>
+                </div>
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.25rem;">
+                    <h4 style="color:#1d4ed8 !important; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-2" style="margin-right:0.25rem;"></i> Forcer le rafraîchissement des quotes</h4>
+                    <p style="margin:0; font-size:0.85rem; color:#334155;">Avant chaque scan, appeler <code>QueryData types=quote</code> pour chaque ticker candidat afin de s'assurer que les prix spot sont à jour. Ne pas se fier au cache. Priorité : <strong>P0</strong>.</p>
+                </div>
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.25rem;">
+                    <h4 style="color:#1d4ed8 !important; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-3" style="margin-right:0.25rem;"></i> Détecter les splits récents</h4>
+                    <p style="margin:0; font-size:0.85rem; color:#334155;">Vérifier le calendrier des splits via <code>QueryData types=calendar</code>. Si un split a eu lieu dans les 6 derniers mois, vérifier que les données historiques sont bien ajustées. Priorité : <strong>P1</strong>.</p>
+                </div>
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.25rem;">
+                    <h4 style="color:#1d4ed8 !important; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-4" style="margin-right:0.25rem;"></i> Afficher un avertissement dans l'article</h4>
+                    <p style="margin:0; font-size:0.85rem; color:#334155;">Quand un écart est détecté mais le setup publié quand même, afficher un badge "Données à vérifier" dans l'article. Transparence totale avec le lecteur. Priorité : <strong>P1</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: DETECTION DOUBLONS -->
+        <!-- ============================================================ -->
+        <div id="duplicates" class="content-card">
+            <h2><i class="fa-solid fa-clone" style="color:#f59e0b;"></i> Détection de doublons — Scans 19 vs 20 février</h2>
+            <p>L'analyse comparative des scans du 19 et du 20 février révèle un problème de renouvellement des candidats. Sur 20 setups combinés, 6 sont strictement identiques.</p>
+
+            <!-- Visual comparison -->
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:start; margin:2rem 0;">
+                <!-- Scan 19 -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+                    <h4 style="margin:0 0 1rem; font-size:0.9rem; color:#0f172a;">
+                        <span style="background:#2563eb; color:white; padding:0.15rem 0.5rem; border-radius:6px; font-size:0.75rem; font-weight:800; margin-right:0.5rem;">19 FÉV</span>
+                        10 setups
+                    </h4>
+                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> COLD</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> OMC</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> NICE</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> DE</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> AG</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> ETSY</div>
+                        <div style="padding:0.35rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; font-size:0.85rem; font-weight:600; color:#2563eb;">FNF</div>
+                        <div style="padding:0.35rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; font-size:0.85rem; font-weight:600; color:#2563eb;">DECK</div>
+                        <div style="padding:0.35rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; font-size:0.85rem; font-weight:600; color:#2563eb;">EL</div>
+                        <div style="padding:0.35rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; font-size:0.85rem; font-weight:600; color:#2563eb;">FIS</div>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div style="display:flex; align-items:center; justify-content:center; padding-top:4rem;">
+                    <div style="text-align:center;">
+                        <div style="font-size:2rem; color:#f59e0b;"><i class="fa-solid fa-arrows-left-right"></i></div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#f59e0b; text-transform:uppercase; margin-top:0.25rem;">6 identiques</div>
+                    </div>
+                </div>
+
+                <!-- Scan 20 -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+                    <h4 style="margin:0 0 1rem; font-size:0.9rem; color:#0f172a;">
+                        <span style="background:#8b5cf6; color:white; padding:0.15rem 0.5rem; border-radius:6px; font-size:0.75rem; font-weight:800; margin-right:0.5rem;">20 FÉV</span>
+                        10 setups
+                    </h4>
+                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> COLD</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> OMC</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> NICE</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> DE</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> AG</div>
+                        <div style="padding:0.35rem 0.75rem; background:#fefce8; border:1px dashed #f59e0b; border-radius:6px; font-size:0.85rem; font-weight:600;"><i class="fa-solid fa-clone" style="color:#f59e0b; margin-right:0.35rem;"></i> ETSY</div>
+                        <div style="padding:0.35rem 0.75rem; background:#f0fdf4; border:1px solid #86efac; border-radius:6px; font-size:0.85rem; font-weight:600; color:#16a34a;">LITE <span style="font-size:0.65rem; color:#64748b; font-weight:400;">nouveau</span></div>
+                        <div style="padding:0.35rem 0.75rem; background:#f0fdf4; border:1px solid #86efac; border-radius:6px; font-size:0.85rem; font-weight:600; color:#16a34a;">FIX <span style="font-size:0.65rem; color:#64748b; font-weight:400;">nouveau</span></div>
+                        <div style="padding:0.35rem 0.75rem; background:#f0fdf4; border:1px solid #86efac; border-radius:6px; font-size:0.85rem; font-weight:600; color:#16a34a;">GEV <span style="font-size:0.65rem; color:#64748b; font-weight:400;">nouveau</span></div>
+                        <div style="padding:0.35rem 0.75rem; background:#f0fdf4; border:1px solid #86efac; border-radius:6px; font-size:0.85rem; font-weight:600; color:#16a34a;">CAT <span style="font-size:0.65rem; color:#64748b; font-weight:400;">nouveau</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-top:1.5rem;">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#dc2626;">60%</div>
+                    <div class="metric-label">Taux de duplication</div>
+                    <div class="metric-change down">6 tickers sur 10</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#16a34a;">4</div>
+                    <div class="metric-label">Nouveaux tickers (20 Fév)</div>
+                    <div class="metric-change neutral">LITE, FIX, GEV, CAT</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#0f172a;">14</div>
+                    <div class="metric-label">Tickers uniques / 20</div>
+                    <div class="metric-change down">30% de redondance</div>
+                </div>
+            </div>
+
+            <!-- Fix recommendations -->
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-wrench"></i> Correctif recommandé</h4>
+                <ul style="font-size:0.9rem; color:#334155; padding-left:1.25rem; margin:0;">
+                    <li><strong>Filtre anti-doublon J-1</strong> : comparer les tickers du scan en cours avec ceux du scan précédent. Exclure tout ticker déjà recommandé la veille, sauf si le setup a significativement évolué (nouveau signal technique, changement de niveaux >5%).</li>
+                    <li><strong>Diversification forcée</strong> : imposer un minimum de 7 nouveaux tickers par scan (70% de renouvellement minimum).</li>
+                    <li><strong>Historique des recommandations</strong> : maintenir un fichier <code>scanner/history.json</code> avec les tickers des 5 derniers scans pour éviter la répétition.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: ANALYSE PAR STRATEGIE -->
+        <!-- ============================================================ -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-chess" style="color:#8b5cf6;"></i> Analyse par type de stratégie</h2>
+            <p>Tous les setups de la période étaient en direction <strong>Long</strong> dans un régime <strong>Early Risk-Off</strong>. Le scanner n'a proposé aucun short, ce qui mérite discussion.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:1.5rem 0;">
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                        <div style="width:40px; height:40px; border-radius:12px; background:#f0fdf4; display:flex; align-items:center; justify-content:center;">
+                            <i class="fa-solid fa-arrow-trend-up" style="color:#16a34a;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800; color:#0f172a;">Long Only</div>
+                            <div style="font-size:0.8rem; color:#64748b;">40 setups / 40 total</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar-bg" style="height:10px;">
+                        <div class="progress-bar-fill" style="width:100%; background:linear-gradient(90deg, #16a34a, #4ade80);"></div>
+                    </div>
+                    <p style="font-size:0.85rem; color:#475569; margin-top:0.75rem;">100% des setups sont longs. En régime Early Risk-Off, il serait pertinent de proposer au moins 20-30% de shorts ou de hedges pour refléter le risque baissier détecté par le régime.</p>
+                </div>
+
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                        <div style="width:40px; height:40px; border-radius:12px; background:#fef2f2; display:flex; align-items:center; justify-content:center;">
+                            <i class="fa-solid fa-arrow-trend-down" style="color:#dc2626;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800; color:#0f172a;">Short</div>
+                            <div style="font-size:0.8rem; color:#64748b;">0 setups / 40 total</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar-bg" style="height:10px;">
+                        <div class="progress-bar-fill" style="width:0%; background:#dc2626;"></div>
+                    </div>
+                    <p style="font-size:0.85rem; color:#475569; margin-top:0.75rem;">Aucun short proposé malgré un régime Early Risk-Off. ACHC (-42%) aurait pu être un candidat short plutôt qu'un long raté. Le scanner gagnerait à intégrer des setups short en régime défensif.</p>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-graduation-cap"></i> Cohérence régime-stratégie</h4>
+                <p style="margin:0; font-size:0.9rem; color:#334155;">Le régime <strong>Early Risk-Off</strong> signale une montée du risque et une rotation vers les actifs défensifs. Un scanner cohérent devrait alors :</p>
+                <ul style="font-size:0.9rem; color:#334155; padding-left:1.25rem; margin:0.5rem 0 0;">
+                    <li>Favoriser les <strong>secteurs défensifs</strong> (Healthcare, Utilities, Consumer Staples) — partiellement fait avec ABBV, JNJ, PG, XLV</li>
+                    <li>Inclure des <strong>setups short</strong> sur les secteurs cycliques faibles</li>
+                    <li>Proposer des <strong>hedges</strong> (GLD, TLT) — bien fait avec le scan du 17 Fév</li>
+                    <li>Réduire l'exposition aux <strong>small caps agressives</strong> — or ACMR (+184%) était le meilleur performer</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 8: LECONS ET AMELIORATIONS -->
+        <!-- ============================================================ -->
+        <div id="lessons" class="content-card">
+            <h2><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Leçons et améliorations</h2>
+            <p>Synthèse des enseignements de cette première rétrospective hebdomadaire et feuille de route des améliorations prioritaires.</p>
+
+            <!-- What works -->
+            <h3><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> Ce qui fonctionne</h3>
+            <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.5rem; margin:1rem 0;">
+                <ul style="font-size:0.9rem; color:#334155; padding-left:1.25rem; margin:0;">
+                    <li><strong>Stock-picking de qualité</strong> — Quand les données sont correctes, le scanner identifie de vraies opportunités. Hit rate de 62.5% sur les setups valides.</li>
+                    <li><strong>Excellence sur les small/mid caps</strong> — ACMR (+184%), AA (+53%), ACAD (+43%), AAP (+33%) sont des performances remarquables.</li>
+                    <li><strong>Niveaux techniques pertinents</strong> — Les entrées sur 200 DMA et RSI survendu ont démontré leur efficacité.</li>
+                    <li><strong>Cohérence partielle avec le régime</strong> — Le scan du 17 Fév incluait des hedges (GLD, TLT) et des défensifs (XLV, ABBV), ce qui est adapté au régime Early Risk-Off.</li>
+                    <li><strong>Diversification sectorielle</strong> — Les scans couvrent tech, santé, matériaux, énergie, consommation — bonne diversification.</li>
+                </ul>
+            </div>
+
+            <!-- What needs fixing -->
+            <h3><i class="fa-solid fa-xmark-circle" style="color:#dc2626;"></i> Ce qui doit être corrigé</h3>
+            <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.5rem; margin:1rem 0;">
+                <ul style="font-size:0.9rem; color:#334155; padding-left:1.25rem; margin:0;">
+                    <li><strong>Qualité des données (P0)</strong> — 25% de setups avec des prix d'entrée faux. C'est le problème numéro un. Sans données fiables, le scanner ne peut pas être utilisé en confiance.</li>
+                    <li><strong>Détection de splits (P0)</strong> — ASML et JNJ utilisaient des prix pré-split. Le scanner doit vérifier le calendrier des corporate actions.</li>
+                    <li><strong>Doublons inter-scans (P1)</strong> — 60% de duplication entre le 19 et le 20 février. Le scanner doit maintenir un historique et forcer le renouvellement.</li>
+                    <li><strong>Absence de shorts (P1)</strong> — En régime Early Risk-Off, ne proposer que des longs est incohérent. Ajouter des setups short ou des hedges systématiques.</li>
+                    <li><strong>Évaluation trop précoce</strong> — Les scans du 17, 19 et 20 n'ont que 0 à 3 jours d'historique. La prochaine rétro devra les réévaluer.</li>
+                </ul>
+            </div>
+
+            <!-- Roadmap -->
+            <h3><i class="fa-solid fa-road" style="color:#2563eb;"></i> Feuille de route</h3>
+            <div style="margin:1rem 0;">
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#dc2626;"></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.95rem; color:#0f172a;">P0 — Validation de cohérence des prix</strong>
+                            <span class="badge badge-red">Critique</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:#475569; margin:0.25rem 0 0;">Ajouter un contrôle automatique prix d'entrée vs prix spot. Rejet si écart > 10%. Implémentation immédiate.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#dc2626;"></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.95rem; color:#0f172a;">P0 — Rafraîchissement forcé des quotes</strong>
+                            <span class="badge badge-red">Critique</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:#475569; margin:0.25rem 0 0;">Appeler <code>QueryData types=quote</code> pour chaque candidat avant de calculer les niveaux. Ne jamais utiliser de cache.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#f59e0b;"></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.95rem; color:#0f172a;">P1 — Filtre anti-doublon J-1</strong>
+                            <span class="badge badge-purple">Élevé</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:#475569; margin:0.25rem 0 0;">Comparer chaque scan avec le précédent. Minimum 70% de nouveaux tickers par scan.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#f59e0b;"></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.95rem; color:#0f172a;">P1 — Setups short en régime Risk-Off</strong>
+                            <span class="badge badge-purple">Élevé</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:#475569; margin:0.25rem 0 0;">Adapter la direction des setups au régime détecté. Risk-Off = minimum 20% de shorts ou hedges.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#2563eb;"></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.95rem; color:#0f172a;">P2 — Rétrospective automatique</strong>
+                            <span class="badge badge-blue">Normal</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:#475569; margin:0.25rem 0 0;">Automatiser la génération de la rétrospective hebdomadaire chaque dimanche soir. Calcul automatique des P&L et hit rates.</p>
+                    </div>
+                </div>
+                <div class="timeline-item" style="border-bottom:none;">
+                    <div class="timeline-dot" style="background:#2563eb;"></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.95rem; color:#0f172a;">P2 — Scoring dynamique post-publication</strong>
+                            <span class="badge badge-blue">Normal</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:#475569; margin:0.25rem 0 0;">Mettre à jour les pages scanner existantes avec les résultats réels (TP atteint, stop touché) pour que chaque scan devienne un track record vivant.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grading methodology -->
+            <h3><i class="fa-solid fa-scale-balanced" style="color:#64748b;"></i> Méthodologie de notation</h3>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem; margin:1rem 0;">
+                <div style="overflow-x:auto;">
+                    <table class="data-table" style="margin:0;">
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                <th>Poids</th>
+                                <th>Score</th>
+                                <th>Commentaire</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Hit rate (setups valides)</strong></td>
+                                <td>30%</td>
+                                <td style="color:#16a34a; font-weight:700;">B+ (62.5%)</td>
+                                <td>5 TP sur 8 setups valides — bon taux</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Qualité des données</strong></td>
+                                <td>30%</td>
+                                <td style="color:#dc2626; font-weight:700;">D (25% d'erreurs)</td>
+                                <td>5 prix faux sur 20 — inacceptable</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Originalité des setups</strong></td>
+                                <td>15%</td>
+                                <td style="color:#f59e0b; font-weight:700;">C- (60% doublons)</td>
+                                <td>Scans 19-20 très redondants</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cohérence régime</strong></td>
+                                <td>15%</td>
+                                <td style="color:#f59e0b; font-weight:700;">C (long only)</td>
+                                <td>Pas de shorts en Risk-Off</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Amplitude des gains</strong></td>
+                                <td>10%</td>
+                                <td style="color:#16a34a; font-weight:700;">A (184% max)</td>
+                                <td>Performances exceptionnelles sur les winners</td>
+                            </tr>
+                            <tr style="background:#f8fafc; font-weight:700;">
+                                <td><strong>Note globale</strong></td>
+                                <td>100%</td>
+                                <td style="color:#f59e0b; font-weight:900; font-size:1.1rem;">C+</td>
+                                <td>Bon stock-picking, mauvaise infrastructure données</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 9: VERDICT FINAL -->
+        <!-- ============================================================ -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-gavel" style="color:#0f172a;"></i> Verdict final</h2>
+
+            <div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:2rem; border-radius:16px; margin:1.5rem 0;">
+                <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
+                    <div class="retro-grade" style="font-size:2rem; width:72px; height:72px;">C+</div>
+                    <div style="flex:1; min-width:250px;">
+                        <h3 style="color:white; margin:0 0 0.75rem; font-size:1.25rem;">Un scanner prometteur, freiné par ses données</h3>
+                        <p style="color:#cbd5e1; margin:0; font-size:0.95rem; line-height:1.6;">Le scanner Market Watch démontre une vraie capacité à identifier des opportunités de marché. Les 5 setups valides du 15 février affichent un hit rate de 62.5% avec des performances remarquables (jusqu'à +184% sur ACMR). Cependant, les problèmes de qualité des données — prix d'entrée faux dans 25% des cas — et la duplication des setups entre scans consécutifs sapent la confiance. La priorité absolue est de fiabiliser le pipeline de données avant d'améliorer le modèle de sélection.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="verdict-grid">
+                <div class="verdict-pro">
+                    <h4 style="color:#16a34a !important; margin:0 0 0.75rem;"><i class="fa-solid fa-thumbs-up"></i> Points forts</h4>
+                    <ul style="font-size:0.9rem; color:#334155; padding-left:1.25rem; margin:0;">
+                        <li>Hit rate 62.5% sur setups valides</li>
+                        <li>ACMR +184%, AA +53% — alpha significatif</li>
+                        <li>Bonne identification des supports techniques</li>
+                        <li>Inclusion de hedges (GLD, TLT) en Risk-Off</li>
+                        <li>Diversification sectorielle correcte</li>
+                    </ul>
+                </div>
+                <div class="verdict-con">
+                    <h4 style="color:#dc2626 !important; margin:0 0 0.75rem;"><i class="fa-solid fa-thumbs-down"></i> Points faibles</h4>
+                    <ul style="font-size:0.9rem; color:#334155; padding-left:1.25rem; margin:0;">
+                        <li>25% de prix d'entrée erronés</li>
+                        <li>60% de duplication entre scans consécutifs</li>
+                        <li>Zéro short en régime Early Risk-Off</li>
+                        <li>ACHC -42% — absence de filtre fondamental</li>
+                        <li>Pas de validation croisée prix/spot</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 10: SOURCES & DISCLAIMER -->
+        <!-- ============================================================ -->
+        <div id="sources" class="content-card">
+            <h2><i class="fa-solid fa-book-open" style="color:#64748b;"></i> Sources et méthodologie</h2>
+
+            <h3>Sources des données</h3>
+            <ul style="font-size:0.9rem; color:#475569; padding-left:1.25rem;">
+                <li><strong>Scans analysés</strong> : Scanner Market Watch des 15, 17, 19 et 20 février 2026</li>
+                <li><strong>Prix de référence</strong> : Clôture du 19 février 2026 (Yahoo Finance via MCP Gateway)</li>
+                <li><strong>Données techniques</strong> : MCP Gateway — QueryData, GetInstruments</li>
+                <li><strong>Régime de marché</strong> : RunAutoScreener — détection Early Risk-Off</li>
+            </ul>
+
+            <h3>Méthodologie</h3>
+            <ul style="font-size:0.9rem; color:#475569; padding-left:1.25rem;">
+                <li><strong>Hit rate</strong> : nombre de setups ayant atteint TP1 / nombre total de setups valides (entrées exécutables)</li>
+                <li><strong>Setup invalide</strong> : prix d'entrée suggéré divergeant de plus de 10% du prix spot au moment du scan</li>
+                <li><strong>Doublon</strong> : ticker identique avec prix d'entrée identique entre deux scans consécutifs</li>
+                <li><strong>Période d'évaluation</strong> : variable selon le scan (5 jours pour le 15 fév, 3 jours pour le 17 fév, 0-1 jour pour les 19-20 fév)</li>
+            </ul>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin-top:1.5rem;">
+                <h4 style="margin:0 0 0.5rem; font-size:0.85rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Avertissement</h4>
+                <p style="font-size:0.8rem; color:#94a3b8; margin:0; line-height:1.6;">Cette rétrospective est fournie à titre informatif et éducatif uniquement. Elle ne constitue pas un conseil en investissement. Les performances passées ne préjugent pas des performances futures. Le scanner Market Watch est un outil d'aide à la décision, pas une recommandation d'achat ou de vente. Consultez un conseiller financier qualifié avant toute décision d'investissement. Market Watch n'est pas responsable des pertes éventuelles liées à l'utilisation des setups présentés.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align:center; padding:2rem 0 3rem; color:#94a3b8; font-size:0.8rem;">
+            <a href="https://market-watch.xyz/" style="text-decoration:none; color:#64748b; font-weight:700;">
+                <i class="fa-solid fa-chart-line" style="color:#2563eb;"></i> MARKET WATCH
+            </a>
+            <p style="margin:0.5rem 0 0; color:#94a3b8;">Rétrospective Scanner Hebdomadaire — 10-20 Février 2026</p>
+            <p style="margin:0.25rem 0 0; color:#cbd5e1; font-size:0.7rem;">Publié le 20 février 2026 &middot; market-watch.xyz</p>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ECHARTS SCRIPTS -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // GAUGE: Hit Rate (setups valides)
+        // ============================================================
+        (function() {
+            var chart = echarts.init(document.getElementById('gauge-hitrate'));
+            var option = {
+                series: [{
+                    type: 'gauge',
+                    startAngle: 200,
+                    endAngle: -20,
+                    min: 0,
+                    max: 100,
+                    splitNumber: 10,
+                    itemStyle: {
+                        color: '#2563eb'
+                    },
+                    progress: {
+                        show: true,
+                        width: 20,
+                        itemStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 1, y2: 0,
+                                colorStops: [
+                                    { offset: 0, color: '#dc2626' },
+                                    { offset: 0.3, color: '#f59e0b' },
+                                    { offset: 0.6, color: '#2563eb' },
+                                    { offset: 1, color: '#16a34a' }
+                                ]
+                            }
+                        }
+                    },
+                    pointer: {
+                        icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+                        length: '55%',
+                        width: 12,
+                        offsetCenter: [0, '-20%'],
+                        itemStyle: {
+                            color: '#0f172a'
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            width: 20,
+                            color: [[0.3, '#dc2626'], [0.5, '#f59e0b'], [0.7, '#2563eb'], [1, '#16a34a']]
+                        }
+                    },
+                    axisTick: {
+                        distance: -30,
+                        splitNumber: 5,
+                        lineStyle: { width: 1, color: '#cbd5e1' }
+                    },
+                    splitLine: {
+                        distance: -35,
+                        length: 12,
+                        lineStyle: { width: 2, color: '#94a3b8' }
+                    },
+                    axisLabel: {
+                        distance: -20,
+                        color: '#64748b',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        formatter: function(v) { return v + '%'; }
+                    },
+                    detail: {
+                        valueAnimation: true,
+                        width: '60%',
+                        lineHeight: 40,
+                        borderRadius: 8,
+                        offsetCenter: [0, '30%'],
+                        fontSize: 28,
+                        fontWeight: 900,
+                        formatter: '{value}%',
+                        color: '#0f172a'
+                    },
+                    title: {
+                        offsetCenter: [0, '55%'],
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: '#64748b'
+                    },
+                    data: [{
+                        value: 62.5,
+                        name: 'Hit Rate (setups valides)'
+                    }]
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', function() { chart.resize(); });
+        })();
+
+        // ============================================================
+        // BAR CHART: Résultats par scan
+        // ============================================================
+        (function() {
+            var chart = echarts.init(document.getElementById('bar-scans'));
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: '#0f172a',
+                    borderColor: '#334155',
+                    textStyle: { color: '#f8fafc', fontSize: 12 }
+                },
+                legend: {
+                    data: ['TP atteint', 'Stop touché', 'En cours', 'Entrée invalide'],
+                    bottom: 0,
+                    textStyle: { fontSize: 11, color: '#64748b' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Scan 15 Fév', 'Scan 17 Fév', 'Scan 19 Fév', 'Scan 20 Fév'],
+                    axisLabel: { fontSize: 12, fontWeight: 600, color: '#334155' },
+                    axisLine: { lineStyle: { color: '#e2e8f0' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    max: 10,
+                    axisLabel: { fontSize: 11, color: '#64748b' },
+                    splitLine: { lineStyle: { color: '#f1f5f9' } }
+                },
+                series: [
+                    {
+                        name: 'TP atteint',
+                        type: 'bar',
+                        stack: 'total',
+                        data: [5, 0, 0, 0],
+                        itemStyle: { color: '#16a34a', borderRadius: [0, 0, 0, 0] },
+                        barWidth: '45%'
+                    },
+                    {
+                        name: 'Stop touché',
+                        type: 'bar',
+                        stack: 'total',
+                        data: [2, 0, 0, 0],
+                        itemStyle: { color: '#dc2626' },
+                        barWidth: '45%'
+                    },
+                    {
+                        name: 'En cours',
+                        type: 'bar',
+                        stack: 'total',
+                        data: [1, 7, 10, 10],
+                        itemStyle: { color: '#2563eb' },
+                        barWidth: '45%'
+                    },
+                    {
+                        name: 'Entrée invalide',
+                        type: 'bar',
+                        stack: 'total',
+                        data: [2, 3, 0, 0],
+                        itemStyle: { color: '#f59e0b', borderRadius: [4, 4, 0, 0] },
+                        barWidth: '45%'
+                    }
+                ]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', function() { chart.resize(); });
+        })();
+
+        // ============================================================
+        // BAR CHART: Score moyen par scan
+        // ============================================================
+        (function() {
+            var chart = echarts.init(document.getElementById('bar-scores'));
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: '#0f172a',
+                    borderColor: '#334155',
+                    textStyle: { color: '#f8fafc', fontSize: 12 },
+                    formatter: function(params) {
+                        return params[0].name + '<br/>' +
+                            '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + params[0].color + ';margin-right:5px;"></span>' +
+                            'Score moyen: <strong>' + params[0].value + '</strong>';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Scan 15 Fév', 'Scan 17 Fév', 'Scan 19 Fév', 'Scan 20 Fév'],
+                    axisLabel: { fontSize: 12, fontWeight: 600, color: '#334155' },
+                    axisLine: { lineStyle: { color: '#e2e8f0' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 50,
+                    max: 100,
+                    axisLabel: { fontSize: 11, color: '#64748b' },
+                    splitLine: { lineStyle: { color: '#f1f5f9' } }
+                },
+                series: [{
+                    type: 'bar',
+                    data: [
+                        { value: 74.2, itemStyle: { color: '#2563eb', borderRadius: [6, 6, 0, 0] } },
+                        { value: 91.5, itemStyle: { color: '#8b5cf6', borderRadius: [6, 6, 0, 0] } },
+                        { value: 85.0, itemStyle: { color: '#f59e0b', borderRadius: [6, 6, 0, 0] } },
+                        { value: 83.0, itemStyle: { color: '#f59e0b', borderRadius: [6, 6, 0, 0] } }
+                    ],
+                    barWidth: '50%',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontWeight: 800,
+                        fontSize: 14,
+                        color: '#0f172a',
+                        formatter: '{c}'
+                    }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', function() { chart.resize(); });
+        })();
+
+        // ============================================================
+        // TAB SWITCHING for scan panels
+        // ============================================================
+        function switchScan(scanId) {
+            var tabs = document.querySelectorAll('.scan-tab');
+            var panels = document.querySelectorAll('.scan-panel');
+
+            tabs.forEach(function(tab) { tab.classList.remove('active'); });
+
+            if (scanId === 'all') {
+                panels.forEach(function(p) { p.classList.add('active'); });
+                tabs[0].classList.add('active');
+            } else {
+                panels.forEach(function(p) { p.classList.remove('active'); });
+                var map = {
+                    'feb15': 'scan15',
+                    'feb17': 'scan17',
+                    'feb19': 'scan1920',
+                    'feb20': 'scan1920'
+                };
+                var targetId = map[scanId];
+                if (targetId) {
+                    document.getElementById(targetId).classList.add('active');
+                }
+                var tabIndex = { 'feb15': 1, 'feb17': 2, 'feb19': 3, 'feb20': 4 };
+                if (tabs[tabIndex[scanId]]) {
+                    tabs[tabIndex[scanId]].classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
