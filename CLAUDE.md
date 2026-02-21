@@ -15,7 +15,7 @@ articles/
 │   └── assets/                   # Assets partagés weekly
 ├── analyses/                     # Analyses individuelles par ticker
 │   ├── {TICKER}/                 # Dossier par ticker (ex: AAPL/)
-│   │   ├── index.html            # Default = expert/fr (rétrocompatible)
+│   │   ├── index.html            # Default = beginner/en
 │   │   ├── assets/report.css     # CSS partagé toutes variantes
 │   │   ├── variants.json         # Manifest des variantes disponibles
 │   │   ├── expert/               # Niveau expert
@@ -31,12 +31,12 @@ articles/
 │   │           └── index.html
 ├── daily/                        # Briefings quotidiens
 │   └── YYYYMMDD/                 # Format de nommage: date du briefing
-│       ├── index.html            # Default = expert/fr
+│       ├── index.html            # Default = beginner/en
 │       ├── assets/report.css     # CSS spécifique
 │       └── variants.json         # Manifest des variantes (optionnel)
 ├── scanner/                      # Scans quotidiens algorithmiques
 │   └── YYYYMMDD/                 # Format de nommage: date du scan
-│       ├── index.html            # Default = expert/fr
+│       ├── index.html            # Default = beginner/en
 │       ├── assets/report.css     # CSS spécifique (thème dark)
 │       ├── variants.json         # Manifest des variantes
 │       ├── expert/{en,ar}/       # Variantes expert
@@ -95,8 +95,8 @@ Par défaut, génère **toutes les 6 variantes** (expert + beginner) × (fr + en
 L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` ou `analyse AAPL beginner en`.
 
 1. **Parser les paramètres** :
-   - `level` : beginner, expert (défaut: **les deux**)
-   - `langs` : fr, en, ar (défaut: **les trois**)
+   - `level` : beginner, expert (défaut: **beginner**)
+   - `langs` : en, fr, ar (défaut: **en**)
    - Combinaisons par défaut = 6 variantes : expert/fr, expert/en, expert/ar, beginner/fr, beginner/en, beginner/ar
 2. **Si l'analyse existe déjà** : archiver l'ancienne version
    - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
@@ -124,7 +124,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
    ```json
    {
      "ticker": "AAPL",
-     "default": { "level": "expert", "lang": "fr" },
+     "default": { "level": "beginner", "lang": "en" },
      "variants": [
        { "level": "expert", "lang": "fr", "path": "." },
        { "level": "expert", "lang": "en", "path": "expert/en" },
@@ -230,7 +230,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 - Mobile : les tabs s'affichent en grille d'icones (5 colonnes) au lieu de texte horizontal
 
 ## Conventions
-- **Langue**: Français par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
+- **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
 - **CSS**: Réutiliser report.css existant, customiser dans `<style>` inline
 - **GTM**: Toujours inclure Google Tag Manager (GTM-T5Z595CW)
 - **Fonts**: Inter (Google Fonts) + Font Awesome 6.4.0
