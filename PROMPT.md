@@ -1190,11 +1190,11 @@ Avant de valider un article :
 
 ```
 analyses/AAPL/
-├── index.html                    # Default = expert/fr (rétrocompatible)
+├── index.html                    # Default = beginner/en
 ├── assets/report.css             # CSS partagé (toutes variantes)
 ├── variants.json                 # Manifest des variantes disponibles
 ├── expert/
-│   ├── fr/index.html             # Français expert (copie du root)
+│   ├── fr/index.html             # Français expert
 │   ├── en/index.html             # English expert
 │   ├── ar/index.html             # العربية expert
 │   ├── de/index.html             # Deutsch expert
@@ -1208,7 +1208,7 @@ analyses/AAPL/
 ```
 
 - **URL propres** : `articles.market-watch.xyz/analyses/AAPL/expert/en` (pas de trailing slash ni index.html)
-- **Default** : `analyses/AAPL/` → toujours expert/fr (rétrocompatible avec les 141 articles existants)
+- **Default** : `analyses/AAPL/` → beginner/en (nouvelle norme). Les anciens articles expert/fr restent accessibles via le switcher.
 - **CSS partagé** : toutes les variantes linkent vers `../../assets/report.css` (ou `../../../assets/report.css` selon le niveau)
 
 ### variants.json (Manifest)
@@ -1218,7 +1218,7 @@ Chaque dossier ticker contient un `variants.json` listant les variantes disponib
 ```json
 {
   "ticker": "AAPL",
-  "default": { "level": "expert", "lang": "fr" },
+  "default": { "level": "beginner", "lang": "en" },
   "variants": [
     { "level": "expert", "lang": "fr", "path": "expert/fr" },
     { "level": "expert", "lang": "en", "path": "expert/en" },
@@ -1444,7 +1444,7 @@ Et dans le CSS :
 **Syntaxe** : `TICKER [level] [lang1,lang2,...]`
 
 Exemples :
-- `AAPL` → expert fr (défaut)
+- `AAPL` → beginner en (défaut)
 - `AAPL expert fr,en,ar` → 3 langues en expert
 - `AAPL beginner fr,en` → 2 langues en beginner
 - `AAPL expert,intermediate fr,en` → 4 variantes (2 niveaux × 2 langues)
@@ -1454,8 +1454,8 @@ Exemples :
 function parseAnalyseCommand(text) {
     var parts = text.trim().split(/\s+/);
     var ticker = parts[0].toUpperCase();
-    var levels = ['expert'];
-    var langs = ['fr'];
+    var levels = ['beginner'];
+    var langs = ['en'];
 
     for (var i = 1; i < parts.length; i++) {
         var p = parts[i].toLowerCase();
