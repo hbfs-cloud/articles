@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Short Squeeze & Cost to Borrow — Le Piège des Vendeurs à Découvert | Le Guide du Super Spéculateur — Partie 3 | Market Watch</title>
+ <meta name="description" content="Série Le Guide du Super Spéculateur — Partie 3/8 : Comprendre le short squeeze, le cost to borrow, le short interest et les failures to deliver. Mécanismes, exemples historiques (GameStop, VW, Tesla) et stratégies de trading.">
+ <meta property="og:title" content="Short Squeeze & Cost to Borrow | Le Guide du Super Spéculateur — Partie 3 | Market Watch">
+ <meta property="og:description" content="Comprendre les short squeezes : mécanismes, métriques clés (SI%, CTB, DTC), cas historiques légendaires et stratégies de trading. Le guide complet du spéculateur averti.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/guide-speculateur/part3-short-squeeze/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ /* Guide du Super Spéculateur — RED THEME (#dc2626) */
+ .brand-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0;
+  position:sticky; top:0; z-index:100;
+ }
+ .brand-logo {
+  font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none;
+  letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center;
+ }
+ .brand-logo:hover { color:#dc2626; }
+
+ .series-nav {
+  background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  padding:1rem 2rem; display:flex; align-items:center; justify-content:center;
+  gap:0.5rem; flex-wrap:wrap;
+ }
+ .series-title {
+  color:#94a3b8; font-size:0.75rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem;
+ }
+ .series-link {
+  padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600;
+  text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s;
+ }
+ .series-link:hover { border-color:#fca5a5; color:#fca5a5; }
+ .series-link.current { background:#dc2626; color:white; border-color:#dc2626; }
+ .series-link.disabled { opacity:0.4; pointer-events:none; }
+
+ .hero-section {
+  padding:4rem 2rem 8rem 2rem;
+  background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%);
+  text-align:center;
+ }
+ .hero-date {
+  font-size:0.85rem; font-weight:700; color:#dc2626;
+  text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;
+ }
+ .hero-badges {
+  display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem;
+ }
+ .hero-badge {
+  display:inline-flex; align-items:center; gap:0.4rem;
+  padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700;
+ }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+
+ .section-divider {
+  display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem;
+  color:#94a3b8; font-size:0.75rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.1em;
+ }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ /* Steps timeline */
+ .steps-timeline { position:relative; padding-left:3rem; margin:2rem 0; }
+ .steps-timeline::before {
+  content:''; position:absolute; left:1rem; top:0; bottom:0;
+  width:3px; background:linear-gradient(180deg, #dc2626 0%, #f87171 50%, #fca5a5 100%);
+  border-radius:2px;
+ }
+ .step-item {
+  position:relative; margin-bottom:2rem; padding:1.5rem;
+  background:white; border:1px solid #e2e8f0; border-radius:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform 0.2s, box-shadow 0.2s;
+ }
+ .step-item:hover { transform:translateX(4px); box-shadow:0 8px 24px rgba(0,0,0,0.08); }
+ .step-number {
+  position:absolute; left:-2.5rem; top:1.5rem;
+  width:28px; height:28px; border-radius:50%;
+  background:#dc2626; color:white;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.75rem; font-weight:800; z-index:2;
+ }
+ .step-item h4 { margin:0 0 0.5rem; color:#0f172a; font-size:1.05rem; font-weight:700; }
+ .step-item p { margin:0; color:#475569; font-size:0.95rem; line-height:1.6; }
+
+ /* Case study cards */
+ .case-card {
+  background:white; border:1px solid #e2e8f0; border-radius:16px;
+  overflow:hidden; margin-bottom:1.5rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform 0.2s;
+ }
+ .case-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.08); }
+ .case-header {
+  padding:1.25rem 1.5rem; display:flex; align-items:center; gap:1rem;
+  border-bottom:1px solid #f1f5f9;
+ }
+ .case-icon {
+  width:48px; height:48px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.25rem; font-weight:800; flex-shrink:0;
+ }
+ .case-header h4 { margin:0; font-size:1rem; font-weight:700; color:#0f172a; }
+ .case-header .case-year { font-size:0.75rem; color:#94a3b8; font-weight:600; }
+ .case-body { padding:1.25rem 1.5rem; }
+ .case-body p { font-size:0.9rem; color:#475569; line-height:1.6; margin-bottom:0.75rem; }
+ .case-metrics {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr));
+  gap:0.75rem; margin-top:1rem;
+ }
+ .case-metric {
+  text-align:center; padding:0.75rem; background:#f8fafc;
+  border-radius:10px; border:1px solid #e2e8f0;
+ }
+ .case-metric .cm-value { font-size:1.1rem; font-weight:800; color:#dc2626; }
+ .case-metric .cm-label { font-size:0.6rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.15rem; }
+
+ /* Formula box */
+ .formula-box {
+  background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color:white; padding:1.5rem 2rem; border-radius:12px;
+  margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700;
+ }
+ .formula-box .formula-label {
+  font-size:0.7rem; color:#94a3b8; text-transform:uppercase;
+  letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600;
+ }
+ .formula-box .formula-highlight { color:#f87171; }
+
+ /* Takeaway box */
+ .takeaway-box {
+  background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0;
+ }
+ .takeaway-box h3 { color:#991b1b; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li {
+  display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0;
+  font-size:1rem; color:#334155; line-height:1.6;
+  border-bottom:1px solid rgba(220,38,38,0.15);
+ }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+
+ /* Checklist */
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li {
+  display:flex; align-items:flex-start; gap:0.75rem;
+  padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5;
+ }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ /* Quiz */
+ details { margin:0.75rem 0; }
+ details summary {
+  cursor:pointer; padding:1rem 1.25rem; background:#f8fafc;
+  border:1px solid #e2e8f0; border-radius:12px; font-weight:700;
+  color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none;
+ }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before {
+  content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900;
+  color:#dc2626; margin-right:0.75rem;
+ }
+ details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+ details .quiz-answer {
+  padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac;
+  border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7;
+ }
+
+ /* Next article CTA */
+ .next-cta {
+  display:flex; align-items:center; justify-content:center; gap:1rem;
+  padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color:white; border-radius:16px; margin:2rem 0; text-decoration:none;
+  transition:transform 0.2s, box-shadow 0.2s;
+ }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .footer-bar {
+  text-align:center; padding:2rem; background:#f8fafc;
+  border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem;
+ }
+ .footer-bar a { color:#64748b; text-decoration:none; }
+ .footer-bar a:hover { color:#dc2626; }
+
+ /* Danger zone highlight */
+ .danger-zone {
+  background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+  color:white; padding:2rem; border-radius:16px; margin:2rem 0;
+ }
+ .danger-zone h3 { color:#fca5a5; margin-top:0; }
+ .danger-zone p { color:#fecaca; }
+ .danger-zone ul { color:#fecaca; }
+ .danger-zone li { margin-bottom:0.5rem; line-height:1.6; }
+
+ /* Screener box */
+ .screener-box {
+  background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color:white; padding:2rem; border-radius:16px; margin:2rem 0;
+  font-family:'Courier New', monospace;
+ }
+ .screener-box .screener-label {
+  font-family:'Inter', sans-serif; font-size:0.7rem; color:#94a3b8;
+  text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; font-weight:700;
+ }
+ .screener-box code {
+  display:block; background:rgba(255,255,255,0.05); padding:1.25rem;
+  border-radius:8px; border:1px solid #334155; font-size:0.9rem;
+  line-height:1.8; color:#f87171; white-space:pre-wrap;
+ }
+ .screener-box .screener-comment { color:#64748b; }
+
+ @media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .brand-bar { padding:0.75rem 1rem; }
+  .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+  .brand-logo { font-size:0.9rem; }
+  .series-title { font-size:0.65rem; margin-right:0.5rem; }
+  .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta { flex-direction:column; text-align:center; }
+  .steps-timeline { padding-left:2.5rem; }
+  .step-number { left:-2rem; width:24px; height:24px; font-size:0.65rem; }
+  .case-metrics { grid-template-columns:repeat(2, 1fr); }
+ }
+ @media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .brand-logo { font-size:0.85rem; }
+  .series-title { display:none; }
+  .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+  .steps-timeline { padding-left:2rem; }
+  .step-number { left:-1.75rem; width:22px; height:22px; font-size:0.6rem; }
+  .case-header { flex-direction:column; text-align:center; }
+  .case-metrics { grid-template-columns:1fr 1fr; gap:0.5rem; }
+  .screener-box code { font-size:0.7rem; padding:0.75rem; }
+ }
+ </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation — RED THEME -->
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Le Guide du Super Spéculateur</span>
+ <a href="/series/guide-speculateur/part1-philosophie/" class="series-link">1</a>
+ <a href="/series/guide-speculateur/part2-meme-stocks/" class="series-link">2</a>
+ <a href="/series/guide-speculateur/part3-short-squeeze/" class="series-link current">3</a>
+ <a href="#" class="series-link disabled">4</a>
+ <a href="#" class="series-link disabled">5</a>
+ <a href="#" class="series-link disabled">6</a>
+ <a href="#" class="series-link disabled">7</a>
+ <a href="#" class="series-link disabled">8</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<div class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-graduation-cap" style="margin-right:0.4rem;"></i> Le Guide du Super Spéculateur — Partie 3 sur 8</div>
+ <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:800px;">Short Squeeze &<br>Cost to Borrow</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto; line-height:1.7;">Comprendre le piège des vendeurs à découvert : comment <strong>le short interest, le cost to borrow et les margin calls</strong> peuvent transformer une action ordinaire en fusée.</p>
+ <div class="hero-badges">
+  <span class="hero-badge hero-badge-red"><i class="fa-solid fa-fire"></i> SHORT SQUEEZE</span>
+  <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-coins"></i> CTB</span>
+  <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> SI%</span>
+  <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-clock"></i> DAYS TO COVER</span>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CONTENT -->
+<!-- ============================================================ -->
+<div class="container">
+
+<!-- Navigation Grid -->
+<div class="nav-grid" style="margin-top:-3rem;">
+ <a href="#vad" class="nav-item"><i class="fa-solid fa-arrow-down-short-wide" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Vente à Découvert</a>
+ <a href="#metriques" class="nav-item"><i class="fa-solid fa-gauge-high" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Métriques Clés</a>
+ <a href="#mecanique" class="nav-item"><i class="fa-solid fa-gears" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Mécanique</a>
+ <a href="#exemples" class="nav-item"><i class="fa-solid fa-landmark" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Exemples</a>
+ <a href="#outils" class="nav-item"><i class="fa-solid fa-toolbox" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Outils</a>
+ <a href="#screener" class="nav-item"><i class="fa-solid fa-filter" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Screener</a>
+ <a href="#trade" class="nav-item"><i class="fa-solid fa-crosshairs" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Trade</a>
+ <a href="#dangers" class="nav-item"><i class="fa-solid fa-skull-crossbones" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Dangers</a>
+ <a href="#quiz" class="nav-item"><i class="fa-solid fa-question-circle" style="display:block; font-size:1.25rem; color:#dc2626; margin-bottom:0.25rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- DISCLAIMER -->
+<!-- ============================================================ -->
+<div class="content-card">
+ <div class="alert-box">
+  <h4 style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Avertissement</h4>
+  <p style="margin-bottom:0; font-size:0.9rem; color:#991b1b;">Cet article est <strong>purement éducatif</strong>. Le trading de short squeezes est extrêmement risqué. Les actions les plus shortées sont souvent shortées pour de bonnes raisons (fondamentaux dégradés, risque de faillite). <strong>Ne risquez jamais plus que ce que vous pouvez vous permettre de perdre.</strong> Market Watch ne fournit aucun conseil en investissement.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: LA VENTE A DECOUVERT EXPLIQUEE -->
+<!-- ============================================================ -->
+<div class="content-card" id="vad">
+ <div class="section-divider">Section 1</div>
+ <h2><i class="fa-solid fa-arrow-down-short-wide" style="color:#dc2626;"></i> La Vente à Découvert Expliquée</h2>
+
+ <p>Avant de comprendre le short squeeze, il faut maîtriser la <strong>vente à découvert</strong> (ou <em>short selling</em>). C'est l'opération inverse d'un achat classique : au lieu d'acheter bas pour revendre haut, on <strong>vend haut pour racheter bas</strong>.</p>
+
+ <div class="pedagogy-box">
+  <h4 style="color:#2563eb;"><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Le Mécanisme en 4 Étapes</h4>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;">
+   <div style="background:white; padding:1.25rem; border-radius:12px; text-align:center; border:1px solid #e2e8f0;">
+    <div style="font-size:1.5rem; font-weight:800; color:#dc2626; margin-bottom:0.5rem;">1</div>
+    <div style="font-weight:700; color:#0f172a; margin-bottom:0.25rem;">Emprunter</div>
+    <div style="font-size:0.85rem; color:#64748b;">Le trader emprunte des actions auprès de son courtier (qui les prend dans le portefeuille d'un autre client).</div>
+   </div>
+   <div style="background:white; padding:1.25rem; border-radius:12px; text-align:center; border:1px solid #e2e8f0;">
+    <div style="font-size:1.5rem; font-weight:800; color:#dc2626; margin-bottom:0.5rem;">2</div>
+    <div style="font-weight:700; color:#0f172a; margin-bottom:0.25rem;">Vendre</div>
+    <div style="font-size:0.85rem; color:#64748b;">Il vend immédiatement ces actions empruntées sur le marché au prix actuel.</div>
+   </div>
+   <div style="background:white; padding:1.25rem; border-radius:12px; text-align:center; border:1px solid #e2e8f0;">
+    <div style="font-size:1.5rem; font-weight:800; color:#dc2626; margin-bottom:0.5rem;">3</div>
+    <div style="font-weight:700; color:#0f172a; margin-bottom:0.25rem;">Racheter</div>
+    <div style="font-size:0.85rem; color:#64748b;">Plus tard, il rachète les actions sur le marché (espérant un prix plus bas).</div>
+   </div>
+   <div style="background:white; padding:1.25rem; border-radius:12px; text-align:center; border:1px solid #e2e8f0;">
+    <div style="font-size:1.5rem; font-weight:800; color:#dc2626; margin-bottom:0.5rem;">4</div>
+    <div style="font-weight:700; color:#0f172a; margin-bottom:0.25rem;">Rendre</div>
+    <div style="font-size:0.85rem; color:#64748b;">Il rend les actions au prêteur. La différence entre le prix de vente et de rachat = son profit (ou sa perte).</div>
+   </div>
+  </div>
+ </div>
+
+ <h3><i class="fa-solid fa-coins" style="color:#d97706; margin-right:0.5rem;"></i> Le Cost to Borrow (CTB)</h3>
+ <p>Emprunter des actions n'est pas gratuit. Le <strong>Cost to Borrow</strong> (CTB) est le taux d'intérêt annualisé que le short seller paie pour emprunter les actions. Ce taux varie en fonction de l'offre et la demande d'actions disponibles à l'emprunt.</p>
+
+ <div class="formula-box">
+  <div class="formula-label">Formule du Cost to Borrow</div>
+  CTB = <span class="formula-highlight">Frais d'emprunt annualisés</span> / Valeur des actions empruntées
+ </div>
+
+ <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin:1.5rem 0;">
+  <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+   <div style="font-weight:700; color:#166534; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle" style="margin-right:0.4rem;"></i> CTB Normal (< 5%)</div>
+   <p style="font-size:0.85rem; color:#334155; margin:0;">Actions liquides, beaucoup de shares disponibles. Exemples : AAPL, MSFT, SPY. Facile et peu cher à shorter.</p>
+  </div>
+  <div style="background:#fffbeb; border:1px solid #d97706; border-radius:12px; padding:1.25rem;">
+   <div style="font-weight:700; color:#92400e; margin-bottom:0.5rem;"><i class="fa-solid fa-exclamation-triangle" style="margin-right:0.4rem;"></i> CTB Élevé (20-100%)</div>
+   <p style="font-size:0.85rem; color:#334155; margin:0;">Actions très demandées à l'emprunt. Les shorts paient cher pour maintenir leur position. Pression croissante.</p>
+  </div>
+  <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+   <div style="font-weight:700; color:#991b1b; margin-bottom:0.5rem;"><i class="fa-solid fa-fire" style="margin-right:0.4rem;"></i> CTB Extrême (> 100%)</div>
+   <p style="font-size:0.85rem; color:#334155; margin:0;">Situation de pénurie. Les shorts paient plus de 100% par an pour garder leur position. Zone de squeeze imminente.</p>
+  </div>
+ </div>
+
+ <h3><i class="fa-solid fa-chart-pie" style="color:#2563eb; margin-right:0.5rem;"></i> Short Interest (SI) et SI% du Float</h3>
+ <p>Le <strong>Short Interest</strong> (SI) est le nombre total d'actions actuellement vendues à découvert. Le <strong>SI% du float</strong> mesure ce nombre par rapport au nombre total d'actions disponibles au trading public (le <em>free float</em>).</p>
+
+ <div class="formula-box">
+  <div class="formula-label">Formule du SI% du Float</div>
+  SI% = (<span class="formula-highlight">Nombre d'actions shortées</span> / Free Float) x 100
+ </div>
+
+ <p>Un SI% de 30% signifie que presque un tiers de toutes les actions disponibles sont actuellement vendues à découvert. Plus ce pourcentage est élevé, plus le potentiel de squeeze est important.</p>
+
+ <h3><i class="fa-solid fa-hourglass-half" style="color:#9333ea; margin-right:0.5rem;"></i> Days to Cover (DTC)</h3>
+ <p>Le <strong>Days to Cover</strong> est le nombre de jours qu'il faudrait aux short sellers pour racheter toutes leurs positions, en se basant sur le volume moyen quotidien de l'action.</p>
+
+ <div class="formula-box">
+  <div class="formula-label">Formule du Days to Cover</div>
+  DTC = <span class="formula-highlight">Short Interest</span> / Volume Moyen Quotidien (20 jours)
+ </div>
+
+ <p>Un DTC de 7 signifie qu'il faudrait 7 jours de volume moyen pour que tous les shorts puissent couvrir. Plus ce chiffre est élevé, plus les shorts sont piégés et plus le squeeze peut durer.</p>
+
+ <h3><i class="fa-solid fa-users" style="color:#64748b; margin-right:0.5rem;"></i> Qui Shorte ?</h3>
+ <table class="data-table">
+  <thead>
+   <tr>
+    <th>Acteur</th>
+    <th>Motivation</th>
+    <th>Part du marché</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td><strong>Hedge Funds</strong></td>
+    <td>Short fondamental (thèse baissière), arbitrage, pairs trading</td>
+    <td>~60-70%</td>
+   </tr>
+   <tr>
+    <td><strong>Market Makers</strong></td>
+    <td>Couverture (hedging) des positions options, fourniture de liquidité</td>
+    <td>~20-25%</td>
+   </tr>
+   <tr>
+    <td><strong>Retail Traders</strong></td>
+    <td>Spéculation directionnelle, suivi de thèses short publiques</td>
+    <td>~5-10%</td>
+   </tr>
+   <tr>
+    <td><strong>Vendeurs d'ETF</strong></td>
+    <td>Arbitrage création/rachat de parts, hedging de panier</td>
+    <td>~5%</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: LES METRIQUES CLES -->
+<!-- ============================================================ -->
+<div class="content-card" id="metriques">
+ <div class="section-divider">Section 2</div>
+ <h2><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Les Métriques Clés du Short Squeeze</h2>
+
+ <p>Pour évaluer le potentiel d'un short squeeze, il faut surveiller <strong>6 métriques fondamentales</strong>. Plus ces indicateurs sont extrêmes simultanément, plus le risque de squeeze est élevé.</p>
+
+ <div class="metric-grid" style="grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));">
+  <div class="metric-card" style="border-top:3px solid #dc2626;">
+   <div class="metric-value" style="color:#dc2626;">SI% > 20%</div>
+   <div class="metric-label">Zone Dangereuse</div>
+   <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem; text-align:left;">Plus de 20% du float est shorté. Les short sellers sont exposés et vulnérables à tout catalyseur positif.</div>
+  </div>
+  <div class="metric-card" style="border-top:3px solid #f59e0b;">
+   <div class="metric-value" style="color:#d97706;">CTB > 100%</div>
+   <div class="metric-label">Emprunt Très Cher</div>
+   <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem; text-align:left;">Les shorts paient plus de 100% annualisé pour maintenir leur position. La pression financière est énorme.</div>
+  </div>
+  <div class="metric-card" style="border-top:3px solid #9333ea;">
+   <div class="metric-value" style="color:#7c3aed;">DTC > 5</div>
+   <div class="metric-label">Long à Couvrir</div>
+   <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem; text-align:left;">Il faudrait plus de 5 jours pour couvrir toutes les positions short. Les shorts ne peuvent pas sortir rapidement.</div>
+  </div>
+  <div class="metric-card" style="border-top:3px solid #2563eb;">
+   <div class="metric-value" style="color:#2563eb;">Util. > 90%</div>
+   <div class="metric-label">Plus de Shares</div>
+   <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem; text-align:left;">90%+ des actions disponibles à l'emprunt sont déjà prêtées. Il ne reste presque plus rien à emprunter.</div>
+  </div>
+  <div class="metric-card" style="border-top:3px solid #16a34a;">
+   <div class="metric-value" style="color:#16a34a;">Float < 20M</div>
+   <div class="metric-label">Squeeze Facile</div>
+   <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem; text-align:left;">Un petit float signifie moins d'actions en circulation. Il faut moins de volume d'achat pour faire monter le prix.</div>
+  </div>
+  <div class="metric-card" style="border-top:3px solid #64748b;">
+   <div class="metric-value" style="color:#475569;">FTD Élevés</div>
+   <div class="metric-label">Naked Shorting</div>
+   <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem; text-align:left;">Les Failures to Deliver indiquent que des actions vendues n'ont pas été livrées. Signe potentiel de naked shorting.</div>
+  </div>
+ </div>
+
+ <div class="didactic-box">
+  <h4 style="color:#16a34a;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Le Combo Explosif</h4>
+  <p style="margin-bottom:0; font-size:0.9rem; color:#334155;">Un squeeze a le plus de chances de se produire quand <strong>plusieurs métriques sont simultanément extrêmes</strong>. Le setup idéal : SI% > 25%, CTB > 50%, DTC > 3, Utilization > 90%, Float < 30M, et un catalyseur positif imminent (earnings, FDA, contrat). Sans catalyseur, même les métriques les plus extrêmes peuvent rester stables pendant des mois.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: LA MECANIQUE DU SHORT SQUEEZE -->
+<!-- ============================================================ -->
+<div class="content-card" id="mecanique">
+ <div class="section-divider">Section 3</div>
+ <h2><i class="fa-solid fa-gears" style="color:#dc2626;"></i> La Mécanique du Short Squeeze</h2>
+
+ <p>Un short squeeze est une <strong>boucle de rétroaction positive</strong> où chaque hausse de prix force de nouveaux shorts à couvrir, ce qui pousse le prix encore plus haut. Voici les 6 étapes typiques.</p>
+
+ <div class="steps-timeline">
+  <div class="step-item">
+   <div class="step-number">1</div>
+   <h4><i class="fa-solid fa-crosshairs" style="color:#64748b; margin-right:0.4rem;"></i> Accumulation des Positions Short</h4>
+   <p>Les hedge funds identifient une société avec des fondamentaux faibles (dette élevée, revenus en baisse, business model fragile) et accumulent des positions short. Le SI% monte progressivement. Le marché ne réagit pas encore.</p>
+  </div>
+  <div class="step-item">
+   <div class="step-number">2</div>
+   <h4><i class="fa-solid fa-bolt" style="color:#f59e0b; margin-right:0.4rem;"></i> Catalyseur Positif Inattendu</h4>
+   <p>Un événement inattendu survient : earnings beat surprise, approbation FDA, contrat majeur, post viral sur Reddit/X, ou simplement un rally sectoriel. Le prix commence à monter, d'abord lentement.</p>
+  </div>
+  <div class="step-item">
+   <div class="step-number">3</div>
+   <h4><i class="fa-solid fa-chart-line" style="color:#dc2626; margin-right:0.4rem;"></i> Prix Monte, Shorts Perdent</h4>
+   <p>La hausse du prix crée des <strong>pertes latentes</strong> pour les short sellers. Contrairement aux longs (perte max = 100%), les shorts ont une perte potentielle <strong>illimitée</strong>. Les brokers commencent à envoyer des <strong>margin calls</strong>.</p>
+  </div>
+  <div class="step-item">
+   <div class="step-number">4</div>
+   <h4><i class="fa-solid fa-explosion" style="color:#dc2626; margin-right:0.4rem;"></i> Rachats Forcés = Prix Explose</h4>
+   <p>Les shorts qui ne peuvent pas répondre aux margin calls sont <strong>liquidés de force</strong> par leur broker. Ces rachats forcés créent une pression acheteuse massive. Le prix explose à la verticale. Le volume atteint des niveaux jamais vus.</p>
+  </div>
+  <div class="step-item">
+   <div class="step-number">5</div>
+   <h4><i class="fa-solid fa-users" style="color:#9333ea; margin-right:0.4rem;"></i> FOMO Retail Entre en Jeu</h4>
+   <p>L'action fait les gros titres. Les traders retail voient le mouvement sur Reddit, Twitter/X, TikTok et se ruent à l'achat (<strong>FOMO</strong> = Fear Of Missing Out). Le volume devient astronomique. Les options calls gamma amplifient le mouvement.</p>
+  </div>
+  <div class="step-item">
+   <div class="step-number">6</div>
+   <h4><i class="fa-solid fa-mountain" style="color:#64748b; margin-right:0.4rem;"></i> Pic et Retombée</h4>
+   <p>Les shorts ont couvert, le carburant du squeeze est épuisé. Les early buyers prennent leurs profits. Les derniers acheteurs FOMO se retrouvent piégés en haut. Le prix retombe brutalement, souvent de 50-80% depuis le pic.</p>
+  </div>
+ </div>
+
+ <!-- ECharts: Typical Squeeze Pattern -->
+ <div style="background:#f8fafc; border-radius:16px; padding:1.5rem; margin:2rem 0; border:1px solid #e2e8f0;">
+  <h3 style="margin-top:0; text-align:center; color:#0f172a;"><i class="fa-solid fa-chart-area" style="color:#dc2626; margin-right:0.5rem;"></i> Anatomie d'un Short Squeeze Typique</h3>
+  <div id="squeezeChart" style="width:100%; height:400px;"></div>
+ </div>
+
+ <div class="pedagogy-box">
+  <h4 style="color:#2563eb;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Gamma Squeeze : L'Amplificateur</h4>
+  <p style="margin-bottom:0; font-size:0.9rem; color:#334155;">Quand les traders achètent massivement des <strong>calls out-of-the-money</strong>, les market makers qui ont vendu ces options doivent acheter l'action sous-jacente pour se couvrir (delta hedging). Plus le prix monte, plus ils doivent acheter. C'est un <strong>gamma squeeze</strong> qui amplifie le short squeeze. GameStop en janvier 2021 est l'exemple parfait de cette double mécanique.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: EXEMPLES HISTORIQUES LEGENDAIRES -->
+<!-- ============================================================ -->
+<div class="content-card" id="exemples">
+ <div class="section-divider">Section 4</div>
+ <h2><i class="fa-solid fa-landmark" style="color:#dc2626;"></i> Exemples Historiques Légendaires</h2>
+
+ <p>Ces 6 short squeezes ont marqué l'histoire des marchés financiers. Chacun illustre un aspect différent de la mécanique du squeeze.</p>
+
+ <!-- VW 2008 -->
+ <div class="case-card">
+  <div class="case-header">
+   <div class="case-icon" style="background:#fef2f2; color:#dc2626;">VW</div>
+   <div>
+    <h4>Volkswagen — Le Squeeze Parfait</h4>
+    <div class="case-year">Octobre 2008</div>
+   </div>
+   <span class="badge badge-red" style="margin-left:auto;">Légendaire</span>
+  </div>
+  <div class="case-body">
+   <p>En pleine crise financière de 2008, les hedge funds shortaient massivement Volkswagen, pensant que l'action baisserait avec le reste du marché. Mais <strong>Porsche a secrètement accumulé 74% des actions VW</strong> via des options, ne laissant que ~6% de free float. Quand Porsche a révélé sa position, les shorts ont réalisé qu'il n'y avait presque plus d'actions à racheter. VW est passé de 200 EUR à 1 000 EUR en <strong>2 jours</strong>, devenant brièvement la société la plus valorisée au monde.</p>
+   <div class="case-metrics">
+    <div class="case-metric"><div class="cm-value">+400%</div><div class="cm-label">Hausse max</div></div>
+    <div class="case-metric"><div class="cm-value">~12%</div><div class="cm-label">SI% Float</div></div>
+    <div class="case-metric"><div class="cm-value">2 jours</div><div class="cm-label">Durée</div></div>
+    <div class="case-metric"><div class="cm-value">#1 Monde</div><div class="cm-label">Market Cap</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- GameStop 2021 -->
+ <div class="case-card">
+  <div class="case-header">
+   <div class="case-icon" style="background:#eff6ff; color:#2563eb;">GME</div>
+   <div>
+    <h4>GameStop — La Révolution Retail</h4>
+    <div class="case-year">Janvier 2021</div>
+   </div>
+   <span class="badge badge-red" style="margin-left:auto;">Iconique</span>
+  </div>
+  <div class="case-body">
+   <p><strong>DeepFuckingValue</strong> (Keith Gill) identifie GameStop comme undervalué avec un SI% > 140% (plus d'actions shortées que d'actions en circulation !). Le subreddit r/WallStreetBets se mobilise. Le prix passe de $4 à $483 en quelques semaines. Les hedge funds Melvin Capital et Citron Research subissent des milliards de pertes. <strong>Robinhood suspend l'achat</strong> de GME, déclenchant une crise de confiance et des audiences au Congrès américain.</p>
+   <div class="case-metrics">
+    <div class="case-metric"><div class="cm-value">+11 975%</div><div class="cm-label">Hausse max</div></div>
+    <div class="case-metric"><div class="cm-value">>140%</div><div class="cm-label">SI% Float</div></div>
+    <div class="case-metric"><div class="cm-value">~3 sem.</div><div class="cm-label">Durée</div></div>
+    <div class="case-metric"><div class="cm-value">$13B</div><div class="cm-label">Pertes shorts</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- AMC 2021 -->
+ <div class="case-card">
+  <div class="case-header">
+   <div class="case-icon" style="background:#faf5ff; color:#9333ea;">AMC</div>
+   <div>
+    <h4>AMC Entertainment — Le Mouvement Ape</h4>
+    <div class="case-year">Janvier-Juin 2021</div>
+   </div>
+   <span class="badge badge-purple" style="margin-left:auto;">Communauté</span>
+  </div>
+  <div class="case-body">
+   <p>Après GameStop, les "Apes" (la communauté retail) se tournent vers AMC, la chaîne de cinémas menacée de faillite. Le SI% était > 20%, le CTB élevé. L'action passe de $2 à $72 en quelques mois. Le CEO Adam Aron embrasse la communauté Ape, ajoutant des acceptations de crypto et des NFT. Mais AMC dilue massivement ses actions pour lever du capital, ce qui finit par peser sur le prix.</p>
+   <div class="case-metrics">
+    <div class="case-metric"><div class="cm-value">+3 500%</div><div class="cm-label">Hausse max</div></div>
+    <div class="case-metric"><div class="cm-value">~21%</div><div class="cm-label">SI% Float</div></div>
+    <div class="case-metric"><div class="cm-value">~5 mois</div><div class="cm-label">Durée</div></div>
+    <div class="case-metric"><div class="cm-value">$32B</div><div class="cm-label">Market Cap pic</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- Tesla 2020 -->
+ <div class="case-card">
+  <div class="case-header">
+   <div class="case-icon" style="background:#f0fdf4; color:#16a34a;">TSLA</div>
+   <div>
+    <h4>Tesla — Le Squeeze le Plus Long de l'Histoire</h4>
+    <div class="case-year">2019-2021</div>
+   </div>
+   <span class="badge badge-green" style="margin-left:auto;">Record</span>
+  </div>
+  <div class="case-body">
+   <p>Tesla a été l'action la plus shortée de Wall Street pendant des années. Les shorts pariaient sur la faillite. Mais Tesla a livré des profits, intégré le S&P 500, et le prix est passé de $50 (ajusté splits) à $900. <strong>Les shorts ont perdu cumulativement plus de $40 milliards</strong>. C'est le squeeze le plus lent mais le plus destructeur de l'histoire pour les vendeurs à découvert.</p>
+   <div class="case-metrics">
+    <div class="case-metric"><div class="cm-value">+1 700%</div><div class="cm-label">Hausse max</div></div>
+    <div class="case-metric"><div class="cm-value">~18%</div><div class="cm-label">SI% pic</div></div>
+    <div class="case-metric"><div class="cm-value">~2 ans</div><div class="cm-label">Durée</div></div>
+    <div class="case-metric"><div class="cm-value">$40B+</div><div class="cm-label">Pertes shorts</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- FFIE 2024 -->
+ <div class="case-card">
+  <div class="case-header">
+   <div class="case-icon" style="background:#fffbeb; color:#d97706;">FFIE</div>
+   <div>
+    <h4>Faraday Future — Le Micro Float Explosif</h4>
+    <div class="case-year">Mai 2024</div>
+   </div>
+   <span class="badge badge-amber" style="margin-left:auto;">Micro Cap</span>
+  </div>
+  <div class="case-body">
+   <p>Faraday Future, constructeur de véhicules électriques au bord de la faillite, avait un float minuscule (< 5M actions) avec un SI% élevé. Un rally coordonné sur Reddit a fait exploser l'action de $0.05 à $1.20 en une semaine, soit <strong>+2 300%</strong>. Le volume quotidien a dépassé le float entier. L'action est ensuite retombée aussi vite, piégeant les retardataires.</p>
+   <div class="case-metrics">
+    <div class="case-metric"><div class="cm-value">+2 300%</div><div class="cm-label">Hausse max</div></div>
+    <div class="case-metric"><div class="cm-value">< 5M</div><div class="cm-label">Free Float</div></div>
+    <div class="case-metric"><div class="cm-value">1 sem.</div><div class="cm-label">Durée</div></div>
+    <div class="case-metric"><div class="cm-value">Penny</div><div class="cm-label">Catégorie</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- Tilray 2018 -->
+ <div class="case-card">
+  <div class="case-header">
+   <div class="case-icon" style="background:#f0fdf4; color:#16a34a;">TLRY</div>
+   <div>
+    <h4>Tilray — Le Squeeze Cannabis</h4>
+    <div class="case-year">Septembre 2018</div>
+   </div>
+   <span class="badge badge-green" style="margin-left:auto;">Sectoriel</span>
+  </div>
+  <div class="case-body">
+   <p>Tilray, producteur de cannabis, avait un free float minuscule après son IPO (seulement ~17M actions). L'euphorie autour de la légalisation du cannabis au Canada a déclenché un squeeze. L'action est passée de $25 à $300 en un mois, soit <strong>+1 100%</strong>. Le 19 septembre 2018, TLRY a été halté 5 fois en une journée. Tilray est ensuite retombé sous $5.</p>
+   <div class="case-metrics">
+    <div class="case-metric"><div class="cm-value">+1 100%</div><div class="cm-label">Hausse max</div></div>
+    <div class="case-metric"><div class="cm-value">~17M</div><div class="cm-label">Free Float</div></div>
+    <div class="case-metric"><div class="cm-value">1 mois</div><div class="cm-label">Durée</div></div>
+    <div class="case-metric"><div class="cm-value">5 halts</div><div class="cm-label">En 1 jour</div></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- ECharts: Gains Max Bar Chart -->
+ <div style="background:#f8fafc; border-radius:16px; padding:1.5rem; margin:2rem 0; border:1px solid #e2e8f0;">
+  <h3 style="margin-top:0; text-align:center; color:#0f172a;"><i class="fa-solid fa-ranking-star" style="color:#dc2626; margin-right:0.5rem;"></i> Gains Max Pendant le Squeeze</h3>
+  <div id="gainsChart" style="width:100%; height:380px;"></div>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: OUTILS POUR TRACKER LES SHORTS -->
+<!-- ============================================================ -->
+<div class="content-card" id="outils">
+ <div class="section-divider">Section 5</div>
+ <h2><i class="fa-solid fa-toolbox" style="color:#dc2626;"></i> Outils pour Tracker les Shorts</h2>
+
+ <p>Les données de short interest ne sont pas facilement accessibles. Voici les <strong>7 outils principaux</strong> utilisés par les traders pour suivre l'activité des vendeurs à découvert.</p>
+
+ <table class="data-table">
+  <thead>
+   <tr>
+    <th>Outil</th>
+    <th>Données</th>
+    <th>Prix</th>
+    <th>Délai</th>
+    <th>Verdict</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td><strong>Ortex</strong></td>
+    <td>SI, CTB, Utilization, DTC, Age of SI, On-Loan — temps réel estimé</td>
+    <td>$49-199/mois</td>
+    <td>Temps réel (estimé)</td>
+    <td><span class="badge badge-green">Le meilleur</span></td>
+   </tr>
+   <tr>
+    <td><strong>Fintel</strong></td>
+    <td>Short Interest, CTB, Short Squeeze Score, Insider Transactions</td>
+    <td>Freemium ($40/mo premium)</td>
+    <td>T+2 à T+14</td>
+    <td><span class="badge badge-blue">Bon rapport Q/P</span></td>
+   </tr>
+   <tr>
+    <td><strong>S3 Partners</strong></td>
+    <td>SI estimé temps réel, CTB, Mark-to-Market P&L des shorts</td>
+    <td>Institutionnel (cher)</td>
+    <td>Temps réel (modèle)</td>
+    <td><span class="badge badge-purple">Pro</span></td>
+   </tr>
+   <tr>
+    <td><strong>FINRA SI Reports</strong></td>
+    <td>Short Interest officiel de toutes les actions US</td>
+    <td>Gratuit</td>
+    <td>Bi-mensuel (2 sem. retard)</td>
+    <td><span class="badge badge-green">Officiel</span></td>
+   </tr>
+   <tr>
+    <td><strong>ChartExchange</strong></td>
+    <td>CTB history, Dark Pool data, Short Volume Ratio</td>
+    <td>Freemium</td>
+    <td>T+1</td>
+    <td><span class="badge badge-blue">Dark Pool</span></td>
+   </tr>
+   <tr>
+    <td><strong>IBorrowDesk</strong></td>
+    <td>Disponibilité des actions à emprunter (borrow availability), taux CTB</td>
+    <td>Gratuit</td>
+    <td>Temps réel (IB seulement)</td>
+    <td><span class="badge badge-green">Gratuit</span></td>
+   </tr>
+   <tr>
+    <td><strong>SEC FTD Data</strong></td>
+    <td>Failures to Deliver — actions non livrées après vente</td>
+    <td>Gratuit</td>
+    <td>~30 jours de retard</td>
+    <td><span class="badge badge-red">Naked Shorting</span></td>
+   </tr>
+  </tbody>
+ </table>
+
+ <div class="pedagogy-box">
+  <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Le Problème du Délai</h4>
+  <p style="margin-bottom:0; font-size:0.9rem; color:#334155;">Les données officielles de Short Interest (FINRA) sont publiées <strong>seulement deux fois par mois</strong>, avec un délai de ~10 jours ouvrés. Quand vous voyez un SI% de 30% dans un rapport FINRA, la situation réelle peut avoir changé drastiquement. C'est pourquoi les traders sérieux utilisent Ortex ou S3 Partners pour des estimations <strong>en temps réel</strong>, même si elles ne sont que des modèles.</p>
+ </div>
+
+ <div class="didactic-box">
+  <h4 style="color:#16a34a;"><i class="fa-solid fa-magnifying-glass-chart" style="margin-right:0.5rem;"></i> Comprendre les FTD (Failures to Deliver)</h4>
+  <p style="font-size:0.9rem; color:#334155; margin-bottom:0.75rem;">Un FTD se produit quand une action vendue n'est pas livrée à l'acheteur dans le délai réglementaire (T+2). C'est souvent le signe de <strong>naked shorting</strong> : vendre à découvert sans avoir emprunté les actions.</p>
+  <p style="font-size:0.9rem; color:#334155; margin-bottom:0;">La SEC publie les données FTD avec ~30 jours de retard. Des FTD élevés et croissants sur un titre peuvent indiquer une activité de shorting agressive et potentiellement illégale. C'est un des indicateurs qui a alimenté les théories autour de GameStop.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: SCREENER SHORT SQUEEZE -->
+<!-- ============================================================ -->
+<div class="content-card" id="screener">
+ <div class="section-divider">Section 6</div>
+ <h2><i class="fa-solid fa-filter" style="color:#dc2626;"></i> Construire un Screener Short Squeeze</h2>
+
+ <p>Un bon screener short squeeze combine <strong>les métriques de short interest</strong> avec des critères de liquidité et de catalyseur. Voici comment construire le vôtre.</p>
+
+ <h3><i class="fa-solid fa-sliders" style="color:#2563eb; margin-right:0.5rem;"></i> Critères de Filtrage</h3>
+
+ <table class="data-table">
+  <thead>
+   <tr>
+    <th>Critère</th>
+    <th>Valeur</th>
+    <th>Raison</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td><strong>SI% du Float</strong></td>
+    <td>> 25%</td>
+    <td>Assez de shorts pour alimenter un squeeze significatif</td>
+   </tr>
+   <tr>
+    <td><strong>CTB</strong></td>
+    <td>> 50%</td>
+    <td>Les shorts paient cher, pression temporelle forte</td>
+   </tr>
+   <tr>
+    <td><strong>Free Float</strong></td>
+    <td>< 30M actions</td>
+    <td>Peu de supply = prix se déplace facilement</td>
+   </tr>
+   <tr>
+    <td><strong>Days to Cover</strong></td>
+    <td>> 3 jours</td>
+    <td>Les shorts ne peuvent pas sortir rapidement</td>
+   </tr>
+   <tr>
+    <td><strong>Volume</strong></td>
+    <td>Surge > 2x moyenne</td>
+    <td>Signal d'activité anormale, début potentiel de squeeze</td>
+   </tr>
+   <tr>
+    <td><strong>Catalyseur</strong></td>
+    <td>Oui (earnings, FDA, contrat...)</td>
+    <td>Le carburant qui déclenche le mouvement</td>
+   </tr>
+  </tbody>
+ </table>
+
+ <h3><i class="fa-solid fa-code" style="color:#dc2626; margin-right:0.5rem;"></i> Exemple de Screener DSL (Market Watch)</h3>
+
+ <div class="screener-box">
+  <div class="screener-label"><i class="fa-solid fa-terminal" style="margin-right:0.4rem;"></i> Short Squeeze Screener DSL</div>
+  <code><span class="screener-comment">// Filtre principal : Short Squeeze Candidates</span>
+pass_expr = "si_pct > 25 && ctb > 50 && float < 30e6 && dtc > 3"
+
+<span class="screener-comment">// Score : pondère SI%, CTB et DTC</span>
+score_expr = "si_pct * 0.4 + min(ctb, 300) * 0.3 + dtc * 10 * 0.3"
+
+<span class="screener-comment">// Confirmer avec volume surge</span>
+<span class="screener-comment">// vol > sma(vol, 20) * 2</span>
+
+<span class="screener-comment">// Résultat : top 20 candidats classés par score</span>
+top_k = 20</code>
+ </div>
+
+ <div class="alert-box">
+  <h4 style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Attention au Biais de Survie</h4>
+  <p style="margin-bottom:0; font-size:0.9rem; color:#991b1b;">Un screener identifie des <strong>candidats potentiels</strong>, pas des certitudes. Sur 100 actions avec un SI% > 25%, peut-être 5-10 subiront un vrai squeeze. Les autres continueront de baisser car la <strong>thèse baissière des shorts était correcte</strong>. Le catalyseur positif est l'ingrédient le plus important et le plus imprévisible.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: STRATEGIE DE TRADING -->
+<!-- ============================================================ -->
+<div class="content-card" id="trade">
+ <div class="section-divider">Section 7</div>
+ <h2><i class="fa-solid fa-crosshairs" style="color:#dc2626;"></i> Stratégie de Trading Short Squeeze</h2>
+
+ <p>Trader un short squeeze est l'une des manoeuvres les plus risquées mais potentiellement les plus rémunératrices en bourse. Voici un framework discipliné.</p>
+
+ <div class="trade-box">
+  <h3><i class="fa-solid fa-bullseye" style="margin-right:0.5rem;"></i> Framework de Trading Short Squeeze</h3>
+  <div class="trade-levels">
+   <div class="trade-level trade-entry">
+    <div class="label">Entrée</div>
+    <div class="value">Breakout</div>
+    <div style="font-size:0.7rem; color:#93c5fd; margin-top:0.25rem;">Au-dessus résistance clé<br>Volume > 3x moyenne</div>
+   </div>
+   <div class="trade-level trade-stop">
+    <div class="label">Stop Loss</div>
+    <div class="value">-5 à -10%</div>
+    <div style="font-size:0.7rem; color:#fca5a5; margin-top:0.25rem;">Sous dernier support<br>Strict, non négociable</div>
+   </div>
+   <div class="trade-level trade-tp">
+    <div class="label">TP1 (+50%)</div>
+    <div class="value">1/3 position</div>
+    <div style="font-size:0.7rem; color:#86efac; margin-top:0.25rem;">Sécuriser les gains<br>Remonter le stop</div>
+   </div>
+   <div class="trade-level trade-tp">
+    <div class="label">TP2 (+100%)</div>
+    <div class="value">1/3 position</div>
+    <div style="font-size:0.7rem; color:#86efac; margin-top:0.25rem;">Prendre profit<br>Trailing stop 20%</div>
+   </div>
+   <div class="trade-level trade-rr">
+    <div class="label">Runner</div>
+    <div class="value">1/3 reste</div>
+    <div style="font-size:0.7rem; color:#fed7aa; margin-top:0.25rem;">Trailing stop 20%<br>Laisser courir</div>
+   </div>
+  </div>
+ </div>
+
+ <div class="pedagogy-box">
+  <h4 style="color:#2563eb;"><i class="fa-solid fa-book-open" style="margin-right:0.5rem;"></i> Thèse du Trade</h4>
+  <p style="font-size:0.95rem; color:#334155; margin-bottom:0.75rem;">Le short squeeze trade repose sur une asymétrie : <strong>risque limité (stop serré)</strong> contre <strong>gain potentiellement illimité</strong> (squeeze). Le ratio risque/récompense doit être minimum 1:5 pour compenser le faible taux de réussite.</p>
+  <p style="font-size:0.95rem; color:#334155; margin-bottom:0;">La clé est la <strong>discipline du stop loss</strong>. Vous allez avoir tort 6-7 fois sur 10. Mais les 3-4 fois où le squeeze se déclenche, les gains de +100% à +500% compensent largement les petites pertes de -5% à -10%.</p>
+ </div>
+
+ <!-- Signaux de renforcement -->
+ <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:16px; padding:1.5rem; margin:1.5rem 0;">
+  <h4 style="color:#166534; margin-top:0;"><i class="fa-solid fa-arrow-up" style="margin-right:0.5rem;"></i> Signaux de Renforcement (Bullish)</h4>
+  <ul class="checklist">
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Volume explosion</strong> : volume quotidien > 5x la moyenne 20 jours, signe d'intérêt massif</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>CTB en hausse rapide</strong> : le CTB double ou triple en quelques jours, les prêteurs de titres augmentent leurs tarifs</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Options flow haussier</strong> : achats massifs de calls OTM, le gamma squeeze s'amorce</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Social media buzz</strong> : trending sur Reddit/WSB, Twitter/X, StockTwits — la cavalerie retail arrive</li>
+  </ul>
+ </div>
+
+ <!-- Signaux d'annulation -->
+ <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:16px; padding:1.5rem; margin:1.5rem 0;">
+  <h4 style="color:#991b1b; margin-top:0;"><i class="fa-solid fa-arrow-down" style="margin-right:0.5rem;"></i> Signaux d'Annulation (Invalidation)</h4>
+  <ul class="checklist">
+   <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <strong>SI% en baisse</strong> : les shorts couvrent tranquillement sans squeeze, le setup se dissipe</li>
+   <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <strong>Dilution annoncée</strong> : la société émet de nouvelles actions (offre secondaire), augmente le float et tue le squeeze</li>
+   <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <strong>Trading halt prolongé</strong> : un halt de plus de 24h permet aux shorts de se réorganiser et casse le momentum</li>
+   <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <strong>Volume décroissant</strong> : si le volume baisse alors que le prix stagne, l'intérêt s'estompe — sortez</li>
+  </ul>
+ </div>
+
+ <!-- Timing & Sizing -->
+ <div class="alert-box" style="background:#eff6ff; border-left-color:#2563eb;">
+  <h4 style="color:#1d4ed8;"><i class="fa-solid fa-clock" style="margin-right:0.5rem;"></i> Timing & Sizing</h4>
+  <ul style="margin:0; padding-left:1.25rem; color:#334155; font-size:0.9rem;">
+   <li><strong>Horizon</strong> : Swing trading (1-10 jours). Les squeezes les plus violents durent 2-5 jours.</li>
+   <li><strong>Sizing maximum</strong> : 3-5% du portfolio par position. Jamais plus. Un squeeze raté peut perdre rapidement.</li>
+   <li><strong>Entrée échelonnée</strong> : 50% sur le breakout initial, 50% sur le premier pullback qui tient le support.</li>
+   <li><strong>Catalyseurs calendrier</strong> : Dates d'earnings, dates FDA (biotech), dates de rapport FINRA SI, expiration d'options (OpEx).</li>
+   <li><strong>Heures clés</strong> : L'ouverture (9:30-10:30 ET) et la dernière heure (15:00-16:00 ET) sont les moments les plus volatils.</li>
+   <li><strong>Ne jamais hold overnight</strong> sans stop : les squeezes peuvent inverser violemment en pre-market/after-hours.</li>
+  </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: LES DANGERS -->
+<!-- ============================================================ -->
+<div class="content-card" id="dangers">
+ <div class="section-divider">Section 8</div>
+ <h2><i class="fa-solid fa-skull-crossbones" style="color:#dc2626;"></i> Les Dangers du Short Squeeze Trading</h2>
+
+ <p>Pour chaque GME qui a fait des millionnaires, il y a des <strong>dizaines d'actions qui n'ont jamais squeezé</strong> et ont continué de baisser. Voici les pièges à connaître.</p>
+
+ <div class="danger-zone">
+  <h3><i class="fa-solid fa-radiation" style="margin-right:0.5rem;"></i> 7 Risques Majeurs</h3>
+  <ol style="padding-left:1.25rem; margin:0;">
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Le squeeze peut NE PAS se produire.</strong> La thèse baissière des shorts est souvent correcte. L'entreprise peut faire faillite, le prix peut aller à $0. Un SI% élevé seul n'est pas un signal d'achat.
+   </li>
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Trading halts.</strong> Quand le prix bouge trop vite (> 5-10% en 5 minutes), la bourse suspend le trading. Vous ne pouvez ni acheter ni vendre pendant le halt. À la reprise, le prix peut être drastiquement différent — dans n'importe quelle direction.
+   </li>
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Données SI en retard.</strong> Les données FINRA ont 2 semaines de retard. Quand vous voyez un rapport avec SI% à 40%, les shorts ont peut-être déjà couvert. Même Ortex n'est qu'une estimation.
+   </li>
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Dilution.</strong> La société peut émettre de nouvelles actions (offre secondaire, ATM offering) pendant le squeeze pour lever du capital. Cela augmente le float et tue mécaniquement le squeeze. AMC l'a fait plusieurs fois.
+   </li>
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Broker restrictions.</strong> Votre broker peut augmenter les exigences de marge, limiter l'achat d'actions ou d'options, voire suspendre complètement le trading (comme Robinhood avec GME). Vous êtes piégé sans pouvoir agir.
+   </li>
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Inverse squeeze.</strong> Si le support clé casse, les acheteurs paniquent et vendent, les shorts ajoutent à leurs positions. Le prix s'effondre. Tout le momentum positif s'inverse en une spirale baissière.
+   </li>
+   <li style="margin-bottom:1rem; line-height:1.6;">
+    <strong>Le timing est impossible.</strong> Même si le squeeze se produit, acheter trop tôt (le prix baisse encore) ou trop tard (vous achetez le top) est le scénario le plus courant. Les profits ne sont réels que si vous vendez.
+   </li>
+  </ol>
+ </div>
+
+ <div class="takeaway-box">
+  <h3><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem;"></i> Règles de Survie</h3>
+  <ul class="takeaway-list">
+   <li><i class="fa-solid fa-check-double"></i> <strong>Stop loss obligatoire</strong> — Définissez votre stop AVANT d'entrer. Si l'action casse le support, sortez. Pas de négociation.</li>
+   <li><i class="fa-solid fa-check-double"></i> <strong>Position sizing strict</strong> — Jamais plus de 3-5% du portfolio. Si vous perdez tout sur un trade, ça ne doit pas vous ruiner.</li>
+   <li><i class="fa-solid fa-check-double"></i> <strong>Prenez des profits en route</strong> — Vendez par tranches (1/3, 1/3, 1/3). Ne cherchez pas le top absolu. "Bulls make money, pigs get slaughtered."</li>
+   <li><i class="fa-solid fa-check-double"></i> <strong>Ne tradez pas sur la rumeur seule</strong> — Vérifiez les métriques (SI%, CTB, DTC) et le catalyseur. Un post Reddit n'est pas une analyse.</li>
+   <li><i class="fa-solid fa-check-double"></i> <strong>Acceptez que la majorité de vos trades seront perdants</strong> — Le win rate est de 30-40%. Le profit vient de l'asymétrie gains/pertes.</li>
+  </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: QUIZ -->
+<!-- ============================================================ -->
+<div class="content-card" id="quiz">
+ <div class="section-divider">Quiz</div>
+ <h2><i class="fa-solid fa-question-circle" style="color:#dc2626;"></i> Testez Vos Connaissances</h2>
+
+ <details>
+  <summary>1. Quelle est la perte maximale théorique d'un vendeur à découvert ?</summary>
+  <div class="quiz-answer">
+   <strong>La perte est théoriquement illimitée.</strong> Quand vous achetez une action (position longue), vous pouvez au maximum perdre 100% (l'action va à $0). Mais quand vous shortez, le prix peut monter indéfiniment : de $10 à $100, $1 000, $10 000... Chaque dollar de hausse est un dollar de perte pour le short. C'est pourquoi les shorts sont si vulnérables aux squeezes.
+  </div>
+ </details>
+
+ <details>
+  <summary>2. Le SI% d'une action est de 35% et le CTB est de 120%. Le Days to Cover est de 6. Est-ce un bon candidat au squeeze ?</summary>
+  <div class="quiz-answer">
+   <strong>C'est un excellent candidat sur le papier.</strong> Les trois métriques sont dans la zone rouge : SI% > 20%, CTB > 100%, DTC > 5. Mais attention : il manque l'ingrédient le plus important — le <strong>catalyseur</strong>. Sans événement déclencheur (earnings beat, news positive, buzz social media), ces métriques peuvent rester élevées pendant des mois sans qu'un squeeze se produise. Le setup est en place, mais il attend l'allumette.
+  </div>
+ </details>
+
+ <details>
+  <summary>3. Pourquoi le squeeze de Volkswagen en 2008 a-t-il été si violent ?</summary>
+  <div class="quiz-answer">
+   <strong>À cause du "corner" de Porsche.</strong> Porsche avait secrètement accumulé 74% des actions VW (via options), et la Basse-Saxe en détenait 20%. Il ne restait que ~6% de free float, alors que les shorts avaient vendu ~12% du total. Mathématiquement, il n'y avait pas assez d'actions pour que tous les shorts puissent couvrir. C'est un "corner" — la forme la plus extrême de squeeze, où les shorts n'ont littéralement aucune issue.
+  </div>
+ </details>
+
+ <details>
+  <summary>4. Qu'est-ce qu'un Failure to Deliver (FTD) et pourquoi est-ce important ?</summary>
+  <div class="quiz-answer">
+   <strong>Un FTD se produit quand une action vendue n'est pas livrée dans le délai réglementaire (T+2).</strong> C'est souvent le signe de <strong>naked shorting</strong> : vendre à découvert sans avoir emprunté les actions au préalable, ce qui est généralement illégal. Des FTD élevés et persistants sur un titre suggèrent que l'offre d'actions a été artificiellement gonflée. La SEC publie ces données avec ~30 jours de retard. Des FTD élevés + SI% élevé = signal d'alarme rouge.
+  </div>
+ </details>
+
+ <details>
+  <summary>5. Vous achetez une action en plein squeeze à +200%. Le volume commence à baisser. Que faites-vous ?</summary>
+  <div class="quiz-answer">
+   <strong>Vous sortez immédiatement ou vous placez un trailing stop très serré (10-15%).</strong> Un volume décroissant pendant un squeeze est un signal d'alarme majeur. Le carburant du squeeze (les rachats forcés des shorts) s'épuise. Les "smart money" prennent leurs profits. Les prochains vendeurs seront les retardataires FOMO qui paniquent. Le prix peut chuter de 50-80% en quelques heures. La règle : <em>"Quand le volume meurt, le squeeze meurt."</em>
+  </div>
+ </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- NEXT CTA -->
+<!-- ============================================================ -->
+<div class="content-card">
+ <a href="#" class="next-cta" style="pointer-events:none; opacity:0.7;">
+  <div>
+   <div class="next-label">Prochainement — Partie 4 sur 8</div>
+   <div class="next-title">Options & Gamma : L'Amplificateur Ultime</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+ </a>
+ <p style="text-align:center; font-size:0.8rem; color:#94a3b8; margin-top:1rem;">La partie 4 sera publiée prochainement. Elle couvrira les options, le gamma squeeze et les stratégies d'amplification.</p>
+</div>
+
+</div><!-- /container -->
+
+<!-- ============================================================ -->
+<!-- FOOTER -->
+<!-- ============================================================ -->
+<div class="footer-bar">
+ <p style="margin-bottom:0.5rem;"><strong>Market Watch</strong> — Le Guide du Super Spéculateur, Partie 3/8</p>
+ <p style="margin-bottom:0.5rem;">Cet article est purement éducatif et ne constitue pas un conseil en investissement.</p>
+ <p><a href="/">Accueil</a> &middot; <a href="/series/guide-speculateur/part2-meme-stocks/">Partie 2</a> &middot; <a href="#">Partie 4 (bientôt)</a></p>
+ <p style="margin-top:1rem; font-size:0.7rem; color:#cbd5e1;">&copy; 2026 Market Watch. Tous droits réservés.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: Typical Short Squeeze Price Pattern
+(function() {
+ var chart = echarts.init(document.getElementById('squeezeChart'));
+ // Simulate a squeeze pattern
+ var days = [];
+ var prices = [];
+ var volumes = [];
+ var annotations = [];
+
+ // Phase 1: Accumulation (day 1-15) - flat/slight decline
+ for (var i = 1; i <= 15; i++) {
+  days.push('J' + i);
+  prices.push(+(10 + Math.random() * 1.5 - 0.75).toFixed(2));
+  volumes.push(Math.floor(500000 + Math.random() * 300000));
+ }
+ // Phase 2: Catalyst + initial move (day 16-20)
+ var p = 10.5;
+ for (var i = 16; i <= 20; i++) {
+  p = p * (1 + 0.08 + Math.random() * 0.05);
+  days.push('J' + i);
+  prices.push(+p.toFixed(2));
+  volumes.push(Math.floor(1500000 + Math.random() * 1000000));
+ }
+ // Phase 3: Squeeze explosion (day 21-25)
+ for (var i = 21; i <= 25; i++) {
+  p = p * (1 + 0.25 + Math.random() * 0.15);
+  days.push('J' + i);
+  prices.push(+p.toFixed(2));
+  volumes.push(Math.floor(8000000 + Math.random() * 5000000));
+ }
+ // Phase 4: Peak (day 26)
+ p = p * 1.15;
+ days.push('J26');
+ prices.push(+p.toFixed(2));
+ volumes.push(Math.floor(15000000 + Math.random() * 3000000));
+
+ var peak = p;
+ // Phase 5: Crash (day 27-35)
+ for (var i = 27; i <= 35; i++) {
+  p = p * (1 - 0.12 - Math.random() * 0.06);
+  days.push('J' + i);
+  prices.push(+p.toFixed(2));
+  volumes.push(Math.floor(4000000 - (i - 27) * 300000 + Math.random() * 500000));
+ }
+
+ var option = {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+  legend: { data: ['Prix ($)', 'Volume'], top: 5, textStyle: { fontSize: 11 } },
+  grid: { left: '8%', right: '8%', bottom: '15%', top: '15%' },
+  xAxis: { type: 'category', data: days, axisLabel: { fontSize: 10 } },
+  yAxis: [
+   { type: 'value', name: 'Prix ($)', nameTextStyle: { fontSize: 10 }, axisLabel: { fontSize: 10 } },
+   { type: 'value', name: 'Volume', nameTextStyle: { fontSize: 10 }, axisLabel: { fontSize: 9, formatter: function(v) { return (v / 1e6).toFixed(0) + 'M'; } }, splitLine: { show: false } }
+  ],
+  series: [
+   {
+    name: 'Prix ($)',
+    type: 'line',
+    data: prices,
+    smooth: true,
+    lineStyle: { color: '#dc2626', width: 3 },
+    itemStyle: { color: '#dc2626' },
+    areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+     { offset: 0, color: 'rgba(220,38,38,0.3)' },
+     { offset: 1, color: 'rgba(220,38,38,0)' }
+    ]}},
+    markPoint: {
+     data: [
+      { name: 'Catalyseur', xAxis: 15, yAxis: prices[15], itemStyle: { color: '#f59e0b' }, symbol: 'triangle', symbolSize: 14 },
+      { name: 'Pic', type: 'max', itemStyle: { color: '#dc2626' }, symbolSize: 16 }
+     ],
+     label: { fontSize: 10, color: '#0f172a' }
+    },
+    markArea: {
+     silent: true,
+     data: [
+      [{ xAxis: 'J1', itemStyle: { color: 'rgba(148,163,184,0.08)' }, label: { show: true, position: 'insideTop', formatter: 'Accumulation\ndes shorts', fontSize: 9, color: '#94a3b8' } }, { xAxis: 'J15' }],
+      [{ xAxis: 'J16', itemStyle: { color: 'rgba(245,158,11,0.08)' }, label: { show: true, position: 'insideTop', formatter: 'Catalyseur', fontSize: 9, color: '#d97706' } }, { xAxis: 'J20' }],
+      [{ xAxis: 'J21', itemStyle: { color: 'rgba(220,38,38,0.08)' }, label: { show: true, position: 'insideTop', formatter: 'SQUEEZE', fontSize: 10, color: '#dc2626', fontWeight: 'bold' } }, { xAxis: 'J26' }],
+      [{ xAxis: 'J27', itemStyle: { color: 'rgba(100,116,139,0.08)' }, label: { show: true, position: 'insideTop', formatter: 'Retombée', fontSize: 9, color: '#64748b' } }, { xAxis: 'J35' }]
+     ]
+    }
+   },
+   {
+    name: 'Volume',
+    type: 'bar',
+    yAxisIndex: 1,
+    data: volumes,
+    itemStyle: {
+     color: function(params) {
+      if (params.dataIndex >= 20 && params.dataIndex <= 25) return 'rgba(220,38,38,0.4)';
+      if (params.dataIndex >= 15 && params.dataIndex < 20) return 'rgba(245,158,11,0.3)';
+      return 'rgba(148,163,184,0.2)';
+     }
+    },
+    barWidth: '60%'
+   }
+  ]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 2: Gains Max Bar Chart
+(function() {
+ var chart = echarts.init(document.getElementById('gainsChart'));
+ var option = {
+  tooltip: {
+   trigger: 'axis',
+   axisPointer: { type: 'shadow' },
+   formatter: function(params) {
+    var d = params[0];
+    return d.name + '<br/>Gain max : <strong>+' + d.value.toLocaleString() + '%</strong>';
+   }
+  },
+  grid: { left: '10%', right: '5%', bottom: '12%', top: '10%' },
+  xAxis: {
+   type: 'category',
+   data: ['GME\n2021', 'AMC\n2021', 'FFIE\n2024', 'TSLA\n2020', 'TLRY\n2018', 'VW\n2008'],
+   axisLabel: { fontSize: 11, fontWeight: 600, interval: 0, lineHeight: 16 }
+  },
+  yAxis: {
+   type: 'value',
+   name: 'Gain Max (%)',
+   nameTextStyle: { fontSize: 10 },
+   axisLabel: {
+    fontSize: 10,
+    formatter: function(v) { return '+' + v.toLocaleString() + '%'; }
+   }
+  },
+  series: [{
+   type: 'bar',
+   data: [
+    { value: 11975, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#dc2626' }, { offset: 1, color: '#f87171' }] } } },
+    { value: 3500, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#9333ea' }, { offset: 1, color: '#c084fc' }] } } },
+    { value: 2300, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#d97706' }, { offset: 1, color: '#fbbf24' }] } } },
+    { value: 1700, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#16a34a' }, { offset: 1, color: '#4ade80' }] } } },
+    { value: 1100, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#2563eb' }, { offset: 1, color: '#60a5fa' }] } } },
+    { value: 400, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#64748b' }, { offset: 1, color: '#94a3b8' }] } } }
+   ],
+   barWidth: '55%',
+   label: {
+    show: true,
+    position: 'top',
+    formatter: function(params) { return '+' + params.value.toLocaleString() + '%'; },
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#0f172a'
+   },
+   emphasis: {
+    itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' }
+   }
+  }]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
