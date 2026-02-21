@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L'IA, Votre Nouvel Allié en Bourse : Screeners, Sentiment, Signaux & Workflow | Maîtriser les Earnings — Partie 3 | Market Watch</title>
+  <meta name="description" content="Comment utiliser l'intelligence artificielle pour analyser les marchés financiers. Screeners intelligents, sentiment analysis, signaux de trading, workflow IA et limites à connaître.">
+  <meta property="og:title" content="L'IA, Votre Nouvel Allié en Bourse | Maîtriser les Earnings — Partie 3">
+  <meta property="og:description" content="Screeners intelligents, analyse de sentiment, signaux automatisés, workflow IA — et les pièges à éviter.">
+  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/series/ia-et-bourse/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="assets/report.css">
+
+  <style>
+  /* Series-specific styles - VIOLET THEME for Part 3 */
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; }
+  .brand-logo:hover { color:#f59e0b; }
+
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fbbf24; color:#fbbf24; }
+  .series-link.current { background:#8b5cf6; color:white; border-color:#8b5cf6; }
+
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#8b5cf6; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+
+  .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#8b5cf6; margin-right:0.75rem; }
+  details[open] summary { border-color:#8b5cf6; background:#f5f3ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; margin-top:0; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+  /* Timeline specific */
+  .timeline { position:relative; padding:2rem 0; }
+  .timeline::before { content:''; position:absolute; left:30px; top:0; bottom:0; width:3px; background:linear-gradient(180deg, #8b5cf6, #f59e0b); }
+  .timeline-item { position:relative; padding-left:70px; margin-bottom:2rem; }
+  .timeline-item::before { content:''; position:absolute; left:22px; top:8px; width:20px; height:20px; border-radius:50%; border:3px solid #8b5cf6; background:white; z-index:1; }
+  .timeline-year { font-size:0.75rem; font-weight:800; color:#8b5cf6; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.25rem; }
+  .timeline-title { font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:0.25rem; }
+  .timeline-desc { font-size:0.85rem; color:#64748b; line-height:1.5; }
+
+  /* Workflow steps */
+  .workflow-step { display:flex; align-items:flex-start; gap:1.5rem; padding:1.5rem; margin:1rem 0; background:white; border:1px solid #e2e8f0; border-radius:16px; transition:all 0.3s; }
+  .workflow-step:hover { border-color:#8b5cf6; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.1); }
+  .workflow-number { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:900; color:white; flex-shrink:0; }
+
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#8b5cf6; }
+
+  /* Code block style */
+  .code-block { background:#1e293b; color:#e2e8f0; padding:1.5rem; border-radius:12px; font-family:'Courier New', monospace; font-size:0.85rem; line-height:1.7; overflow-x:auto; margin:1.5rem 0; white-space:pre-wrap; word-wrap:break-word; }
+  .code-block .code-comment { color:#64748b; }
+  .code-block .code-highlight { color:#fbbf24; }
+  .code-block .code-string { color:#86efac; }
+
+  /* Strategy cards */
+  .strategy-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+  .strategy-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; transition:all 0.3s; }
+  .strategy-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+  .strategy-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:white; margin-bottom:1rem; }
+  .strategy-card h4 { font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.5rem; }
+  .strategy-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+  /* Pitfall cards */
+  .pitfall-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin:2rem 0; }
+  .pitfall-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #ef4444; }
+  .pitfall-card h4 { display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.75rem; }
+  .pitfall-card p { font-size:0.88rem; color:#475569; line-height:1.6; margin:0; }
+  .pitfall-number { width:28px; height:28px; border-radius:8px; background:#fef2f2; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; flex-shrink:0; }
+
+  /* Before/After comparison */
+  .ba-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0; }
+  .ba-card { padding:1.5rem; border-radius:16px; }
+  .ba-before { background:#fef2f2; border:1px solid #fecaca; }
+  .ba-after { background:#f0fdf4; border:1px solid #bbf7d0; }
+  .ba-card h4 { margin:0 0 1rem; font-size:0.9rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+  .ba-before h4 { color:#dc2626; }
+  .ba-after h4 { color:#16a34a; }
+  .ba-card p { font-size:0.88rem; line-height:1.6; margin:0 0 0.5rem; color:#334155; }
+
+  /* Series completion banner */
+  .series-complete { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 50%, #f59e0b 100%); color:white; padding:3rem 2rem; border-radius:20px; text-align:center; margin:2rem 0; }
+  .series-complete h3 { color:white; font-size:1.5rem; font-weight:800; margin:0 0 1rem; }
+  .series-complete p { color:rgba(255,255,255,0.9); font-size:1rem; line-height:1.6; margin:0 0 0.75rem; max-width:600px; margin-left:auto; margin-right:auto; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .brand-logo { font-size:0.9rem; }
+    .series-title { font-size:0.65rem; margin-right:0.5rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+    .timeline-item { padding-left:50px; }
+    .workflow-step { flex-direction:column; text-align:center; }
+    .ba-grid { grid-template-columns:1fr; }
+    .strategy-grid { grid-template-columns:1fr; }
+    .pitfall-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .brand-logo { font-size:0.85rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+    .hero-badges { gap:0.4rem; margin-top:1rem; }
+    .timeline::before { left:15px; }
+    .timeline-item { padding-left:45px; }
+    .timeline-item::before { left:7px; width:16px; height:16px; }
+    .code-block { font-size:0.72rem; padding:1rem; }
+  }
+  </style>
+</head>
+
+<body>
+<!-- GTM noscript -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation - Part 3 is current -->
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-column" style="margin-right:0.4rem;"></i> Ma&icirc;triser les Earnings</span>
+  <a href="/series/maitriser-les-earnings/" class="series-link">1 &mdash; R&eacute;sultats</a>
+  <a href="/series/valoriser-une-action/" class="series-link">2 &mdash; Valorisation</a>
+  <a href="/series/ia-et-bourse/" class="series-link current">3 &mdash; IA</a>
+</div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-robot" style="margin-right:0.4rem;"></i> Partie 3 sur 3 &mdash; F&eacute;vrier 2026</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:800px; margin:0 auto 1.5rem;">L'IA, Votre Nouvel Alli&eacute; en Bourse</h1>
+  <p class="hero-subtitle">Comment utiliser l'intelligence artificielle pour analyser les march&eacute;s financiers : screeners intelligents, analyse de sentiment, signaux automatis&eacute;s, workflow complet &mdash; et les pi&egrave;ges &agrave; &eacute;viter.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-magnifying-glass-chart"></i> Screeners</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-face-smile"></i> Sentiment</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-signal"></i> Signaux</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-gears"></i> Workflow</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Limites</span>
+  </div>
+</section>
+
+<!-- ==================== NAV GRID ==================== -->
+<div class="container">
+  <div class="nav-grid" style="margin-top:-3rem;">
+    <a href="#introduction" class="nav-item"><i class="fa-solid fa-book-open" style="display:block; font-size:1.2rem; color:#8b5cf6; margin-bottom:0.3rem;"></i> Introduction</a>
+    <a href="#ia-marches" class="nav-item"><i class="fa-solid fa-timeline" style="display:block; font-size:1.2rem; color:#f59e0b; margin-bottom:0.3rem;"></i> L'IA dans les March&eacute;s</a>
+    <a href="#analyser" class="nav-item"><i class="fa-solid fa-file-lines" style="display:block; font-size:1.2rem; color:#2563eb; margin-bottom:0.3rem;"></i> Analyser un Earnings</a>
+    <a href="#screeners" class="nav-item"><i class="fa-solid fa-filter" style="display:block; font-size:1.2rem; color:#f97316; margin-bottom:0.3rem;"></i> Screeners</a>
+    <a href="#sentiment" class="nav-item"><i class="fa-solid fa-chart-area" style="display:block; font-size:1.2rem; color:#10b981; margin-bottom:0.3rem;"></i> Sentiment</a>
+    <a href="#signaux" class="nav-item"><i class="fa-solid fa-bolt" style="display:block; font-size:1.2rem; color:#eab308; margin-bottom:0.3rem;"></i> Signaux</a>
+    <a href="#limites" class="nav-item"><i class="fa-solid fa-shield-halved" style="display:block; font-size:1.2rem; color:#ef4444; margin-bottom:0.3rem;"></i> Limites</a>
+    <a href="#workflow" class="nav-item"><i class="fa-solid fa-diagram-project" style="display:block; font-size:1.2rem; color:#6d28d9; margin-bottom:0.3rem;"></i> Workflow</a>
+    <a href="#quiz" class="nav-item"><i class="fa-solid fa-graduation-cap" style="display:block; font-size:1.2rem; color:#0ea5e9; margin-bottom:0.3rem;"></i> Quiz</a>
+    <a href="#resume" class="nav-item"><i class="fa-solid fa-flag-checkered" style="display:block; font-size:1.2rem; color:#8b5cf6; margin-bottom:0.3rem;"></i> R&eacute;sum&eacute;</a>
+  </div>
+
+  <!-- ==================== SECTION 1 : INTRODUCTION ==================== -->
+  <div class="section-divider" id="introduction">Introduction</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-rocket" style="color:#8b5cf6;"></i> L'IA a d&eacute;mocratis&eacute; l'analyse financi&egrave;re</h2>
+
+    <p>Il y a dix ans, analyser les march&eacute;s comme un professionnel co&ucirc;tait <strong>50 000 $ par an</strong> (le prix d'un terminal Bloomberg). Aujourd'hui, gr&acirc;ce &agrave; l'intelligence artificielle, ces m&ecirc;mes capacit&eacute;s sont accessibles &agrave; tout le monde &mdash; souvent gratuitement.</p>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#8b5cf6;">200 p.</div>
+        <div class="metric-label">10-K lu en secondes</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#f59e0b;">1 000</div>
+        <div class="metric-label">Tweets analys&eacute;s en un clic</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#2563eb;">5 000</div>
+        <div class="metric-label">Actions scann&eacute;es en 8 sec</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#10b981;">0 $</div>
+        <div class="metric-label">Co&ucirc;t pour d&eacute;buter</div>
+      </div>
+    </div>
+
+    <p>L'IA peut lire un rapport annuel de 200 pages en quelques secondes, analyser le sentiment de milliers de messages sur les r&eacute;seaux sociaux, et d&eacute;tecter des patterns &agrave; travers des milliers d'actions simultan&eacute;ment. C'est un <strong>superpouvoir</strong> &mdash; mais ce n'est pas un oracle.</p>
+
+    <p>Vous devez toujours comprendre ce que vous regardez. L'IA ne remplace pas votre jugement : elle l'<strong>augmente</strong>.</p>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-link"></i> Le fil rouge de la s&eacute;rie</h4>
+      <p style="margin:0;">Si vous avez lu les <strong>Parties 1 et 2</strong>, vous savez maintenant lire un rapport de r&eacute;sultats (EPS, chiffre d'affaires, marges, guidance) et valoriser une action (P/E, PEG, multiples, float, insiders). <strong>L'IA va vous aider &agrave; faire tout cela 100 fois plus vite.</strong> Cet article vous montre comment l'utiliser efficacement &mdash; et o&ugrave; se situent ses limites.</p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 2 : L'IA DANS LES MARCHES ==================== -->
+  <div class="section-divider" id="ia-marches">L'IA dans les March&eacute;s</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-brain" style="color:#f59e0b;"></i> L'intelligence artificielle &agrave; Wall Street</h2>
+
+    <p>L'IA n'est pas nouvelle en finance. Ce qui est nouveau, c'est qu'elle est d&eacute;sormais <strong>accessible &agrave; tous</strong>. Voici le paysage actuel :</p>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#ef4444;">70-80%</div>
+        <div class="metric-label">Volume US algorithmique</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#f59e0b;">&micro;sec</div>
+        <div class="metric-label">Vitesse HFT</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#8b5cf6;">$100Md+</div>
+        <div class="metric-label">Actifs des quant funds</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#10b981;">2023</div>
+        <div class="metric-label">D&eacute;mocratisation IA</div>
+      </div>
+    </div>
+
+    <p><strong>Le trading algorithmique</strong> repr&eacute;sente d&eacute;sormais 70 &agrave; 80 % du volume de transactions aux &Eacute;tats-Unis. Les fonds quantitatifs comme <strong>Renaissance Technologies</strong>, <strong>Two Sigma</strong> et <strong>Citadel</strong> utilisent des mod&egrave;les de machine learning depuis des d&eacute;cennies pour g&eacute;n&eacute;rer des rendements sup&eacute;rieurs.</p>
+
+    <p>Le <strong>HFT</strong> (High Frequency Trading) op&egrave;re &agrave; l'&eacute;chelle de la microseconde. Le <strong>NLP</strong> (Natural Language Processing) analyse le ton et les mots utilis&eacute;s lors des conf&eacute;rences de r&eacute;sultats pour d&eacute;tecter la confiance ou la nervosit&eacute; d'un PDG &mdash; avant m&ecirc;me que le march&eacute; ne r&eacute;agisse.</p>
+
+    <p>Et depuis 2023, <strong>ChatGPT, Claude et Perplexity</strong> ont rendu l'analyse financi&egrave;re conversationnelle accessible &agrave; tous les investisseurs particuliers.</p>
+
+    <h3><i class="fa-solid fa-timeline" style="color:#8b5cf6; margin-right:0.5rem;"></i> L'&eacute;volution de l'IA en finance</h3>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">1980s</div>
+        <div class="timeline-title">Bloomberg Terminal</div>
+        <div class="timeline-desc">Premier acc&egrave;s en temps r&eacute;el aux donn&eacute;es de march&eacute;. R&eacute;volutionne le m&eacute;tier de trader, mais r&eacute;serv&eacute; aux institutionnels (20 000 $/an).</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2000s</div>
+        <div class="timeline-title">Trading algorithmique</div>
+        <div class="timeline-desc">Les machines remplacent les traders de floor. Les ordres sont ex&eacute;cut&eacute;s automatiquement selon des r&egrave;gles pr&eacute;programm&eacute;es. Naissance du HFT.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2010s</div>
+        <div class="timeline-title">Machine Learning</div>
+        <div class="timeline-desc">D&eacute;tection de patterns dans les donn&eacute;es massives. Les hedge funds quant dominent. Deep learning appliqu&eacute; aux s&eacute;ries temporelles.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2020</div>
+        <div class="timeline-title">Reddit &amp; WallStreetBets</div>
+        <div class="timeline-desc">L'IA du sentiment social &eacute;merge. GameStop (GME) prouve que le sentiment de masse peut faire bouger les march&eacute;s. Naissance de l'analyse de sentiment retail.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2023</div>
+        <div class="timeline-title">ChatGPT &mdash; L'IA conversationnelle</div>
+        <div class="timeline-desc">N'importe qui peut poser des questions complexes sur les march&eacute;s et recevoir des analyses structur&eacute;es. Le co&ucirc;t d'entr&eacute;e tombe &agrave; z&eacute;ro.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2025</div>
+        <div class="timeline-title">Agents IA</div>
+        <div class="timeline-desc">Analyse automatis&eacute;e end-to-end : screeners intelligents, g&eacute;n&eacute;ration de rapports, alertes personnalis&eacute;es, ex&eacute;cution d'ordres. L'&egrave;re des copilotes financiers.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 3 : ANALYSER UN EARNINGS ==================== -->
+  <div class="section-divider" id="analyser">Analyser un Earnings avec l'IA</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-file-lines" style="color:#2563eb;"></i> 3 cas d'usage concrets</h2>
+
+    <p>L'IA transforme radicalement la mani&egrave;re dont on analyse les r&eacute;sultats trimestriels d'une entreprise. Voici les trois cas d'usage les plus puissants :</p>
+
+    <h3>1. R&eacute;sumer un 10-K de 200 pages en 5 minutes</h3>
+    <p>Le rapport annuel (10-K) d'une entreprise comme NVIDIA fait plus de 200 pages. L'IA peut extraire les informations cl&eacute;s &mdash; chiffre d'affaires par segment, marges, risques, guidance &mdash; en quelques secondes.</p>
+
+    <h3>2. D&eacute;tecter le sentiment dans un earnings call</h3>
+    <p>Le NLP analyse le <strong>ton</strong> du PDG : les mots positifs vs n&eacute;gatifs, les h&eacute;sitations, les phrases &eacute;vasives. Un PDG qui dit "nous sommes prudemment optimistes" n'envoie pas le m&ecirc;me signal que "nous sommes extr&ecirc;mement confiants dans notre pipeline".</p>
+
+    <h3>3. Comparer avec le consensus historique</h3>
+    <p>L'IA peut instantan&eacute;ment comparer les r&eacute;sultats actuels avec les estimations des analystes, les r&eacute;sultats des trimestres pr&eacute;c&eacute;dents, et les performances des concurrents.</p>
+
+    <h3 style="margin-top:2.5rem;"><i class="fa-solid fa-code" style="color:#8b5cf6; margin-right:0.5rem;"></i> Exemple de prompt pour analyser les earnings NVDA</h3>
+
+    <div class="code-block"><span class="code-comment">// Prompt &agrave; copier-coller dans Claude ou ChatGPT</span>
+
+<span class="code-highlight">Analyse les r&eacute;sultats trimestriels de NVIDIA (Q4 FY2026).</span>
+
+<span class="code-string">1. R&eacute;sum&eacute; en 5 bullet points (EPS, CA, marges, guidance, surprise)</span>
+<span class="code-string">2. Compare avec le consensus analystes</span>
+<span class="code-string">3. Identifie les 3 risques majeurs mentionn&eacute;s dans le call</span>
+<span class="code-string">4. Score le sentiment du management (1 &agrave; 10)</span>
+<span class="code-string">5. Donne un verdict : acheter, conserver ou vendre</span>
+
+<span class="code-comment">// Inclure le transcript du call ou le lien du 10-K</span></div>
+
+    <h3 style="margin-top:2.5rem;">Avant / Apr&egrave;s : l'impact de l'IA</h3>
+
+    <div class="ba-grid">
+      <div class="ba-card ba-before">
+        <h4><i class="fa-solid fa-clock" style="margin-right:0.5rem;"></i> Sans IA &mdash; ~5 heures</h4>
+        <p><i class="fa-solid fa-file-lines" style="color:#dc2626; margin-right:0.4rem;"></i> Lire 200 pages du 10-K : <strong>3h</strong></p>
+        <p><i class="fa-solid fa-headphones" style="color:#dc2626; margin-right:0.4rem;"></i> &Eacute;couter le call : <strong>1h</strong></p>
+        <p><i class="fa-solid fa-table" style="color:#dc2626; margin-right:0.4rem;"></i> Compiler les donn&eacute;es : <strong>1h</strong></p>
+        <p style="font-weight:700; color:#dc2626; margin:0;">Total : 5 heures minimum</p>
+      </div>
+      <div class="ba-card ba-after">
+        <h4><i class="fa-solid fa-bolt" style="margin-right:0.5rem;"></i> Avec IA &mdash; ~10 minutes</h4>
+        <p><i class="fa-solid fa-upload" style="color:#16a34a; margin-right:0.4rem;"></i> Upload 10-K + transcript : <strong>2 min</strong></p>
+        <p><i class="fa-solid fa-robot" style="color:#16a34a; margin-right:0.4rem;"></i> R&eacute;sum&eacute; structur&eacute; g&eacute;n&eacute;r&eacute; : <strong>3 min</strong></p>
+        <p><i class="fa-solid fa-check-double" style="color:#16a34a; margin-right:0.4rem;"></i> V&eacute;rification + questions : <strong>5 min</strong></p>
+        <p style="font-weight:700; color:#16a34a; margin:0;">Total : 10 minutes</p>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Conseils pour des prompts efficaces</h4>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Soyez sp&eacute;cifique</strong> : "Analyse les marges de NVDA Q4" est meilleur que "Parle-moi de NVIDIA"</li>
+        <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Demandez des chiffres</strong> : "Donne-moi l'EPS, le CA et la marge nette" force l'IA &agrave; &ecirc;tre pr&eacute;cise</li>
+        <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Demandez des comparaisons</strong> : "Compare avec Q3 et avec le consensus" ajoute du contexte</li>
+        <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>V&eacute;rifiez toujours</strong> : Croisez les chiffres de l'IA avec les sources officielles (SEC, site de l'entreprise)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 4 : SCREENERS INTELLIGENTS ==================== -->
+  <div class="section-divider" id="screeners">Screeners Intelligents</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-magnifying-glass-chart" style="color:#f97316;"></i> Filtrer des milliers d'actions en quelques secondes</h2>
+
+    <p>Un <strong>screener</strong> (ou filtre d'actions) est un outil qui passe au crible des milliers d'actions selon des crit&egrave;res que vous d&eacute;finissez. C'est comme un tamis : vous versez 5 000 actions dedans, et il n'en ressort que les 10-20 qui correspondent &agrave; vos crit&egrave;res.</p>
+
+    <h3>Screener classique vs screener IA</h3>
+
+    <div class="ba-grid">
+      <div class="ba-card" style="background:#f8fafc; border:1px solid #e2e8f0;">
+        <h4 style="color:#64748b;"><i class="fa-solid fa-filter" style="margin-right:0.5rem;"></i> Screener classique</h4>
+        <p>Crit&egrave;res simples : P/E &lt; 15, RSI &lt; 30, volume &gt; 1M</p>
+        <p>Un seul filtre &agrave; la fois, pas de contexte</p>
+        <p style="margin:0;">Exemples : Finviz, Yahoo Screener</p>
+      </div>
+      <div class="ba-card" style="background:#f5f3ff; border:1px solid #c4b5fd;">
+        <h4 style="color:#8b5cf6;"><i class="fa-solid fa-robot" style="margin-right:0.5rem;"></i> Screener IA</h4>
+        <p>Multi-facteurs : RSI oversold <strong>+</strong> volume spike <strong>+</strong> insider buying <strong>+</strong> rotation sectorielle</p>
+        <p>D&eacute;tection de r&eacute;gime : adapte les strat&eacute;gies au contexte de march&eacute;</p>
+        <p style="margin:0;">Exemples : MarketWatch Scanner, TradingView</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2.5rem;">Les 4 strat&eacute;gies du scanner MarketWatch</h3>
+
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <div class="strategy-icon" style="background:linear-gradient(135deg, #f59e0b, #d97706);"><i class="fa-solid fa-compress"></i></div>
+        <h4>Pre-Squeeze</h4>
+        <p>Short interest &eacute;lev&eacute; + volume croissant + momentum positif. L'action se comprime avant une explosion potentielle.</p>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);"><i class="fa-solid fa-rocket"></i></div>
+        <h4>Momentum Expansion</h4>
+        <p>Breakout confirm&eacute; + volume au-dessus de la moyenne + force relative positive. La tendance est votre amie.</p>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9);"><i class="fa-solid fa-bolt-lightning"></i></div>
+        <h4>Breakout Squeeze</h4>
+        <p>Bandes de Bollinger serr&eacute;es + volatilit&eacute; faible. L'action est "endormie" &mdash; une explosion est imminente (direction inconnue).</p>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon" style="background:linear-gradient(135deg, #ef4444, #dc2626);"><i class="fa-solid fa-fire"></i></div>
+        <h4>Short Squeeze</h4>
+        <p>Days-to-cover &eacute;lev&eacute; + prix en hausse + shorts pi&eacute;g&eacute;s. Les vendeurs &agrave; d&eacute;couvert sont forc&eacute;s de racheter.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2.5rem;">Performance des strat&eacute;gies</h3>
+    <div id="chartStrategies" style="width:100%;height:400px;"></div>
+
+    <div class="didactic-box">
+      <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> &Agrave; retenir</h4>
+      <p style="margin:0;">Aucune strat&eacute;gie ne fonctionne tout le temps. Le <strong>momentum</strong> a le meilleur taux de r&eacute;ussite (62 % TP1) mais le <strong>short squeeze</strong> offre le plus gros rendement moyen (+6,1 %) quand il fonctionne. <strong>Diversifier les strat&eacute;gies est la cl&eacute;.</strong></p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 5 : SENTIMENT ANALYSIS ==================== -->
+  <div class="section-divider" id="sentiment">Analyse de Sentiment</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-face-smile" style="color:#10b981;"></i> Lire l'humeur du march&eacute;</h2>
+
+    <p>L'<strong>analyse de sentiment</strong> utilise le NLP pour &eacute;valuer si les investisseurs sont optimistes (bullish) ou pessimistes (bearish) &agrave; partir de ce qu'ils &eacute;crivent en ligne.</p>
+
+    <h3>Les sources de sentiment</h3>
+
+    <div class="metric-grid" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));">
+      <div class="metric-card">
+        <div class="metric-value" style="font-size:1.3rem; color:#f97316;"><i class="fa-brands fa-reddit"></i></div>
+        <div class="metric-label">Reddit / WallStreetBets</div>
+        <div class="metric-change neutral">Retail traders</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="font-size:1.3rem; color:#10b981;"><i class="fa-solid fa-chart-simple"></i></div>
+        <div class="metric-label">StockTwits</div>
+        <div class="metric-change neutral">Micro-blogging finance</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="font-size:1.3rem; color:#0ea5e9;"><i class="fa-brands fa-x-twitter"></i></div>
+        <div class="metric-label">Twitter / X</div>
+        <div class="metric-change neutral">Influenceurs &amp; news</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="font-size:1.3rem; color:#ef4444;"><i class="fa-brands fa-youtube"></i></div>
+        <div class="metric-label">YouTube</div>
+        <div class="metric-change neutral">Cr&eacute;ateurs finance</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="font-size:1.3rem; color:#8b5cf6;"><i class="fa-solid fa-newspaper"></i></div>
+        <div class="metric-label">News &amp; M&eacute;dias</div>
+        <div class="metric-change neutral">Reuters, Bloomberg</div>
+      </div>
+    </div>
+
+    <h3>Comment &ccedil;a marche ?</h3>
+    <p>Les mod&egrave;les NLP attribuent un <strong>score</strong> &agrave; chaque message : bullish, bearish ou neutre. En agr&eacute;geant des milliers de messages, on obtient un indicateur de sentiment global pour une action ou un march&eacute;.</p>
+
+    <h3 style="margin-top:2rem;">Sentiment vs prix : le graphique</h3>
+    <div id="chartSentiment" style="width:100%;height:400px;"></div>
+
+    <div class="pedagogy-box" style="margin-top:2rem;">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-eye"></i> Le sentiment comme indicateur contrariant</h4>
+      <p>Le sentiment extr&ecirc;me est souvent un <strong>indicateur contrariant</strong> :</p>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-arrow-up" style="color:#ef4444;"></i> <strong>Euphorie g&eacute;n&eacute;rale (sentiment &gt; 80 %)</strong> : Souvent pr&eacute;curseur d'une correction. Quand tout le monde est optimiste, il n'y a plus d'acheteurs potentiels.</li>
+        <li><i class="fa-solid fa-arrow-down" style="color:#10b981;"></i> <strong>Panique g&eacute;n&eacute;rale (sentiment &lt; 20 %)</strong> : Souvent une opportunit&eacute; d'achat. Quand tout le monde a vendu, les vendeurs sont &eacute;puis&eacute;s.</li>
+      </ul>
+      <p style="margin:0; font-style:italic; color:#64748b;">Warren Buffett : "Soyez craintif quand les autres sont avides, et avide quand les autres sont craintifs."</p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 6 : SIGNAUX DE TRADING ==================== -->
+  <div class="section-divider" id="signaux">Signaux de Trading Automatis&eacute;s</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-bolt" style="color:#eab308;"></i> Les signaux techniques d&eacute;crypt&eacute;s</h2>
+
+    <p>Les <strong>signaux de trading</strong> sont des alertes g&eacute;n&eacute;r&eacute;es automatiquement par des algorithmes lorsqu'un indicateur technique franchit un seuil. Voici les plus courants :</p>
+
+    <h3>Golden Cross &amp; Death Cross</h3>
+    <p>Le <strong>Golden Cross</strong> se produit lorsque la moyenne mobile 50 jours croise &agrave; la hausse la moyenne mobile 200 jours. C'est un signal haussier long terme. Le <strong>Death Cross</strong> est l'inverse &mdash; un signal baissier.</p>
+
+    <h3>RSI, MACD &amp; Bollinger</h3>
+    <p>Le <strong>RSI</strong> (Relative Strength Index) sous 30 indique un titre survendo. Le <strong>MACD</strong> signale les changements de momentum. Les <strong>Bandes de Bollinger</strong> mesurent la volatilit&eacute; et anticipent les mouvements explosifs.</p>
+
+    <h3 style="margin-top:2rem;">Tableau comparatif des signaux</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Signal</th>
+          <th>Fiabilit&eacute;</th>
+          <th>Win Rate</th>
+          <th>Meilleur Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Golden Cross</strong> (SMA 50/200)</td>
+          <td><span style="color:#10b981; font-weight:700;">Haute</span></td>
+          <td>~65 %</td>
+          <td>Tendance long terme</td>
+        </tr>
+        <tr>
+          <td><strong>RSI Oversold</strong> (&lt; 30)</td>
+          <td><span style="color:#f59e0b; font-weight:700;">Moyenne</span></td>
+          <td>~55 %</td>
+          <td>Rebond court terme</td>
+        </tr>
+        <tr>
+          <td><strong>MACD Crossover</strong></td>
+          <td><span style="color:#f59e0b; font-weight:700;">Moyenne</span></td>
+          <td>~52 %</td>
+          <td>Confirmation de tendance</td>
+        </tr>
+        <tr>
+          <td><strong>Death Cross</strong> (SMA 50/200)</td>
+          <td><span style="color:#10b981; font-weight:700;">Haute</span></td>
+          <td>~60 %</td>
+          <td>Sortie / couverture</td>
+        </tr>
+        <tr>
+          <td><strong>Bollinger Squeeze</strong></td>
+          <td><span style="color:#f59e0b; font-weight:700;">Moyenne</span></td>
+          <td>~50 %</td>
+          <td>Anticipation de mouvement</td>
+        </tr>
+        <tr>
+          <td><strong>Volume Spike + Price</strong></td>
+          <td><span style="color:#10b981; font-weight:700;">Haute</span></td>
+          <td>~58 %</td>
+          <td>Confirmation de breakout</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation"></i> Avertissement important</h4>
+      <p style="margin:0;">Aucun signal n'est fiable &agrave; 100 %. Les <strong>meilleurs signaux</strong> ont un win rate de 60-65 %, ce qui signifie qu'ils se trompent <strong>1 fois sur 3</strong>. C'est pourquoi la gestion du risque (stop loss, sizing) est plus importante que le signal lui-m&ecirc;me. Un signal ne vous dit pas <em>combien</em> investir ni <em>quand</em> sortir &mdash; c'est votre plan de trading qui le fait.</p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 7 : LIMITES DE L'IA ==================== -->
+  <div class="section-divider" id="limites">Les Limites de l'IA</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> 5 pi&egrave;ges &agrave; conna&icirc;tre absolument</h2>
+
+    <p>L'IA est un outil extraordinaire, mais elle a des failles importantes. Conna&icirc;tre ses limites est <strong>aussi important</strong> que conna&icirc;tre ses capacit&eacute;s.</p>
+
+    <div class="pitfall-grid">
+      <div class="pitfall-card">
+        <h4><span class="pitfall-number">1</span> Hallucinations</h4>
+        <p>L'IA peut <strong>inventer des chiffres ou des faits</strong> qui n'existent pas. Exemple : citer un rapport de r&eacute;sultats du "Q3 2026" alors que nous sommes encore en f&eacute;vrier 2026. Elle peut aussi confondre des entreprises ou m&eacute;langer des donn&eacute;es. <strong>V&eacute;rifiez toujours les chiffres cl&eacute;s aupr&egrave;s des sources officielles.</strong></p>
+      </div>
+      <div class="pitfall-card">
+        <h4><span class="pitfall-number">2</span> Overfitting</h4>
+        <p>Un mod&egrave;le qui "marche" parfaitement sur les donn&eacute;es pass&eacute;es mais <strong>&eacute;choue lamentablement dans le futur</strong>. C'est comme r&eacute;viser les r&eacute;ponses d'un examen pass&eacute; sans comprendre les concepts &mdash; d&egrave;s que les questions changent, vous &ecirc;tes perdu.</p>
+      </div>
+      <div class="pitfall-card">
+        <h4><span class="pitfall-number">3</span> Biais de survie</h4>
+        <p>On ne voit que les <strong>gagnants</strong>. Les fonds qui ont ferm&eacute; sont invisibles. Les strat&eacute;gies qui ont &eacute;chou&eacute; ne sont pas publi&eacute;es. Quand quelqu'un vous dit "mon IA a gagn&eacute; 200 %", demandez-vous combien de strat&eacute;gies &eacute;quivalentes ont perdu 100 %.</p>
+      </div>
+      <div class="pitfall-card">
+        <h4><span class="pitfall-number">4</span> Black Box</h4>
+        <p>Impossible de comprendre <strong>pourquoi</strong> l'IA recommande un trade. Si vous ne pouvez pas expliquer la logique derri&egrave;re une d&eacute;cision, c'est un signe d'alerte. Les meilleurs traders comprennent chaque position qu'ils prennent.</p>
+      </div>
+      <div class="pitfall-card">
+        <h4><span class="pitfall-number">5</span> Donn&eacute;es obsolètes</h4>
+        <p>Les mod&egrave;les sont entra&icirc;n&eacute;s sur des donn&eacute;es pass&eacute;es qui ne refl&egrave;tent pas toujours le pr&eacute;sent. Un mod&egrave;le entra&icirc;n&eacute; avant le COVID ne savait pas g&eacute;rer une pand&eacute;mie. <strong>Le march&eacute; &eacute;volue plus vite que les mod&egrave;les.</strong></p>
+      </div>
+    </div>
+
+    <div class="alert-box" style="border-left-width:6px; padding:2rem;">
+      <h4 style="font-size:1.1rem;"><i class="fa-solid fa-exclamation-circle"></i> R&egrave;gle d'or</h4>
+      <p style="font-size:1.05rem; font-weight:600; margin:0;">L'IA est un <strong>OUTIL</strong>, JAMAIS un oracle. V&eacute;rifiez toujours les chiffres. Croisez les sources. Ne faites <strong>jamais confiance aveugl&eacute;ment</strong> &agrave; une recommandation automatis&eacute;e. Si vous ne comprenez pas pourquoi l'IA recommande un trade, <strong>ne le prenez pas</strong>.</p>
+    </div>
+
+    <h3 style="margin-top:2.5rem;">Niveau de confiance &agrave; accorder &agrave; l'IA</h3>
+    <div id="chartConfiance" style="width:100%;height:350px;"></div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-book"></i> Interpr&eacute;tation de la jauge</h4>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-circle" style="color:#ef4444; font-size:0.7rem;"></i> <strong>0-30 (Danger)</strong> : L'IA se trompe trop souvent. Ne basez aucune d&eacute;cision sur ses sorties brutes.</li>
+        <li><i class="fa-solid fa-circle" style="color:#eab308; font-size:0.7rem;"></i> <strong>30-60 (Prudent)</strong> : Utile comme point de d&eacute;part, mais n&eacute;cessite une v&eacute;rification humaine syst&eacute;matique.</li>
+        <li><i class="fa-solid fa-circle" style="color:#10b981; font-size:0.7rem;"></i> <strong>60-80 (Utile)</strong> : Zone optimale. L'IA comme assistant, l'humain comme d&eacute;cideur. C'est l&agrave; que nous recommandons de vous situer.</li>
+        <li><i class="fa-solid fa-circle" style="color:#f97316; font-size:0.7rem;"></i> <strong>80-100 (Confiance excessive)</strong> : Attention ! Trop de confiance dans l'IA m&egrave;ne &agrave; des d&eacute;cisions non v&eacute;rifi&eacute;es et &agrave; des pertes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 8 : WORKFLOW ==================== -->
+  <div class="section-divider" id="workflow">Construire Son Workflow IA</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-diagram-project" style="color:#6d28d9;"></i> Le pipeline en 4 &eacute;tapes</h2>
+
+    <p>Voici le workflow que nous recommandons pour int&eacute;grer l'IA dans votre processus d'investissement. Chaque &eacute;tape utilise l'IA diff&eacute;remment.</p>
+
+    <div class="workflow-step">
+      <div class="workflow-number" style="background:linear-gradient(135deg, #f59e0b, #d97706);">1</div>
+      <div>
+        <h4 style="margin:0 0 0.5rem; color:#d97706; font-size:1.1rem; font-weight:800;">SCREEN &mdash; Identifier les candidats</h4>
+        <p style="margin:0 0 0.75rem; font-size:0.92rem;">Utiliser un screener IA pour identifier <strong>10-20 candidats</strong> par jour parmi les milliers d'actions disponibles. Le screener d&eacute;tecte automatiquement le r&eacute;gime de march&eacute; et adapte ses strat&eacute;gies.</p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <span style="padding:0.25rem 0.6rem; background:#fffbeb; color:#92400e; border-radius:6px; font-size:0.75rem; font-weight:600;">MarketWatch Scanner</span>
+          <span style="padding:0.25rem 0.6rem; background:#f8fafc; color:#64748b; border-radius:6px; font-size:0.75rem; font-weight:600;">Finviz</span>
+          <span style="padding:0.25rem 0.6rem; background:#f8fafc; color:#64748b; border-radius:6px; font-size:0.75rem; font-weight:600;">TradingView Screener</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="workflow-step">
+      <div class="workflow-number" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);">2</div>
+      <div>
+        <h4 style="margin:0 0 0.5rem; color:#2563eb; font-size:1.1rem; font-weight:800;">RESEARCH &mdash; Collecter les donn&eacute;es</h4>
+        <p style="margin:0 0 0.75rem; font-size:0.92rem;">Pour chaque candidat, collecter les donn&eacute;es fondamentales et techniques. L'IA peut r&eacute;sumer les rapports financiers, les actualit&eacute;s r&eacute;centes et le sentiment de march&eacute; en quelques minutes.</p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <span style="padding:0.25rem 0.6rem; background:#eff6ff; color:#1d4ed8; border-radius:6px; font-size:0.75rem; font-weight:600;">SEC EDGAR</span>
+          <span style="padding:0.25rem 0.6rem; background:#f8fafc; color:#64748b; border-radius:6px; font-size:0.75rem; font-weight:600;">Yahoo Finance</span>
+          <span style="padding:0.25rem 0.6rem; background:#f8fafc; color:#64748b; border-radius:6px; font-size:0.75rem; font-weight:600;">Claude / ChatGPT</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="workflow-step">
+      <div class="workflow-number" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9);">3</div>
+      <div>
+        <h4 style="margin:0 0 0.5rem; color:#8b5cf6; font-size:1.1rem; font-weight:800;">ANALYZE &mdash; Appliquer vos grilles</h4>
+        <p style="margin:0 0 0.75rem; font-size:0.92rem;">Appliquer la <strong>checklist de valorisation</strong> (Partie 2) et lire le dernier <strong>earnings report</strong> (Partie 1). L'IA vous aide &agrave; comparer avec les concurrents et &agrave; d&eacute;tecter les risques cach&eacute;s.</p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <span style="padding:0.25rem 0.6rem; background:#f5f3ff; color:#6d28d9; border-radius:6px; font-size:0.75rem; font-weight:600;">IA pour r&eacute;sum&eacute;s</span>
+          <span style="padding:0.25rem 0.6rem; background:#f8fafc; color:#64748b; border-radius:6px; font-size:0.75rem; font-weight:600;">Screeners techniques</span>
+          <span style="padding:0.25rem 0.6rem; background:#f8fafc; color:#64748b; border-radius:6px; font-size:0.75rem; font-weight:600;">Checklist valorisation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="workflow-step">
+      <div class="workflow-number" style="background:linear-gradient(135deg, #10b981, #059669);">4</div>
+      <div>
+        <h4 style="margin:0 0 0.5rem; color:#10b981; font-size:1.1rem; font-weight:800;">DECIDE &mdash; Prendre la d&eacute;cision</h4>
+        <p style="margin:0 0 0.75rem; font-size:0.92rem;">C'est <strong>vous</strong> qui d&eacute;cidez : acheter, surveiller ou passer. L'IA ne prend pas la d&eacute;cision &agrave; votre place. Documentez chaque d&eacute;cision dans votre journal de trading.</p>
+        <div style="padding:0.75rem 1rem; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; margin-top:0.5rem;">
+          <p style="margin:0; font-size:0.88rem; font-weight:600; color:#166534;"><i class="fa-solid fa-quote-left" style="margin-right:0.4rem;"></i> Si vous ne pouvez pas expliquer pourquoi vous achetez en 3 phrases, n'achetez pas.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="didactic-box" style="margin-top:2rem;">
+      <h4 style="color:#10b981;"><i class="fa-solid fa-clock"></i> Routine quotidienne &mdash; 30 minutes</h4>
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:0.5rem 1rem; align-items:center; margin-top:1rem;">
+        <span style="font-size:0.85rem; font-weight:800; color:#8b5cf6;">7h00</span>
+        <span style="font-size:0.9rem; color:#334155;">Lire le briefing Market Watch <span style="color:#94a3b8;">(5 min)</span></span>
+        <span style="font-size:0.85rem; font-weight:800; color:#8b5cf6;">7h05</span>
+        <span style="font-size:0.9rem; color:#334155;">V&eacute;rifier les screeners &mdash; quels candidats aujourd'hui ? <span style="color:#94a3b8;">(5 min)</span></span>
+        <span style="font-size:0.85rem; font-weight:800; color:#8b5cf6;">7h10</span>
+        <span style="font-size:0.9rem; color:#334155;">Analyser les 2-3 meilleurs candidats en d&eacute;tail <span style="color:#94a3b8;">(15 min)</span></span>
+        <span style="font-size:0.85rem; font-weight:800; color:#8b5cf6;">7h25</span>
+        <span style="font-size:0.9rem; color:#334155;">D&eacute;cision + mise &agrave; jour du journal de trading <span style="color:#94a3b8;">(5 min)</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 9 : QUIZ ==================== -->
+  <div class="section-divider" id="quiz">Quiz &mdash; Testez vos connaissances</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-graduation-cap" style="color:#0ea5e9;"></i> 5 questions pour v&eacute;rifier</h2>
+
+    <details>
+      <summary>Question 1 : Quel pourcentage du volume de trading aux &Eacute;tats-Unis est algorithmique ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : 70 &agrave; 80 %.</strong> La grande majorit&eacute; des transactions boursi&egrave;res aux &Eacute;tats-Unis sont ex&eacute;cut&eacute;es par des algorithmes, et non par des humains. Cela inclut le HFT (High Frequency Trading) et les strat&eacute;gies quantitatives des hedge funds.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 2 : Votre IA pr&eacute;f&eacute;r&eacute;e vous dit qu'une action va monter de 50 % ce mois-ci. Que faites-vous ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : Vous ne faites RIEN bas&eacute; uniquement sur cette pr&eacute;diction.</strong> L'IA ne peut pas pr&eacute;dire l'avenir avec certitude. Vous devez : (1) v&eacute;rifier les chiffres cit&eacute;s, (2) analyser les fondamentaux vous-m&ecirc;me, (3) v&eacute;rifier le sentiment et les signaux techniques, (4) &eacute;valuer le risque (stop loss, sizing). Une pr&eacute;diction chiffr&eacute;e sans justification est un red flag.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 3 : Le sentiment sur WallStreetBets est &agrave; 95 % bullish sur une action. Est-ce un signal d'achat ou de prudence ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : C'est un signal de PRUDENCE.</strong> Un sentiment extr&ecirc;mement bullish est souvent un indicateur contrariant &mdash; il pr&eacute;c&egrave;de fr&eacute;quemment une correction. Quand tout le monde est d&eacute;j&agrave; acheteur, il ne reste plus personne pour pousser le prix &agrave; la hausse. Comme disait Buffett : "Soyez craintif quand les autres sont avides."
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 4 : Citez 3 limites majeures de l'utilisation de l'IA en finance.</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse :</strong> Parmi les 5 limites &eacute;tudi&eacute;es : (1) <strong>Hallucinations</strong> &mdash; l'IA peut inventer des chiffres, (2) <strong>Overfitting</strong> &mdash; un mod&egrave;le parfait sur le pass&eacute; mais nul sur le futur, (3) <strong>Biais de survie</strong> &mdash; on ne voit que les gagnants, (4) <strong>Black Box</strong> &mdash; impossible de comprendre le "pourquoi", (5) <strong>Donn&eacute;es obsolètes</strong> &mdash; les mod&egrave;les ne connaissent pas toujours le pr&eacute;sent. Toute combinaison de 3 parmi ces 5 est une bonne r&eacute;ponse.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 5 : D&eacute;crivez les 4 &eacute;tapes du workflow IA recommand&eacute; dans cet article.</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse :</strong> (1) <strong>SCREEN</strong> &mdash; Utiliser un screener IA pour identifier 10-20 candidats par jour. (2) <strong>RESEARCH</strong> &mdash; Collecter les donn&eacute;es fondamentales et techniques pour chaque candidat. (3) <strong>ANALYZE</strong> &mdash; Appliquer la checklist de valorisation et lire les derniers earnings. (4) <strong>DECIDE</strong> &mdash; Prendre la d&eacute;cision (acheter, surveiller ou passer) et la documenter dans un journal de trading.
+      </div>
+    </details>
+  </div>
+
+  <!-- ==================== SECTION 10 : CE QU'ON RETIENT ==================== -->
+  <div class="section-divider" id="resume">Ce qu'on retient</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-bookmark" style="color:#8b5cf6;"></i> R&eacute;sum&eacute; de l'article</h2>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#8b5cf6;"></i> <strong>L'IA d&eacute;mocratise l'analyse financi&egrave;re</strong> : ce qui co&ucirc;tait 50 000 $/an est d&eacute;sormais accessible gratuitement.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#8b5cf6;"></i> <strong>Les screeners IA</strong> d&eacute;tectent des patterns multi-facteurs (momentum, squeeze, breakout) impossibles &agrave; rep&eacute;rer manuellement.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#8b5cf6;"></i> <strong>L'analyse de sentiment</strong> est un indicateur contrariant : l'euphorie pr&eacute;c&egrave;de souvent les corrections.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#8b5cf6;"></i> <strong>Aucun signal n'est fiable &agrave; 100 %</strong> : les meilleurs ont un win rate de 60-65 %. La gestion du risque prime.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#8b5cf6;"></i> <strong>L'IA est un outil, pas un oracle</strong> : hallucinations, overfitting, biais de survie et black box sont des risques r&eacute;els.</li>
+    </ul>
+
+    <div style="height:2px; background:linear-gradient(90deg, #8b5cf6, #f59e0b); border-radius:99px; margin:2.5rem 0;"></div>
+
+    <h2><i class="fa-solid fa-flag-checkered" style="color:#f59e0b;"></i> R&eacute;capitulatif de la s&eacute;rie compl&egrave;te</h2>
+
+    <p>F&eacute;licitations ! Vous avez termin&eacute; les 3 parties de la s&eacute;rie <strong>"Ma&icirc;triser les Earnings"</strong>. Voici ce que vous savez d&eacute;sormais faire :</p>
+
+    <div style="display:grid; gap:1rem; margin:2rem 0;">
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:1.25rem; background:#fffbeb; border:1px solid #fde68a; border-radius:14px;">
+        <div style="width:40px; height:40px; border-radius:10px; background:#f59e0b; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">1</div>
+        <div>
+          <h4 style="margin:0 0 0.25rem; color:#92400e; font-size:0.95rem;">Partie 1 &mdash; Lire un rapport de r&eacute;sultats</h4>
+          <p style="margin:0; font-size:0.88rem; color:#78350f;">Vous savez d&eacute;coder un earnings report : EPS, chiffre d'affaires, marges, guidance, free cash flow. Vous comprenez la diff&eacute;rence entre un "beat" et un "miss" et pourquoi le march&eacute; r&eacute;agit parfois de mani&egrave;re contre-intuitive.</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:1.25rem; background:#fffbeb; border:1px solid #fde68a; border-radius:14px;">
+        <div style="width:40px; height:40px; border-radius:10px; background:#d97706; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">2</div>
+        <div>
+          <h4 style="margin:0 0 0.25rem; color:#92400e; font-size:0.95rem;">Partie 2 &mdash; Valoriser une action</h4>
+          <p style="margin:0; font-size:0.88rem; color:#78350f;">Vous savez &eacute;valuer si une action est ch&egrave;re ou bon march&eacute; : P/E, PEG, EV/EBITDA, multiples sectoriels. Vous comprenez le float, les insiders, et comment les analyser pour d&eacute;tecter les opportunit&eacute;s.</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:1.25rem; background:#f5f3ff; border:1px solid #c4b5fd; border-radius:14px;">
+        <div style="width:40px; height:40px; border-radius:10px; background:#8b5cf6; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">3</div>
+        <div>
+          <h4 style="margin:0 0 0.25rem; color:#5b21b6; font-size:0.95rem;">Partie 3 &mdash; Utiliser l'IA comme assistant</h4>
+          <p style="margin:0; font-size:0.88rem; color:#4c1d95;">Vous savez utiliser les screeners IA, l'analyse de sentiment, les signaux de trading et un workflow structur&eacute; en 4 &eacute;tapes. Et surtout, vous connaissez les limites de l'IA pour ne pas tomber dans les pi&egrave;ges.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2.5rem;">Et maintenant ? Les prochaines &eacute;tapes</h3>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-arrow-right" style="color:#f59e0b;"></i> <strong>Ouvrez un compte de d&eacute;monstration</strong> (paper trading) pour pratiquer sans risquer d'argent r&eacute;el.</li>
+      <li><i class="fa-solid fa-arrow-right" style="color:#f59e0b;"></i> <strong>Suivez le briefing quotidien</strong> Market Watch chaque matin pour rester inform&eacute;.</li>
+      <li><i class="fa-solid fa-arrow-right" style="color:#f59e0b;"></i> <strong>Appliquez le workflow SCREEN &rarr; RESEARCH &rarr; ANALYZE &rarr; DECIDE</strong> sur 2-3 actions par semaine.</li>
+      <li><i class="fa-solid fa-arrow-right" style="color:#f59e0b;"></i> <strong>Tenez un journal de trading</strong> pour documenter et am&eacute;liorer vos d&eacute;cisions au fil du temps.</li>
+      <li><i class="fa-solid fa-arrow-right" style="color:#f59e0b;"></i> <strong>Relisez les Parties 1 et 2</strong> r&eacute;guli&egrave;rement &mdash; chaque relecture r&eacute;v&egrave;le de nouveaux d&eacute;tails.</li>
+    </ul>
+
+    <div class="series-complete">
+      <div style="font-size:3rem; margin-bottom:1rem;"><i class="fa-solid fa-trophy"></i></div>
+      <h3>S&eacute;rie compl&eacute;t&eacute;e !</h3>
+      <p>Vous avez termin&eacute; les 3 parties de "Ma&icirc;triser les Earnings". Vous avez d&eacute;sormais les bases solides pour analyser les march&eacute;s financiers avec m&eacute;thode et intelligence.</p>
+      <p style="font-weight:700; font-size:1.1rem;">L'investissement est un marathon, pas un sprint. Bonne route !</p>
+      <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem;">
+        <a href="/series/maitriser-les-earnings/" style="padding:0.6rem 1.25rem; background:rgba(255,255,255,0.2); color:white; border-radius:10px; text-decoration:none; font-weight:600; font-size:0.85rem; border:1px solid rgba(255,255,255,0.3); transition:all 0.2s;">
+          <i class="fa-solid fa-arrow-left" style="margin-right:0.4rem;"></i> Partie 1 &mdash; R&eacute;sultats
+        </a>
+        <a href="/series/valoriser-une-action/" style="padding:0.6rem 1.25rem; background:rgba(255,255,255,0.2); color:white; border-radius:10px; text-decoration:none; font-weight:600; font-size:0.85rem; border:1px solid rgba(255,255,255,0.3); transition:all 0.2s;">
+          <i class="fa-solid fa-arrow-left" style="margin-right:0.4rem;"></i> Partie 2 &mdash; Valorisation
+        </a>
+        <a href="/" style="padding:0.6rem 1.25rem; background:white; color:#8b5cf6; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.85rem; transition:all 0.2s;">
+          <i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Accueil Market Watch
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ==================== FOOTER ==================== -->
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Market Watch</strong> &mdash; S&eacute;rie "Ma&icirc;triser les Earnings" &mdash; Partie 3 sur 3</p>
+  <p style="margin:0 0 0.5rem;">
+    <a href="/series/maitriser-les-earnings/">Partie 1</a> &middot;
+    <a href="/series/valoriser-une-action/">Partie 2</a> &middot;
+    <a href="/series/ia-et-bourse/" style="color:#8b5cf6; font-weight:600;">Partie 3</a> &middot;
+    <a href="/">Accueil</a>
+  </p>
+  <p style="margin:0; font-size:0.7rem; color:#cbd5e1;">Cet article est &agrave; but &eacute;ducatif uniquement. Il ne constitue pas un conseil en investissement. Les performances pass&eacute;es ne pr&eacute;jugent pas des performances futures. Consultez un professionnel agr&eacute;&eacute; avant toute d&eacute;cision d'investissement.</p>
+</div>
+
+<!-- ==================== CHARTS SCRIPTS ==================== -->
+<script>
+// ===== CHART 1: Strategy Performance =====
+(function() {
+  var dom = document.getElementById('chartStrategies');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: function(params) {
+        var str = '<strong>' + params[0].name + '</strong><br/>';
+        params.forEach(function(p) {
+          str += '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + p.color + ';margin-right:6px;"></span>';
+          str += p.seriesName + ': <strong>' + p.value + (p.seriesName === 'Rendement Moyen' ? ' %' : ' %') + '</strong><br/>';
+        });
+        return str;
+      }
+    },
+    legend: {
+      data: ['TP1 Hit Rate', 'TP2 Hit Rate', 'Rendement Moyen'],
+      bottom: 0,
+      textStyle: { color: '#64748b', fontSize: 11 },
+      itemGap: 20
+    },
+    grid: {
+      left: '3%', right: '4%', bottom: '15%', top: '10%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'value',
+      max: 70,
+      axisLabel: { formatter: '{value} %', color: '#94a3b8', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    yAxis: {
+      type: 'category',
+      data: ['Short Squeeze', 'Breakout Squeeze', 'Momentum', 'Pre-Squeeze'],
+      axisLabel: { color: '#334155', fontSize: 12, fontWeight: 600 },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    series: [
+      {
+        name: 'TP1 Hit Rate',
+        type: 'bar',
+        data: [40, 48, 62, 55],
+        itemStyle: { color: '#8b5cf6', borderRadius: [0, 6, 6, 0] },
+        barGap: '20%',
+        barCategoryGap: '40%'
+      },
+      {
+        name: 'TP2 Hit Rate',
+        type: 'bar',
+        data: [20, 25, 38, 30],
+        itemStyle: { color: '#f59e0b', borderRadius: [0, 6, 6, 0] }
+      },
+      {
+        name: 'Rendement Moyen',
+        type: 'bar',
+        data: [6.1, 3.5, 5.8, 4.2],
+        itemStyle: { color: '#10b981', borderRadius: [0, 6, 6, 0] }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ===== CHART 2: Sentiment vs Price =====
+(function() {
+  var dom = document.getElementById('chartSentiment');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var months = ['Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc', 'Jan', 'Fév'];
+  var priceData = [142, 151, 158, 170, 178, 175, 160, 148, 155, 168, 180, 185];
+  var sentimentData = [55, 62, 70, 82, 88, 75, 35, 22, 40, 65, 78, 72];
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: function(params) {
+        var str = '<strong>' + params[0].axisValue + '</strong><br/>';
+        params.forEach(function(p) {
+          if (p.seriesName === 'Prix ($)') {
+            str += '<span style="color:' + p.color + ';">●</span> Prix: <strong>$' + p.value + '</strong><br/>';
+          } else {
+            str += '<span style="color:' + p.color + ';">●</span> Sentiment: <strong>' + p.value + ' %</strong>';
+            if (p.value >= 80) str += ' <span style="color:#ef4444;">(Euphorie !)</span>';
+            else if (p.value <= 30) str += ' <span style="color:#10b981;">(Panique !)</span>';
+            str += '<br/>';
+          }
+        });
+        return str;
+      }
+    },
+    legend: {
+      data: ['Prix ($)', 'Sentiment (%)'],
+      bottom: 0,
+      textStyle: { color: '#64748b', fontSize: 11 }
+    },
+    grid: {
+      left: '3%', right: '4%', bottom: '15%', top: '12%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: months,
+      axisLabel: { color: '#94a3b8', fontSize: 11 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'Prix ($)',
+        nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+        min: 130,
+        max: 200,
+        axisLabel: { formatter: '${value}', color: '#94a3b8', fontSize: 10 },
+        splitLine: { lineStyle: { color: '#f1f5f9' } }
+      },
+      {
+        type: 'value',
+        name: 'Sentiment (%)',
+        nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+        min: 0,
+        max: 100,
+        axisLabel: { formatter: '{value}%', color: '#94a3b8', fontSize: 10 },
+        splitLine: { show: false }
+      }
+    ],
+    series: [
+      {
+        name: 'Prix ($)',
+        type: 'line',
+        data: priceData,
+        smooth: true,
+        lineStyle: { color: '#8b5cf6', width: 3 },
+        itemStyle: { color: '#8b5cf6' },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(139,92,246,0.15)' },
+              { offset: 1, color: 'rgba(139,92,246,0)' }
+            ]
+          }
+        },
+        symbol: 'circle',
+        symbolSize: 6,
+        yAxisIndex: 0
+      },
+      {
+        name: 'Sentiment (%)',
+        type: 'bar',
+        data: sentimentData,
+        yAxisIndex: 1,
+        itemStyle: {
+          color: function(params) {
+            var val = params.value;
+            if (val >= 80) return '#ef4444';
+            if (val >= 60) return '#f59e0b';
+            if (val >= 40) return '#10b981';
+            if (val >= 25) return '#f59e0b';
+            return '#ef4444';
+          },
+          borderRadius: [4, 4, 0, 0]
+        },
+        barWidth: '40%',
+        markLine: {
+          silent: true,
+          lineStyle: { type: 'dashed', color: '#94a3b8' },
+          label: { color: '#94a3b8', fontSize: 9 },
+          data: [
+            { yAxis: 80, label: { formatter: 'Euphorie', position: 'end' } },
+            { yAxis: 25, label: { formatter: 'Panique', position: 'end' } }
+          ]
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ===== CHART 3: IA Confidence Gauge =====
+(function() {
+  var dom = document.getElementById('chartConfiance');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var option = {
+    series: [
+      {
+        type: 'gauge',
+        center: ['50%', '60%'],
+        radius: '85%',
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 100,
+        splitNumber: 10,
+        axisLine: {
+          lineStyle: {
+            width: 25,
+            color: [
+              [0.3, '#ef4444'],
+              [0.6, '#eab308'],
+              [0.8, '#10b981'],
+              [1, '#f97316']
+            ]
+          }
+        },
+        pointer: {
+          icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+          length: '55%',
+          width: 12,
+          offsetCenter: [0, '-10%'],
+          itemStyle: { color: '#1e293b' }
+        },
+        axisTick: {
+          length: 8,
+          lineStyle: { color: 'auto', width: 2 }
+        },
+        splitLine: {
+          length: 15,
+          lineStyle: { color: 'auto', width: 3 }
+        },
+        axisLabel: {
+          color: '#94a3b8',
+          fontSize: 11,
+          distance: -45,
+          formatter: function(value) {
+            if (value === 0) return 'Danger';
+            if (value === 30) return '';
+            if (value === 50) return 'Prudent';
+            if (value === 70) return 'Utile';
+            if (value === 90) return '';
+            if (value === 100) return 'Excessif';
+            return '';
+          }
+        },
+        title: {
+          offsetCenter: [0, '30%'],
+          fontSize: 14,
+          fontWeight: 700,
+          color: '#64748b'
+        },
+        detail: {
+          fontSize: 36,
+          fontWeight: 800,
+          offsetCenter: [0, '10%'],
+          valueAnimation: true,
+          formatter: '{value}/100',
+          color: '#10b981'
+        },
+        data: [
+          {
+            value: 65,
+            name: 'Niveau de confiance recommandé'
+          }
+        ]
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
