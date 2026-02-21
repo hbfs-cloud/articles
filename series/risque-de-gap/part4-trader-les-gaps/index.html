@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trader les Gaps — De la Menace à l'Opportunité | Gérer le Risque de Gap — Partie 4/5 | Market Watch</title>
+  <meta name="description" content="Série Gérer le Risque de Gap — Partie 4/5 : Gap and Go, gap fill strategy, fading the gap, earnings gap trading, CME gap crypto. Transformer les gaps en opportunités de trading.">
+  <meta property="og:title" content="Trader les Gaps — De la Menace à l'Opportunité | Gérer le Risque de Gap — Partie 4/5 | Market Watch">
+  <meta property="og:description" content="Gap and Go, gap fill, fading the gap, straddles earnings, CME gap crypto. Les stratégies pour profiter des gaps au lieu de les subir.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/risque-de-gap/part4-trader-les-gaps/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#dc2626; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#f87171; color:#f87171; }
+  .series-link.current { background:#dc2626; color:white; border-color:#dc2626; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#dc2626; margin-right:0.75rem; }
+  details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#dc2626; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#f87171; }
+  .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#dc2626; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:#f8fafc; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#dc2626; color:#dc2626; }
+  .prev-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.7; }
+  .prev-cta .next-title { font-size:1.1rem; font-weight:700; }
+  .disclaimer-mega { background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #dc2626; }
+  .disclaimer-mega h3 { color:#fca5a5; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fecaca; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#f87171; margin-top:0.2rem; flex-shrink:0; }
+  .asset-section { background:white; border:1px solid #e2e8f0; border-radius:20px; padding:2rem; margin:1.5rem 0; border-top:4px solid; }
+  .case-study { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin:1rem 0; border-left:4px solid #dc2626; }
+  .case-study h5 { margin:0 0 0.5rem; font-size:0.95rem; font-weight:700; color:#0f172a; }
+  .case-study p { margin:0; font-size:0.88rem; color:#475569; line-height:1.6; }
+  .strategy-setup { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem; border-radius:12px; margin:1.5rem 0; }
+  .strategy-setup h5 { color:#f97316; margin:0 0 1rem; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em; }
+  .setup-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; }
+  .setup-item { text-align:center; padding:0.75rem; border-radius:8px; }
+  .setup-item .setup-label { font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; }
+  .setup-item .setup-value { font-size:1.1rem; font-weight:800; margin-top:0.25rem; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+    .asset-section { padding:1.25rem; }
+    .setup-grid { grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Gérer le Risque de Gap</span>
+  <a href="/series/risque-de-gap/part1-anatomie-gap/" class="series-link">1 — Anatomie</a>
+  <a href="/series/risque-de-gap/part2-gap-par-actif/" class="series-link">2 — Par Actif</a>
+  <a href="/series/risque-de-gap/part3-protection/" class="series-link">3 — Protection</a>
+  <a href="/series/risque-de-gap/part4-trader-les-gaps/" class="series-link current">4 — Trader</a>
+  <a href="/series/risque-de-gap/part5-survivre/" class="series-link">5 — Survivre</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Gérer le Risque de Gap — Partie 4 sur 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Trader les Gaps — De la Menace à l'Opportunité</h1>
+  <p class="hero-subtitle">Gap and Go, gap fill, fading the gap, straddles sur earnings, CME gap crypto. Les stratégies éprouvées pour transformer les gaps en opportunités de trading rentables.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-rocket"></i> Gap and Go</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-left-right"></i> Gap Fill</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-rotate-left"></i> Fading</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-brands fa-bitcoin"></i> CME Gap</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-line"></i> Earnings</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#gapandgo" class="nav-item"><i class="fa-solid fa-rocket" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Gap and Go</a>
+  <a href="#gapfill" class="nav-item"><i class="fa-solid fa-arrows-left-right" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Gap Fill</a>
+  <a href="#fading" class="nav-item"><i class="fa-solid fa-rotate-left" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Fading</a>
+  <a href="#earnings" class="nav-item"><i class="fa-solid fa-calendar-check" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Earnings</a>
+  <a href="#cmegap" class="nav-item"><i class="fa-brands fa-bitcoin" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> CME Gap</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : GAP AND GO                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="gapandgo"><i class="fa-solid fa-rocket" style="color:#dc2626;"></i> Gap and Go — Surfer le Momentum</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rocket" style="color:#dc2626;"></i> Le Trade du Momentum d'Ouverture</h2>
+
+  <p>Le <strong>Gap and Go</strong> est la stratégie de gap la plus populaire chez les day traders. Le principe : quand une action ouvre en gap significatif (+5% ou plus), le momentum initial a tendance à <strong>se poursuivre</strong> pendant les 15 à 60 premières minutes. Vous surfez sur cette vague.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi le Gap and Go fonctionne</h4>
+    <p style="margin:0;">Un gap significatif signifie qu'un catalyseur majeur (earnings, news, upgrade) a changé la perception du marché. Les traders qui ont manqué le mouvement pré-marché veulent entrer à l'ouverture, créant une pression acheteuse supplémentaire. Les shorts sont piégés et doivent couvrir (short squeeze). Ce flux acheteur pousse le prix encore plus haut dans les premières minutes.</p>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#dc2626;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-crosshairs" style="color:#dc2626;"></i> Conditions d'Entrée</h3>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#dc2626;">&ge;5%</div>
+        <div class="metric-label">Gap minimum</div>
+        <div class="metric-change neutral">Idéal : +8% à +15%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#f97316;">2x+</div>
+        <div class="metric-label">Volume pré-marché</div>
+        <div class="metric-change neutral">vs moyenne 20j</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#2563eb;">News</div>
+        <div class="metric-label">Catalyseur clair</div>
+        <div class="metric-change neutral">Earnings, FDA, M&A</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#16a34a;">Trend</div>
+        <div class="metric-label">Direction alignée</div>
+        <div class="metric-change neutral">Gap dans le sens du trend</div>
+      </div>
+    </div>
+
+    <div class="strategy-setup">
+      <h5><i class="fa-solid fa-crosshairs"></i> Setup Gap and Go — Plan de Trade</h5>
+      <div class="setup-grid">
+        <div class="setup-item" style="background:rgba(59,130,246,0.15);">
+          <div class="setup-label">Entrée</div>
+          <div class="setup-value" style="color:#3b82f6;">1ère bougie 5min</div>
+        </div>
+        <div class="setup-item" style="background:rgba(220,38,38,0.15);">
+          <div class="setup-label">Stop Loss</div>
+          <div class="setup-value" style="color:#dc2626;">Bas de la bougie 5min</div>
+        </div>
+        <div class="setup-item" style="background:rgba(22,163,74,0.15);">
+          <div class="setup-label">Target</div>
+          <div class="setup-value" style="color:#16a34a;">VWAP + extension</div>
+        </div>
+        <div class="setup-item" style="background:rgba(249,115,22,0.15);">
+          <div class="setup-label">Durée</div>
+          <div class="setup-value" style="color:#f97316;">15-60 min</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-study">
+      <h5><i class="fa-solid fa-arrow-up" style="color:#16a34a;"></i> Exemple : NVDA post-earnings mai 2023</h5>
+      <p>NVDA annonce une guidance AI explosive. L'action gap up de +24% à l'ouverture ($306 &rarr; $380). Le Gap and Go : entrée à $382 sur la première bougie verte 5 min, stop à $374 (bas de la bougie), target VWAP étendu à $395. L'action touche $395 en 40 minutes. Gain : +3,4% en 40 minutes sur un trade intraday. Risque : 2,1%. R/R : 1,6:1.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Les pièges du Gap and Go</h4>
+    <p style="margin:0;">Le Gap and Go échoue quand : (1) le gap est un <strong>exhaustion gap</strong> (fin de tendance, pas début), (2) le volume pré-marché est faible (gap artificiel), (3) vous entrez trop tard (après les premières 5-10 minutes, le momentum s'épuise souvent), (4) vous ne respectez pas votre stop — un Gap and Go raté se transforme en gap fade très rapidement. Règle : si la première bougie 5 min est rouge (baissière), <strong>n'entrez pas</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : GAP FILL                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="gapfill"><i class="fa-solid fa-arrows-left-right" style="color:#2563eb;"></i> Gap Fill — Quand les Gaps se Referment</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-left-right" style="color:#2563eb;"></i> Le Concept du Gap Fill</h2>
+
+  <p>Un "gap fill" (ou "gap close") se produit quand le prix revient au niveau de la clôture précédente, "comblant" le gap. C'est l'une des observations les plus fiables en analyse technique. Mais tous les gaps ne se comblent pas de la même manière — et certains ne se comblent <strong>jamais</strong>.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Type de Gap</th><th>Taux de Fill</th><th>Délai Moyen</th><th>Stratégie</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Common Gap</strong> (gap ordinaire)</td><td style="color:#16a34a; font-weight:700;">90%+</td><td>1-5 jours</td><td>Fade agressif</td></tr>
+      <tr><td><strong>Breakaway Gap</strong> (rupture)</td><td style="color:#dc2626; font-weight:700;">30-40%</td><td>Semaines/mois</td><td>Ne pas fade — trader le momentum</td></tr>
+      <tr><td><strong>Runaway Gap</strong> (continuation)</td><td style="color:#dc2626; font-weight:700;">20-30%</td><td>Mois/jamais</td><td>Rejoindre la tendance</td></tr>
+      <tr><td><strong>Exhaustion Gap</strong> (épuisement)</td><td style="color:#16a34a; font-weight:700;">80-90%</td><td>1-3 jours</td><td>Fade, mais attendre confirmation</td></tr>
+      <tr><td><strong>CME Gap (BTC)</strong></td><td style="color:#16a34a; font-weight:700;">~60%</td><td>1-7 jours</td><td>Mean reversion vers le gap</td></tr>
+    </tbody>
+  </table>
+
+  <div class="asset-section" style="border-top-color:#2563eb;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-bullseye" style="color:#2563eb;"></i> Comment Distinguer les Types de Gap</h3>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle"></i> Gap qui se comble (fade)</div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+          <li>Volume faible/normal à l'ouverture</li>
+          <li>Pas de catalyseur clair ou catalyseur faible</li>
+          <li>Gap contre la tendance dominante</li>
+          <li>Gap dans une zone de range/consolidation</li>
+          <li>RSI en surachat/survente extrême</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark-circle"></i> Gap qui ne se comble PAS</div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+          <li>Volume explosif (3x+ la moyenne)</li>
+          <li>Catalyseur fondamental majeur</li>
+          <li>Gap dans le sens de la tendance</li>
+          <li>Cassure d'un niveau clé (résistance/support)</li>
+          <li>L'action ne retrace pas dans les premières heures</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="strategy-setup">
+    <h5><i class="fa-solid fa-crosshairs"></i> Setup Gap Fill — Plan de Trade</h5>
+    <div class="setup-grid">
+      <div class="setup-item" style="background:rgba(59,130,246,0.15);">
+        <div class="setup-label">Entrée</div>
+        <div class="setup-value" style="color:#3b82f6;">Premier rejet du gap</div>
+      </div>
+      <div class="setup-item" style="background:rgba(220,38,38,0.15);">
+        <div class="setup-label">Stop Loss</div>
+        <div class="setup-value" style="color:#dc2626;">Au-delà du high/low du gap</div>
+      </div>
+      <div class="setup-item" style="background:rgba(22,163,74,0.15);">
+        <div class="setup-label">Target</div>
+        <div class="setup-value" style="color:#16a34a;">Clôture veille (gap fill)</div>
+      </div>
+      <div class="setup-item" style="background:rgba(249,115,22,0.15);">
+        <div class="setup-label">Durée</div>
+        <div class="setup-value" style="color:#f97316;">1-5 jours</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart: Gap Fill vs Gap and Go -->
+  <div id="chart-gapfill" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : FADING THE GAP                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="fading"><i class="fa-solid fa-rotate-left" style="color:#f97316;"></i> Fading the Gap — Le Trade Contrarian</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rotate-left" style="color:#f97316;"></i> Trader Contre le Gap</h2>
+
+  <p>Le "fading" consiste à prendre une position <strong>opposée</strong> au gap : short un gap up, long un gap down. C'est un trade contrarian qui repose sur le mean reversion — l'idée que les prix extrêmes reviennent vers leur moyenne. C'est très rentable sur les common gaps et les exhaustion gaps, mais <strong>suicidaire</strong> sur les breakaway gaps.</p>
+
+  <div class="asset-section" style="border-top-color:#f97316;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-clock" style="color:#f97316;"></i> La Règle des 15 Minutes</h3>
+    <p>Ne jamais fader un gap dans les <strong>15 premières minutes</strong> de la séance. L'ouverture est chaotique : les market makers ajustent leurs prix, les ordres de nuit s'exécutent, la volatilité est maximale. Attendez que le "dust settles" (la poussière retombe). Si après 15 minutes le gap commence à montrer des signes de rejet (mèches longues, volume décroissant, retour vers VWAP), alors le fade peut être envisagé.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb"></i> Le VWAP comme ancrage</h4>
+      <p style="margin:0;">Le <strong>VWAP (Volume Weighted Average Price)</strong> est votre meilleur ami pour fader les gaps. Si l'action gap up mais que le prix revient sous le VWAP dans les 30 premières minutes, le gap a de fortes chances de se combler. Le VWAP agit comme un "centre de gravité" du prix : les gaps qui échouent à s'en éloigner sont des candidats au fade.</p>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#dc2626;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-skull-crossbones" style="color:#dc2626;"></i> Quand Ne JAMAIS Fader</h3>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark-circle"></i> NE PAS fader si...</div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+          <li>Gap post-earnings avec surprise &gt;10%</li>
+          <li>Gap FDA (approbation ou rejet)</li>
+          <li>Gap M&A (annonce d'acquisition)</li>
+          <li>Volume 5x+ la moyenne</li>
+          <li>Gap hors range de consolidation</li>
+          <li>Gap dans le sens de la tendance long terme</li>
+        </ul>
+      </div>
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle"></i> Fader si...</div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+          <li>Gap sur catalyseur faible (upgrade analyste)</li>
+          <li>Volume normal ou en baisse</li>
+          <li>Gap contre la tendance dominante</li>
+          <li>RSI &gt;80 (gap up) ou RSI &lt;20 (gap down)</li>
+          <li>Gap dans un range de trading</li>
+          <li>Rejet visible après 15-30 min</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="strategy-setup">
+    <h5><i class="fa-solid fa-crosshairs"></i> Setup Fade — Plan de Trade</h5>
+    <div class="setup-grid">
+      <div class="setup-item" style="background:rgba(59,130,246,0.15);">
+        <div class="setup-label">Entrée</div>
+        <div class="setup-value" style="color:#3b82f6;">Après 15 min, rejet VWAP</div>
+      </div>
+      <div class="setup-item" style="background:rgba(220,38,38,0.15);">
+        <div class="setup-label">Stop Loss</div>
+        <div class="setup-value" style="color:#dc2626;">High du jour + 0,5%</div>
+      </div>
+      <div class="setup-item" style="background:rgba(22,163,74,0.15);">
+        <div class="setup-label">Target 1</div>
+        <div class="setup-value" style="color:#16a34a;">VWAP (50% fill)</div>
+      </div>
+      <div class="setup-item" style="background:rgba(249,115,22,0.15);">
+        <div class="setup-label">Target 2</div>
+        <div class="setup-value" style="color:#f97316;">Clôture veille (full fill)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : EARNINGS GAP TRADING                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="earnings"><i class="fa-solid fa-calendar-check" style="color:#9333ea;"></i> Earnings Gap Trading — Straddles & Strangles</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-check" style="color:#9333ea;"></i> Profiter de la Volatilité des Earnings</h2>
+
+  <p>Les earnings sont le seul événement de gap que vous pouvez <strong>anticiper avec certitude</strong> dans le calendrier. Vous savez exactement quand le gap va se produire. La question n'est pas "si" mais "dans quelle direction" et "de quelle amplitude". Les options offrent un moyen unique de profiter de cette incertitude <strong>sans deviner la direction</strong>.</p>
+
+  <div class="asset-section" style="border-top-color:#9333ea;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-arrows-up-down" style="color:#9333ea;"></i> Le Straddle Pré-Earnings</h3>
+    <p>Le <strong>straddle</strong> consiste à acheter un call et un put au même strike (ATM) avant les earnings. Vous gagnez si le mouvement post-earnings (dans <strong>n'importe quelle direction</strong>) dépasse le coût combiné des deux options.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Breakeven du Straddle</div>
+      Mouvement nécessaire = Prime du Call + Prime du Put = <span class="formula-highlight">Implied Move</span>
+    </div>
+
+    <div class="case-study">
+      <h5><i class="fa-solid fa-chart-line" style="color:#9333ea;"></i> Exemple : Straddle sur META avant earnings Q3 2023</h5>
+      <p>META trade à 300 $. Le straddle ATM (call 300 + put 300) coûte 24 $ (8% de prime). L'implied move est donc de &plusmn;8%. META annonce des résultats explosifs et gap up de +15%. Le call vaut maintenant 45 $, le put vaut 0,50 $. P&L = (45 + 0,50) - 24 = <strong>+21,50 $ par action</strong> (+89%). Si META avait gap down de -15%, le put aurait valu 45 $ au lieu du call.</p>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du "Vol Crush"</h4>
+      <p style="margin:0;">Avant les earnings, la volatilité implicite (IV) est gonflée car le marché anticipe un gros mouvement. Après l'annonce, l'IV s'effondre (vol crush) — les options perdent 30-70% de leur valeur en une nuit. Pour que votre straddle soit rentable, le gap doit être <strong>supérieur</strong> à l'implied move. Si META gap de +5% mais que l'implied move était de 8%, vous perdez malgré un mouvement haussier. C'est pourquoi les straddles earnings ne sont rentables que sur les <strong>grosses surprises</strong>.</p>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#2563eb;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-arrows-left-right-to-line" style="color:#2563eb;"></i> Le Strangle — Alternative Moins Chère</h3>
+    <p>Le <strong>strangle</strong> utilise un call et un put OTM (hors de la monnaie) au lieu d'ATM. Coût plus faible, mais mouvement nécessaire plus grand. Idéal quand vous anticipez un mouvement <strong>très violent</strong>.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Critère</th><th>Straddle (ATM)</th><th>Strangle (OTM)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Coût</strong></td><td style="color:#dc2626;">Élevé (6-10% du prix)</td><td style="color:#16a34a;">Modéré (2-5% du prix)</td></tr>
+        <tr><td><strong>Breakeven</strong></td><td>&plusmn;6-10%</td><td>&plusmn;8-15%</td></tr>
+        <tr><td><strong>Win Rate</strong></td><td style="color:#f97316;">~35-40%</td><td style="color:#dc2626;">~25-30%</td></tr>
+        <tr><td><strong>Gain Potentiel</strong></td><td>Élevé</td><td style="color:#16a34a;">Très élevé (effet de levier)</td></tr>
+        <tr><td><strong>Perte Max</strong></td><td>Prime payée</td><td>Prime payée (plus faible)</td></tr>
+        <tr><td><strong>Idéal Pour</strong></td><td>AAPL, MSFT (movers modérés)</td><td>TSLA, NFLX (movers violents)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : CME GAP CRYPTO                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cmegap"><i class="fa-brands fa-bitcoin" style="color:#16a34a;"></i> CME Gap Trading — Le Setup du Dimanche Soir</div>
+
+<div class="content-card">
+  <h2><i class="fa-brands fa-bitcoin" style="color:#16a34a;"></i> Trader les Gaps CME en Crypto</h2>
+
+  <p>Les futures Bitcoin du CME sont fermés du vendredi 17h au dimanche 18h (heure de New York). Pendant ce temps, le BTC spot trade 24/7. À la réouverture du CME, un <strong>gap</strong> apparaît entre le dernier prix CME de vendredi et le premier prix CME de dimanche/lundi. Ce gap est comblé dans environ <strong>60% des cas</strong> dans la semaine — un taux statistiquement exploitable.</p>
+
+  <div class="asset-section" style="border-top-color:#f97316;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-chart-bar" style="color:#f97316;"></i> Statistiques des CME Gaps</h3>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#f97316;">85%</div>
+        <div class="metric-label">des weekends ont un gap</div>
+        <div class="metric-change neutral">&gt;0,5% de gap</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#16a34a;">~60%</div>
+        <div class="metric-label">des gaps sont comblés</div>
+        <div class="metric-change neutral">Dans la semaine</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#2563eb;">2,3%</div>
+        <div class="metric-label">gap moyen</div>
+        <div class="metric-change neutral">Absolue value</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#9333ea;">24-48h</div>
+        <div class="metric-label">délai moyen de fill</div>
+        <div class="metric-change neutral">Pour les gaps comblés</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#16a34a;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-crosshairs" style="color:#16a34a;"></i> Le Setup du Dimanche Soir</h3>
+
+    <div class="strategy-setup">
+      <h5><i class="fa-solid fa-crosshairs"></i> Setup CME Gap Fill — Plan de Trade</h5>
+      <div class="setup-grid">
+        <div class="setup-item" style="background:rgba(59,130,246,0.15);">
+          <div class="setup-label">Entrée</div>
+          <div class="setup-value" style="color:#3b82f6;">Dimanche 18h ET</div>
+        </div>
+        <div class="setup-item" style="background:rgba(220,38,38,0.15);">
+          <div class="setup-label">Stop Loss</div>
+          <div class="setup-value" style="color:#dc2626;">1,5x la taille du gap</div>
+        </div>
+        <div class="setup-item" style="background:rgba(22,163,74,0.15);">
+          <div class="setup-label">Target</div>
+          <div class="setup-value" style="color:#16a34a;">Fill complet du gap</div>
+        </div>
+        <div class="setup-item" style="background:rgba(249,115,22,0.15);">
+          <div class="setup-label">Expiration</div>
+          <div class="setup-value" style="color:#f97316;">5 jours max</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-study">
+      <h5><i class="fa-brands fa-bitcoin" style="color:#f97316;"></i> Exemple : CME Gap du 14 janvier 2024</h5>
+      <p>BTC clôture le CME vendredi à 43 200 $. Pendant le weekend, le BTC spot monte à 45 800 $ sur l'euphorie des ETF spot. Le CME ouvre lundi avec un gap up de +6%. Le trade : short BTC vers le niveau d'ouverture CME ($45 800), target le gap fill à $43 200, stop à $47 000. Le gap est comblé en 3 jours — le BTC revient à $43 200 avant de repartir. Gain : +5,7%, Risque : 2,6%. R/R : 2,2:1.</p>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb"></i> Attention aux gaps qui ne se comblent PAS</h4>
+      <p style="margin:0;">40% des CME gaps ne se comblent pas dans la semaine. Ces gaps "non comblés" sont souvent des <strong>breakaway gaps</strong> : un changement structurel de tendance (début de bull run, crack majeur). Le secret : n'essayez pas de combattre un gap avec volume massif et un catalyseur fondamental. Le CME gap fill fonctionne mieux quand le weekend est calme et que le gap est dû à un mouvement technique léger, pas à un événement majeur.</p>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#dc2626;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Les Gaps comme Indicateurs de Tendance</h3>
+    <p>Au-delà du trading direct, les gaps sont des <strong>indicateurs de force de tendance</strong> puissants. Un breakaway gap avec volume confirme le début d'une nouvelle tendance. Plusieurs runaway gaps successifs signalent une tendance forte en cours. Un exhaustion gap après une longue tendance signale l'épuisement et un retournement probable.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Pattern</th><th>Signal</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>1 breakaway gap + volume</strong></td><td style="color:#16a34a;">Nouvelle tendance</td><td>Entrer dans le sens du gap</td></tr>
+        <tr><td><strong>2-3 runaway gaps</strong></td><td style="color:#16a34a;">Tendance forte</td><td>Maintenir la position, trailing stop</td></tr>
+        <tr><td><strong>Exhaustion gap + volume décroissant</strong></td><td style="color:#dc2626;">Fin de tendance</td><td>Prendre profits, préparer le fade</td></tr>
+        <tr><td><strong>Gap et island reversal</strong></td><td style="color:#dc2626;">Retournement fort</td><td>Sortir immédiatement, possible short</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chart: Gap and Go vs Gap Fill Equity Curves -->
+  <div id="chart-equity" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Testez vos Connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz — 5 Questions</h2>
+
+  <details>
+    <summary>Question 1 : Quelle est la condition principale pour un trade Gap and Go réussi ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un catalyseur fondamental clair + volume pré-marché élevé + première bougie verte.</strong><br>
+      Le Gap and Go repose sur le momentum : le gap doit être justifié par un catalyseur fort (earnings, FDA, M&A) et confirmé par un volume pré-marché au moins 2x la moyenne. La première bougie de 5 minutes doit être verte (haussière pour un gap up). Si elle est rouge, le momentum initial échoue et le gap risque de se combler. Le stop loss se place sous le bas de la première bougie de 5 minutes.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quel type de gap a le taux de fill le plus élevé et pourquoi ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le common gap (gap ordinaire), avec un taux de fill de 90%+.</strong><br>
+      Les common gaps se produisent sans catalyseur majeur — ils résultent du bruit de marché, de légers déséquilibres overnight, ou de faibles volumes. Comme aucun changement fondamental ne justifie le gap, le prix revient naturellement à son niveau précédent par mean reversion. À l'opposé, les breakaway gaps (cassure avec volume) ne se comblent que dans 30-40% des cas car ils reflètent un vrai changement de paradigme.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce que le "vol crush" et pourquoi est-il dangereux pour les straddles earnings ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le vol crush est l'effondrement de la volatilité implicite après les earnings.</strong><br>
+      Avant les earnings, l'IV est gonflée car le marché anticipe de l'incertitude. Après l'annonce, l'incertitude disparaît et l'IV s'effondre de 30-70% en une nuit. Pour un straddle, cela signifie que même si l'action gap dans la bonne direction, la perte de valeur temporelle (vega) peut annuler le gain directionnel (delta). Le breakeven d'un straddle earnings est l'implied move — si le gap réel est inférieur, vous perdez de l'argent même si vous aviez raison sur la direction.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Pourquoi ne faut-il JAMAIS fader un gap dans les 15 premières minutes ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : L'ouverture est chaotique et le momentum initial peut être trompeur.</strong><br>
+      Les 15 premières minutes sont dominées par : (1) l'exécution des ordres de nuit (MOO — Market On Open), (2) les ajustements des market makers, (3) les algorithmes HFT qui exploitent les déséquilibres, (4) les stops triggered des deux côtés. Le prix peut faire des mouvements violents dans les deux sens avant de trouver son équilibre. Fader trop tôt, c'est parier contre un momentum potentiellement puissant sans aucune confirmation de retournement.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quel est le taux de fill des CME gaps Bitcoin et comment l'exploiter ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Environ 60% des CME gaps sont comblés dans la semaine.</strong><br>
+      Les futures BTC du CME ferment le weekend (vendredi 17h → dimanche 18h ET). Le BTC spot continue de trader, créant un gap à la réouverture. Le setup : à l'ouverture du CME dimanche soir, prendre une position dans la direction du gap fill (short si gap up, long si gap down). Target = le prix de clôture de vendredi. Stop = 1,5x la taille du gap. Expiration : 5 jours. Attention : ne pas utiliser ce setup quand le gap est causé par un événement fondamental majeur (hack, régulation, ETF approval).
+    </div>
+  </details>
+</div>
+
+
+<!-- Takeaways -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> À Retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 Enseignements Clés</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-rocket"></i> <strong>Gap and Go = momentum + volume + catalyseur</strong> — ne surfez le gap que si les trois conditions sont réunies. Première bougie 5 min verte obligatoire.</li>
+      <li><i class="fa-solid fa-arrows-left-right"></i> <strong>90% des common gaps se comblent</strong> — mais seulement 30% des breakaway gaps. La clé est de savoir distinguer les types de gap avant de trader.</li>
+      <li><i class="fa-solid fa-rotate-left"></i> <strong>Jamais de fade dans les 15 premières minutes</strong> — l'ouverture est chaotique. Attendez la confirmation du rejet (VWAP, mèches, volume décroissant).</li>
+      <li><i class="fa-solid fa-arrows-up-down"></i> <strong>Le straddle earnings = pari sur la surprise</strong> — vous devez battre l'implied move pour être rentable. Le vol crush rend les straddles ATM chers.</li>
+      <li><i class="fa-brands fa-bitcoin"></i> <strong>CME gap fill = 60% de win rate</strong> — un edge statistique exploitable, mais uniquement sur les gaps techniques légers, pas les gaps fondamentaux.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>Les gaps sont des indicateurs de tendance</strong> — breakaway gap = nouvelle tendance, exhaustion gap = fin de tendance, island reversal = retournement fort.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Le risk management prime toujours</strong> — chaque stratégie gap a un stop loss défini. Si le trade va contre vous, coupez. Un gap fill raté peut devenir un runaway gap dans la direction opposée.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Disclaimer Final -->
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> RAPPEL — AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-xmark-circle"></i> Ce guide est <strong>strictement éducatif</strong>. Il ne constitue pas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Le gap trading est une activité à haut risque. Les statistiques passées ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Pratiquez ces stratégies en paper trading avant de risquer du capital réel.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Consultez un conseiller financier agréé avant toute décision.</li>
+  </ul>
+</div>
+
+<!-- Navigation -->
+<a href="/series/risque-de-gap/part3-protection/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie précédente</div>
+    <div class="next-title">Se Protéger — Hedging & Position Sizing</div>
+  </div>
+</a>
+
+<a href="/series/risque-de-gap/part5-survivre/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 5</div>
+    <div class="next-title">Survivre à un Gap — Psychologie & Plan B</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/risque-de-gap/part1-anatomie-gap/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Anatomie</a>
+  <a href="/series/risque-de-gap/part2-gap-par-actif/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Par Actif</a>
+  <a href="/series/risque-de-gap/part3-protection/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Protection</a>
+  <a href="/series/risque-de-gap/part4-trader-les-gaps/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#dc2626; color:white; border:1px solid #dc2626;">4. Trader</a>
+  <a href="/series/risque-de-gap/part5-survivre/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Survivre</a>
+</div>
+
+</div><!-- end container -->
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Gérer le Risque de Gap</strong> — Partie 4/5 : Trader les Gaps — De la Menace à l'Opportunité</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif. Les performances passées ne garantissent pas les performances futures. Consultez un conseiller financier agréé.</p>
+</div>
+
+<script>
+// ============================
+// CHART 1: Gap Fill vs Gap and Go Illustration
+// ============================
+(function(){
+  var dom = document.getElementById('chart-gapfill');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  // Simulated price action showing gap fill pattern
+  var times = ['Veille 15:30', 'Veille 15:45', 'Veille 16:00', 'Gap', 'Open', '9:35', '9:40', '9:45', '9:50', '9:55', '10:00', '10:15', '10:30', '10:45', '11:00', '11:30', '12:00', '13:00', '14:00', '15:00', '16:00'];
+
+  // Gap Fill scenario (common gap)
+  var gapFill = [100, 100.2, 100.5, null, 103, 103.5, 103.2, 102.8, 102.2, 101.8, 101.5, 101.0, 100.8, 100.5, 100.3, 100.5, 100.2, 100.5, 100.3, 100.5, 100.6];
+
+  // Gap and Go scenario (breakaway gap)
+  var gapAndGo = [100, 100.2, 100.5, null, 106, 106.5, 107.2, 107.8, 108.5, 108.2, 109.0, 109.5, 110.0, 109.5, 110.2, 111.0, 110.5, 111.5, 112.0, 112.5, 113.0];
+
+  var option = {
+    title: { text: 'Gap Fill (Common Gap) vs Gap and Go (Breakaway Gap)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Gap Fill (Common)', 'Gap and Go (Breakaway)'], bottom: 0 },
+    grid: { left: '8%', right: '5%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: times, axisLabel: { fontSize: 8, color: '#64748b', rotate: 45 },
+      axisPointer: { label: { show: true } } },
+    yAxis: { type: 'value', min: 98, max: 115, name: 'Prix ($)', axisLabel: { fontSize: 10, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      { name: 'Gap Fill (Common)', type: 'line', data: gapFill, smooth: true, lineStyle: { color: '#2563eb', width: 3 }, itemStyle: { color: '#2563eb' }, connectNulls: false,
+        markArea: { silent: true, data: [[{ yAxis: 100.5, itemStyle: { color: 'rgba(37,99,235,0.08)' } }, { yAxis: 103 }]] } },
+      { name: 'Gap and Go (Breakaway)', type: 'line', data: gapAndGo, smooth: true, lineStyle: { color: '#dc2626', width: 3 }, itemStyle: { color: '#dc2626' }, connectNulls: false }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 2: Equity Curves — Simulated Backtests
+// ============================
+(function(){
+  var dom = document.getElementById('chart-equity');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var months = [];
+  var gapAndGoEquity = [10000];
+  var gapFillEquity = [10000];
+  var cmeGapEquity = [10000];
+
+  var seed = 123;
+  function rand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+  for (var i = 0; i < 52; i++) {
+    months.push('S' + (i + 1));
+
+    // Gap and Go: 40% win rate, 2:1 R/R
+    var r1 = rand();
+    var pnl1 = r1 < 0.40 ? gapAndGoEquity[i] * 0.03 : -gapAndGoEquity[i] * 0.015;
+    gapAndGoEquity.push(Math.round(gapAndGoEquity[i] + pnl1));
+
+    // Gap Fill: 55% win rate, 1.3:1 R/R
+    var r2 = rand();
+    var pnl2 = r2 < 0.55 ? gapFillEquity[i] * 0.018 : -gapFillEquity[i] * 0.014;
+    gapFillEquity.push(Math.round(gapFillEquity[i] + pnl2));
+
+    // CME Gap: 60% win rate, 1.5:1 R/R but fewer trades
+    var r3 = rand();
+    var pnl3 = r3 < 0.60 ? cmeGapEquity[i] * 0.02 : -cmeGapEquity[i] * 0.013;
+    cmeGapEquity.push(Math.round(cmeGapEquity[i] + pnl3));
+  }
+
+  var option = {
+    title: { text: 'Equity Curves Simulées — Stratégies Gap (52 Semaines)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', valueFormatter: function(v) { return v ? v.toLocaleString() + ' $' : ''; } },
+    legend: { data: ['Gap and Go', 'Gap Fill', 'CME Gap Fill'], bottom: 0 },
+    grid: { left: '10%', right: '5%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 9, color: '#64748b', interval: 7 } },
+    yAxis: { type: 'value', name: 'Capital ($)', axisLabel: { fontSize: 10, color: '#64748b', formatter: function(v) { return (v/1000).toFixed(1) + 'K'; } }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      { name: 'Gap and Go', type: 'line', data: gapAndGoEquity, smooth: true, lineStyle: { color: '#dc2626', width: 2.5 }, itemStyle: { color: '#dc2626' }, symbol: 'none', areaStyle: { color: 'rgba(220,38,38,0.05)' } },
+      { name: 'Gap Fill', type: 'line', data: gapFillEquity, smooth: true, lineStyle: { color: '#2563eb', width: 2.5 }, itemStyle: { color: '#2563eb' }, symbol: 'none', areaStyle: { color: 'rgba(37,99,235,0.05)' } },
+      { name: 'CME Gap Fill', type: 'line', data: cmeGapEquity, smooth: true, lineStyle: { color: '#16a34a', width: 2.5 }, itemStyle: { color: '#16a34a' }, symbol: 'none', areaStyle: { color: 'rgba(22,163,74,0.05)' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

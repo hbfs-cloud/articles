@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Options Flow & Dark Pool — Lire le Smart Money | Lire le Marché — Partie 2/6 | Market Watch</title>
+  <meta name="description" content="Série Lire le Marché — Partie 2/6 : Options flow, unusual activity, sweep orders, max pain, GEX (gamma exposure), dark pools, short volume ratio.">
+  <meta property="og:title" content="Options Flow & Dark Pool — Lire le Smart Money | Lire le Marché — Partie 2/6 | Market Watch">
+  <meta property="og:description" content="Comprendre les options flow comme leading indicator, le GEX et son impact sur la volatilité, les dark pools et comment les institutionnels accumulent en silence.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-le-marche/part2-options-darkpool/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#4f46e5; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#818cf8; color:#818cf8; }
+  .series-link.current { background:#4f46e5; color:white; border-color:#4f46e5; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; margin-right:0.75rem; }
+  details[open] summary { border-color:#4f46e5; background:#eef2ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#4f46e5; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#818cf8; }
+  .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#4f46e5; color:#4f46e5; }
+  .disclaimer-mega { background:linear-gradient(135deg, #312e81 0%, #4338ca 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #4f46e5; }
+  .disclaimer-mega h3 { color:#c7d2fe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#e0e7ff; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#818cf8; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #4f46e5; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Lire le Marché</span>
+  <a href="/series/lire-le-marche/part1-sec-filings/" class="series-link">1 — SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" class="series-link current">2 — Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" class="series-link">3 — Short Interest & FTD</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" class="series-link">4 — News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" class="series-link">5 — Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" class="series-link">6 — Dashboard Synthèse</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Série Lire le Marché — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Options Flow & Dark Pool : Lire le Smart Money</h1>
+  <p class="hero-subtitle">Le marché des options est le marché de l'information. Les dark pools cachent les mouvements des institutionnels. Apprendre à lire ces données, c'est voir ce que 95% des investisseurs ne voient pas.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-chart-bar"></i> Options Flow</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bolt"></i> Sweep Orders</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-magnet"></i> Max Pain</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-wave-square"></i> GEX / Gamma</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-eye-slash"></i> Dark Pools</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#options-flow" class="nav-item"><i class="fa-solid fa-chart-bar" style="color:#4f46e5; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Options Flow</a>
+  <a href="#max-pain" class="nav-item"><i class="fa-solid fa-magnet" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Max Pain</a>
+  <a href="#gex" class="nav-item"><i class="fa-solid fa-wave-square" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> GEX & Gamma</a>
+  <a href="#darkpools" class="nav-item"><i class="fa-solid fa-eye-slash" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Dark Pools</a>
+  <a href="#outils" class="nav-item"><i class="fa-solid fa-wrench" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Outils</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : OPTIONS FLOW                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="options-flow"><i class="fa-solid fa-chart-bar" style="color:#4f46e5;"></i> Options Flow : le marché de l'information</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#4f46e5;"></i> Pourquoi les options sont un leading indicator</h2>
+
+  <p>Le marché des options est le <strong>marché de l'information par excellence</strong>. Grâce à l'effet de levier, un insider ou un hedge fund informé préférera acheter des calls plutôt que l'action elle-même. Avec $100,000, il peut contrôler $1M d'actions via des options, amplifiant ses gains si l'information est correcte. C'est pourquoi l'options flow <strong>précède souvent</strong> les mouvements de l'action sous-jacente.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Put/Call Ratio</div>
+    PCR = <span class="formula-highlight">Volume Puts</span> / <span class="formula-highlight">Volume Calls</span> | PCR &lt; 0.7 = Bullish | PCR &gt; 1.0 = Bearish / Peur
+  </div>
+
+  <h3>Les 4 types de signaux options à surveiller</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Signal</th><th>Définition</th><th>Interprétation</th><th>Fiabilité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#4f46e5;">Unusual Options Activity (UOA)</strong></td>
+        <td>Volume sur un strike >> open interest (souvent 5x+)</td>
+        <td>Quelqu'un ouvre massivement de nouvelles positions</td>
+        <td style="color:#16a34a;"><strong>Élevée</strong></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f97316;">Sweep Orders</strong></td>
+        <td>Ordres fractionnés exécutés simultanément sur plusieurs exchanges</td>
+        <td>Urgence d'exécution — souvent smart money</td>
+        <td style="color:#16a34a;"><strong>Élevée</strong></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">Block Trades</strong></td>
+        <td>Gros ordres unitaires (&gt;$250K premium) hors carnet</td>
+        <td>Institutionnel — position directionnelle ou hedge</td>
+        <td style="color:#f59e0b;">Moyenne</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#9333ea;">Call/Put Skew</strong></td>
+        <td>Volatilité implicite des calls vs puts sur un même sous-jacent</td>
+        <td>Demande relative calls vs puts = sentiment directionnel</td>
+        <td style="color:#f59e0b;">Moyenne</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-bolt"></i> Sweep Orders — Le signal le plus fiable</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>L'acheteur <strong>fractionne son ordre</strong> pour l'exécuter en millisecondes sur 3-5 exchanges simultanément</li>
+        <li>Cela signifie qu'il est prêt à payer le ask sur tous les exchanges — il veut être rempli <strong>immédiatement</strong></li>
+        <li>Sweeps on calls = bullish conviction</li>
+        <li>Sweeps on puts = bearish conviction ou hedge urgent</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#eef2ff; border:1px solid #4f46e5; border-radius:16px;">
+      <h4 style="color:#4f46e5; margin:0 0 0.75rem;"><i class="fa-solid fa-magnifying-glass"></i> Comment filtrer le bruit</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Premium minimum $100K+</strong> pour éliminer le retail</li>
+        <li>Vérifier si l'ordre est "opening" (nouvelle position) vs "closing"</li>
+        <li>Expiration proche (1-3 semaines) = conviction court terme</li>
+        <li>Expiration lointaine (3-6 mois) = positionnement stratégique</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Exemple réel : AMD avant les earnings Q3 2024</h4>
+    <p style="margin:0;">48 heures avant l'annonce des résultats d'AMD (octobre 2024), un volume inhabituel de calls $170 à expiration 2 semaines a été détecté — <strong>15x l'open interest</strong>. Majoritairement des sweeps au ask. AMD a ensuite publié des résultats supérieurs aux attentes et le titre a bondi de +9%. Les options achetées 48h avant valaient <strong>5x leur prix</strong>. Coïncidence ou information ? La SEC enquête rarement, mais le signal était visible pour quiconque surveillait le flow.</p>
+  </div>
+
+  <!-- CHART 1: Call vs Put volume -->
+  <h3>Calls vs Puts — Volume quotidien (SPY, 3 mois)</h3>
+  <div id="chart-call-put" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : MAX PAIN                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="max-pain"><i class="fa-solid fa-magnet" style="color:#f97316;"></i> Max Pain Theory</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnet" style="color:#f97316;"></i> Max Pain : le magnétisme des options</h2>
+
+  <p>La théorie du <strong>Max Pain</strong> stipule que le prix d'un sous-jacent tend à converger, à l'expiration des options, vers le prix où le maximum de contrats (calls + puts) expirent <strong>sans valeur</strong>. C'est le prix qui inflige la "douleur maximale" aux acheteurs d'options — et le profit maximum pour les vendeurs (market makers).</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Calcul du Max Pain</div>
+    Max Pain = Strike où la somme de (<span class="formula-highlight">valeur intrinsèque calls</span> + <span class="formula-highlight">valeur intrinsèque puts</span>) est <span class="formula-highlight">minimale</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Quand le Max Pain fonctionne</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Semaines calmes</strong> sans catalyseur (pas d'earnings, pas de FOMC)</li>
+        <li>Expirations mensuelles à fort OI (OPEX, 3ème vendredi)</li>
+        <li>Actions à faible volatilité avec beaucoup de positions ouvertes</li>
+        <li>Magnétisme plus fort les 2-3 derniers jours avant expiration</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Quand le Max Pain échoue</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Catalyseurs puissants</strong> : earnings surprise, news géopolitique, FOMC</li>
+        <li>Tendances fortes (marché en rallye ou en crash)</li>
+        <li>Faible open interest sur les options</li>
+        <li>Expirations hebdomadaires (0DTE) — trop de bruit</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Controversé mais utile</h4>
+    <p style="margin:0;">La théorie du Max Pain est <strong>controversée dans la communauté académique</strong>. Aucune étude peer-reviewed n'a prouvé de manière définitive que les market makers "manipulent" le prix vers le max pain. Cependant, le mécanisme est logique : les market makers qui ont vendu des options sont naturellement incités à hedger de manière à minimiser leurs payouts. En pratique, le max pain est surtout utile comme <strong>zone de gravité à court terme</strong> lors de semaines calmes, pas comme prédicteur absolu.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : GEX / GAMMA EXPOSURE                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="gex"><i class="fa-solid fa-wave-square" style="color:#16a34a;"></i> GEX — Gamma Exposure</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wave-square" style="color:#16a34a;"></i> Comment les market makers contrôlent la volatilité</h2>
+
+  <p>Le <strong>GEX (Gamma Exposure)</strong> mesure l'exposition gamma agrégée des market makers sur un sous-jacent. C'est un des concepts les plus puissants pour comprendre la dynamique intraday du marché. Quand les market makers ont beaucoup de gamma, ils <strong>amortissent</strong> les mouvements. Quand ils sont en gamma négatif, ils les <strong>amplifient</strong>.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Mécanique du hedging gamma</div>
+    Gamma positif : MM <span class="formula-highlight">achètent les dips</span> et <span class="formula-highlight">vendent les rallyes</span> = volatilité comprimée
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-compress"></i> GEX Positif (Gamma Long)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Les market makers ont vendu des options OTM. Pour hedger, ils doivent acheter quand le prix baisse et vendre quand il monte.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Effet :</strong> Volatilité comprimée, mouvements limités<br>
+        <strong>Range :</strong> Le prix reste coincé entre les strikes à fort OI<br>
+        <strong>Stratégie :</strong> Vendre la volatilité, range trading
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-expand"></i> GEX Négatif (Gamma Short)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Les market makers ont acheté des options (ou vendu ITM). Pour hedger, ils vendent quand le prix baisse et achètent quand il monte.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Effet :</strong> Volatilité amplifiée, mouvements explosifs<br>
+        <strong>Range :</strong> Le prix fait des moves de 2-3% intraday<br>
+        <strong>Stratégie :</strong> Acheter la volatilité, breakout trading
+      </div>
+    </div>
+  </div>
+
+  <h3>Les 0DTE et leur impact sur la structure du marché</h3>
+
+  <p>Depuis 2022, les options expirant le jour même (<strong>0DTE — Zero Days to Expiration</strong>) représentent jusqu'à <strong>50% du volume</strong> options sur le SPX. Ces options ont un gamma extrêmement élevé (elles passent de 0 à 100 delta ou inversement en quelques minutes). Leur prolifération a créé un nouveau régime de marché :</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#4f46e5; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-line"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Intraday Pinning</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le prix du SPX se "colle" souvent aux strikes à fort OI de 0DTE. Mouvements de 0.5% le matin, puis convergence vers un strike l'après-midi.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-explosion"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Gamma Squeezes intraday</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Quand le SPX traverse un strike avec beaucoup de 0DTE, les market makers doivent hedger massivement, créant un mouvement auto-amplificateur de 0.5-1% en quelques minutes.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-clock"></i></div>
+      <h4 style="margin:0 0 0.5rem;">3:00 PM Effect</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">L'heure de début de l'unwinding des 0DTE. Le gamma tombe à zéro et la volatilité explose souvent dans la dernière heure de trading.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-rotate"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Réinitialisation quotidienne</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Chaque matin, le GEX est "frais" — la structure se reconstruit avec les nouveaux 0DTE, rendant chaque journée potentiellement différente de la veille.</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: GEX levels visualization -->
+  <h3>GEX Profile — Niveaux de gamma par strike (SPY)</h3>
+  <div id="chart-gex" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : DARK POOLS                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="darkpools"><i class="fa-solid fa-eye-slash" style="color:#2563eb;"></i> Dark Pools</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-eye-slash" style="color:#2563eb;"></i> Dark Pools : là où les institutionnels se cachent</h2>
+
+  <p>Une <strong>dark pool</strong> est un système d'échange privé (ATS — Alternative Trading System) où les ordres sont exécutés <strong>sans transparence pré-trade</strong>. Contrairement au NYSE ou au NASDAQ, vous ne voyez pas le carnet d'ordres avant exécution. Environ <strong>40% du volume US</strong> passe par les dark pools.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#4f46e5;">~40%</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Volume US via dark pools</div>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#f97316;">50+</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Dark pools actives aux US</div>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#16a34a;">FINRA</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Régulateur des ATS</div>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#2563eb;">T+0</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Données publiées le jour même</div>
+    </div>
+  </div>
+
+  <h3>Pourquoi les dark pools existent</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#eef2ff; border:1px solid #4f46e5; border-radius:16px;">
+      <h4 style="color:#4f46e5; margin:0 0 0.75rem;"><i class="fa-solid fa-building-columns"></i> Point de vue institutionnel</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Un fonds veut acheter 5M d'actions AAPL sans impacter le prix</li>
+        <li>Sur le NYSE, son ordre serait visible et le prix monterait avant exécution (front-running)</li>
+        <li>En dark pool, l'ordre est invisible — exécution au midpoint spread</li>
+        <li>Moins de <strong>market impact</strong> = meilleure exécution</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-eye"></i> Point de vue retail</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Manque de transparence pré-trade = désavantage informationnel</li>
+        <li>Fragmentation du marché : la liquidité est dispersée</li>
+        <li>Les brokers retail (Robinhood, etc.) vendent le flow aux dark pools (PFOF)</li>
+        <li>Débat réglementaire permanent : la SEC veut réformer</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Comment lire les prints dark pool</h3>
+
+  <p>Même si les ordres dark pool sont invisibles avant exécution, les <strong>prints (trades exécutés)</strong> sont publiés en temps réel. Voici comment les interpréter :</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Signal</th><th>Description</th><th>Interprétation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#16a34a;">Print massif au-dessus du prix</strong></td>
+        <td>Gros trade exécuté au-dessus du prix actuel</td>
+        <td style="color:#16a34a;"><strong>Accumulation bullish</strong> — l'acheteur accepte de payer plus</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">Print massif en dessous du prix</strong></td>
+        <td>Gros trade exécuté en dessous du prix actuel</td>
+        <td style="color:#dc2626;"><strong>Distribution bearish</strong> — le vendeur accepte un prix inférieur</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f59e0b;">Cluster de prints sur un niveau</strong></td>
+        <td>Multiples trades dark pool concentrés sur un prix</td>
+        <td>Support/résistance institutionnel — ce niveau est "défendu"</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#4f46e5;">Short volume ratio élevé</strong></td>
+        <td>&gt;60% des trades dark pool sont des ventes à découvert</td>
+        <td>Pression vendeuse — mais attention, souvent lié au market making</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le short volume ratio en dark pool — attention au piège</h4>
+    <p style="margin:0;">Un short volume ratio de 60%+ peut sembler alarmant, mais c'est souvent <strong>normal et lié au market making</strong>. Les market makers vendent "short" pour fournir de la liquidité aux acheteurs, puis couvrent dans la milliseconde. Le vrai signal est le <strong>changement</strong> : si le short volume ratio passe soudainement de 45% à 65% sur un ticker, c'est plus significatif que le niveau absolu.</p>
+  </div>
+
+  <!-- CHART 3: Dark pool volume heatmap -->
+  <h3>Dark Pool Volume vs Lit Exchange — Top 10 actions US</h3>
+  <div id="chart-darkpool" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : OUTILS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="outils"><i class="fa-solid fa-wrench" style="color:#9333ea;"></i> Outils & Ressources</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wrench" style="color:#9333ea;"></i> 6 outils pour lire les options et les dark pools</h2>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#4f46e5; margin-bottom:0.5rem;"><i class="fa-solid fa-fish"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Unusual Whales</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Options flow en temps réel, alertes sweep, dark pool prints. Interface moderne. Freemium avec version payante complète. Le plus populaire chez les retail traders.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">FlowAlgo</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Spécialisé options flow institutionnel. Filtres avancés par premium, expiration, type d'ordre. Dark pool prints. Interface professionnelle. Payant.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-cheese"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Cheddar Flow</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Flow options simplifié, idéal pour débuter. Alertes en temps réel. Gratuit pour les fonctionnalités de base. Bon rapport qualité/prix.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-simple"></i></div>
+      <h4 style="margin:0 0 0.5rem;">ChartExchange</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Dark pool data, FTD, short volume, options flow. Données FINRA ATS gratuites. Interface épurée. Excellente source pour les dark pools.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-bar"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Fintel</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Options flow, dark pool, short interest, institutional ownership. Données agrégées multi-source. Version gratuite généreuse.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-wave-square"></i></div>
+      <h4 style="margin:0 0 0.5rem;">SpotGamma (GEX)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Spécialisé GEX / gamma exposure. Niveaux gamma quotidiens pour SPX/SPY. Incontournable pour le trading intraday basé sur la structure gamma.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Pourquoi un sweep order est-il considéré comme un signal de smart money ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce que l'acheteur fractionne son ordre sur plusieurs exchanges pour être exécuté immédiatement, quel que soit le prix.</strong><br>
+      Un sweep montre une urgence d'exécution. L'acheteur ne négocie pas — il prend le ask sur 3 à 5 exchanges simultanément. Cela signifie qu'il a une conviction forte (ou une information) qui justifie de payer une prime. Les sweep orders précèdent souvent des mouvements significatifs de l'action sous-jacente dans les 1-5 jours suivants.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est la différence entre GEX positif et GEX négatif pour la volatilité ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : GEX positif = les market makers amortissent les mouvements (faible volatilité). GEX négatif = ils amplifient les mouvements (haute volatilité).</strong><br>
+      En gamma positif, les MM achètent quand le prix baisse et vendent quand il monte (hedging delta), ce qui "pince" le prix dans un range. En gamma négatif, c'est l'inverse : ils vendent quand ça baisse et achètent quand ça monte, créant un effet boule de neige. C'est pourquoi les journées de GEX très négatif voient souvent des mouvements intraday de 2-3%.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi ~40% du volume US passe-t-il par les dark pools ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Pour minimiser le market impact des gros ordres institutionnels.</strong><br>
+      Si un fonds veut acheter 5 millions d'actions AAPL sur le NYSE, son ordre serait visible dans le carnet d'ordres et les algorithmes de front-running feraient monter le prix avant que l'ordre ne soit pleinement exécuté. En dark pool, l'ordre est invisible et exécuté au midpoint du spread. L'institution obtient une meilleure exécution, mais au prix de la transparence pour le reste du marché.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce que le max pain et quand est-il le plus fiable ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le max pain est le strike où le plus d'options expirent sans valeur. Il est le plus fiable lors de semaines calmes (pas de catalyseur) et d'expirations mensuelles à fort open interest.</strong><br>
+      La théorie est controversée, mais le mécanisme est logique : les market makers qui ont vendu des options sont incités à hedger de manière à minimiser leurs payouts, créant une gravité vers le max pain. Ce magnétisme est plus fort dans les 2-3 derniers jours avant expiration et se casse lors de catalyseurs puissants (earnings, FOMC, news géopolitique).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Comment interpréter un short volume ratio de 65% en dark pool ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Avec prudence — un short volume ratio élevé est souvent normal et lié au market making. Le vrai signal est le changement, pas le niveau absolu.</strong><br>
+      Les market makers vendent "short" en permanence pour fournir de la liquidité, puis couvrent instantanément. Un ratio de 50-55% est normal. Ce qui est significatif, c'est un changement soudain : si le ratio passe de 45% à 65% en quelques jours sur un titre spécifique, cela peut indiquer une pression vendeuse réelle. Combinez toujours avec d'autres indicateurs (prix, volume, options flow).
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#4f46e5;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-chart-bar"></i> <strong>Les options sont un leading indicator</strong> — l'effet de levier attire le smart money informé. Surveillez l'unusual activity et les sweeps.</li>
+      <li><i class="fa-solid fa-bolt"></i> <strong>Les sweep orders sont le signal le plus fiable</strong> — urgence d'exécution = conviction forte. Filtrez par premium &gt;$100K et expiration courte.</li>
+      <li><i class="fa-solid fa-magnet"></i> <strong>Le max pain est une zone de gravité</strong> — utile en semaines calmes, inutile lors de catalyseurs. Plus fiable les 2-3 derniers jours avant OPEX.</li>
+      <li><i class="fa-solid fa-wave-square"></i> <strong>Le GEX détermine le régime de volatilité</strong> — GEX positif = range trading. GEX négatif = explosivité. Les 0DTE ont amplifié ce phénomène.</li>
+      <li><i class="fa-solid fa-eye-slash"></i> <strong>40% du volume US passe par les dark pools</strong> — les prints massifs au-dessus/en dessous du prix signalent accumulation/distribution.</li>
+      <li><i class="fa-solid fa-percent"></i> <strong>Le short volume ratio en dark pool est souvent trompeur</strong> — le changement est plus significatif que le niveau absolu. Market making ≠ conviction short.</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>Combinez toujours plusieurs signaux</strong> — sweep bullish + dark pool accumulation + GEX positif = signal de haute conviction.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les flux d'options et dark pool ne garantissent pas la direction future des prix.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/lire-le-marche/part1-sec-filings/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">1. SEC Filings — 10-K, 10-Q, 8-K, Insider Forms</div>
+  </div>
+</a>
+
+<a href="/series/lire-le-marche/part3-short-interest/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 3 sur 6</div>
+    <div class="next-title">Short Interest, FTD & Cost-to-Borrow — Détecter les Squeezes</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-le-marche/part1-sec-filings/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#4f46e5; color:white; border:1px solid #4f46e5;">2. Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Short Interest & FTD</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Dashboard Synthèse</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Lire le Marché — Données Publiques & Intelligence</strong> — Partie 2/6 : Options Flow & Dark Pool</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Call vs Put volume (SPY, 3 months)
+(function(){
+  var dom = document.getElementById('chart-call-put');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var days = [];
+  var calls = [];
+  var puts = [];
+  var d = new Date(2025,11,1);
+  for(var i=0; i<60; i++){
+    var dd = new Date(d.getTime() + i*86400000);
+    if(dd.getDay()===0||dd.getDay()===6) continue;
+    days.push((dd.getMonth()+1)+'/'+ dd.getDate());
+    var baseCall = 2800000 + Math.random()*1200000;
+    var basePut = 1800000 + Math.random()*900000;
+    if(i%7===3) { baseCall *= 1.5; basePut *= 1.3; }
+    calls.push(Math.round(baseCall));
+    puts.push(Math.round(basePut));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+'<br/>'+p[0].marker+'Calls: '+Math.round(p[0].value/1000000*10)/10+'M<br/>'+p[1].marker+'Puts: '+Math.round(p[1].value/1000000*10)/10+'M';}},
+    legend:{data:['Calls','Puts'],bottom:0},
+    grid:{left:'10%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:days,axisLabel:{fontSize:9,interval:4,rotate:30}},
+    yAxis:{type:'value',name:'Contrats',axisLabel:{fontSize:10,formatter:function(v){return (v/1000000).toFixed(1)+'M';}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Calls',type:'bar',stack:'volume',data:calls,itemStyle:{color:'#16a34a'},barWidth:'60%'},
+      {name:'Puts',type:'bar',stack:'volume',data:puts,itemStyle:{color:'#dc2626'},barWidth:'60%'}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: GEX levels bar chart
+(function(){
+  var dom = document.getElementById('chart-gex');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var strikes = ['570','572','574','575','576','578','580','582','584','585','586','588','590','592','594','595','598','600'];
+  var gex = [-120,-80,-45,250,180,-30,850,320,150,1200,280,100,620,180,90,450,60,-50];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return 'Strike $'+p[0].axisValueLabel+'<br/>GEX: <b>'+p[0].value+'</b> ($M gamma)';}},
+    grid:{left:'12%',right:'4%',top:'8%',bottom:'12%'},
+    xAxis:{type:'category',data:strikes,axisLabel:{fontSize:10,fontWeight:600,formatter:function(v){return '$'+v;}}},
+    yAxis:{type:'value',name:'GEX ($M)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'bar',data:gex.map(function(v){return {value:v,itemStyle:{color:v>=0?'#16a34a':'#dc2626'}};}),
+      barWidth:'55%',
+      markLine:{silent:true,lineStyle:{type:'dashed',color:'#94a3b8'},data:[{yAxis:0}]},
+      label:{show:false}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Dark pool volume bar chart
+(function(){
+  var dom = document.getElementById('chart-darkpool');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var tickers = ['AAPL','MSFT','TSLA','NVDA','AMZN','META','GOOGL','SPY','QQQ','AMD'];
+  var darkVol = [42,38,48,44,40,36,35,52,46,50];
+  var litVol = [58,62,52,56,60,64,65,48,54,50];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+'<br/>'+p[0].marker+'Dark Pool: '+p[0].value+'%<br/>'+p[1].marker+'Lit Exchange: '+p[1].value+'%';}},
+    legend:{data:['Dark Pool %','Lit Exchange %'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:tickers,axisLabel:{fontSize:11,fontWeight:700}},
+    yAxis:{type:'value',max:100,axisLabel:{fontSize:10,formatter:'{value}%'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Dark Pool %',type:'bar',stack:'vol',data:darkVol,itemStyle:{color:'#4f46e5',borderRadius:[0,0,0,0]},barWidth:'50%'},
+      {name:'Lit Exchange %',type:'bar',stack:'vol',data:litVol,itemStyle:{color:'#e2e8f0',borderRadius:[4,4,0,0]},barWidth:'50%'}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

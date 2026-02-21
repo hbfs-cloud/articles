@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portefeuille Beta — Construction & Rotation | Proxys à Haut Beta — Partie 6/6 | Market Watch</title>
+  <meta name="description" content="Série Proxys à Haut Beta — Partie 6/6 : Architecture core/satellite, construction systématique, rotation sectorielle, rebalancement dynamique, tracking de performance et modèle complet $100K.">
+  <meta property="og:title" content="Portefeuille Beta — Construction & Rotation | Proxys à Haut Beta — Partie 6/6 | Market Watch">
+  <meta property="og:description" content="Finale de la série : construisez un portefeuille beta optimisé avec 12 positions, rotation sectorielle et rebalancement dynamique. Modèle complet $100K inclus.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/proxys-haut-beta/part6-portefeuille-beta/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#e11d48; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fb7185; color:#fb7185; }
+  .series-link.current { background:#e11d48; color:white; border-color:#e11d48; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fff1f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#e11d48; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-rose { background:rgba(225,29,72,0.1); color:#e11d48; border:1px solid rgba(225,29,72,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#e11d48; margin-right:0.75rem; }
+  details[open] summary { border-color:#e11d48; background:#fff1f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#e11d48; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fb7185; }
+  .takeaway-box { background:linear-gradient(135deg, #fff1f2 0%, #fecdd3 100%); border:1px solid #e11d48; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#e11d48; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(225,29,72,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#e11d48; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #e11d48 0%, #be123c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(225,29,72,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#e11d48; color:#e11d48; }
+  .disclaimer-mega { background:linear-gradient(135deg, #881337 0%, #be123c 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #e11d48; }
+  .disclaimer-mega h3 { color:#fecdd3; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#ffe4e6; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#fb7185; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #e11d48; }
+  .conclusion-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #e11d48; }
+  .conclusion-box h3 { color:#fb7185; margin-top:0; font-size:1.4rem; }
+  .conclusion-box p { color:#cbd5e1; line-height:1.8; }
+  .conclusion-box strong { color:white; }
+  .conclusion-parts { display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin:1.5rem 0; }
+  .conclusion-part { background:rgba(255,255,255,0.05); border:1px solid #334155; border-radius:12px; padding:1rem; text-align:center; }
+  .conclusion-part .part-num { font-size:1.5rem; font-weight:900; color:#fb7185; }
+  .conclusion-part .part-title { font-size:0.75rem; color:#94a3b8; margin-top:0.25rem; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+    .conclusion-parts { grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+    .conclusion-parts { grid-template-columns:1fr; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <span class="brand-date">Février 2026</span>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Proxys Haut Beta</span>
+  <a href="/series/proxys-haut-beta/part1-comprendre-beta/" class="series-link">1. Beta</a>
+  <a href="/series/proxys-haut-beta/part2-identifier-proxys/" class="series-link">2. Identifier</a>
+  <a href="/series/proxys-haut-beta/part3-strategies-trading/" class="series-link">3. Stratégies</a>
+  <a href="/series/proxys-haut-beta/part4-secteurs-leaders/" class="series-link">4. Secteurs</a>
+  <a href="/series/proxys-haut-beta/part5-gestion-risque/" class="series-link">5. Risque</a>
+  <a href="/series/proxys-haut-beta/part6-portefeuille-beta/" class="series-link current">6. Portefeuille</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Proxys à Haut Beta — Partie 6 sur 6 — Finale</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Portefeuille Beta — Construction & Rotation</h1>
+  <p class="hero-subtitle">La théorie, c'est terminé. Cette dernière partie assemble tout ce que vous avez appris en un portefeuille concret de $100K : architecture core/satellite, screening systématique, rotation sectorielle, rebalancement dynamique et tracking de performance.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-rose"><i class="fa-solid fa-briefcase"></i> Core/Satellite</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-filter"></i> Screening</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-rotate"></i> Rotation</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-pie"></i> Rebalancement</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-trophy"></i> Performance</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#architecture" class="nav-item"><i class="fa-solid fa-building-columns" style="color:#e11d48; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Architecture</a>
+  <a href="#construction" class="nav-item"><i class="fa-solid fa-hammer" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Construction</a>
+  <a href="#rotation" class="nav-item"><i class="fa-solid fa-arrows-rotate" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rotation</a>
+  <a href="#rebalancement" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rebalancement</a>
+  <a href="#tracking" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Tracking</a>
+  <a href="#modele" class="nav-item"><i class="fa-solid fa-wallet" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Modèle $100K</a>
+  <a href="#conclusion-serie" class="nav-item"><i class="fa-solid fa-flag-checkered" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Conclusion</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : ARCHITECTURE DU PORTEFEUILLE BETA                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="architecture"><i class="fa-solid fa-building-columns" style="color:#e11d48;"></i> Architecture du portefeuille beta</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building-columns" style="color:#e11d48;"></i> Structure Core/Satellite : la fondation</h2>
+
+  <p>Un portefeuille haut beta ne peut pas être composé uniquement de positions agressives. La structure <strong>core/satellite</strong> sépare le portefeuille en deux parties distinctes : un noyau stable qui ancre la performance, et des satellites dynamiques qui génèrent l'alpha.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-anchor"></i></div>
+      <h4 style="margin:0 0 0.5rem; color:#2563eb;">Core — 50%</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">ETF sectoriels haut beta (SMH, XBI, ARKK). Beta 1.2-1.5. Diversification intra-sectorielle. Rotation trimestrielle. Stabilité relative + amplification modérée.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-rocket"></i></div>
+      <h4 style="margin:0 0 0.5rem; color:#f97316;">Satellite — 35%</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Actions individuelles haut beta (NVDA, AMD, MARA). Beta 1.5-2.5. Stock picking basé sur le momentum et les catalyseurs. Rotation mensuelle.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-shield-halved"></i></div>
+      <h4 style="margin:0 0 0.5rem; color:#16a34a;">Hedge — 15%</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Actifs anti-beta (TLT, GLD, SGOV) ou puts SPY. Beta négatif ou nul. Réduction du drawdown max. Rééquilibrage lors des pics de VIX.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Beta cible du portefeuille</div>
+    β<sub>portefeuille</sub> = Σ (<span class="formula-highlight">w<sub>i</sub></span> × <span class="formula-highlight">β<sub>i</sub></span>) = 0.50×1.35 + 0.35×1.85 + 0.15×(-0.15) = <span class="formula-highlight">1.30</span>
+  </div>
+
+  <h3>Allocation par bande de beta</h3>
+
+  <p>Au sein du core et du satellite, les positions sont réparties par bandes de beta. Chaque bande a une allocation maximale pour éviter la surconcentration sur le beta extrême.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Bande de beta</th><th>Allocation max</th><th>Rôle</th><th>Exemples</th><th>Max par position</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#2563eb;">1.0 — 1.5</strong></td>
+        <td>40-50%</td>
+        <td>Core amplificateur</td>
+        <td>SMH (1.3), XBI (1.4), AAPL (1.2), META (1.4)</td>
+        <td>12-15%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f97316;">1.5 — 2.0</strong></td>
+        <td>25-35%</td>
+        <td>Satellite momentum</td>
+        <td>NVDA (1.8), AMD (1.6), AVGO (1.5), SOXX (1.6)</td>
+        <td>8-10%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">2.0+</strong></td>
+        <td>10-20%</td>
+        <td>Satellite spéculatif</td>
+        <td>TSLA (2.0), MARA (2.8), SOXL (3.0), RIOT (2.5)</td>
+        <td>3-5%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#16a34a;">Négatif / nul</strong></td>
+        <td>10-20%</td>
+        <td>Hedge / stabilisateur</td>
+        <td>TLT (-0.3), GLD (-0.1), SGOV (0.0)</td>
+        <td>5-10%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 1: Portfolio allocation treemap -->
+  <h3>Treemap du portefeuille : 12 positions par poids et secteur</h3>
+  <div id="chart-treemap" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi pas 100% haut beta ?</h4>
+    <p style="margin:0;">La tentation est forte de mettre tout sur le beta 2.0+ pour maximiser les gains. Mais rappelons la partie 5 : un drawdown de -60% nécessite +150% pour récupérer. En 2022, un portefeuille 100% haut beta tech perdait <strong>-45 à -65%</strong>. Le même portefeuille avec structure core/satellite et hedge limitait la perte à <strong>-20 à -30%</strong>. La structure n'est pas sexy — mais c'est elle qui vous garde en jeu assez longtemps pour capturer les rallyes.</p>
+  </div>
+
+  <h3>Diversification sectorielle obligatoire</h3>
+
+  <p>Ne mettez pas tous vos proxys dans le même secteur. Un portefeuille 100% semis (NVDA, AMD, AVGO, SMH, SOXL) n'est pas un portefeuille — c'est un pari sectoriel. La diversification par secteur réduit le risque de corrélation intra-sectorielle.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-xmark-circle"></i> Portefeuille concentré (mauvais)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">NVDA 20% + AMD 15% + AVGO 15% + SMH 20% + SOXL 10% + MARA 10% + TLT 10%</p>
+      <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">Corrélation intra-portefeuille : <strong style="color:#dc2626;">0.82</strong>. Un sell-off semis = crash total.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-check-circle"></i> Portefeuille diversifié (bon)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">NVDA 10% + XBI 10% + META 8% + MARA 5% + XLE 8% + SMH 12% + FSLR 5% + GLD 7%...</p>
+      <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">Corrélation intra-portefeuille : <strong style="color:#16a34a;">0.54</strong>. Les secteurs se compensent partiellement.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : CONSTRUCTION SYSTÉMATIQUE                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="construction"><i class="fa-solid fa-hammer" style="color:#2563eb;"></i> Construction systématique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hammer" style="color:#2563eb;"></i> Screener & critères d'inclusion</h2>
+
+  <p>La construction du portefeuille n'est pas discrétionnaire — elle suit un processus de <strong>screening systématique</strong>. Chaque position candidate passe par un filtre en 6 étapes avant d'être incluse.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #e11d48; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#e11d48;">Étape 1 — Beta minimum</strong>
+        <span class="badge badge-red">Filtre</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Beta 1Y rolling >= <strong>1.2</strong> vs SPY (ou vs QQQ pour les techs). Le beta doit être <strong>stable</strong> : écart-type du rolling beta 90j < 0.3 sur les 12 derniers mois. Un beta instable signifie un proxy imprévisible.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Étape 2 — Corrélation minimum</strong>
+        <span class="badge badge-blue">Filtre</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Corrélation rolling 60j >= <strong>0.60</strong> avec l'indice de référence. En dessous, le proxy ne suit plus le marché de manière fiable. Les crypto miners doivent avoir une corrélation >= 0.50 avec BTC.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">Étape 3 — Liquidité</strong>
+        <span class="badge badge-orange">Filtre</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Volume moyen 20j >= <strong>2M d'actions/jour</strong> (ou $50M de notionnel). Le spread bid/ask moyen doit être < 0.10%. Un proxy illiquide est un piège : vous ne pourrez pas sortir quand vous en aurez besoin.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#9333ea;">Étape 4 — Momentum technique</strong>
+        <span class="badge badge-purple">Score</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le proxy doit être au-dessus de sa <strong>SMA 50</strong> ET sa <strong>SMA 200</strong>. RSI(14) entre 40 et 75 (pas de surachat extrême, pas de faiblesse). Le proxy doit confirmer la tendance, pas la contredire.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Étape 5 — Diversification croisée</strong>
+        <span class="badge badge-green">Contrainte</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Corrélation entre le candidat et les positions existantes < <strong>0.75</strong>. Si le candidat est trop corrélé à une position déjà en portefeuille, il n'ajoute pas de diversification. Maximum <strong>3 positions</strong> par secteur.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #d97706; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#d97706;">Étape 6 — Catalyseur ou tendance</strong>
+        <span class="badge badge-orange">Qualitatif</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le proxy doit avoir un <strong>catalyseur identifiable</strong> (earnings à venir, approbation FDA, adoption AI) ou être dans un <strong>secteur en rotation favorable</strong> (flux institutionnels positifs, upgrade des analystes).</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Score composite de sélection</div>
+    Score = (<span class="formula-highlight">β</span> × 0.25) + (<span class="formula-highlight">ρ</span> × 0.25) + (<span class="formula-highlight">Momentum</span> × 0.20) + (<span class="formula-highlight">Liquidité</span> × 0.15) + (<span class="formula-highlight">Diversif</span> × 0.15)
+  </div>
+
+  <h3>Critères d'exclusion (red flags)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Red flag</th><th>Pourquoi exclure</th><th>Exemples</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Beta instable (σ > 0.5)</strong></td>
+        <td>Le proxy est imprévisible, le sizing est impossible</td>
+        <td>TSLA (β oscille 0.8-2.5), meme stocks</td>
+      </tr>
+      <tr>
+        <td><strong>Corrélation < 0.4</strong></td>
+        <td>Le proxy ne suit pas le marché, risque idiosyncratique</td>
+        <td>GME, AMC, DWAC</td>
+      </tr>
+      <tr>
+        <td><strong>Volume < 500K/jour</strong></td>
+        <td>Spread trop large, impossible de sortir en urgence</td>
+        <td>Small caps peu tradées</td>
+      </tr>
+      <tr>
+        <td><strong>Sous SMA 200</strong></td>
+        <td>En tendance baissière, ne pas attraper un couteau qui tombe</td>
+        <td>Tout proxy en breakdown technique</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings dans < 5 jours</strong></td>
+        <td>Gap risk idiosyncratique non quantifiable</td>
+        <td>Toute position nouvelle pré-earnings</td>
+      </tr>
+      <tr>
+        <td><strong>Short interest > 25%</strong></td>
+        <td>Risque de short squeeze artificiel (mouvement non corrélé)</td>
+        <td>Heavily shorted names</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Systématique ne veut pas dire automatique</h4>
+    <p style="margin:0;">Le processus de screening est systématique (chaque candidat passe par les mêmes filtres) mais la décision finale reste discrétionnaire. Le screener réduit l'univers de 5000+ actions à 15-20 candidats. C'est ensuite au gestionnaire de sélectionner les 10-12 positions finales en fonction du contexte macro, du régime de marché et des catalyseurs imminents. L'objectif : <strong>éliminer les émotions de la sélection, pas du jugement</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : ROTATION SECTORIELLE BETA                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="rotation"><i class="fa-solid fa-arrows-rotate" style="color:#f97316;"></i> Rotation sectorielle beta</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-rotate" style="color:#f97316;"></i> Quand et comment rotationner</h2>
+
+  <p>Le portefeuille beta n'est pas statique. Les secteurs leaders changent avec le cycle économique, le régime de marché et les flux institutionnels. La <strong>rotation sectorielle</strong> consiste à déplacer l'allocation vers les secteurs dont le beta est le plus efficace dans le régime actuel.</p>
+
+  <h3>Signaux de rotation</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-up"></i> Signaux Risk-On (augmenter le beta)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>VIX < 18</strong> et en baisse depuis 2+ semaines</li>
+        <li><strong>Spreads crédit</strong> (HY-IG) en compression</li>
+        <li><strong>PMI manufacturing > 50</strong> et en hausse</li>
+        <li><strong>Fed dovish</strong> : pause de hausse ou pivot accommodant</li>
+        <li><strong>Breadth marché</strong> : advance/decline ratio > 2:1</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-down"></i> Signaux Risk-Off (réduire le beta)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>VIX > 25</strong> et en hausse, ou spike > 30</li>
+        <li><strong>Spreads crédit</strong> en expansion rapide</li>
+        <li><strong>PMI < 48</strong> et en baisse (contraction)</li>
+        <li><strong>Fed hawkish</strong> : hausse surprise ou rhétorique restrictive</li>
+        <li><strong>Yield curve</strong> : 2Y-10Y inversion > 50 bps</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Matrice de rotation par régime</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Régime</th><th>Secteurs à surpondérer</th><th>Secteurs à sous-pondérer</th><th>Beta cible</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#16a34a;">Risk-On agressif</strong></td>
+        <td>Semis (SMH), Tech growth (ARKK), Crypto miners (MARA)</td>
+        <td>Utilities, Staples, Treasuries</td>
+        <td style="color:#dc2626; font-weight:700;">1.5 - 1.8</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">Risk-On modéré</strong></td>
+        <td>Tech leaders (NVDA, META), Industrials, Financials</td>
+        <td>Biotech, Crypto miners</td>
+        <td style="color:#f97316;">1.2 - 1.5</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f59e0b;">Neutre / transition</strong></td>
+        <td>ETF sectoriels (SMH, XBI), Énergie (XLE)</td>
+        <td>Actions individuelles haut beta, leveraged ETF</td>
+        <td>1.0 - 1.2</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">Risk-Off</strong></td>
+        <td>GLD, TLT, SGOV, Utilities (XLU), Healthcare (XLV)</td>
+        <td>Tout beta > 1.5, crypto miners, leveraged ETF</td>
+        <td style="color:#16a34a; font-weight:700;">0.5 - 0.8</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 4: Monthly rotation heatmap -->
+  <h3>Heatmap de rotation sectorielle (performance mensuelle par secteur)</h3>
+  <div id="chart-heatmap" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Ne pas confondre rotation et timing</h4>
+    <p style="margin:0;">La rotation sectorielle n'est pas du market timing. Vous ne cherchez pas à prédire les tops et les bottoms. Vous <strong>réagissez aux signaux objectifs</strong> (VIX, spreads, PMI) avec un délai de 1-2 semaines. La rotation est graduelle : on ne passe pas de 100% risk-on à 100% risk-off en un jour. On ajuste l'allocation de <strong>10-20% par mois</strong> vers les secteurs favorisés par le régime actuel.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le tableau de bord de rotation</h4>
+    <p style="margin:0;">Chaque semaine, vérifiez ces 5 indicateurs pour évaluer le régime : <strong>1)</strong> VIX (niveau et tendance), <strong>2)</strong> Spreads crédit HY-IG (compression ou expansion), <strong>3)</strong> PMI (expansion ou contraction), <strong>4)</strong> Breadth marché (% actions au-dessus de leur SMA 50), <strong>5)</strong> Flux sectoriels (rotation vers le cyclique vs défensif). Si 4/5 sont risk-on, augmentez le beta. Si 4/5 sont risk-off, réduisez. Si c'est mitigé (2/5 ou 3/5), restez neutre.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : REBALANCEMENT DYNAMIQUE                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="rebalancement"><i class="fa-solid fa-scale-balanced" style="color:#9333ea;"></i> Rebalancement dynamique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#9333ea;"></i> Garder le portefeuille aligné avec l'objectif</h2>
+
+  <p>Même sans rotation, le portefeuille <strong>dérive naturellement</strong>. Une position NVDA qui monte de 40% en 3 mois passe de 10% à 14% du portefeuille. Le beta du portefeuille augmente sans que vous ayez rien fait. Le rebalancement corrige cette dérive.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-calendar"></i></div>
+      <h4 style="margin:0 0 0.5rem; color:#9333ea;">Rebalancement calendaire</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;"><strong>Mensuel</strong> pour le satellite (positions actives). <strong>Trimestriel</strong> pour le core (ETF sectoriels). <strong>Annuel</strong> pour le hedge (structure stable). Date fixe : premier lundi du mois.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#e11d48; margin-bottom:0.5rem;"><i class="fa-solid fa-bell"></i></div>
+      <h4 style="margin:0 0 0.5rem; color:#e11d48;">Rebalancement par seuil (drift)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Si une position dévie de <strong>+/- 3 points</strong> de son allocation cible, rebalancer immédiatement. Si le beta du portefeuille dévie de <strong>+/- 0.2</strong> de la cible, rebalancer.</p>
+    </div>
+  </div>
+
+  <h3>Processus de rebalancement en 5 étapes</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Étape</th><th>Action</th><th>Détail</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Audit</strong></td>
+        <td>Photographier le portefeuille</td>
+        <td>Poids actuels, beta réalisé par position, beta du portefeuille</td>
+      </tr>
+      <tr>
+        <td><strong>2. Comparer</strong></td>
+        <td>Écart vs cible</td>
+        <td>Identifier les positions en surpoids (+) et sous-poids (-)</td>
+      </tr>
+      <tr>
+        <td><strong>3. Re-screening</strong></td>
+        <td>Valider les positions actuelles</td>
+        <td>Chaque position repasse le screening (beta, corrélation, momentum)</td>
+      </tr>
+      <tr>
+        <td><strong>4. Ajuster</strong></td>
+        <td>Vendre les surpoids, renforcer les sous-poids</td>
+        <td>Trimmer les gagnants, ajouter aux positions techniques valides</td>
+      </tr>
+      <tr>
+        <td><strong>5. Documenter</strong></td>
+        <td>Journal de rebalancement</td>
+        <td>Raison, montants, nouveau beta portefeuille, P&L de la période</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Tax-loss harvesting sur le haut beta</h4>
+    <p style="margin:0;">Le haut beta génère des pertes réalisées fréquemment (stops touchés, rotations). Ces pertes sont des <strong>actifs fiscaux</strong> : elles compensent vos gains. Règles : <strong>1)</strong> Vendez les positions perdantes avant la fin de l'année fiscale, <strong>2)</strong> Respectez la règle de wash sale (30 jours), <strong>3)</strong> Remplacez le proxy vendu par un proxy similaire mais pas identique (ex : vendez NVDA, achetez SMH — même exposition semis, proxy différent), <strong>4)</strong> Documentez toutes les transactions pour votre déclaration.</p>
+  </div>
+
+  <!-- CHART 2: Beta band distribution pie chart -->
+  <h3>Répartition par bande de beta</h3>
+  <div id="chart-pie-beta" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="formula-box">
+    <div class="formula-label">Drift tolerance rule</div>
+    Si |<span class="formula-highlight">w<sub>actuel</sub></span> - <span class="formula-highlight">w<sub>cible</sub></span>| > <span class="formula-highlight">3%</span> → Rebalancer | Si |<span class="formula-highlight">β<sub>actuel</sub></span> - <span class="formula-highlight">β<sub>cible</sub></span>| > <span class="formula-highlight">0.2</span> → Rebalancer
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : TRACKING & MESURE DE PERFORMANCE                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tracking"><i class="fa-solid fa-chart-line" style="color:#16a34a;"></i> Tracking & mesure de performance</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#16a34a;"></i> Mesurer si le beta travaille pour vous</h2>
+
+  <p>Avoir un portefeuille haut beta ne suffit pas. Il faut <strong>mesurer</strong> si l'amplification fonctionne réellement. Un beta de 1.5 devrait générer +50% de rendement supplémentaire par rapport au SPY en tendance haussière. Si ce n'est pas le cas, quelque chose ne va pas.</p>
+
+  <h3>Les 6 métriques essentielles</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#e11d48; margin-bottom:0.5rem;"><i class="fa-solid fa-bullseye"></i></div>
+      <h4 style="margin:0 0 0.3rem;">Alpha</h4>
+      <p style="font-size:0.8rem; color:#475569; margin:0;">Rendement excédentaire vs le benchmark ajusté du beta. Alpha = R<sub>p</sub> - β × R<sub>m</sub>. Cible : <strong>> 0%</strong> (le portefeuille bat son beta attendu).</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-bar"></i></div>
+      <h4 style="margin:0 0 0.3rem;">Information Ratio</h4>
+      <p style="font-size:0.8rem; color:#475569; margin:0;">Alpha / Tracking Error. Mesure la consistance de la surperformance. Cible : <strong>> 0.5</strong> (bon), > 1.0 (excellent).</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.3rem;">Beta-Adjusted Return</h4>
+      <p style="font-size:0.8rem; color:#475569; margin:0;">R<sub>p</sub> / β<sub>p</sub>. Normalise le rendement par unité de beta. Permet de comparer avec le SPY sur une base ajustée.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-pie"></i></div>
+      <h4 style="margin:0 0 0.3rem;">Contribution par position</h4>
+      <p style="font-size:0.8rem; color:#475569; margin:0;">w<sub>i</sub> × R<sub>i</sub> pour chaque position. Identifie les contributeurs positifs et les freins à la performance.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-down"></i></div>
+      <h4 style="margin:0 0 0.3rem;">Max Drawdown</h4>
+      <p style="font-size:0.8rem; color:#475569; margin:0;">Perte maximale pic-à-creux. Cible : <strong>< 1.5× le max DD du SPY</strong> sur la même période (le hedge limite).</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#d97706; margin-bottom:0.5rem;"><i class="fa-solid fa-trophy"></i></div>
+      <h4 style="margin:0 0 0.3rem;">Sharpe Ratio</h4>
+      <p style="font-size:0.8rem; color:#475569; margin:0;">(R<sub>p</sub> - R<sub>f</sub>) / σ<sub>p</sub>. Rendement ajusté du risque total. Cible : <strong>> 0.8</strong> (le haut beta doit compenser la volatilité).</p>
+    </div>
+  </div>
+
+  <!-- CHART 3: Cumulative performance vs SPY vs QQQ -->
+  <h3>Performance cumulée : Portefeuille Beta vs SPY vs QQQ</h3>
+  <div id="chart-performance" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <h3>Tableau de bord mensuel</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Métrique</th><th>Jan 2026</th><th>Déc 2025</th><th>Nov 2025</th><th>Cible</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Rendement mensuel</strong></td>
+        <td style="color:#16a34a; font-weight:700;">+4.2%</td>
+        <td style="color:#16a34a;">+2.8%</td>
+        <td style="color:#dc2626;">-1.5%</td>
+        <td>> SPY × β</td>
+      </tr>
+      <tr>
+        <td><strong>SPY rendement</strong></td>
+        <td style="color:#16a34a;">+2.9%</td>
+        <td style="color:#16a34a;">+1.8%</td>
+        <td style="color:#dc2626;">-0.8%</td>
+        <td>--</td>
+      </tr>
+      <tr>
+        <td><strong>Alpha mensuel</strong></td>
+        <td style="color:#16a34a; font-weight:700;">+0.45%</td>
+        <td style="color:#16a34a;">+0.46%</td>
+        <td style="color:#dc2626;">-0.46%</td>
+        <td>> 0%</td>
+      </tr>
+      <tr>
+        <td><strong>Beta réalisé</strong></td>
+        <td>1.28</td>
+        <td>1.35</td>
+        <td>1.42</td>
+        <td>1.20-1.40</td>
+      </tr>
+      <tr>
+        <td><strong>Max drawdown (mois)</strong></td>
+        <td>-2.1%</td>
+        <td>-3.5%</td>
+        <td>-6.2%</td>
+        <td>< -10%</td>
+      </tr>
+      <tr>
+        <td><strong>Sharpe (annualisé)</strong></td>
+        <td>1.12</td>
+        <td>0.95</td>
+        <td>0.68</td>
+        <td>> 0.8</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le piège du rendement absolu</h4>
+    <p style="margin:0;">Si votre portefeuille fait +30% dans une année où le SPY fait +25%, c'est tentant de se féliciter. Mais avec un beta de 1.3, vous <strong>auriez dû</strong> faire +32.5% (= 25% × 1.3). Votre alpha est en fait <strong>-2.5%</strong> — vous avez sous-performé le beta attendu. Le rendement absolu est trompeur. Toujours mesurer par rapport à ce que le beta <strong>aurait dû</strong> produire. C'est ça, le beta-adjusted return.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : MODÈLE COMPLET $100K                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="modele"><i class="fa-solid fa-wallet" style="color:#d97706;"></i> Modèle complet : portefeuille $100K</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wallet" style="color:#d97706;"></i> Le portefeuille en action — 12 positions</h2>
+
+  <p>Voici un modèle complet de portefeuille haut beta de $100,000, construit selon les principes des parties 1 à 5. Ce portefeuille est calibré pour un régime <strong>risk-on modéré</strong> (VIX 15-20, PMI > 50, breadth positive).</p>
+
+  <h3>Allocation détaillée</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>#</th><th>Ticker</th><th>Secteur</th><th>Beta</th><th>Allocation</th><th>Montant</th><th>Type</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>SMH</strong></td>
+        <td>Semis (ETF)</td>
+        <td>1.35</td>
+        <td>12%</td>
+        <td>$12,000</td>
+        <td style="color:#2563eb;">Core</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>XBI</strong></td>
+        <td>Biotech (ETF)</td>
+        <td>1.40</td>
+        <td>10%</td>
+        <td>$10,000</td>
+        <td style="color:#2563eb;">Core</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>META</strong></td>
+        <td>Tech / Social</td>
+        <td>1.35</td>
+        <td>10%</td>
+        <td>$10,000</td>
+        <td style="color:#2563eb;">Core</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>XLE</strong></td>
+        <td>Énergie (ETF)</td>
+        <td>1.20</td>
+        <td>8%</td>
+        <td>$8,000</td>
+        <td style="color:#2563eb;">Core</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>IWM</strong></td>
+        <td>Small Caps (ETF)</td>
+        <td>1.25</td>
+        <td>10%</td>
+        <td>$10,000</td>
+        <td style="color:#2563eb;">Core</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>NVDA</strong></td>
+        <td>Semis / AI</td>
+        <td>1.80</td>
+        <td>8%</td>
+        <td>$8,000</td>
+        <td style="color:#f97316;">Satellite</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><strong>AMD</strong></td>
+        <td>Semis</td>
+        <td>1.65</td>
+        <td>6%</td>
+        <td>$6,000</td>
+        <td style="color:#f97316;">Satellite</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><strong>FSLR</strong></td>
+        <td>Énergie solaire</td>
+        <td>1.70</td>
+        <td>5%</td>
+        <td>$5,000</td>
+        <td style="color:#f97316;">Satellite</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><strong>MARA</strong></td>
+        <td>Crypto miner</td>
+        <td>2.80</td>
+        <td>5%</td>
+        <td>$5,000</td>
+        <td style="color:#dc2626;">Satellite (spéc.)</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><strong>COIN</strong></td>
+        <td>Crypto / Fintech</td>
+        <td>2.20</td>
+        <td>4%</td>
+        <td>$4,000</td>
+        <td style="color:#dc2626;">Satellite (spéc.)</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td><strong>GLD</strong></td>
+        <td>Or (ETF)</td>
+        <td>-0.10</td>
+        <td>7%</td>
+        <td>$7,000</td>
+        <td style="color:#16a34a;">Hedge</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td><strong>TLT</strong></td>
+        <td>Treasuries (ETF)</td>
+        <td>-0.30</td>
+        <td>8%</td>
+        <td>$8,000</td>
+        <td style="color:#16a34a;">Hedge</td>
+      </tr>
+      <tr style="background:#f1f5f9;">
+        <td></td>
+        <td><strong>Cash</strong></td>
+        <td>--</td>
+        <td>0.00</td>
+        <td>7%</td>
+        <td>$7,000</td>
+        <td style="color:#64748b;">Réserve</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Beta pondéré du portefeuille</div>
+    β<sub>p</sub> = (0.12×1.35) + (0.10×1.40) + (0.10×1.35) + (0.08×1.20) + (0.10×1.25) + (0.08×1.80) + (0.06×1.65) + (0.05×1.70) + (0.05×2.80) + (0.04×2.20) + (0.07×(-0.10)) + (0.08×(-0.30)) = <span class="formula-highlight">1.18</span>
+  </div>
+
+  <h3>Analyse du portefeuille</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1rem; text-align:center; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em;">Beta portefeuille</div>
+      <div style="font-size:1.8rem; font-weight:900; color:#e11d48;">1.18</div>
+    </div>
+    <div style="padding:1rem; text-align:center; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em;">Positions</div>
+      <div style="font-size:1.8rem; font-weight:900; color:#2563eb;">12</div>
+    </div>
+    <div style="padding:1rem; text-align:center; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em;">Secteurs</div>
+      <div style="font-size:1.8rem; font-weight:900; color:#16a34a;">7</div>
+    </div>
+    <div style="padding:1rem; text-align:center; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em;">Cash</div>
+      <div style="font-size:1.8rem; font-weight:900; color:#d97706;">7%</div>
+    </div>
+  </div>
+
+  <h3>Scénarios de performance (12 mois)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Scénario SPY</th><th>SPY return</th><th>Portefeuille Beta (estimé)</th><th>P&L sur $100K</th><th>Drawdown max estimé</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#16a34a;">Bull fort</strong></td>
+        <td>+25%</td>
+        <td style="color:#16a34a; font-weight:700;">+29.5%</td>
+        <td style="color:#16a34a;">+$29,500</td>
+        <td>-8%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">Bull modéré</strong></td>
+        <td>+12%</td>
+        <td style="color:#16a34a;">+14.2%</td>
+        <td style="color:#16a34a;">+$14,200</td>
+        <td>-10%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f59e0b;">Flat / choppy</strong></td>
+        <td>+2%</td>
+        <td>+1.5%</td>
+        <td>+$1,500</td>
+        <td>-12%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">Correction -10%</strong></td>
+        <td>-10%</td>
+        <td style="color:#dc2626;">-10.5%</td>
+        <td style="color:#dc2626;">-$10,500</td>
+        <td>-15%</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#881337;">Bear -25%</strong></td>
+        <td>-25%</td>
+        <td style="color:#dc2626; font-weight:700;">-24.8%</td>
+        <td style="color:#dc2626;">-$24,800</td>
+        <td>-28%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi le portefeuille perd moins que beta × SPY en bear ?</h4>
+    <p style="margin:0;">Grâce au hedge (GLD + TLT = 15% du portefeuille). En bear market, l'or et les treasuries montent typiquement de 5-15%, compensant partiellement les pertes des positions haut beta. C'est exactement le rôle de la poche hedge : <strong>réduire le drawdown en bear sans trop freiner en bull</strong>. Dans le scénario bear -25%, le SPY perd -25% mais le portefeuille ne perd "que" -24.8% malgré un beta de 1.18, car GLD et TLT gagnent ~+8-12% dans ce scénario.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Ce modèle est éducatif</h4>
+    <p style="margin:0;">Ce portefeuille est un <strong>exemple pédagogique</strong>, pas une recommandation d'investissement. Les betas, corrélations et rendements attendus sont basés sur des données historiques et des hypothèses simplifiées. Les résultats réels varieront significativement. Adaptez toujours le portefeuille à votre tolérance au risque, votre horizon, et votre situation fiscale.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : CONCLUSION DE LA SÉRIE                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="conclusion-serie"><i class="fa-solid fa-flag-checkered" style="color:#dc2626;"></i> Conclusion de la série</div>
+
+<div class="content-card">
+  <div class="conclusion-box">
+    <h3><i class="fa-solid fa-flag-checkered"></i> Trader les Proxys à Haut Beta — Ce que vous avez appris</h3>
+
+    <p>En 6 parties, vous avez construit une compréhension complète du trading de proxys haut beta, de la théorie pure à l'application pratique. Voici le parcours complet.</p>
+
+    <div class="conclusion-parts">
+      <div class="conclusion-part">
+        <div class="part-num">1</div>
+        <div class="part-title">Comprendre le Beta</div>
+      </div>
+      <div class="conclusion-part">
+        <div class="part-num">2</div>
+        <div class="part-title">Identifier les Proxys</div>
+      </div>
+      <div class="conclusion-part">
+        <div class="part-num">3</div>
+        <div class="part-title">Stratégies de Trading</div>
+      </div>
+      <div class="conclusion-part">
+        <div class="part-num">4</div>
+        <div class="part-title">Secteurs Leaders</div>
+      </div>
+      <div class="conclusion-part">
+        <div class="part-num">5</div>
+        <div class="part-title">Gestion du Risque</div>
+      </div>
+      <div class="conclusion-part">
+        <div class="part-num">6</div>
+        <div class="part-title">Portefeuille Beta</div>
+      </div>
+    </div>
+
+    <p><strong>Partie 1</strong> vous a appris ce qu'est le beta, comment le calculer (régression linéaire, rolling beta), et pourquoi le haut beta est un levier naturel sans les inconvénients du leveraged ETF (pas de decay, pas de path dependency).</p>
+
+    <p><strong>Partie 2</strong> vous a donné les outils pour identifier les meilleurs proxys : corrélation élevée, beta stable, liquidité suffisante. Vous savez distinguer un bon proxy (NVDA, SMH) d'un mauvais (GME, TSLA).</p>
+
+    <p><strong>Partie 3</strong> vous a enseigné les stratégies : long proxy directionnel, beta trade market-neutral (long proxy + short SPY), rotation sectorielle, et timing basé sur le régime VIX.</p>
+
+    <p><strong>Partie 4</strong> a cartographié les secteurs leaders par environnement macro : semis en expansion AI, biotech en innovation, énergie en géopolitique, crypto miners en cycle bitcoin.</p>
+
+    <p><strong>Partie 5</strong> vous a armé pour survivre : position sizing ajusté (÷ beta), stops ATR élargis, détection de corrélation breakdown, hedging (puts, collars, VIX calls), et protocole de drawdown.</p>
+
+    <p><strong>Partie 6</strong> (celle-ci) a assemblé tout en un portefeuille fonctionnel : architecture core/satellite, screening systématique, rotation sectorielle, rebalancement dynamique, et tracking de performance.</p>
+
+    <p style="color:#fecdd3; font-size:1.1rem; font-weight:700; margin-top:1.5rem;">Le haut beta n'est pas pour tout le monde. Il amplifie les gains <strong>et</strong> les pertes. Mais si vous avez la discipline, le processus et la gestion du risque — c'est l'un des outils les plus puissants du marché.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz Final — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quelle est la structure recommandée pour un portefeuille haut beta et pourquoi ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Core (50%) / Satellite (35%) / Hedge (15%) avec 7% de cash.</strong><br>
+      Le core (ETF sectoriels, beta 1.2-1.5) fournit l'amplification de base avec diversification intra-sectorielle. Le satellite (actions individuelles, beta 1.5-2.5+) génère l'alpha via le stock picking et le momentum. Le hedge (GLD, TLT, beta négatif/nul) limite les drawdowns en bear market. Le cash sert de réserve pour les opportunités et les appels de marge. Cette structure permet un beta portefeuille de ~1.2 tout en limitant le max drawdown à ~1.5× celui du SPY.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Citez les 6 critères du screening systématique pour sélectionner un proxy.</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 1) Beta minimum (>= 1.2, stable), 2) Corrélation minimum (>= 0.60), 3) Liquidité (>= 2M actions/jour), 4) Momentum technique (au-dessus SMA 50 et SMA 200), 5) Diversification croisée (corrélation < 0.75 avec les positions existantes), 6) Catalyseur ou tendance sectorielle.</strong><br>
+      Ces 6 critères éliminent les proxys dangereux (illiquides, décorrélés, en tendance baissière) et garantissent que chaque position ajoute de la valeur au portefeuille. Le score composite pondère : beta (25%), corrélation (25%), momentum (20%), liquidité (15%), diversification (15%).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Quels sont les signaux macro qui déclenchent une rotation de risk-on vers risk-off ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : VIX > 25 en hausse, spreads crédit en expansion, PMI < 48 en baisse, Fed hawkish, yield curve inversée > 50 bps.</strong><br>
+      Ces 5 indicateurs forment le tableau de bord de rotation. Quand 4/5 passent en risk-off, il faut réduire le beta du portefeuille : sous-pondérer les positions beta > 1.5, surpondérer les hedges (GLD, TLT), et augmenter le cash. La rotation est graduelle (10-20% par mois), pas brutale. L'objectif est de passer d'un beta portefeuille de ~1.3 à ~0.7 en régime risk-off.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Comment fonctionne le rebalancement par seuil de drift ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Si une position dévie de +/- 3 points de pourcentage de son allocation cible, ou si le beta du portefeuille dévie de +/- 0.2 de sa cible, on rebalance immédiatement.</strong><br>
+      Exemple : NVDA est allouée à 8%. Après un rallye de 40%, elle pèse 11.2% du portefeuille. L'écart est de +3.2 points > seuil de 3 points. On trim NVDA et on réalloue vers les positions sous-pondérées. Le rebalancement calendaire (mensuel pour le satellite, trimestriel pour le core) complète le rebalancement par seuil pour capter la dérive progressive.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Un portefeuille fait +30% sur l'année avec un beta de 1.3. Le SPY fait +25%. Le portefeuille a-t-il généré de l'alpha ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Non — le portefeuille a en fait sous-performé son beta attendu (alpha négatif de -2.5%).</strong><br>
+      Avec un beta de 1.3 et un SPY à +25%, le rendement attendu était de 25% × 1.3 = <strong>32.5%</strong>. Le portefeuille n'a fait que +30%, soit un alpha de 30% - 32.5% = <strong>-2.5%</strong>. C'est le piège du rendement absolu : +30% semble excellent, mais par rapport à ce que le beta aurait dû produire, c'est une sous-performance. Le beta-adjusted return est la seule métrique honnête pour évaluer un portefeuille haut beta.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#e11d48;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-building-columns"></i> <strong>Structure Core/Satellite/Hedge</strong> — 50% core (ETF beta 1.2-1.5), 35% satellite (actions beta 1.5-2.5+), 15% hedge (GLD, TLT). Beta portefeuille cible : 1.2.</li>
+      <li><i class="fa-solid fa-hammer"></i> <strong>Screening systématique en 6 étapes</strong> — Beta stable >= 1.2, corrélation >= 0.60, liquidité >= 2M/jour, momentum positif (> SMA 50/200), diversification croisée (corr < 0.75), catalyseur identifiable.</li>
+      <li><i class="fa-solid fa-arrows-rotate"></i> <strong>La rotation suit les signaux macro, pas les émotions</strong> — VIX, spreads crédit, PMI, breadth, flux sectoriels. 4/5 risk-on = augmenter le beta. 4/5 risk-off = réduire.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>Rebalancer quand le drift dépasse 3% ou le beta dévie de 0.2</strong> — Mensuel pour le satellite, trimestriel pour le core. Trimmer les gagnants, renforcer les sous-pondérés.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>Mesurer l'alpha, pas le rendement absolu</strong> — Alpha = Rp - β × Rm. Un portefeuille beta 1.3 qui fait +30% quand le SPY fait +25% a un alpha négatif (-2.5%).</li>
+      <li><i class="fa-solid fa-wallet"></i> <strong>12 positions diversifiées sur 7 secteurs</strong> — Max 12-15% par position core, 8-10% satellite, 3-5% spéculatif. 7% de cash en réserve toujours.</li>
+      <li><i class="fa-solid fa-flag-checkered"></i> <strong>Le processus bat la prédiction</strong> — Un portefeuille systématique (screening + rotation + rebalancement + tracking) bat un portefeuille discrétionnaire sur le long terme. La discipline est l'alpha.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le portefeuille présenté est un <strong>modèle pédagogique</strong>. Les rendements passés ne garantissent pas les rendements futurs.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le trading de proxys à haut beta comporte un risque élevé de perte en capital.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/proxys-haut-beta/part5-gestion-risque/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">Gestion du Risque — Survivre à la Volatilité</div>
+  </div>
+</a>
+
+<a href="/" class="next-cta">
+  <div>
+    <div class="next-label">Série terminée</div>
+    <div class="next-title">Retour à l'accueil — Toutes les séries</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/proxys-haut-beta/part1-comprendre-beta/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Comprendre le Beta</a>
+  <a href="/series/proxys-haut-beta/part2-identifier-proxys/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Identifier les Proxys</a>
+  <a href="/series/proxys-haut-beta/part3-strategies-trading/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Stratégies de Trading</a>
+  <a href="/series/proxys-haut-beta/part4-secteurs-leaders/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Secteurs Leaders</a>
+  <a href="/series/proxys-haut-beta/part5-gestion-risque/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Gestion du Risque</a>
+  <a href="/series/proxys-haut-beta/part6-portefeuille-beta/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#e11d48; color:white; border:1px solid #e11d48;">6. Portefeuille Beta</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les Proxys à Haut Beta</strong> — Partie 6/6 : Portefeuille Beta — Construction & Rotation</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Portfolio allocation treemap (12 positions by weight and sector)
+(function(){
+  var dom = document.getElementById('chart-treemap');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:function(p){if(p.data.children)return p.name;return '<b>'+p.name+'</b><br/>Allocation: '+p.value+'%<br/>Beta: '+p.data.beta+'<br/>Type: '+p.data.role;}},
+    series:[{
+      type:'treemap',
+      roam:false,
+      nodeClick:false,
+      breadcrumb:{show:false},
+      label:{show:true,formatter:function(p){if(p.data.children)return '';return p.name+'\n'+p.value+'%';},fontSize:12,fontWeight:700},
+      upperLabel:{show:true,height:28,fontSize:11,fontWeight:700,color:'#fff'},
+      levels:[
+        {itemStyle:{borderColor:'#1e293b',borderWidth:3,gapWidth:3},upperLabel:{show:true}},
+        {itemStyle:{borderColor:'#e2e8f0',borderWidth:1,gapWidth:2},label:{show:true}}
+      ],
+      data:[
+        {name:'Core (50%)',itemStyle:{color:'#2563eb'},children:[
+          {name:'SMH',value:12,beta:1.35,role:'Core',itemStyle:{color:'#3b82f6'}},
+          {name:'XBI',value:10,beta:1.40,role:'Core',itemStyle:{color:'#60a5fa'}},
+          {name:'META',value:10,beta:1.35,role:'Core',itemStyle:{color:'#93c5fd'}},
+          {name:'XLE',value:8,beta:1.20,role:'Core',itemStyle:{color:'#2563eb'}},
+          {name:'IWM',value:10,beta:1.25,role:'Core',itemStyle:{color:'#1d4ed8'}}
+        ]},
+        {name:'Satellite (28%)',itemStyle:{color:'#f97316'},children:[
+          {name:'NVDA',value:8,beta:1.80,role:'Satellite',itemStyle:{color:'#fb923c'}},
+          {name:'AMD',value:6,beta:1.65,role:'Satellite',itemStyle:{color:'#f97316'}},
+          {name:'FSLR',value:5,beta:1.70,role:'Satellite',itemStyle:{color:'#ea580c'}},
+          {name:'MARA',value:5,beta:2.80,role:'Satellite spéc.',itemStyle:{color:'#dc2626'}},
+          {name:'COIN',value:4,beta:2.20,role:'Satellite spéc.',itemStyle:{color:'#ef4444'}}
+        ]},
+        {name:'Hedge (15%)',itemStyle:{color:'#16a34a'},children:[
+          {name:'GLD',value:7,beta:-0.10,role:'Hedge',itemStyle:{color:'#22c55e'}},
+          {name:'TLT',value:8,beta:-0.30,role:'Hedge',itemStyle:{color:'#16a34a'}}
+        ]},
+        {name:'Cash (7%)',itemStyle:{color:'#94a3b8'},children:[
+          {name:'Cash',value:7,beta:0.00,role:'Réserve',itemStyle:{color:'#cbd5e1'}}
+        ]}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Beta band distribution pie chart
+(function(){
+  var dom = document.getElementById('chart-pie-beta');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c}% ({d}%)'},
+    legend:{orient:'vertical',right:'5%',top:'center',textStyle:{fontSize:12}},
+    series:[{
+      type:'pie',
+      radius:['40%','72%'],
+      center:['40%','50%'],
+      avoidLabelOverlap:true,
+      itemStyle:{borderRadius:8,borderColor:'#fff',borderWidth:3},
+      label:{show:true,formatter:'{b}\n{d}%',fontSize:11,fontWeight:600},
+      emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
+      data:[
+        {value:50,name:'Beta 1.0-1.5 (Core)',itemStyle:{color:'#2563eb'}},
+        {value:19,name:'Beta 1.5-2.0 (Satellite)',itemStyle:{color:'#f97316'}},
+        {value:9,name:'Beta 2.0+ (Spéculatif)',itemStyle:{color:'#dc2626'}},
+        {value:15,name:'Beta négatif (Hedge)',itemStyle:{color:'#16a34a'}},
+        {value:7,name:'Cash (Réserve)',itemStyle:{color:'#94a3b8'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Cumulative performance vs SPY vs QQQ (backtest simulation)
+(function(){
+  var dom = document.getElementById('chart-performance');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months = ['Jan 25','Fév 25','Mar 25','Avr 25','Mai 25','Jun 25','Jul 25','Aoû 25','Sep 25','Oct 25','Nov 25','Déc 25','Jan 26','Fév 26'];
+  var spy =   [100, 102.5, 100.8, 103.2, 106.1, 108.4, 107.2, 110.5, 109.1, 112.3, 111.5, 114.8, 118.2, 121.0];
+  var qqq =   [100, 103.8, 100.2, 104.5, 108.7, 112.1, 109.8, 114.2, 111.5, 116.8, 114.9, 119.5, 124.1, 127.8];
+  var port =  [100, 103.2, 100.5, 104.1, 107.8, 110.9, 108.6, 113.1, 110.8, 115.2, 113.8, 118.1, 122.5, 126.3];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){var s=p[0].axisValueLabel;p.forEach(function(i){s+='<br/>'+i.marker+i.seriesName+': <b>'+i.value.toFixed(1)+'</b> ('+(i.value>100?'+':'')+(i.value-100).toFixed(1)+'%)';});return s;}},
+    legend:{data:['SPY','QQQ','Portefeuille Beta'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:10,rotate:25}},
+    yAxis:{type:'value',name:'Valeur ($100 base)',min:95,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'SPY',type:'line',data:spy,smooth:true,symbol:'none',lineStyle:{color:'#64748b',width:2,type:'dashed'}},
+      {name:'QQQ',type:'line',data:qqq,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:2}},
+      {name:'Portefeuille Beta',type:'line',data:port,smooth:true,symbol:'none',lineStyle:{color:'#e11d48',width:3},areaStyle:{color:'rgba(225,29,72,0.06)'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 4: Monthly sector rotation heatmap
+(function(){
+  var dom = document.getElementById('chart-heatmap');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var sectors = ['Semis','Biotech','Énergie','Crypto Miners','Small Caps','Financials','Tech Growth'];
+  var months = ['Sep 25','Oct 25','Nov 25','Déc 25','Jan 26','Fév 26'];
+  // [monthIndex, sectorIndex, performance%]
+  var data = [
+    [0,0,4.2],[0,1,-1.5],[0,2,2.8],[0,3,8.5],[0,4,1.2],[0,5,2.1],[0,6,3.5],
+    [1,0,5.8],[1,1,2.3],[1,2,-0.5],[1,3,12.1],[1,4,3.4],[1,5,1.8],[1,6,6.2],
+    [2,0,-2.1],[2,1,-3.2],[2,2,1.5],[2,3,-5.8],[2,4,-1.8],[2,5,0.4],[2,6,-3.5],
+    [3,0,3.5],[3,1,1.8],[3,2,2.2],[3,3,6.4],[3,4,2.8],[3,5,3.1],[3,6,4.1],
+    [4,0,6.1],[4,1,0.5],[4,2,-1.2],[4,3,9.8],[4,4,4.2],[4,5,2.5],[4,6,5.8],
+    [5,0,2.8],[5,1,1.2],[5,2,3.5],[5,3,4.5],[5,4,1.5],[5,5,1.8],[5,6,3.2]
+  ];
+  var min = -6, max = 13;
+  chart.setOption({
+    tooltip:{position:'top',formatter:function(p){return sectors[p.value[1]]+' ('+months[p.value[0]]+')<br/>Performance: <b>'+(p.value[2]>0?'+':'')+p.value[2]+'%</b>';}},
+    grid:{left:'15%',right:'8%',top:'5%',bottom:'15%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:10},splitArea:{show:true}},
+    yAxis:{type:'category',data:sectors,axisLabel:{fontSize:10},splitArea:{show:true}},
+    visualMap:{min:min,max:max,calculable:true,orient:'horizontal',left:'center',bottom:'0%',textStyle:{fontSize:10},inRange:{color:['#dc2626','#fecaca','#f8fafc','#bbf7d0','#16a34a']}},
+    series:[{
+      type:'heatmap',
+      data:data,
+      label:{show:true,formatter:function(p){return (p.value[2]>0?'+':'')+p.value[2]+'%';},fontSize:10,fontWeight:600},
+      emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.3)'}},
+      itemStyle:{borderColor:'#fff',borderWidth:2,borderRadius:4}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

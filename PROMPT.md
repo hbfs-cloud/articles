@@ -158,8 +158,9 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 ### 17 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
+- **IMPORTANT** : Le brand link doit **TOUJOURS** utiliser le logo Market Watch (`https://market-watch.xyz/logo.svg`), **JAMAIS** le logo de la société (parqet.com). Le logo société est réservé aux cartes de listing dans index.html uniquement.
 - Ticker, exchange, date, lien retour site (`href="/"`)
-- Brand link : `color:#0f172a`, pas de `filter:brightness` sur le logo
+- Brand link : `<img src="https://market-watch.xyz/logo.svg" alt="MW">` + texte "MARKET WATCH", `color:#0f172a`, pas de `filter:brightness` sur le logo
 - Prix actuel, variation jour, variation semaine
 - Métriques clés en `.ticker-metrics` : MCap, Volume, Float, Short Interest, Beta, 52W Range
 - Badges : secteur, exchange, thème
@@ -782,7 +783,7 @@ Quand on **régénère** une analyse qui existe déjà :
   - **Non-US Stocks** → Yahoo Finance chart (pas de Finviz)
   - **Modal** : fond dark #0f172a, 3 liens externes (Finviz/TradingView/Yahoo Finance)
 - **Weekly : metric-cards cliquables** : chaque metric-card avec un ticker doit avoir `onclick="openChartModal('SYMBOL','Label')"` et `cursor:pointer`
-- **Logos tickers** : utiliser `https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg` avec fallback gradient+initiales
+- **Logos tickers (index.html uniquement)** : utiliser `https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg` avec fallback gradient+initiales — **NE PAS** utiliser le logo société dans le header des pages d'analyses individuelles (toujours logo MW : `market-watch.xyz/logo.svg`)
 - **Liens** : jamais de `/index.html` — GitHub Pages résout automatiquement
 - **Landing page** : chaque nouvelle analyse doit être ajoutée dans index.html avec logo, chart button, et lien
 - **Alert-banner** : toujours forcer `color: white !important` sur le texte et les `<p>` internes

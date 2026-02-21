@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discipline & Sortie — Savoir S'arrêter | Le Scalping & Trading Intraday — Partie 6/6 | Market Watch</title>
+  <meta name="description" content="Série Le Scalping & Trading Intraday — Partie 6/6 : Overtrading, daily loss limit, revenge trade, position sizing, exits, journal de trading, santé mentale et routine du scalper.">
+  <meta property="og:title" content="Discipline & Sortie — Savoir S'arrêter | Le Scalping & Trading Intraday — Partie 6/6 | Market Watch">
+  <meta property="og:description" content="Le tueur numéro 1 des day traders : l'overtrading. Daily loss limit, exits ATR, scaling out, journal, routine et comment être dans les 10% qui survivent.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/scalping-intraday/part6-discipline-sortie/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#2563eb; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#60a5fa; color:#60a5fa; }
+  .series-link.current { background:#2563eb; color:white; border-color:#2563eb; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#2563eb; margin-right:0.75rem; }
+  details[open] summary { border-color:#2563eb; background:#eff6ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#2563eb; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#60a5fa; }
+  .takeaway-box { background:linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%); border:1px solid #2563eb; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#2563eb; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(37,99,235,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#2563eb; margin-top:0.2rem; flex-shrink:0; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#2563eb; color:#2563eb; }
+  .home-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .home-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(37,99,235,0.3); }
+  .disclaimer-mega { background:linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #2563eb; }
+  .disclaimer-mega h3 { color:#bfdbfe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#dbeafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#60a5fa; margin-top:0.2rem; flex-shrink:0; }
+  .rule-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #2563eb; }
+  .conclusion-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #2563eb; }
+  .conclusion-box h3 { color:#60a5fa; margin-top:0; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Le Scalping & Trading Intraday</span>
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" class="series-link">1 — Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" class="series-link">2 — Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" class="series-link">3 — Détecter les Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" class="series-link">4 — Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" class="series-link">5 — Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" class="series-link current">6 — Discipline & Sortie</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Le Scalping & Trading Intraday — Partie 6 sur 6 (Finale)</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Discipline & Sortie — Savoir S'arrêter</h1>
+  <p class="hero-subtitle">90% des traders perdent 90% de leur capital en 90 jours. La différence entre les 10% qui survivent et le reste ? La discipline. Pas le talent, pas les outils, pas la stratégie. La discipline.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-hand"></i> Overtrading</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-shield-halved"></i> Risk Management</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-book"></i> Journal</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-brain"></i> Psychologie</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#overtrading" class="nav-item"><i class="fa-solid fa-repeat" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Overtrading</a>
+  <a href="#limites" class="nav-item"><i class="fa-solid fa-shield-halved" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Daily Limits</a>
+  <a href="#sizing" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Position Sizing</a>
+  <a href="#exits" class="nav-item"><i class="fa-solid fa-door-open" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Exits</a>
+  <a href="#journal" class="nav-item"><i class="fa-solid fa-book" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Journal</a>
+  <a href="#sante" class="nav-item"><i class="fa-solid fa-brain" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Santé</a>
+  <a href="#progression" class="nav-item"><i class="fa-solid fa-stairs" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Progression</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : OVERTRADING                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="overtrading"><i class="fa-solid fa-repeat" style="color:#dc2626;"></i> Le tueur numéro 1 : l'overtrading</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-repeat" style="color:#dc2626;"></i> L'overtrading : pourquoi c'est le piège mortel</h2>
+
+  <p>L'<strong>overtrading</strong> (trading excessif) est la cause numéro 1 de ruine chez les day traders. Ce n'est pas un mauvais setup ou un marché hostile qui vous détruira — c'est le fait de prendre trop de trades, trop souvent, sans critères clairs.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">L'équation de l'overtrading</div>
+    <span class="formula-highlight">Plus de trades</span> = Plus de commissions + Plus de slippage + <span class="formula-highlight">Plus d'erreurs émotionnelles</span>
+  </div>
+
+  <h3>Les 5 signes que vous overtradez</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">1. Vous tradez par ennui</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le marché est plat, il ne se passe rien... mais vous ouvrez quand même une position "pour faire quelque chose". Si votre raison d'entrée est "je m'ennuie", fermez votre plateforme.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">2. Vous n'avez pas de plan avant d'entrer</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Si vous ne pouvez pas articuler en une phrase pourquoi vous entrez, où est votre stop et où est votre TP avant de cliquer, vous n'avez pas de plan — vous jouez.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">3. Le revenge trade — Vous essayez de "vous refaire"</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Vous venez de perdre et vous augmentez la taille ou prenez un trade médiocre pour "récupérer votre perte". C'est le cercle vicieux le plus dangereux. Chaque trade est indépendant — le marché ne vous doit rien.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">4. Vous ignorez vos propres règles</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">"Je vais prendre ce trade même si mon setup n'est pas parfait." Dès que vous commencez à faire des exceptions, la discipline s'effrite. Une règle enfreinte une fois sera enfreinte cent fois.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">5. Vos commissions représentent > 30% de vos gains</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Si vos frais de transaction mangent plus de 30% de vos profits bruts, vous tradez trop. Réduisez le nombre de trades et augmentez la qualité de sélection.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le revenge trade : le cercle vicieux</h4>
+    <p style="margin:0;">Perte → frustration → trade impulsif (taille plus grande, setup médiocre) → perte plus grosse → rage → trade encore plus gros → catastrophe. <strong>Briser le cycle</strong> : après 2 pertes consécutives, fermez votre plateforme pendant 30 minutes minimum. Allez marcher. Buvez un verre d'eau. Revenez avec un esprit clair. Si vous sentez encore la frustration, arrêtez la journée.</p>
+  </div>
+
+  <!-- CHART 1: Emotional heatmap of a trader's day -->
+  <h3>Carte émotionnelle d'une journée de trading</h3>
+  <div id="chart-emotional-heatmap" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : DAILY LIMITS                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="limites"><i class="fa-solid fa-shield-halved" style="color:#2563eb;"></i> Daily limits : votre filet de sécurité</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#2563eb;"></i> Limites quotidiennes : les règles non-négociables</h2>
+
+  <p>Les daily limits sont vos <strong>garde-fous</strong>. Elles vous protègent de vous-même dans les moments de faiblesse émotionnelle. Elles doivent être programmées dans votre plateforme et appliquées <strong>sans exception</strong>.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-arrow-down"></i> Daily Loss Limit</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Perte maximale par jour : <strong>-2% du capital</strong></p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        Exemple : compte de $25,000 → loss limit = -$500/jour.<br>
+        Quand atteint : <strong>STOP immédiat</strong>. Pas de "un dernier trade".<br>
+        Programmez la coupure automatique dans votre broker si possible (IBKR le permet via TWS).
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-arrow-up"></i> Daily Profit Target</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Objectif de profit par jour : <strong>+3% du capital ou 3 trades gagnants</strong></p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        Quand atteint : vous <strong>pouvez</strong> arrêter ou réduire la taille de 50%.<br>
+        "Quit while you're ahead" — protéger vos gains est aussi important que limiter vos pertes.<br>
+        Les meilleurs jours ne sont pas ceux où vous gagnez le plus, mais ceux où vous gardez vos gains.
+      </div>
+    </div>
+  </div>
+
+  <h3>Les 3 règles de stop automatiques</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Règle</th><th>Seuil</th><th>Action</th><th>Pourquoi</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>3 pertes consécutives</strong></td>
+        <td>3 trades perdants de suite</td>
+        <td>Pause 30 min minimum</td>
+        <td>Votre lecture du marché est mauvaise ce jour-là. Attendez un nouveau contexte.</td>
+      </tr>
+      <tr>
+        <td><strong>Daily loss limit</strong></td>
+        <td>-2% du capital</td>
+        <td>Stop total de la journée</td>
+        <td>Protéger le capital est la priorité numéro 1. Vous pouvez vous rattraper demain.</td>
+      </tr>
+      <tr>
+        <td><strong>Weekly loss limit</strong></td>
+        <td>-5% du capital</td>
+        <td>Stop jusqu'à lundi</td>
+        <td>Éviter l'effet boule de neige. Une semaine catastrophique peut effacer un mois de gains.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'asymétrie des pertes — Pourquoi limiter les drawdowns</h4>
+    <p style="margin:0;">Les maths sont cruelles : si vous perdez <strong>10%</strong>, il faut gagner 11% pour revenir au point de départ. Perdre <strong>20%</strong> → il faut +25%. Perdre <strong>50%</strong> → il faut <strong>+100%</strong> (doubler votre argent) pour récupérer. C'est pourquoi les daily limits sont si importantes : une perte de -10% sur une journée nécessite des semaines de travail pour la récupérer. Mieux vaut perdre -2% et revenir frais demain.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : POSITION SIZING                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-scale-balanced" style="color:#f97316;"></i> Position sizing pour le scalping</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#f97316;"></i> Taille des positions : la science du risque</h2>
+
+  <p>Le position sizing est le seul paramètre que vous contrôlez à 100%. Vous ne contrôlez pas la direction du marché, mais vous contrôlez <strong>combien</strong> vous risquez sur chaque trade.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle d'or du position sizing</div>
+    Taille = (<span class="formula-highlight">Capital</span> × <span class="formula-highlight">Risque %</span>) / <span class="formula-highlight">Distance au stop</span>
+  </div>
+
+  <h3>Exemples concrets</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Capital</th><th>Risque/trade</th><th>Montant risqué</th><th>Stop distance</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>$25,000</td>
+        <td>0.5%</td>
+        <td>$125</td>
+        <td>$0.25/action</td>
+        <td>500 actions</td>
+      </tr>
+      <tr>
+        <td>$25,000</td>
+        <td>1.0%</td>
+        <td>$250</td>
+        <td>$0.50/action</td>
+        <td>500 actions</td>
+      </tr>
+      <tr>
+        <td>$50,000</td>
+        <td>0.5%</td>
+        <td>$250</td>
+        <td>$0.25/action</td>
+        <td>1,000 actions</td>
+      </tr>
+      <tr>
+        <td>$100,000</td>
+        <td>0.5%</td>
+        <td>$500</td>
+        <td>$0.50/action</td>
+        <td>1,000 actions</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Les 3 règles du sizing</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="rule-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-1"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Jamais > 1% par trade</h4>
+      <p style="font-size:0.82rem; color:#475569; margin:0;">0.5% est idéal pour les scalpers. 1% est le maximum absolu. Avec 0.5%/trade, il vous faut 40 pertes consécutives pour perdre 20% — statistiquement presque impossible avec un edge positif.</p>
+    </div>
+    <div class="rule-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-2"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Pyramider les gagnants</h4>
+      <p style="font-size:0.82rem; color:#475569; margin:0;">Ajoutez à vos positions gagnantes (avec un stop au breakeven sur la première entrée). Jamais à vos perdants. "Cut your losers, ride your winners" — la règle la plus difficile mais la plus importante.</p>
+    </div>
+    <div class="rule-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-3"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Adapter au setup</h4>
+      <p style="font-size:0.82rem; color:#475569; margin:0;">Setup A+ (haute conviction) : taille pleine. Setup B (correct) : 50-75% de la taille. Setup C (médiocre) : ne le prenez pas. La taille doit refléter votre confiance dans le trade.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> "Never average down" — Pourquoi ne jamais renforcer un perdant</h4>
+    <p style="margin:0;">Le biais psychologique le plus dangereux : "Le prix a baissé, c'est encore moins cher, j'en achète plus." Non. Si votre thèse de trade est invalidée (le prix a touché votre stop mental ou structurel), <strong>le trade est fini</strong>. Ajouter à un perdant, c'est doubler votre risque sur un trade qui ne fonctionne pas. Les scalpers professionnels ajoutent uniquement aux <strong>gagnants</strong> — c'est la preuve que le marché valide votre thèse.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : STRATÉGIES DE SORTIE                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="exits"><i class="fa-solid fa-door-open" style="color:#16a34a;"></i> Stratégies de sortie</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-door-open" style="color:#16a34a;"></i> Comment et quand sortir d'un trade</h2>
+
+  <p>L'entrée est facile. La sortie est <strong>tout</strong>. Un bon entry avec une mauvaise sortie donne un trade perdant. Un entry moyen avec une sortie disciplinée peut être un trade gagnant. Voici les méthodes de sortie que tout scalper doit maîtriser.</p>
+
+  <h3>Les 5 méthodes de sortie</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">1. Stop Loss fixe</strong>
+        <span class="badge badge-red">Obligatoire</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Niveau d'invalidation technique défini <strong>avant</strong> l'entrée. Sous le dernier support, sous l'EMA 20, ou à un pourcentage fixe (0.3-0.5% pour le scalping). Ne jamais déplacer un stop loss dans le mauvais sens. Jamais.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">2. Trailing Stop (ATR-based)</strong>
+        <span class="badge badge-blue">Recommandé</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le trailing stop suit le prix à une distance de <strong>1.5x à 2x l'ATR</strong> (Average True Range). Si l'ATR est de $0.30, le trailing stop se place $0.45-$0.60 derrière le prix. Avantage : laisse respirer le trade tout en protégeant les gains.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">3. Scaling Out — 50/50</strong>
+        <span class="badge badge-green">Pro</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Vendez <strong>50% de la position au TP1</strong> (objectif conservateur) et laissez courir les 50% restants avec un trailing stop vers le TP2. Avantage : sécurise des profits tout en gardant une exposition au mouvement. Psychologiquement plus facile que le tout-ou-rien.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">4. Time-based Exit</strong>
+        <span class="badge badge-orange">Scalping</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Si le trade ne fonctionne pas après <strong>X minutes</strong> (5-15 min pour un scalp, 30-60 min pour un day trade), fermez-le au marché. Un bon trade se montre rapidement. Si rien ne se passe, votre thèse est probablement fausse. Le temps est un coût d'opportunité.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#9333ea;">5. "When in doubt, get out"</strong>
+        <span class="badge badge-purple">Sagesse</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le principe le plus simple et le plus puissant. Si vous ne savez plus pourquoi vous êtes dans le trade, si le setup a changé, si vous ressentez de l'anxiété — <strong>sortez</strong>. Vous pourrez toujours re-rentrer. Mais un capital perdu ne revient pas.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> R/R minimum et espérance mathématique</h4>
+    <p style="margin:0;">Un scalper professionnel ne prend jamais un trade avec un R/R (Risk/Reward) inférieur à <strong>1:1.5</strong>. Idéalement 1:2 ou mieux. Avec un R/R de 1:2 et un win rate de 40%, vous êtes rentable : (0.40 × 2) - (0.60 × 1) = +0.20 par trade. Avec un R/R de 1:1 et un win rate de 50%, vous êtes à breakeven avant commissions (= perdant). <strong>Le R/R est plus important que le win rate.</strong></p>
+  </div>
+
+  <!-- CHART 2: Drawdown analysis -->
+  <h3>Impact du drawdown sur le capital — La spirale mortelle</h3>
+  <div id="chart-drawdown" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : JOURNAL DE TRADING                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="journal"><i class="fa-solid fa-book" style="color:#9333ea;"></i> Le journal de trading</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-book" style="color:#9333ea;"></i> Le journal : votre coach personnel gratuit</h2>
+
+  <p>Le journal de trading est l'outil d'amélioration le plus puissant et le moins utilisé. Les traders qui tiennent un journal progressent <strong>3 à 5 fois plus vite</strong> que ceux qui ne le font pas. Pourquoi ? Parce que sans données, vous ne pouvez pas identifier vos erreurs récurrentes.</p>
+
+  <h3>Que noter dans chaque trade</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Champ</th><th>Exemple</th><th>Pourquoi</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Date & Heure</strong></td>
+        <td>21/02/2026 10:15 ET</td>
+        <td>Identifier les heures où vous performez le mieux/le pire</td>
+      </tr>
+      <tr>
+        <td><strong>Ticker & Direction</strong></td>
+        <td>NVDA Long</td>
+        <td>Quels secteurs/tickers vous réussissez le mieux</td>
+      </tr>
+      <tr>
+        <td><strong>Setup type</strong></td>
+        <td>VWAP bounce, Gap fill</td>
+        <td>Quel setup a le meilleur win rate et le meilleur R/R</td>
+      </tr>
+      <tr>
+        <td><strong>Entry / Exit / Stop</strong></td>
+        <td>$142.50 / $143.20 / $142.10</td>
+        <td>Calculer R/R réel, slippage, qualité d'exécution</td>
+      </tr>
+      <tr>
+        <td><strong>Taille & P/L</strong></td>
+        <td>300 actions / +$210</td>
+        <td>Suivre le P/L cumulé et le profit factor</td>
+      </tr>
+      <tr>
+        <td><strong>Screenshot</strong></td>
+        <td>Chart annoté</td>
+        <td>Revoir visuellement le setup, apprendre des patterns</td>
+      </tr>
+      <tr>
+        <td><strong>Émotion avant/pendant</strong></td>
+        <td>Confiant / Anxieux</td>
+        <td>Corréler émotions et résultats — identifier les patterns destructeurs</td>
+      </tr>
+      <tr>
+        <td><strong>Note (A/B/C/D)</strong></td>
+        <td>A = setup parfait, exécution propre</td>
+        <td>Un trade perdant peut être un "A" si l'exécution était bonne</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La revue hebdomadaire — Le rituel qui change tout</h4>
+    <p style="margin:0;">Chaque dimanche, passez <strong>30 minutes</strong> à revoir votre journal de la semaine. Posez-vous ces questions : Quel setup a le meilleur win rate ? À quelle heure suis-je le plus performant ? Ai-je respecté mes règles ? Quel pattern émotionnel revient le plus ? Les réponses révèlent des angles morts que vous ne verrez jamais en temps réel. Les traders pros considèrent la revue hebdomadaire comme <strong>la seule habitude qui fait la différence</strong>.</p>
+  </div>
+
+  <!-- CHART 3: Trading journal performance tracker -->
+  <h3>Performance tracker — Exemple de suivi mensuel</h3>
+  <div id="chart-journal-tracker" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : SANTÉ PHYSIQUE ET MENTALE                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sante"><i class="fa-solid fa-brain" style="color:#0891b2;"></i> Santé physique & mentale</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#0891b2;"></i> Votre corps et votre esprit sont vos meilleurs outils</h2>
+
+  <p>Le trading est un sport de performance. Comme un athlète, votre performance dépend directement de votre condition physique et mentale. Un trader fatigué, stressé ou mal nourri <strong>prendra de mauvaises décisions</strong> — c'est une certitude, pas une possibilité.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-moon"></i> Sommeil : l'arme secrète</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>7-8 heures minimum</strong> — le cerveau consolide les apprentissages pendant le sommeil</li>
+        <li>Couchez-vous et levez-vous à la même heure chaque jour</li>
+        <li>Pas d'écran 1h avant de dormir (lumière bleue = cortisol)</li>
+        <li>Mal dormi ? Réduisez votre taille de 50% ou ne tradez pas</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#eff6ff; border:1px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem;"><i class="fa-solid fa-dumbbell"></i> Exercice physique</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>30 min/jour minimum</strong> — marche, course, salle de sport</li>
+        <li>L'exercice réduit le cortisol (hormone du stress)</li>
+        <li>Améliore la concentration, la prise de décision et le sommeil</li>
+        <li>Pause écran toutes les 90 minutes pour bouger</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#faf5ff; border:1px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.75rem;"><i class="fa-solid fa-brain"></i> Santé mentale</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Ne tradez JAMAIS quand</strong> : en colère, triste, euphorique, ou ivre</li>
+        <li>La méditation (10 min/jour) améliore le focus et réduit l'impulsivité</li>
+        <li>Parlez à quelqu'un si le trading génère de l'anxiété chronique</li>
+        <li>Le trading n'est pas votre identité — une perte n'est pas un échec personnel</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-utensils"></i> Nutrition & hydratation</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Petit-déjeuner protéiné avant la session (stabilise la glycémie)</li>
+        <li><strong>2L d'eau minimum</strong> par jour — la déshydratation réduit la cognition</li>
+        <li>Limitez la caféine après 14h (cortisol + mauvais sommeil)</li>
+        <li>Évitez le sucre rapide pendant le trading (crash énergétique)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Règle de la check-list matinale</h4>
+    <p style="margin:0;">Avant chaque session, posez-vous ces 4 questions : <strong>(1)</strong> Ai-je bien dormi ? <strong>(2)</strong> Suis-je dans un état émotionnel neutre ? <strong>(3)</strong> Ai-je un plan pour aujourd'hui (niveaux, catalyseurs, tickers) ? <strong>(4)</strong> Ai-je défini mes limites (daily loss, profit target) ? Si la réponse à n'importe laquelle est "non", réduisez votre taille ou passez votre tour.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : PROGRESSION                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="progression"><i class="fa-solid fa-stairs" style="color:#d97706;"></i> La progression du trader</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-stairs" style="color:#d97706;"></i> Du paper trading au full size : la feuille de route</h2>
+
+  <p>Devenir un scalper rentable prend <strong>6 mois à 2 ans</strong> de travail discipliné. Les traders qui sautent les étapes sont ceux qui perdent le plus vite. Voici la progression recommandée.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#eff6ff; border:2px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.5rem;"><i class="fa-solid fa-1"></i> Mois 1-2 : Paper Trading</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Tradez avec de l'argent virtuel sur TradingView ou NinjaTrader (mode simulateur). Objectif : apprendre la plateforme, tester vos setups, développer la discipline du journal. Traitez le paper trading comme du vrai argent — sinon l'exercice est inutile. <strong>Critère de passage</strong> : rentable sur 3 semaines consécutives.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-2"></i> Mois 3-4 : Micro-taille</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Tradez avec <strong>1 action ou 1 micro-contrat</strong>. L'objectif n'est pas le profit — c'est de sentir l'émotion de l'argent réel. Vous découvrirez que perdre $5 pour de vrai est psychologiquement très différent de perdre $500 en papier. <strong>Critère de passage</strong> : respect de vos règles 90% du temps pendant 4 semaines.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-3"></i> Mois 5-8 : Taille réduite (25-50%)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Augmentez progressivement la taille. Gardez un journal rigoureux. Identifiez votre "edge" — le setup qui vous rapporte le plus. Éliminez les setups qui ne fonctionnent pas. <strong>Critère de passage</strong> : rentable sur 2 mois consécutifs avec un profit factor > 1.5.</p>
+    </div>
+    <div style="padding:1.5rem; background:#faf5ff; border:2px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.5rem;"><i class="fa-solid fa-4"></i> Mois 9+ : Full size</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Vous avez prouvé votre edge sur plusieurs mois. Passez à la taille normale (0.5-1% par trade). Continuez à tenir votre journal. Ne cessez jamais d'apprendre. <strong>Objectif long terme</strong> : constance, pas performance maximale. Un gain régulier de 1-2%/jour vaut mieux que des journées à +10% suivies de -15%.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">La règle du 90/90/90</div>
+    <span class="formula-highlight">90%</span> des traders perdent <span class="formula-highlight">90%</span> de leur capital en <span class="formula-highlight">90 jours</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment être dans les 10% ?</h4>
+    <p style="margin:0;">Les 10% qui survivent ont tous ces points communs : <strong>(1)</strong> Ils ont commencé petit et ont progressé lentement. <strong>(2)</strong> Ils ont un journal et font une revue hebdomadaire. <strong>(3)</strong> Ils ont des règles écrites et les respectent. <strong>(4)</strong> Ils considèrent le trading comme un business, pas comme un casino. <strong>(5)</strong> Ils ont accepté les pertes comme partie intégrante du jeu (coût de faire business). <strong>(6)</strong> Ils ont un seul ou deux setups qu'ils maîtrisent parfaitement, pas 20 qu'ils connaissent superficiellement.</p>
+  </div>
+
+  <h3>La routine quotidienne du scalper professionnel</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Heure (Paris)</th><th>Activité</th><th>Durée</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>14h00</td><td>Revue du calendrier macro, scan pre-market, niveaux clés</td><td>30 min</td></tr>
+      <tr><td>14h30</td><td>Réaction aux données macro (si release 14h30)</td><td>15 min</td></tr>
+      <tr><td>15h00</td><td>Watchlist finale, alertes configurées, plan de trading écrit</td><td>30 min</td></tr>
+      <tr><td>15h30</td><td><strong>TRADING — Session d'ouverture</strong> (focus maximum)</td><td>90 min</td></tr>
+      <tr><td>17h00</td><td>Pause — marche, étirement, hydratation</td><td>30 min</td></tr>
+      <tr><td>17h30</td><td>Trading mid-day (optionnel, taille réduite)</td><td>60 min</td></tr>
+      <tr><td>18h30</td><td>Pause déjeuner Wall Street — pas de trading</td><td>60 min</td></tr>
+      <tr><td>19h30</td><td>Trading après-midi (si setup)</td><td>60 min</td></tr>
+      <tr><td>21h00</td><td><strong>TRADING — Power Hour</strong></td><td>60 min</td></tr>
+      <tr><td>22h00</td><td>Fin de session — journal, revue des trades, P&L</td><td>30 min</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Si votre capital est de $25,000 et vous risquez 0.5% par trade avec un stop de $0.25, combien d'actions pouvez-vous trader ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 500 actions.</strong><br>
+      Calcul : Risque = $25,000 x 0.5% = $125. Taille = $125 / $0.25 = 500 actions. Vous pouvez acheter 500 actions en sachant que si le prix baisse de $0.25 (votre stop), vous perdrez exactement $125, soit 0.5% de votre capital. C'est le position sizing correct pour ce setup.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi ne faut-il jamais renforcer une position perdante (average down) en scalping ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce que cela double votre risque sur un trade qui prouve déjà que votre thèse est fausse.</strong><br>
+      Si le prix va contre vous, c'est un signal que votre analyse est incorrecte. Ajouter des actions ne change pas la réalité du marché — cela augmente simplement votre perte potentielle. Les scalpers professionnels font l'inverse : ils ajoutent aux positions gagnantes (pyramiding) parce que le marché valide leur thèse. Un gagnant mérite plus de capital. Un perdant mérite la sortie.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Si vous perdez 20% de votre capital, quel pourcentage de gain devez-vous réaliser pour revenir au point de départ ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : +25%, pas +20%.</strong><br>
+      Si vous avez $10,000 et perdez 20%, il vous reste $8,000. Pour revenir à $10,000, vous devez gagner $2,000 sur une base de $8,000, soit +25%. C'est l'asymétrie des pertes. Plus le drawdown est grand, plus la récupération est difficile : -30% nécessite +43%, -50% nécessite +100%. C'est pourquoi la règle du daily loss limit (-2%) est si importante — elle évite les drawdowns catastrophiques.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce que le "scaling out" et pourquoi est-ce recommandé ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Fermer 50% de la position au premier objectif (TP1) et laisser courir le reste avec un trailing stop vers TP2.</strong><br>
+      Le scaling out a deux avantages majeurs : (1) il sécurise des profits, transformant le trade en "risk-free" si le trailing stop est au breakeven, et (2) il vous donne une exposition au mouvement maximum si le prix continue. Psychologiquement, c'est aussi plus facile : prendre des profits partiels réduit l'anxiété de "tout perdre" et permet de "laisser courir" les gagnants plus sereinement.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quel est le signe le plus fiable que vous êtes prêt à passer du paper trading au trading réel ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Être rentable sur 3 semaines consécutives en paper trading ET respecter vos règles 90% du temps.</strong><br>
+      La rentabilité seule ne suffit pas — un trader peut être rentable par chance. Le vrai critère est la discipline : respecter ses stops, ne pas overtrader, suivre son plan, et tenir son journal. Si vous êtes rentable ET discipliné en paper, vous avez les fondations pour le trading réel. Commencez alors avec une micro-taille (1 action) pour découvrir l'impact émotionnel de l'argent réel, puis augmentez progressivement.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#2563eb;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-repeat"></i> <strong>L'overtrading est le tueur numéro 1</strong> — si vous tradez par ennui, par frustration ou sans plan, vous perdrez. La qualité bat toujours la quantité.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Daily loss limit -2%, 3 pertes consécutives = pause</strong> — ces règles ne sont pas négociables. Programmez-les et respectez-les sans exception.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>0.5-1% de risque max par trade</strong> — le position sizing est le seul paramètre que vous contrôlez. Pyramidez les gagnants, coupez les perdants.</li>
+      <li><i class="fa-solid fa-door-open"></i> <strong>"When in doubt, get out"</strong> — le scaling out 50/50, les trailing stops ATR et les exits time-based protègent votre capital et votre santé mentale.</li>
+      <li><i class="fa-solid fa-book"></i> <strong>Le journal est votre coach gratuit</strong> — chaque trade logué, chaque revue hebdomadaire vous rapproche de la rentabilité. Les traders sans journal stagnent.</li>
+      <li><i class="fa-solid fa-brain"></i> <strong>Sommeil, exercice et alimentation = performance</strong> — ne tradez jamais fatigué, en colère ou affamé. La check-list matinale est votre première décision du jour.</li>
+      <li><i class="fa-solid fa-stairs"></i> <strong>Paper → Micro → 50% → Full size</strong> — la progression prend 6 à 24 mois. Sauter les étapes est la garantie de l'échec.</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CONCLUSION DE LA SÉRIE                                        -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-flag-checkered" style="color:#2563eb;"></i> Conclusion de la série</div>
+
+<div class="content-card">
+  <div class="conclusion-box">
+    <h3><i class="fa-solid fa-flag-checkered"></i> Le Scalping & Trading Intraday — Récapitulatif des 6 parties</h3>
+    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+      <div style="padding:1rem; background:rgba(255,255,255,0.1); border-radius:12px;">
+        <p style="font-size:0.85rem; color:#bfdbfe; margin:0;"><strong style="color:#60a5fa;">Partie 1 — Ouvrir la Journée</strong><br>Pre-market, gap analysis, VWAP, les 30 premières minutes décisives.</p>
+      </div>
+      <div style="padding:1rem; background:rgba(255,255,255,0.1); border-radius:12px;">
+        <p style="font-size:0.85rem; color:#bfdbfe; margin:0;"><strong style="color:#60a5fa;">Partie 2 — Sessions Mondiales</strong><br>Asie, Europe, US : les overlaps, la liquidité, les fenêtres optimales.</p>
+      </div>
+      <div style="padding:1rem; background:rgba(255,255,255,0.1); border-radius:12px;">
+        <p style="font-size:0.85rem; color:#bfdbfe; margin:0;"><strong style="color:#60a5fa;">Partie 3 — Détecter les Tendances</strong><br>EMA, MACD, RSI, momentum, microstructure du marché.</p>
+      </div>
+      <div style="padding:1rem; background:rgba(255,255,255,0.1); border-radius:12px;">
+        <p style="font-size:0.85rem; color:#bfdbfe; margin:0;"><strong style="color:#60a5fa;">Partie 4 — Outils & Alertes</strong><br>Broker, charting, scanners, order flow, setup multi-écrans.</p>
+      </div>
+      <div style="padding:1rem; background:rgba(255,255,255,0.1); border-radius:12px;">
+        <p style="font-size:0.85rem; color:#bfdbfe; margin:0;"><strong style="color:#60a5fa;">Partie 5 — Annonces & Catalyseurs</strong><br>FOMC, CPI, NFP, earnings, géopolitique, quand ne pas trader.</p>
+      </div>
+      <div style="padding:1rem; background:rgba(255,255,255,0.1); border-radius:12px;">
+        <p style="font-size:0.85rem; color:#bfdbfe; margin:0;"><strong style="color:#60a5fa;">Partie 6 — Discipline & Sortie</strong><br>Overtrading, daily limits, sizing, exits, journal, santé mentale.</p>
+      </div>
+    </div>
+    <p style="font-size:1rem; color:white; line-height:1.7; margin:1.5rem 0 0;">
+      Le scalping n'est pas un jeu de hasard. C'est un <strong>métier</strong> qui demande de la préparation, de la discipline, de la patience et un apprentissage continu. Les outils et les stratégies que vous avez découverts dans cette série sont le point de départ — mais la vraie différence se fera dans l'exécution quotidienne, la rigueur du journal, et la discipline émotionnelle.
+    </p>
+    <p style="font-size:1rem; color:#60a5fa; line-height:1.7; margin:1rem 0 0; font-weight:700;">
+      Commencez en paper trading. Progressez lentement. Respectez vos règles. Et rappelez-vous : le but n'est pas de gagner chaque trade — c'est de survivre assez longtemps pour que votre edge statistique travaille pour vous.
+    </p>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le scalping et le day trading comportent des risques <strong>extrêmement élevés</strong> de perte en capital.</li>
+    <li><i class="fa-solid fa-info-circle"></i> 90% des traders particuliers perdent de l'argent. Ne tradez qu'avec de l'argent que vous pouvez vous permettre de perdre.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/scalping-intraday/part5-annonces-catalyseurs/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">5. Annonces Fed, Macro & Catalyseurs</div>
+  </div>
+</a>
+
+<a href="/" class="home-cta">
+  <i class="fa-solid fa-house"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85;">Série terminée</div>
+    <div style="font-size:1.25rem; font-weight:800;">Retour à l'accueil Market Watch</div>
+  </div>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Détecter Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#2563eb; color:white; border:1px solid #2563eb;">6. Discipline & Sortie</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Le Scalping & Trading Intraday</strong> — Partie 6/6 : Discipline & Sortie — Savoir S'arrêter</p>
+  <p style="margin:0 0 0.5rem;">Publication : 21 février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Emotional heatmap of a trader's day
+(function(){
+  var dom = document.getElementById('chart-emotional-heatmap');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var hours = ['9:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00'];
+  var emotions = ['Confiance','Anxiété','Frustration','Euphorie','Fatigue'];
+  // Data: [hour_idx, emotion_idx, intensity 0-10]
+  var data = [
+    // Confiance
+    [0,0,7],[1,0,8],[2,0,6],[3,0,4],[4,0,3],[5,0,2],[6,0,3],[7,0,4],[8,0,5],[9,0,6],[10,0,5],[11,0,4],[12,0,7],[13,0,6],
+    // Anxiété
+    [0,1,6],[1,1,4],[2,1,5],[3,1,7],[4,1,8],[5,1,3],[6,1,2],[7,1,3],[8,1,5],[9,1,6],[10,1,7],[11,1,8],[12,1,5],[13,1,4],
+    // Frustration
+    [0,2,2],[1,2,1],[2,2,3],[3,2,6],[4,2,9],[5,2,4],[6,2,2],[7,2,1],[8,2,3],[9,2,5],[10,2,7],[11,2,9],[12,2,3],[13,2,2],
+    // Euphorie
+    [0,3,3],[1,3,7],[2,3,4],[3,3,2],[4,3,1],[5,3,1],[6,3,2],[7,3,3],[8,3,4],[9,3,5],[10,3,3],[11,3,2],[12,3,8],[13,3,5],
+    // Fatigue
+    [0,4,1],[1,4,2],[2,4,3],[3,4,5],[4,4,6],[5,4,7],[6,4,8],[7,4,7],[8,4,6],[9,4,5],[10,4,6],[11,4,7],[12,4,4],[13,4,8]
+  ];
+  chart.setOption({
+    tooltip:{formatter:function(p){return hours[p.data[0]]+' ET<br/>'+emotions[p.data[1]]+': <b>'+p.data[2]+'/10</b>';}},
+    grid:{left:'14%',right:'8%',top:'5%',bottom:'15%'},
+    xAxis:{type:'category',data:hours,axisLabel:{fontSize:9,rotate:30},splitArea:{show:true}},
+    yAxis:{type:'category',data:emotions,axisLabel:{fontSize:10,fontWeight:600},splitArea:{show:true}},
+    visualMap:{min:0,max:10,orient:'horizontal',left:'center',bottom:0,inRange:{color:['#dbeafe','#93c5fd','#f97316','#dc2626','#7f1d1d']},textStyle:{fontSize:10}},
+    series:[{
+      type:'heatmap',data:data,
+      label:{show:true,fontSize:10,fontWeight:700,color:'white',formatter:function(p){return p.data[2];}},
+      itemStyle:{borderWidth:2,borderColor:'white'}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Drawdown analysis
+(function(){
+  var dom = document.getElementById('chart-drawdown');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var drawdowns = [5,10,15,20,25,30,35,40,45,50,60,70,80,90];
+  var recovery = [5.3,11.1,17.6,25.0,33.3,42.9,53.8,66.7,81.8,100,150,233,400,900];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return 'Perte: <b>-'+p[0].axisValueLabel+'%</b><br/>Gain nécessaire pour récupérer: <b style="color:#dc2626">+'+p[0].value+'%</b>';}},
+    grid:{left:'10%',right:'4%',top:'10%',bottom:'12%'},
+    xAxis:{type:'category',data:drawdowns.map(function(d){return d+'%';}),name:'Drawdown',nameLocation:'middle',nameGap:30,axisLabel:{fontSize:10,fontWeight:600}},
+    yAxis:{type:'value',name:'Gain requis pour récupérer (%)',nameLocation:'middle',nameGap:50,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'bar',data:recovery,
+      itemStyle:{color:function(p){
+        if(p.value<30) return '#3b82f6';
+        if(p.value<60) return '#f97316';
+        if(p.value<150) return '#dc2626';
+        return '#7f1d1d';
+      },borderRadius:[6,6,0,0]},
+      label:{show:true,position:'top',fontSize:9,fontWeight:700,formatter:function(p){return '+'+p.value+'%';},color:'#475569'}
+    }],
+    markLine:{silent:true,lineStyle:{type:'dashed',color:'#dc2626'},data:[{yAxis:100,label:{formatter:'Doubler le capital requis',fontSize:10}}]}
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Trading journal performance tracker
+(function(){
+  var dom = document.getElementById('chart-journal-tracker');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var days = [];
+  var pnl = [];
+  var cumPnl = [];
+  var cum = 0;
+  // Simulate a month of trading
+  var results = [120,-80,200,-50,150,-120,90,60,-40,180,-70,130,-90,110,50,-30,170,-60,140,-100,80,200,-40,160,-80,220];
+  for(var i=0; i<results.length; i++){
+    days.push('J'+(i+1));
+    pnl.push(results[i]);
+    cum += results[i];
+    cumPnl.push(cum);
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['P&L Journalier','P&L Cumulé'],bottom:0},
+    grid:{left:'10%',right:'8%',top:'10%',bottom:'15%'},
+    xAxis:{type:'category',data:days,axisLabel:{fontSize:9}},
+    yAxis:[
+      {type:'value',name:'P&L Journalier ($)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      {type:'value',name:'P&L Cumulé ($)',axisLabel:{fontSize:10},splitLine:{show:false}}
+    ],
+    series:[
+      {
+        name:'P&L Journalier',type:'bar',data:pnl,yAxisIndex:0,
+        itemStyle:{color:function(p){return p.value>=0?'#16a34a':'#dc2626';},borderRadius:[4,4,0,0]}
+      },
+      {
+        name:'P&L Cumulé',type:'line',data:cumPnl,yAxisIndex:1,smooth:true,symbol:'none',
+        lineStyle:{color:'#2563eb',width:3},
+        areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(37,99,235,0.15)'},{offset:1,color:'rgba(37,99,235,0.01)'}]}}
+      }
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

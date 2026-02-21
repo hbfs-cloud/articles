@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On-Chain Analysis — Lire la Blockchain | Trader les Crypto — Partie 3/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les Crypto — Partie 3/6 : Analyse on-chain, NUPL, MVRV, SOPR, whale tracking, exchange flows, miner behavior, stablecoin supply, HODLer waves.">
+  <meta property="og:title" content="On-Chain Analysis — Lire la Blockchain | Trader les Crypto — Partie 3/6 | Market Watch">
+  <meta property="og:description" content="NUPL, MVRV, SOPR : les métriques on-chain pour identifier les tops et bottoms. Whale tracking, exchange flows, capitulation des mineurs, stablecoin supply.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-crypto/part3-on-chain/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#f59e0b; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fbbf24; color:#fbbf24; }
+  .series-link.current { background:#f59e0b; color:white; border-color:#f59e0b; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-amber { background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#f59e0b; margin-right:0.75rem; }
+  details[open] summary { border-color:#f59e0b; background:#fffbeb; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#f59e0b; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fbbf24; }
+  .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fde68a 100%); border:1px solid #f59e0b; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#f59e0b; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(245,158,11,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#f59e0b; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(245,158,11,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#f59e0b; color:#f59e0b; }
+  .disclaimer-mega { background:linear-gradient(135deg, #78350f 0%, #d97706 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #f59e0b; }
+  .disclaimer-mega h3 { color:#fde68a; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fef3c7; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#fbbf24; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #f59e0b; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-brands fa-bitcoin" style="margin-right:0.4rem;"></i> Trader les Crypto</span>
+  <a href="/series/trader-crypto/part1-ecosysteme/" class="series-link">1 — L'Écosystème</a>
+  <a href="/series/trader-crypto/part2-analyse-technique/" class="series-link">2 — Analyse Technique</a>
+  <a href="/series/trader-crypto/part3-on-chain/" class="series-link current">3 — On-Chain</a>
+  <a href="/series/trader-crypto/part4-defi-yield/" class="series-link">4 — DeFi & Yield</a>
+  <a href="/series/trader-crypto/part5-altcoins-narratives/" class="series-link">5 — Altcoins & Narratives</a>
+  <a href="/series/trader-crypto/part6-risques-securite/" class="series-link">6 — Risques & Sécurité</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-bitcoin" style="margin-right:0.4rem;"></i> Série Trader les Crypto — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">On-Chain Analysis — Lire la Blockchain</h1>
+  <p class="hero-subtitle">La blockchain est un registre ouvert. Chaque transaction, chaque wallet, chaque mouvement est traçable. L'analyse on-chain permet de voir ce que les whales font — pas ce qu'elles disent. Un avantage informationnel unique en crypto.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-gauge"></i> NUPL</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-scale-balanced"></i> MVRV</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrow-right-arrow-left"></i> Exchange Flows</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-whale"></i> Whale Tracking</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-cube"></i> Miners</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#intro" class="nav-item"><i class="fa-solid fa-cube" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> On-Chain ?</a>
+  <a href="#nupl-mvrv" class="nav-item"><i class="fa-solid fa-gauge" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> NUPL & MVRV</a>
+  <a href="#sopr" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#8b5cf6; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> SOPR</a>
+  <a href="#whales" class="nav-item"><i class="fa-solid fa-fish" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Whales</a>
+  <a href="#exchange-flows" class="nav-item"><i class="fa-solid fa-arrow-right-arrow-left" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Exchange Flows</a>
+  <a href="#miners" class="nav-item"><i class="fa-solid fa-hammer" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Mineurs</a>
+  <a href="#stablecoins" class="nav-item"><i class="fa-solid fa-coins" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Stablecoins</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : INTRO ON-CHAIN                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="intro"><i class="fa-solid fa-cube" style="color:#f59e0b;"></i> Qu'est-ce que l'analyse on-chain</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-cube" style="color:#f59e0b;"></i> Lire les transactions directement sur la blockchain</h2>
+
+  <p>L'analyse <strong>on-chain</strong> est un avantage informationnel <strong>unique à la crypto</strong>. En bourse traditionnelle, les mouvements des gros acteurs sont opaques (dark pools, 13-F trimestriels avec 45 jours de retard). En crypto, chaque transaction est enregistrée publiquement sur la blockchain — en temps réel.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fffbeb; border:1px solid #f59e0b; border-radius:16px;">
+      <h4 style="color:#f59e0b; margin:0 0 0.75rem;"><i class="fa-solid fa-eye"></i> Ce que l'on-chain révèle</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Les <strong>whales</strong> achètent-elles ou vendent-elles ?</li>
+        <li>Les BTC quittent-ils les exchanges (accumulation) ?</li>
+        <li>Les HODLers sont-ils en profit ou en perte ?</li>
+        <li>Les mineurs capitulent-ils ou accumulent-ils ?</li>
+        <li>Le "dry powder" (stablecoins) est-il en hausse ?</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-wrench"></i> Les outils essentiels</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Glassnode</strong> : le leader, métriques avancées (payant)</li>
+        <li><strong>CryptoQuant</strong> : exchange flows, miners (freemium)</li>
+        <li><strong>Santiment</strong> : sentiment + on-chain (freemium)</li>
+        <li><strong>Dune Analytics</strong> : dashboards SQL personnalisés (gratuit)</li>
+        <li><strong>Arkham / Nansen</strong> : whale tracking, wallet labeling</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> On-chain = l'avantage informationnel</h4>
+    <p style="margin:0;">En bourse, quand Warren Buffett achète une action, vous ne le savez que 45 jours plus tard (via le 13-F SEC). En crypto, quand une whale envoie 10,000 BTC sur un exchange, vous le voyez <strong>en temps réel</strong>. C'est comme si vous pouviez voir les ordres de tous les hedge funds avant qu'ils ne soient exécutés. L'analyse on-chain transforme cette transparence en <strong>avantage de trading</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : NUPL & MVRV                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="nupl-mvrv"><i class="fa-solid fa-gauge" style="color:#2563eb;"></i> NUPL & MVRV</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge" style="color:#2563eb;"></i> Les indicateurs de profit/perte du réseau</h2>
+
+  <h3>NUPL — Net Unrealized Profit/Loss</h3>
+
+  <p>Le <strong>NUPL</strong> mesure le profit ou la perte non réalisé(e) de tous les BTC en circulation. Il indique si le marché global est "en profit" ou "en perte" — et à quel degré.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">NUPL</div>
+    NUPL = (<span class="formula-highlight">Market Cap</span> - <span class="formula-highlight">Realized Cap</span>) / <span class="formula-highlight">Market Cap</span>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Zone NUPL</th><th>Valeur</th><th>État du marché</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#dc2626;">Capitulation</strong></td>
+        <td>< 0</td>
+        <td>Le réseau est en perte nette — panique maximale</td>
+        <td style="color:#16a34a;"><strong>Zone d'achat historique</strong></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f59e0b;">Espoir / Peur</strong></td>
+        <td>0 — 0.25</td>
+        <td>Recovery en cours, sentiment mitigé</td>
+        <td style="color:#16a34a;">Accumulation</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#16a34a;">Optimisme</strong></td>
+        <td>0.25 — 0.50</td>
+        <td>Le marché est en profit modéré, tendance saine</td>
+        <td style="color:#2563eb;">Hold / suivre la tendance</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">Croyance</strong></td>
+        <td>0.50 — 0.75</td>
+        <td>La majorité du réseau est en fort profit</td>
+        <td style="color:#f59e0b;">Commencer à prendre des profits</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#9333ea;">Euphorie / Cupidité</strong></td>
+        <td>> 0.75</td>
+        <td>Profit extrême — historiquement zone de top</td>
+        <td style="color:#dc2626;"><strong>Vendre / alléger fortement</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 1: NUPL Gauge -->
+  <h3>NUPL actuel — Où en est le marché ?</h3>
+  <div id="chart-nupl" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <h3>MVRV — Market Value to Realized Value</h3>
+
+  <p>Le <strong>MVRV</strong> compare la capitalisation de marché à la <strong>Realized Cap</strong> (somme de la valeur de chaque BTC au moment de son dernier mouvement). C'est un indicateur de surévaluation/sous-évaluation.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">MVRV Ratio</div>
+    MVRV = <span class="formula-highlight">Market Cap</span> / <span class="formula-highlight">Realized Cap</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card" style="border-top-color:#16a34a;">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-down"></i></div>
+      <h4 style="margin:0 0 0.5rem;">MVRV < 1.0</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;"><strong>Sous-évalué</strong> — le marché vaut moins que ce que les holders ont payé. Zone d'achat historique (2018, 2022).</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#f59e0b;">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-equals"></i></div>
+      <h4 style="margin:0 0 0.5rem;">MVRV 1.0 — 2.5</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;"><strong>Fair value</strong> — le marché est raisonnablement évalué. Zone de tendance saine.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#dc2626;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-up"></i></div>
+      <h4 style="margin:0 0 0.5rem;">MVRV > 3.5</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;"><strong>Surévalué</strong> — le profit non réalisé est extrême. Zone de top historique (2017, 2021).</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Realized Cap vs Market Cap</h4>
+    <p style="margin:0;">La <strong>Market Cap</strong> = prix actuel x supply totale. C'est ce que le marché "vaut" si tout le monde vendait au prix actuel. La <strong>Realized Cap</strong> = somme de (prix au moment du dernier mouvement x quantité) pour chaque BTC. C'est ce que les holders ont effectivement "payé". Quand Market Cap >> Realized Cap, beaucoup de holders sont en profit non réalisé — et la tentation de vendre augmente.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : SOPR                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sopr"><i class="fa-solid fa-scale-balanced" style="color:#8b5cf6;"></i> SOPR</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#8b5cf6;"></i> SOPR — Les vendeurs sont-ils en profit ou en perte ?</h2>
+
+  <p>Le <strong>SOPR (Spent Output Profit Ratio)</strong> mesure le profit ou la perte <strong>réalisé(e)</strong> des BTC qui sont dépensés (vendus/transférés) à chaque moment. Si SOPR > 1, les vendeurs réalisent un profit. Si SOPR < 1, ils vendent à perte.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">SOPR</div>
+    SOPR = <span class="formula-highlight">Prix de vente</span> / <span class="formula-highlight">Prix d'achat</span> (pondéré par volume de BTC dépensés)
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-up"></i> SOPR > 1 (en bull market)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Les vendeurs sont en profit</li>
+        <li>En <strong>bull market</strong>, un SOPR qui retouche 1.0 et rebondit = signal d'achat</li>
+        <li>Les holders ne vendent pas à perte → support psychologique</li>
+        <li>Tant que SOPR reste > 1, la tendance haussière est intacte</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-down"></i> SOPR < 1 (en bear market)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Les vendeurs sont en perte — capitulation</li>
+        <li>En <strong>bear market</strong>, un SOPR qui retouche 1.0 et rejette = signal de vente</li>
+        <li>Les holders vendent à perte dès qu'ils reviennent au break-even</li>
+        <li>SOPR durablement < 1 = bear market profond</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le SOPR Reset — Signal clé</h4>
+    <p style="margin:0;">Le signal le plus puissant du SOPR est le <strong>"reset"</strong>. En bull market, quand le SOPR descend vers 1.0 (les vendeurs sont au break-even) puis remonte, cela confirme que les acheteurs défendent ce niveau — le marché refuse de se mettre en perte. C'est un signal d'achat de haute conviction. En bear market, c'est l'inverse : un SOPR qui monte vers 1.0 puis rejette confirme que les vendeurs prennent la sortie dès qu'ils ne perdent plus d'argent.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : WHALE TRACKING                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="whales"><i class="fa-solid fa-fish" style="color:#16a34a;"></i> Whale Tracking</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-fish" style="color:#16a34a;"></i> Suivre les gros wallets — le smart money crypto</h2>
+
+  <p>En crypto, les <strong>whales</strong> (wallets détenant > 1,000 BTC) représentent une part significative de l'offre. Leurs mouvements précèdent souvent les mouvements de prix majeurs.</p>
+
+  <h3>Classification des wallets BTC</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Catégorie</th><th>Holdings</th><th>Nombre estimé</th><th>Impact marché</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Shrimps</strong> (crevettes)</td>
+        <td>< 1 BTC</td>
+        <td>~40M+ wallets</td>
+        <td style="color:#64748b;">Négligeable individuellement</td>
+      </tr>
+      <tr>
+        <td><strong>Crabs</strong> (crabes)</td>
+        <td>1-10 BTC</td>
+        <td>~800K wallets</td>
+        <td style="color:#64748b;">Faible</td>
+      </tr>
+      <tr>
+        <td><strong>Fish</strong> (poissons)</td>
+        <td>10-100 BTC</td>
+        <td>~140K wallets</td>
+        <td style="color:#f59e0b;">Modéré</td>
+      </tr>
+      <tr>
+        <td><strong>Sharks</strong> (requins)</td>
+        <td>100-1,000 BTC</td>
+        <td>~15K wallets</td>
+        <td style="color:#f59e0b;">Significatif</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">Whales</strong></td>
+        <td>1,000-10,000 BTC</td>
+        <td>~2,100 wallets</td>
+        <td style="color:#dc2626;"><strong>Majeur</strong></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#9333ea;">Mega Whales</strong></td>
+        <td>> 10,000 BTC</td>
+        <td>~110 wallets</td>
+        <td style="color:#dc2626;"><strong>Dominant</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 2: Whale Transactions Heatmap -->
+  <h3>Transactions Whale (> 1M$) — Heatmap</h3>
+  <div id="chart-whale" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <h3>Comment interpréter les mouvements whale</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:0.75rem; margin:1.5rem 0;">
+    <div style="padding:1rem 1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Whale envoie BTC vers un exchange</strong>
+        <span class="badge badge-red">Bearish</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Un dépôt massif sur un exchange signale une intention de vente probable. Surveillez les alertes Whale Alert pour les transferts > 1,000 BTC vers Binance, Coinbase ou Kraken.</p>
+    </div>
+    <div style="padding:1rem 1.25rem; background:#f0fdf4; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Whale retire BTC d'un exchange</strong>
+        <span class="badge badge-green">Bullish</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Un retrait massif d'un exchange vers un cold wallet signale une accumulation long terme. La whale ne prévoit pas de vendre à court terme. Signal d'accumulation.</p>
+    </div>
+    <div style="padding:1rem 1.25rem; background:#fffbeb; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">Whale transfert wallet-to-wallet</strong>
+        <span class="badge badge-blue">Neutre</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Un transfert entre wallets personnels (pas vers un exchange) est souvent neutre — consolidation, réorganisation, passage vers un nouveau cold wallet. Pas de signal de vente.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention aux faux signaux whale</h4>
+    <p style="margin:0;">Tous les mouvements whale ne sont pas des signaux de trading. Les exchanges déplacent régulièrement des fonds entre leurs wallets internes (hot wallet → cold wallet). Les OTC desks exécutent des trades qui n'impactent pas le prix spot. <strong>Arkham Intelligence</strong> et <strong>Nansen</strong> labellisent les wallets pour distinguer les vrais mouvements whale des mouvements internes d'exchange. Ne tradez jamais sur un seul mouvement — cherchez un <strong>pattern</strong> de multiples mouvements dans la même direction.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : EXCHANGE FLOWS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="exchange-flows"><i class="fa-solid fa-arrow-right-arrow-left" style="color:#dc2626;"></i> Exchange Flows</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-right-arrow-left" style="color:#dc2626;"></i> Exchange Flows — Inflows vs Outflows</h2>
+
+  <p>Les <strong>exchange flows</strong> mesurent le flux net de BTC entrant et sortant des exchanges. C'est un des indicateurs on-chain les plus fiables car la logique est simple : on envoie des BTC sur un exchange pour les <strong>vendre</strong>, on les retire pour les <strong>garder</strong>.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div class="triangle-card" style="border-top-color:#dc2626;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-right"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Inflows (vers exchanges)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;"><strong>Bearish</strong> — les holders envoient leurs BTC sur les exchanges pour vendre. Un spike d'inflows précède souvent une baisse de prix.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#16a34a;">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-left"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Outflows (hors exchanges)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;"><strong>Bullish</strong> — les holders retirent leurs BTC vers des cold wallets. Accumulation long terme. Moins de supply disponible à la vente.</p>
+    </div>
+  </div>
+
+  <!-- CHART 3: Exchange Flow Bar Chart -->
+  <h3>BTC Exchange Net Flow (30 derniers jours)</h3>
+  <div id="chart-exchange-flow" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le BTC sur les exchanges atteint des records bas</h4>
+    <p style="margin:0;">Depuis 2020, la quantité de BTC détenue sur les exchanges est en <strong>baisse constante</strong>. En 2025, elle est passée sous les 2.3M BTC (environ 12% de la supply circulante) — un record bas historique. Cela signifie que de plus en plus de holders retirent leurs BTC vers des cold wallets, réduisant la supply disponible à la vente. C'est un signal <strong>structurellement bullish</strong> : si la demande reste stable (ETFs, institutionnels), la raréfaction de l'offre sur les exchanges pousse les prix à la hausse.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : MINERS                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="miners"><i class="fa-solid fa-hammer" style="color:#f97316;"></i> Miner Behavior</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hammer" style="color:#f97316;"></i> Les mineurs : le baromètre du cycle</h2>
+
+  <p>Les <strong>mineurs de Bitcoin</strong> sont les producteurs de BTC. Ils ont des coûts fixes (électricité, hardware) et doivent vendre du BTC pour couvrir ces coûts. Leur comportement donne des signaux fiables sur la santé du marché.</p>
+
+  <h3>Indicateurs mineurs clés</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Indicateur</th><th>Ce qu'il mesure</th><th>Signal bullish</th><th>Signal bearish</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Hash Rate</strong></td>
+        <td>Puissance de calcul totale du réseau</td>
+        <td style="color:#16a34a;">ATH = confiance max des mineurs</td>
+        <td style="color:#dc2626;">Chute > 15% = capitulation</td>
+      </tr>
+      <tr>
+        <td><strong>Hash Ribbons</strong></td>
+        <td>Croisement MA 30j / MA 60j du hash rate</td>
+        <td style="color:#16a34a;"><strong>Buy signal</strong> quand MA30 repasse au-dessus</td>
+        <td style="color:#dc2626;">MA30 < MA60 = stress mineur</td>
+      </tr>
+      <tr>
+        <td><strong>Miner Revenue</strong></td>
+        <td>Revenus quotidiens des mineurs en $</td>
+        <td style="color:#16a34a;">Revenu en hausse = mineurs rentables</td>
+        <td style="color:#dc2626;">Revenu sous coût production = capitulation</td>
+      </tr>
+      <tr>
+        <td><strong>Difficulty</strong></td>
+        <td>Difficulté de minage (ajustée tous les ~14 jours)</td>
+        <td style="color:#16a34a;">En hausse = plus de mineurs = confiance</td>
+        <td style="color:#dc2626;">En baisse = mineurs quittent le réseau</td>
+      </tr>
+      <tr>
+        <td><strong>Miner Outflows</strong></td>
+        <td>BTC envoyés par mineurs vers exchanges</td>
+        <td style="color:#16a34a;">Faible = mineurs accumulent</td>
+        <td style="color:#dc2626;">Spike = vente forcée pour couvrir coûts</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Hash Ribbons : le signal d'achat ultime</h4>
+    <p style="margin:0;">Les <strong>Hash Ribbons</strong> ont donné un signal d'achat à chaque bottom majeur : décembre 2018, mars 2020, juillet 2022, janvier 2023. Le signal se déclenche quand le hash rate MA 30 jours repasse au-dessus du MA 60 jours après une période de capitulation des mineurs. C'est le signe que les mineurs les moins efficaces ont été éliminés et que le réseau est redevenu sain. <strong>Chaque signal Hash Ribbons "buy" depuis 2015 a précédé un rallye de +50% minimum.</strong></p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : STABLECOINS & HODLER WAVES                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stablecoins"><i class="fa-solid fa-coins" style="color:#d97706;"></i> Stablecoins & HODLer Waves</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-coins" style="color:#d97706;"></i> Le "dry powder" et la distribution par âge</h2>
+
+  <h3>Stablecoin Supply = Dry Powder</h3>
+
+  <p>La <strong>supply totale de stablecoins</strong> (USDT, USDC, DAI) représente le capital "en attente" prêt à être déployé dans le marché. C'est le "dry powder" du marché crypto.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.25rem; background:#f0fdf4; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">Supply stablecoins en hausse</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Plus de capital attend sur le sideline. Quand ce capital sera déployé (FOMO, breakout, catalyseur), le mouvement haussier sera amplifié. Signal bullish moyen terme.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">Supply stablecoins en baisse</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le capital quitte le marché crypto (conversion vers fiat). Moins de "poudre sèche" = moins de carburant pour la hausse. Signal bearish moyen terme.</p>
+    </div>
+  </div>
+
+  <h3>HODLer Waves — Distribution par âge des BTC</h3>
+
+  <p>Les <strong>HODLer Waves</strong> montrent la distribution des BTC par âge (depuis leur dernier mouvement). Les BTC qui n'ont pas bougé depuis > 1 an sont considérés comme détenus par des <strong>HODLers convaincus</strong>.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Âge des BTC</th><th>Catégorie</th><th>Implication</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>< 1 mois</strong></td>
+        <td>Hot Money / Spéculateurs</td>
+        <td>Trading actif, volume court terme, amplifient la volatilité</td>
+      </tr>
+      <tr>
+        <td><strong>1-6 mois</strong></td>
+        <td>Holders récents</td>
+        <td>Acheteurs du cycle actuel, sensibles aux corrections</td>
+      </tr>
+      <tr>
+        <td><strong>6 mois - 1 an</strong></td>
+        <td>Holders modérés</td>
+        <td>Ont survécu à une correction, plus convaincus</td>
+      </tr>
+      <tr>
+        <td><strong>1 - 3 ans</strong></td>
+        <td>HODLers</td>
+        <td>Ne vendent qu'aux extrêmes (euphorie). Supply "locked".</td>
+      </tr>
+      <tr>
+        <td><strong>> 3 ans</strong></td>
+        <td>Long-term HODLers (LTH)</td>
+        <td>Supply pratiquement illiquide. Ne vendent presque jamais.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Signal de top : les LTH commencent à vendre</h4>
+    <p style="margin:0;">Le signal de top le plus fiable en on-chain est quand les <strong>Long-Term Holders (> 1 an)</strong> commencent à distribuer massivement. Ces holders qui n'ont pas vendu pendant tout le bear market décident enfin de prendre leurs profits. C'est exactement ce qui s'est passé en novembre 2021 : les BTC détenus > 1 an ont commencé à se réduire massivement 2-3 mois avant le top. <strong>Quand les HODLers deviennent des vendeurs, la fin du bull market est proche.</strong></p>
+  </div>
+
+  <h3>Realized Cap vs Market Cap — Comprendre la différence</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card" style="border-top-color:#f59e0b;">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-pie"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Market Cap</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Prix actuel x supply totale. Mesure ce que le marché "vaut" au prix du moment. Volatile, réactif aux mouvements de prix. ~$1.9T (BTC, fév 2026).</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#2563eb;">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-receipt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Realized Cap</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Somme du prix au dernier mouvement de chaque BTC. Mesure la "base de coût agrégée" du réseau. Plus stable, reflète le capital réel investi. ~$850B (BTC, fév 2026).</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Que signifie un NUPL de 0.70 ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 70% de la valeur du réseau Bitcoin est en profit non réalisé — zone de "Croyance" proche de l'euphorie.</strong><br>
+      Un NUPL de 0.70 signifie que si tous les holders vendaient maintenant, le profit net total serait de 70% de la market cap. Historiquement, cette zone (0.50-0.75) correspond au "bull market mature" — il reste potentiellement de la hausse, mais c'est le moment de commencer à prendre des profits progressifs. Au-dessus de 0.75, on entre en zone d'euphorie où les tops historiques se sont formés.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Une whale envoie 5,000 BTC vers Binance. Que signifie ce mouvement ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : C'est un signal bearish — la whale prépare probablement une vente. Mais vérifiez le contexte.</strong><br>
+      Un transfert de 5,000 BTC (~$500M) vers un exchange est un signal de pression vendeuse potentielle. Cependant, il faut vérifier plusieurs choses : est-ce un wallet identifié (exchange interne, OTC desk) ? Y a-t-il d'autres whales qui font la même chose ? Le NUPL est-il en zone d'euphorie ? Un seul mouvement whale n'est jamais suffisant — cherchez la convergence avec d'autres signaux on-chain.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce que les Hash Ribbons et pourquoi sont-ils un signal d'achat fiable ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Les Hash Ribbons signalent la fin de la capitulation des mineurs — un buy signal avec 100% de track record depuis 2015.</strong><br>
+      Quand le hash rate MA30 passe sous le MA60, les mineurs les moins rentables ferment (capitulation). Quand le MA30 repasse au-dessus (recovery), les mineurs faibles ont été éliminés et le réseau est redevenu sain. Historiquement, ce signal a précédé des rallyes de +50% à +500%. La logique : si les mineurs survivent et continuent à investir dans le réseau, c'est qu'ils anticipent des prix plus élevés.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : La supply de stablecoins augmente fortement. Qu'est-ce que cela implique ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Plus de "dry powder" (capital en attente) est disponible pour acheter des crypto — signal bullish moyen terme.</strong><br>
+      Les stablecoins sont la passerelle entre le fiat et la crypto. Quand leur supply augmente, cela signifie que des dollars sont convertis en USDT/USDC et attendent sur les exchanges ou en DeFi, prêts à être déployés. C'est comme un réservoir de carburant qui se remplit. Quand le catalyseur arrive (breakout, news positive, FOMO), ce capital sera déployé rapidement, amplifiant le mouvement haussier.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Pourquoi le SOPR qui touche 1.0 et rebondit est-il un signal d'achat en bull market ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Cela signifie que les vendeurs refusent de vendre à perte — le support psychologique du break-even est défendu.</strong><br>
+      Quand le SOPR descend vers 1.0 en bull market, les vendeurs marginaux sont au break-even. Si le SOPR rebondit (ne passe pas sous 1.0), cela confirme que les holders ne capitulent pas et préfèrent attendre plutôt que de vendre à perte. C'est le signe d'une conviction forte du marché. En bear market, c'est l'inverse : un SOPR qui touche 1.0 et rejette montre que les holders vendent dès qu'ils peuvent sortir sans perte — signe de conviction négative.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#f59e0b;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-cube"></i> <strong>L'on-chain est un avantage unique à la crypto</strong> — vous pouvez voir les mouvements des whales en temps réel. Aucun équivalent en bourse traditionnelle.</li>
+      <li><i class="fa-solid fa-gauge"></i> <strong>NUPL > 0.75 = zone de top historique</strong> — quand le réseau est en euphorie, c'est le moment de prendre des profits, pas d'ajouter du leverage.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>MVRV > 3.5 = surévaluation extrême</strong> — la market cap est 3.5x la realized cap. Historiquement, les corrections majeures suivent.</li>
+      <li><i class="fa-solid fa-fish"></i> <strong>Suivez les whales, pas le bruit</strong> — les transferts whale vers les exchanges sont bearish, les retraits sont bullish. Utilisez Arkham/Nansen pour filtrer les faux signaux.</li>
+      <li><i class="fa-solid fa-arrow-right-arrow-left"></i> <strong>Exchange outflows = accumulation structurelle</strong> — la supply de BTC sur les exchanges est au plus bas historique. Supply squeeze en cours.</li>
+      <li><i class="fa-solid fa-hammer"></i> <strong>Hash Ribbons buy = signal ultime</strong> — 100% de track record depuis 2015. La fin de la capitulation des mineurs est un signal d'achat de conviction maximale.</li>
+      <li><i class="fa-solid fa-coins"></i> <strong>Stablecoin supply = dry powder</strong> — plus la supply augmente, plus le carburant disponible pour le prochain rallye est important.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les métriques on-chain sont des indicateurs, pas des certitudes. Toujours combiner avec d'autres analyses.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le trading de cryptomonnaies comporte un risque de perte totale du capital. Consultez un professionnel.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-crypto/part2-analyse-technique/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">2. Analyse Technique Crypto</div>
+  </div>
+</a>
+
+<a href="/series/trader-crypto/part4-defi-yield/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 4 sur 6</div>
+    <div class="next-title">DeFi & Yield — Stratégies de Rendement</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-crypto/part1-ecosysteme/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. L'Écosystème</a>
+  <a href="/series/trader-crypto/part2-analyse-technique/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Analyse Technique</a>
+  <a href="/series/trader-crypto/part3-on-chain/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#f59e0b; color:white; border:1px solid #f59e0b;">3. On-Chain</a>
+  <a href="/series/trader-crypto/part4-defi-yield/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. DeFi & Yield</a>
+  <a href="/series/trader-crypto/part5-altcoins-narratives/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Altcoins & Narratives</a>
+  <a href="/series/trader-crypto/part6-risques-securite/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Risques & Sécurité</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les Crypto</strong> — Partie 3/6 : On-Chain Analysis</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: NUPL Gauge
+(function(){
+  var dom = document.getElementById('chart-nupl');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    series:[{
+      type:'gauge',
+      startAngle:180,
+      endAngle:0,
+      min:-0.25,
+      max:1,
+      splitNumber:5,
+      center:['50%','70%'],
+      radius:'90%',
+      pointer:{length:'65%',width:6,itemStyle:{color:'#0f172a'}},
+      axisLine:{lineStyle:{width:25,color:[[0.2,'#dc2626'],[0.4,'#f59e0b'],[0.6,'#16a34a'],[0.8,'#2563eb'],[1,'#9333ea']]}},
+      axisTick:{distance:-25,length:6,lineStyle:{color:'#fff',width:1.5}},
+      splitLine:{distance:-30,length:12,lineStyle:{color:'#fff',width:2.5}},
+      axisLabel:{distance:-15,fontSize:10,fontWeight:600,
+        formatter:function(v){
+          if(v<0) return 'Capitulation';
+          if(v<0.25) return 'Peur';
+          if(v<0.5) return 'Optimisme';
+          if(v<0.75) return 'Croyance';
+          return 'Euphorie';
+        }
+      },
+      detail:{
+        valueAnimation:true,
+        formatter:function(v){return v.toFixed(2)+'\nNUPL';},
+        fontSize:22,
+        fontWeight:800,
+        color:'#0f172a',
+        offsetCenter:[0,'-10%']
+      },
+      data:[{value:0.58}]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Whale Transaction Heatmap
+(function(){
+  var dom = document.getElementById('chart-whale');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var days=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  var hours=['00h','04h','08h','12h','16h','20h'];
+  var data=[];
+  for(var d=0;d<7;d++){
+    for(var h=0;h<6;h++){
+      var base;
+      if(h>=2&&h<=4) base=Math.random()*80+40;
+      else base=Math.random()*50+10;
+      if(d>=5) base*=0.6;
+      data.push([h,d,Math.floor(base)]);
+    }
+  }
+  chart.setOption({
+    tooltip:{formatter:function(p){return days[p.value[1]]+' '+hours[p.value[0]]+'<br/>Transactions: <b>'+p.value[2]+'</b>';}},
+    grid:{left:'12%',right:'15%',top:'5%',bottom:'15%'},
+    xAxis:{type:'category',data:hours,axisLabel:{fontSize:11},splitArea:{show:true}},
+    yAxis:{type:'category',data:days,axisLabel:{fontSize:11,fontWeight:600}},
+    visualMap:{min:5,max:120,calculable:true,orient:'vertical',right:10,top:'center',
+      inRange:{color:['#fefce8','#fde68a','#f59e0b','#d97706','#92400e']},
+      textStyle:{fontSize:9}
+    },
+    series:[{type:'heatmap',data:data,label:{show:true,fontSize:9,formatter:function(p){return p.value[2];}},
+      emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.3)'}}}]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Exchange Net Flow
+(function(){
+  var dom = document.getElementById('chart-exchange-flow');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates=[], flows=[];
+  for(var i=30;i>=1;i--){
+    var d=new Date(2026,1,21);
+    d.setDate(d.getDate()-i);
+    dates.push((d.getMonth()+1)+'/'+(d.getDate()));
+    var val=(Math.random()-0.55)*8000;
+    if(Math.random()>0.7) val=-Math.abs(val)*1.5;
+    flows.push(parseFloat(val.toFixed(0)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){
+      var v=p[0].value;
+      var dir=v>0?'Inflow (bearish)':'Outflow (bullish)';
+      return p[0].axisValueLabel+'<br/>Net Flow: <b>'+v.toLocaleString()+' BTC</b><br/>'+dir;
+    }},
+    grid:{left:'12%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,rotate:30}},
+    yAxis:{type:'value',name:'BTC Net Flow',axisLabel:{fontSize:9,formatter:function(v){return (v/1000).toFixed(1)+'K';}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'bar',data:flows,
+      itemStyle:{color:function(p){return p.value>0?'#dc2626':'#16a34a';}},
+      markLine:{silent:true,lineStyle:{type:'dashed',color:'#94a3b8',width:1},data:[{yAxis:0}]}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

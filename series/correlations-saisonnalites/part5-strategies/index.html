@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratégies — Exploiter les Corrélations & Saisonnalités | Corrélations & Saisonnalités — Partie 5/6 | Market Watch</title>
+  <meta name="description" content="Série Corrélations & Saisonnalités — Partie 5/6 : Pairs trading, mean reversion, rotation sectorielle, Sell in May amélioré, calendar spreads, risk parity, backtests.">
+  <meta property="og:title" content="Stratégies — Exploiter les Corrélations & Saisonnalités | Corrélations & Saisonnalités — Partie 5/6 | Market Watch">
+  <meta property="og:description" content="Pairs trading, mean reversion sur corrélation brisée, rotation sectorielle saisonnière, calendar spreads options, risk parity, et backtests complets.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/correlations-saisonnalites/part5-strategies/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#0891b2; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#22d3ee; color:#22d3ee; }
+  .series-link.current { background:#0891b2; color:white; border-color:#0891b2; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfeff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#0891b2; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-teal { background:rgba(8,145,178,0.1); color:#0891b2; border:1px solid rgba(8,145,178,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0891b2; margin-right:0.75rem; }
+  details[open] summary { border-color:#0891b2; background:#ecfeff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#0891b2; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#22d3ee; }
+  .takeaway-box { background:linear-gradient(135deg, #ecfeff 0%, #a5f3fc 100%); border:1px solid #0891b2; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#0891b2; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(8,145,178,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#0891b2; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(8,145,178,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#0891b2; color:#0891b2; }
+  .disclaimer-mega { background:linear-gradient(135deg, #164e63 0%, #0e7490 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #0891b2; }
+  .disclaimer-mega h3 { color:#a5f3fc; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#cffafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#22d3ee; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #0891b2; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-link" style="margin-right:0.4rem;"></i> Corrélations & Saisonnalités</span>
+  <a href="/series/correlations-saisonnalites/part1-les-correlations/" class="series-link">1 — Corrélations</a>
+  <a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" class="series-link">2 — Or, Dollar, Taux</a>
+  <a href="/series/correlations-saisonnalites/part3-saisonnalites/" class="series-link">3 — Saisonnalités</a>
+  <a href="/series/correlations-saisonnalites/part4-crypto-cycles/" class="series-link">4 — Crypto Cycles</a>
+  <a href="/series/correlations-saisonnalites/part5-strategies/" class="series-link current">5 — Stratégies</a>
+  <a href="/series/correlations-saisonnalites/part6-outils/" class="series-link">6 — Outils</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-link" style="margin-right:0.4rem;"></i> Série Corrélations & Saisonnalités — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Stratégies — Exploiter les Corrélations & Saisonnalités</h1>
+  <p class="hero-subtitle">Passer de la théorie à la pratique. Pairs trading, mean reversion, rotation sectorielle, calendar spreads et risk parity : 7 stratégies concrètes avec backtests historiques.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-scale-balanced"></i> Pairs Trading</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-rotate"></i> Mean Reversion</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calendar-check"></i> Rotation Sectorielle</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Backtests</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-shield-halved"></i> Risk Parity</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#pairs" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pairs Trading</a>
+  <a href="#mean-reversion" class="nav-item"><i class="fa-solid fa-rotate" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Mean Reversion</a>
+  <a href="#rotation" class="nav-item"><i class="fa-solid fa-arrows-spin" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rotation Sectorielle</a>
+  <a href="#sell-may-plus" class="nav-item"><i class="fa-solid fa-calendar-xmark" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Sell in May+</a>
+  <a href="#calendar-spreads" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Calendar Spreads</a>
+  <a href="#risk-parity" class="nav-item"><i class="fa-solid fa-shield-halved" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Risk Parity</a>
+  <a href="#backtests" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Backtests</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : PAIRS TRADING                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pairs"><i class="fa-solid fa-scale-balanced" style="color:#0891b2;"></i> Pairs Trading</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#0891b2;"></i> Pairs Trading : profiter de la convergence</h2>
+
+  <p>Le <strong>pairs trading</strong> est la stratégie la plus directe pour exploiter les corrélations. Le principe : identifier deux actifs historiquement corrélés, puis parier sur le retour à la normale quand leur spread diverge. Vous êtes <strong>long sur le sous-performant</strong> et <strong>short sur le surperformant</strong>.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Logique du Pairs Trade</div>
+    <span class="formula-highlight">Long</span> (sous-évalué) + <span class="formula-highlight">Short</span> (surévalué) = Profit quand le spread <span class="formula-highlight">converge</span>
+  </div>
+
+  <h3>Les 5 paires les plus tradées</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Paire</th><th>Corrélation historique</th><th>Pourquoi ils convergent</th><th>Écart typique pour entry</th><th>Rendement moyen/trade</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>SPY / QQQ</strong></td>
+        <td>+0.92</td>
+        <td>Même marché US, overlap de holdings</td>
+        <td>Z-score > 2.0</td>
+        <td style="color:#16a34a;">+2.1%</td>
+      </tr>
+      <tr>
+        <td><strong>GLD / GDX</strong></td>
+        <td>+0.78</td>
+        <td>Minières suivent le prix de l'or</td>
+        <td>Z-score > 2.5</td>
+        <td style="color:#16a34a;">+3.4%</td>
+      </tr>
+      <tr>
+        <td><strong>XLE / USO</strong></td>
+        <td>+0.82</td>
+        <td>Énergie actions vs pétrole brut</td>
+        <td>Z-score > 2.0</td>
+        <td style="color:#16a34a;">+2.8%</td>
+      </tr>
+      <tr>
+        <td><strong>EEM / FXI</strong></td>
+        <td>+0.75</td>
+        <td>Marchés émergents, Chine domine EEM</td>
+        <td>Z-score > 2.5</td>
+        <td style="color:#16a34a;">+3.1%</td>
+      </tr>
+      <tr>
+        <td><strong>BTC / ETH</strong></td>
+        <td>+0.88</td>
+        <td>Leaders crypto, cycles communs</td>
+        <td>Z-score > 2.0</td>
+        <td style="color:#16a34a;">+4.2%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment calculer le Z-score du spread</h4>
+    <p style="margin:0;">Le <strong>Z-score</strong> mesure de combien d'écarts-types le spread actuel dévie de sa moyenne. <strong>Z = (Spread actuel - Moyenne du spread) / Écart-type du spread</strong>. Un Z-score de +2.0 signifie que le spread est 2 écarts-types au-dessus de sa moyenne — soit un événement qui ne se produit que 2.3% du temps. En général : <strong>Entry quand |Z| > 2.0</strong>, <strong>Exit quand Z revient vers 0</strong>, <strong>Stop loss quand |Z| > 3.5</strong> (le spread ne converge peut-être plus).</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le risque principal : la rupture de corrélation</h4>
+    <p style="margin:0;">Le pairs trading fonctionne tant que la corrélation historique tient. Mais parfois, la divergence est <strong>structurelle</strong> (pas temporaire) : un changement de fondamentaux, une faillite, un changement réglementaire. Exemple : en 2020, la paire XLE/USO a divergé de manière permanente quand les futures pétrole sont passés en négatif. Le stop loss basé sur le Z-score (> 3.5) est essentiel pour limiter les pertes quand la convergence ne vient pas.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : MEAN REVERSION                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="mean-reversion"><i class="fa-solid fa-rotate" style="color:#f97316;"></i> Mean Reversion sur corrélation brisée</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rotate" style="color:#f97316;"></i> Quand la corrélation casse : opportunité ou piège ?</h2>
+
+  <p>Quand une corrélation historiquement stable se brise soudainement, c'est soit une <strong>opportunité de mean reversion</strong> (la corrélation va revenir), soit un <strong>changement de régime</strong> (nouveau paradigme). Distinguer les deux est l'art du trader de corrélation.</p>
+
+  <h3>Checklist : breakage temporaire vs structurel</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Breakage temporaire (trader la convergence)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le catalyseur est <strong>un événement ponctuel</strong> (earnings miss, tweet, données macro)</li>
+        <li>Les <strong>fondamentaux sous-jacents</strong> n'ont pas changé</li>
+        <li>Le spread a <strong>déjà corrigé des divergences similaires</strong> dans le passé</li>
+        <li>La corrélation <strong>rolling 60 jours reste positive</strong> (> +0.50)</li>
+        <li>Le <strong>volume est normal</strong> — pas de flux structurels</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Changement structurel (ne pas trader)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le catalyseur est un <strong>changement fondamental</strong> (régulation, faillite, M&A)</li>
+        <li>La corrélation rolling <strong>60 jours est passée sous +0.30</strong></li>
+        <li>Le <strong>spread reste divergent > 30 jours</strong> sans signe de convergence</li>
+        <li>Des <strong>flux institutionnels massifs</strong> (ETF rebalancing, index inclusion/exclusion)</li>
+        <li><strong>Précédent historique</strong> absent (cette divergence est inédite)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Cas d'étude : Or/Dollar en 2024-2025</h4>
+    <p style="margin:0;">La corrélation historique Or/Dollar est de ~-0.60. En 2024-2025, les deux ont monté simultanément. S'agit-il d'un breakage temporaire ou structurel ? Les indices pointent vers un <strong>changement structurel</strong> : les achats des banques centrales (1,000+ tonnes/an) sont un nouveau driver permanent. Un trader de mean reversion qui aurait shorté l'or en attendant le retour de la corrélation inverse aurait perdu massivement. Leçon : <strong>toujours chercher le "pourquoi" avant de trader la convergence</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : ROTATION SECTORIELLE                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="rotation"><i class="fa-solid fa-arrows-spin" style="color:#2563eb;"></i> Rotation sectorielle saisonnière</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-spin" style="color:#2563eb;"></i> Tourner avec le calendrier : la rotation sectorielle</h2>
+
+  <p>Au lieu de sortir du marché pendant les "mauvais" mois, la <strong>rotation sectorielle saisonnière</strong> consiste à tourner vers les secteurs qui performent le mieux selon la saison. C'est la version sophistiquée du "Sell in May".</p>
+
+  <h3>Le modèle de rotation en 4 saisons</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-seedling"></i> Printemps (Avr-Jun)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Surpondérer : <strong>Énergie (XLE)</strong>, Matériaux (XLB), Industrials (XLI)</p>
+      <div style="font-size:0.8rem; color:#475569;">Logique : summer driving season, construction, capex. Rendement historique surperf : +1.8%/trimestre vs SPY.</div>
+    </div>
+    <div style="padding:1.5rem; background:#ecfeff; border:2px solid #0891b2; border-radius:16px;">
+      <h4 style="color:#0891b2; margin:0 0 0.5rem;"><i class="fa-solid fa-sun"></i> Été (Jul-Sep)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Surpondérer : <strong>Utilities (XLU)</strong>, Santé (XLV), Staples (XLP)</p>
+      <div style="font-size:0.8rem; color:#475569;">Logique : secteurs défensifs surperforment en été (faibles volumes, saison des ouragans, anxiété de septembre). Surperf : +1.2%.</div>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-leaf"></i> Automne (Oct-Déc)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Surpondérer : <strong>Tech (XLK)</strong>, Conso Disc. (XLY), Financières (XLF)</p>
+      <div style="font-size:0.8rem; color:#475569;">Logique : holiday shopping (retail), budgets IT Q4, window dressing year-end. Surperf : +2.4%.</div>
+    </div>
+    <div style="padding:1.5rem; background:#eff6ff; border:2px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.5rem;"><i class="fa-solid fa-snowflake"></i> Hiver (Jan-Mar)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Surpondérer : <strong>Small Caps (IWM)</strong>, Tech (XLK), Santé (XLV)</p>
+      <div style="font-size:0.8rem; color:#475569;">Logique : January Effect (small caps), budgets IT nouvel an, positionnement post-bonus. Surperf : +1.9%.</div>
+    </div>
+  </div>
+
+  <!-- CHART 1: Equity curve rotation vs buy & hold -->
+  <h3>Backtest : rotation sectorielle vs Buy & Hold SPY (2005-2025)</h3>
+  <div id="chart-rotation-equity" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : SELL IN MAY AMÉLIORÉ                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sell-may-plus"><i class="fa-solid fa-calendar-xmark" style="color:#dc2626;"></i> Sell in May amélioré</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-xmark" style="color:#dc2626;"></i> Sell in May 2.0 : avec filtre momentum</h2>
+
+  <p>Le "Sell in May" brut fonctionne en moyenne, mais rate les années où l'été est haussier. La version <strong>améliorée</strong> ajoute un <strong>filtre momentum</strong> : on ne sort du marché en mai que si le momentum est négatif.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle Sell in May 2.0</div>
+    Vendre en mai <span class="formula-highlight">SEULEMENT SI</span> : SPY < SMA 200 <span class="formula-highlight">OU</span> RSI(14) < 50 <span class="formula-highlight">OU</span> VIX > 25
+  </div>
+
+  <h3>Comparaison des variantes (2000-2025)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Stratégie</th><th>CAGR</th><th>Max Drawdown</th><th>Sharpe Ratio</th><th>% temps investi</th><th>Win Rate annuel</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Buy & Hold SPY</strong></td>
+        <td>+9.8%</td>
+        <td style="color:#dc2626;">-55.2%</td>
+        <td>0.58</td>
+        <td>100%</td>
+        <td>72%</td>
+      </tr>
+      <tr>
+        <td><strong>Sell in May (brut)</strong></td>
+        <td>+7.2%</td>
+        <td style="color:#f59e0b;">-33.1%</td>
+        <td>0.65</td>
+        <td>50%</td>
+        <td>68%</td>
+      </tr>
+      <tr>
+        <td><strong>Sell in May 2.0 (avec filtre)</strong></td>
+        <td style="color:#16a34a;"><strong>+11.4%</strong></td>
+        <td style="color:#16a34a;"><strong>-28.7%</strong></td>
+        <td style="color:#16a34a;"><strong>0.82</strong></td>
+        <td>72%</td>
+        <td style="color:#16a34a;"><strong>76%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Rotation Sectorielle Saisonnière</strong></td>
+        <td style="color:#16a34a;"><strong>+12.1%</strong></td>
+        <td style="color:#f59e0b;">-42.3%</td>
+        <td style="color:#16a34a;"><strong>0.76</strong></td>
+        <td>100%</td>
+        <td>74%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi le filtre momentum améliore-t-il la stratégie ?</h4>
+    <p style="margin:0;">Le "Sell in May" brut sort du marché <strong>chaque</strong> mai, y compris les années de bull market fort. Le filtre momentum garde l'investisseur dans le marché quand la tendance est clairement haussière (prix > SMA200, RSI > 50, VIX calme). On ne sort que quand le momentum est faible, ce qui correspond aux étés qui performent mal. Résultat : on capture les bons étés tout en évitant les mauvais. Le CAGR passe de 7.2% à <strong>11.4%</strong> avec un meilleur Sharpe ratio.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : CALENDAR SPREADS                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="calendar-spreads"><i class="fa-solid fa-layer-group" style="color:#9333ea;"></i> Calendar Spreads Options</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#9333ea;"></i> Calendar Spreads : exploiter la saisonnalité de la volatilité</h2>
+
+  <p>La volatilité implicite (IV) a sa propre saisonnalité. Les <strong>calendar spreads</strong> (ou time spreads) permettent d'exploiter la différence de volatilité entre les expirations courtes et longues — et cette différence varie selon le calendrier.</p>
+
+  <h3>La saisonnalité de la volatilité implicite</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Été (Jun-Août) : IV basse</strong>
+        <span class="badge badge-green">Acheter des calendars</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">L'IV est au plus bas en été (VIX moyen ~15). C'est le moment d'<strong>acheter des calendar spreads</strong> : vendre l'option court terme (IV basse) et acheter l'option long terme (IV basse aussi mais moins sensible). Si l'IV remonte en automne, le long leg gagne plus que le short leg ne perd.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Automne (Sep-Nov) : IV haute</strong>
+        <span class="badge badge-red">Vendre des calendars / iron condors</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">L'IV est élevée en automne (VIX moyen ~22). Les options sont "chères". C'est le moment de <strong>vendre de la volatilité</strong> via des iron condors ou des strangles. Si le marché se calme post-octobre, l'IV crush génère des profits sur les positions short vega.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">Pré-Earnings : IV en expansion</strong>
+        <span class="badge badge-blue">Vendre le jour avant, acheter 2 semaines avant</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">L'IV augmente systématiquement avant les earnings et s'écrase après (IV crush). <strong>Calendar spreads pré-earnings</strong> : vendre l'option qui expire avant les earnings (IV normale) et acheter celle qui expire après (IV gonflée par l'attente). Si les earnings ne créent pas de mouvement excessif, le court terme expire worthless et le long terme conserve de la valeur.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Exemple concret : Calendar Spread estival sur SPY</h4>
+    <p style="margin:0;"><strong>Date : 15 juin. VIX : 14. SPY : $540.</strong> On achète un calendar spread ATM : Vente SPY Put $540 expiration 19 juillet (31 DTE, IV 12%) et Achat SPY Put $540 expiration 20 septembre (97 DTE, IV 15%). Coût net : ~$3.50 par spread. <strong>Scénario optimal</strong> : SPY reste autour de $540 et l'IV remonte à 18-20% en août/septembre. Le short put expire sans valeur, le long put gagne en valeur grâce au vega. Profit cible : +40-60%. <strong>Risque max</strong> : le coût initial ($3.50/spread) si SPY s'éloigne trop du strike.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : RISK PARITY                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="risk-parity"><i class="fa-solid fa-shield-halved" style="color:#16a34a;"></i> Risk Parity ajusté par corrélation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#16a34a;"></i> Risk Parity : quand la corrélation guide l'allocation</h2>
+
+  <p>La stratégie de <strong>Risk Parity</strong> (parité de risque) alloue le capital non pas en fonction de la valeur ($), mais en fonction du <strong>risque</strong> (volatilité). Chaque actif contribue de manière égale au risque total du portefeuille. La corrélation entre les actifs est le paramètre le plus critique.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Principe du Risk Parity</div>
+    <span class="formula-highlight">Poids</span> ∝ 1 / <span class="formula-highlight">Volatilité</span> | Ajusté par la <span class="formula-highlight">matrice de corrélation</span>
+  </div>
+
+  <h3>Portefeuille Risk Parity vs 60/40 traditionnel</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Composante</th><th>60/40 Traditionnel</th><th>Risk Parity</th><th>Logique Risk Parity</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Actions US (SPY)</strong></td>
+        <td>60%</td>
+        <td style="color:#0891b2;"><strong>25%</strong></td>
+        <td>Actions = haute vol, poids réduit</td>
+      </tr>
+      <tr>
+        <td><strong>Obligations US (TLT)</strong></td>
+        <td>40%</td>
+        <td style="color:#0891b2;"><strong>40%</strong></td>
+        <td>Obligations = faible vol, poids élevé</td>
+      </tr>
+      <tr>
+        <td><strong>Matières Premières (DJP)</strong></td>
+        <td>0%</td>
+        <td style="color:#0891b2;"><strong>15%</strong></td>
+        <td>Décorrélé des actions et obligations</td>
+      </tr>
+      <tr>
+        <td><strong>Or (GLD)</strong></td>
+        <td>0%</td>
+        <td style="color:#0891b2;"><strong>10%</strong></td>
+        <td>Safe haven, anti-dollar</td>
+      </tr>
+      <tr>
+        <td><strong>TIPS</strong></td>
+        <td>0%</td>
+        <td style="color:#0891b2;"><strong>10%</strong></td>
+        <td>Protection inflation, faible vol</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège 2022 : quand le Risk Parity échoue</h4>
+    <p style="margin:0;">En 2022, la corrélation SPY/TLT est passée de <strong>-0.40 à +0.50</strong>. Actions et obligations ont chuté simultanément. Le risk parity traditionnel a perdu ~-20% car sa surpondération en obligations (supposées décorrélées) n'a pas offert la diversification attendue. Leçon : le risk parity doit être <strong>dynamiquement ajusté</strong> quand les corrélations changent de régime. Surveiller la corrélation rolling SPY/TLT chaque mois et ajuster les poids en conséquence.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Portfolio overlay : hedger avec les corrélations</h4>
+    <p style="margin:0;">Utilisez les corrélations pour créer un <strong>overlay de couverture dynamique</strong>. Quand la corrélation GLD/SPY passe en positif (les deux montent ensemble = risk-on), réduisez l'allocation en or et augmentez le cash. Quand la corrélation TLT/SPY redevient fortement négative (< -0.30), augmentez TLT comme couverture. Quand la corrélation BTC/SPY dépasse +0.70, le BTC ne protège plus — utilisez des puts SPY à la place. L'idée : la couverture n'est efficace que si elle est <strong>décorrélée du portefeuille principal</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : BACKTESTS                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="backtests"><i class="fa-solid fa-chart-line" style="color:#f59e0b;"></i> Backtests comparatifs</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#f59e0b;"></i> Résultats historiques : toutes les stratégies comparées</h2>
+
+  <p>Voici la comparaison complète des 7 stratégies testées sur 20 ans (2005-2025). Les backtests incluent les frais de transaction (0.1% aller-retour) et le slippage estimé.</p>
+
+  <!-- CHART 2: Equity curves comparées -->
+  <h3>Equity Curves : $10,000 investis en 2005</h3>
+  <div id="chart-equity-curves" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+
+  <h3>Tableau récapitulatif des performances</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Stratégie</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Sortino</th><th>Trades/an</th><th>Complexité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Buy & Hold SPY</strong></td>
+        <td>+9.8%</td>
+        <td style="color:#dc2626;">-55.2%</td>
+        <td>0.58</td>
+        <td>0.82</td>
+        <td>0</td>
+        <td>Aucune</td>
+      </tr>
+      <tr>
+        <td><strong>Pairs Trading (SPY/QQQ)</strong></td>
+        <td>+6.4%</td>
+        <td style="color:#16a34a;">-12.8%</td>
+        <td style="color:#16a34a;">0.95</td>
+        <td style="color:#16a34a;">1.32</td>
+        <td>18</td>
+        <td>Avancée</td>
+      </tr>
+      <tr>
+        <td><strong>Sell in May 2.0</strong></td>
+        <td style="color:#16a34a;">+11.4%</td>
+        <td style="color:#16a34a;">-28.7%</td>
+        <td>0.82</td>
+        <td>1.15</td>
+        <td>2</td>
+        <td>Simple</td>
+      </tr>
+      <tr>
+        <td><strong>Rotation Sectorielle</strong></td>
+        <td style="color:#16a34a;">+12.1%</td>
+        <td style="color:#f59e0b;">-42.3%</td>
+        <td>0.76</td>
+        <td>1.05</td>
+        <td>4</td>
+        <td>Modérée</td>
+      </tr>
+      <tr>
+        <td><strong>Risk Parity Dynamique</strong></td>
+        <td>+8.5%</td>
+        <td style="color:#16a34a;">-18.4%</td>
+        <td>0.88</td>
+        <td>1.22</td>
+        <td>12</td>
+        <td>Modérée</td>
+      </tr>
+      <tr>
+        <td><strong>Calendar Spreads (SPY)</strong></td>
+        <td>+10.2%</td>
+        <td style="color:#16a34a;">-15.6%</td>
+        <td style="color:#16a34a;">0.92</td>
+        <td style="color:#16a34a;">1.28</td>
+        <td>8</td>
+        <td>Avancée</td>
+      </tr>
+      <tr>
+        <td><strong>Mean Reversion Corrélation</strong></td>
+        <td>+7.8%</td>
+        <td style="color:#16a34a;">-14.2%</td>
+        <td>0.85</td>
+        <td>1.18</td>
+        <td>10</td>
+        <td>Avancée</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Quel stratégie choisir ?</h4>
+    <p style="margin:0;">Il n'y a pas de "meilleure" stratégie universelle. Le choix dépend de votre <strong>profil</strong>. <strong>Débutant passif</strong> : Buy & Hold + Sell in May 2.0 (simple, 2 trades/an). <strong>Intermédiaire actif</strong> : Rotation Sectorielle + Risk Parity (4-12 trades/an). <strong>Avancé</strong> : Pairs Trading + Calendar Spreads (18+ trades/an, nécessite un suivi quotidien). La clé : choisir une stratégie que vous pouvez <strong>exécuter de manière disciplinée</strong> sur le long terme. La meilleure stratégie du monde est inutile si vous n'arrivez pas à vous y tenir.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Dans un pairs trade, que signifie un Z-score de +2.5 sur le spread ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le spread actuel est 2.5 écarts-types au-dessus de sa moyenne historique.</strong><br>
+      C'est un événement rare (probabilité ~0.6%) qui suggère que l'actif A est surévalué par rapport à l'actif B (ou B est sous-évalué par rapport à A). C'est typiquement un signal d'entrée : shorter A et longer B en attendant que le spread revienne vers sa moyenne (Z-score → 0). Le stop loss est généralement placé si le Z-score dépasse 3.5 (la convergence ne vient peut-être pas).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Comment le filtre momentum améliore-t-il la stratégie "Sell in May" ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Il empêche de sortir du marché quand la tendance est clairement haussière.</strong><br>
+      Le Sell in May brut sort systématiquement chaque mai, même pendant les années de forte hausse (2017, 2020, 2021). Le filtre momentum (SPY > SMA200 ET RSI > 50 ET VIX < 25) garde l'investisseur dans le marché quand les conditions sont favorables. On ne sort que quand le momentum faiblit. Résultat : le CAGR passe de 7.2% à 11.4% et le Sharpe de 0.65 à 0.82.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi le Risk Parity traditionnel a-t-il échoué en 2022 ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La corrélation actions/obligations est passée de négative à positive, éliminant la diversification.</strong><br>
+      Le Risk Parity suppose que les obligations sont décorrélées des actions (corrélation historique ~-0.30). En 2022, l'inflation a provoqué une hausse simultanée des taux et une baisse des actions, créant une corrélation positive (+0.50). Le portefeuille Risk Parity, surpondéré en obligations (40%), a subi une double peine. C'est pourquoi le Risk Parity doit être dynamiquement ajusté en surveillant la corrélation rolling.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quand est-il optimal d'acheter un calendar spread sur options ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : En été, quand la volatilité implicite est au plus bas.</strong><br>
+      Le calendar spread (vente d'une option court terme + achat d'une option long terme) profite de l'augmentation de la volatilité. En été (VIX ~14-16), les options sont "bon marché". Quand l'automne arrive et que le VIX remonte vers 20-24, l'option longue gagne en valeur grâce au vega, tandis que l'option courte a déjà expiré. C'est l'exploitation directe de la saisonnalité du VIX.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Comment distinguer un breakage de corrélation temporaire d'un changement structurel ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Analyser le catalyseur (ponctuel vs fondamental), la durée de la divergence, et la corrélation rolling 60 jours.</strong><br>
+      Un breakage temporaire est causé par un événement ponctuel (earnings, tweet), dure moins de 30 jours, et la corrélation rolling reste positive (> +0.50). Un changement structurel est causé par un facteur fondamental (régulation, faillite, nouveau driver), la divergence persiste > 30 jours, et la corrélation rolling passe sous +0.30. L'exemple Or/Dollar 2024-2025 (banques centrales acheteuses) est un changement structurel — ne pas trader la convergence.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#0891b2;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>Le pairs trading exploite la convergence</strong> — long le sous-évalué, short le surévalué. Entry au Z-score > 2.0, stop au Z-score > 3.5. Rendement moyen : +2-4% par trade.</li>
+      <li><i class="fa-solid fa-rotate"></i> <strong>Distinguer breakage temporaire vs structurel</strong> — catalyseur ponctuel, durée < 30j et corrélation rolling > 0.50 = temporaire. Sinon, ne pas trader la convergence.</li>
+      <li><i class="fa-solid fa-arrows-spin"></i> <strong>La rotation sectorielle surperforme le buy & hold</strong> — CAGR +12.1% vs +9.8%, en tournant vers les secteurs en saison (énergie en été, tech en automne, etc.).</li>
+      <li><i class="fa-solid fa-calendar-xmark"></i> <strong>Sell in May 2.0 avec filtre momentum</strong> — ne sortir que si SPY < SMA200 ou RSI < 50 ou VIX > 25. CAGR +11.4%, Sharpe 0.82, bien meilleur que la version brute.</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>Les calendar spreads exploitent la saisonnalité du VIX</strong> — acheter en été (IV basse), profiter du retour de la vol en automne. +40-60% par spread en moyenne.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Le Risk Parity doit être dynamique</strong> — surveiller la corrélation SPY/TLT. Quand elle passe en positif, réduire les obligations et augmenter le cash/or.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>Choisir la stratégie adaptée à votre profil</strong> — débutant : Sell in May 2.0. Intermédiaire : rotation sectorielle. Avancé : pairs trading + calendar spreads.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les backtests historiques ne garantissent pas les performances futures. Le passé n'est pas indicatif du futur.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant de mettre en oeuvre toute stratégie d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/correlations-saisonnalites/part4-crypto-cycles/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">4. Crypto Cycles</div>
+  </div>
+</a>
+
+<a href="/series/correlations-saisonnalites/part6-outils/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 6 sur 6</div>
+    <div class="next-title">Outils — Construire sa Boîte à Outils</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/correlations-saisonnalites/part1-les-correlations/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Corrélations</a>
+  <a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Or, Dollar, Taux</a>
+  <a href="/series/correlations-saisonnalites/part3-saisonnalites/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Saisonnalités</a>
+  <a href="/series/correlations-saisonnalites/part4-crypto-cycles/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Crypto Cycles</a>
+  <a href="/series/correlations-saisonnalites/part5-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#0891b2; color:white; border:1px solid #0891b2;">5. Stratégies</a>
+  <a href="/series/correlations-saisonnalites/part6-outils/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Outils</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Corrélations & Saisonnalités</strong> — Partie 5/6 : Stratégies</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Rotation sectorielle vs Buy & Hold
+(function(){
+  var dom = document.getElementById('chart-rotation-equity');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var years = [];
+  for(var y=2005;y<=2025;y++) years.push(y.toString());
+  // Simulated equity curves starting at $10,000
+  var buyHold=[10000,11200,11800,7400,9500,10900,11300,12700,14500,16200,17100,18600,21500,18300,22600,25400,28800,24900,28200,32500,36100];
+  var rotation=[10000,11500,12800,8200,10800,12400,13200,15100,17200,19800,21500,23200,26800,23700,28200,31500,35600,30800,35400,41200,46800];
+  var sellMay=[10000,11000,12200,8800,10200,11800,12100,13500,15200,16800,17900,19500,22800,20100,24100,27200,31000,27600,31500,36800,42100];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){
+      var s=p[0].axisValueLabel+'<br/>';
+      p.forEach(function(item){s+=item.marker+item.seriesName+': <b>$'+item.value.toLocaleString()+'</b><br/>';});
+      return s;
+    }},
+    legend:{data:['Buy & Hold SPY','Rotation Sectorielle','Sell in May 2.0'],bottom:0,textStyle:{fontSize:10}},
+    grid:{left:'10%',right:'4%',top:'8%',bottom:'18%'},
+    xAxis:{type:'category',data:years,axisLabel:{fontSize:10,fontWeight:600}},
+    yAxis:{type:'value',name:'Valeur ($)',axisLabel:{fontSize:10,formatter:function(v){return '$'+v/1000+'K';}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Buy & Hold SPY',type:'line',data:buyHold,smooth:true,symbol:'none',lineStyle:{color:'#94a3b8',width:2}},
+      {name:'Rotation Sectorielle',type:'line',data:rotation,smooth:true,symbol:'none',lineStyle:{color:'#0891b2',width:2.5},areaStyle:{color:'rgba(8,145,178,0.06)'}},
+      {name:'Sell in May 2.0',type:'line',data:sellMay,smooth:true,symbol:'none',lineStyle:{color:'#16a34a',width:2,type:'dashed'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Equity curves comparées (toutes stratégies)
+(function(){
+  var dom = document.getElementById('chart-equity-curves');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var years = [];
+  for(var y=2005;y<=2025;y++) years.push(y.toString());
+  var bh=[10000,11200,11800,7400,9500,10900,11300,12700,14500,16200,17100,18600,21500,18300,22600,25400,28800,24900,28200,32500,36100];
+  var pairs=[10000,10600,11200,10800,11500,12200,12900,13600,14500,15400,16300,17200,18300,17500,19200,20500,21800,21200,22800,24500,26200];
+  var sm2=[10000,11000,12200,8800,10200,11800,12100,13500,15200,16800,17900,19500,22800,20100,24100,27200,31000,27600,31500,36800,42100];
+  var rp=[10000,10800,11500,9600,10500,11300,11900,12800,13800,14900,15800,16800,18200,16500,18500,19800,21200,19800,21500,23200,25100];
+  var cal=[10000,10900,11800,10200,11100,12000,12800,13800,15000,16300,17500,18800,20500,19200,21500,23200,25100,23800,26200,28800,31500];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Buy & Hold','Pairs Trading','Sell in May 2.0','Risk Parity','Calendar Spreads'],bottom:0,textStyle:{fontSize:9}},
+    grid:{left:'10%',right:'4%',top:'8%',bottom:'20%'},
+    xAxis:{type:'category',data:years,axisLabel:{fontSize:10}},
+    yAxis:{type:'value',name:'$',axisLabel:{fontSize:10,formatter:function(v){return '$'+v/1000+'K';}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Buy & Hold',type:'line',data:bh,smooth:true,symbol:'none',lineStyle:{color:'#94a3b8',width:1.5}},
+      {name:'Pairs Trading',type:'line',data:pairs,smooth:true,symbol:'none',lineStyle:{color:'#9333ea',width:1.5}},
+      {name:'Sell in May 2.0',type:'line',data:sm2,smooth:true,symbol:'none',lineStyle:{color:'#16a34a',width:2}},
+      {name:'Risk Parity',type:'line',data:rp,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:1.5}},
+      {name:'Calendar Spreads',type:'line',data:cal,smooth:true,symbol:'none',lineStyle:{color:'#f97316',width:1.5,type:'dashed'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

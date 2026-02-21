@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earnings, Analystes & Guidance : Décoder les Signaux | Lire le Marché — Partie 5/6 | Market Watch</title>
+  <meta name="description" content="Série Lire le Marché — Partie 5/6 : Earnings season, décoder un earnings report, analystes sell-side, guidance, manipulation, post-earnings drift et outils gratuits.">
+  <meta property="og:title" content="Earnings, Analystes & Guidance : Décoder les Signaux | Lire le Marché — Partie 5/6 | Market Watch">
+  <meta property="og:description" content="Comment lire un earnings report, comprendre les révisions d'analystes, détecter le sandbagging et les kitchen sink quarters, et exploiter le post-earnings drift.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-le-marche/part5-earnings-analystes/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#4f46e5; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#818cf8; color:#818cf8; }
+  .series-link.current { background:#4f46e5; color:white; border-color:#4f46e5; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; margin-right:0.75rem; }
+  details[open] summary { border-color:#4f46e5; background:#eef2ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#4f46e5; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#818cf8; }
+  .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#4f46e5; color:#4f46e5; }
+  .disclaimer-mega { background:linear-gradient(135deg, #312e81 0%, #4338ca 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #4f46e5; }
+  .disclaimer-mega h3 { color:#c7d2fe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#e0e7ff; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#818cf8; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #4f46e5; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Lire le Marché — Données Publiques & Intelligence</span>
+  <a href="/series/lire-le-marche/part1-sec-filings/" class="series-link">1 — SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" class="series-link">2 — Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" class="series-link">3 — Short Interest</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" class="series-link">4 — News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" class="series-link current">5 — Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" class="series-link">6 — Dashboard Synthèse</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Série Lire le Marché — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Earnings, Analystes & Guidance : Décoder les Signaux</h1>
+  <p class="hero-subtitle">Quatre fois par an, les entreprises révèlent leurs cartes. Revenue, EPS, guidance — chaque chiffre raconte une histoire. Apprenez à décoder les earnings reports, comprendre les analystes sell-side, et exploiter le post-earnings drift.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-chart-column"></i> Earnings Season</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bullseye"></i> Price Targets</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-microphone"></i> Conference Calls</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-forward"></i> Post-Earnings Drift</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#earnings-season" class="nav-item"><i class="fa-solid fa-calendar" style="color:#4f46e5; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Earnings Season</a>
+  <a href="#decoder" class="nav-item"><i class="fa-solid fa-magnifying-glass" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Décoder</a>
+  <a href="#analystes" class="nav-item"><i class="fa-solid fa-user-tie" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Analystes</a>
+  <a href="#manipulation" class="nav-item"><i class="fa-solid fa-mask" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Manipulation</a>
+  <a href="#outils" class="nav-item"><i class="fa-solid fa-toolbox" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Outils</a>
+  <a href="#drift" class="nav-item"><i class="fa-solid fa-arrow-trend-up" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Drift</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : EARNINGS SEASON                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="earnings-season"><i class="fa-solid fa-calendar" style="color:#4f46e5;"></i> L'earnings season</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar" style="color:#4f46e5;"></i> Le cycle trimestriel qui rythme les marchés</h2>
+
+  <p>Quatre fois par an, les entreprises cotées publient leurs résultats financiers. C'est la <strong>earnings season</strong> — une période de 6 semaines de volatilité intense où les prix s'ajustent à la réalité des chiffres. Comprendre ce cycle est fondamental pour tout investisseur.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Calendrier des earnings seasons</div>
+    <span class="formula-highlight">Q4</span> → mi-Jan à fin Fév | <span class="formula-highlight">Q1</span> → mi-Avr à fin Mai | <span class="formula-highlight">Q2</span> → mi-Jul à fin Août | <span class="formula-highlight">Q3</span> → mi-Oct à fin Nov
+  </div>
+
+  <h3>Anatomie d'une earnings season (6 semaines)</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #4f46e5; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#4f46e5;">Semaine 1-2 : Les banques ouvrent le bal</strong>
+        <span class="badge badge-blue">Kick-off</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">JPM, GS, MS, BAC, C, WFC publient en premier. Les banques donnent le ton sur l'état de l'économie : qualité du crédit, volumes de trading, perspectives de taux. Si les banques surprennent positivement, c'est un signal macro positif.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">Semaine 3-4 : Les mega-caps tech</strong>
+        <span class="badge badge-purple">Peak Activity</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">AAPL, MSFT, GOOGL, AMZN, META, NVDA — les "Magnificent 7" publient. Ces résultats pèsent 30%+ du S&P 500. Une déception d'un seul mega-cap peut faire baisser tout l'indice de 1-2%. C'est la semaine la plus volatile de l'année.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Semaine 5-6 : Le reste du marché</strong>
+        <span class="badge badge-green">Broad Market</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Mid-caps, small-caps, industriels, consumer staples. Moins médiatisé mais souvent plus riche en opportunités — les surprises positives sur les mid-caps sont moins suivies par les analystes et peuvent offrir un edge plus exploitable.</p>
+    </div>
+  </div>
+
+  <h3>Pre-earnings : ce qu'il faut surveiller AVANT la publication</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Indicateur</th><th>Où le trouver</th><th>Pourquoi c'est important</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Consensus estimates</strong></td>
+        <td>Yahoo Finance, Seeking Alpha, FactSet</td>
+        <td>La barre que l'entreprise doit franchir — le prix intègre déjà le consensus</td>
+      </tr>
+      <tr>
+        <td><strong>Whisper numbers</strong></td>
+        <td>Earnings Whispers</td>
+        <td>L'estimation officieuse du "vrai" consensus — souvent plus élevée</td>
+      </tr>
+      <tr>
+        <td><strong>Options implied move</strong></td>
+        <td>Options chain (straddle ATM)</td>
+        <td>Le mouvement attendu par le marché — si le stock bouge moins, les vendeurs de vol gagnent</td>
+      </tr>
+      <tr>
+        <td><strong>Analyst revisions (30 jours)</strong></td>
+        <td>Seeking Alpha, Zacks</td>
+        <td>Révisions à la hausse récentes = les analystes ont de l'info positive fraîche</td>
+      </tr>
+      <tr>
+        <td><strong>Insider activity</strong></td>
+        <td>OpenInsider, SEC Form 4</td>
+        <td>Insiders qui achètent avant les earnings = ils savent que ça va être bon</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le "Earnings Whisper" : le vrai benchmark</h4>
+    <p style="margin:0;">Le consensus officiel (moyenne des analystes sell-side) n'est pas le vrai benchmark. Les traders pro utilisent le <strong>"whisper number"</strong> — une estimation informelle, souvent plus élevée, qui reflète les vrais anticipations du marché. Si une entreprise bat le consensus de 2% mais rate le whisper, <strong>le stock peut quand même baisser</strong>. C'est pourquoi "beat" n'est pas synonyme de hausse.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : DÉCODER UN EARNINGS REPORT                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="decoder"><i class="fa-solid fa-magnifying-glass" style="color:#f59e0b;"></i> Décoder un earnings report</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass" style="color:#f59e0b;"></i> Les 5 chiffres clés d'un earnings report</h2>
+
+  <p>Un earnings report contient des dizaines de métriques, mais seuls <strong>5 chiffres</strong> déterminent vraiment la réaction du prix. Apprenez à les lire dans l'ordre de priorité du marché.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card" style="grid-column:span 2;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-bullhorn"></i></div>
+      <h4 style="margin:0 0 0.5rem;">1. Guidance (Forward-Looking) — LE chiffre #1</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">La guidance (prévisions pour le trimestre/année à venir) est le chiffre le PLUS important. Le marché est forward-looking : ce qui compte n'est pas ce qui s'est passé, mais ce qui va se passer. <strong>Un beat du trimestre passé + guidance abaissée = le stock baisse.</strong> Un miss + guidance relevée = le stock peut monter.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#4f46e5; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-column"></i></div>
+      <h4 style="margin:0 0 0.5rem;">2. Revenue (Chiffre d'affaires)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le revenue montre la croissance organique. Un revenue miss est plus grave qu'un EPS miss car le revenue est plus difficile à manipuler (pas d'ajustements comptables). Croissance top-line &gt; 10% = growth stock sain.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-coins"></i></div>
+      <h4 style="margin:0 0 0.5rem;">3. EPS (Bénéfice par action)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Attention : toujours vérifier GAAP vs Non-GAAP. Les entreprises tech excluent souvent le stock-based compensation (SBC) du Non-GAAP, ce qui gonfle artificiellement le bénéfice. L'écart peut être de 20-40%.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-microphone"></i></div>
+      <h4 style="margin:0 0 0.5rem;">4. Conference Call (Ton du management)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le ton du CEO et CFO pendant le Q&A est un signal puissant. "Confident", "excited", "acceleration" = bullish. "Challenging", "cautious", "headwinds" = red flag. Les algos NLP analysent ces mots en temps réel.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-puzzle-piece"></i></div>
+      <h4 style="margin:0 0 0.5rem;">5. Segment Breakdown</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Quels segments surperforment ? Un revenue global en hausse peut cacher un segment core en déclin compensé par un one-off. Ex : GOOGL revenue flat mais YouTube Ads +25% et Cloud +30% = très bullish sous la surface.</p>
+    </div>
+  </div>
+
+  <!-- CHART 1: Earnings surprise history -->
+  <h3>Earnings Surprise vs Réaction du prix — Ce n'est pas toujours logique</h3>
+  <div id="chart-earnings-surprise" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> GAAP vs Non-GAAP : le piège classique</h4>
+    <p style="margin:0;">En Q4 2024, <strong>Meta</strong> a reporté un EPS Non-GAAP de $8.02 (beat de 12%) mais un EPS GAAP de $6.73. La différence ? $4.2 milliards de stock-based compensation exclus du Non-GAAP. Autrement dit, la rémunération en actions des employés (une vraie dépense qui dilue les actionnaires) est "magiquement" effacée. <strong>Règle :</strong> regardez toujours le free cash flow — c'est le chiffre le plus difficile à manipuler.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : LES ANALYSTES SELL-SIDE                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="analystes"><i class="fa-solid fa-user-tie" style="color:#2563eb;"></i> Les analystes sell-side</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-user-tie" style="color:#2563eb;"></i> Comprendre (et relativiser) les analystes</h2>
+
+  <p>Les analystes sell-side travaillent pour les banques d'investissement (Goldman Sachs, Morgan Stanley, JPMorgan...). Leur rôle officiel est de fournir des recherches aux clients institutionnels. Mais leurs incentives créent des biais systématiques qu'il faut comprendre.</p>
+
+  <h3>La distribution asymétrique des ratings</h3>
+
+  <div class="formula-box">
+    <div class="formula-label">Distribution moyenne des ratings sell-side (2024)</div>
+    <span class="formula-highlight">Strong Buy</span> 15% | <span class="formula-highlight">Buy</span> 40% | <span class="formula-highlight">Hold</span> 38% | <span class="formula-highlight">Sell</span> 6% | <span class="formula-highlight">Strong Sell</span> 1%
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi si peu de "Sell" ?</h4>
+    <p style="margin:0;">Les analystes sell-side ont un <strong>conflit d'intérêts structurel</strong>. Leur banque fait du business avec les entreprises qu'ils couvrent (IPO, émission de dette, M&A advisory). Mettre un "Sell" sur un client potentiel = perdre des millions de fees. De plus, les entreprises coupent parfois l'accès au management pour les analystes qui sont trop négatifs. Résultat : un "Hold" de la part d'un analyste sell-side signifie souvent <strong>"Sell" en langage codé</strong>.</p>
+  </div>
+
+  <h3>Les révisions : le signal #1</h3>
+
+  <p>Le rating en lui-même est peu informatif (55% sont "Buy"). Ce qui compte, c'est le <strong>changement</strong>. Les révisions d'estimates et les changements de rating sont les signaux les plus exploitables.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Signal</th><th>Impact moyen (5 jours)</th><th>Persistance</th><th>Exploitabilité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Upgrade (Hold → Buy)</strong></td>
+        <td style="color:#16a34a;">+3 à +5%</td>
+        <td>Momentum positif 30-60 jours</td>
+        <td style="color:#16a34a;">Élevée</td>
+      </tr>
+      <tr>
+        <td><strong>Downgrade (Buy → Hold)</strong></td>
+        <td style="color:#dc2626;">-3 à -7%</td>
+        <td>Momentum négatif 30-90 jours</td>
+        <td style="color:#16a34a;">Élevée</td>
+      </tr>
+      <tr>
+        <td><strong>Initiation (Buy)</strong></td>
+        <td style="color:#16a34a;">+1 à +3%</td>
+        <td>Court terme seulement</td>
+        <td style="color:#f59e0b;">Modérée</td>
+      </tr>
+      <tr>
+        <td><strong>Price Target relevé (&gt;10%)</strong></td>
+        <td style="color:#16a34a;">+1 à +2%</td>
+        <td>Signal de tendance</td>
+        <td style="color:#f59e0b;">Modérée</td>
+      </tr>
+      <tr>
+        <td><strong>EPS estimate révisé à la hausse</strong></td>
+        <td style="color:#16a34a;">+2 à +4% (cumulatif)</td>
+        <td style="color:#16a34a;">Fort — 60-120 jours</td>
+        <td style="color:#16a34a;"><strong>Le plus élevé</strong></td>
+      </tr>
+      <tr>
+        <td><strong>EPS estimate révisé à la baisse</strong></td>
+        <td style="color:#dc2626;">-3 à -8% (cumulatif)</td>
+        <td style="color:#dc2626;">Fort — 90-180 jours</td>
+        <td style="color:#16a34a;"><strong>Le plus élevé</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 2: Analyst revision momentum -->
+  <h3>Revision Momentum — L'indicateur le plus profitable</h3>
+  <div id="chart-revisions" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Comment utiliser les révisions d'analystes</h4>
+    <p style="margin:0;"><strong>La stratégie :</strong> surveillez le "Earnings Revision Ratio" — le nombre de révisions à la hausse divisé par le total des révisions. Un ratio &gt; 0.7 (70%+ de révisions positives) est un signal d'achat fort. Un ratio &lt; 0.3 est un signal de vente. Le facteur "Revision Momentum" a été le <strong>facteur le plus profitable</strong> en stock picking sur les 20 dernières années, surpassant même le momentum de prix.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : MANIPULATION DE LA GUIDANCE                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="manipulation"><i class="fa-solid fa-mask" style="color:#dc2626;"></i> Manipulation de la guidance</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-mask" style="color:#dc2626;"></i> Les tours de passe-passe du management</h2>
+
+  <p>Les dirigeants d'entreprise ne sont pas des observateurs neutres — ils ont des stock options, des bonus liés aux résultats, et des ego impliqués. Résultat : la guidance est souvent <strong>stratégiquement manipulée</strong>. Voici les 3 techniques les plus courantes.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f59e0b; border-radius:16px;">
+      <h4 style="color:#f59e0b; margin:0 0 0.5rem;"><i class="fa-solid fa-arrow-down-short-wide"></i> 1. Sandbagging — Guider bas pour "beat" facilement</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.75rem;">La technique la plus répandue. Le management donne une guidance intentionnellement conservatrice pour s'assurer de la dépasser. Cela crée un pattern de "beats" consistants qui rassure le marché.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Comment le détecter :</strong> L'entreprise bat les estimates systématiquement (8+ trimestres consécutifs) par une marge similaire (3-5%). Les insiders ne vendent pas malgré la "surperformance".<br>
+        <strong>Exemples célèbres :</strong> Apple (bat les estimates 90%+ du temps), Amazon (guidance revenue toujours conservatrice)
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-trash-can"></i> 2. Kitchen Sink Quarter — Tout passer en pertes d'un coup</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.75rem;">Un nouveau CEO arrive et "nettoie" les comptes en passant toutes les dépréciations, write-offs et restructurations en un seul trimestre catastrophique. Objectif : repartir sur une base propre et s'attribuer la reprise.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Comment le détecter :</strong> Changement récent de CEO, charges exceptionnelles massives, restructuring costs, goodwill impairments.<br>
+        <strong>Exemples :</strong> Bob Iger retour chez Disney (Q1 2023), nouveau CEO chez Intel (2025), Satya Nadella chez Microsoft (2014)
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#f5f3ff; border:2px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.5rem;"><i class="fa-solid fa-wand-magic-sparkles"></i> 3. Non-GAAP Tricks — Faire disparaître les dépenses</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.75rem;">Les entreprises tech abusent du Non-GAAP en excluant des dépenses récurrentes (SBC, amortissement d'acquisitions, restructuring) pour présenter un bénéfice plus élevé.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Comment le détecter :</strong> Écart GAAP/Non-GAAP &gt; 20%. Le SBC en % du revenue augmente chaque année. Le free cash flow diverge du bénéfice net.<br>
+        <strong>Pire offenders :</strong> Salesforce (SBC = 10%+ du revenue), Snap (SBC = 25%+ du revenue), Palantir (SBC massif)
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le "Big Bath Accounting" : l'arnaque légale</h4>
+    <p style="margin:0;">Le "big bath" est une version extrême du kitchen sink : le management prend toutes les charges possibles en un seul trimestre pour créer une <strong>base de comparaison artificiellement basse</strong>. Le trimestre suivant, même une performance médiocre apparaît comme une "amélioration spectaculaire". C'est parfaitement légal mais profondément trompeur. <strong>Astuce :</strong> quand une entreprise annonce un trimestre catastrophique avec un nouveau CEO, regardez les résultats 2 trimestres plus tard — si la "reprise" semble miraculeuse, c'est souvent du big bath accounting.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : OUTILS ET POST-EARNINGS DRIFT                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="outils"><i class="fa-solid fa-toolbox" style="color:#9333ea;"></i> Outils gratuits</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-toolbox" style="color:#9333ea;"></i> Votre boîte à outils earnings</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Outil</th><th>Données</th><th>Coût</th><th>Pour qui</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Earnings Whispers</strong></td>
+        <td>Calendrier, whisper numbers, surprise history</td>
+        <td>Gratuit (base) / $$$</td>
+        <td>Timing des publications</td>
+      </tr>
+      <tr>
+        <td><strong>Estimize</strong></td>
+        <td>Consensus crowdsourcé (souvent plus précis que Wall Street)</td>
+        <td>Gratuit (base)</td>
+        <td>Estimation alternative</td>
+      </tr>
+      <tr>
+        <td><strong>Seeking Alpha Transcripts</strong></td>
+        <td>Transcripts complets des conference calls</td>
+        <td>Gratuit</td>
+        <td>Analyse du ton management</td>
+      </tr>
+      <tr>
+        <td><strong>Zacks</strong></td>
+        <td>Revision tracking, surprise history, rankings</td>
+        <td>Gratuit (base) / $$</td>
+        <td>Revision momentum</td>
+      </tr>
+      <tr>
+        <td><strong>Yahoo Finance</strong></td>
+        <td>Consensus estimates, calendrier, historique</td>
+        <td>Gratuit</td>
+        <td>Vue d'ensemble rapide</td>
+      </tr>
+      <tr>
+        <td><strong>FactSet / Bloomberg</strong></td>
+        <td>Données complètes, dispersion, révisions détaillées</td>
+        <td>$$$$</td>
+        <td>Institutionnels uniquement</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-divider" id="drift"><i class="fa-solid fa-arrow-trend-up" style="color:#16a34a;"></i> Le post-earnings drift</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-trend-up" style="color:#16a34a;"></i> Post-Earnings Announcement Drift (PEAD)</h2>
+
+  <p>L'une des anomalies de marché les plus documentées en finance académique : après une surprise d'earnings, le prix continue à dériver dans la même direction pendant <strong>60 à 90 jours</strong>. C'est le <strong>Post-Earnings Announcement Drift</strong> (PEAD), découvert par Ball & Brown en 1968 et toujours exploitable aujourd'hui.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Le PEAD en chiffres</div>
+    <span class="formula-highlight">Positive surprise</span> → +3 à +5% de drift sur 60 jours | <span class="formula-highlight">Negative surprise</span> → -5 à -8% de drift sur 60 jours
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Pourquoi le drift existe</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Sous-réaction initiale</strong> : le marché n'intègre que 60-70% de la surprise le jour-même</li>
+        <li><strong>Analyst revisions</strong> : les analystes ajustent leurs estimates graduellement (pas immédiatement)</li>
+        <li><strong>Fund flows</strong> : les fonds quant et momentum achètent progressivement les "beaters"</li>
+        <li><strong>Information cascade</strong> : un beat crée de la couverture médiatique → plus d'acheteurs</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Quand le drift ne fonctionne PAS</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Beat du trimestre + guidance abaissée</strong> : le drift sera négatif malgré le beat</li>
+        <li><strong>Mega-caps ultra-suivis</strong> (AAPL, MSFT) : le marché réagit plus efficacement</li>
+        <li><strong>Bear market généralisé</strong> : le flow selling domine le PEAD</li>
+        <li><strong>Beat mais valorisation extrême</strong> : le marché attendait encore mieux</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CHART 3: Post-earnings drift visualization -->
+  <h3>Post-Earnings Drift — Rendement cumulé après une surprise</h3>
+  <div id="chart-drift" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Comment exploiter le PEAD</h4>
+    <p style="margin:0;"><strong>Stratégie simple :</strong> identifiez les entreprises qui battent le consensus d'au moins 5% sur le revenue ET l'EPS, avec une guidance relevée. Achetez le lendemain de l'annonce et tenez 60 jours. Sur les 20 dernières années, cette stratégie a produit un alpha annualisé de <strong>+8% à +12%</strong> (académiquement documenté). Fonctionne mieux sur les mid-caps moins suivies par les analystes.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quel est le chiffre le plus important dans un earnings report ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La guidance (prévisions forward-looking).</strong><br>
+      Le marché est forward-looking. Les résultats du trimestre passé sont déjà intégrés dans le prix via les anticipations. Ce qui fait bouger le stock, c'est la guidance — les prévisions du management pour le prochain trimestre et l'année à venir. Un beat du trimestre passé combiné à une guidance abaissée est presque toujours négatif pour le prix.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi les analystes sell-side émettent-ils si rarement des recommandations "Sell" ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Conflit d'intérêts — leur banque fait du business (IPO, M&A, émission de dette) avec les entreprises qu'ils couvrent.</strong><br>
+      Mettre un "Sell" sur un client potentiel ou actuel de la division Investment Banking risque de coûter des millions en fees perdus. De plus, les entreprises peuvent couper l'accès au management (conference calls, réunions privées) si l'analyste est trop négatif. Résultat : seulement 7% des ratings sont Sell ou Strong Sell. Un "Hold" signifie souvent "Sell" en langage codé.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce que le "sandbagging" en matière de guidance ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La pratique de donner une guidance intentionnellement conservatrice pour être sûr de la dépasser.</strong><br>
+      Le management guide bas (par exemple, prévoir une croissance de 5% quand ils savent que ce sera 8-10%) pour créer un pattern de "beats" réguliers. Cela maintient la confiance des investisseurs et fait monter le stock graduellement. Apple est le maître du sandbagging — l'entreprise bat les estimates plus de 90% du temps.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce que le Post-Earnings Announcement Drift (PEAD) ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : L'anomalie où le prix continue à dériver dans la direction de la surprise pendant 60-90 jours après l'annonce.</strong><br>
+      Après une surprise positive, le stock gagne en moyenne encore +3 à +5% sur les 60 jours suivants (au-delà de la réaction du jour-même). Après une surprise négative, il perd -5 à -8% supplémentaires. Cette anomalie existe depuis 1968 et persiste malgré des décennies de recherche, principalement parce que les analystes ajustent leurs estimates graduellement et que les fonds momentum achètent progressivement.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quelle est la différence principale entre EPS GAAP et EPS Non-GAAP ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le Non-GAAP exclut certaines dépenses (SBC, restructuring, amortissements d'acquisitions) pour présenter un bénéfice plus élevé.</strong><br>
+      Le GAAP (Generally Accepted Accounting Principles) inclut toutes les dépenses réelles. Le Non-GAAP permet aux entreprises d'exclure des dépenses qu'elles considèrent "non-récurrentes" ou "non-cash" — mais le stock-based compensation est une vraie dépense qui dilue les actionnaires. Chez certaines tech (Snap, Palantir), l'écart GAAP/Non-GAAP peut dépasser 100%. Privilégiez le free cash flow comme mesure de profitabilité réelle.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#4f46e5;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-bullhorn"></i> <strong>La guidance est le chiffre #1</strong> — le marché est forward-looking. Un beat + guidance abaissée = baisse. Un miss + guidance relevée = hausse possible.</li>
+      <li><i class="fa-solid fa-chart-column"></i> <strong>Revenue &gt; EPS en fiabilité</strong> — le revenue est plus difficile à manipuler que l'EPS. Un revenue miss est un signal d'alarme plus grave.</li>
+      <li><i class="fa-solid fa-user-tie"></i> <strong>Les analystes sell-side sont biaisés vers le "Buy"</strong> — 55% de Buy, 7% de Sell. Un "Hold" = souvent un "Sell" déguisé. Focalisez-vous sur les révisions, pas les ratings.</li>
+      <li><i class="fa-solid fa-rotate"></i> <strong>Les révisions d'estimates sont le signal le plus profitable</strong> — un ratio de révisions positives &gt; 70% est un signal d'achat fort sur 60-120 jours.</li>
+      <li><i class="fa-solid fa-mask"></i> <strong>Attention au Non-GAAP</strong> — les entreprises excluent le SBC et les charges pour gonfler le bénéfice. Vérifiez toujours le free cash flow.</li>
+      <li><i class="fa-solid fa-arrow-trend-up"></i> <strong>Le Post-Earnings Drift est exploitable</strong> — après un beat de 5%+ avec guidance relevée, le stock dérive encore +3-5% sur 60 jours.</li>
+      <li><i class="fa-solid fa-arrow-down-short-wide"></i> <strong>Le sandbagging est la norme</strong> — la plupart des entreprises guident volontairement bas. Un beat "attendu" n'est pas un vrai beat.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/lire-le-marche/part4-news-sentiment/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">4. News, Sentiment & Social Media</div>
+  </div>
+</a>
+
+<a href="/series/lire-le-marche/part6-dashboard-synthese/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 6 sur 6</div>
+    <div class="next-title">Synthèse — Construire son Dashboard de Veille</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-le-marche/part1-sec-filings/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Short Interest</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#4f46e5; color:white; border:1px solid #4f46e5;">5. Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Dashboard Synthèse</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Lire le Marché — Données Publiques & Intelligence</strong> — Partie 5/6 : Earnings, Analystes & Guidance</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Earnings surprise vs price reaction
+(function(){
+  var dom = document.getElementById('chart-earnings-surprise');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var companies = ['NVDA\nQ3 24','META\nQ3 24','AAPL\nQ4 24','MSFT\nQ2 24','TSLA\nQ3 24','GOOGL\nQ3 24','AMZN\nQ3 24','NFLX\nQ3 24'];
+  var epsSurprise = [9.5, 12.1, 2.3, 4.8, -5.2, 7.6, 8.4, 15.3];
+  var priceReaction = [8.2, 3.5, -4.1, -3.8, -9.3, 5.1, 6.8, 11.1];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel.replace('\n',' ')+'<br/>EPS Surprise: <b>'+p[0].value+'%</b><br/>Price Reaction: <b>'+p[1].value+'%</b>';}},
+    legend:{data:['EPS Surprise (%)','Price Reaction (%)'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:companies,axisLabel:{fontSize:10,fontWeight:600,interval:0}},
+    yAxis:{type:'value',name:'%',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'EPS Surprise (%)',type:'bar',data:epsSurprise,itemStyle:{color:function(p){return p.value>=0?'#4f46e5':'#dc2626';},borderRadius:[4,4,0,0]},barWidth:'30%',barGap:'20%'},
+      {name:'Price Reaction (%)',type:'bar',data:priceReaction,itemStyle:{color:function(p){return p.value>=0?'#16a34a':'#f97316';},borderRadius:[4,4,0,0]},barWidth:'30%'}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Analyst revision momentum
+(function(){
+  var dom = document.getElementById('chart-revisions');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Août','Sep','Oct','Nov','Déc'];
+  var upRevisions = [45,52,58,48,42,55,62,68,72,65,58,50];
+  var downRevisions = [35,28,22,32,38,25,18,12,8,15,22,30];
+  var spxReturn = [1.5,2.1,3.2,1.8,0.5,2.8,3.5,4.2,4.8,3.1,2.5,1.2];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Révisions hausse (%)','Révisions baisse (%)','S&P 500 Return (%)'],bottom:0},
+    grid:{left:'8%',right:'8%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:11,fontWeight:600}},
+    yAxis:[
+      {type:'value',name:'% des révisions',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      {type:'value',name:'Rendement (%)',axisLabel:{fontSize:10},splitLine:{show:false}}
+    ],
+    series:[
+      {name:'Révisions hausse (%)',type:'bar',stack:'rev',data:upRevisions,itemStyle:{color:'#16a34a',borderRadius:[4,4,0,0]},barWidth:'40%'},
+      {name:'Révisions baisse (%)',type:'bar',stack:'rev',data:downRevisions,itemStyle:{color:'#dc2626'}},
+      {name:'S&P 500 Return (%)',type:'line',data:spxReturn,smooth:true,symbol:'circle',symbolSize:6,lineStyle:{color:'#4f46e5',width:3},itemStyle:{color:'#4f46e5'},yAxisIndex:1}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Post-earnings drift
+(function(){
+  var dom = document.getElementById('chart-drift');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var days = [];
+  for(var i=0;i<=90;i+=5) days.push('J+'+i);
+  var positiveDrift = [0,2.8,3.5,4.0,4.3,4.5,4.8,5.0,5.2,5.5,5.6,5.7,5.8,5.9,6.0,6.1,6.2,6.2,6.3];
+  var negativeDrift = [0,-3.5,-4.5,-5.2,-5.8,-6.2,-6.5,-6.8,-7.0,-7.2,-7.5,-7.7,-7.8,-7.9,-8.0,-8.0,-8.1,-8.1,-8.2];
+  var neutral = [0,0.2,0.1,-0.1,0.3,0.2,0.0,-0.2,0.1,0.3,0.2,0.0,-0.1,0.2,0.1,-0.1,0.0,0.1,0.2];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){var s=p[0].axisValueLabel;p.forEach(function(e){s+='<br/>'+e.marker+e.seriesName+': <b>'+e.value+'%</b>';});return s;}},
+    legend:{data:['Surprise positive (>5%)','Surprise neutre (-2% à +2%)','Surprise négative (<-5%)'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:days,axisLabel:{fontSize:10,fontWeight:600}},
+    yAxis:{type:'value',name:'Rendement cumulé (%)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Surprise positive (>5%)',type:'line',data:positiveDrift,smooth:true,symbol:'none',lineStyle:{color:'#16a34a',width:3},areaStyle:{color:'rgba(22,163,74,0.08)'}},
+      {name:'Surprise neutre (-2% à +2%)',type:'line',data:neutral,smooth:true,symbol:'none',lineStyle:{color:'#94a3b8',width:2,type:'dashed'}},
+      {name:'Surprise négative (<-5%)',type:'line',data:negativeDrift,smooth:true,symbol:'none',lineStyle:{color:'#dc2626',width:3},areaStyle:{color:'rgba(220,38,38,0.08)'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

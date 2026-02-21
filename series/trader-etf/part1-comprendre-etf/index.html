@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprendre les ETF — Le Couteau Suisse de l'Investisseur | Trader les ETF — Partie 1/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les ETF — Partie 1/6 : Qu'est-ce qu'un ETF, structure, coûts, émetteurs, liquidité, domiciliation, physique vs synthétique. Le guide complet pour débuter.">
+  <meta property="og:title" content="Comprendre les ETF — Le Couteau Suisse de l'Investisseur | Trader les ETF — Partie 1/6 | Market Watch">
+  <meta property="og:description" content="Tout comprendre sur les ETF : structure AP, NAV vs prix, tracking error, TER, physique vs synthétique, domiciliation US vs UCITS, et les ETF incontournables.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-etf/part1-comprendre-etf/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#059669; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#34d399; color:#34d399; }
+  .series-link.current { background:#059669; color:white; border-color:#059669; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-teal { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#059669; margin-right:0.75rem; }
+  details[open] summary { border-color:#059669; background:#ecfdf5; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#059669; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#34d399; }
+  .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%); border:1px solid #059669; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#059669; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(5,150,105,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#059669; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(5,150,105,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#059669; color:#059669; }
+  .disclaimer-mega { background:linear-gradient(135deg, #064e3b 0%, #047857 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #059669; }
+  .disclaimer-mega h3 { color:#a7f3d0; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#d1fae5; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#34d399; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #059669; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Trader les ETF</span>
+  <a href="/series/trader-etf/part1-comprendre-etf/" class="series-link current">1 — Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" class="series-link">2 — Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" class="series-link">3 — Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" class="series-link">4 — Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" class="series-link">5 — Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" class="series-link">6 — Portefeuille</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Série Trader les ETF — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Comprendre les ETF — Le Couteau Suisse de l'Investisseur</h1>
+  <p class="hero-subtitle">Les ETF ont révolutionné l'investissement. Comprendre leur structure, leurs coûts et leur fonctionnement, c'est poser les fondations de tout portefeuille moderne. De SPY à GLD, découvrez l'outil financier le plus puissant du siècle.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-cubes"></i> Structure</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-coins"></i> Coûts</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-building-columns"></i> Émetteurs</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-water"></i> Liquidité</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-globe"></i> Domiciliation</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#definition" class="nav-item"><i class="fa-solid fa-cubes" style="color:#059669; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Qu'est-ce qu'un ETF</a>
+  <a href="#vs-fonds" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> ETF vs Fonds</a>
+  <a href="#structure" class="nav-item"><i class="fa-solid fa-gears" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Structure</a>
+  <a href="#emetteurs" class="nav-item"><i class="fa-solid fa-building-columns" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Émetteurs</a>
+  <a href="#couts" class="nav-item"><i class="fa-solid fa-receipt" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Coûts</a>
+  <a href="#physique-synthetique" class="nav-item"><i class="fa-solid fa-arrows-split-up-and-left" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Physique vs Synth.</a>
+  <a href="#incontournables" class="nav-item"><i class="fa-solid fa-star" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Incontournables</a>
+  <a href="#liquidite" class="nav-item"><i class="fa-solid fa-water" style="color:#059669; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Liquidité</a>
+  <a href="#domiciliation" class="nav-item"><i class="fa-solid fa-globe" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Domiciliation</a>
+  <a href="#lire-fiche" class="nav-item"><i class="fa-solid fa-file-lines" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Lire une fiche</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : QU'EST-CE QU'UN ETF                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="definition"><i class="fa-solid fa-cubes" style="color:#059669;"></i> Qu'est-ce qu'un ETF</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-cubes" style="color:#059669;"></i> Exchange-Traded Fund : le fonds qui se trade comme une action</h2>
+
+  <p>Un <strong>ETF</strong> (Exchange-Traded Fund) est un fonds d'investissement coté en bourse qui réplique la performance d'un indice, d'un panier d'actifs ou d'une stratégie. Contrairement à un fonds traditionnel, vous pouvez l'acheter et le vendre <strong>à tout moment pendant les heures de marché</strong>, exactement comme une action.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'analogie du panier de courses</h4>
+    <p style="margin:0;">Imaginez que vous voulez investir dans les 500 plus grandes entreprises américaines. Acheter les 500 actions individuellement coûterait des dizaines de milliers d'euros en frais. Un ETF comme <strong>SPY</strong> vous permet d'acheter un seul titre qui contient les 500 — pour le prix d'une seule action (~$600). C'est comme acheter un panier tout prêt au supermarché au lieu de chaque ingrédient séparément.</p>
+  </div>
+
+  <h3>Pourquoi les ETF ont conquis le monde</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#059669; margin-bottom:0.5rem;"><i class="fa-solid fa-piggy-bank"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Coûts ultra-bas</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le TER moyen d'un ETF est de 0.03% à 0.20%, contre 1% à 2% pour un fonds actif. Sur 30 ans, cette différence représente des dizaines de milliers d'euros.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-shield-halved"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Diversification instantanée</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Un seul ETF peut contenir des centaines ou milliers de titres. VTI contient +4,000 actions américaines. Un investissement, une diversification maximale.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Liquidité intraday</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Achetable et vendable à chaque seconde pendant les heures de marché. Prix en temps réel, carnet d'ordres, options disponibles sur les plus gros ETF.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-eye"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Transparence totale</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Les holdings sont publiés quotidiennement. Vous savez exactement ce que vous possédez, contrairement à beaucoup de fonds mutuels qui publient trimestriellement.</p>
+    </div>
+  </div>
+
+  <!-- CHART 1: ETF market growth -->
+  <h3>Croissance du marché des ETF (2005-2025)</h3>
+  <div id="chart-etf-growth" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : ETF vs FONDS vs ACTIONS                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="vs-fonds"><i class="fa-solid fa-scale-balanced" style="color:#2563eb;"></i> ETF vs Fonds Mutuels vs Actions</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#2563eb;"></i> Comparaison : ETF, fonds mutuels, actions individuelles</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Critère</th><th>ETF</th><th>Fonds mutuel</th><th>Action individuelle</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Négociation</strong></td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-check"></i> Intraday, temps réel</td>
+        <td style="color:#f59e0b;">1x/jour (NAV fin de journée)</td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-check"></i> Intraday, temps réel</td>
+      </tr>
+      <tr>
+        <td><strong>Frais annuels</strong></td>
+        <td style="color:#16a34a;">0.03% — 0.50%</td>
+        <td style="color:#dc2626;">0.50% — 2.00%</td>
+        <td style="color:#16a34a;">0% (pas de frais de gestion)</td>
+      </tr>
+      <tr>
+        <td><strong>Diversification</strong></td>
+        <td style="color:#16a34a;">Excellente (centaines de titres)</td>
+        <td style="color:#16a34a;">Excellente</td>
+        <td style="color:#dc2626;">Nulle (1 titre = 1 risque)</td>
+      </tr>
+      <tr>
+        <td><strong>Investissement minimum</strong></td>
+        <td style="color:#16a34a;">1 part (~$5 à ~$600)</td>
+        <td style="color:#f59e0b;">Souvent $1,000 — $10,000</td>
+        <td style="color:#16a34a;">1 action</td>
+      </tr>
+      <tr>
+        <td><strong>Transparence</strong></td>
+        <td style="color:#16a34a;">Holdings quotidiens</td>
+        <td style="color:#f59e0b;">Holdings trimestriels</td>
+        <td style="color:#16a34a;">Totale (vous détenez l'action)</td>
+      </tr>
+      <tr>
+        <td><strong>Fiscalité</strong></td>
+        <td style="color:#16a34a;">Efficiente (création/rachat in-kind)</td>
+        <td style="color:#dc2626;">Distributions de capital gains</td>
+        <td style="color:#f59e0b;">Dépend de votre stratégie</td>
+      </tr>
+      <tr>
+        <td><strong>Options disponibles</strong></td>
+        <td style="color:#16a34a;">Oui (SPY, QQQ, IWM...)</td>
+        <td style="color:#dc2626;">Non</td>
+        <td style="color:#16a34a;">Oui</td>
+      </tr>
+      <tr>
+        <td><strong>Vente à découvert</strong></td>
+        <td style="color:#16a34a;">Oui</td>
+        <td style="color:#dc2626;">Non</td>
+        <td style="color:#16a34a;">Oui</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Verdict</h4>
+    <p style="margin:0;">Pour la grande majorité des investisseurs, les ETF sont le véhicule optimal : <strong>coûts minimaux + diversification maximale + liquidité + transparence</strong>. Les actions individuelles sont pour ceux qui veulent faire du stock picking actif. Les fonds mutuels n'ont presque plus d'avantage — sauf dans certaines niches (obligations municipales, stratégies alternatives).</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : STRUCTURE AP / NAV                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="structure"><i class="fa-solid fa-gears" style="color:#f59e0b;"></i> Structure & Fonctionnement</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gears" style="color:#f59e0b;"></i> Le mécanisme de création/rachat</h2>
+
+  <p>La magie des ETF repose sur un mécanisme ingénieux : le processus de <strong>création/rachat</strong> par les <strong>Authorized Participants (AP)</strong>. Ce mécanisme garantit que le prix de l'ETF reste très proche de la valeur réelle de ses actifs sous-jacents.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Arbitrage AP</div>
+    Si <span class="formula-highlight">Prix ETF</span> > <span class="formula-highlight">NAV</span> → AP crée des parts (prix baisse) | Si <span class="formula-highlight">Prix ETF</span> < <span class="formula-highlight">NAV</span> → AP rachète des parts (prix monte)
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #059669; border-radius:0 12px 12px 0;">
+      <strong style="color:#059669;">Étape 1 — Création de parts</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">L'AP (une grande banque comme Goldman Sachs ou JP Morgan) achète le panier d'actions sous-jacentes sur le marché et les livre à l'émetteur de l'ETF (ex: BlackRock). En échange, l'émetteur crée de nouvelles parts d'ETF que l'AP peut vendre sur le marché.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <strong style="color:#f59e0b;">Étape 2 — Rachat de parts</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Processus inverse : l'AP rachète des parts d'ETF sur le marché et les renvoie à l'émetteur, qui lui restitue le panier d'actions sous-jacentes. Cela réduit le nombre de parts en circulation.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <strong style="color:#2563eb;">Résultat — Arbitrage automatique</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Ce mécanisme d'arbitrage maintient le prix de l'ETF aligné sur sa NAV (Net Asset Value). Si l'ETF se trade avec une prime (au-dessus de la NAV), les AP créent des parts pour profiter de la différence. Si l'ETF est en décote, ils rachètent. L'écart (premium/discount) est généralement inférieur à <strong>0.05%</strong> pour les grands ETF.</p>
+    </div>
+  </div>
+
+  <h3>NAV vs Prix de marché — Le tracking error</h3>
+
+  <p>Le <strong>tracking error</strong> mesure l'écart entre la performance de l'ETF et celle de son indice de référence. Un bon ETF a un tracking error inférieur à 0.10% par an. Causes principales : frais de gestion (TER), coûts de transaction du fonds, dividendes en attente, et prêt de titres.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Premium vs Discount : quand s'inquiéter ?</h4>
+    <p style="margin:0;">Pour les ETF liquides (SPY, QQQ), le premium/discount est négligeable (~0.01%). Mais pour les ETF sur marchés illiquides (obligations high yield, marchés émergents exotiques), l'écart peut atteindre <strong>1% à 5%</strong> en période de stress. En mars 2020, certains ETF obligataires comme HYG se sont tradés avec une décote de <strong>-5%</strong> par rapport à leur NAV pendant plusieurs jours. C'est un risque réel à comprendre.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : ÉMETTEURS                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="emetteurs"><i class="fa-solid fa-building-columns" style="color:#9333ea;"></i> Les grands émetteurs</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building-columns" style="color:#9333ea;"></i> Les 4 géants qui dominent le marché</h2>
+
+  <p>Le marché des ETF est dominé par <strong>trois titans</strong> qui contrôlent plus de 75% des actifs sous gestion mondiaux. Leurs marques sont devenues des raccourcis pour des classes d'actifs entières.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#0f172a; margin-bottom:0.5rem;"><i class="fa-solid fa-crown"></i></div>
+      <h4 style="margin:0 0 0.25rem;">BlackRock (iShares)</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">~$3.9 trillions AUM | 400+ ETF</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le plus gros gérant d'actifs au monde. Ses ETF iShares couvrent tout : IVV (S&P 500), IEMG (Emerging), AGG (obligations US), IBIT (Bitcoin). Domination mondiale, y compris en Europe (UCITS).</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-ship"></i></div>
+      <h4 style="margin:0 0 0.25rem;">Vanguard</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">~$2.7 trillions AUM | 80+ ETF</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le pionnier des fonds indiciels, fondé par Jack Bogle. Les frais les plus bas du marché : VTI (0.03%), VOO (0.03%). Structure mutualiste unique — l'entreprise appartient à ses fonds (donc à ses investisseurs).</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-spider"></i></div>
+      <h4 style="margin:0 0 0.25rem;">State Street (SPDR)</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">~$1.3 trillions AUM | 130+ ETF</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">L'inventeur du premier ETF américain : SPY (1993). SPY est l'ETF le plus tradé au monde (~$30B/jour). Aussi connu pour les ETF sectoriels Select Sector (XLF, XLE, XLK...).</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.25rem;">Invesco</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">~$570 milliards AUM | 200+ ETF</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Connu pour QQQ (Nasdaq-100), le 2ème ETF le plus tradé au monde. Aussi DBC (commodités), RSP (S&P 500 equal-weight), et de nombreux ETF thématiques et smart beta.</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: Top 10 ETF by AUM treemap -->
+  <h3>Top 10 des ETF mondiaux par actifs sous gestion</h3>
+  <div id="chart-aum-treemap" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : COÛTS                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="couts"><i class="fa-solid fa-receipt" style="color:#dc2626;"></i> Les coûts d'un ETF</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-receipt" style="color:#dc2626;"></i> TER, spread, tracking difference : les vrais coûts</h2>
+
+  <p>Le coût affiché d'un ETF (le TER) n'est que la partie visible de l'iceberg. Pour connaître le coût réel, il faut considérer trois éléments.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-tag"></i> TER (Total Expense Ratio)</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">Les frais de gestion annuels prélevés automatiquement sur la NAV du fonds. Inclut les frais d'administration, de custody, d'audit, et la marge de l'émetteur. Pour un ETF S&P 500 : <strong>0.03% (VOO) à 0.09% (SPY)</strong>. Sur $100,000 investis, la différence = $60/an.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f59e0b; border-radius:16px;">
+      <h4 style="color:#f59e0b; margin:0 0 0.75rem;"><i class="fa-solid fa-arrows-left-right"></i> Spread Bid/Ask</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">La différence entre le prix d'achat et le prix de vente. C'est un coût caché payé à chaque transaction. SPY : spread ~$0.01 (0.002%). Un ETF exotique sur le Vietnam : spread ~$0.30 (1.5%). <strong>Plus l'ETF est liquide, plus le spread est serré.</strong></p>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-chart-line"></i> Tracking Difference</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">L'écart réel entre la performance de l'ETF et celle de son indice sur un an. Souvent <strong>supérieur au TER</strong> car il inclut les coûts de transaction, le cash drag (dividendes non immédiatement réinvestis), et l'impact fiscal. Parfois la tracking difference est <strong>négative</strong> (l'ETF bat son indice) grâce au prêt de titres.</p>
+    </div>
+  </div>
+
+  <!-- CHART 3: TER comparison bar chart -->
+  <h3>Comparaison des TER par type d'ETF</h3>
+  <div id="chart-ter-comparison" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+
+  <div class="formula-box">
+    <div class="formula-label">Coût réel annuel d'un ETF</div>
+    Coût réel = <span class="formula-highlight">TER</span> + <span class="formula-highlight">Tracking Difference</span> + <span class="formula-highlight">Spread × Fréquence de trading</span>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : PHYSIQUE vs SYNTHÉTIQUE                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="physique-synthetique"><i class="fa-solid fa-arrows-split-up-and-left" style="color:#0891b2;"></i> Physique vs Synthétique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-split-up-and-left" style="color:#0891b2;"></i> ETF physique vs synthétique : deux méthodes de réplication</h2>
+
+  <p>Tous les ETF ne détiennent pas physiquement les actifs qu'ils répliquent. Il existe deux méthodes fondamentalement différentes.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-box"></i> Réplication physique</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Complète</strong> : achète toutes les actions de l'indice (SPY détient les 500 actions du S&P 500)</li>
+        <li><strong>Échantillonnée</strong> : achète un échantillon représentatif (utile pour indices à 3,000+ titres)</li>
+        <li><strong>Avantage</strong> : transparence, pas de risque de contrepartie</li>
+        <li><strong>Inconvénient</strong> : coûts de transaction plus élevés pour les indices larges</li>
+        <li><strong>Exemples</strong> : SPY, VOO, IVV, QQQ, VTI</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-repeat"></i> Réplication synthétique (swap)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Mécanisme</strong> : l'ETF signe un contrat swap avec une banque qui promet de payer la performance de l'indice</li>
+        <li><strong>Avantage</strong> : tracking error quasi nul, accès à des marchés difficiles</li>
+        <li><strong>Risque</strong> : risque de contrepartie — si la banque fait faillite, l'ETF peut perdre jusqu'à 10% de sa NAV</li>
+        <li><strong>Courant en Europe</strong> : beaucoup d'ETF UCITS sur indices US utilisent des swaps pour éviter la retenue à la source US</li>
+        <li><strong>Exemples</strong> : Lyxor, Amundi (certains), Xtrackers</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le risque de contrepartie en pratique</h4>
+    <p style="margin:0;">La réglementation UCITS limite l'exposition au risque de contrepartie à <strong>10% de la NAV</strong> par contrepartie. De plus, la plupart des ETF synthétiques utilisent du collatéral (obligations d'État, actions blue-chip) pour sécuriser le swap. En pratique, le risque réel est faible — mais il n'est pas nul. Lors de la faillite de Lehman Brothers en 2008, certains ETF synthétiques ont été temporairement impactés.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : LES ETF INCONTOURNABLES                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="incontournables"><i class="fa-solid fa-star" style="color:#f97316;"></i> Les ETF incontournables</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#f97316;"></i> Les 10 ETF que tout investisseur doit connaître</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>ETF</th><th>Indice</th><th>AUM</th><th>TER</th><th>Usage</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>SPY</strong></td>
+        <td>S&P 500</td>
+        <td>$570B</td>
+        <td>0.09%</td>
+        <td>Le plus tradé au monde. Idéal pour options et trading court terme.</td>
+      </tr>
+      <tr>
+        <td><strong>QQQ</strong></td>
+        <td>Nasdaq-100</td>
+        <td>$310B</td>
+        <td>0.20%</td>
+        <td>Exposition tech/growth. Les 100 plus grosses valeurs non-financières du Nasdaq.</td>
+      </tr>
+      <tr>
+        <td><strong>IWM</strong></td>
+        <td>Russell 2000</td>
+        <td>$70B</td>
+        <td>0.19%</td>
+        <td>Small caps US. Proxy de l'économie domestique américaine.</td>
+      </tr>
+      <tr>
+        <td><strong>VTI</strong></td>
+        <td>CRSP US Total Market</td>
+        <td>$430B</td>
+        <td>0.03%</td>
+        <td>4,000+ actions US. Le marché entier dans un seul ETF. Buy & hold idéal.</td>
+      </tr>
+      <tr>
+        <td><strong>EFA</strong></td>
+        <td>MSCI EAFE</td>
+        <td>$60B</td>
+        <td>0.32%</td>
+        <td>Marchés développés hors US (Europe, Japon, Australie). Diversification géographique.</td>
+      </tr>
+      <tr>
+        <td><strong>EEM</strong></td>
+        <td>MSCI Emerging Markets</td>
+        <td>$20B</td>
+        <td>0.68%</td>
+        <td>Marchés émergents (Chine, Inde, Brésil, Taïwan). Plus risqué, plus de potentiel.</td>
+      </tr>
+      <tr>
+        <td><strong>GLD</strong></td>
+        <td>Or (spot)</td>
+        <td>$75B</td>
+        <td>0.40%</td>
+        <td>Or physique. Hedge contre l'inflation et le risque systémique.</td>
+      </tr>
+      <tr>
+        <td><strong>TLT</strong></td>
+        <td>Treasuries 20Y+</td>
+        <td>$55B</td>
+        <td>0.15%</td>
+        <td>Obligations longues US. Safe haven. Très sensible aux taux.</td>
+      </tr>
+      <tr>
+        <td><strong>HYG</strong></td>
+        <td>iBoxx High Yield Corporate</td>
+        <td>$15B</td>
+        <td>0.49%</td>
+        <td>Obligations high yield (junk bonds). Rendement élevé, corrélé aux actions.</td>
+      </tr>
+      <tr>
+        <td><strong>IBIT</strong></td>
+        <td>Bitcoin (spot)</td>
+        <td>$55B</td>
+        <td>0.25%</td>
+        <td>Bitcoin spot ETF (approuvé 2024). Exposition crypto régulée sans wallet.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : LIQUIDITÉ                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="liquidite"><i class="fa-solid fa-water" style="color:#059669;"></i> Comprendre la liquidité</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-water" style="color:#059669;"></i> Volume vs AUM : le piège de la liquidité apparente</h2>
+
+  <p>Beaucoup d'investisseurs débutants pensent qu'un ETF avec un faible volume de trading est "illiquide". C'est une erreur fondamentale. La liquidité d'un ETF vient de <strong>deux sources</strong> :</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#ecfdf5; border:2px solid #059669; border-radius:16px;">
+      <h4 style="color:#059669; margin:0 0 0.5rem;"><i class="fa-solid fa-chart-bar"></i> Liquidité primaire (sous-jacente)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">La liquidité des actifs détenus par l'ETF. Un ETF S&P 500 est extrêmement liquide car les 500 actions sous-jacentes le sont. Même si l'ETF lui-même a peu de volume, un AP peut créer/racheter des parts instantanément.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f8fafc; border:2px solid #94a3b8; border-radius:16px;">
+      <h4 style="color:#475569; margin:0 0 0.5rem;"><i class="fa-solid fa-arrows-left-right"></i> Liquidité secondaire (marché)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Le volume et le spread bid/ask sur le marché. SPY trade $30B/jour avec un spread de 0.002%. Un ETF niche peut ne trader que $1M/jour avec un spread de 0.3%.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La règle du spread, pas du volume</h4>
+    <p style="margin:0;">Oubliez le volume. Regardez le <strong>spread bid/ask</strong>. Un ETF avec un volume de $5M/jour mais un spread de 0.05% est parfaitement tradable pour un investisseur particulier. Un spread supérieur à <strong>0.30%</strong> doit vous alerter — vous payez 0.30% à chaque aller-retour. Pour un holding à long terme (buy & hold), même un spread de 0.50% est acceptable puisque vous ne le payez qu'une fois à l'achat.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 9 : DOMICILIATION                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="domiciliation"><i class="fa-solid fa-globe" style="color:#d97706;"></i> Domiciliation : US vs UCITS</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-globe" style="color:#d97706;"></i> ETF US (SPY) vs ETF UCITS européens (CSPX)</h2>
+
+  <p>Depuis la réglementation <strong>PRIIPs/MiFID II</strong> (2018), les investisseurs européens ne peuvent plus acheter directement les ETF domiciliés aux États-Unis. Ils doivent utiliser les versions UCITS, domiciliées en Irlande ou au Luxembourg.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Critère</th><th>ETF US</th><th>ETF UCITS (Europe)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Exemples</strong></td>
+        <td>SPY, QQQ, IWM, VTI, GLD</td>
+        <td>CSPX, EQQQ, IWDA, VWRL, SGLD</td>
+      </tr>
+      <tr>
+        <td><strong>Domiciliation</strong></td>
+        <td>États-Unis</td>
+        <td>Irlande (IE) ou Luxembourg (LU)</td>
+      </tr>
+      <tr>
+        <td><strong>Accès UE</strong></td>
+        <td style="color:#dc2626;">Bloqué (PRIIPs)</td>
+        <td style="color:#16a34a;">Accessible</td>
+      </tr>
+      <tr>
+        <td><strong>Retenue à la source US</strong></td>
+        <td>30% sur dividendes (15% avec convention)</td>
+        <td>15% (traité fiscal Irlande-US)</td>
+      </tr>
+      <tr>
+        <td><strong>Capitalisant/Distribuant</strong></td>
+        <td>Toujours distribuant</td>
+        <td>Choix : Acc (capitalisant) ou Dist</td>
+      </tr>
+      <tr>
+        <td><strong>Liquidité</strong></td>
+        <td style="color:#16a34a;">Excellente (SPY: $30B/jour)</td>
+        <td style="color:#f59e0b;">Bonne (CSPX: ~$500M/jour)</td>
+      </tr>
+      <tr>
+        <td><strong>TER</strong></td>
+        <td>Souvent plus bas (SPY: 0.09%)</td>
+        <td>Comparable (CSPX: 0.07%)</td>
+      </tr>
+      <tr>
+        <td><strong>Devise</strong></td>
+        <td>USD uniquement</td>
+        <td>USD, EUR, GBP, CHF...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> L'astuce de l'Irlande</h4>
+    <p style="margin:0;">Les ETF domiciliés en <strong>Irlande</strong> bénéficient d'un traité fiscal avec les États-Unis qui réduit la retenue à la source sur les dividendes US de 30% à 15%. C'est pourquoi la quasi-totalité des ETF UCITS répliquant des indices US sont domiciliés en Irlande (code ISIN commençant par "IE"). Un ETF capitalisant irlandais (Acc) est souvent la solution <strong>la plus fiscalement efficiente</strong> pour un investisseur européen.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 10 : LIRE UNE FICHE ETF                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="lire-fiche"><i class="fa-solid fa-file-lines" style="color:#16a34a;"></i> Lire une fiche ETF</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-file-lines" style="color:#16a34a;"></i> Comment décrypter une fiche ETF en 5 minutes</h2>
+
+  <p>Chaque émetteur publie une fiche produit (factsheet) pour ses ETF. Voici les éléments clés à vérifier systématiquement avant d'investir.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#059669; margin-bottom:0.5rem;">1</div>
+      <h4 style="margin:0 0 0.5rem;">Holdings (Top 10)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Vérifiez la concentration. Si les 10 premiers titres représentent +40% du fonds, vous n'êtes pas vraiment diversifié. QQQ : top 10 = 52%. SPY : top 10 = 35%.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#2563eb; margin-bottom:0.5rem;">2</div>
+      <h4 style="margin:0 0 0.5rem;">Sector Breakdown</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">La répartition sectorielle révèle le biais de l'ETF. QQQ = 50% tech. SPY = 30% tech. Connaître le biais, c'est comprendre quand l'ETF surperformera ou sous-performera.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#f59e0b; margin-bottom:0.5rem;">3</div>
+      <h4 style="margin:0 0 0.5rem;">Geographic Exposure</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">D'où viennent les revenus vs où sont domiciliées les entreprises. SPY = 100% US domicilié, mais ~40% des revenus viennent de l'international.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#dc2626; margin-bottom:0.5rem;">4</div>
+      <h4 style="margin:0 0 0.5rem;">Performance vs Benchmark</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Comparez la performance réelle à l'indice de référence. La tracking difference doit être proche du TER. Si elle est bien supérieure, l'ETF a des coûts cachés.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#9333ea; margin-bottom:0.5rem;">5</div>
+      <h4 style="margin:0 0 0.5rem;">AUM & Volume</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Un AUM minimum de $100M est recommandé (risque de fermeture en dessous). Le volume quotidien détermine le spread. Visez $10M+/jour pour un spread serré.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:1.5rem; color:#0891b2; margin-bottom:0.5rem;">6</div>
+      <h4 style="margin:0 0 0.5rem;">Méthode de réplication</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Physique complète, échantillonnée ou synthétique ? Chaque méthode a ses avantages. Pour un investisseur débutant, la réplication physique est la plus simple à comprendre.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Qu'est-ce qu'un Authorized Participant (AP) et quel est son rôle ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un AP est une grande institution financière (banque, market maker) autorisée à créer et racheter des parts d'ETF directement avec l'émetteur.</strong><br>
+      Son rôle est de maintenir le prix de l'ETF aligné sur sa NAV grâce à l'arbitrage. Si l'ETF se trade au-dessus de sa NAV (premium), l'AP crée de nouvelles parts en livrant le panier d'actions sous-jacentes. Si l'ETF est en dessous de sa NAV (discount), l'AP rachète des parts pour récupérer les actions sous-jacentes. Ce mécanisme est ce qui distingue fondamentalement un ETF d'un fonds fermé (closed-end fund).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi un ETF UCITS irlandais est-il souvent préférable à un ETF US pour un investisseur européen ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Pour trois raisons : l'accès réglementaire, la fiscalité, et l'option capitalisante.</strong><br>
+      Premièrement, les ETF US sont bloqués par la réglementation PRIIPs pour les investisseurs européens. Deuxièmement, l'Irlande bénéficie d'un traité fiscal avec les US réduisant la retenue à la source de 30% à 15%. Troisièmement, les ETF UCITS offrent des versions capitalisantes (Acc) qui réinvestissent automatiquement les dividendes, évitant l'imposition annuelle des dividendes dans certaines juridictions.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : SPY et VOO répliquent tous les deux le S&P 500. Quelle est la différence principale ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le TER et l'utilisation optimale.</strong><br>
+      SPY (State Street) a un TER de 0.09% et est le plus tradé au monde avec le meilleur spread et les options les plus liquides — c'est l'ETF des traders. VOO (Vanguard) a un TER de 0.03%, trois fois moins cher — c'est l'ETF des investisseurs long terme. Sur $100,000 investis pendant 30 ans, la différence de TER représente environ $5,000. Si vous faites du buy & hold, prenez VOO. Si vous tradez activement ou utilisez des options, prenez SPY.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel est le risque spécifique d'un ETF synthétique (swap-based) ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le risque de contrepartie.</strong><br>
+      Un ETF synthétique ne détient pas les actifs de l'indice — il signe un contrat swap avec une banque. Si cette banque fait faillite, l'ETF peut perdre jusqu'à 10% de sa NAV (limite UCITS). En pratique, ce risque est atténué par le collatéral que la banque doit fournir. Mais il n'est pas nul, comme l'a montré la faillite de Lehman Brothers en 2008. Pour un investisseur prudent, la réplication physique est préférable.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Pourquoi le spread bid/ask est-il plus important que le volume pour évaluer la liquidité d'un ETF ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce que la liquidité d'un ETF vient principalement de ses actifs sous-jacents, pas de son volume de trading.</strong><br>
+      Un ETF peut avoir un faible volume mais un spread très serré si ses sous-jacents sont liquides. L'AP peut créer/racheter des parts instantanément en s'appuyant sur la liquidité des actifs détenus. Le volume ne mesure que les transactions passées, tandis que le spread mesure le coût réel d'exécution au moment présent. Un ETF S&P 500 avec $10M de volume quotidien aura un spread identique à un ETF S&P 500 avec $30B de volume.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-cubes"></i> <strong>Un ETF est un fonds coté en bourse</strong> qui réplique un indice ou un panier d'actifs. Achetable et vendable comme une action, avec des frais minimes.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>ETF > Fonds mutuels</strong> pour la plupart des investisseurs : coûts plus bas, liquidité intraday, transparence quotidienne, efficience fiscale.</li>
+      <li><i class="fa-solid fa-gears"></i> <strong>Le mécanisme AP maintient le prix aligné sur la NAV</strong> grâce à l'arbitrage création/rachat. C'est le cœur du fonctionnement d'un ETF.</li>
+      <li><i class="fa-solid fa-receipt"></i> <strong>Le TER n'est pas le coût total</strong> — ajoutez la tracking difference et le spread bid/ask pour connaître le vrai coût. VOO (0.03%) vs SPY (0.09%) fait une vraie différence sur 30 ans.</li>
+      <li><i class="fa-solid fa-arrows-split-up-and-left"></i> <strong>Physique vs synthétique</strong> : la réplication physique est plus transparente, la synthétique offre un meilleur tracking mais ajoute un risque de contrepartie.</li>
+      <li><i class="fa-solid fa-water"></i> <strong>Le spread est plus important que le volume</strong> pour évaluer la liquidité. La liquidité primaire (sous-jacents) est plus fiable que la liquidité secondaire (volume affiché).</li>
+      <li><i class="fa-solid fa-globe"></i> <strong>UCITS irlandais pour les européens</strong> : accès réglementaire, avantage fiscal (15% vs 30% de retenue), et option capitalisante (Acc) pour l'efficience maximale.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne préjugent pas des performances futures.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-etf/part2-classes-actifs/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 2 sur 6</div>
+    <div class="next-title">ETF par Classe d'Actifs — Actions, Obligations, Commodités</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-etf/part1-comprendre-etf/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#059669; color:white; border:1px solid #059669;">1. Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Portefeuille</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les ETF</strong> — Partie 1/6 : Comprendre les ETF</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: ETF market growth timeline
+(function(){
+  var dom = document.getElementById('chart-etf-growth');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var years = ['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'];
+  var aum = [0.4,0.6,0.8,0.7,1.0,1.3,1.4,1.8,2.3,2.7,2.9,3.4,4.7,4.7,6.2,7.7,10.0,9.5,11.5,14.5,15.8];
+  var nbEtf = [700,900,1100,1600,1900,2400,3000,3300,3500,3900,4400,4800,5300,5800,6300,7100,8500,8800,9500,10200,10800];
+  chart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'}},
+    legend:{data:['AUM (trillions $)','Nombre d\'ETF'],bottom:0},
+    grid:{left:'8%',right:'8%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:years,axisLabel:{fontSize:10}},
+    yAxis:[
+      {type:'value',name:'AUM ($T)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      {type:'value',name:'Nombre d\'ETF',axisLabel:{fontSize:10},splitLine:{show:false}}
+    ],
+    series:[
+      {name:'AUM (trillions $)',type:'bar',data:aum,itemStyle:{color:'#059669',borderRadius:[4,4,0,0]},barWidth:'40%'},
+      {name:'Nombre d\'ETF',type:'line',data:nbEtf,smooth:true,symbol:'circle',symbolSize:5,lineStyle:{color:'#f59e0b',width:2.5},itemStyle:{color:'#f59e0b'},yAxisIndex:1}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Top 10 ETF by AUM treemap
+(function(){
+  var dom = document.getElementById('chart-aum-treemap');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{formatter:function(p){return '<b>'+p.name+'</b><br/>AUM: $'+p.value+'B';}},
+    series:[{
+      type:'treemap',
+      roam:false,
+      nodeClick:false,
+      breadcrumb:{show:false},
+      label:{show:true,formatter:function(p){return p.name+'\n$'+p.value+'B';},fontSize:12,fontWeight:700,color:'#fff'},
+      itemStyle:{borderColor:'#fff',borderWidth:2,borderRadius:4},
+      data:[
+        {name:'SPY\nS&P 500',value:570,itemStyle:{color:'#059669'}},
+        {name:'VTI\nTotal Market',value:430,itemStyle:{color:'#047857'}},
+        {name:'VOO\nS&P 500',value:420,itemStyle:{color:'#10b981'}},
+        {name:'QQQ\nNasdaq-100',value:310,itemStyle:{color:'#2563eb'}},
+        {name:'IVV\nS&P 500',value:290,itemStyle:{color:'#3b82f6'}},
+        {name:'VEA\nDeveloped',value:130,itemStyle:{color:'#f59e0b'}},
+        {name:'AGG\nUS Bonds',value:110,itemStyle:{color:'#64748b'}},
+        {name:'BND\nTotal Bond',value:105,itemStyle:{color:'#94a3b8'}},
+        {name:'GLD\nGold',value:75,itemStyle:{color:'#d97706'}},
+        {name:'IWM\nRussell 2000',value:70,itemStyle:{color:'#9333ea'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: TER comparison bar chart
+(function(){
+  var dom = document.getElementById('chart-ter-comparison');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>TER: <b>'+p[0].value+'%</b>';}},
+    grid:{left:'22%',right:'8%',top:'5%',bottom:'8%'},
+    xAxis:{type:'value',name:'TER (%)',axisLabel:{fontSize:10,formatter:'{value}%'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    yAxis:{type:'category',data:['S&P 500 (VOO)','S&P 500 (SPY)','Nasdaq-100 (QQQ)','Treasuries (TLT)','Emerging (EEM)','Gold (GLD)','High Yield (HYG)','Bitcoin (IBIT)','Thématique (ARKK)','Fonds actif moyen'],axisLabel:{fontSize:10,fontWeight:600},inverse:true},
+    series:[{
+      type:'bar',
+      data:[
+        {value:0.03,itemStyle:{color:'#059669'}},
+        {value:0.09,itemStyle:{color:'#059669'}},
+        {value:0.20,itemStyle:{color:'#10b981'}},
+        {value:0.15,itemStyle:{color:'#2563eb'}},
+        {value:0.68,itemStyle:{color:'#f59e0b'}},
+        {value:0.40,itemStyle:{color:'#d97706'}},
+        {value:0.49,itemStyle:{color:'#f97316'}},
+        {value:0.25,itemStyle:{color:'#9333ea'}},
+        {value:0.75,itemStyle:{color:'#dc2626'}},
+        {value:1.50,itemStyle:{color:'#991b1b'}}
+      ],
+      barWidth:'55%',
+      label:{show:true,position:'right',formatter:'{c}%',fontSize:11,fontWeight:700,color:'#334155'}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>
