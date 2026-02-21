@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Introduction & Premier Workflow — Découvrez Claude Code et créez votre premier assistant de trading | Automatiser son Trading — Partie 1/5 | Market Watch</title>
+ <meta name="description" content="Série Automatiser son Trading avec Claude Code — Partie 1/5 : Installation, configuration MCP, CLAUDE.md, premier workflow d'analyse automatisée, architecture multi-agents et comparatif des outils IA pour le trading.">
+ <meta property="og:title" content="Introduction & Premier Workflow | Automatiser son Trading avec Claude Code — Partie 1/5 | Market Watch">
+ <meta property="og:description" content="Découvrez Claude Code et créez votre premier assistant de trading. Installation, MCP Gateway, CLAUDE.md, CoWork multi-agents et automatisation quotidienne.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/automatiser-trading-claude/part1-introduction/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ /* Series-specific styles — INDIGO THEME (#6366f1) */
+ .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+ .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+ .brand-logo:hover { color:#6366f1; }
+
+ .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+ .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+ .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+ .series-link:hover { border-color:#818cf8; color:#818cf8; }
+ .series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ /* Code blocks — Dark monospace */
+ .code-block { background:#1e1b4b; color:#c7d2fe; padding:1.5rem; border-radius:12px; font-family:'JetBrains Mono', monospace; font-size:0.85rem; overflow-x:auto; margin:1.5rem 0; line-height:1.6; border:1px solid #312e81; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; font-family:'Inter', sans-serif; font-weight:700; }
+ .code-comment { color:#6366f1; }
+ .code-keyword { color:#a78bfa; }
+ .code-string { color:#34d399; }
+ .code-function { color:#f59e0b; }
+ .code-variable { color:#38bdf8; }
+
+ /* Terminal box — Green on dark */
+ .terminal-box { background:#0f0f23; color:#00ff41; padding:1.5rem; border-radius:12px; font-family:monospace; margin:1.5rem 0; border:1px solid #1a1a3e; line-height:1.6; font-size:0.85rem; overflow-x:auto; position:relative; }
+ .terminal-box .terminal-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#4a4a6a; text-transform:uppercase; letter-spacing:0.05em; font-family:'Inter', sans-serif; font-weight:700; }
+
+ /* Quiz */
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+ details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+ .footer-bar a { color:#64748b; text-decoration:none; }
+ .footer-bar a:hover { color:#6366f1; }
+
+ /* Formula box */
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#818cf8; }
+
+ /* Key takeaway box — Indigo theme */
+ .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+
+ /* Next article CTA — Indigo gradient */
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ /* Step cards */
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #6366f1; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ /* Capability cards */
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#6366f1; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .brand-bar { padding:0.75rem 1rem; }
+   .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+   .brand-logo { font-size:0.9rem; }
+   .series-title { font-size:0.65rem; margin-right:0.5rem; }
+   .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .code-block, .terminal-box { font-size:0.75rem; padding:1rem; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .brand-logo { font-size:0.85rem; }
+   .series-title { display:none; }
+   .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+   .code-block, .terminal-box { font-size:0.7rem; padding:0.75rem; }
+   .step-grid { grid-template-columns:1fr; }
+   .capability-grid { grid-template-columns:1fr; }
+ }
+ </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation -->
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-robot" style="margin-right:0.4rem;"></i> Automatiser son Trading</span>
+ <a href="./" class="series-link current">1 — Introduction</a>
+ <a href="../part2-screeners/" class="series-link">2 — Screeners</a>
+ <a href="../part3-social-media/" class="series-link">3 — Réseaux</a>
+ <a href="../part4-bots/" class="series-link">4 — Bots</a>
+ <a href="../part5-avance/" class="series-link">5 — Avancé</a>
+</div>
+
+<!-- Hero Section -->
+<div class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-graduation-cap" style="margin-right:0.4rem;"></i> Série Automatiser son Trading — Partie 1 sur 5</div>
+ <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:800px;">Introduction &amp; Premier Workflow</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto; line-height:1.7;">Découvrez Claude Code et créez votre premier assistant de trading. De l'installation à la publication automatisée sur GitHub Pages en passant par le MCP Gateway.</p>
+ <div class="hero-badges">
+   <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-terminal"></i> Claude Code</span>
+   <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-brain"></i> IA</span>
+   <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-wand-magic-sparkles"></i> Automatisation</span>
+   <span class="hero-badge hero-badge-green"><i class="fa-solid fa-plug"></i> MCP</span>
+   <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-line"></i> Trading</span>
+ </div>
+</div>
+
+<div class="container">
+
+<!-- Navigation Grid -->
+<div class="nav-grid" style="margin-top:-3rem;">
+ <a href="#claude-code" class="nav-item"><i class="fa-solid fa-terminal" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Claude Code</a>
+ <a href="#architecture" class="nav-item"><i class="fa-solid fa-diagram-project" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Architecture</a>
+ <a href="#setup" class="nav-item"><i class="fa-solid fa-download" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Installation</a>
+ <a href="#premier-workflow" class="nav-item"><i class="fa-solid fa-rocket" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Premier Workflow</a>
+ <a href="#claude-md" class="nav-item"><i class="fa-solid fa-file-code" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> CLAUDE.md</a>
+ <a href="#mcp-gateway" class="nav-item"><i class="fa-solid fa-plug" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> MCP Gateway</a>
+ <a href="#cowork" class="nav-item"><i class="fa-solid fa-users-gear" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> CoWork</a>
+ <a href="#resultats" class="nav-item"><i class="fa-solid fa-trophy" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Résultats</a>
+ <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : QU'EST-CE QUE CLAUDE CODE ?                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="claude-code"><i class="fa-solid fa-terminal" style="color:#6366f1;"></i> Qu'est-ce que Claude Code ?</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-bolt" style="color:#6366f1;"></i> Le CLI officiel d'Anthropic pour le trading</h2>
+
+ <p><strong>Claude Code</strong> est l'outil en ligne de commande (CLI) officiel d'Anthropic. Contrairement aux chatbots web classiques, Claude Code s'exécute directement dans votre terminal et dispose d'un accès complet à votre système de fichiers, vos commandes shell et vos APIs externes.</p>
+
+ <p>Concrètement, c'est un <strong>agent IA autonome</strong> capable de :</p>
+
+ <div class="capability-grid">
+   <div class="capability-card">
+     <div class="capability-icon" style="background:#eef2ff; color:#6366f1;"><i class="fa-solid fa-code"></i></div>
+     <h4>Exécuter du code</h4>
+     <p>Bash, Python, Node.js directement sur votre machine</p>
+   </div>
+   <div class="capability-card">
+     <div class="capability-icon" style="background:#f0fdf4; color:#16a34a;"><i class="fa-solid fa-file-pen"></i></div>
+     <h4>Lire & écrire</h4>
+     <p>Créer des rapports HTML, modifier des fichiers, gérer des projets</p>
+   </div>
+   <div class="capability-card">
+     <div class="capability-icon" style="background:#fef3c7; color:#f59e0b;"><i class="fa-solid fa-plug"></i></div>
+     <h4>Appeler des APIs</h4>
+     <p>Via les serveurs MCP : données de marché, SEC, sentiment</p>
+   </div>
+   <div class="capability-card">
+     <div class="capability-icon" style="background:#fae8ff; color:#9333ea;"><i class="fa-solid fa-users-gear"></i></div>
+     <h4>Multi-agents</h4>
+     <p>Déléguer des tâches à d'autres agents Claude en parallèle</p>
+   </div>
+   <div class="capability-card">
+     <div class="capability-icon" style="background:#fef2f2; color:#ef4444;"><i class="fa-brands fa-git-alt"></i></div>
+     <h4>Git natif</h4>
+     <p>Commit, push, gestion de branches directement intégrée</p>
+   </div>
+   <div class="capability-card">
+     <div class="capability-icon" style="background:#ecfdf5; color:#10b981;"><i class="fa-solid fa-globe"></i></div>
+     <h4>Publier</h4>
+     <p>GitHub Pages, Discord, Telegram et autres plateformes</p>
+   </div>
+ </div>
+
+ <h3>La différence fondamentale avec ChatGPT</h3>
+
+ <p>ChatGPT est un chatbot conversationnel dans un navigateur. Quand vous lui demandez de créer un fichier, il vous montre le contenu dans la conversation. Quand vous demandez la même chose à Claude Code, il <strong>crée réellement le fichier sur votre disque dur</strong> et peut ensuite le commiter sur Git et le publier sur le web.</p>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-comments"></i> ChatGPT / Perplexity</div>
+     <div style="font-size:1rem; font-weight:700; color:#64748b;">Conversation</div>
+     <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">Vous demandez, l'IA répond avec du texte. Copier-coller manuel. Pas d'accès au système de fichiers. Pas d'exécution de code réelle.</p>
+   </div>
+   <div style="background:#eef2ff; border:1px solid #6366f1; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-terminal"></i> Claude Code</div>
+     <div style="font-size:1rem; font-weight:700; color:#4f46e5;">Action</div>
+     <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">Vous demandez, l'IA <strong>agit</strong>. Crée des fichiers, exécute des scripts, appelle des APIs, commit sur Git, publie sur le web. Zéro copier-coller.</p>
+   </div>
+ </div>
+
+ <h3>Combien ça coûte ?</h3>
+
+ <p>Claude Code fonctionne avec une <strong>clé API Anthropic</strong>. Vous payez uniquement ce que vous consommez en tokens. Voici les coûts typiques :</p>
+
+ <div class="metric-grid">
+   <div class="metric-card">
+     <div class="metric-value" style="color:#6366f1;">$0.50-2</div>
+     <div class="metric-label">Par analyse</div>
+     <div class="metric-change neutral">6 variantes</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#6366f1;">$1-3</div>
+     <div class="metric-label">Par scan</div>
+     <div class="metric-change neutral">10 tickers</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#6366f1;">$5-15</div>
+     <div class="metric-label">Par jour</div>
+     <div class="metric-change neutral">Usage intensif</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#6366f1;">$50-100</div>
+     <div class="metric-label">Par mois</div>
+     <div class="metric-change neutral">Budget recommandé</div>
+   </div>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Comparaison de coûts</h4>
+   <p style="margin-bottom:0;">Un abonnement Bloomberg Terminal coûte <strong>$2,000/mois</strong>. Un abonnement Refinitiv Eikon : <strong>$1,500/mois</strong>. Avec Claude Code + MCP Gateway, vous obtenez des analyses comparables pour <strong>$50-100/mois</strong> — soit 20 à 40 fois moins cher, avec en plus la capacité d'automatiser entièrement le workflow.</p>
+ </div>
+
+ <h3>Installation en une commande</h3>
+
+ <div class="terminal-box">
+   <span class="terminal-label">Terminal</span>
+$ npm install -g @anthropic-ai/claude-code
+$ claude --version
+Claude Code v1.0.28
+$ claude
+Welcome to Claude Code! Connecting to Anthropic...
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : ARCHITECTURE D'UN WORKFLOW TRADING                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="architecture"><i class="fa-solid fa-diagram-project" style="color:#6366f1;"></i> L'Architecture</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-sitemap" style="color:#6366f1;"></i> L'architecture d'un workflow trading</h2>
+
+ <p>Un workflow de trading automatisé avec Claude Code repose sur une architecture simple mais puissante. Claude Code agit comme le <strong>cerveau central</strong> qui orchestre les différentes étapes : collecte de données, analyse, génération de rapports et publication.</p>
+
+ <div class="formula-box">
+   <div class="formula-label">Pipeline simplifié</div>
+   Données MCP <span class="formula-highlight">&rarr;</span> Claude Code <span class="formula-highlight">&rarr;</span> Analyse <span class="formula-highlight">&rarr;</span> Rapport HTML <span class="formula-highlight">&rarr;</span> GitHub Pages
+ </div>
+
+ <!-- ECharts: Architecture Diagram -->
+ <div id="chartArchitecture" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+ <h3>Les quatre couches du système</h3>
+
+ <div class="step-grid">
+   <div class="step-card">
+     <div class="step-number">1</div>
+     <h4>Sources de données</h4>
+     <p>Yahoo Finance, SEC EDGAR, NASDAQ, Fintel, ChartExchange, AlphaVantage, AmericanBulls, StockTwits, Reddit</p>
+   </div>
+   <div class="step-card">
+     <div class="step-number">2</div>
+     <h4>MCP Gateway</h4>
+     <p>Interface unifiée qui agrège toutes les sources en 15+ outils standardisés pour Claude Code</p>
+   </div>
+   <div class="step-card">
+     <div class="step-number">3</div>
+     <h4>Claude Code (Agent)</h4>
+     <p>Cerveau central qui collecte, analyse, génère des rapports HTML avec ECharts et coordonne les sous-agents</p>
+   </div>
+   <div class="step-card">
+     <div class="step-number">4</div>
+     <h4>Distribution</h4>
+     <p>GitHub Pages, Discord, Telegram, réseaux sociaux. Publication automatisée via Git push</p>
+   </div>
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Pourquoi cette architecture ?</h4>
+   <p style="margin-bottom:0;">L'avantage majeur de cette architecture est sa <strong>modularité</strong>. Vous pouvez remplacer n'importe quelle couche sans affecter les autres. Changer de source de données ? Il suffit de configurer un nouveau serveur MCP. Changer de plateforme de publication ? Il suffit de modifier les instructions dans le CLAUDE.md. L'agent s'adapte.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : INSTALLATION ET CONFIGURATION                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="setup"><i class="fa-solid fa-download" style="color:#6366f1;"></i> Installation & Configuration</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-gear" style="color:#6366f1;"></i> Installer Claude Code en 5 minutes</h2>
+
+ <h3>Prérequis</h3>
+ <div class="metric-grid">
+   <div class="metric-card">
+     <div class="metric-value" style="font-size:1.3rem;"><i class="fa-brands fa-node-js" style="color:#16a34a;"></i></div>
+     <div class="metric-label">Node.js 18+</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="font-size:1.3rem;"><i class="fa-solid fa-terminal" style="color:#6366f1;"></i></div>
+     <div class="metric-label">Terminal (zsh/bash)</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="font-size:1.3rem;"><i class="fa-solid fa-key" style="color:#f59e0b;"></i></div>
+     <div class="metric-label">Clé API Anthropic</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="font-size:1.3rem;"><i class="fa-brands fa-git-alt" style="color:#ef4444;"></i></div>
+     <div class="metric-label">Git installé</div>
+   </div>
+ </div>
+
+ <h3>Étape 1 — Installer Claude Code</h3>
+ <div class="code-block">
+   <span class="code-label">Terminal</span>
+<span class="code-comment"># Installation globale via npm</span>
+<span class="code-keyword">npm</span> install -g <span class="code-string">@anthropic-ai/claude-code</span>
+
+<span class="code-comment"># Vérifier l'installation</span>
+<span class="code-keyword">claude</span> --version
+<span class="code-comment"># Claude Code v1.0.28</span>
+
+<span class="code-comment"># Premier lancement — authentification</span>
+<span class="code-keyword">claude</span>
+<span class="code-comment"># Suivre les instructions pour connecter votre compte Anthropic</span>
+ </div>
+
+ <h3>Étape 2 — Configurer la clé API</h3>
+ <div class="code-block">
+   <span class="code-label">Terminal</span>
+<span class="code-comment"># Exporter la clé API Anthropic</span>
+<span class="code-keyword">export</span> <span class="code-variable">ANTHROPIC_API_KEY</span>=<span class="code-string">"sk-ant-api03-votre-cle-ici"</span>
+
+<span class="code-comment"># Ajouter à votre profil shell pour la rendre permanente</span>
+<span class="code-keyword">echo</span> <span class="code-string">'export ANTHROPIC_API_KEY="sk-ant-api03-votre-cle-ici"'</span> >> ~/.zshrc
+<span class="code-keyword">source</span> ~/.zshrc
+ </div>
+
+ <h3>Étape 3 — Créer votre premier projet</h3>
+ <div class="code-block">
+   <span class="code-label">Terminal</span>
+<span class="code-comment"># Créer le répertoire de travail</span>
+<span class="code-keyword">mkdir</span> -p ~/trading-automation
+<span class="code-keyword">cd</span> ~/trading-automation
+<span class="code-keyword">git</span> init
+
+<span class="code-comment"># Créer le fichier d'instructions CLAUDE.md</span>
+<span class="code-keyword">cat</span> > CLAUDE.md << <span class="code-string">'EOF'
+# Mon Projet Trading
+
+## Instructions
+- Collecter les données via MCP Gateway
+- Générer des rapports HTML avec ECharts
+- Publier sur GitHub Pages
+- Toujours inclure entry/stop/target dans les analyses
+EOF</span>
+
+<span class="code-comment"># Lancer Claude Code dans le projet</span>
+<span class="code-keyword">claude</span>
+ </div>
+
+ <h3>Étape 4 — Configurer le MCP</h3>
+ <div class="code-block">
+   <span class="code-label">~/.claude/settings.json</span>
+{
+  <span class="code-string">"mcpServers"</span>: {
+    <span class="code-string">"marketwatch"</span>: {
+      <span class="code-string">"type"</span>: <span class="code-string">"url"</span>,
+      <span class="code-string">"url"</span>: <span class="code-string">"https://mcp.market-watch.xyz/sse"</span>,
+      <span class="code-string">"headers"</span>: {
+        <span class="code-string">"Authorization"</span>: <span class="code-string">"Bearer votre-token-ici"</span>
+      }
+    }
+  }
+}
+ </div>
+
+ <h3>Étape 5 — Premier test</h3>
+ <div class="terminal-box">
+   <span class="terminal-label">Claude Code</span>
+$ claude "Analyse AAPL pour moi"
+
+> Reading CLAUDE.md...
+> Calling GetInstruments(symbols="AAPL")...
+> Calling QueryData(types="quote,bars_daily,support_resistance")...
+> Calling WebSearch("AAPL Apple latest news earnings 2026")...
+> Creating analyses/AAPL/index.html (1247 lines)...
+> Creating analyses/AAPL/assets/report.css...
+> Creating analyses/AAPL/variants.json...
+> Updating index.html (adding AAPL card)...
+> git add . && git commit -m "Add AAPL analysis"
+> Done! Analysis published at /analyses/AAPL/
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Le fichier CLAUDE.md</h4>
+   <p style="margin-bottom:0;">Le fichier <code>CLAUDE.md</code> est la <strong>bible de votre projet</strong>. Claude Code le lit automatiquement à chaque lancement et suit ses instructions à la lettre. C'est là que vous définissez la structure des rapports, les conventions CSS, les sources de données et les workflows de publication. Plus il est détaillé, plus Claude Code sera précis et autonome.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : PREMIER WORKFLOW                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="premier-workflow"><i class="fa-solid fa-rocket" style="color:#6366f1;"></i> Premier Workflow</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-play" style="color:#6366f1;"></i> Votre premier workflow — L'analyse quotidienne</h2>
+
+ <p>Maintenant que Claude Code est installé, construisons ensemble un workflow complet. L'objectif : générer une <strong>analyse technique quotidienne automatisée</strong> qui se publie toute seule.</p>
+
+ <h3>Le workflow en 4 étapes</h3>
+
+ <div style="display:grid; grid-template-columns:1fr; gap:0; margin:1.5rem 0;">
+   <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px 12px 0 0; padding:1.25rem; display:flex; align-items:center; gap:1rem;">
+     <div style="width:36px; height:36px; border-radius:10px; background:#6366f1; color:white; display:flex; align-items:center; justify-content:center; font-weight:900; flex-shrink:0;">1</div>
+     <div>
+       <div style="font-weight:700; color:#4f46e5; font-size:0.95rem;">Récupérer les données</div>
+       <div style="font-size:0.85rem; color:#475569;">MCP GetMarketOverview + QueryData pour les quotes et bars</div>
+     </div>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:1.25rem; display:flex; align-items:center; gap:1rem;">
+     <div style="width:36px; height:36px; border-radius:10px; background:#16a34a; color:white; display:flex; align-items:center; justify-content:center; font-weight:900; flex-shrink:0;">2</div>
+     <div>
+       <div style="font-weight:700; color:#16a34a; font-size:0.95rem;">Analyser</div>
+       <div style="font-size:0.85rem; color:#475569;">Claude traite les données : technicals, sentiment, news, régime de marché</div>
+     </div>
+   </div>
+   <div style="background:#fef3c7; border:1px solid #fde68a; padding:1.25rem; display:flex; align-items:center; gap:1rem;">
+     <div style="width:36px; height:36px; border-radius:10px; background:#f59e0b; color:white; display:flex; align-items:center; justify-content:center; font-weight:900; flex-shrink:0;">3</div>
+     <div>
+       <div style="font-weight:700; color:#b45309; font-size:0.95rem;">Générer le rapport HTML</div>
+       <div style="font-size:0.85rem; color:#475569;">Rapport complet avec graphiques ECharts, tableaux, trade ideas</div>
+     </div>
+   </div>
+   <div style="background:#fae8ff; border:1px solid #e9d5ff; border-radius:0 0 12px 12px; padding:1.25rem; display:flex; align-items:center; gap:1rem;">
+     <div style="width:36px; height:36px; border-radius:10px; background:#9333ea; color:white; display:flex; align-items:center; justify-content:center; font-weight:900; flex-shrink:0;">4</div>
+     <div>
+       <div style="font-weight:700; color:#9333ea; font-size:0.95rem;">Publier sur GitHub Pages</div>
+       <div style="font-size:0.85rem; color:#475569;">Git add, commit, push — le rapport est en ligne automatiquement</div>
+     </div>
+   </div>
+ </div>
+
+ <h3>Le script complet</h3>
+
+ <div class="code-block">
+   <span class="code-label">workflow.sh</span>
+<span class="code-comment">#!/bin/bash</span>
+<span class="code-comment"># Workflow d'analyse quotidienne automatisée</span>
+<span class="code-comment"># Ce script est lancé chaque jour à 7h00 via cron ou bot Discord</span>
+
+<span class="code-keyword">set</span> -e
+
+<span class="code-comment"># Variables</span>
+<span class="code-variable">PROJECT_DIR</span>=<span class="code-string">"/Users/trader/trading-automation"</span>
+<span class="code-variable">DATE</span>=$(<span class="code-keyword">date</span> +%Y%m%d)
+
+<span class="code-comment"># Se placer dans le projet</span>
+<span class="code-keyword">cd</span> <span class="code-variable">$PROJECT_DIR</span>
+
+<span class="code-comment"># Lancer Claude Code en mode headless (non-interactif)</span>
+<span class="code-keyword">claude</span> --print <span class="code-string">"</span>
+<span class="code-string">Génère le briefing quotidien du jour.</span>
+<span class="code-string">1. Appelle GetMarketOverview pour le snapshot global</span>
+<span class="code-string">2. Appelle QueryData pour SPY, QQQ, BTC-USD, ETH-USD</span>
+<span class="code-string">3. Fais une WebSearch pour le calendrier économique</span>
+<span class="code-string">4. Crée daily/$DATE/index.html avec toutes les sections</span>
+<span class="code-string">5. Mets à jour index.html (tab Daily)</span>
+<span class="code-string">6. Git add, commit et push</span>
+<span class="code-string">"</span>
+
+<span class="code-comment"># Vérifier le résultat</span>
+<span class="code-keyword">echo</span> <span class="code-string">"Briefing publié : https://articles.market-watch.xyz/daily/$DATE/"</span>
+ </div>
+
+ <p>Ce script de 20 lignes remplace un processus manuel qui prendrait <strong>45 minutes à 1 heure</strong>. Et il produit un rapport plus complet, plus cohérent et mieux formaté que ce que la plupart des humains pourraient faire manuellement.</p>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-clock"></i> Avant (Manuel)</div>
+     <div style="font-size:1.2rem; font-weight:800; color:#16a34a;">~45 min / analyse</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0.5rem 0 0;">Ouvrir TradingView, chercher les données fondamentales, vérifier les news, calculer les niveaux techniques, rédiger un rapport, le formater, le publier...</p>
+   </div>
+   <div style="background:#eef2ff; border:1px solid #6366f1; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-robot"></i> Après (Claude Code)</div>
+     <div style="font-size:1.2rem; font-weight:800; color:#6366f1;">~3 min automatisé</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0.5rem 0 0;">Une commande, et Claude Code collecte les données MCP, analyse les technicals, rédige le rapport HTML complet avec graphiques ECharts, et commit sur GitHub Pages.</p>
+   </div>
+ </div>
+
+ <div class="alert-box">
+   <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Le flag --print</h4>
+   <p style="margin-bottom:0;">Le flag <code>--print</code> est essentiel pour les workflows automatisés. Il exécute Claude Code en mode <strong>non-interactif</strong> (headless) : pas de confirmation manuelle, pas de questions. Claude Code exécute la tâche et retourne le résultat. C'est le mode utilisé par les cron jobs et le bot Discord.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : LE CLAUDE.MD                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="claude-md"><i class="fa-solid fa-file-code" style="color:#6366f1;"></i> Le CLAUDE.md</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-book" style="color:#6366f1;"></i> Le CLAUDE.md — Votre manuel d'instructions</h2>
+
+ <p>Le <code>CLAUDE.md</code> est le fichier le plus important de votre projet. C'est le document que Claude Code lit en premier à chaque lancement. Il définit <strong>tout</strong> : la structure du projet, les conventions, les workflows, les commandes utilisateur et les sources de données.</p>
+
+ <h3>Structure d'un bon CLAUDE.md</h3>
+
+ <div class="code-block">
+   <span class="code-label">CLAUDE.md</span>
+<span class="code-comment"># Mon Projet Trading Automatisé</span>
+
+<span class="code-comment">## Project Overview</span>
+Site de publication d'analyses financières automatisées,
+hébergé sur GitHub Pages.
+
+<span class="code-comment">## Structure du Projet</span>
+```
+articles/
+├── index.html          <span class="code-comment"># Page d'accueil</span>
+├── analyses/           <span class="code-comment"># Analyses par ticker</span>
+│   └── {TICKER}/
+│       ├── index.html  <span class="code-comment"># Rapport HTML</span>
+│       └── assets/     <span class="code-comment"># CSS spécifique</span>
+├── daily/              <span class="code-comment"># Briefings quotidiens</span>
+│   └── YYYYMMDD/
+└── scanner/            <span class="code-comment"># Scans quotidiens</span>
+```
+
+<span class="code-comment">## Commandes Utilisateur</span>
+
+<span class="code-comment">### "Analyse [TICKER]"</span>
+1. Collecter via MCP (GetInstruments + QueryData)
+2. WebSearch pour actualités récentes
+3. Générer le rapport HTML avec ECharts
+4. Mettre à jour index.html
+5. Git commit et push
+
+<span class="code-comment">### "Analyse Daily"</span>
+1. GetMarketOverview (snapshot global)
+2. QueryData pour les indices et crypto
+3. WebSearch pour le calendrier économique
+4. Créer daily/YYYYMMDD/index.html
+5. Mettre à jour le tab Daily
+
+<span class="code-comment">## Conventions</span>
+- Langue: Français par défaut
+- CSS: Réutiliser report.css existant
+- Charts: ECharts 5.4.3
+- Fonts: Inter (Google Fonts)
+- Toujours inclure un Trade Idea avec entry/stop/TP
+ </div>
+
+ <h3>Les sections obligatoires</h3>
+
+ <table class="compare-table">
+   <thead>
+     <tr>
+       <th>Section</th>
+       <th>Rôle</th>
+       <th>Impact</th>
+     </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td><strong>Project Overview</strong></td>
+       <td>Contexte global du projet</td>
+       <td>Claude comprend l'objectif</td>
+     </tr>
+     <tr>
+       <td><strong>Structure</strong></td>
+       <td>Arborescence des fichiers</td>
+       <td>Claude sait où créer les fichiers</td>
+     </tr>
+     <tr>
+       <td><strong>Commandes</strong></td>
+       <td>Workflows pas-à-pas</td>
+       <td>Claude sait quoi faire pour chaque demande</td>
+     </tr>
+     <tr>
+       <td><strong>Conventions</strong></td>
+       <td>Règles CSS, langue, format</td>
+       <td>Cohérence entre les rapports</td>
+     </tr>
+     <tr>
+       <td><strong>MCP Gateway</strong></td>
+       <td>Outils disponibles et usage</td>
+       <td>Claude sait quelles données appeler</td>
+     </tr>
+   </tbody>
+ </table>
+
+ <h3>Les pièges à éviter</h3>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark"></i> Trop vague</div>
+     <div class="code-block" style="margin:0.5rem 0 0; font-size:0.75rem; padding:1rem;">
+<span class="code-comment"># Instructions</span>
+Fais des analyses de stocks
+et publie-les sur le site.
+     </div>
+     <p style="font-size:0.8rem; color:#991b1b; margin:0.5rem 0 0;">Claude ne sait pas quelle structure utiliser, quel CSS, quel format, quels outils MCP appeler.</p>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-check"></i> Précis et structuré</div>
+     <div class="code-block" style="margin:0.5rem 0 0; font-size:0.75rem; padding:1rem;">
+<span class="code-comment">### "Analyse [TICKER]"</span>
+1. GetInstruments(symbols=TICKER)
+2. QueryData(types=quote,bars_daily)
+3. Créer analyses/TICKER/index.html
+4. Inclure: profil, technicals,
+   trade idea, risques, ECharts
+     </div>
+     <p style="font-size:0.8rem; color:#166534; margin:0.5rem 0 0;">Claude sait exactement quoi faire, dans quel ordre, avec quels outils et quel format de sortie.</p>
+   </div>
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Conseil de pro</h4>
+   <p style="margin-bottom:0;">Le CLAUDE.md chez Market Watch fait <strong>plus de 300 lignes</strong>. Il documente chaque type de rapport (weekly, daily, analyse, scanner, rétrospective), chaque convention CSS, chaque workflow de publication, et même le plan de formation progressive pour les articles pédagogiques. C'est un investissement initial, mais il paie ensuite à chaque exécution automatisée.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : MCP GATEWAY                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="mcp-gateway"><i class="fa-solid fa-plug" style="color:#6366f1;"></i> MCP Gateway</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-network-wired" style="color:#6366f1;"></i> MCP Gateway — Vos données de marché</h2>
+
+ <p>Le <strong>MCP (Model Context Protocol)</strong> est le mécanisme qui permet à Claude Code d'appeler des APIs externes. Pensez-y comme des « plugins » : chaque serveur MCP fournit un ensemble d'outils que Claude peut utiliser directement dans ses analyses.</p>
+
+ <div class="formula-box">
+   <div class="formula-label">Architecture MCP</div>
+   Claude Code <span class="formula-highlight">&rarr;</span> Serveur MCP <span class="formula-highlight">&rarr;</span> APIs (Yahoo, SEC, Fintel, NASDAQ...)
+ </div>
+
+ <h3><i class="fa-solid fa-chart-bar" style="color:#6366f1; margin-right:0.5rem;"></i> GetMarketOverview — Snapshot du marché</h3>
+ <p>Retourne un snapshot complet du marché : indices, commodities, crypto, taux, devises, sentiment, news, régime VIX et calendrier. C'est l'outil de base pour les briefings quotidiens.</p>
+
+ <div class="code-block">
+   <span class="code-label">Appel MCP</span>
+<span class="code-function">GetMarketOverview</span>({
+  <span class="code-string">"analysis_depth"</span>: <span class="code-string">"deep"</span>
+})
+<span class="code-comment">// Retourne 16+ items :</span>
+<span class="code-comment">// market_indices (15 indices CSV)</span>
+<span class="code-comment">// market_commodities (6 commodities)</span>
+<span class="code-comment">// market_crypto (BTC, ETH)</span>
+<span class="code-comment">// market_rates (4 treasury yields)</span>
+<span class="code-comment">// regime (analyse VIX)</span>
+<span class="code-comment">// sentiment (news sentiment NLP)</span>
+<span class="code-comment">// performance (sector rotations)</span>
+<span class="code-comment">// calendar (earnings, IPOs, events)</span>
+<span class="code-comment">// news_articles (dernières actualités)</span>
+ </div>
+
+ <h3><i class="fa-solid fa-magnifying-glass" style="color:#6366f1; margin-right:0.5rem;"></i> GetInstruments — Analyse d'un symbole</h3>
+ <p>L'outil le plus complet pour analyser un ticker spécifique. Retourne <strong>30+ items</strong> : quote, profil, financials, earnings, holders, technicals, bars OHLCV, sentiment multi-sources, signaux de trading.</p>
+
+ <div class="code-block">
+   <span class="code-label">Appel MCP</span>
+<span class="code-function">GetInstruments</span>({
+  <span class="code-string">"symbols"</span>: <span class="code-string">"NVDA"</span>
+})
+<span class="code-comment">// 27 types de données retournés :</span>
+<span class="code-comment">// metadata, quote, calendar, comprehensive_profile,</span>
+<span class="code-comment">// comprehensive_financial, comprehensive_earnings,</span>
+<span class="code-comment">// comprehensive_holders, comprehensive_stats,</span>
+<span class="code-comment">// technicals, bar_daily (100 OHLCV),</span>
+<span class="code-comment">// bar_intraday15m, support_resistance,</span>
+<span class="code-comment">// volume_profile, sentiment (StockTwits, Reddit, YouTube),</span>
+<span class="code-comment">// trading_signals (22 signaux AmericanBulls),</span>
+<span class="code-comment">// analyst_actions, insider_transactions, ctb...</span>
+ </div>
+
+ <h3><i class="fa-solid fa-database" style="color:#6366f1; margin-right:0.5rem;"></i> QueryData — 58 types de données</h3>
+ <p>L'outil le plus flexible. Vous spécifiez exactement les types de données que vous voulez. Idéal pour des requêtes ciblées.</p>
+
+ <div class="code-block">
+   <span class="code-label">Exemples</span>
+<span class="code-comment">// Quotes + bars pour plusieurs symboles</span>
+<span class="code-function">QueryData</span>({ <span class="code-string">"types"</span>: <span class="code-string">"quote,bars_daily"</span>, <span class="code-string">"symbols"</span>: <span class="code-string">"AAPL,MSFT,GOOGL"</span> })
+
+<span class="code-comment">// Calendrier des earnings</span>
+<span class="code-function">QueryData</span>({ <span class="code-string">"types"</span>: <span class="code-string">"earnings_calendar"</span> })
+
+<span class="code-comment">// Options chain + max pain</span>
+<span class="code-function">QueryData</span>({ <span class="code-string">"types"</span>: <span class="code-string">"options_chain,max_pain"</span>, <span class="code-string">"symbols"</span>: <span class="code-string">"SPY"</span> })
+
+<span class="code-comment">// Filings SEC récents</span>
+<span class="code-function">QueryData</span>({ <span class="code-string">"types"</span>: <span class="code-string">"sec_filings"</span>, <span class="code-string">"symbols"</span>: <span class="code-string">"TSLA"</span>, <span class="code-string">"form_types"</span>: <span class="code-string">"10-K,10-Q"</span> })
+
+<span class="code-comment">// Dark pool + cost to borrow</span>
+<span class="code-function">QueryData</span>({ <span class="code-string">"types"</span>: <span class="code-string">"dark_pool,ctb"</span>, <span class="code-string">"symbols"</span>: <span class="code-string">"GME"</span> })
+ </div>
+
+ <h3><i class="fa-solid fa-magnifying-glass-chart" style="color:#6366f1; margin-right:0.5rem;"></i> RunAutoScreener — Scanner intelligent</h3>
+ <p>Détecte automatiquement le <strong>régime de marché</strong> (RiskOn, Neutral, RiskOff, EarlyRiskOff, Recovery) et ajuste les poids des 4 stratégies de screening.</p>
+
+ <div class="code-block">
+   <span class="code-label">AutoScreener</span>
+<span class="code-function">RunAutoScreener</span>({
+  <span class="code-string">"top_k"</span>: 50,
+  <span class="code-string">"timeframe"</span>: <span class="code-string">"1d"</span>
+})
+<span class="code-comment">// Retourne : régime détecté, risk_tolerance,</span>
+<span class="code-comment">// strategy_weights, top candidates scorés,</span>
+<span class="code-comment">// opportunités, warnings, ATR entry/exit hints</span>
+ </div>
+
+ <h3><i class="fa-solid fa-calculator" style="color:#6366f1; margin-right:0.5rem;"></i> Options : Greeks, Stratégies, VaR</h3>
+
+ <table class="compare-table">
+   <thead>
+     <tr>
+       <th>Outil</th>
+       <th>Fonction</th>
+       <th>Cas d'usage</th>
+     </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td><code>ScreenOptions</code></td>
+       <td>Scanner d'options par Greeks, IV, volume</td>
+       <td>Trouver des opportunités options</td>
+     </tr>
+     <tr>
+       <td><code>CalculateOptionsGreeks</code></td>
+       <td>Greeks 1er et 2nd ordre (Black-Scholes)</td>
+       <td>Pricing et couverture d'options</td>
+     </tr>
+     <tr>
+       <td><code>AnalyzeOptionsStrategy</code></td>
+       <td>Analyse multi-legs (spreads, condors, butterflies)</td>
+       <td>Structuration de positions</td>
+     </tr>
+     <tr>
+       <td><code>CalculatePortfolioGreeks</code></td>
+       <td>Greeks agrégés d'un portefeuille</td>
+       <td>Gestion du risque global</td>
+     </tr>
+     <tr>
+       <td><code>CalculatePortfolioVaR</code></td>
+       <td>Value at Risk historique/paramétrique</td>
+       <td>Quantification du risque</td>
+     </tr>
+     <tr>
+       <td><code>LLMAnalysis</code></td>
+       <td>Analyse DeepSeek intégrée</td>
+       <td>Analyse fondamentale avancée</td>
+     </tr>
+   </tbody>
+ </table>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Sources de données agrégées</h4>
+   <p style="margin-bottom:0;">Le MCP Gateway agrège des données de <strong>Yahoo Finance, SEC EDGAR, NASDAQ, Fintel, ChartExchange, AlphaVantage, AmericanBulls, StockTwits, Reddit</strong> et d'autres sources. Toutes accessibles via une seule interface unifiée — plus besoin de jongler entre 10 APIs différentes et de gérer 10 clés API.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : COWORK                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cowork"><i class="fa-solid fa-users-gear" style="color:#6366f1;"></i> CoWork</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-people-group" style="color:#6366f1;"></i> CoWork — L'IA comme collaborateur</h2>
+
+ <p>Le mode <strong>CoWork</strong> est l'une des fonctionnalités les plus puissantes de Claude Code. Il permet à un agent « orchestrateur » de déléguer des sous-tâches à d'autres agents Claude qui travaillent <strong>en parallèle</strong>.</p>
+
+ <h3>Le concept : votre analyste junior 24/7</h3>
+
+ <p>Imaginez que vous avez un analyste junior disponible 24h/24, 7j/7, qui ne dort jamais, ne fait jamais de fautes de frappe, et qui peut se cloner en 8 copies de lui-même pour travailler en parallèle. C'est exactement ce que fait le mode CoWork.</p>
+
+ <div style="background:#0f172a; border-radius:16px; padding:2rem; margin:1.5rem 0; color:white;">
+   <div style="text-align:center; margin-bottom:1.5rem;">
+     <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem;">Architecture CoWork</div>
+     <div style="font-size:1.2rem; font-weight:800; color:#818cf8;">Orchestrateur Principal</div>
+     <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.25rem;">Lit le CLAUDE.md, planifie les tâches, consolide les résultats</div>
+   </div>
+   <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; text-align:center;">
+     <div style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:1rem;">
+       <div style="font-size:1.5rem; margin-bottom:0.5rem;"><i class="fa-solid fa-robot" style="color:#818cf8;"></i></div>
+       <div style="font-size:0.75rem; font-weight:700; color:#818cf8;">Agent 1</div>
+       <div style="font-size:0.65rem; color:#94a3b8; margin-top:0.25rem;">Analyse NVDA<br>Expert FR</div>
+     </div>
+     <div style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:1rem;">
+       <div style="font-size:1.5rem; margin-bottom:0.5rem;"><i class="fa-solid fa-robot" style="color:#818cf8;"></i></div>
+       <div style="font-size:0.75rem; font-weight:700; color:#818cf8;">Agent 2</div>
+       <div style="font-size:0.65rem; color:#94a3b8; margin-top:0.25rem;">Analyse NVDA<br>Beginner EN</div>
+     </div>
+     <div style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:1rem;">
+       <div style="font-size:1.5rem; margin-bottom:0.5rem;"><i class="fa-solid fa-robot" style="color:#818cf8;"></i></div>
+       <div style="font-size:0.75rem; font-weight:700; color:#818cf8;">Agent 3</div>
+       <div style="font-size:0.65rem; color:#94a3b8; margin-top:0.25rem;">Analyse NVDA<br>Expert AR</div>
+     </div>
+     <div style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:1rem;">
+       <div style="font-size:1.5rem; margin-bottom:0.5rem;"><i class="fa-solid fa-robot" style="color:#818cf8;"></i></div>
+       <div style="font-size:0.75rem; font-weight:700; color:#818cf8;">Agent 4</div>
+       <div style="font-size:0.65rem; color:#94a3b8; margin-top:0.25rem;">Analyse NVDA<br>Beginner FR</div>
+     </div>
+   </div>
+ </div>
+
+ <h3>Sessions interactives vs sessions autonomes</h3>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; border-top:4px solid #6366f1;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-comments"></i> Mode interactif</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0.5rem 0 0;">Vous dialoguez avec Claude Code en temps réel. Idéal pour explorer des idées, affiner une analyse, ou débugger un workflow. Vous posez des questions, Claude répond et agit.</p>
+     <div class="terminal-box" style="margin:0.75rem 0 0; font-size:0.75rem; padding:0.75rem;">
+$ claude
+> "Analyse NVDA en détail"
+> "Ajoute un trade idea bearish"
+> "Traduis en arabe"
+     </div>
+   </div>
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; border-top:4px solid #9333ea;">
+     <div style="font-size:0.7rem; font-weight:700; color:#9333ea; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-clock"></i> Mode autonome (headless)</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0.5rem 0 0;">Claude Code s'exécute sans intervention humaine. Planifié via cron ou bot Discord. Idéal pour les tâches récurrentes : briefing quotidien, scanner, rétrospective.</p>
+     <div class="terminal-box" style="margin:0.75rem 0 0; font-size:0.75rem; padding:0.75rem;">
+$ claude --print "scan du jour"
+<span style="color:#6366f1;"># Exécute tout automatiquement</span>
+<span style="color:#6366f1;"># Aucune interaction humaine</span>
+     </div>
+   </div>
+ </div>
+
+ <h3>Le bot Discord : planifier des tâches</h3>
+
+ <p>Chez Market Watch, nous utilisons un <strong>bot Discord</strong> qui contrôle les tâches planifiées. L'avantage : vous gérez tout depuis votre téléphone, avec des notifications en temps réel.</p>
+
+ <div class="code-block">
+   <span class="code-label">Discord</span>
+<span class="code-comment"># Créer des tâches planifiées</span>
+<span class="code-keyword">every day at 07:00</span> articles <span class="code-string">analyse daily</span>
+<span class="code-keyword">every weekday at 23:00</span> articles <span class="code-string">scan du jour</span>
+<span class="code-keyword">every friday at 23:00</span> articles <span class="code-string">rétrospective scanner</span>
+<span class="code-keyword">every sunday at 18:00</span> articles <span class="code-string">nouvelle analyse weekly</span>
+
+<span class="code-comment"># Contrôler les tâches</span>
+<span class="code-keyword">schedules</span>          <span class="code-comment"># Lister toutes les tâches</span>
+<span class="code-keyword">pause</span> #1            <span class="code-comment"># Mettre en pause</span>
+<span class="code-keyword">resume</span> #1           <span class="code-comment"># Reprendre</span>
+<span class="code-keyword">run</span> #1              <span class="code-comment"># Exécuter immédiatement</span>
+<span class="code-keyword">cancel</span> #1           <span class="code-comment"># Supprimer</span>
+ </div>
+
+ <!-- ECharts: Timeline d'une journée type -->
+ <h3>Timeline d'une journée type automatisée</h3>
+ <div id="chartTimeline" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Le gain de productivité</h4>
+   <p style="margin-bottom:0;">Avec cette configuration, Market Watch publie <strong>chaque jour</strong> un briefing matinal, un scan quotidien et des analyses individuelles — le tout sans intervention humaine. L'équivalent de 4-6 heures de travail d'analyste, automatisé pour ~$5-10/jour.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : COMPARATIF IA                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="comparatif"><i class="fa-solid fa-scale-balanced" style="color:#6366f1;"></i> Comparatif IA</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-robot" style="color:#6366f1;"></i> Claude Code vs ChatGPT vs Perplexity</h2>
+
+ <p>Pourquoi Claude Code et pas simplement ChatGPT ou Perplexity ? Chaque outil a ses forces, mais pour l'automatisation du trading, Claude Code est dans une catégorie à part.</p>
+
+ <table class="compare-table">
+   <thead>
+     <tr>
+       <th>Critère</th>
+       <th>Claude Code</th>
+       <th>ChatGPT</th>
+       <th>Perplexity</th>
+     </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td><strong>Interface</strong></td>
+       <td>CLI (terminal)</td>
+       <td>Web / App</td>
+       <td>Web / App</td>
+     </tr>
+     <tr>
+       <td><strong>Exécution de code</strong></td>
+       <td style="color:#16a34a; font-weight:700;">Natif (Bash, Python, Node)</td>
+       <td>Sandbox limité</td>
+       <td>Non</td>
+     </tr>
+     <tr>
+       <td><strong>Écriture de fichiers</strong></td>
+       <td style="color:#16a34a; font-weight:700;">Système local complet</td>
+       <td>Non (sandbox)</td>
+       <td>Non</td>
+     </tr>
+     <tr>
+       <td><strong>APIs externes (MCP)</strong></td>
+       <td style="color:#16a34a; font-weight:700;">15+ outils intégrés</td>
+       <td>GPTs limités</td>
+       <td>Non</td>
+     </tr>
+     <tr>
+       <td><strong>Multi-agents</strong></td>
+       <td style="color:#16a34a; font-weight:700;">CoWork natif</td>
+       <td>Non</td>
+       <td>Non</td>
+     </tr>
+     <tr>
+       <td><strong>Automatisation</strong></td>
+       <td style="color:#16a34a; font-weight:700;">Cron, Discord bot</td>
+       <td>API uniquement</td>
+       <td>Non</td>
+     </tr>
+     <tr>
+       <td><strong>Git intégré</strong></td>
+       <td style="color:#16a34a; font-weight:700;">Commit, push natif</td>
+       <td>Non</td>
+       <td>Non</td>
+     </tr>
+     <tr>
+       <td><strong>Recherche web</strong></td>
+       <td>Oui (WebSearch)</td>
+       <td>Oui (Bing)</td>
+       <td style="color:#16a34a; font-weight:700;">Excellent (spécialité)</td>
+     </tr>
+     <tr>
+       <td><strong>Prix</strong></td>
+       <td>~$0.50-2 / analyse</td>
+       <td>$20/mois (Plus)</td>
+       <td>$20/mois (Pro)</td>
+     </tr>
+     <tr>
+       <td><strong>Idéal pour</strong></td>
+       <td style="color:#6366f1; font-weight:700;">Automatisation trading</td>
+       <td>Conversation, brainstorming</td>
+       <td>Recherche d'information</td>
+     </tr>
+   </tbody>
+ </table>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> En résumé</h4>
+   <p style="margin-bottom:0;"><strong>Claude Code</strong> est le seul outil qui combine exécution de code local, accès aux APIs financières via MCP, multi-agents et automatisation. Pour un trader qui veut automatiser son workflow, c'est l'outil le plus complet. ChatGPT reste excellent pour le brainstorming et Perplexity pour la recherche, mais aucun des deux ne peut écrire un rapport HTML sur votre disque et le publier sur GitHub Pages.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9 : PREMIERS RÉSULTATS                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="resultats"><i class="fa-solid fa-trophy" style="color:#6366f1;"></i> Premiers Résultats</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-flag-checkered" style="color:#6366f1;"></i> Ce que vous pourrez faire après cette série</h2>
+
+ <p>À la fin de cette série en 5 parties, vous aurez construit un <strong>système de trading automatisé complet</strong>. Voici la feuille de route.</p>
+
+ <!-- ECharts: Radar des compétences -->
+ <div id="chartRadar" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+ <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin:2rem 0;">
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #6366f1;">
+     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+       <div style="width:40px; height:40px; border-radius:10px; background:#eef2ff; color:#6366f1; display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fa-solid fa-chart-line"></i></div>
+       <h4 style="margin:0; font-size:1rem; color:#0f172a;">Analyses automatisées</h4>
+     </div>
+     <p style="font-size:0.85rem; color:#64748b; margin:0; line-height:1.5;">Rapport complet (profil, technicals, fundamentals, trade idea) généré en 3 minutes avec graphiques ECharts interactifs.</p>
+     <div style="margin-top:0.75rem; font-size:0.75rem; font-weight:700; color:#6366f1;">Partie 1 (cette leçon)</div>
+   </div>
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #2563eb;">
+     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+       <div style="width:40px; height:40px; border-radius:10px; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+       <h4 style="margin:0; font-size:1rem; color:#0f172a;">Scanner de marché</h4>
+     </div>
+     <p style="font-size:0.85rem; color:#64748b; margin:0; line-height:1.5;">Scan quotidien avec détection de régime, 4 stratégies (pre-squeeze, momentum, breakout, short squeeze) et alertes.</p>
+     <div style="margin-top:0.75rem; font-size:0.75rem; font-weight:700; color:#2563eb;">Partie 2 — Screeners</div>
+   </div>
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #9333ea;">
+     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+       <div style="width:40px; height:40px; border-radius:10px; background:#fae8ff; color:#9333ea; display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fa-solid fa-share-nodes"></i></div>
+       <h4 style="margin:0; font-size:1rem; color:#0f172a;">Réseaux sociaux</h4>
+     </div>
+     <p style="font-size:0.85rem; color:#64748b; margin:0; line-height:1.5;">Publication automatique sur X (Twitter), LinkedIn, YouTube Shorts avec génération de visuels et hashtags optimisés.</p>
+     <div style="margin-top:0.75rem; font-size:0.75rem; font-weight:700; color:#9333ea;">Partie 3 — Social Media</div>
+   </div>
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #f59e0b;">
+     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+       <div style="width:40px; height:40px; border-radius:10px; background:#fef3c7; color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fa-brands fa-discord"></i></div>
+       <h4 style="margin:0; font-size:1rem; color:#0f172a;">Bots & Alertes</h4>
+     </div>
+     <p style="font-size:0.85rem; color:#64748b; margin:0; line-height:1.5;">Bot Discord pour la planification, alertes Telegram en temps réel, notifications push quand un setup est détecté.</p>
+     <div style="margin-top:0.75rem; font-size:0.75rem; font-weight:700; color:#f59e0b;">Partie 4 — Bots</div>
+   </div>
+   <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #16a34a;">
+     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+       <div style="width:40px; height:40px; border-radius:10px; background:#f0fdf4; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fa-solid fa-rocket"></i></div>
+       <h4 style="margin:0; font-size:1rem; color:#0f172a;">Techniques avancées</h4>
+     </div>
+     <p style="font-size:0.85rem; color:#64748b; margin:0; line-height:1.5;">Options Greeks, backtesting, portefeuille VaR, Evidence.dev dashboards, multi-LLM (DeepSeek + Claude) et scaling.</p>
+     <div style="margin-top:0.75rem; font-size:0.75rem; font-weight:700; color:#16a34a;">Partie 5 — Avancé</div>
+   </div>
+ </div>
+
+ <div class="formula-box">
+   <div class="formula-label">Objectif final</div>
+   1 commande = Analyse complète + Publication + Alertes + Réseaux sociaux
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 10 : QUIZ                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#6366f1;"></i> Quiz</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-brain" style="color:#6366f1;"></i> Testez vos connaissances — 6 questions</h2>
+
+ <p>Cliquez sur chaque question pour révéler la réponse.</p>
+
+ <details>
+   <summary>Q1 — Qu'est-ce que Claude Code et en quoi diffère-t-il de ChatGPT ?</summary>
+   <div class="quiz-answer">
+     <p><strong>Claude Code</strong> est le CLI officiel d'Anthropic. Contrairement à ChatGPT (interface web), il s'exécute dans votre terminal et peut directement lire/écrire des fichiers sur votre machine, exécuter des commandes Bash, appeler des APIs via MCP, et faire des commits Git.</p>
+     <p style="margin-bottom:0;">C'est un <strong>agent</strong> qui agit sur votre système, pas juste un chatbot. Il peut créer des rapports HTML complets, les publier, et automatiser des workflows entiers sans intervention humaine.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q2 — Qu'est-ce que le MCP (Model Context Protocol) ?</summary>
+   <div class="quiz-answer">
+     <p>Le <strong>MCP</strong> est un protocole standardisé qui permet à Claude Code d'accéder à des outils et des données externes. C'est l'équivalent des « plugins » : chaque serveur MCP expose un ensemble de fonctions (outils) que Claude peut appeler.</p>
+     <p style="margin-bottom:0;">Par exemple, le MCP MarketWatch fournit des outils comme <code>GetInstruments</code>, <code>QueryData</code>, <code>RunAutoScreener</code> qui donnent accès à des données financières en temps réel depuis Yahoo Finance, SEC EDGAR, Fintel et autres sources.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q3 — À quoi sert le fichier CLAUDE.md ?</summary>
+   <div class="quiz-answer">
+     <p>Le fichier <strong>CLAUDE.md</strong> est le document d'instructions de votre projet. Claude Code le lit automatiquement à chaque lancement et suit ses directives à la lettre.</p>
+     <p style="margin-bottom:0;">Il définit la structure du projet (dossiers, fichiers), les conventions (CSS, langue, format), les workflows (comment analyser un stock, comment publier), et les sources de données. Plus il est détaillé et précis, plus Claude Code produira des résultats cohérents et de haute qualité.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q4 — Qu'est-ce que le mode CoWork et pourquoi est-il utile ?</summary>
+   <div class="quiz-answer">
+     <p>Le mode <strong>CoWork</strong> permet à un agent Claude « orchestrateur » de déléguer des sous-tâches à d'autres agents Claude qui s'exécutent en parallèle. C'est une architecture multi-agents.</p>
+     <p style="margin-bottom:0;">Exemple concret : pour générer 6 variantes d'une analyse (expert/beginner x FR/EN/AR), l'orchestrateur lance 6 agents en parallèle. Chaque agent traduit et adapte le contenu indépendamment, puis l'orchestrateur consolide. Résultat : <strong>6 rapports en 5 minutes</strong> au lieu de 30 minutes séquentiellement.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q5 — Quelle est la différence entre le flag --print et le mode interactif ?</summary>
+   <div class="quiz-answer">
+     <p>Le mode <strong>interactif</strong> (simplement <code>claude</code>) ouvre une session de dialogue où vous échangez avec Claude Code en temps réel. Vous pouvez poser des questions, affiner les résultats, et guider l'agent.</p>
+     <p style="margin-bottom:0;">Le flag <strong>--print</strong> (<code>claude --print "commande"</code>) exécute Claude Code en mode <strong>headless</strong> (non-interactif). Pas de confirmation, pas de questions : Claude exécute la tâche et retourne. C'est le mode utilisé pour les tâches automatisées (cron jobs, bot Discord).</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q6 — Combien coûte une utilisation régulière de Claude Code pour le trading ?</summary>
+   <div class="quiz-answer">
+     <p>Claude Code fonctionne avec une clé API Anthropic (paiement à l'usage). Les coûts typiques sont :</p>
+     <ul style="margin-bottom:0;">
+       <li><strong>Analyse complète</strong> (6 variantes) : $0.50-2.00</li>
+       <li><strong>Scanner quotidien</strong> : $1-3</li>
+       <li><strong>Briefing quotidien</strong> : $0.50-1.50</li>
+       <li><strong>Budget mensuel recommandé</strong> : $50-100 pour un usage régulier (daily + scanner + analyses ponctuelles)</li>
+     </ul>
+     <p style="margin-bottom:0; margin-top:0.5rem;">C'est 20 à 40 fois moins cher qu'un terminal Bloomberg ($2,000/mois) pour des analyses comparables, avec l'avantage de l'automatisation complète.</p>
+   </div>
+ </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ & TAKEAWAY                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="resume"><i class="fa-solid fa-bookmark" style="color:#6366f1;"></i> Ce Qu'on Retient</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-list-check" style="color:#6366f1;"></i> Les 6 leçons essentielles</h2>
+
+ <div class="takeaway-box">
+   <h3><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Résumé de la Partie 1</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-terminal"></i> <span><strong>Claude Code est un agent CLI</strong> qui exécute du code, écrit des fichiers et appelle des APIs — bien au-delà d'un simple chatbot conversationnel.</span></li>
+     <li><i class="fa-solid fa-diagram-project"></i> <span><strong>L'architecture est modulaire</strong> : données (MCP) &rarr; analyse (Claude) &rarr; rapport (HTML) &rarr; publication (Git). Chaque couche est interchangeable.</span></li>
+     <li><i class="fa-solid fa-plug"></i> <span><strong>Le MCP Gateway</strong> agrège 10+ sources de données financières en 15+ outils standardisés. Une seule interface pour toutes vos données de marché.</span></li>
+     <li><i class="fa-solid fa-file-code"></i> <span><strong>Le CLAUDE.md est votre bible</strong>. Plus il est détaillé et précis, plus Claude Code sera autonome et cohérent dans ses analyses.</span></li>
+     <li><i class="fa-solid fa-users-gear"></i> <span><strong>Le mode CoWork</strong> permet la collaboration multi-agents en parallèle pour un gain de productivité massif sur les tâches batch.</span></li>
+     <li><i class="fa-solid fa-clock"></i> <span><strong>L'automatisation via cron ou bot Discord</strong> transforme un workflow manuel de 45 minutes en pipeline 100% autonome exécuté en 3 minutes.</span></li>
+   </ul>
+ </div>
+
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem; margin:2rem 0; text-align:center;">
+   <p style="font-size:0.9rem; color:#64748b; margin-bottom:0.5rem;">Prochaine étape</p>
+   <p style="font-size:1.1rem; color:#0f172a; font-weight:700; margin-bottom:0.5rem;">Maintenant que Claude Code est installé, comment <em>scanner le marché automatiquement</em> ?</p>
+   <p style="font-size:0.9rem; color:#64748b; margin-bottom:0;">C'est exactement ce que nous aborderons dans la <strong>Partie 2 : Screeners Automatisés</strong>.</p>
+ </div>
+
+ <a href="../part2-screeners/" class="next-cta">
+   <div>
+     <div class="next-label">Partie 2 — Prochaine leçon</div>
+     <div class="next-title">Screeners Automatisés — DSL, AutoScreener & Alertes</div>
+   </div>
+   <i class="fa-solid fa-arrow-right"></i>
+ </a>
+</div>
+
+</div><!-- /.container -->
+
+<!-- Footer -->
+<div class="footer-bar">
+ <p>Série <strong>Automatiser son Trading avec Claude Code</strong> — Partie 1 sur 5</p>
+ <p style="margin-top:0.5rem;"><a href="./">1. Introduction</a> &middot; <a href="../part2-screeners/">2. Screeners</a> &middot; <a href="../part3-social-media/">3. Réseaux</a> &middot; <a href="../part4-bots/">4. Bots</a> &middot; <a href="../part5-avance/">5. Avancé</a></p>
+ <p style="margin-top:1rem; font-size:0.7rem; color:#94a3b8;">Les informations présentées sont à but éducatif uniquement et ne constituent pas des conseils en investissement. L'automatisation du trading comporte des risques. Faites toujours vos propres recherches avant d'investir.</p>
+ <p style="margin-top:0.5rem;"><a href="/">market-watch.xyz</a> &copy; 2025-2026</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- ECHARTS INITIALIZATION                                        -->
+<!-- ============================================================ -->
+<script>
+// ---- Chart 1: Architecture Diagram (Graph/Force) ----
+(function() {
+ var dom = document.getElementById('chartArchitecture');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ chart.setOption({
+   tooltip: {},
+   animationDurationUpdate: 1500,
+   animationEasingUpdate: 'quinticInOut',
+   series: [{
+     type: 'graph',
+     layout: 'force',
+     roam: true,
+     label: { show: true, fontSize: 11, fontWeight: 600, color: '#1e293b' },
+     edgeLabel: { fontSize: 9, color: '#94a3b8' },
+     force: { repulsion: 280, edgeLength: [100, 180], gravity: 0.08 },
+     data: [
+       { name: 'Claude Code', symbolSize: 70, itemStyle: { color: '#6366f1' }, label: { color: '#fff', fontWeight: 800, fontSize: 13 } },
+       { name: 'MCP Gateway', symbolSize: 55, itemStyle: { color: '#4f46e5' }, label: { color: '#fff', fontWeight: 700 } },
+       { name: 'Yahoo Finance', symbolSize: 38, itemStyle: { color: '#2563eb' }, label: { color: '#fff' } },
+       { name: 'SEC EDGAR', symbolSize: 38, itemStyle: { color: '#0891b2' }, label: { color: '#fff' } },
+       { name: 'Fintel', symbolSize: 34, itemStyle: { color: '#0d9488' }, label: { color: '#fff' } },
+       { name: 'StockTwits', symbolSize: 34, itemStyle: { color: '#059669' }, label: { color: '#fff' } },
+       { name: 'GitHub Pages', symbolSize: 45, itemStyle: { color: '#16a34a' }, label: { color: '#fff', fontWeight: 700 } },
+       { name: 'Discord Bot', symbolSize: 40, itemStyle: { color: '#7c3aed' }, label: { color: '#fff' } },
+       { name: 'Telegram', symbolSize: 36, itemStyle: { color: '#0ea5e9' }, label: { color: '#fff' } },
+       { name: 'CLAUDE.md', symbolSize: 40, itemStyle: { color: '#f59e0b' }, label: { color: '#fff' } },
+       { name: 'Rapport HTML', symbolSize: 42, itemStyle: { color: '#ef4444' }, label: { color: '#fff' } },
+       { name: 'WebSearch', symbolSize: 34, itemStyle: { color: '#8b5cf6' }, label: { color: '#fff' } }
+     ],
+     links: [
+       { source: 'MCP Gateway', target: 'Claude Code', lineStyle: { width: 3, color: '#818cf8' } },
+       { source: 'Yahoo Finance', target: 'MCP Gateway', lineStyle: { width: 2, color: '#93c5fd' } },
+       { source: 'SEC EDGAR', target: 'MCP Gateway', lineStyle: { width: 2, color: '#67e8f9' } },
+       { source: 'Fintel', target: 'MCP Gateway', lineStyle: { width: 1.5, color: '#5eead4' } },
+       { source: 'StockTwits', target: 'MCP Gateway', lineStyle: { width: 1.5, color: '#6ee7b7' } },
+       { source: 'CLAUDE.md', target: 'Claude Code', lineStyle: { width: 2.5, color: '#fbbf24', type: 'dashed' } },
+       { source: 'WebSearch', target: 'Claude Code', lineStyle: { width: 2, color: '#a78bfa' } },
+       { source: 'Claude Code', target: 'Rapport HTML', lineStyle: { width: 3, color: '#f87171' } },
+       { source: 'Rapport HTML', target: 'GitHub Pages', lineStyle: { width: 2.5, color: '#4ade80' } },
+       { source: 'Claude Code', target: 'Discord Bot', lineStyle: { width: 2, color: '#a78bfa' } },
+       { source: 'Claude Code', target: 'Telegram', lineStyle: { width: 1.5, color: '#38bdf8' } }
+     ],
+     lineStyle: { opacity: 0.7, curveness: 0.1 }
+   }]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ---- Chart 2: Timeline d'une journée type ----
+(function() {
+ var dom = document.getElementById('chartTimeline');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ var hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+ var activities = [0, 3, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 4];
+ var labels = ['', 'Briefing\nDaily', '', 'Analyse\nponctuelle', '', '', '', '', '', 'Veille\nnews', '', '', '', '', '', '', 'Alertes\nTelegram', 'Scanner\nquotidien'];
+ var colors = activities.map(function(v) {
+   if (v === 0) return '#e2e8f0';
+   if (v === 1) return '#818cf8';
+   if (v === 3) return '#6366f1';
+   return '#4f46e5';
+ });
+
+ chart.setOption({
+   tooltip: {
+     trigger: 'axis',
+     formatter: function(params) {
+       var idx = params[0].dataIndex;
+       if (activities[idx] === 0) return hours[idx] + ' — Aucune activité';
+       return hours[idx] + ' — ' + labels[idx].replace('\n', ' ');
+     }
+   },
+   grid: { left: '3%', right: '4%', bottom: '8%', top: '12%', containLabel: true },
+   xAxis: {
+     type: 'category',
+     data: hours,
+     axisLabel: { color: '#64748b', fontWeight: 600, fontSize: 10, rotate: 45 },
+     axisLine: { lineStyle: { color: '#e2e8f0' } }
+   },
+   yAxis: {
+     type: 'value',
+     name: 'Intensité',
+     nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+     axisLabel: { show: false },
+     splitLine: { lineStyle: { color: '#f1f5f9' } },
+     max: 5
+   },
+   series: [{
+     name: 'Activité',
+     type: 'bar',
+     data: activities.map(function(v, i) {
+       return { value: v, itemStyle: { color: colors[i], borderRadius: [4, 4, 0, 0] } };
+     }),
+     barWidth: '55%',
+     label: {
+       show: true,
+       position: 'top',
+       formatter: function(params) { return labels[params.dataIndex]; },
+       color: '#334155',
+       fontWeight: 700,
+       fontSize: 9,
+       lineHeight: 13
+     }
+   }]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ---- Chart 3: Radar des compétences (série) ----
+(function() {
+ var dom = document.getElementById('chartRadar');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ chart.setOption({
+   tooltip: {},
+   radar: {
+     indicator: [
+       { name: 'Analyses\ntechniques', max: 100 },
+       { name: 'Scanner\nde marché', max: 100 },
+       { name: 'Réseaux\nsociaux', max: 100 },
+       { name: 'Bots &\nAlertes', max: 100 },
+       { name: 'Options &\nGreeks', max: 100 },
+       { name: 'Portefeuille\n& VaR', max: 100 }
+     ],
+     shape: 'circle',
+     splitNumber: 4,
+     axisName: { color: '#475569', fontSize: 11, fontWeight: 600 },
+     splitLine: { lineStyle: { color: '#e2e8f0' } },
+     splitArea: { areaStyle: { color: ['#f8fafc', '#eef2ff', '#e0e7ff', '#c7d2fe'] } },
+     axisLine: { lineStyle: { color: '#e2e8f0' } }
+   },
+   series: [{
+     type: 'radar',
+     data: [
+       {
+         value: [30, 10, 5, 5, 5, 5],
+         name: 'Après Partie 1',
+         lineStyle: { color: '#c7d2fe', width: 2 },
+         areaStyle: { color: 'rgba(199,210,254,0.3)' },
+         itemStyle: { color: '#c7d2fe' }
+       },
+       {
+         value: [90, 95, 85, 90, 80, 75],
+         name: 'Après Partie 5',
+         lineStyle: { color: '#6366f1', width: 3 },
+         areaStyle: { color: 'rgba(99,102,241,0.2)' },
+         itemStyle: { color: '#6366f1' }
+       }
+     ]
+   }],
+   legend: {
+     data: ['Après Partie 1', 'Après Partie 5'],
+     bottom: 0,
+     textStyle: { color: '#64748b', fontWeight: 600 }
+   }
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

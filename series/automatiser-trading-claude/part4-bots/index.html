@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Bots & Pipelines de Trading — Construire des pipelines automatisés avec Claude Code | Automatiser son Trading — Partie 4 | Market Watch</title>
+ <meta name="description" content="Série Automatiser son Trading avec Claude Code — Partie 4 : Construire des bots Discord, des pipelines d'analyse quotidienne, des alertes en temps réel et un système de publication automatisé sur GitHub Pages.">
+ <meta property="og:title" content="Bots & Pipelines de Trading — Automatisation complète | Market Watch">
+ <meta property="og:description" content="Construire des pipelines de trading automatisés avec Claude Code : bot Discord, scanner algorithmique, alertes temps réel, publication GitHub Pages et monitoring.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/automatiser-trading-claude/part4-bots/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ /* Series-specific styles — INDIGO THEME */
+ .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+ .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+ .brand-logo:hover { color:#6366f1; }
+ .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+ .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+ .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+ .series-link:hover { border-color:#818cf8; color:#818cf8; }
+ .series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ /* Code blocks */
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', 'Courier New', monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; font-family:'Inter', sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#818cf8; }
+ .code-block .string { color:#34d399; }
+ .code-block .function { color:#f59e0b; }
+ .code-block .variable { color:#38bdf8; }
+
+ /* Terminal box — dark with green accent */
+ .terminal-box { background:#0a0a0a; color:#22c55e; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', 'Courier New', monospace; font-size:0.82rem; line-height:1.8; position:relative; border:1px solid #1e293b; }
+ .terminal-box .terminal-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.6rem; color:#4ade80; text-transform:uppercase; letter-spacing:0.1em; font-family:'Inter', sans-serif; font-weight:700; }
+ .terminal-box .prompt { color:#4ade80; }
+ .terminal-box .output { color:#94a3b8; }
+ .terminal-box .error { color:#f87171; }
+ .terminal-box .success { color:#34d399; }
+
+ /* Quiz */
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+ details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+ .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+ .footer-bar a { color:#64748b; text-decoration:none; }
+ .footer-bar a:hover { color:#6366f1; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#6366f1; }
+ .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+ .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.25rem 2rem; background:#f8fafc; border:1px solid #e2e8f0; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; transition:all 0.2s; }
+ .prev-cta:hover { border-color:#6366f1; color:#6366f1; }
+ .prev-cta .next-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; }
+ .prev-cta .next-title { font-size:1rem; font-weight:700; }
+
+ /* Pipeline step cards */
+ .pipeline-step { display:flex; align-items:flex-start; gap:1.25rem; padding:1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin:0.75rem 0; transition:border-color 0.2s; }
+ .pipeline-step:hover { border-color:#6366f1; }
+ .pipeline-step .step-number { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; flex-shrink:0; }
+ .pipeline-step .step-content { flex:1; }
+ .pipeline-step .step-title { font-weight:700; color:#0f172a; font-size:0.95rem; margin-bottom:0.25rem; }
+ .pipeline-step .step-desc { font-size:0.85rem; color:#64748b; line-height:1.5; }
+ .pipeline-step .step-duration { display:inline-block; font-size:0.7rem; font-weight:700; color:#6366f1; background:rgba(99,102,241,0.1); padding:0.15rem 0.5rem; border-radius:99px; margin-top:0.4rem; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .brand-bar { padding:0.75rem 1rem; }
+   .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+   .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+   .code-block, .terminal-box { font-size:0.75rem; padding:1rem; }
+   .next-cta, .prev-cta { flex-direction:column; text-align:center; }
+   .pipeline-step { flex-direction:column; text-align:center; }
+   .pipeline-step .step-number { margin:0 auto; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .series-title { display:none; }
+   .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+   .code-block, .terminal-box { font-size:0.7rem; padding:0.75rem; }
+ }
+ </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation -->
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-robot" style="margin-right:0.4rem;"></i> Automatiser son Trading</span>
+ <a href="../part1-introduction/" class="series-link">1 — Introduction</a>
+ <a href="../part2-screeners/" class="series-link">2 — Screeners</a>
+ <a href="../part3-social-media/" class="series-link">3 — Réseaux</a>
+ <a href="../part4-bots/" class="series-link current">4 — Bots</a>
+ <a href="../part5-avance/" class="series-link">5 — Avancé</a>
+</div>
+
+<!-- Hero -->
+<div class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-graduation-cap" style="margin-right:0.4rem;"></i> Série Automatiser son Trading — Partie 4 sur 5</div>
+ <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:800px;">Bots & Pipelines<br>de Trading</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto; line-height:1.7;">Construire des <strong>pipelines de trading automatisés</strong> avec Claude Code : bots Discord, alertes temps réel, publication GitHub Pages et monitoring.</p>
+ <div class="hero-badges">
+   <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-robot"></i> Bots</span>
+   <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-spin"></i> Pipeline</span>
+   <span class="hero-badge hero-badge-purple"><i class="fa-brands fa-discord"></i> Discord</span>
+   <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bell"></i> Alertes</span>
+ </div>
+</div>
+
+<div class="container">
+
+<!-- Navigation Grid -->
+<div class="nav-grid" style="margin-top:-3rem;">
+ <a href="#architecture" class="nav-item"><i class="fa-solid fa-sitemap" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Architecture</a>
+ <a href="#discord" class="nav-item"><i class="fa-brands fa-discord" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Bot Discord</a>
+ <a href="#daily" class="nav-item"><i class="fa-solid fa-calendar-day" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pipeline Daily</a>
+ <a href="#scanner" class="nav-item"><i class="fa-solid fa-magnifying-glass-chart" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pipeline Scanner</a>
+ <a href="#alertes" class="nav-item"><i class="fa-solid fa-bell" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Alertes</a>
+ <a href="#github" class="nav-item"><i class="fa-brands fa-github" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> GitHub Pages</a>
+ <a href="#monitoring" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Monitoring</a>
+ <a href="#securite" class="nav-item"><i class="fa-solid fa-shield-halved" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Sécurité</a>
+ <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : ARCHITECTURE D'UN BOT DE TRADING                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="architecture"><i class="fa-solid fa-sitemap" style="color:#6366f1;"></i> Architecture d'un Bot de Trading</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-microchip" style="color:#6366f1;"></i> Le bot comme orchestrateur, pas comme autotrader</h2>
+
+ <p>Avant d'aller plus loin, clarifions un point essentiel : <strong>le bot que nous construisons n'est PAS un robot de trading automatique</strong>. Il ne passe aucun ordre. C'est un <strong>orchestrateur</strong> qui automatise la collecte de données, l'analyse et la publication de rapports.</p>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark"></i> Ce qu'on NE fait PAS</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.2rem;">
+       <li>Passer des ordres automatiquement</li>
+       <li>Connecter un broker via API</li>
+       <li>Exécuter des trades sans validation humaine</li>
+       <li>Gérer un portefeuille en temps réel</li>
+     </ul>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-check"></i> Ce qu'on FAIT</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.2rem;">
+       <li>Collecter les données de marché automatiquement</li>
+       <li>Analyser les opportunités via Claude Code</li>
+       <li>Publier des rapports sur GitHub Pages</li>
+       <li>Envoyer des alertes sur Discord/Telegram</li>
+     </ul>
+   </div>
+ </div>
+
+ <h3>Les 5 composants du pipeline</h3>
+ <p>Le pipeline d'analyse automatisé repose sur 5 briques fondamentales qui s'enchaînent séquentiellement.</p>
+
+ <div class="formula-box">
+   <div class="formula-label">Pipeline simplifié</div>
+   <span class="formula-highlight">Collecte</span> &rarr; Analyse &rarr; <span class="formula-highlight">Décision</span> &rarr; Notification &rarr; <span class="formula-highlight">Publication</span>
+ </div>
+
+ <ul class="checklist">
+   <li><i class="fa-solid fa-database" style="color:#6366f1;"></i> <strong>Collecte</strong> — Le MCP Gateway récupère les données brutes : quotes, bars, earnings, technicals, sentiment, news. 58 types de données disponibles en une seule requête.</li>
+   <li><i class="fa-solid fa-brain" style="color:#6366f1;"></i> <strong>Analyse</strong> — Claude Code interprète les données : détection de setups, calcul des niveaux d'entrée/stop/target, évaluation du risque, rédaction du rapport.</li>
+   <li><i class="fa-solid fa-scale-balanced" style="color:#6366f1;"></i> <strong>Décision</strong> — Le rapport inclut un score, un trade idea, et un risk/reward. C'est le trader humain qui décide d'agir ou non.</li>
+   <li><i class="fa-solid fa-bell" style="color:#6366f1;"></i> <strong>Notification</strong> — Discord webhook, Telegram bot, ou email. Le trader est averti immédiatement qu'un nouveau rapport est disponible.</li>
+   <li><i class="fa-solid fa-globe" style="color:#6366f1;"></i> <strong>Publication</strong> — Le rapport HTML est commité sur GitHub, poussé, et accessible sur <code>market-watch.xyz</code> en moins de 2 minutes.</li>
+ </ul>
+
+ <!-- EChart: Architecture Sankey -->
+ <div id="chartArchitecture" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+
+ <p>Le diagramme ci-dessus illustre le flux de données complet. Notez que <strong>Claude Code est le cerveau central</strong> : il orchestre les appels MCP, interprète les résultats, génère les rapports, et déclenche la publication. Le bot Discord n'est que l'interface utilisateur — la télécommande, pas le moteur.</p>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Séparation des responsabilités</h4>
+   <p style="margin-bottom:0;">La clé d'un système fiable est la <strong>séparation claire des responsabilités</strong>. Le bot Discord gère l'interface utilisateur et la planification. Claude Code gère l'analyse et la rédaction. Git gère le versioning. GitHub Pages gère l'hébergement. Chaque composant fait une seule chose, et la fait bien.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : LE BOT DISCORD                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="discord"><i class="fa-brands fa-discord" style="color:#6366f1;"></i> Le Bot Discord</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-robot" style="color:#6366f1;"></i> Votre assistant personnel sur Discord</h2>
+
+ <p>Le bot Discord est la <strong>tour de contrôle</strong> de votre pipeline. Il transforme Discord en interface de commande pour Claude Code. Vous tapez une commande, le bot lance Claude Code, attend le résultat, et vous notifie.</p>
+
+ <h3>Architecture du bot</h3>
+ <div class="code-block">
+   <span class="code-label">Architecture</span>
+<span class="comment">// Structure du projet bot Discord</span>
+claude-discord-bot/
+├── index.js              <span class="comment">// Point d'entrée — discord.js</span>
+├── commands/
+│   ├── analyse.js        <span class="comment">// Handler: "analyse AAPL"</span>
+│   ├── scan.js           <span class="comment">// Handler: "scan du jour"</span>
+│   ├── daily.js          <span class="comment">// Handler: "analyse daily"</span>
+│   ├── retro.js          <span class="comment">// Handler: "rétrospective scanner"</span>
+│   └── schedule.js       <span class="comment">// Handler: "every day at 07:00..."</span>
+├── scheduler/
+│   ├── cron.js           <span class="comment">// Planificateur node-cron</span>
+│   └── executor.js       <span class="comment">// Exécuteur de tâches</span>
+├── lib/
+│   ├── claude.js         <span class="comment">// Wrapper: spawn claude CLI</span>
+│   ├── notifier.js       <span class="comment">// Notifications Discord + Telegram</span>
+│   └── logger.js         <span class="comment">// Logs structurés</span>
+├── schedules.json        <span class="comment">// Tâches planifiées (source de vérité)</span>
+├── package.json
+└── .env                  <span class="comment">// DISCORD_TOKEN, ANTHROPIC_API_KEY...</span>
+ </div>
+
+ <h3>Le coeur du bot : spawn de Claude Code</h3>
+ <p>Le bot ne fait <em>pas</em> d'analyse lui-même. Il lance Claude Code comme un processus enfant et capture sa sortie.</p>
+
+ <div class="code-block">
+   <span class="code-label">lib/claude.js</span>
+<span class="keyword">const</span> { spawn } = <span class="function">require</span>(<span class="string">'child_process'</span>);
+<span class="keyword">const</span> path = <span class="function">require</span>(<span class="string">'path'</span>);
+
+<span class="keyword">const</span> <span class="variable">ARTICLES_DIR</span> = <span class="string">'/Users/marketwatchxyz/GolandProjects/articles'</span>;
+
+<span class="keyword">function</span> <span class="function">runClaude</span>(prompt, { timeout = 600000 } = {}) {
+  <span class="keyword">return new</span> <span class="function">Promise</span>((resolve, reject) => {
+    <span class="keyword">const</span> proc = <span class="function">spawn</span>(<span class="string">'claude'</span>, [
+      <span class="string">'--print'</span>,          <span class="comment">// Mode non-interactif</span>
+      <span class="string">'--dangerously-skip-permissions'</span>,
+      <span class="string">'-p'</span>, prompt        <span class="comment">// Le prompt utilisateur</span>
+    ], {
+      cwd: <span class="variable">ARTICLES_DIR</span>,
+      timeout,
+      env: { ...process.env }
+    });
+
+    <span class="keyword">let</span> stdout = <span class="string">''</span>;
+    <span class="keyword">let</span> stderr = <span class="string">''</span>;
+
+    proc.stdout.on(<span class="string">'data'</span>, (d) => stdout += d);
+    proc.stderr.on(<span class="string">'data'</span>, (d) => stderr += d);
+
+    proc.on(<span class="string">'close'</span>, (code) => {
+      <span class="keyword">if</span> (code === 0) resolve(stdout);
+      <span class="keyword">else</span> reject(<span class="keyword">new</span> <span class="function">Error</span>(<span class="string">`Exit ${code}: ${stderr}`</span>));
+    });
+  });
+}
+
+module.exports = { runClaude };
+ </div>
+
+ <h3>Commandes Discord</h3>
+ <table class="compare-table">
+   <thead>
+     <tr><th>Commande</th><th>Action</th><th>Durée estimée</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><code>analyse AAPL</code></td><td>Analyse complète d'un ticker (6 variantes)</td><td>5-10 min</td></tr>
+     <tr><td><code>analyse daily</code></td><td>Briefing matinal quotidien</td><td>3-5 min</td></tr>
+     <tr><td><code>scan du jour</code></td><td>Scanner algorithmique + rapport dark theme</td><td>5-8 min</td></tr>
+     <tr><td><code>rétrospective scanner</code></td><td>Bilan hebdomadaire des scans passés</td><td>3-5 min</td></tr>
+     <tr><td><code>schedules</code></td><td>Lister toutes les tâches planifiées</td><td>instantané</td></tr>
+     <tr><td><code>pause #1</code></td><td>Mettre en pause une tâche planifiée</td><td>instantané</td></tr>
+     <tr><td><code>run #1</code></td><td>Exécuter immédiatement une tâche</td><td>variable</td></tr>
+   </tbody>
+ </table>
+
+ <h3>Le fichier schedules.json</h3>
+ <p>Les tâches planifiées sont stockées dans un fichier JSON qui sert de <strong>source de vérité</strong>. Le bot le relit au démarrage pour restaurer les planifications.</p>
+
+ <div class="code-block">
+   <span class="code-label">schedules.json</span>
+[
+  {
+    <span class="string">"id"</span>: 1,
+    <span class="string">"schedule"</span>: <span class="string">"0 7 * * *"</span>,
+    <span class="string">"command"</span>: <span class="string">"analyse daily"</span>,
+    <span class="string">"project"</span>: <span class="string">"articles"</span>,
+    <span class="string">"description"</span>: <span class="string">"Briefing quotidien 7h00"</span>,
+    <span class="string">"status"</span>: <span class="string">"active"</span>,
+    <span class="string">"createdAt"</span>: <span class="string">"2026-02-01T07:00:00Z"</span>,
+    <span class="string">"lastRun"</span>: <span class="string">"2026-02-21T07:00:12Z"</span>,
+    <span class="string">"lastResult"</span>: <span class="string">"success"</span>
+  },
+  {
+    <span class="string">"id"</span>: 2,
+    <span class="string">"schedule"</span>: <span class="string">"0 23 * * 1-5"</span>,
+    <span class="string">"command"</span>: <span class="string">"scan du jour"</span>,
+    <span class="string">"project"</span>: <span class="string">"articles"</span>,
+    <span class="string">"description"</span>: <span class="string">"Scanner quotidien Lun-Ven 23h00"</span>,
+    <span class="string">"status"</span>: <span class="string">"active"</span>,
+    <span class="string">"createdAt"</span>: <span class="string">"2026-02-01T23:00:00Z"</span>,
+    <span class="string">"lastRun"</span>: <span class="string">"2026-02-21T23:00:08Z"</span>,
+    <span class="string">"lastResult"</span>: <span class="string">"success"</span>
+  },
+  {
+    <span class="string">"id"</span>: 3,
+    <span class="string">"schedule"</span>: <span class="string">"0 23 * * 5"</span>,
+    <span class="string">"command"</span>: <span class="string">"rétrospective scanner"</span>,
+    <span class="string">"project"</span>: <span class="string">"articles"</span>,
+    <span class="string">"description"</span>: <span class="string">"Rétrospective scanner Vendredi 23h00"</span>,
+    <span class="string">"status"</span>: <span class="string">"active"</span>,
+    <span class="string">"createdAt"</span>: <span class="string">"2026-02-07T23:00:00Z"</span>,
+    <span class="string">"lastRun"</span>: <span class="string">"2026-02-21T23:01:34Z"</span>,
+    <span class="string">"lastResult"</span>: <span class="string">"success"</span>
+  }
+]
+ </div>
+
+ <h3>Gestion des erreurs et retry</h3>
+ <div class="code-block">
+   <span class="code-label">lib/executor.js</span>
+<span class="keyword">const</span> { runClaude } = <span class="function">require</span>(<span class="string">'./claude'</span>);
+<span class="keyword">const</span> { notify } = <span class="function">require</span>(<span class="string">'./notifier'</span>);
+<span class="keyword">const</span> logger = <span class="function">require</span>(<span class="string">'./logger'</span>);
+
+<span class="keyword">async function</span> <span class="function">executeWithRetry</span>(prompt, { maxRetries = 2, channel } = {}) {
+  <span class="keyword">for</span> (<span class="keyword">let</span> attempt = 1; attempt <= maxRetries + 1; attempt++) {
+    <span class="keyword">try</span> {
+      logger.<span class="function">info</span>(<span class="string">`Tentative ${attempt}/${maxRetries + 1}: ${prompt}`</span>);
+
+      <span class="keyword">const</span> startTime = Date.<span class="function">now</span>();
+      <span class="keyword">const</span> result = <span class="keyword">await</span> <span class="function">runClaude</span>(prompt, {
+        timeout: 600000  <span class="comment">// 10 min max</span>
+      });
+      <span class="keyword">const</span> duration = ((Date.<span class="function">now</span>() - startTime) / 1000).<span class="function">toFixed</span>(1);
+
+      logger.<span class="function">info</span>(<span class="string">`Succès en ${duration}s`</span>);
+      <span class="keyword">await</span> <span class="function">notify</span>(channel, {
+        title: <span class="string">`Terminé: ${prompt}`</span>,
+        description: <span class="string">`Durée: ${duration}s`</span>,
+        color: 0x16a34a  <span class="comment">// vert</span>
+      });
+      <span class="keyword">return</span> result;
+
+    } <span class="keyword">catch</span> (error) {
+      logger.<span class="function">error</span>(<span class="string">`Échec tentative ${attempt}: ${error.message}`</span>);
+
+      <span class="keyword">if</span> (attempt > maxRetries) {
+        <span class="keyword">await</span> <span class="function">notify</span>(channel, {
+          title: <span class="string">`ÉCHEC: ${prompt}`</span>,
+          description: error.message.<span class="function">slice</span>(0, 500),
+          color: 0xdc2626  <span class="comment">// rouge</span>
+        });
+        <span class="keyword">throw</span> error;
+      }
+
+      <span class="comment">// Attendre avant retry (backoff exponentiel)</span>
+      <span class="keyword">await new</span> <span class="function">Promise</span>(r => <span class="function">setTimeout</span>(r, attempt * 15000));
+    }
+  }
+}
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Pourquoi Discord et pas Telegram ?</h4>
+   <p style="margin-bottom:0;">Discord offre des <strong>canaux multiples</strong> (un canal par type de rapport), des <strong>embeds riches</strong> (formatage, couleurs, images), des <strong>threads</strong> pour les discussions, et une API robuste via discord.js. Telegram est plus simple mais moins structuré. Rien n'empêche d'utiliser les deux : Discord comme interface de commande, et Telegram pour les alertes mobiles rapides.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : PIPELINE D'ANALYSE QUOTIDIENNE                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="daily"><i class="fa-solid fa-calendar-day" style="color:#6366f1;"></i> Pipeline d'Analyse Quotidienne</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-clock" style="color:#6366f1;"></i> Votre journée type automatisée</h2>
+
+ <p>Un trader sérieux a besoin de données à des moments précis de la journée. Voici le pipeline quotidien complet qui tourne chez Market Watch.</p>
+
+ <div class="pipeline-step">
+   <div class="step-number">1</div>
+   <div class="step-content">
+     <div class="step-title"><i class="fa-solid fa-sun" style="color:#f59e0b; margin-right:0.5rem;"></i> 07h00 — Briefing Daily</div>
+     <div class="step-desc">Marchés EU et Asie (déjà ouverts), crypto overnight, pré-market US. Agenda macro du jour, earnings attendus. Format : rapport HTML complet avec dashboard rapide, calendrier, et idées de trading.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~4 min</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">2</div>
+   <div class="step-content">
+     <div class="step-title"><i class="fa-solid fa-chart-line" style="color:#2563eb; margin-right:0.5rem;"></i> 09h30 — Scan pré-marché US (optionnel)</div>
+     <div class="step-desc">Gap analysis, pre-market movers, volume anormal. Identifie les stocks qui ouvrent avec un écart significatif et ceux qui ont un volume pré-market inhabituel. Alerte Discord uniquement.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~2 min</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">3</div>
+   <div class="step-content">
+     <div class="step-title"><i class="fa-solid fa-flag-checkered" style="color:#16a34a; margin-right:0.5rem;"></i> 16h00 — Post-market recap (optionnel)</div>
+     <div class="step-desc">Résumé de la séance US : top/flop du jour, secteurs en rotation, événements marquants. Notification rapide sur Discord, pas de rapport HTML.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~1 min</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">4</div>
+   <div class="step-content">
+     <div class="step-title"><i class="fa-solid fa-magnifying-glass" style="color:#9333ea; margin-right:0.5rem;"></i> 23h00 — Scanner Algorithmique</div>
+     <div class="step-desc">Pipeline complet : AutoScreener + 3 DSL + filtrage Top 10 + rapport HTML dark theme + variantes multilangue. Le rapport le plus important de la journée.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~7 min</div>
+   </div>
+ </div>
+
+ <h3>Le flux de chaque étape</h3>
+ <p>Quelle que soit l'heure, chaque pipeline suit le même patron : collecte MCP, analyse Claude, publication HTML, notification.</p>
+
+ <div class="code-block">
+   <span class="code-label">pipeline-daily.sh</span>
+<span class="comment">#!/bin/bash</span>
+<span class="comment"># Pipeline d'analyse quotidienne Market Watch</span>
+<span class="comment"># Exécuté par le bot Discord via schedules.json</span>
+
+<span class="variable">ARTICLES_DIR</span>=<span class="string">"/Users/marketwatchxyz/GolandProjects/articles"</span>
+<span class="variable">LOG_DIR</span>=<span class="string">"$ARTICLES_DIR/.logs"</span>
+<span class="variable">DATE</span>=$(<span class="keyword">date</span> +%Y%m%d)
+
+<span class="comment"># Créer le dossier de logs s'il n'existe pas</span>
+<span class="keyword">mkdir</span> -p <span class="string">"$LOG_DIR"</span>
+
+<span class="comment"># Étape 1: Lancer Claude Code pour le briefing</span>
+<span class="keyword">echo</span> <span class="string">"[$(date)] Démarrage du briefing daily..."</span>
+
+<span class="keyword">cd</span> <span class="variable">$ARTICLES_DIR</span>
+
+<span class="keyword">claude</span> --print \
+  -p <span class="string">"analyse daily"</span> \
+  2>&1 | <span class="keyword">tee</span> <span class="string">"$LOG_DIR/daily-$DATE.log"</span>
+
+<span class="comment"># Étape 2: Vérifier que le fichier a été créé</span>
+<span class="keyword">if</span> [ -f <span class="string">"daily/$DATE/index.html"</span> ]; <span class="keyword">then</span>
+  <span class="keyword">echo</span> <span class="string">"[$(date)] Briefing créé avec succès"</span>
+
+  <span class="comment"># Étape 3: Git commit & push</span>
+  <span class="keyword">git</span> add <span class="string">"daily/$DATE/"</span> <span class="string">"index.html"</span>
+  <span class="keyword">git</span> commit -m <span class="string">"Add Daily Briefing $DATE"</span>
+  <span class="keyword">git</span> push origin main
+
+  <span class="keyword">echo</span> <span class="string">"[$(date)] Publié sur GitHub Pages"</span>
+<span class="keyword">else</span>
+  <span class="keyword">echo</span> <span class="string">"[$(date)] ERREUR: Fichier non créé"</span>
+  <span class="keyword">exit</span> 1
+<span class="keyword">fi</span>
+ </div>
+
+ <p>En pratique, c'est Claude Code lui-même qui gère le git add/commit/push, car il a accès au système de fichiers. Le script ci-dessus est une version simplifiée pour illustrer le flux. Le bot Discord se contente de lancer <code>claude --print -p "analyse daily"</code> et de capturer le résultat.</p>
+
+ <div class="alert-box">
+   <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Point crucial : chaque pipeline est isolé</h4>
+   <p style="margin-bottom:0;">Chaque pipeline (daily, scanner, analyse) est <strong>indépendant</strong>. Si le scanner de 23h00 échoue, cela n'affecte pas le briefing de 7h00 du lendemain. Le bot Discord gère chaque tâche dans un processus séparé avec son propre timeout et sa propre logique de retry.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : PIPELINE DE SCAN ALGORITHMIQUE                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scanner"><i class="fa-solid fa-magnifying-glass-chart" style="color:#6366f1;"></i> Pipeline de Scan Algorithmique</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-gears" style="color:#6366f1;"></i> Les 8 étapes du scanner automatisé</h2>
+
+ <p>Le scanner algorithmique est le pipeline le plus complexe. Il enchaîne 8 étapes en séquence, chacune dépendant du résultat de la précédente.</p>
+
+ <div class="pipeline-step">
+   <div class="step-number">1</div>
+   <div class="step-content">
+     <div class="step-title">RunAutoScreener — Détection du régime + candidats</div>
+     <div class="step-desc">Analyse les 6 composantes de marché (VIX, SPX, TLT, DXY, Credit, Liquidity) + NLP sur 18 articles Yahoo Finance. Détecte le régime (RiskOn, Neutral, EarlyRiskOff, RiskOff, Recovery) et retourne les 50 meilleurs candidats pondérés.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~8 sec</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">2</div>
+   <div class="step-content">
+     <div class="step-title">RunScreener x3 — Screeners DSL complémentaires</div>
+     <div class="step-desc">Trois screeners lancés en parallèle avec des DSL différents : Oversold Bounce (<code>rsi14 &lt; 30</code>), Momentum Breakout (<code>close &gt; sma(close, 200) && macd &gt; 0</code>), et Volume Spike (<code>vol &gt; sma(vol, 20) * 3</code>). Chacun retourne 20 candidats.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~30 sec (parallèle)</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">3</div>
+   <div class="step-content">
+     <div class="step-title">Fusion et filtrage — Top 10</div>
+     <div class="step-desc">Claude Code fusionne les résultats des 4 screeners, élimine les doublons, re-score les candidats en tenant compte du régime de marché, et sélectionne les 10 meilleurs setups.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~5 sec</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">4</div>
+   <div class="step-content">
+     <div class="step-title">QueryData — Données détaillées pour les Top 10</div>
+     <div class="step-desc">Pour chaque ticker retenu : quote, bars_daily, support_resistance, volume_profile, sentiment, trading_signals. Ces données alimentent les graphiques ECharts et les niveaux de trading du rapport.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~12 sec</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">5</div>
+   <div class="step-content">
+     <div class="step-title">WebSearch — Catalyseurs et actualités</div>
+     <div class="step-desc">Recherche web pour chaque ticker retenu : earnings récents, news spécifiques, catalyseurs attendus. Le contexte fondamental est essentiel pour valider un setup technique.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~15 sec</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">6</div>
+   <div class="step-content">
+     <div class="step-title">Génération HTML — Rapport dark theme</div>
+     <div class="step-desc">Claude Code génère le rapport HTML complet : dashboard régime, tableau des 10 setups avec entry/stop/TP1/TP2, graphiques ECharts (radar, bar, heatmap), et sections pédagogiques. Thème dark avec accents néon.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~90 sec</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">7</div>
+   <div class="step-content">
+     <div class="step-title">Variantes multilangue — Agents parallèles</div>
+     <div class="step-desc">L'orchestrateur lance des sous-agents pour créer les variantes : expert/en, expert/ar, beginner/fr, beginner/en, beginner/ar. Chaque agent adapte le contenu au niveau et à la langue cible.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~120 sec (parallèle)</div>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="step-number">8</div>
+   <div class="step-content">
+     <div class="step-title">Commit, Push & Notification</div>
+     <div class="step-desc"><code>git add</code> tous les fichiers, <code>git commit</code> avec un message descriptif, <code>git push</code> sur GitHub. Notification Discord avec le lien vers le rapport publié. Mise à jour de l'index.html principal.</div>
+     <div class="step-duration"><i class="fa-solid fa-stopwatch" style="margin-right:0.3rem;"></i> ~20 sec</div>
+   </div>
+ </div>
+
+ <!-- EChart: Timeline du pipeline avec durées -->
+ <div id="chartPipeline" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+ <div class="formula-box">
+   <div class="formula-label">Durée totale du pipeline scanner</div>
+   8 étapes = <span class="formula-highlight">~5 minutes</span> (étapes 2 et 7 en parallèle)
+ </div>
+
+ <h3>Ce que Claude Code produit</h3>
+ <div class="terminal-box">
+   <span class="terminal-label">Sortie Pipeline</span>
+<span class="prompt">$</span> claude --print -p "scan du jour"
+<span class="output">
+Reading CLAUDE.md...
+Calling RunAutoScreener(top_k=50, timeframe="1d")...
+  Regime detected: RiskOn (risk_tolerance: 0.68)
+  50 candidates returned
+
+Calling RunScreener x3 (oversold, momentum, breakout)...
+  Oversold: 18 candidates
+  Momentum: 22 candidates
+  Breakout: 15 candidates
+
+Merging and filtering: Top 10 selected
+  1. SMCI  (87.3) momentum_expansion
+  2. HOOD  (82.1) breakout_squeeze
+  3. RIVN  (79.8) short_squeeze
+  4. PLTR  (77.5) momentum_expansion
+  5. SOFI  (75.2) pre_squeeze
+  6. MARA  (73.1) breakout_squeeze
+  7. AFRM  (71.8) momentum_expansion
+  8. RKLB  (70.4) pre_squeeze
+  9. IONQ  (68.9) short_squeeze
+ 10. UPST  (67.2) momentum_expansion
+
+Calling QueryData for 10 tickers...
+Calling WebSearch for catalysts...
+</span>
+<span class="success">
+Writing scanner/20260221/index.html (1,247 lines)
+Writing scanner/20260221/assets/report.css
+Writing scanner/20260221/variants.json
+Writing 5 variant files...
+Updating index.html (scanner tab)
+
+Git: add 8 files, commit, push
+</span>
+<span class="prompt">$</span> <span class="success">Pipeline completed in 4m 37s</span>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Étapes parallélisées vs séquentielles</h4>
+   <p style="margin-bottom:0;">Les étapes 1 à 5 sont séquentielles (chaque étape dépend de la précédente). Les étapes 2 (3 screeners) et 7 (5 variantes) sont parallélisées en interne grâce au mode CoWork de Claude Code. C'est cette parallélisation qui permet de réduire le temps total de ~12 minutes théoriques à ~5 minutes réelles.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : ALERTES EN TEMPS RÉEL                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="alertes"><i class="fa-solid fa-bell" style="color:#6366f1;"></i> Alertes en Temps Réel</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-bolt" style="color:#6366f1;"></i> Ne ratez jamais une opportunité</h2>
+
+ <p>Les rapports quotidiens, c'est bien. Mais certains événements nécessitent une réaction immédiate. C'est le rôle du système d'alertes.</p>
+
+ <h3>Types d'alertes</h3>
+ <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-circle-exclamation"></i> Critique</div>
+     <ul style="font-size:0.82rem; color:#334155; margin:0; padding-left:1rem;">
+       <li>Earnings surprise (&gt; 10% miss/beat)</li>
+       <li>Halt de trading</li>
+       <li>Flash crash (&gt; 5% intraday)</li>
+     </ul>
+   </div>
+   <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#d97706; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Important</div>
+     <ul style="font-size:0.82rem; color:#334155; margin:0; padding-left:1rem;">
+       <li>Volume spike (&gt; 3x moyenne)</li>
+       <li>RSI extreme (&lt; 20 ou &gt; 80)</li>
+       <li>Breakout de range majeur</li>
+     </ul>
+   </div>
+   <div style="background:#eef2ff; border:1px solid #6366f1; border-radius:12px; padding:1rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-circle-info"></i> Info</div>
+     <ul style="font-size:0.82rem; color:#334155; margin:0; padding-left:1rem;">
+       <li>Passage de target (TP1 ou TP2 atteint)</li>
+       <li>Dégradation/upgrade analyste</li>
+       <li>Filing SEC inhabituel</li>
+     </ul>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle"></i> Routine</div>
+     <ul style="font-size:0.82rem; color:#334155; margin:0; padding-left:1rem;">
+       <li>Rapport publié avec succès</li>
+       <li>Pipeline terminé</li>
+       <li>Nouveau scan disponible</li>
+     </ul>
+   </div>
+ </div>
+
+ <h3>Sources de données pour les alertes</h3>
+ <table class="compare-table">
+   <thead>
+     <tr><th>Source</th><th>Type de données</th><th>Méthode</th><th>Latence</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>Yahoo Finance</strong></td><td>Prix, volume, earnings</td><td>WebSocket / polling</td><td>&lt; 5s</td></tr>
+     <tr><td><strong>Polygon.io</strong></td><td>Ticks, trades, quotes</td><td>WebSocket</td><td>&lt; 100ms</td></tr>
+     <tr><td><strong>SEC EDGAR</strong></td><td>Filings (10-K, 8-K)</td><td>RSS / polling 10min</td><td>~10 min</td></tr>
+     <tr><td><strong>NASDAQ</strong></td><td>Trade halts</td><td>Polling 1min</td><td>~1 min</td></tr>
+   </tbody>
+ </table>
+
+ <h3>Canaux de notification</h3>
+ <table class="compare-table">
+   <thead>
+     <tr><th>Canal</th><th>Usage</th><th>Latence</th><th>Avantage</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>Discord</strong></td><td>Interface principale, embeds riches</td><td>&lt; 1s</td><td>Canaux multiples, formatage</td></tr>
+     <tr><td><strong>Telegram</strong></td><td>Alertes mobiles rapides</td><td>&lt; 1s</td><td>Push notifications fiables</td></tr>
+     <tr><td><strong>Email</strong></td><td>Rapports quotidiens, récapitulatifs</td><td>1-5 min</td><td>Archivage automatique</td></tr>
+     <tr><td><strong>SMS</strong></td><td>Alertes critiques uniquement</td><td>1-10s</td><td>Fonctionne partout, pas besoin d'internet</td></tr>
+   </tbody>
+ </table>
+
+ <h3>Bot d'alertes avec throttling</h3>
+ <div class="code-block">
+   <span class="code-label">alert-bot.js</span>
+<span class="keyword">const</span> <span class="variable">MAX_ALERTS_PER_DAY</span> = 5;
+<span class="keyword">const</span> <span class="variable">COOLDOWN_MS</span> = 30 * 60 * 1000; <span class="comment">// 30 min entre chaque alerte</span>
+<span class="keyword">const</span> alertHistory = <span class="keyword">new</span> <span class="function">Map</span>();
+
+<span class="keyword">async function</span> <span class="function">sendAlert</span>({ ticker, type, priority, message }) {
+  <span class="keyword">const</span> key = <span class="string">`${ticker}-${type}`</span>;
+  <span class="keyword">const</span> now = Date.<span class="function">now</span>();
+
+  <span class="comment">// Anti-spam : vérifier le cooldown par ticker+type</span>
+  <span class="keyword">const</span> lastSent = alertHistory.<span class="function">get</span>(key) || 0;
+  <span class="keyword">if</span> (now - lastSent < <span class="variable">COOLDOWN_MS</span>) {
+    logger.<span class="function">debug</span>(<span class="string">`Throttled: ${key} (cooldown)`</span>);
+    <span class="keyword">return</span>;
+  }
+
+  <span class="comment">// Vérifier le quota journalier</span>
+  <span class="keyword">const</span> todayCount = <span class="function">getTodayAlertCount</span>();
+  <span class="keyword">if</span> (todayCount >= <span class="variable">MAX_ALERTS_PER_DAY</span> && priority !== <span class="string">'critical'</span>) {
+    logger.<span class="function">debug</span>(<span class="string">`Throttled: quota atteint (${todayCount}/${MAX_ALERTS_PER_DAY})`</span>);
+    <span class="keyword">return</span>;
+  }
+
+  <span class="comment">// Envoyer selon la priorité</span>
+  <span class="keyword">const</span> channels = {
+    <span class="string">'critical'</span>: [<span class="string">'discord'</span>, <span class="string">'telegram'</span>, <span class="string">'sms'</span>],
+    <span class="string">'important'</span>: [<span class="string">'discord'</span>, <span class="string">'telegram'</span>],
+    <span class="string">'info'</span>:      [<span class="string">'discord'</span>],
+    <span class="string">'routine'</span>:   [<span class="string">'discord'</span>]
+  };
+
+  <span class="keyword">const</span> targets = channels[priority] || [<span class="string">'discord'</span>];
+  <span class="keyword">const</span> color = {
+    <span class="string">'critical'</span>: 0xdc2626,
+    <span class="string">'important'</span>: 0xf59e0b,
+    <span class="string">'info'</span>: 0x6366f1,
+    <span class="string">'routine'</span>: 0x16a34a
+  }[priority];
+
+  <span class="keyword">for</span> (<span class="keyword">const</span> target <span class="keyword">of</span> targets) {
+    <span class="keyword">await</span> <span class="function">dispatch</span>(target, { ticker, type, message, color });
+  }
+
+  alertHistory.<span class="function">set</span>(key, now);
+}
+ </div>
+
+ <h3>Exemples de messages d'alerte</h3>
+ <div class="terminal-box">
+   <span class="terminal-label">Discord Alerts</span>
+<span class="error">[CRITIQUE] NVDA -8.2% — Earnings miss: EPS $0.82 vs $0.91 attendu</span>
+<span class="error">After-hours: $118.40 (-$10.60). Volume: 45M (12x normal)</span>
+
+<span class="output">[IMPORTANT] SMCI — Volume spike 4.2x moyenne</span>
+<span class="output">RSI: 72.3, Prix: $42.80 (+6.3%). Setup momentum en cours.</span>
+
+<span class="success">[INFO] Scanner 20260221 publié — 10 setups</span>
+<span class="success">Top: HOOD (82.1), RIVN (79.8), PLTR (77.5)</span>
+<span class="success">Lien: market-watch.xyz/scanner/20260221/</span>
+
+<span class="output">[ROUTINE] Daily Briefing 21/02 publié en 3m 42s</span>
+<span class="output">Lien: market-watch.xyz/daily/20260221/</span>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Règle d'or : pas de spam</h4>
+   <p style="margin-bottom:0;">Un système d'alertes qui envoie 50 notifications par jour devient inutile — vous finirez par tout ignorer. Limitez à <strong>5 alertes maximum par jour</strong> (sauf critiques), avec un cooldown de 30 minutes par ticker. Les meilleures alertes sont celles qui vous font <em>agir</em>, pas celles qui vous font <em>scroller</em>.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : PUBLICATION GITHUB PAGES                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="github"><i class="fa-brands fa-github" style="color:#6366f1;"></i> Pipeline de Publication</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-globe" style="color:#6366f1;"></i> De la génération à la publication</h2>
+
+ <p>GitHub Pages est notre plateforme de publication. Chaque rapport généré par Claude Code est un fichier HTML statique qui vit dans un repository Git. Un simple <code>git push</code> le rend accessible au monde entier.</p>
+
+ <h3>Structure du repository</h3>
+ <div class="code-block">
+   <span class="code-label">Structure Git</span>
+articles/                        <span class="comment"># Repository GitHub</span>
+├── index.html                   <span class="comment"># Landing page avec 5 tabs</span>
+├── CNAME                        <span class="comment"># DNS: market-watch.xyz</span>
+├── daily/
+│   ├── 20260221/index.html      <span class="comment"># Briefing du jour</span>
+│   ├── 20260220/index.html      <span class="comment"># Briefing d'hier</span>
+│   └── ...
+├── scanner/
+│   ├── 20260221/
+│   │   ├── index.html           <span class="comment"># Scan du jour (dark theme)</span>
+│   │   ├── assets/report.css
+│   │   ├── variants.json
+│   │   ├── expert/en/index.html
+│   │   ├── beginner/fr/index.html
+│   │   └── ...
+│   └── retrospective/
+│       └── index.html           <span class="comment"># Rétrospective hebdomadaire</span>
+├── analyses/
+│   ├── NVDA/index.html          <span class="comment"># Analyse NVIDIA</span>
+│   ├── AAPL/index.html          <span class="comment"># Analyse Apple</span>
+│   └── ...
+├── weekly/
+│   └── 20260216/index.html      <span class="comment"># Rapport hebdomadaire</span>
+└── series/
+    └── automatiser-trading-claude/  <span class="comment"># Cette série !</span>
+ </div>
+
+ <h3>Workflow Git automatisé</h3>
+ <div class="code-block">
+   <span class="code-label">Git Workflow</span>
+<span class="comment"># Ce que Claude Code exécute à chaque publication :</span>
+
+<span class="comment"># 1. Ajouter les nouveaux fichiers</span>
+<span class="keyword">git</span> add scanner/20260221/ index.html
+
+<span class="comment"># 2. Créer le commit avec un message descriptif</span>
+<span class="keyword">git</span> commit -m <span class="string">"Add Scanner Feb 21 — RiskOn regime, 10 setups"</span>
+
+<span class="comment"># 3. Pousser sur GitHub</span>
+<span class="keyword">git</span> push origin main
+
+<span class="comment"># GitHub Pages détecte le push et déploie en ~60s</span>
+<span class="comment"># Le rapport est accessible sur market-watch.xyz/scanner/20260221/</span>
+ </div>
+
+ <h3>Configuration DNS et CDN</h3>
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-server"></i> DNS (Fichier CNAME)</div>
+     <div class="code-block" style="margin:0.5rem 0 0; padding:1rem; font-size:0.8rem;">market-watch.xyz</div>
+     <p style="font-size:0.82rem; color:#64748b; margin:0.5rem 0 0;">Le fichier CNAME à la racine du repo pointe le domaine custom vers GitHub Pages.</p>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-shield"></i> CDN Cloudflare</div>
+     <ul style="font-size:0.82rem; color:#334155; margin:0.5rem 0 0; padding-left:1rem;">
+       <li>SSL gratuit (HTTPS)</li>
+       <li>Cache global (CDN 200+ POP)</li>
+       <li>Protection DDoS</li>
+       <li>Analytics visiteurs</li>
+     </ul>
+   </div>
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Pourquoi du HTML statique ?</h4>
+   <p style="margin-bottom:0;">Pas de base de données, pas de serveur, pas de backend. Chaque rapport est un fichier HTML autonome avec son CSS et ses graphiques ECharts embarqués. Les avantages : <strong>gratuit</strong> (GitHub Pages), <strong>ultra-rapide</strong> (CDN), <strong>zéro maintenance</strong> (pas de serveur à gérer), et <strong>versionné</strong> (chaque rapport est un commit Git que vous pouvez restaurer).</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : MONITORING ET OBSERVABILITÉ                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="monitoring"><i class="fa-solid fa-chart-line" style="color:#6366f1;"></i> Monitoring et Observabilité</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-eye" style="color:#6366f1;"></i> Surveiller vos pipelines</h2>
+
+ <p>Un pipeline automatisé qui tourne dans l'ombre sans monitoring, c'est un pipeline qui échouera silencieusement un mardi à 3h du matin. Voici comment construire un monitoring efficace.</p>
+
+ <h3>Logs structurés</h3>
+ <p>Chaque exécution de pipeline génère des logs structurés au format JSONL avec horodatage, durée, résultat et coût estimé.</p>
+
+ <div class="code-block">
+   <span class="code-label">lib/logger.js</span>
+<span class="keyword">const</span> fs = <span class="function">require</span>(<span class="string">'fs'</span>);
+<span class="keyword">const</span> path = <span class="function">require</span>(<span class="string">'path'</span>);
+
+<span class="keyword">const</span> <span class="variable">LOG_FILE</span> = path.<span class="function">join</span>(__dirname, <span class="string">'../.logs/pipeline.jsonl'</span>);
+
+<span class="keyword">function</span> <span class="function">log</span>(level, event, data = {}) {
+  <span class="keyword">const</span> entry = {
+    timestamp: <span class="keyword">new</span> Date().<span class="function">toISOString</span>(),
+    level,     <span class="comment">// info, warn, error</span>
+    event,     <span class="comment">// "pipeline.start", "pipeline.complete", etc.</span>
+    ...data    <span class="comment">// durée, ticker, coût, etc.</span>
+  };
+  fs.<span class="function">appendFileSync</span>(<span class="variable">LOG_FILE</span>, JSON.<span class="function">stringify</span>(entry) + <span class="string">'\n'</span>);
+  console.<span class="function">log</span>(<span class="string">`[${level.toUpperCase()}] ${event}`</span>, data);
+}
+
+module.exports = {
+  <span class="function">info</span>:  (event, data) => <span class="function">log</span>(<span class="string">'info'</span>, event, data),
+  <span class="function">warn</span>:  (event, data) => <span class="function">log</span>(<span class="string">'warn'</span>, event, data),
+  <span class="function">error</span>: (event, data) => <span class="function">log</span>(<span class="string">'error'</span>, event, data)
+};
+ </div>
+
+ <h3>Dashboard Discord</h3>
+ <p>Un canal Discord dédié <code>#bot-status</code> affiche un résumé quotidien de toutes les exécutions.</p>
+
+ <div class="terminal-box">
+   <span class="terminal-label">Discord #bot-status</span>
+<span class="success">--- Rapport quotidien du 21/02/2026 ---</span>
+
+<span class="success">[07:02] Daily Briefing       OK    3m 42s   ~$0.85</span>
+<span class="success">[23:01] Scanner Quotidien    OK    4m 37s   ~$1.20</span>
+<span class="success">[23:06] Rétrospective        OK    3m 15s   ~$0.95</span>
+
+<span class="output">Bilan: 3/3 pipelines réussis</span>
+<span class="output">Coût estimé: $3.00</span>
+<span class="output">Coût cumulé (février): $47.30</span>
+<span class="output">Prochaine exécution: Daily 22/02 à 07:00</span>
+ </div>
+
+ <h3>Healthchecks automatiques</h3>
+ <p>Le bot vérifie régulièrement que les services externes répondent correctement.</p>
+
+ <div class="code-block">
+   <span class="code-label">Healthchecks</span>
+<span class="keyword">const</span> healthchecks = [
+  {
+    <span class="string">"name"</span>: <span class="string">"MCP Gateway"</span>,
+    <span class="string">"check"</span>: () => <span class="function">fetch</span>(<span class="string">"https://mcp.market-watch.xyz/health"</span>),
+    <span class="string">"interval"</span>: <span class="string">"5m"</span>
+  },
+  {
+    <span class="string">"name"</span>: <span class="string">"GitHub Pages"</span>,
+    <span class="string">"check"</span>: () => <span class="function">fetch</span>(<span class="string">"https://market-watch.xyz"</span>),
+    <span class="string">"interval"</span>: <span class="string">"15m"</span>
+  },
+  {
+    <span class="string">"name"</span>: <span class="string">"Claude Code CLI"</span>,
+    <span class="string">"check"</span>: () => <span class="function">exec</span>(<span class="string">"claude --version"</span>),
+    <span class="string">"interval"</span>: <span class="string">"1h"</span>
+  },
+  {
+    <span class="string">"name"</span>: <span class="string">"Disk Space"</span>,
+    <span class="string">"check"</span>: () => <span class="function">checkDiskUsage</span>(<span class="string">"/"</span>, { threshold: 0.9 }),
+    <span class="string">"interval"</span>: <span class="string">"6h"</span>
+  }
+];
+
+<span class="comment">// Si un healthcheck échoue → alerte Discord immédiate</span>
+<span class="keyword">for</span> (<span class="keyword">const</span> hc <span class="keyword">of</span> healthchecks) {
+  <span class="function">setInterval</span>(<span class="keyword">async</span> () => {
+    <span class="keyword">try</span> {
+      <span class="keyword">await</span> hc.<span class="function">check</span>();
+      logger.<span class="function">info</span>(<span class="string">`healthcheck.${hc.name}.ok`</span>);
+    } <span class="keyword">catch</span> (e) {
+      logger.<span class="function">error</span>(<span class="string">`healthcheck.${hc.name}.fail`</span>, { error: e.message });
+      <span class="keyword">await</span> <span class="function">sendAlert</span>({
+        ticker: <span class="string">'SYSTEM'</span>,
+        type: <span class="string">'healthcheck'</span>,
+        priority: <span class="string">'critical'</span>,
+        message: <span class="string">`${hc.name} is DOWN: ${e.message}`</span>
+      });
+    }
+  }, <span class="function">parseInterval</span>(hc.interval));
+}
+ </div>
+
+ <h3>Métriques à suivre</h3>
+ <div class="metric-grid">
+   <div class="metric-card">
+     <div class="metric-value" style="color:#16a34a;">98.5%</div>
+     <div class="metric-label">Taux de succès</div>
+     <div class="metric-change up">Cible: &gt; 95%</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#6366f1;">4m 12s</div>
+     <div class="metric-label">Temps moyen / pipeline</div>
+     <div class="metric-change neutral">Cible: &lt; 10 min</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#f59e0b;">$1.45</div>
+     <div class="metric-label">Coût moyen / pipeline</div>
+     <div class="metric-change neutral">Cible: &lt; $3</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#2563eb;">3/jour</div>
+     <div class="metric-label">Pipelines exécutés</div>
+     <div class="metric-change neutral">Daily + Scanner + Rétro</div>
+   </div>
+ </div>
+
+ <!-- EChart: Coûts et performance -->
+ <div id="chartMonitoring" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+ <div class="alert-box">
+   <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Alertes sur les échecs</h4>
+   <p style="margin-bottom:0;">Si un pipeline échoue 2 fois consécutives (après les retries), le bot envoie une alerte <strong>critique</strong> sur tous les canaux (Discord + Telegram + SMS). Mieux vaut être réveillé une fois pour un problème systémique que de découvrir 3 jours plus tard que vos rapports ne sont plus publiés.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : SÉCURITÉ ET BONNES PRATIQUES                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="securite"><i class="fa-solid fa-shield-halved" style="color:#6366f1;"></i> Sécurité et Bonnes Pratiques</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-lock" style="color:#6366f1;"></i> Protéger votre pipeline</h2>
+
+ <p>Un bot de trading mal sécurisé, même s'il ne passe pas d'ordres, peut causer des problèmes : fuite de clés API, factures exorbitantes, ou publication de données erronées. Voici les règles essentielles.</p>
+
+ <h3>Règle #1 : Variables d'environnement pour les secrets</h3>
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark"></i> JAMAIS</div>
+     <div class="code-block" style="margin:0; padding:0.75rem; font-size:0.75rem;">
+<span class="comment">// NE FAITES JAMAIS CELA</span>
+<span class="keyword">const</span> token = <span class="string">"sk-ant-api03-..."</span>;
+<span class="keyword">const</span> webhook = <span class="string">"https://discord..."</span>;
+     </div>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-check"></i> CORRECT</div>
+     <div class="code-block" style="margin:0; padding:0.75rem; font-size:0.75rem;">
+<span class="comment">// Utilisez les env vars</span>
+<span class="keyword">const</span> token = process.env.<span class="variable">ANTHROPIC_API_KEY</span>;
+<span class="keyword">const</span> webhook = process.env.<span class="variable">DISCORD_WEBHOOK</span>;
+     </div>
+   </div>
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">.env (JAMAIS commité)</span>
+<span class="comment"># Fichier .env — toujours dans .gitignore</span>
+<span class="variable">ANTHROPIC_API_KEY</span>=<span class="string">"sk-ant-api03-votre-cle"</span>
+<span class="variable">DISCORD_TOKEN</span>=<span class="string">"MTI3NjY1..."</span>
+<span class="variable">DISCORD_WEBHOOK</span>=<span class="string">"https://discord.com/api/webhooks/..."</span>
+<span class="variable">TELEGRAM_BOT_TOKEN</span>=<span class="string">"123456:ABC-DEF..."</span>
+<span class="variable">TELEGRAM_CHAT_ID</span>=<span class="string">"@my_channel"</span>
+<span class="variable">MCP_GATEWAY_TOKEN</span>=<span class="string">"Bearer xxx..."</span>
+ </div>
+
+ <h3>Règle #2 : Rate limiting des APIs</h3>
+ <table class="compare-table">
+   <thead>
+     <tr><th>API</th><th>Limite</th><th>Notre usage</th><th>Marge</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>Anthropic</strong></td><td>4,000 req/min</td><td>~20 req/pipeline</td><td style="color:#16a34a; font-weight:700;">Large</td></tr>
+     <tr><td><strong>MCP Gateway</strong></td><td>60 req/min</td><td>~15 req/pipeline</td><td style="color:#16a34a; font-weight:700;">Confortable</td></tr>
+     <tr><td><strong>Discord API</strong></td><td>5 msg/5s/canal</td><td>~3 msg/pipeline</td><td style="color:#16a34a; font-weight:700;">OK</td></tr>
+     <tr><td><strong>GitHub Push</strong></td><td>Pas de limite stricte</td><td>~3 push/jour</td><td style="color:#16a34a; font-weight:700;">OK</td></tr>
+   </tbody>
+ </table>
+
+ <h3>Règle #3 : Backup et versioning</h3>
+ <ul class="checklist">
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Git IS le backup</strong> — Chaque rapport est un commit. Vous pouvez restaurer n'importe quelle version passée avec <code>git checkout</code>.</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>schedules.json versionné</strong> — Les tâches planifiées sont dans le repo. Si le bot redémarre, il restaure tout à partir du fichier.</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Logs archivés</strong> — Les logs JSONL sont conservés 30 jours minimum pour le debug post-mortem.</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>.gitignore strict</strong> — Exclure .env, node_modules, .logs/, fichiers temporaires.</li>
+ </ul>
+
+ <h3>Règle #4 : Monitoring des coûts</h3>
+ <div class="code-block">
+   <span class="code-label">Suivi des coûts</span>
+<span class="comment">// Estimer le coût de chaque appel Claude Code</span>
+<span class="keyword">function</span> <span class="function">estimateCost</span>(inputTokens, outputTokens) {
+  <span class="keyword">const</span> <span class="variable">INPUT_COST</span>  = 15.00 / 1_000_000;  <span class="comment">// $15/MTok (Opus)</span>
+  <span class="keyword">const</span> <span class="variable">OUTPUT_COST</span> = 75.00 / 1_000_000;  <span class="comment">// $75/MTok (Opus)</span>
+
+  <span class="keyword">return</span> (inputTokens * <span class="variable">INPUT_COST</span>)
+       + (outputTokens * <span class="variable">OUTPUT_COST</span>);
+}
+
+<span class="comment">// Alerte si le coût journalier dépasse le seuil</span>
+<span class="keyword">const</span> <span class="variable">DAILY_BUDGET</span> = 10.00; <span class="comment">// $10/jour max</span>
+
+<span class="keyword">if</span> (dailyCost > <span class="variable">DAILY_BUDGET</span>) {
+  <span class="function">sendAlert</span>({
+    ticker: <span class="string">'SYSTEM'</span>,
+    type: <span class="string">'cost-warning'</span>,
+    priority: <span class="string">'important'</span>,
+    message: <span class="string">`Budget journalier dépassé: $${dailyCost.toFixed(2)} / $${DAILY_BUDGET}`</span>
+  });
+}
+ </div>
+
+ <h3>Règle #5 : JAMAIS d'exécution d'ordres automatique</h3>
+ <div style="background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border:2px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+   <div style="font-size:2.5rem; margin-bottom:0.75rem;"><i class="fa-solid fa-ban" style="color:#dc2626;"></i></div>
+   <div style="font-size:1.2rem; font-weight:800; color:#dc2626; margin-bottom:0.5rem;">Analyse automatique ≠ Exécution automatique</div>
+   <p style="font-size:0.95rem; color:#334155; max-width:600px; margin:0 auto; line-height:1.6;">Ne connectez <strong>jamais</strong> un broker API (Alpaca, IBKR, Binance) à un bot automatisé sans supervision humaine constante. L'analyse peut être automatisée. La décision d'investir doit <strong>toujours</strong> rester entre les mains d'un humain.</p>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Checklist de sécurité avant mise en production</h4>
+   <ul style="margin-bottom:0;">
+     <li><code>.env</code> dans <code>.gitignore</code> ? <strong>Vérifier.</strong></li>
+     <li>Aucun secret en dur dans le code ? <strong>Vérifier.</strong></li>
+     <li>Rate limiting configuré ? <strong>Vérifier.</strong></li>
+     <li>Alerte sur dépassement de budget ? <strong>Vérifier.</strong></li>
+     <li>Healthchecks actifs ? <strong>Vérifier.</strong></li>
+     <li>Retry avec backoff exponentiel ? <strong>Vérifier.</strong></li>
+     <li>Logs structurés activés ? <strong>Vérifier.</strong></li>
+   </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9 : QUIZ                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#6366f1;"></i> Testez vos Connaissances</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-brain" style="color:#6366f1;"></i> Quiz — 6 questions</h2>
+
+ <p>Cliquez sur chaque question pour révéler la réponse.</p>
+
+ <details>
+   <summary>Q1 — Pourquoi le bot ne passe-t-il pas d'ordres automatiquement ?</summary>
+   <div class="quiz-answer">
+     <p>Le bot est un <strong>orchestrateur d'analyse</strong>, pas un autotrader. La séparation est fondamentale : l'analyse peut être automatisée (collecte de données, détection de patterns, génération de rapports), mais la <strong>décision d'investir doit rester humaine</strong>.</p>
+     <p style="margin-bottom:0;">Un autotrader mal configuré peut perdre tout votre capital en quelques minutes. Notre approche : le bot identifie les opportunités et vous les présente avec un trade idea structuré (entry, stop, target, R/R). Vous décidez si vous agissez.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q2 — Quelle est la fonction du fichier schedules.json ?</summary>
+   <div class="quiz-answer">
+     <p>Le <strong>schedules.json</strong> est la source de vérité pour les tâches planifiées. Il stocke l'expression cron, la commande, le projet cible, le statut (active/paused), et l'historique des dernières exécutions.</p>
+     <p style="margin-bottom:0;">Quand le bot Discord redémarre, il relit ce fichier et restaure toutes les planifications automatiquement. C'est versionné dans Git, donc vous avez un historique complet de toutes les modifications de planning.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q3 — Combien d'étapes comporte le pipeline scanner et combien de temps prend-il ?</summary>
+   <div class="quiz-answer">
+     <p>Le pipeline scanner comporte <strong>8 étapes</strong> : (1) RunAutoScreener, (2) RunScreener x3, (3) Fusion et filtrage Top 10, (4) QueryData détaillé, (5) WebSearch catalyseurs, (6) Génération HTML, (7) Variantes multilangue, (8) Commit/Push/Notification.</p>
+     <p style="margin-bottom:0;">Durée totale : environ <strong>5 minutes</strong>. Les étapes 2 et 7 s'exécutent en parallèle (3 screeners et 5 agents de traduction respectivement), ce qui réduit significativement le temps total.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q4 — Comment fonctionne le throttling des alertes ?</summary>
+   <div class="quiz-answer">
+     <p>Le système d'alertes utilise deux mécanismes anti-spam : (1) un <strong>cooldown de 30 minutes</strong> par combinaison ticker+type (pas deux alertes identiques dans la même demi-heure), et (2) un <strong>quota journalier de 5 alertes</strong> maximum (sauf les alertes critiques qui sont toujours envoyées).</p>
+     <p style="margin-bottom:0;">Les alertes sont aussi hiérarchisées par priorité : <strong>critique</strong> (Discord + Telegram + SMS), <strong>important</strong> (Discord + Telegram), <strong>info</strong> (Discord uniquement), <strong>routine</strong> (Discord uniquement).</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q5 — Pourquoi GitHub Pages pour l'hébergement ?</summary>
+   <div class="quiz-answer">
+     <p>GitHub Pages est idéal pour ce cas d'usage : hébergement <strong>gratuit</strong>, déploiement automatique sur git push (pas de CI/CD à configurer), <strong>CDN global</strong> via Cloudflare, support des domaines custom avec SSL, et <strong>zéro maintenance serveur</strong>.</p>
+     <p style="margin-bottom:0;">Chaque rapport est un fichier HTML statique autonome. Pas de base de données, pas de backend, pas de dépendance runtime. Le repo Git sert à la fois de système de publication et de backup versionné. C'est l'approche la plus simple et la plus robuste.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q6 — Quel est le budget mensuel recommandé pour ce pipeline ?</summary>
+   <div class="quiz-answer">
+     <p>Pour un usage régulier (daily briefing + scanner quotidien + analyses ponctuelles), comptez environ <strong>$50 à $100 par mois</strong> en tokens API Anthropic. La répartition typique : daily briefing ~$0.85/jour, scanner ~$1.20/jour, rétrospective ~$0.95/semaine, analyses ponctuelles ~$1.50 chacune.</p>
+     <p style="margin-bottom:0;">Pour surveiller les coûts, le bot calcule un coût estimé après chaque exécution et envoie une alerte si le budget journalier ($10) est dépassé. C'est bien moins cher qu'un Bloomberg Terminal ($2,000/mois) ou qu'un service d'analyse premium.</p>
+   </div>
+ </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ                                                         -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#6366f1;"></i> Ce Qu'on Retient</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-list-check" style="color:#6366f1;"></i> Les leçons essentielles</h2>
+
+ <div class="takeaway-box">
+   <h3><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Résumé de la Partie 4</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-robot"></i> <span><strong>Le bot est un orchestrateur</strong>, pas un autotrader. Il automatise la collecte, l'analyse et la publication, mais jamais l'exécution d'ordres. Le trader humain garde le contrôle.</span></li>
+     <li><i class="fa-brands fa-discord"></i> <span><strong>Le bot Discord</strong> transforme votre téléphone en tour de contrôle : lancer des analyses, planifier des tâches, recevoir des notifications, le tout depuis Discord.</span></li>
+     <li><i class="fa-solid fa-arrows-spin"></i> <span><strong>Le pipeline scanner en 8 étapes</strong> enchaîne AutoScreener, DSL, filtrage, données détaillées, news, génération HTML, variantes multilangue et publication — en ~5 minutes.</span></li>
+     <li><i class="fa-solid fa-bell"></i> <span><strong>Les alertes avec throttling</strong> garantissent que vous ne ratez rien d'important tout en évitant le spam : 5 alertes/jour max, cooldown 30 min, hiérarchie de priorité.</span></li>
+     <li><i class="fa-solid fa-shield-halved"></i> <span><strong>Sécurité et monitoring</strong> : variables d'environnement pour les secrets, healthchecks automatiques, suivi des coûts, logs structurés, et JAMAIS de clés en dur dans le code.</span></li>
+   </ul>
+ </div>
+
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem; margin:2rem 0; text-align:center;">
+   <p style="font-size:0.9rem; color:#64748b; margin-bottom:0.5rem;">Prochaine étape</p>
+   <p style="font-size:1.1rem; color:#0f172a; font-weight:700; margin-bottom:0.5rem;">Vous avez un pipeline complet qui tourne. Comment aller <em>plus loin</em> ?</p>
+   <p style="font-size:0.9rem; color:#64748b; margin-bottom:0;">Options avancées, backtesting systématique, multi-portefeuilles et machine learning dans la <strong>Partie 5</strong>.</p>
+ </div>
+
+ <a href="../part3-social-media/" class="prev-cta">
+   <i class="fa-solid fa-arrow-left"></i>
+   <div>
+     <div class="next-label">Partie 3 — Leçon précédente</div>
+     <div class="next-title">Promouvoir ses Analyses sur les Réseaux Sociaux</div>
+   </div>
+ </a>
+
+ <a href="../part5-avance/" class="next-cta">
+   <div>
+     <div class="next-label">Partie 5 — Prochaine leçon</div>
+     <div class="next-title">Techniques Avancées — Backtesting, Multi-Portefeuilles & ML</div>
+   </div>
+   <i class="fa-solid fa-arrow-right"></i>
+ </a>
+</div>
+
+</div><!-- /.container -->
+
+<!-- Footer -->
+<div class="footer-bar">
+ <p>Série <strong>Automatiser son Trading avec Claude Code</strong> — Partie 4 sur 5</p>
+ <p style="margin-top:0.5rem;"><a href="../part1-introduction/">1. Introduction</a> &middot; <a href="../part2-screeners/">2. Screeners</a> &middot; <a href="../part3-social-media/">3. Réseaux</a> &middot; <a href="../part4-bots/">4. Bots</a> &middot; <a href="../part5-avance/">5. Avancé</a></p>
+ <p style="margin-top:1rem; font-size:0.7rem; color:#94a3b8;">Les informations présentées sont à but éducatif uniquement et ne constituent pas des conseils en investissement. L'automatisation du trading comporte des risques. Faites toujours vos propres recherches avant d'investir.</p>
+ <p style="margin-top:0.5rem;"><a href="/">market-watch.xyz</a> &copy; 2025-2026</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- ECHARTS INITIALIZATION                                         -->
+<!-- ============================================================ -->
+<script>
+// ---- Chart 1: Architecture Sankey ----
+(function() {
+ var dom = document.getElementById('chartArchitecture');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ chart.setOption({
+   tooltip: { trigger: 'item', triggerOn: 'mousemove' },
+   series: [{
+     type: 'sankey',
+     layout: 'none',
+     emphasis: { focus: 'adjacency' },
+     nodeAlign: 'left',
+     lineStyle: { color: 'gradient', curveness: 0.5 },
+     label: { fontSize: 12, fontWeight: 600, fontFamily: 'Inter' },
+     data: [
+       { name: 'Bot Discord', itemStyle: { color: '#5865F2' } },
+       { name: 'Claude Code', itemStyle: { color: '#6366f1' } },
+       { name: 'MCP Gateway', itemStyle: { color: '#818cf8' } },
+       { name: 'Yahoo Finance', itemStyle: { color: '#7c3aed' } },
+       { name: 'SEC EDGAR', itemStyle: { color: '#9333ea' } },
+       { name: 'Fintel', itemStyle: { color: '#a855f7' } },
+       { name: 'Web Search', itemStyle: { color: '#2563eb' } },
+       { name: 'Analyse IA', itemStyle: { color: '#4f46e5' } },
+       { name: 'Rapport HTML', itemStyle: { color: '#16a34a' } },
+       { name: 'GitHub Pages', itemStyle: { color: '#0d9488' } },
+       { name: 'Discord Alert', itemStyle: { color: '#5865F2' } },
+       { name: 'Telegram Alert', itemStyle: { color: '#0088cc' } }
+     ],
+     links: [
+       { source: 'Bot Discord', target: 'Claude Code', value: 10 },
+       { source: 'Claude Code', target: 'MCP Gateway', value: 8 },
+       { source: 'Claude Code', target: 'Web Search', value: 4 },
+       { source: 'MCP Gateway', target: 'Yahoo Finance', value: 4 },
+       { source: 'MCP Gateway', target: 'SEC EDGAR', value: 2 },
+       { source: 'MCP Gateway', target: 'Fintel', value: 2 },
+       { source: 'Yahoo Finance', target: 'Analyse IA', value: 4 },
+       { source: 'SEC EDGAR', target: 'Analyse IA', value: 2 },
+       { source: 'Fintel', target: 'Analyse IA', value: 2 },
+       { source: 'Web Search', target: 'Analyse IA', value: 4 },
+       { source: 'Analyse IA', target: 'Rapport HTML', value: 8 },
+       { source: 'Rapport HTML', target: 'GitHub Pages', value: 6 },
+       { source: 'Rapport HTML', target: 'Discord Alert', value: 3 },
+       { source: 'Rapport HTML', target: 'Telegram Alert', value: 2 }
+     ]
+   }]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ---- Chart 2: Pipeline Timeline (Gantt-style horizontal bar) ----
+(function() {
+ var dom = document.getElementById('chartPipeline');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ var categories = [
+   'AutoScreener',
+   'Screener DSL x3',
+   'Fusion Top 10',
+   'QueryData',
+   'WebSearch',
+   'HTML Generation',
+   'Variantes (//)',
+   'Git Push + Notif'
+ ];
+
+ var startEnd = [
+   [0, 8],
+   [8, 38],
+   [38, 43],
+   [43, 55],
+   [55, 70],
+   [70, 160],
+   [160, 280],
+   [280, 300]
+ ];
+
+ var colors = ['#6366f1', '#818cf8', '#a5b4fc', '#6366f1', '#2563eb', '#4f46e5', '#9333ea', '#16a34a'];
+
+ var seriesData = startEnd.map(function(se, i) {
+   return {
+     value: [se[0], se[1], se[1] - se[0]],
+     itemStyle: { color: colors[i] }
+   };
+ });
+
+ chart.setOption({
+   tooltip: {
+     formatter: function(p) {
+       var se = startEnd[p.dataIndex];
+       return '<b>' + categories[p.dataIndex] + '</b><br>Durée: ' + (se[1] - se[0]) + 's<br>Début: T+' + se[0] + 's — Fin: T+' + se[1] + 's';
+     }
+   },
+   grid: { left: '22%', right: '6%', top: '8%', bottom: '12%' },
+   xAxis: {
+     type: 'value',
+     name: 'Secondes',
+     nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+     axisLabel: { color: '#64748b', formatter: '{value}s' },
+     splitLine: { lineStyle: { color: '#f1f5f9' } },
+     max: 320
+   },
+   yAxis: {
+     type: 'category',
+     data: categories,
+     inverse: true,
+     axisLabel: { color: '#334155', fontWeight: 600, fontSize: 11 },
+     axisLine: { show: false },
+     axisTick: { show: false }
+   },
+   series: [{
+     type: 'custom',
+     renderItem: function(params, api) {
+       var cIdx = api.value(0);
+       var s = startEnd[cIdx];
+       var start = api.coord([s[0], cIdx]);
+       var end = api.coord([s[1], cIdx]);
+       var height = api.size([0, 1])[1] * 0.55;
+       var rectShape = echarts.graphic.clipRectByRect({
+         x: start[0],
+         y: start[1] - height / 2,
+         width: end[0] - start[0],
+         height: height
+       }, {
+         x: params.coordSys.x,
+         y: params.coordSys.y,
+         width: params.coordSys.width,
+         height: params.coordSys.height
+       });
+       return rectShape && {
+         type: 'rect',
+         shape: Object.assign({}, rectShape, { r: 4 }),
+         style: api.style()
+       };
+     },
+     data: seriesData.map(function(d, i) {
+       return { value: [i], itemStyle: d.itemStyle };
+     }),
+     encode: { x: [0], y: 0 }
+   }]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ---- Chart 3: Monitoring — Coûts et durées sur 14 jours ----
+(function() {
+ var dom = document.getElementById('chartMonitoring');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ var days = ['08/02', '09/02', '10/02', '11/02', '12/02', '13/02', '14/02',
+             '15/02', '16/02', '17/02', '18/02', '19/02', '20/02', '21/02'];
+
+ chart.setOption({
+   tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+   legend: { data: ['Coût ($)', 'Durée (min)', 'Pipelines'], top: '3%', textStyle: { color: '#64748b', fontSize: 11 } },
+   grid: { left: '8%', right: '8%', bottom: '12%', top: '18%' },
+   xAxis: {
+     type: 'category',
+     data: days,
+     axisLabel: { color: '#64748b', fontSize: 10, rotate: 30 },
+     axisLine: { lineStyle: { color: '#e2e8f0' } }
+   },
+   yAxis: [
+     {
+       type: 'value',
+       name: 'Coût ($)',
+       nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+       axisLabel: { color: '#64748b', formatter: '${value}' },
+       splitLine: { lineStyle: { color: '#f1f5f9' } }
+     },
+     {
+       type: 'value',
+       name: 'Durée (min)',
+       nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+       axisLabel: { color: '#64748b', formatter: '{value}m' },
+       splitLine: { show: false }
+     }
+   ],
+   series: [
+     {
+       name: 'Coût ($)',
+       type: 'bar',
+       data: [2.80, 3.10, 2.95, 3.40, 2.70, 3.20, 1.80,
+              2.90, 3.05, 3.15, 2.65, 3.50, 2.80, 3.00],
+       itemStyle: { color: '#6366f1', borderRadius: [4, 4, 0, 0] },
+       barWidth: '40%'
+     },
+     {
+       name: 'Durée (min)',
+       type: 'line',
+       yAxisIndex: 1,
+       data: [12.5, 13.2, 11.8, 14.1, 12.0, 13.5, 8.2,
+              12.8, 13.0, 12.3, 11.5, 14.5, 12.2, 12.0],
+       lineStyle: { color: '#f59e0b', width: 2 },
+       itemStyle: { color: '#f59e0b' },
+       symbol: 'circle',
+       symbolSize: 6
+     },
+     {
+       name: 'Pipelines',
+       type: 'line',
+       yAxisIndex: 1,
+       data: [3, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 3, 3],
+       lineStyle: { color: '#16a34a', width: 2, type: 'dashed' },
+       itemStyle: { color: '#16a34a' },
+       symbol: 'diamond',
+       symbolSize: 6
+     }
+   ]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

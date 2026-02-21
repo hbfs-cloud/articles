@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M&eacute;thodologie &amp; Validation Anti-Overfit | Strat&eacute;gies Syst&eacute;matiques | Market Watch</title>
+  <meta name="description" content="Comment nous concevons, optimisons, validons et forward-testons nos strat&eacute;gies de trading syst&eacute;matique. 5 phases, 6 tests anti-overfit, scoring de robustesse.">
+  <meta property="og:title" content="M&eacute;thodologie Anti-Overfit | Market Watch">
+  <meta property="og:description" content="Processus complet de conception et validation des strat&eacute;gies syst&eacute;matiques : perturbation, stress test, monkey test, cross-period, cliff detection.">
+  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/portfolio/methodology/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#ffffff; --bg-panel:#ffffff; --bg-alt:#f8fafc;
+    --text:#0f172a; --text-secondary:#334155; --text-muted:#94a3b8;
+    --border:1px solid #e2e8f0; --radius:16px;
+    --accent:#4f46e5; --accent-light:#e0e7ff; --accent-dark:#312e81;
+    --green:#059669; --red:#dc2626; --amber:#d97706; --blue:#2563eb; --purple:#7c3aed;
+  }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+
+  /* Brand bar */
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:var(--accent); text-decoration:none; }
+  .back-link { font-size:0.8rem; font-weight:600; color:var(--text-muted); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; }
+  .back-link:hover { color:var(--accent); text-decoration:none; }
+
+  /* Hero */
+  .hero { padding:4rem 2rem 3rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+  .hero h1 { font-size:2.2rem; font-weight:900; margin-bottom:0.5rem; line-height:1.2; }
+  .hero .subtitle { font-size:1.05rem; color:var(--text-secondary); margin-bottom:1.5rem; max-width:700px; margin-left:auto; margin-right:auto; }
+  .hero-badges { display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.35rem; padding:0.4rem 0.9rem; border-radius:99px; font-size:0.75rem; font-weight:700; }
+
+  /* Navigation */
+  .nav-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:0.75rem; max-width:1000px; margin:-1.5rem auto 2rem; padding:0 2rem; position:relative; z-index:10; }
+  .nav-item { display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1rem; background:white; border:1px solid #e2e8f0; border-radius:12px; font-size:0.78rem; font-weight:700; color:var(--text-secondary); text-decoration:none; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+  .nav-item:hover { border-color:var(--accent); color:var(--accent); transform:translateY(-1px); box-shadow:0 4px 12px rgba(79,70,229,0.12); text-decoration:none; }
+  .nav-item i { width:20px; text-align:center; color:var(--accent); }
+
+  /* Content */
+  .content { max-width:900px; margin:0 auto; padding:0 2rem 4rem; }
+
+  /* Sections */
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 1.5rem; color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+  /* Cards */
+  .phase-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.75rem; margin-bottom:1.25rem; position:relative; overflow:hidden; }
+  .phase-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .phase-card h3 { font-size:1.1rem; font-weight:800; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
+  .phase-card p, .phase-card li { font-size:0.9rem; color:var(--text-secondary); line-height:1.7; }
+  .phase-card ul, .phase-card ol { padding-left:1.25rem; margin:0.75rem 0; }
+  .phase-card li { margin-bottom:0.4rem; }
+
+  .phase-1::before { background:linear-gradient(90deg,var(--accent),#818cf8); }
+  .phase-2::before { background:linear-gradient(90deg,var(--blue),#60a5fa); }
+  .phase-3::before { background:linear-gradient(90deg,var(--red),#f87171); }
+  .phase-4::before { background:linear-gradient(90deg,var(--green),#34d399); }
+  .phase-5::before { background:linear-gradient(90deg,var(--amber),#fbbf24); }
+
+  /* Phase number */
+  .phase-num { width:32px; height:32px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.85rem; flex-shrink:0; }
+
+  /* Tables */
+  .data-table { width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; margin:1.25rem 0; }
+  .data-table th { background:#1e1b4b; color:white; padding:0.75rem 1rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:left; }
+  .data-table td { padding:0.65rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.85rem; color:var(--text-secondary); }
+  .data-table tr:nth-child(even) td { background:#f8fafc; }
+  .data-table tr:last-child td { border-bottom:none; }
+
+  /* Alert boxes */
+  .alert-box { padding:1.25rem 1.5rem; border-radius:14px; margin:1.25rem 0; font-size:0.88rem; line-height:1.7; }
+  .alert-green { background:#f0fdf4; border:1px solid #86efac; color:#065f46; }
+  .alert-red { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+  .alert-blue { background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a5f; }
+  .alert-amber { background:#fffbeb; border:1px solid #fde68a; color:#78350f; }
+  .alert-purple { background:#faf5ff; border:1px solid #e9d5ff; color:#581c87; }
+
+  /* Score gauge */
+  .score-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:0.75rem; margin:1.25rem 0; }
+  .score-card { text-align:center; padding:1rem; border-radius:12px; border:1px solid #e2e8f0; background:white; }
+  .score-card .score-value { font-size:1.5rem; font-weight:900; line-height:1.2; }
+  .score-card .score-label { font-size:0.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem; }
+
+  /* Test cards */
+  .test-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1rem; margin:1.25rem 0; }
+  .test-card { padding:1.25rem; border-radius:14px; border:1px solid #e2e8f0; background:white; }
+  .test-card h4 { font-size:0.95rem; font-weight:800; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.4rem; }
+  .test-card p { font-size:0.82rem; color:var(--text-secondary); line-height:1.6; }
+  .test-icon { width:28px; height:28px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:white; font-size:0.75rem; flex-shrink:0; }
+
+  /* Anti-pattern list */
+  .anti-pattern { display:flex; align-items:flex-start; gap:0.75rem; padding:0.85rem 1rem; margin:0.4rem 0; border-radius:10px; font-size:0.85rem; }
+  .anti-pattern.bad { background:#fef2f2; border:1px solid #fecaca; }
+  .anti-pattern.good { background:#f0fdf4; border:1px solid #bbf7d0; }
+
+  /* Pipeline */
+  .pipeline { display:flex; align-items:center; gap:0; justify-content:center; flex-wrap:wrap; margin:2rem 0; }
+  .pipeline-step { padding:0.6rem 1.25rem; font-size:0.78rem; font-weight:700; color:white; position:relative; }
+  .pipeline-step:first-child { border-radius:8px 0 0 8px; }
+  .pipeline-step:last-child { border-radius:0 8px 8px 0; }
+  .pipeline-arrow { font-size:1.2rem; color:var(--text-muted); margin:0 -2px; }
+
+  /* Chart container */
+  .chart-container { width:100%; height:350px; margin:1.5rem 0; }
+
+  /* Footer */
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:var(--text-muted); font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:var(--accent); }
+
+  @media (max-width:768px) {
+    .hero { padding:2.5rem 1.25rem 2rem; }
+    .hero h1 { font-size:1.6rem; }
+    .content { padding:0 1.25rem 3rem; }
+    .nav-grid { grid-template-columns:1fr 1fr; padding:0 1.25rem; }
+    .test-grid { grid-template-columns:1fr; }
+    .score-grid { grid-template-columns:1fr 1fr; }
+    .pipeline { flex-direction:column; align-items:stretch; }
+    .pipeline-step { border-radius:8px !important; margin:2px 0; text-align:center; }
+    .pipeline-arrow { transform:rotate(90deg); margin:0 auto; }
+    .brand-bar { padding:0.75rem 1rem; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- ===== BRAND BAR ===== -->
+<div class="brand-bar">
+  <a href="https://articles.market-watch.xyz/" class="brand-logo">
+    <i class="fa-solid fa-chart-line" style="margin-right:8px; color:var(--accent);"></i> MARKET WATCH
+  </a>
+  <a href="https://articles.market-watch.xyz/?tab=portfolio" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Retour au Portfolio
+  </a>
+</div>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div style="font-size:0.8rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;">
+    <i class="fa-solid fa-shield-halved"></i> Strat&eacute;gies Syst&eacute;matiques
+  </div>
+  <h1>M&eacute;thodologie &amp; Validation Anti-Overfit</h1>
+  <p class="subtitle">Comment nous concevons, optimisons, validons et forward-testons chaque strat&eacute;gie avant publication. Un processus en 5 phases pour garantir la robustesse.</p>
+  <div class="hero-badges">
+    <span class="hero-badge" style="background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2);"><i class="fa-solid fa-flask"></i> 5 Phases</span>
+    <span class="hero-badge" style="background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2);"><i class="fa-solid fa-vial"></i> 6 Tests</span>
+    <span class="hero-badge" style="background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2);"><i class="fa-solid fa-check-double"></i> Score &ge; 60/100</span>
+    <span class="hero-badge" style="background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2);"><i class="fa-solid fa-forward"></i> Forward Testing</span>
+  </div>
+</div>
+
+<!-- ===== NAVIGATION ===== -->
+<div class="nav-grid">
+  <a href="#pipeline" class="nav-item"><i class="fa-solid fa-sitemap"></i> Vue d'ensemble</a>
+  <a href="#phase1" class="nav-item"><i class="fa-solid fa-lightbulb"></i> Conception</a>
+  <a href="#phase2" class="nav-item"><i class="fa-solid fa-sliders"></i> Optimisation</a>
+  <a href="#phase3" class="nav-item"><i class="fa-solid fa-vial"></i> Tests Anti-Overfit</a>
+  <a href="#phase4" class="nav-item"><i class="fa-solid fa-chart-bar"></i> M&eacute;triques</a>
+  <a href="#phase5" class="nav-item"><i class="fa-solid fa-forward"></i> Forward Testing</a>
+  <a href="#scoring" class="nav-item"><i class="fa-solid fa-star"></i> Scoring</a>
+  <a href="#antipatterns" class="nav-item"><i class="fa-solid fa-triangle-exclamation"></i> Anti-Patterns</a>
+</div>
+
+<div class="content">
+
+  <!-- ===== PIPELINE OVERVIEW ===== -->
+  <div class="section-divider" id="pipeline"><i class="fa-solid fa-sitemap"></i> Vue d'ensemble du processus</div>
+
+  <div class="pipeline">
+    <div class="pipeline-step" style="background:var(--accent);">1. Conception</div>
+    <span class="pipeline-arrow">&rarr;</span>
+    <div class="pipeline-step" style="background:var(--blue);">2. Optimisation</div>
+    <span class="pipeline-arrow">&rarr;</span>
+    <div class="pipeline-step" style="background:var(--red);">3. Tests Anti-Overfit</div>
+    <span class="pipeline-arrow">&rarr;</span>
+    <div class="pipeline-step" style="background:var(--green);">4. Validation</div>
+    <span class="pipeline-arrow">&rarr;</span>
+    <div class="pipeline-step" style="background:var(--amber);">5. Forward Testing</div>
+  </div>
+
+  <div class="alert-blue">
+    <strong><i class="fa-solid fa-info-circle"></i> Pourquoi cette m&eacute;thodologie ?</strong><br>
+    Le backtest est un outil puissant mais dangereux. Sans discipline m&eacute;thodologique, il est trivial de cr&eacute;er une strat&eacute;gie qui affiche 200% de CAGR en backtest mais qui s'effondre en live. L'overfit &mdash; quand un mod&egrave;le &laquo; apprend le bruit &raquo; plut&ocirc;t que le signal &mdash; est l'ennemi num&eacute;ro 1 du trading syst&eacute;matique.
+  </div>
+
+  <!-- Chart: Overfit vs Robust -->
+  <div id="chart-overfit" class="chart-container"></div>
+
+  <!-- ===== PHASE 1 ===== -->
+  <div class="section-divider" id="phase1"><i class="fa-solid fa-lightbulb"></i> Phase 1 &mdash; Conception de la strat&eacute;gie</div>
+
+  <div class="phase-card phase-1">
+    <h3>
+      <span class="phase-num" style="background:var(--accent);">1</span>
+      Analyse d'opportunit&eacute;s &amp; Identification des signaux
+    </h3>
+    <p>Chaque strat&eacute;gie na&icirc;t d'une <strong>hypoth&egrave;se de march&eacute;</strong> claire et testable, pas d'une exploration aveugle de param&egrave;tres.</p>
+
+    <ol>
+      <li><strong>G&eacute;n&eacute;ration du dataset</strong> &mdash; Cr&eacute;ation d'un fichier <code>opportunities.csv</code> contenant tous les signaux candidats avec leurs <em>forward returns</em> r&eacute;els &agrave; 5j, 10j, et 20j. Ce dataset sert de v&eacute;rit&eacute; terrain.</li>
+      <li><strong>Cluster Analysis</strong> &mdash; Identification de 3 profils d'opportunit&eacute;s :
+        <ul>
+          <li><strong>SHORT</strong> (&le; 5 jours) : Scalps et day trades</li>
+          <li><strong>MEDIUM</strong> (10-60 jours) : Swing trades</li>
+          <li><strong>LONG</strong> : Runners qui capturent les tendances majeures</li>
+        </ul>
+      </li>
+      <li><strong>Discriminant Identification</strong> &mdash; Pour chaque feature (Score, RSI, VolRatio, ATRPct, DistMA20, Momentum), calcul du <em>lift</em> par rapport au baseline. Seules les features avec un lift significatif (&gt; 1.5x) sont retenues.</li>
+      <li><strong>Filtres par r&eacute;gime</strong> &mdash; Adaptation des crit&egrave;res d'entr&eacute;e selon le r&eacute;gime de march&eacute; :
+        <ul>
+          <li><strong>RiskOn</strong> &rarr; Momentum, breakouts</li>
+          <li><strong>Recovery</strong> &rarr; Mean reversion, dips</li>
+          <li><strong>RiskOff</strong> &rarr; RSI oversold, qualit&eacute; uniquement</li>
+        </ul>
+      </li>
+      <li><strong>Config YAML</strong> &mdash; Tous les param&egrave;tres sont externalis&eacute;s dans un fichier de configuration. Z&eacute;ro hardcoding.</li>
+    </ol>
+  </div>
+
+  <!-- ===== PHASE 2 ===== -->
+  <div class="section-divider" id="phase2"><i class="fa-solid fa-sliders"></i> Phase 2 &mdash; Optimisation des param&egrave;tres</div>
+
+  <div class="phase-card phase-2">
+    <h3>
+      <span class="phase-num" style="background:var(--blue);">2</span>
+      Le Principe du &laquo; Plateau de Montagne &raquo;
+    </h3>
+    <p>La r&egrave;gle d'or de l'optimisation : <strong>ne JAMAIS choisir le pic de performance</strong>. Toujours choisir le <strong>centre du plateau</strong>.</p>
+
+    <div class="alert-purple" style="margin:1rem 0;">
+      <strong><i class="fa-solid fa-mountain"></i> Analogie</strong> &mdash; Imaginez une montagne : le sommet est instable (un pas dans n'importe quelle direction = chute). Le plateau est stable (bouger l&eacute;g&egrave;rement ne change rien). En trading syst&eacute;matique, le &laquo; pic &raquo; = overfit, le &laquo; plateau &raquo; = robuste.
+    </div>
+
+    <h4 style="font-size:0.95rem; font-weight:800; margin:1rem 0 0.5rem;"><i class="fa-solid fa-list-ol" style="color:var(--blue); margin-right:0.4rem;"></i> R&egrave;gles d'optimisation</h4>
+    <ol>
+      <li><strong>Sweeps un-par-un</strong> : Optimiser chaque param&egrave;tre individuellement, jamais en cascade. Un param&egrave;tre &agrave; la fois.</li>
+      <li><strong>Voisins ±1 step</strong> : Les param&egrave;tres voisins (±1 step) doivent afficher &lt; 15% de variation de performance. Sinon = cliff.</li>
+      <li><strong>Consistance cross-p&eacute;riode</strong> : Le param&egrave;tre optimal doit &ecirc;tre similaire entre 2021-2023 et 2024-2026.</li>
+      <li><strong>Pas de cliff (&gt; 50% de chute)</strong> : Si un petit changement de param&egrave;tre d&eacute;truit les r&eacute;sultats, le param&egrave;tre est fragile.</li>
+    </ol>
+
+    <h4 style="font-size:0.95rem; font-weight:800; margin:1.25rem 0 0.5rem;"><i class="fa-solid fa-sort-amount-down" style="color:var(--blue); margin-right:0.4rem;"></i> Ordre d'impact des param&egrave;tres</h4>
+    <p>Les param&egrave;tres sont optimis&eacute;s dans l'ordre de leur impact sur la performance :</p>
+    <table class="data-table">
+      <thead>
+        <tr><th>Priorit&eacute;</th><th>Param&egrave;tre</th><th>Impact</th><th>Exemple</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="font-weight:800; color:var(--accent);">1</td><td>Position Sizing</td><td style="color:var(--red); font-weight:700;">Critique</td><td>% du capital par position</td></tr>
+        <tr><td style="font-weight:800; color:var(--accent);">2</td><td>Stop Management</td><td style="color:var(--red); font-weight:700;">Critique</td><td>ATR multiplier, trailing %</td></tr>
+        <tr><td style="font-weight:800; color:var(--blue);">3</td><td>Timeout</td><td style="color:var(--amber); font-weight:700;">&Eacute;lev&eacute;</td><td>Dur&eacute;e max de d&eacute;tention</td></tr>
+        <tr><td style="font-weight:800; color:var(--blue);">4</td><td>Max Positions</td><td style="color:var(--amber); font-weight:700;">&Eacute;lev&eacute;</td><td>Concentration du portfolio</td></tr>
+        <tr><td style="font-weight:800; color:var(--text-muted);">5</td><td>Scanner Filters</td><td style="color:var(--green); font-weight:700;">Mod&eacute;r&eacute;</td><td>RSI, Score, VolRatio</td></tr>
+        <tr><td style="font-weight:800; color:var(--text-muted);">6</td><td>Pyramiding</td><td style="color:var(--text-muted); font-weight:700;">Faible</td><td>Ajout &agrave; une position gagnante</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chart: Plateau vs Peak -->
+  <div id="chart-plateau" class="chart-container"></div>
+
+  <!-- ===== PHASE 3 ===== -->
+  <div class="section-divider" id="phase3"><i class="fa-solid fa-vial"></i> Phase 3 &mdash; Tests Anti-Overfit</div>
+
+  <div class="alert-red" style="margin-bottom:1.25rem;">
+    <strong><i class="fa-solid fa-exclamation-triangle"></i> Phase critique</strong> &mdash; C'est ici que 60% des strat&eacute;gies &laquo; prometteuses &raquo; sont &eacute;limin&eacute;es. Si une strat&eacute;gie ne survit pas &agrave; ces tests, elle n'est PAS publi&eacute;e.
+  </div>
+
+  <div class="test-grid">
+    <!-- Test 1: Perturbation -->
+    <div class="test-card" style="border-left:4px solid var(--accent);">
+      <h4>
+        <span class="test-icon" style="background:var(--accent);"><i class="fa-solid fa-shuffle"></i></span>
+        Perturbation Test (&plusmn;15%)
+      </h4>
+      <p><strong>Principe :</strong> Tous les param&egrave;tres sont perturb&eacute;s al&eacute;atoirement de &plusmn;15%. La strat&eacute;gie doit maintenir un score &ge; 60.</p>
+      <p style="margin-top:0.5rem;"><strong>Crit&egrave;re de r&eacute;ussite :</strong> La performance ne doit pas varier de plus de 30% par rapport &agrave; la baseline apr&egrave;s perturbation.</p>
+      <div style="margin-top:0.5rem; padding:0.4rem 0.75rem; background:#eef2ff; border-radius:8px; font-size:0.78rem; color:var(--accent); font-weight:700;"><i class="fa-solid fa-check"></i> Simule l'impr&eacute;cision des march&eacute;s r&eacute;els</div>
+    </div>
+
+    <!-- Test 2: Stress -->
+    <div class="test-card" style="border-left:4px solid var(--red);">
+      <h4>
+        <span class="test-icon" style="background:var(--red);"><i class="fa-solid fa-bolt"></i></span>
+        Stress Test
+      </h4>
+      <p><strong>Principe :</strong> Performance pendant les p&eacute;riodes de haute volatilit&eacute; : bear market 2022, crash COVID mars 2020, taper tantrum.</p>
+      <p style="margin-top:0.5rem;"><strong>Crit&egrave;re de r&eacute;ussite :</strong> Drawdown max ne doit pas d&eacute;passer 2x le drawdown moyen. La strat&eacute;gie doit survivre.</p>
+      <div style="margin-top:0.5rem; padding:0.4rem 0.75rem; background:#fef2f2; border-radius:8px; font-size:0.78rem; color:var(--red); font-weight:700;"><i class="fa-solid fa-check"></i> V&eacute;rifie la r&eacute;silience en crise</div>
+    </div>
+
+    <!-- Test 3: Bull -->
+    <div class="test-card" style="border-left:4px solid var(--green);">
+      <h4>
+        <span class="test-icon" style="background:var(--green);"><i class="fa-solid fa-arrow-trend-up"></i></span>
+        Bull Test
+      </h4>
+      <p><strong>Principe :</strong> En march&eacute; haussier, la strat&eacute;gie ne doit pas sous-performer le buy &amp; hold de plus de 50%.</p>
+      <p style="margin-top:0.5rem;"><strong>Crit&egrave;re de r&eacute;ussite :</strong> Si le SPY fait +30%, la strat&eacute;gie doit faire au minimum +15% (50% du benchmark).</p>
+      <div style="margin-top:0.5rem; padding:0.4rem 0.75rem; background:#f0fdf4; border-radius:8px; font-size:0.78rem; color:var(--green); font-weight:700;"><i class="fa-solid fa-check"></i> &Eacute;vite les strat&eacute;gies trop d&eacute;fensives</div>
+    </div>
+
+    <!-- Test 4: Monkey -->
+    <div class="test-card" style="border-left:4px solid var(--purple);">
+      <h4>
+        <span class="test-icon" style="background:var(--purple);"><i class="fa-solid fa-dice"></i></span>
+        Monkey Test
+      </h4>
+      <p><strong>Principe :</strong> Comparer la strat&eacute;gie &agrave; des entr&eacute;es al&eacute;atoires (bruit blanc) avec les m&ecirc;mes r&egrave;gles de sortie.</p>
+      <p style="margin-top:0.5rem;"><strong>Crit&egrave;re de r&eacute;ussite :</strong> La strat&eacute;gie doit battre le monkey par &gt; 2x. Sinon, les entr&eacute;es n'ont pas de valeur ajout&eacute;e.</p>
+      <div style="margin-top:0.5rem; padding:0.4rem 0.75rem; background:#faf5ff; border-radius:8px; font-size:0.78rem; color:var(--purple); font-weight:700;"><i class="fa-solid fa-check"></i> Prouve la valeur du signal</div>
+    </div>
+
+    <!-- Test 5: Cross-Period -->
+    <div class="test-card" style="border-left:4px solid var(--blue);">
+      <h4>
+        <span class="test-icon" style="background:var(--blue);"><i class="fa-solid fa-calendar-check"></i></span>
+        Cross-Period Validation
+      </h4>
+      <p><strong>Principe :</strong> Les param&egrave;tres optimaux doivent &ecirc;tre similaires entre la p&eacute;riode 2021-2023 et 2024-2026.</p>
+      <p style="margin-top:0.5rem;"><strong>Crit&egrave;re de r&eacute;ussite :</strong> Les param&egrave;tres ne doivent pas varier de plus de 20% entre les sous-p&eacute;riodes.</p>
+      <div style="margin-top:0.5rem; padding:0.4rem 0.75rem; background:#eff6ff; border-radius:8px; font-size:0.78rem; color:var(--blue); font-weight:700;"><i class="fa-solid fa-check"></i> Garantit la stabilit&eacute; temporelle</div>
+    </div>
+
+    <!-- Test 6: Cliff Detection -->
+    <div class="test-card" style="border-left:4px solid var(--amber);">
+      <h4>
+        <span class="test-icon" style="background:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        Cliff Detection
+      </h4>
+      <p><strong>Principe :</strong> Identification des param&egrave;tres &laquo; binaires &raquo; o&ugrave; un petit changement d&eacute;truit les r&eacute;sultats (&gt; 50% de chute).</p>
+      <p style="margin-top:0.5rem;"><strong>Crit&egrave;re de r&eacute;ussite :</strong> Aucun param&egrave;tre ne doit montrer un cliff. Sinon, le param&egrave;tre est remplac&eacute; par un range plus stable.</p>
+      <div style="margin-top:0.5rem; padding:0.4rem 0.75rem; background:#fffbeb; border-radius:8px; font-size:0.78rem; color:var(--amber); font-weight:700;"><i class="fa-solid fa-check"></i> D&eacute;tecte la fragilit&eacute; structurelle</div>
+    </div>
+  </div>
+
+  <!-- ===== PHASE 4 ===== -->
+  <div class="section-divider" id="phase4"><i class="fa-solid fa-chart-bar"></i> Phase 4 &mdash; M&eacute;triques minimales requises</div>
+
+  <div class="phase-card phase-4">
+    <h3>
+      <span class="phase-num" style="background:var(--green);">4</span>
+      Seuils de validation
+    </h3>
+    <p>Toute strat&eacute;gie doit atteindre ces m&eacute;triques minimales pour &ecirc;tre publi&eacute;e :</p>
+
+    <div class="score-grid" style="margin-top:1rem;">
+      <div class="score-card" style="border-bottom:3px solid var(--green);">
+        <div class="score-value" style="color:var(--green);">&ge; 40%</div>
+        <div class="score-label">CAGR</div>
+      </div>
+      <div class="score-card" style="border-bottom:3px solid var(--red);">
+        <div class="score-value" style="color:var(--red);">&le; 30%</div>
+        <div class="score-label">Max Drawdown</div>
+      </div>
+      <div class="score-card" style="border-bottom:3px solid var(--blue);">
+        <div class="score-value" style="color:var(--blue);">&ge; 0.8</div>
+        <div class="score-label">R&sup2;</div>
+      </div>
+      <div class="score-card" style="border-bottom:3px solid var(--accent);">
+        <div class="score-value" style="color:var(--accent);">&ge; 35%</div>
+        <div class="score-label">Win Rate</div>
+      </div>
+      <div class="score-card" style="border-bottom:3px solid var(--purple);">
+        <div class="score-value" style="color:var(--purple);">&ge; 1.0</div>
+        <div class="score-label">Sharpe Ratio</div>
+      </div>
+    </div>
+
+    <table class="data-table" style="margin-top:1.25rem;">
+      <thead>
+        <tr><th>M&eacute;trique</th><th>Minimum</th><th>Nos strat&eacute;gies</th><th>Commentaire</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:700;">CAGR</td>
+          <td>&ge; 40%</td>
+          <td style="color:var(--green); font-weight:800;">45% &ndash; 124%</td>
+          <td>Toutes les strat&eacute;gies publi&eacute;es d&eacute;passent largement</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;">Max Drawdown</td>
+          <td>&le; 30%</td>
+          <td style="color:var(--amber); font-weight:800;">1.9% &ndash; 36%</td>
+          <td>highvol-breakout d&eacute;passe (36%) mais compens&eacute; par le CAGR</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;">R&sup2;</td>
+          <td>&ge; 0.8</td>
+          <td style="color:var(--green); font-weight:800;">0.82 &ndash; 0.97</td>
+          <td>Courbes d'equity r&eacute;guli&egrave;res, peu de variance</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;">Win Rate</td>
+          <td>&ge; 35%</td>
+          <td style="color:var(--green); font-weight:800;">42% &ndash; 74%</td>
+          <td>Crypto-rotation &agrave; 74% gr&acirc;ce au trend-following</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;">Sharpe Ratio</td>
+          <td>&ge; 1.0</td>
+          <td style="color:var(--green); font-weight:800;">1.2 &ndash; 2.49</td>
+          <td>Forex-momentum leader avec 2.49</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== PHASE 5 ===== -->
+  <div class="section-divider" id="phase5"><i class="fa-solid fa-forward"></i> Phase 5 &mdash; Forward Testing</div>
+
+  <div class="phase-card phase-5">
+    <h3>
+      <span class="phase-num" style="background:var(--amber);">5</span>
+      De la th&eacute;orie &agrave; la pratique
+    </h3>
+    <p>Le backtest est n&eacute;cessaire mais pas suffisant. Le forward testing r&eacute;v&egrave;le les &eacute;carts entre le mod&egrave;le et la r&eacute;alit&eacute;.</p>
+
+    <ol>
+      <li><strong>D&eacute;ploiement en paper trading</strong> &mdash; Ex&eacute;cution en temps r&eacute;el sans capital r&eacute;el. V&eacute;rification que les signaux se d&eacute;clenchent comme pr&eacute;vu.</li>
+      <li><strong>Petites positions live</strong> &mdash; Capital limit&eacute; (1-5% du portfolio) pour mesurer le slippage r&eacute;el, la latence d'ex&eacute;cution, et les co&ucirc;ts de transaction.</li>
+      <li><strong>Comparaison backtest vs live</strong> &mdash; Tracking de l'&eacute;cart entre les r&eacute;sultats attendus et r&eacute;els. Acceptable : &lt; 15% d'&eacute;cart.</li>
+      <li><strong>Monitoring continu</strong> &mdash; Alertes automatiques si drawdown &gt; 1.5x le max historique ou si le win rate d&eacute;vie de &gt; 10% du backtest.</li>
+      <li><strong>Dur&eacute;e minimum</strong> &mdash; 3 mois de forward testing r&eacute;ussi avant publication et d&eacute;ploiement en capital complet.</li>
+    </ol>
+
+    <div class="alert-amber" style="margin-top:1rem;">
+      <strong><i class="fa-solid fa-clock"></i> Points de vigilance en forward testing :</strong>
+      <ul style="margin:0.5rem 0 0; padding-left:1.25rem;">
+        <li><strong>Slippage</strong> : La diff&eacute;rence entre le prix th&eacute;orique et le prix d'ex&eacute;cution r&eacute;el. Critique sur les small caps illiquides.</li>
+        <li><strong>Fills partiels</strong> : Un ordre peut ne pas &ecirc;tre enti&egrave;rement ex&eacute;cut&eacute;, surtout en dehors des heures principales.</li>
+        <li><strong>Co&ucirc;ts de transaction</strong> : Commissions, spreads bid-ask, frais de change. Peuvent &eacute;roder 5-15% du CAGR.</li>
+        <li><strong>Market impact</strong> : Sur les small caps (&lt; 50M$ de market cap), nos ordres peuvent influencer le prix.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== SCORING ===== -->
+  <div class="section-divider" id="scoring"><i class="fa-solid fa-star"></i> Scoring Anti-Overfit</div>
+
+  <div class="phase-card" style="border:2px solid var(--accent);">
+    <h3>
+      <span class="phase-num" style="background:var(--accent);"><i class="fa-solid fa-star" style="font-size:0.7rem;"></i></span>
+      Grille de scoring
+    </h3>
+    <p>Chaque strat&eacute;gie re&ccedil;oit un score composite bas&eacute; sur les 6 tests. Score minimum pour publication : <strong>60/100</strong>.</p>
+
+    <table class="data-table" style="margin-top:1rem;">
+      <thead>
+        <tr><th>Score</th><th>Verdict</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="display:inline-block; padding:0.25rem 0.75rem; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; font-weight:800; color:var(--green);">80+</span></td>
+          <td style="font-weight:700; color:var(--green);">EXCELLENT</td>
+          <td>Publication autoris&eacute;e &mdash; Tier 1 ou Tier 2</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block; padding:0.25rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font-weight:800; color:var(--blue);">60&ndash;79</span></td>
+          <td style="font-weight:700; color:var(--blue);">GOOD</td>
+          <td>Publication avec mention &laquo; robuste &raquo; &mdash; Tier 2 ou Tier 3</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block; padding:0.25rem 0.75rem; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; font-weight:800; color:var(--amber);">40&ndash;59</span></td>
+          <td style="font-weight:700; color:var(--amber);">FAIR</td>
+          <td>Publication avec avertissement &mdash; Optimisation suppl&eacute;mentaire requise</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block; padding:0.25rem 0.75rem; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; font-weight:800; color:var(--red);">20&ndash;39</span></td>
+          <td style="font-weight:700; color:var(--red);">POOR</td>
+          <td>Non publi&eacute; &mdash; Exp&eacute;rimental uniquement</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block; padding:0.25rem 0.75rem; background:#1e1b4b; border-radius:8px; font-weight:800; color:white;">&lt; 20</span></td>
+          <td style="font-weight:700; color:#64748b;">FAIL</td>
+          <td>Rejet&eacute; &mdash; Probable overfit ou probl&egrave;me structurel</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chart: Radar scoring -->
+  <div id="chart-radar" class="chart-container" style="height:400px;"></div>
+
+  <!-- ===== ANTI-PATTERNS ===== -->
+  <div class="section-divider" id="antipatterns"><i class="fa-solid fa-triangle-exclamation"></i> Anti-Patterns &agrave; &Eacute;viter</div>
+
+  <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:1.25rem;">Les erreurs les plus courantes en trading syst&eacute;matique. Si vous reconnaissez l'une de ces pratiques, votre strat&eacute;gie est probablement overfit.</p>
+
+  <div class="anti-pattern bad">
+    <i class="fa-solid fa-xmark" style="color:var(--red); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--red);">Cascade de modifications</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Changer 3 param&egrave;tres simultan&eacute;ment rend impossible l'attribution de l'am&eacute;lioration. Impossible de savoir quel changement a eu un impact.</p>
+    </div>
+  </div>
+  <div class="anti-pattern good">
+    <i class="fa-solid fa-check" style="color:var(--green); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--green);">Un param&egrave;tre &agrave; la fois</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Changer un seul param&egrave;tre, mesurer l'impact, valider, puis passer au suivant. Processus it&eacute;ratif et tra&ccedil;able.</p>
+    </div>
+  </div>
+
+  <div class="anti-pattern bad">
+    <i class="fa-solid fa-xmark" style="color:var(--red); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--red);">Choisir le pic (max CAGR)</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Le param&egrave;tre qui donne 250% de CAGR est probablement overfit. Un l&eacute;ger d&eacute;calage et tout s'effondre.</p>
+    </div>
+  </div>
+  <div class="anti-pattern good">
+    <i class="fa-solid fa-check" style="color:var(--green); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--green);">Choisir le centre du plateau</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Le param&egrave;tre au centre d'une zone stable (150-180% CAGR sur une plage large) est robuste en conditions r&eacute;elles.</p>
+    </div>
+  </div>
+
+  <div class="anti-pattern bad">
+    <i class="fa-solid fa-xmark" style="color:var(--red); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--red);">Ignorer la consistance temporelle</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Un param&egrave;tre optimal en 2021-2023 mais diff&eacute;rent en 2024-2026 signifie que la strat&eacute;gie s'adapte au pass&eacute;, pas au signal.</p>
+    </div>
+  </div>
+  <div class="anti-pattern good">
+    <i class="fa-solid fa-check" style="color:var(--green); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--green);">V&eacute;rifier sur sous-p&eacute;riodes</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Le m&ecirc;me param&egrave;tre doit fonctionner sur 2021-2023 ET 2024-2026. C'est le test le plus simple et le plus puissant.</p>
+    </div>
+  </div>
+
+  <div class="anti-pattern bad">
+    <i class="fa-solid fa-xmark" style="color:var(--red); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--red);">Sur-param&eacute;trisation</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">20 param&egrave;tres = 20 degr&eacute;s de libert&eacute; = overfit garanti. Plus il y a de param&egrave;tres, plus il est facile de &laquo; coller &raquo; au pass&eacute;.</p>
+    </div>
+  </div>
+  <div class="anti-pattern good">
+    <i class="fa-solid fa-check" style="color:var(--green); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--green);">Moins de param&egrave;tres = plus robuste</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Nos strat&eacute;gies utilisent 5-8 param&egrave;tres max. Chaque param&egrave;tre suppl&eacute;mentaire doit prouver sa valeur ajout&eacute;e.</p>
+    </div>
+  </div>
+
+  <div class="anti-pattern bad">
+    <i class="fa-solid fa-xmark" style="color:var(--red); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--red);">Data snooping</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Tester 100 combinaisons de param&egrave;tres et ne publier que la meilleure. C'est de la s&eacute;lection par le hasard, pas de la d&eacute;couverte.</p>
+    </div>
+  </div>
+  <div class="anti-pattern good">
+    <i class="fa-solid fa-check" style="color:var(--green); font-size:1.1rem; margin-top:2px;"></i>
+    <div>
+      <strong style="color:var(--green);">Tester 10 hypoth&egrave;ses, pas 100 combinaisons</strong>
+      <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Partir d'une hypoth&egrave;se de march&eacute; claire, la tester, puis l'am&eacute;liorer it&eacute;rativement. Pas de &laquo; p&ecirc;che au hasard &raquo;.</p>
+    </div>
+  </div>
+
+  <!-- ===== CONCLUSION ===== -->
+  <div class="section-divider"><i class="fa-solid fa-flag-checkered"></i> En r&eacute;sum&eacute;</div>
+
+  <div class="alert-green">
+    <strong><i class="fa-solid fa-check-double"></i> Ce que cette m&eacute;thodologie garantit :</strong>
+    <ul style="margin:0.5rem 0 0; padding-left:1.25rem;">
+      <li>Chaque strat&eacute;gie publi&eacute;e a &eacute;t&eacute; <strong>stress-test&eacute;e</strong> sur des p&eacute;riodes de crise</li>
+      <li>Les param&egrave;tres sont <strong>robustes</strong> (&plusmn;15% de variation ne d&eacute;truit pas les r&eacute;sultats)</li>
+      <li>Les performances ne sont pas dues au <strong>hasard</strong> (monkey test &gt; 2x)</li>
+      <li>Les r&eacute;sultats sont <strong>reproductibles</strong> sur diff&eacute;rentes p&eacute;riodes (cross-period)</li>
+      <li>Chaque strat&eacute;gie passe par un <strong>forward testing</strong> de 3 mois minimum</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center; margin-top:2rem;">
+    <a href="https://articles.market-watch.xyz/?tab=portfolio" style="display:inline-flex; align-items:center; gap:0.5rem; background:var(--accent); color:white; padding:0.75rem 2rem; border-radius:12px; font-weight:700; font-size:0.9rem; text-decoration:none; transition:background 0.2s;">
+      <i class="fa-solid fa-arrow-left"></i> Retour aux Strat&eacute;gies
+    </a>
+  </div>
+
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer-bar">
+  <p>&copy; 2026 Market Watch &mdash; <a href="https://articles.market-watch.xyz/">market-watch.xyz</a></p>
+  <p style="margin-top:0.5rem;"><strong>Disclaimer :</strong> Les performances pass&eacute;es ne garantissent pas les r&eacute;sultats futurs. Ce document est informatif, pas un conseil en investissement.</p>
+</div>
+
+<!-- ===== CHARTS ===== -->
+<script>
+// Chart 1: Overfit vs Robust equity curves
+(function(){
+  var chart = echarts.init(document.getElementById('chart-overfit'));
+  var days = [];
+  var overfit = [100];
+  var robust = [100];
+  var benchmark = [100];
+  for (var i = 0; i <= 250; i++) {
+    days.push('J' + i);
+  }
+  // Simulate equity curves
+  for (var i = 1; i <= 250; i++) {
+    var noise = (Math.random() - 0.5) * 2;
+    // Overfit: amazing until day 180 (in-sample), then collapses
+    if (i < 180) {
+      overfit.push(overfit[i-1] * (1 + 0.004 + noise * 0.005));
+    } else {
+      overfit.push(overfit[i-1] * (1 - 0.003 + noise * 0.01));
+    }
+    // Robust: steady growth throughout
+    robust.push(robust[i-1] * (1 + 0.002 + noise * 0.004));
+    // Benchmark
+    benchmark.push(benchmark[i-1] * (1 + 0.0004 + noise * 0.006));
+  }
+  chart.setOption({
+    title: { text: 'Overfit vs Robuste : Courbe d\'Equity', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 800 } },
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, data: ['Strat\u00e9gie Overfit', 'Strat\u00e9gie Robuste', 'Benchmark (S&P 500)'] },
+    grid: { left: '3%', right: '4%', bottom: '15%', top: '15%', containLabel: true },
+    xAxis: { type: 'category', data: days, axisLabel: { interval: 49, fontSize: 11 }, boundaryGap: false },
+    yAxis: { type: 'value', axisLabel: { formatter: '{value}' } },
+    series: [
+      { name: 'Strat\u00e9gie Overfit', type: 'line', data: overfit.map(function(v){return +v.toFixed(1)}), lineStyle: { color: '#dc2626', width: 2 }, itemStyle: { color: '#dc2626' }, symbol: 'none', markArea: { silent: true, data: [[{xAxis: 'J180', itemStyle: {color: 'rgba(220,38,38,0.06)'}}, {xAxis: 'J250'}]] } },
+      { name: 'Strat\u00e9gie Robuste', type: 'line', data: robust.map(function(v){return +v.toFixed(1)}), lineStyle: { color: '#059669', width: 2.5 }, itemStyle: { color: '#059669' }, symbol: 'none' },
+      { name: 'Benchmark (S&P 500)', type: 'line', data: benchmark.map(function(v){return +v.toFixed(1)}), lineStyle: { color: '#94a3b8', width: 1.5, type: 'dashed' }, itemStyle: { color: '#94a3b8' }, symbol: 'none' }
+    ],
+    graphic: [{ type: 'text', left: '72%', top: '25%', style: { text: 'Out-of-Sample\n\u2190 Effondrement', fill: '#dc2626', fontSize: 11, fontWeight: 700, fontFamily: 'Inter' } }]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// Chart 2: Plateau vs Peak
+(function(){
+  var chart = echarts.init(document.getElementById('chart-plateau'));
+  var params = [];
+  var cagr = [];
+  for (var i = 0; i <= 40; i++) {
+    params.push(i * 5);
+    // Create a curve with a narrow peak and a wide plateau
+    var peak = 250 * Math.exp(-Math.pow((i - 15) / 2, 2));
+    var plateau = 140 * (1 / (1 + Math.exp(-0.5 * (i - 18)))) * (1 / (1 + Math.exp(0.5 * (i - 32))));
+    cagr.push(+(peak + plateau + 20 + (Math.random() - 0.5) * 8).toFixed(1));
+  }
+  chart.setOption({
+    title: { text: 'Plateau vs Pic : Choisir le Centre', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 800 } },
+    tooltip: { trigger: 'axis', formatter: function(p){ return 'Param\u00e8tre: ' + p[0].axisValue + '<br/>CAGR: ' + p[0].value + '%'; } },
+    grid: { left: '3%', right: '4%', bottom: '12%', top: '15%', containLabel: true },
+    xAxis: { type: 'category', data: params, name: 'Valeur du param\u00e8tre', nameLocation: 'center', nameGap: 30, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'CAGR (%)', axisLabel: { formatter: '{value}%' } },
+    series: [{
+      type: 'line', data: cagr, smooth: 0.3, symbol: 'none',
+      lineStyle: { color: '#4f46e5', width: 2.5 },
+      areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: 'rgba(79,70,229,0.15)'}, {offset: 1, color: 'rgba(79,70,229,0)'}]) },
+      markPoint: {
+        data: [
+          { coord: [15, cagr[15]], name: 'PIC', symbol: 'pin', symbolSize: 50, itemStyle: { color: '#dc2626' }, label: { formatter: 'PIC\n(Overfit)', fontSize: 10, fontWeight: 700, color: '#fff' } },
+          { coord: [25, cagr[25]], name: 'PLATEAU', symbol: 'pin', symbolSize: 50, itemStyle: { color: '#059669' }, label: { formatter: 'CENTRE\n(Robuste)', fontSize: 10, fontWeight: 700, color: '#fff' } }
+        ]
+      },
+      markArea: {
+        silent: true,
+        data: [
+          [{ xAxis: 85, itemStyle: { color: 'rgba(5,150,105,0.08)' } }, { xAxis: 170 }]
+        ]
+      }
+    }],
+    graphic: [
+      { type: 'text', left: '23%', top: '20%', style: { text: '\u2190 Pic \u00e9troit\n   (fragile)', fill: '#dc2626', fontSize: 11, fontWeight: 600, fontFamily: 'Inter' } },
+      { type: 'text', left: '55%', top: '35%', style: { text: 'Plateau large \u2192\n  (robuste)', fill: '#059669', fontSize: 11, fontWeight: 600, fontFamily: 'Inter' } }
+    ]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// Chart 3: Radar scoring example
+(function(){
+  var chart = echarts.init(document.getElementById('chart-radar'));
+  chart.setOption({
+    title: { text: 'Score Anti-Overfit : Exemple trend-hybrid-af', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 800 } },
+    tooltip: {},
+    legend: { bottom: 0, data: ['trend-hybrid-af', 'Seuil minimum'] },
+    radar: {
+      indicator: [
+        { name: 'Perturbation', max: 100 },
+        { name: 'Stress Test', max: 100 },
+        { name: 'Bull Test', max: 100 },
+        { name: 'Monkey Test', max: 100 },
+        { name: 'Cross-Period', max: 100 },
+        { name: 'Cliff-Free', max: 100 }
+      ],
+      shape: 'circle',
+      splitNumber: 5,
+      axisName: { color: '#334155', fontSize: 12, fontWeight: 600, fontFamily: 'Inter' },
+      splitArea: { areaStyle: { color: ['#fff', '#f8fafc', '#fff', '#f8fafc', '#fff'] } }
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        {
+          value: [88, 75, 92, 95, 82, 90],
+          name: 'trend-hybrid-af',
+          areaStyle: { color: 'rgba(5,150,105,0.15)' },
+          lineStyle: { color: '#059669', width: 2 },
+          itemStyle: { color: '#059669' }
+        },
+        {
+          value: [60, 60, 60, 60, 60, 60],
+          name: 'Seuil minimum',
+          areaStyle: { color: 'rgba(220,38,38,0.05)' },
+          lineStyle: { color: '#dc2626', width: 1.5, type: 'dashed' },
+          itemStyle: { color: '#dc2626' }
+        }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
