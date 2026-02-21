@@ -252,6 +252,16 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 - **Accents** (**OBLIGATOIRE**) : Toujours utiliser les caractères accentués français (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç). Ne JAMAIS écrire "resultat" → écrire "résultat", "benefice" → "bénéfice", "marche" → "marché", "premiere" → "première", etc. Les entités HTML (`&eacute;`, `&agrave;`) sont acceptables dans le HTML mais les caractères UTF-8 directs sont préférés.
 - **Badges**: badge-red (alerte), badge-blue (info), badge-green (positif), badge-purple (spécial)
 - **Classes CSS**: content-card, data-table, metric-grid/metric-card, risk-matrix/risk-item, pedagogy-box, didactic-box, alert-box, geo-alert, calendar-days-grid
+- **Tags** (**OBLIGATOIRE**) : Chaque `.report-card` dans `index.html` **doit** avoir un attribut `data-tags="tag1,tag2,..."`. Taxonomie :
+  | Catégorie | Tags | Couleur CSS |
+  |-----------|------|-------------|
+  | Région | `us`, `eu`, `asia`, `crypto`, `commodity`, `forex`, `etf` | Bleu (`data-cat="region"`) |
+  | Secteur | `tech`, `semis`, `healthcare`, `energy`, `financials`, `industrials`, `materials`, `consumer`, `defense` | Vert (`data-cat="sector"`) |
+  | Thème | `ai`, `earnings`, `geopolitique`, `macro`, `technique`, `options`, `dividende`, `small-cap`, `speculative` | Violet (`data-cat="theme"`) |
+  | Contenu | `trade-idea`, `formation`, `retrospective` | Ambre (`data-cat="content"`) |
+  - Les tags sont rendus automatiquement en chips colorés par le JS (`tagMeta` object)
+  - Cliquer sur un tag active le filtre global (AND cumulatif)
+- **URL params** : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — tous combinables
 - **Compteurs de tabs** (**OBLIGATOIRE**) : À chaque ajout d'article, **toujours** mettre à jour le compteur du tab correspondant dans `index.html` :
   - `<span class="tab-count" id="weeklyCount">N</span>` — nombre de cartes dans `#tab-weekly`
   - `<span class="tab-count" id="dailyCount">N</span>` — nombre de cartes dans `#tab-daily`
