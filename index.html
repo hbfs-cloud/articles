@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
     <style>
         /* Landing Specific Overrides */
         body {
@@ -812,6 +813,139 @@
                 padding: 1.25rem;
             }
         }
+
+        /* ===== TAG CHIPS ON CARDS ===== */
+        .card-tags { display:flex; flex-wrap:wrap; gap:4px; margin:0.5rem 0 0.75rem; }
+        .card-tag {
+            display:inline-block; font-size:0.65rem; font-weight:600; padding:2px 8px;
+            border-radius:20px; line-height:1.5; white-space:nowrap; cursor:pointer;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .card-tag:hover { opacity:0.85; transform:scale(1.05); }
+        .card-tag[data-cat="region"]   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+        .card-tag[data-cat="sector"]   { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+        .card-tag[data-cat="theme"]    { background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; }
+        .card-tag[data-cat="content"]  { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+
+        /* ===== TAG FILTER BAR ===== */
+        .tag-filter-bar {
+            display:none; align-items:center; gap:8px; padding:10px 16px;
+            background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
+            margin:0.75rem 0; flex-wrap:wrap; animation:tagBarIn 0.2s ease-out;
+        }
+        .tag-filter-bar.visible { display:flex; }
+        @keyframes tagBarIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+        .tag-filter-bar .active-tag {
+            display:inline-flex; align-items:center; gap:4px; font-size:0.75rem; font-weight:600;
+            padding:4px 10px; border-radius:20px; background:#2563eb; color:#fff; cursor:pointer;
+        }
+        .tag-filter-bar .active-tag:hover { background:#1d4ed8; }
+        .tag-filter-bar .active-tag .remove { font-size:0.85rem; opacity:0.8; }
+        .tag-filter-bar .clear-tags {
+            font-size:0.75rem; color:#64748b; cursor:pointer; padding:4px 8px;
+            border:1px solid #e2e8f0; border-radius:6px; background:white; font-family:inherit;
+        }
+        .tag-filter-bar .clear-tags:hover { background:#f1f5f9; color:#0f172a; }
+        .tag-filter-label { font-size:0.75rem; color:#64748b; font-weight:600; }
+
+        /* ===== QUICK TAG CHIPS (analyses tab) ===== */
+        .quick-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:0.75rem; }
+        .quick-tag {
+            font-size:0.72rem; font-weight:600; padding:4px 12px; border-radius:20px;
+            cursor:pointer; border:1px solid #e2e8f0; background:white; color:#475569;
+            font-family:'Inter',sans-serif; transition:all 0.15s;
+        }
+        .quick-tag:hover { border-color:#2563eb; color:#2563eb; background:#eff6ff; }
+        .quick-tag.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+
+        /* ===== CONTEXT BAR ===== */
+        .context-bar {
+            display:none; font-size:0.8rem; color:#64748b; padding:8px 0; font-weight:500;
+        }
+        .context-bar.visible { display:block; }
+        .context-bar span { color:#2563eb; font-weight:700; }
+
+        /* ===== DESKTOP: PILL TABS ===== */
+        @media (min-width: 769px) {
+            .main-tabs {
+                background:#f1f5f9; border-radius:14px; padding:4px; border-bottom:none;
+                display:inline-flex; gap:2px;
+            }
+            .main-tab {
+                border-radius:10px; padding:10px 22px; transition:all 0.25s;
+            }
+            .main-tab.active {
+                background:#fff; color:var(--accent);
+                box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            }
+            .main-tab.active::after { display:none; }
+            .main-tab:hover:not(.active) { background:rgba(255,255,255,0.5); }
+        }
+
+        /* ===== TAB TRANSITIONS ===== */
+        @keyframes tabFadeIn {
+            from { opacity:0; transform:translateY(8px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+        .tab-panel.active { animation: tabFadeIn 0.25s ease-out; }
+
+        /* ===== HOVER CARDS (less aggressive) ===== */
+        .report-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ===== MOBILE: BOTTOM NAV BAR ===== */
+        @media (max-width: 768px) {
+            .main-tabs {
+                position:fixed; bottom:0; left:0; right:0; z-index:100;
+                display:flex !important; justify-content:space-around;
+                background:rgba(255,255,255,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+                border-top:1px solid #e2e8f0; border-radius:0; margin:0; padding:4px 0;
+                padding-bottom:calc(4px + env(safe-area-inset-bottom, 0px));
+                box-shadow:0 -4px 20px rgba(0,0,0,0.06);
+                grid-template-columns:unset; gap:0; border:none;
+                min-height:auto;
+            }
+            .main-tab {
+                display:flex; flex-direction:column; align-items:center; justify-content:center;
+                gap:2px; padding:6px 4px; border-radius:8px; font-size:0.6rem;
+                min-height:auto; min-width:0; flex:1;
+                transition:color 0.15s;
+            }
+            .main-tab .tab-icon { font-size:1.15rem; margin-right:0; display:block; line-height:1; }
+            .main-tab .tab-label { display:block; font-size:0.6rem; letter-spacing:0.02em; }
+            .main-tab .tab-count { display:none; }
+            .main-tab.active {
+                color:var(--accent); background:transparent;
+                box-shadow:none;
+            }
+            .main-tab.active::after { display:none; }
+            .main-tab:hover { background:transparent; }
+            /* Space for bottom nav */
+            .container { padding-bottom:80px; }
+            footer { padding-bottom:90px; }
+
+            /* Search trigger: circle on mobile */
+            .search-trigger {
+                width:40px; height:40px; border-radius:50%; padding:0;
+                display:flex; align-items:center; justify-content:center;
+                font-size:0; top:0.75rem; right:0.75rem;
+            }
+            .search-trigger i { font-size:0.9rem; margin:0; }
+            .search-trigger kbd { display:none; }
+        }
+
+        /* ===== SEARCH RESULTS GROUPED ===== */
+        .search-group-header {
+            font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+            color:#94a3b8; padding:8px 12px 4px; display:flex; align-items:center; gap:6px;
+        }
+        .search-group-header i { font-size:0.7rem; }
+        .search-item-type {
+            font-size:0.6rem; color:#94a3b8; background:#f1f5f9; padding:1px 6px;
+            border-radius:4px; margin-left:auto; flex-shrink:0;
+        }
     </style>
 </head>
 
@@ -875,6 +1009,16 @@
             </button>
         </div>
 
+        <!-- TAG FILTER BAR (shown when tags are active) -->
+        <div class="tag-filter-bar" id="tagFilterBar">
+            <span class="tag-filter-label"><i class="fa-solid fa-filter" style="margin-right:4px;"></i>Filtres :</span>
+            <div id="activeTagsContainer"></div>
+            <button class="clear-tags" onclick="clearAllTags()"><i class="fa-solid fa-xmark" style="margin-right:2px;"></i>Effacer</button>
+        </div>
+
+        <!-- CONTEXT BAR -->
+        <div class="context-bar" id="contextBar"></div>
+
         <!-- ============================================================ -->
         <!-- TAB: WEEKLY -->
         <!-- ============================================================ -->
@@ -886,7 +1030,7 @@
             <div class="grid-cards" style="margin-top:1rem;">
 
                 <!-- Feb 16, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,crypto,commodity,macro,geopolitique,technique"
                     <span class="badge badge-red" style="margin-bottom:1rem; display:inline-block;">🔴 DERNIER RAPPORT</span>
                     <div class="report-card-meta">16 - 21 Février 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">La Grande Rotation & Genève : Semaine Charnière</h2>
@@ -904,7 +1048,7 @@
                 </div>
 
                 <!-- Feb 9, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,macro,earnings,technique"
                     <div class="report-card-meta">9 - 14 Février 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">NFP & CPI : La Semaine Qui Décidera 2026</h2>
                     <p>SEMAINE PIVOT: NFP mercredi, CPI vendredi. Dow franchit 50K. CTA -$33B à -$80B ventes potentielles. Nasdaq -2.8%. Rotation small-cap dramatique. Or test $5K.</p>
@@ -914,7 +1058,7 @@
                 </div>
 
                 <!-- Feb 2, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,commodity,crypto,earnings,macro"
                     <div class="report-card-meta">2 - 8 Février 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">Crash Métaux Historique & Earnings Mega-Tech</h2>
                     <p>CRASH HISTORIQUE: Or $4,745 (-11.39%), Argent $78.53 (-31.37%). Earnings GOOGL, AMZN, AMD. NFP vendredi. S&P +2.31%. BTC -14.50%. Volatilité extrême.</p>
@@ -924,7 +1068,7 @@
                 </div>
 
                 <!-- Jan 26, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,macro,geopolitique"
                     <div class="report-card-meta">26 Janvier - 1er Février 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">FOMC Critique & Tarifs Canada 100%</h2>
                     <p>Décision FOMC cruciale. Tarifs Canada portés à 100%. Marchés sous tension géopolitique. Métaux en consolidation.</p>
@@ -934,7 +1078,7 @@
                 </div>
 
                 <!-- Jan 19, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,macro,geopolitique"
                     <div class="report-card-meta">19 - 24 Janvier 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">Tarifs Europe & FOMC Critique</h2>
                     <p>Menace de tarifs sur l'Europe. FOMC en ligne de mire. Rotation sectorielle en cours. Or et métaux solides.</p>
@@ -944,7 +1088,7 @@
                 </div>
 
                 <!-- Jan 12, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,financials,earnings,macro"
                     <div class="report-card-meta">12 - 17 Janvier 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">Earnings Bancaires & Inflation Décisive</h2>
                     <p>Saison des résultats bancaires. CPI et PPI en focus. Marchés en attente de confirmation directionnelle.</p>
@@ -954,7 +1098,7 @@
                 </div>
 
                 <!-- Jan 3, 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,energy,commodity,geopolitique"
                     <div class="report-card-meta">3 - 10 Janvier 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">Le Premier Cygne Noir de 2026</h2>
                     <p>Choc Venezuela : nationalisation des ressources. Marchés en turbulence. Impact sur pétrole, métaux et géopolitique globale.</p>
@@ -964,7 +1108,7 @@
                 </div>
 
                 <!-- Dec 29, 2025 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,commodity,macro"
                     <div class="report-card-meta">29 Décembre 2025 - 3 Janvier 2026</div>
                     <h2 style="font-size:1.5rem; margin:0.5rem 0 1rem;">L'Année du Métal et la Revanche de l'Europe</h2>
                     <p>Bilan 2025 et outlook 2026. Métaux précieux en vedette. Europe en rotation favorable. Perspectives macro et sectorielles.</p>
@@ -987,7 +1131,7 @@
 
             <div class="grid-cards" style="margin-top:1rem;">
                 <!-- 21 Feb 2026 — Weekend -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,asia,commodity,geopolitique,macro,trade-idea,formation"
                     <span class="badge badge-red" style="margin-bottom:1rem; display:inline-block;">DERNIER BRIEFING</span>
                     <div class="report-card-meta">February 21, 2026 — Saturday Briefing</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">SCOTUS Strikes Down Tariffs — Markets Rally Into the Weekend</h2>
@@ -998,7 +1142,7 @@
                 </div>
 
                 <!-- SCOTUS Tariffs Special Analysis -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,crypto,commodity,forex,geopolitique,macro"
                     <span class="badge badge-purple" style="margin-bottom:1rem; display:inline-block;">ANALYSE SP&Eacute;CIALE</span>
                     <div class="report-card-meta">20 Février 2026 — Analyse Thématique</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">SCOTUS vs Tarifs : La Cour Supr&ecirc;me Invalide les Droits de Douane</h2>
@@ -1009,7 +1153,7 @@
                 </div>
 
                 <!-- 20 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,commodity,crypto,geopolitique,macro,trade-idea,formation">
                     <div class="report-card-meta">20 Février 2026 — Vendredi</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Cour Suprême, Iran & Core PCE : Vendredi Décisif</h2>
                     <p style="font-size:0.85rem; color:var(--text-muted);">Triple catalyseur : SCOTUS ruling tarifs possible, Trump décide sur l'Iran sous 10 jours, Core PCE + Flash PMI aujourd'hui. Pétrole +7% en 2 jours. Or $5,000+ ATH. S&P -0.28%, Dow -0.54%. BTC $67,743. NVDA earnings mercredi prochain.</p>
@@ -1019,7 +1163,7 @@
                 </div>
 
                 <!-- 19 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,asia,financials,earnings,macro,trade-idea,formation">
                     <div class="report-card-meta">19 Février 2026 — Jeudi</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">FOMC Minutes & Sélections A++ Globales</h2>
                     <p style="font-size:0.85rem; color:var(--text-muted);">Top 3 Dow Jones (GS, NVDA, CAT) + Top 4 Europe (BNP, BBVA, UCG, Siemens) + Top 3 Asie (Samsung, SoftBank, TSMC). WMT earnings. FOMC Minutes. PCE vendredi. S&P +0.56%, Nasdaq +0.78%. Or $5,008. BTC $66,750.</p>
@@ -1029,7 +1173,7 @@
                 </div>
 
                 <!-- Volume Evolution Special Analysis -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,asia,crypto,technique,macro"
                     <span class="badge badge-purple" style="margin-bottom:1rem; display:inline-block;">ANALYSE SP&Eacute;CIALE</span>
                     <div class="report-card-meta">17 Février 2026 — Étude Thématique</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">&Eacute;volution des Volumes de Transaction 2024-2026</h2>
@@ -1040,7 +1184,7 @@
                 </div>
 
                 <!-- 17 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,crypto,geopolitique,macro,formation">
                     <div class="report-card-meta">17 Février 2026 — Lundi</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Presidents' Day & Talks de Genève</h2>
                     <p style="font-size:0.85rem; color:var(--text-muted);">Marchés US fermés (Presidents' Day). Talks Ukraine-Russie Round 3 à Genève. FOMC Minutes mercredi. Core PCE vendredi. BTC $67,987 sous pression. Or recule à $4,955. Semaine macro chargée.</p>
@@ -1077,11 +1221,22 @@
                     </div>
                     <span class="filter-count" id="filterCount"></span>
                 </div>
+                <div class="quick-tags" id="quickTags">
+                    <button class="quick-tag" data-tag="us"><i class="fa-solid fa-flag-usa" style="margin-right:3px;"></i>US</button>
+                    <button class="quick-tag" data-tag="eu"><i class="fa-solid fa-earth-europe" style="margin-right:3px;"></i>EU</button>
+                    <button class="quick-tag" data-tag="crypto"><i class="fa-brands fa-bitcoin" style="margin-right:3px;"></i>Crypto</button>
+                    <button class="quick-tag" data-tag="ai"><i class="fa-solid fa-brain" style="margin-right:3px;"></i>AI</button>
+                    <button class="quick-tag" data-tag="commodity"><i class="fa-solid fa-coins" style="margin-right:3px;"></i>Commodity</button>
+                    <button class="quick-tag" data-tag="trade-idea"><i class="fa-solid fa-crosshairs" style="margin-right:3px;"></i>Trade</button>
+                    <button class="quick-tag" data-tag="etf"><i class="fa-solid fa-layer-group" style="margin-right:3px;"></i>ETF</button>
+                    <button class="quick-tag" data-tag="healthcare"><i class="fa-solid fa-heart-pulse" style="margin-right:3px;"></i>Healthcare</button>
+                    <button class="quick-tag" data-tag="semis"><i class="fa-solid fa-microchip" style="margin-right:3px;"></i>Semis</button>
+                </div>
             </div>
 
             <div class="grid-cards">
             <!-- RXT Rackspace Technology - Palantir Hype -->
-            <div class="report-card" data-grade="D">
+            <div class="report-card" data-grade="D" data-tags="us,tech,ai,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/RXT?format=jpg" alt="RXT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="ticker-logo-fallback" style="display:none; background:linear-gradient(135deg,#1e40af,#3b82f6); color:white; font-weight:800; font-size:0.7rem;">RXT</div>
@@ -1102,7 +1257,7 @@
             </div>
 
             <!-- TRNR Fraud Investigation -->
-            <div class="report-card" data-grade="F">
+            <div class="report-card" data-grade="F" data-tags="us,consumer,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/TRNR?format=jpg" alt="TRNR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="ticker-logo-fallback" style="display:none; background:linear-gradient(135deg,#7f1d1d,#dc2626); color:white; font-weight:800; font-size:0.7rem;">TRNR</div>
@@ -1123,7 +1278,7 @@
             </div>
 
             <!-- AIRBUS Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="eu,industrials,defense,earnings,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AIR?format=jpg" alt="AIR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="ticker-logo-fallback" style="display:none; background:linear-gradient(135deg,#003399,#0055a4); color:white; font-weight:800; font-size:0.7rem;">AIR</div>
@@ -1144,7 +1299,7 @@
             </div>
 
             <!-- AIR FRANCE-KLM Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="eu,industrials,earnings,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AF?format=jpg" alt="AF" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="ticker-logo-fallback" style="display:none; background:linear-gradient(135deg,#002157,#e4002b); color:white; font-weight:800; font-size:0.7rem;">AF</div>
@@ -1165,7 +1320,7 @@
             </div>
 
             <!-- EURONEXT Analysis -->
-            <div class="report-card" data-grade="A">
+            <div class="report-card" data-grade="A" data-tags="eu,financials,earnings,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ENX?format=jpg" alt="ENX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="ticker-logo-fallback" style="display:none; background:linear-gradient(135deg,#003082,#0055a4); color:white; font-weight:800; font-size:0.7rem;">ENX</div>
@@ -1186,7 +1341,7 @@
             </div>
 
             <!-- STABLECOINS Thematic Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="crypto">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg,#0ea5e9,#10b981); color:white; font-weight:800; font-size:0.5rem;">STABLE</div>
                     <div>
@@ -1203,7 +1358,7 @@
             </div>
 
             <!-- ZETA Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="us,tech,ai,earnings,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ZETA?format=jpg" alt="ZETA" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="ticker-logo-fallback" style="display:none; background:linear-gradient(135deg,#1e40af,#7c3aed); color:white; font-weight:800; font-size:0.7rem;">ZETA</div>
@@ -1224,7 +1379,7 @@
             </div>
 
             <!-- STOXX 600 Analysis -->
-            <div class="report-card" data-grade="A">
+            <div class="report-card" data-grade="A" data-tags="eu,macro,technique">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg,#1e40af,#3b82f6); color:white; font-weight:800; font-size:0.55rem;">STOXX</div>
                     <div>
@@ -1244,7 +1399,7 @@
             </div>
 
             <!-- KOSPI Analysis -->
-            <div class="report-card" data-grade="A">
+            <div class="report-card" data-grade="A" data-tags="asia,semis,technique">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg,#991b1b,#1e3a5f); color:white; font-weight:800; font-size:0.55rem;">KOSPI</div>
                     <div>
@@ -1264,7 +1419,7 @@
             </div>
 
             <!-- EUR/USD Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="forex,macro">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:white; font-weight:800; font-size:0.7rem;">FX</div>
                     <div>
@@ -1284,7 +1439,7 @@
             </div>
 
             <!-- POET Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="us,semis,tech,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/POET?format=jpg" alt="POET" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">POET</div>
                     <div>
@@ -1304,7 +1459,7 @@
             </div>
 
             <!-- MT Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="eu,materials,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/MT?format=jpg" alt="MT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">MT</div>
                     <div>
@@ -1324,7 +1479,7 @@
             </div>
 
             <!-- GEV Analysis -->
-            <div class="report-card" data-grade="A">
+            <div class="report-card" data-grade="A" data-tags="us,industrials,energy,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/GEV?format=jpg" alt="GEV" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">GEV</div>
                     <div>
@@ -1344,7 +1499,7 @@
             </div>
 
             <!-- NVDA Analysis -->
-            <div class="report-card" data-grade="A">
+            <div class="report-card" data-grade="A" data-tags="us,semis,tech,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/NVDA?format=jpg" alt="NVDA" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">NVDA</div>
                     <div>
@@ -1364,7 +1519,7 @@
             </div>
 
             <!-- XAU Analysis -->
-            <div class="report-card" data-grade="A">
+            <div class="report-card" data-grade="A" data-tags="commodity,trade-idea">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg, #eab308, #ca8a04);">XAU</div>
                     <div>
@@ -1384,7 +1539,7 @@
             </div>
 
             <!-- XAG Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="commodity,trade-idea">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg, #94a3b8, #64748b);">XAG</div>
                     <div>
@@ -1404,7 +1559,7 @@
             </div>
 
             <!-- BTC Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="crypto,technique,trade-idea">
                 <div class="ticker-card-header">
                     <div class="ticker-logo-fallback" style="display:flex; background:linear-gradient(135deg, #f59e0b, #d97706);">BTC</div>
                     <div>
@@ -1424,7 +1579,7 @@
             </div>
 
             <!-- AGX Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,industrials,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AGX?format=jpg" alt="AGX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AGX</div>
                     <div>
@@ -1444,7 +1599,7 @@
             </div>
 
             <!-- AMZN Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,tech,consumer,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AMZN?format=jpg" alt="AMZN" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AMZN</div>
                     <div>
@@ -1464,7 +1619,7 @@
             </div>
 
             <!-- ASM Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,materials,commodity,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ASM?format=jpg" alt="ASM" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ASM</div>
                     <div>
@@ -1484,7 +1639,7 @@
             </div>
 
             <!-- GOOGL Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,tech,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/GOOGL?format=jpg" alt="GOOGL" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">GOOGL</div>
                     <div>
@@ -1504,7 +1659,7 @@
             </div>
 
             <!-- IBKR Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,financials,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/IBKR?format=jpg" alt="IBKR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">IBKR</div>
                     <div>
@@ -1524,7 +1679,7 @@
             </div>
 
             <!-- META Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,tech,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="META" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">META</div>
                     <div>
@@ -1544,7 +1699,7 @@
             </div>
 
             <!-- MSFT Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,tech,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/MSFT?format=jpg" alt="MSFT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">MSFT</div>
                     <div>
@@ -1564,7 +1719,7 @@
             </div>
 
             <!-- RMBS Analysis -->
-            <div class="report-card" data-grade="A-">
+            <div class="report-card" data-grade="A-" data-tags="us,semis,tech,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/RMBS?format=jpg" alt="RMBS" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">RMBS</div>
                     <div>
@@ -1584,7 +1739,7 @@
             </div>
 
             <!-- AAPL Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,tech,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AAPL?format=jpg" alt="AAPL" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AAPL</div>
                     <div>
@@ -1604,7 +1759,7 @@
             </div>
 
             <!-- AG Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,materials,commodity,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AG?format=jpg" alt="AG" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AG</div>
                     <div>
@@ -1624,7 +1779,7 @@
             </div>
 
             <!-- AMD Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,semis,tech,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AMD?format=jpg" alt="AMD" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AMD</div>
                     <div>
@@ -1644,7 +1799,7 @@
             </div>
 
             <!-- BE Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,industrials,energy,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/BE?format=jpg" alt="BE" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">BE</div>
                     <div>
@@ -1664,7 +1819,7 @@
             </div>
 
             <!-- BLSH Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,crypto,financials,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/BLSH?format=jpg" alt="BLSH" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">BLSH</div>
                     <div>
@@ -1684,7 +1839,7 @@
             </div>
 
             <!-- CCJ Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,energy,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CCJ?format=jpg" alt="CCJ" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CCJ</div>
                     <div>
@@ -1704,7 +1859,7 @@
             </div>
 
             <!-- CRWV Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,tech,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CRWV?format=jpg" alt="CRWV" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CRWV</div>
                     <div>
@@ -1724,7 +1879,7 @@
             </div>
 
             <!-- CVX Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,energy,dividende,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CVX?format=jpg" alt="CVX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CVX</div>
                     <div>
@@ -1744,7 +1899,7 @@
             </div>
 
             <!-- DVAX Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,healthcare,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/DVAX?format=jpg" alt="DVAX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">DVAX</div>
                     <div>
@@ -1764,7 +1919,7 @@
             </div>
 
             <!-- EXK Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,materials,commodity,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/EXK?format=jpg" alt="EXK" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">EXK</div>
                     <div>
@@ -1784,7 +1939,7 @@
             </div>
 
             <!-- FDX Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,industrials,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/FDX?format=jpg" alt="FDX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">FDX</div>
                     <div>
@@ -1964,7 +2119,7 @@
             </div>
 
             <!-- PLTR Analysis -->
-            <div class="report-card" data-grade="B+">
+            <div class="report-card" data-grade="B+" data-tags="us,tech,ai,defense,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/PLTR?format=jpg" alt="PLTR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">PLTR</div>
                     <div>
@@ -2484,7 +2639,7 @@
             </div>
 
             <!-- UEC Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="us,energy,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/UEC?format=jpg" alt="UEC" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">UEC</div>
                     <div>
@@ -2504,7 +2659,7 @@
             </div>
 
             <!-- WYFI Analysis -->
-            <div class="report-card" data-grade="B">
+            <div class="report-card" data-grade="B" data-tags="us,tech,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/WYFI?format=jpg" alt="WYFI" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">WYFI</div>
                     <div>
@@ -2524,7 +2679,7 @@
             </div>
 
             <!-- ABTC Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,industrials,materials,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ABTC?format=jpg" alt="ABTC" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ABTC</div>
                     <div>
@@ -2544,7 +2699,7 @@
             </div>
 
             <!-- AMPX Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,industrials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AMPX?format=jpg" alt="AMPX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AMPX</div>
                     <div>
@@ -2564,7 +2719,7 @@
             </div>
 
             <!-- APLD Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,tech,ai,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/APLD?format=jpg" alt="APLD" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">APLD</div>
                     <div>
@@ -2584,7 +2739,7 @@
             </div>
 
             <!-- CAPR Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CAPR?format=jpg" alt="CAPR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CAPR</div>
                     <div>
@@ -2604,7 +2759,7 @@
             </div>
 
             <!-- CORZ Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,tech,crypto,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CORZ?format=jpg" alt="CORZ" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CORZ</div>
                     <div>
@@ -2624,7 +2779,7 @@
             </div>
 
             <!-- FORM Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,semis,tech,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/FORM?format=jpg" alt="FORM" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">FORM</div>
                     <div>
@@ -2644,7 +2799,7 @@
             </div>
 
             <!-- ICHR Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,semis,tech,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ICHR?format=jpg" alt="ICHR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ICHR</div>
                     <div>
@@ -2664,7 +2819,7 @@
             </div>
 
             <!-- LITE Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,semis,tech,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/LITE?format=jpg" alt="LITE" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">LITE</div>
                     <div>
@@ -2684,7 +2839,7 @@
             </div>
 
             <!-- MAZE Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/MAZE?format=jpg" alt="MAZE" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">MAZE</div>
                     <div>
@@ -2704,7 +2859,7 @@
             </div>
 
             <!-- MBX Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/MBX?format=jpg" alt="MBX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">MBX</div>
                     <div>
@@ -2724,7 +2879,7 @@
             </div>
 
             <!-- PRAX Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/PRAX?format=jpg" alt="PRAX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">PRAX</div>
                     <div>
@@ -2744,7 +2899,7 @@
             </div>
 
             <!-- SNDK Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,semis,tech">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/SNDK?format=jpg" alt="SNDK" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">SNDK</div>
                     <div>
@@ -2764,7 +2919,7 @@
             </div>
 
             <!-- TERN Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/TERN?format=jpg" alt="TERN" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">TERN</div>
                     <div>
@@ -2784,7 +2939,7 @@
             </div>
 
             <!-- USAR Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,materials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/USAR?format=jpg" alt="USAR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">USAR</div>
                     <div>
@@ -2804,7 +2959,7 @@
             </div>
 
             <!-- WULF Analysis -->
-            <div class="report-card" data-grade="B-">
+            <div class="report-card" data-grade="B-" data-tags="us,crypto,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/WULF?format=jpg" alt="WULF" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">WULF</div>
                     <div>
@@ -2824,7 +2979,7 @@
             </div>
 
             <!-- AAOI Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,semis,tech,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AAOI?format=jpg" alt="AAOI" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AAOI</div>
                     <div>
@@ -2844,7 +2999,7 @@
             </div>
 
             <!-- ABAT Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,industrials,materials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ABAT?format=jpg" alt="ABAT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ABAT</div>
                     <div>
@@ -2864,7 +3019,7 @@
             </div>
 
             <!-- AEVA Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,tech,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AEVA?format=jpg" alt="AEVA" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AEVA</div>
                     <div>
@@ -2884,7 +3039,7 @@
             </div>
 
             <!-- ALMS Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ALMS?format=jpg" alt="ALMS" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ALMS</div>
                     <div>
@@ -2904,7 +3059,7 @@
             </div>
 
             <!-- ASST Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,crypto,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ASST?format=jpg" alt="ASST" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ASST</div>
                     <div>
@@ -2924,7 +3079,7 @@
             </div>
 
             <!-- ASTS Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,tech,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ASTS?format=jpg" alt="ASTS" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ASTS</div>
                     <div>
@@ -2944,7 +3099,7 @@
             </div>
 
             <!-- COIN Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,financials,crypto,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/COIN?format=jpg" alt="COIN" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">COIN</div>
                     <div>
@@ -2964,7 +3119,7 @@
             </div>
 
             <!-- DFDV Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,crypto,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/DFDV?format=jpg" alt="DFDV" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">DFDV</div>
                     <div>
@@ -2984,7 +3139,7 @@
             </div>
 
             <!-- EOSE Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,industrials,energy,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/EOSE?format=jpg" alt="EOSE" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">EOSE</div>
                     <div>
@@ -3264,7 +3419,7 @@
             </div>
 
             <!-- TSLA Analysis -->
-            <div class="report-card" data-grade="C+">
+            <div class="report-card" data-grade="C+" data-tags="us,tech,consumer,ai,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/TSLA?format=jpg" alt="TSLA" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">TSLA</div>
                     <div>
@@ -3384,7 +3539,7 @@
             </div>
 
             <!-- BMNR Analysis -->
-            <div class="report-card" data-grade="C">
+            <div class="report-card" data-grade="C" data-tags="us,materials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/BMNR?format=jpg" alt="BMNR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">BMNR</div>
                     <div>
@@ -3485,7 +3640,7 @@
             </div>
 
             <!-- ALLO Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ALLO?format=jpg" alt="ALLO" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ALLO</div>
                     <div>
@@ -3505,7 +3660,7 @@
             </div>
 
             <!-- ALLR Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ALLR?format=jpg" alt="ALLR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ALLR</div>
                     <div>
@@ -3525,7 +3680,7 @@
             </div>
 
             <!-- ALT Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ALT?format=jpg" alt="ALT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ALT</div>
                     <div>
@@ -3545,7 +3700,7 @@
             </div>
 
             <!-- AQMS Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,industrials,materials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AQMS?format=jpg" alt="AQMS" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AQMS</div>
                     <div>
@@ -3565,7 +3720,7 @@
             </div>
 
             <!-- AREC Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,materials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AREC?format=jpg" alt="AREC" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AREC</div>
                     <div>
@@ -3585,7 +3740,7 @@
             </div>
 
             <!-- BTCC Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="crypto,etf,options">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/BTCC?format=jpg" alt="BTCC" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">BTCC</div>
                     <div>
@@ -3605,7 +3760,7 @@
             </div>
 
             <!-- BTM Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,crypto,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/BTM?format=jpg" alt="BTM" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">BTM</div>
                     <div>
@@ -3625,7 +3780,7 @@
             </div>
 
             <!-- BULL Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,financials,tech,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/BULL?format=jpg" alt="BULL" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">BULL</div>
                     <div>
@@ -3645,7 +3800,7 @@
             </div>
 
             <!-- CAN Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,tech,crypto,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CAN?format=jpg" alt="CAN" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CAN</div>
                     <div>
@@ -3665,7 +3820,7 @@
             </div>
 
             <!-- ELBM Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,materials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/ELBM?format=jpg" alt="ELBM" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">ELBM</div>
                     <div>
@@ -3685,7 +3840,7 @@
             </div>
 
             <!-- EU Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,energy,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/EU?format=jpg" alt="EU" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">EU</div>
                     <div>
@@ -3705,7 +3860,7 @@
             </div>
 
             <!-- HIMS Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/HIMS?format=jpg" alt="HIMS" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">HIMS</div>
                     <div>
@@ -3725,7 +3880,7 @@
             </div>
 
             <!-- HOTH Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/HOTH?format=jpg" alt="HOTH" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">HOTH</div>
                     <div>
@@ -3745,7 +3900,7 @@
             </div>
 
             <!-- HYPD Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,crypto,healthcare,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/HYPD?format=jpg" alt="HYPD" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">HYPD</div>
                     <div>
@@ -3765,7 +3920,7 @@
             </div>
 
             <!-- INBX Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/INBX?format=jpg" alt="INBX" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">INBX</div>
                     <div>
@@ -3785,7 +3940,7 @@
             </div>
 
             <!-- INDO Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,energy,speculative,geopolitique,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/INDO?format=jpg" alt="INDO" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">INDO</div>
                     <div>
@@ -3805,7 +3960,7 @@
             </div>
 
             <!-- LITM Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,materials,energy,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/LITM?format=jpg" alt="LITM" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">LITM</div>
                     <div>
@@ -3825,7 +3980,7 @@
             </div>
 
             <!-- LYFT Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,tech,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/LYFT?format=jpg" alt="LYFT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">LYFT</div>
                     <div>
@@ -3845,7 +4000,7 @@
             </div>
 
             <!-- MARA Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,crypto,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/MARA?format=jpg" alt="MARA" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">MARA</div>
                     <div>
@@ -3865,7 +4020,7 @@
             </div>
 
             <!-- MVST Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,industrials,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/MVST?format=jpg" alt="MVST" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">MVST</div>
                     <div>
@@ -3885,7 +4040,7 @@
             </div>
 
             <!-- RGTI Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,tech,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/RGTI?format=jpg" alt="RGTI" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">RGTI</div>
                     <div>
@@ -3905,7 +4060,7 @@
             </div>
 
             <!-- SBET Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,crypto,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/SBET?format=jpg" alt="SBET" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">SBET</div>
                     <div>
@@ -3925,7 +4080,7 @@
             </div>
 
             <!-- SMR Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,industrials,energy,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/SMR?format=jpg" alt="SMR" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">SMR</div>
                     <div>
@@ -3945,7 +4100,7 @@
             </div>
 
             <!-- SPWH Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,consumer,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/SPWH?format=jpg" alt="SPWH" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">SPWH</div>
                     <div>
@@ -3965,7 +4120,7 @@
             </div>
 
             <!-- TRON Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,consumer,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/TRON?format=jpg" alt="TRON" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">TRON</div>
                     <div>
@@ -3985,7 +4140,7 @@
             </div>
 
             <!-- VVOS Analysis -->
-            <div class="report-card" data-grade="D+">
+            <div class="report-card" data-grade="D+" data-tags="us,healthcare,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/VVOS?format=jpg" alt="VVOS" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">VVOS</div>
                     <div>
@@ -4025,7 +4180,7 @@
             </div>
 
             <!-- AXTI Analysis -->
-            <div class="report-card" data-grade="D">
+            <div class="report-card" data-grade="D" data-tags="us,semis,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/AXTI?format=jpg" alt="AXTI" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">AXTI</div>
                     <div>
@@ -4045,7 +4200,7 @@
             </div>
 
             <!-- CISO Analysis -->
-            <div class="report-card" data-grade="D">
+            <div class="report-card" data-grade="D" data-tags="us,tech,speculative,trade-idea">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CISO?format=jpg" alt="CISO" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CISO</div>
                     <div>
@@ -4065,7 +4220,7 @@
             </div>
 
             <!-- PYPY Analysis -->
-            <div class="report-card" data-grade="D">
+            <div class="report-card" data-grade="D" data-tags="etf,options">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/PYPY?format=jpg" alt="PYPY" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">PYPY</div>
                     <div>
@@ -4085,7 +4240,7 @@
             </div>
 
             <!-- YBIT Analysis -->
-            <div class="report-card" data-grade="D">
+            <div class="report-card" data-grade="D" data-tags="crypto,etf,options">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/YBIT?format=jpg" alt="YBIT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">YBIT</div>
                     <div>
@@ -4105,7 +4260,7 @@
             </div>
 
             <!-- REKT Analysis -->
-            <div class="report-card" data-grade="D-">
+            <div class="report-card" data-grade="D-" data-tags="crypto,etf,options,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/REKT?format=jpg" alt="REKT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">REKT</div>
                     <div>
@@ -4125,7 +4280,7 @@
             </div>
 
             <!-- CBTA Analysis -->
-            <div class="report-card" data-grade="F">
+            <div class="report-card" data-grade="F" data-tags="crypto,etf,options">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/CBTA?format=jpg" alt="CBTA" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">CBTA</div>
                     <div>
@@ -4145,7 +4300,7 @@
             </div>
 
             <!-- FIAT Analysis -->
-            <div class="report-card" data-grade="F">
+            <div class="report-card" data-grade="F" data-tags="crypto,etf,options">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/FIAT?format=jpg" alt="FIAT" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">FIAT</div>
                     <div>
@@ -4165,7 +4320,7 @@
             </div>
 
             <!-- PHE Analysis -->
-            <div class="report-card" data-grade="N/A">
+            <div class="report-card" data-grade="N/A" data-tags="us,energy,speculative">
                 <div class="ticker-card-header">
                     <img src="https://assets.parqet.com/logos/symbol/PHE?format=jpg" alt="PHE" class="ticker-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ticker-logo-fallback" style="display:none;">PHE</div>
                     <div>
@@ -4196,9 +4351,74 @@
                 <p style="color:var(--text-muted); margin:0.5rem 0 0; font-size:0.95rem;">Détection algorithmique des meilleurs setups du jour — Analyse multi-stratégie avec régime de marché</p>
             </div>
 
+            <!-- ===== SCANNER PERFORMANCE DASHBOARD ===== -->
+            <div style="background:linear-gradient(135deg,#0f172a,#1e293b); border-radius:20px; padding:1.5rem; margin:1rem 0 1.5rem; color:#e2e8f0;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
+                    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-chart-pie" style="color:#fff; font-size:1rem;"></i></div>
+                    <div>
+                        <div style="font-weight:800; font-size:1.1rem; color:#fff;">Performance du Scanner</div>
+                        <div style="font-size:0.72rem; color:#94a3b8;">Mis à jour : 21 Fév 2026 — Période : 10-20 Février 2026</div>
+                    </div>
+                    <div style="margin-left:auto; background:linear-gradient(135deg,#f59e0b,#d97706); padding:6px 14px; border-radius:10px; font-weight:900; font-size:1.1rem; color:#fff;">C+</div>
+                </div>
+
+                <!-- KPI Row -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); gap:0.6rem; margin-bottom:1.25rem;">
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:0.6rem; text-align:center;">
+                        <div style="font-size:0.6rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Hit Rate</div>
+                        <div style="font-size:1.5rem; font-weight:900; color:#10b981;">62.5%</div>
+                        <div style="font-size:0.6rem; color:#64748b;">5/8 valides</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:0.6rem; text-align:center;">
+                        <div style="font-size:0.6rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Meilleur Pick</div>
+                        <div style="font-size:1.5rem; font-weight:900; color:#10b981;">+184%</div>
+                        <div style="font-size:0.6rem; color:#64748b;">ACMR</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:0.6rem; text-align:center;">
+                        <div style="font-size:0.6rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Scans</div>
+                        <div style="font-size:1.5rem; font-weight:900; color:#fff;">4</div>
+                        <div style="font-size:0.6rem; color:#64748b;">40 setups</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:0.6rem; text-align:center;">
+                        <div style="font-size:0.6rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Pire Pick</div>
+                        <div style="font-size:1.5rem; font-weight:900; color:#ef4444;">-42%</div>
+                        <div style="font-size:0.6rem; color:#64748b;">ACHC</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:0.6rem; text-align:center;">
+                        <div style="font-size:0.6rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Régime</div>
+                        <div style="font-size:1.1rem; font-weight:900; color:#f59e0b;">Early<br>Risk-Off</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div style="background:rgba(255,255,255,0.04); border-radius:12px; padding:0.75rem;">
+                        <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.04em;"><i class="fa-solid fa-trophy" style="margin-right:4px; color:#f59e0b;"></i>Top Picks — P&L (%)</div>
+                        <div id="scannerTopChart" style="width:100%; height:180px;"></div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04); border-radius:12px; padding:0.75rem;">
+                        <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.04em;"><i class="fa-solid fa-bullseye" style="margin-right:4px; color:#10b981;"></i>Résultats par Scan</div>
+                        <div id="scannerResultsChart" style="width:100%; height:180px;"></div>
+                    </div>
+                </div>
+
+                <!-- Score by Scan -->
+                <div style="margin-top:1rem; background:rgba(255,255,255,0.04); border-radius:12px; padding:0.75rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.04em;"><i class="fa-solid fa-gauge-high" style="margin-right:4px; color:#2563eb;"></i>Score Moyen & Qualité par Scan</div>
+                    <div id="scannerScoreChart" style="width:100%; height:160px;"></div>
+                </div>
+
+                <div style="text-align:center; margin-top:1rem;">
+                    <a href="scanner/retrospective/" style="display:inline-flex; align-items:center; gap:6px; color:#94a3b8; font-size:0.8rem; text-decoration:none; padding:8px 16px; border:1px solid #334155; border-radius:8px; transition:0.2s;" onmouseover="this.style.borderColor='#2563eb';this.style.color='#60a5fa'" onmouseout="this.style.borderColor='#334155';this.style.color='#94a3b8'">
+                        <i class="fa-solid fa-arrow-right"></i> Voir la rétrospective complète
+                    </a>
+                </div>
+            </div>
+            <!-- ===== END SCANNER PERFORMANCE DASHBOARD ===== -->
+
             <div class="grid-cards" style="margin-top:1rem;">
                 <!-- Rétrospective Scanner -->
-                <div class="report-card" style="border:2px solid #f59e0b; background:linear-gradient(135deg, #fffbeb, #ffffff);">
+                <div class="report-card" data-tags="us,retrospective,technique" style="border:2px solid #f59e0b; background:linear-gradient(135deg, #fffbeb, #ffffff);">
                     <span class="badge badge-purple" style="margin-bottom:1rem; display:inline-block;">RÉTROSPECTIVE</span>
                     <span class="badge" style="background:#f59e0b; color:white; margin-bottom:1rem; margin-left:0.5rem; display:inline-block;">NOTE : C+</span>
                     <div class="report-card-meta">20 Février 2026</div>
@@ -4210,7 +4430,7 @@
                 </div>
 
                 <!-- 20 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,commodity,materials,industrials,trade-idea">
                     <span class="badge badge-purple" style="margin-bottom:1rem; display:inline-block;">DERNIER SCAN</span>
                     <div class="report-card-meta">20 Février 2026</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Top 10 A+ Relief Rally SCOTUS Tariffs — COLD, OMC, NICE, DE, AG, ETSY, LITE, FIX, GEV, CAT</h2>
@@ -4221,7 +4441,7 @@
                 </div>
 
                 <!-- 19 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,energy,earnings,geopolitique,trade-idea">
                     <div class="report-card-meta">19 Février 2026</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Top 10 A+ Earnings &amp; Géopolitique — COLD, OMC, NICE, DE, AG, OXY, ETSY, ADI, XLE, JNJ</h2>
                     <p style="font-size:0.85rem; color:var(--text-muted);">4 Earnings Breakouts (COLD +15.75%, OMC +15.36%, NICE +13.25%, DE +11.58%) + 3 Géopolitique/Énergie (AG, OXY, XLE — Iran/pétrole) + Analyst Wave ADI (16+ upgrades) + Défensifs (JNJ 52W High, ETSY oversold bounce). Régime Early Risk-Off. Fed Minutes hawkish. VIX 20.23.</p>
@@ -4231,7 +4451,7 @@
                 </div>
 
                 <!-- 17 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,eu,commodity,etf,trade-idea">
                     <div class="report-card-meta">17 Février 2026</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Top 10 Setups A+ Ultra-Safe — Early Risk-Off</h2>
                     <p style="font-size:0.85rem; color:var(--text-muted);">5 US défensifs (JNJ AAA, PG, ABBV, ABT, XLV) + 5 refuges/leaders (GLD, TLT, TSM, ASML, VGK). Tous mega caps, dividendes, beta &lt;1.0. Score moyen 91.5/100.</p>
@@ -4241,7 +4461,7 @@
                 </div>
 
                 <!-- 15 Feb 2026 -->
-                <div class="report-card">
+                <div class="report-card" data-tags="us,trade-idea,technique">
                     <div class="report-card-meta">15 Février 2026</div>
                     <h2 style="font-size:1.3rem; margin:0.5rem 0 0.75rem;">Top 10 Setups — Régime Early Risk-Off</h2>
                     <p style="font-size:0.85rem; color:var(--text-muted);">Régime Early Risk-Off détecté. Stratégies short squeeze (40%) et pre-squeeze (35%) favorisées. 10 setups analysés : ADBE, ADP, ABBV, AA, ACAD, AAP, ACM, ACHC, ACMR, AAON.</p>
@@ -4714,7 +4934,7 @@
             <div class="grid-cards" style="margin-top:1rem;">
 
                 <!-- Bien Débuter en Bourse -->
-                <div class="report-card" style="border-left:4px solid #6366f1;">
+                <div class="report-card" data-tags="formation" style="border-left:4px solid #6366f1;">
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#6366f1,#7c3aed); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-graduation-cap" style="color:white; font-size:1.2rem;"></i></div>
                         <div>
@@ -4727,7 +4947,7 @@
                 </div>
 
                 <!-- Maîtriser les Earnings -->
-                <div class="report-card" style="border-left:4px solid #f59e0b;">
+                <div class="report-card" data-tags="earnings,formation" style="border-left:4px solid #f59e0b;">
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#f59e0b,#f97316); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-chart-column" style="color:white; font-size:1.2rem;"></i></div>
                         <div>
@@ -4740,7 +4960,7 @@
                 </div>
 
                 <!-- Le Guide du Super Spéculateur -->
-                <div class="report-card" style="border-left:4px solid #dc2626;">
+                <div class="report-card" data-tags="speculative,options,formation" style="border-left:4px solid #dc2626;">
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#dc2626,#f97316); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-fire" style="color:white; font-size:1.2rem;"></i></div>
                         <div>
@@ -4753,7 +4973,7 @@
                 </div>
 
                 <!-- La Bourse pour le Musulman -->
-                <div class="report-card" style="border-left:4px solid #059669;">
+                <div class="report-card" data-tags="formation" style="border-left:4px solid #059669;">
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#059669,#047857); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-mosque" style="color:white; font-size:1.2rem;"></i></div>
                         <div>
@@ -4766,7 +4986,7 @@
                 </div>
 
                 <!-- Investir en Bon Père de Famille -->
-                <div class="report-card" style="border-left:4px solid #1e40af;">
+                <div class="report-card" data-tags="dividende,etf,formation" style="border-left:4px solid #1e40af;">
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#1e40af,#1e3a8a); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-shield-halved" style="color:white; font-size:1.2rem;"></i></div>
                         <div>
@@ -4779,7 +4999,7 @@
                 </div>
 
                 <!-- Automatiser son Trading avec Claude Code -->
-                <div class="report-card" style="border-left:4px solid #6366f1;">
+                <div class="report-card" data-tags="ai,tech,formation" style="border-left:4px solid #6366f1;">
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#6366f1,#4f46e5); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-robot" style="color:white; font-size:1.2rem;"></i></div>
                         <div>
@@ -4841,7 +5061,7 @@
         <div class="search-dialog">
             <div class="search-input-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="searchInput" class="search-input" type="text" placeholder="Ticker ou nom (ex: WULF, Silver, Crypto...)" autocomplete="off">
+                <input id="searchInput" class="search-input" type="text" placeholder="Rechercher ticker, titre, sujet, tag..." autocomplete="off">
                 <kbd style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px; padding:2px 6px; font-size:0.7rem; color:#94a3b8; cursor:pointer;" onclick="closeSearch()">Esc</kbd>
             </div>
             <div id="searchResults" class="search-results"></div>
@@ -4854,8 +5074,74 @@
     </div>
 
     <script>
-    // === TABS ===
+    // ===================================================================
+    // TAG METADATA
+    // ===================================================================
+    var tagMeta = {
+        // Region (blue)
+        us:          { label:'US',          cat:'region' },
+        eu:          { label:'EU',          cat:'region' },
+        asia:        { label:'Asia',        cat:'region' },
+        crypto:      { label:'Crypto',      cat:'region' },
+        commodity:   { label:'Commodity',   cat:'region' },
+        forex:       { label:'Forex',       cat:'region' },
+        etf:         { label:'ETF',         cat:'region' },
+        // Sector (green)
+        tech:        { label:'Tech',        cat:'sector' },
+        semis:       { label:'Semis',       cat:'sector' },
+        healthcare:  { label:'Healthcare',  cat:'sector' },
+        energy:      { label:'Energy',      cat:'sector' },
+        financials:  { label:'Financials',  cat:'sector' },
+        industrials: { label:'Industrials', cat:'sector' },
+        materials:   { label:'Materials',   cat:'sector' },
+        consumer:    { label:'Consumer',    cat:'sector' },
+        defense:     { label:'Defense',     cat:'sector' },
+        // Theme (purple)
+        ai:          { label:'AI',          cat:'theme' },
+        earnings:    { label:'Earnings',    cat:'theme' },
+        geopolitique:{ label:'Géopolitique',cat:'theme' },
+        macro:       { label:'Macro',       cat:'theme' },
+        technique:   { label:'Technique',   cat:'theme' },
+        options:     { label:'Options',     cat:'theme' },
+        dividende:   { label:'Dividende',   cat:'theme' },
+        'small-cap': { label:'Small Cap',   cat:'theme' },
+        speculative: { label:'Spéculatif',  cat:'theme' },
+        // Content (amber)
+        'trade-idea':   { label:'Trade Idea',    cat:'content' },
+        formation:      { label:'Formation',     cat:'content' },
+        retrospective:  { label:'Rétrospective', cat:'content' }
+    };
+
+    // ===================================================================
+    // RENDER TAG CHIPS ON ALL CARDS
+    // ===================================================================
+    document.querySelectorAll('.report-card[data-tags]').forEach(function(card) {
+        var tags = card.dataset.tags.split(',').filter(Boolean);
+        if (!tags.length) return;
+        var container = document.createElement('div');
+        container.className = 'card-tags';
+        tags.forEach(function(t) {
+            var meta = tagMeta[t];
+            if (!meta) return;
+            var chip = document.createElement('span');
+            chip.className = 'card-tag';
+            chip.setAttribute('data-cat', meta.cat);
+            chip.textContent = meta.label;
+            chip.onclick = function(e) { e.preventDefault(); e.stopPropagation(); activateTagFilter(t); };
+            container.appendChild(chip);
+        });
+        // Insert before the .actions div
+        var actions = card.querySelector('.actions');
+        if (actions) { card.insertBefore(container, actions); }
+        else { card.appendChild(container); }
+    });
+
+    // ===================================================================
+    // TABS
+    // ===================================================================
+    var currentTab = 'weekly';
     function switchTab(tab) {
+        currentTab = tab;
         document.querySelectorAll('.main-tab').forEach(function(t) { t.classList.remove('active'); });
         document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
         var btn = document.querySelector('.main-tab[data-tab="' + tab + '"]');
@@ -4865,17 +5151,21 @@
         var url = new URL(window.location);
         if (tab === 'weekly') { url.searchParams.delete('tab'); } else { url.searchParams.set('tab', tab); }
         history.replaceState(null, '', url);
+        updateContextBar();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     document.querySelectorAll('.main-tab').forEach(function(btn) {
         btn.addEventListener('click', function() { switchTab(this.dataset.tab); });
     });
 
-    // === GRADE FILTER ===
+    // ===================================================================
+    // GRADE FILTER
+    // ===================================================================
     function setGradeFilter(grade) {
         document.querySelectorAll('#gradeFilter .filter-chip').forEach(function(b) { b.classList.remove('active'); });
         var target = document.querySelector('#gradeFilter .filter-chip[data-grade="' + grade + '"]');
         if (target) target.classList.add('active');
-        filterCards();
+        applyAllFilters();
         var url = new URL(window.location);
         if (grade === 'all') { url.searchParams.delete('grade'); } else { url.searchParams.set('grade', grade); }
         history.replaceState(null, '', url);
@@ -4884,20 +5174,132 @@
         btn.addEventListener('click', function() { setGradeFilter(this.dataset.grade); });
     });
 
-    function filterCards() {
+    // ===================================================================
+    // TAG FILTER (cumulative AND)
+    // ===================================================================
+    var activeTags = [];
+
+    function activateTagFilter(tag) {
+        if (activeTags.indexOf(tag) === -1) { activeTags.push(tag); }
+        renderTagFilterBar();
+        applyAllFilters();
+        syncTagsToURL();
+    }
+
+    function deactivateTagFilter(tag) {
+        activeTags = activeTags.filter(function(t) { return t !== tag; });
+        renderTagFilterBar();
+        applyAllFilters();
+        syncTagsToURL();
+    }
+
+    function clearAllTags() {
+        activeTags = [];
+        renderTagFilterBar();
+        applyAllFilters();
+        syncTagsToURL();
+        // Also clear quick tags
+        document.querySelectorAll('.quick-tag').forEach(function(b) { b.classList.remove('active'); });
+    }
+
+    function renderTagFilterBar() {
+        var bar = document.getElementById('tagFilterBar');
+        var container = document.getElementById('activeTagsContainer');
+        if (!activeTags.length) { bar.classList.remove('visible'); return; }
+        bar.classList.add('visible');
+        container.innerHTML = activeTags.map(function(t) {
+            var meta = tagMeta[t] || { label: t, cat: 'theme' };
+            return '<span class="active-tag" onclick="deactivateTagFilter(\'' + t + '\')">'
+                + meta.label + ' <span class="remove">&times;</span></span>';
+        }).join('');
+    }
+
+    function syncTagsToURL() {
+        var url = new URL(window.location);
+        if (activeTags.length) { url.searchParams.set('tags', activeTags.join(',')); }
+        else { url.searchParams.delete('tags'); }
+        history.replaceState(null, '', url);
+    }
+
+    // ===================================================================
+    // UNIFIED FILTER: grade + tags (analyses tab)
+    // ===================================================================
+    function applyAllFilters() {
+        // Grade filter (analyses only)
         var gradeBtn = document.querySelector('#gradeFilter .filter-chip.active');
         var gradeFilter = gradeBtn ? gradeBtn.dataset.grade : 'all';
         var count = 0;
+
         document.querySelectorAll('#tab-analyses .grid-cards .report-card[data-grade]').forEach(function(card) {
             var grade = card.dataset.grade;
-            var match = gradeFilter === 'all' || grade.charAt(0) === gradeFilter || grade === gradeFilter;
-            card.style.display = match ? '' : 'none';
-            if (match) count++;
+            var gradeMatch = gradeFilter === 'all' || grade.charAt(0) === gradeFilter || grade === gradeFilter;
+            var tagMatch = true;
+            if (activeTags.length) {
+                var cardTags = (card.dataset.tags || '').split(',');
+                tagMatch = activeTags.every(function(t) { return cardTags.indexOf(t) !== -1; });
+            }
+            card.style.display = (gradeMatch && tagMatch) ? '' : 'none';
+            if (gradeMatch && tagMatch) count++;
         });
         var el = document.getElementById('filterCount');
         if (el) el.textContent = count + ' analyse' + (count > 1 ? 's' : '');
+
+        // Tag filter on other tabs (if tags active)
+        if (activeTags.length) {
+            ['tab-weekly','tab-daily','tab-scanner','tab-series'].forEach(function(tabId) {
+                document.querySelectorAll('#' + tabId + ' .report-card[data-tags]').forEach(function(card) {
+                    var cardTags = card.dataset.tags.split(',');
+                    var match = activeTags.every(function(t) { return cardTags.indexOf(t) !== -1; });
+                    card.style.display = match ? '' : 'none';
+                });
+            });
+        } else {
+            ['tab-weekly','tab-daily','tab-scanner','tab-series'].forEach(function(tabId) {
+                document.querySelectorAll('#' + tabId + ' .report-card[data-tags]').forEach(function(card) {
+                    card.style.display = '';
+                });
+            });
+        }
+
+        updateContextBar();
     }
-    // Grade counts on chips
+
+    // ===================================================================
+    // QUICK TAG CHIPS (analyses tab)
+    // ===================================================================
+    document.querySelectorAll('.quick-tag').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tag = this.dataset.tag;
+            if (this.classList.contains('active')) {
+                this.classList.remove('active');
+                deactivateTagFilter(tag);
+            } else {
+                this.classList.add('active');
+                activateTagFilter(tag);
+            }
+        });
+    });
+
+    // ===================================================================
+    // CONTEXT BAR
+    // ===================================================================
+    var tabNames = { weekly:'Hebdo', daily:'Daily', analyses:'Analyses', scanner:'Scanner', portfolio:'Portfolio', series:'Séries' };
+    function updateContextBar() {
+        var bar = document.getElementById('contextBar');
+        if (!activeTags.length) { bar.classList.remove('visible'); return; }
+        var panel = document.getElementById('tab-' + currentTab);
+        if (!panel) { bar.classList.remove('visible'); return; }
+        var visible = panel.querySelectorAll('.report-card[data-tags]');
+        var shown = 0;
+        visible.forEach(function(c) { if (c.style.display !== 'none') shown++; });
+        var tagLabels = activeTags.map(function(t) { return (tagMeta[t] || {}).label || t; }).join(', ');
+        bar.innerHTML = (tabNames[currentTab] || currentTab) + ' › <span>' + tagLabels + '</span> (' + shown + ' article' + (shown > 1 ? 's' : '') + ')';
+        bar.classList.add('visible');
+    }
+
+    // ===================================================================
+    // GRADE COUNTS ON CHIPS
+    // ===================================================================
     (function() {
         var counts = {};
         var total = 0;
@@ -4914,35 +5316,137 @@
         if (el) el.textContent = total;
     })();
 
-    // Init from URL params
-    var params = new URLSearchParams(window.location.search);
-    var urlTab = params.get('tab');
-    if (urlTab) { switchTab(urlTab); }
-    var urlGrade = params.get('grade');
-    if (urlGrade) { switchTab('analyses'); setGradeFilter(urlGrade); } else { filterCards(); }
-
+    // ===================================================================
+    // UNIVERSAL SEARCH INDEX
+    // ===================================================================
     var searchData = [];
     var searchIdx = -1;
 
-    // Build search index from DOM
-    document.querySelectorAll('.grid-cards .report-card .ticker-card-header').forEach(function(hdr) {
-        var card = hdr.closest('.report-card');
-        var sym = hdr.querySelector('.ticker-symbol');
-        var exch = hdr.querySelector('.ticker-exchange');
-        var h2 = card.querySelector('h2');
-        var link = card.querySelector('.actions a');
-        var desc = card.querySelector('p');
-        if (sym && link) {
-            searchData.push({
-                ticker: sym.textContent.trim(),
-                exchange: exch ? exch.textContent.trim() : '',
-                name: h2 ? h2.textContent.trim() : '',
-                desc: desc ? desc.textContent.trim() : '',
-                href: link.getAttribute('href')
-            });
-        }
-    });
+    // Index ALL cards from ALL tabs
+    function buildSearchIndex() {
+        searchData = [];
+        // Analyses cards (with ticker headers)
+        document.querySelectorAll('#tab-analyses .report-card').forEach(function(card) {
+            var hdr = card.querySelector('.ticker-card-header');
+            var sym = hdr ? hdr.querySelector('.ticker-symbol') : null;
+            var exch = hdr ? hdr.querySelector('.ticker-exchange') : null;
+            var h2 = card.querySelector('h2');
+            var link = card.querySelector('.actions a');
+            var desc = card.querySelector('p');
+            if (link) {
+                searchData.push({
+                    type: 'analyse', icon: 'fa-chart-column',
+                    ticker: sym ? sym.textContent.trim() : '',
+                    exchange: exch ? exch.textContent.trim() : '',
+                    name: h2 ? h2.textContent.trim() : '',
+                    title: h2 ? h2.textContent.trim() : '',
+                    desc: desc ? desc.textContent.trim() : '',
+                    tags: card.dataset.tags || '',
+                    grade: card.dataset.grade || '',
+                    href: link.getAttribute('href'),
+                    date: ''
+                });
+            }
+        });
+        // Weekly cards
+        document.querySelectorAll('#tab-weekly .report-card').forEach(function(card) {
+            var h2 = card.querySelector('h2');
+            var link = card.querySelector('.actions a');
+            var meta = card.querySelector('.report-card-meta');
+            var desc = card.querySelector('p');
+            if (link) {
+                searchData.push({
+                    type: 'hebdo', icon: 'fa-calendar-week',
+                    ticker: '', exchange: '',
+                    name: '', title: h2 ? h2.textContent.trim() : '',
+                    desc: desc ? desc.textContent.trim() : '',
+                    tags: card.dataset.tags || '',
+                    grade: '',
+                    href: link.getAttribute('href'),
+                    date: meta ? meta.textContent.trim() : ''
+                });
+            }
+        });
+        // Daily cards
+        document.querySelectorAll('#tab-daily .report-card').forEach(function(card) {
+            var h2 = card.querySelector('h2');
+            var link = card.querySelector('.actions a');
+            var meta = card.querySelector('.report-card-meta');
+            var desc = card.querySelector('p');
+            if (link) {
+                searchData.push({
+                    type: 'daily', icon: 'fa-sun',
+                    ticker: '', exchange: '',
+                    name: '', title: h2 ? h2.textContent.trim() : '',
+                    desc: desc ? desc.textContent.trim() : '',
+                    tags: card.dataset.tags || '',
+                    grade: '',
+                    href: link.getAttribute('href'),
+                    date: meta ? meta.textContent.trim() : ''
+                });
+            }
+        });
+        // Scanner cards
+        document.querySelectorAll('#tab-scanner .report-card').forEach(function(card) {
+            var h2 = card.querySelector('h2');
+            var link = card.querySelector('.actions a');
+            var meta = card.querySelector('.report-card-meta');
+            var desc = card.querySelector('p');
+            if (link) {
+                searchData.push({
+                    type: 'scanner', icon: 'fa-satellite-dish',
+                    ticker: '', exchange: '',
+                    name: '', title: h2 ? h2.textContent.trim() : '',
+                    desc: desc ? desc.textContent.trim() : '',
+                    tags: card.dataset.tags || '',
+                    grade: '',
+                    href: link.getAttribute('href'),
+                    date: meta ? meta.textContent.trim() : ''
+                });
+            }
+        });
+        // Series cards
+        document.querySelectorAll('#tab-series .report-card').forEach(function(card) {
+            var h3 = card.querySelector('h3');
+            var link = card.querySelector('a[href]');
+            var desc = card.querySelector('p');
+            if (link) {
+                searchData.push({
+                    type: 'série', icon: 'fa-graduation-cap',
+                    ticker: '', exchange: '',
+                    name: '', title: h3 ? h3.textContent.trim() : '',
+                    desc: desc ? desc.textContent.trim() : '',
+                    tags: card.dataset.tags || '',
+                    grade: '',
+                    href: link.getAttribute('href'),
+                    date: ''
+                });
+            }
+        });
+    }
+    buildSearchIndex();
 
+    // ===================================================================
+    // SEARCH SCORING
+    // ===================================================================
+    function scoreItem(item, terms) {
+        var score = 0;
+        var weights = { ticker: 10, tags: 6, name: 5, title: 4, exchange: 3, type: 3, desc: 2 };
+        terms.forEach(function(term) {
+            Object.keys(weights).forEach(function(field) {
+                var val = (item[field] || '').toLowerCase();
+                if (val.indexOf(term) !== -1) {
+                    score += weights[field];
+                    if (val.indexOf(term) === 0) score += 2; // bonus for starts-with
+                }
+            });
+        });
+        return score;
+    }
+
+    // ===================================================================
+    // SEARCH OPEN/CLOSE
+    // ===================================================================
     function openSearch() {
         document.getElementById('searchOverlay').classList.add('visible');
         var inp = document.getElementById('searchInput');
@@ -4955,24 +5459,71 @@
         document.getElementById('searchOverlay').classList.remove('visible');
     }
 
+    // ===================================================================
+    // RENDER SEARCH RESULTS (grouped by type)
+    // ===================================================================
+    var typeOrder = ['analyse','hebdo','daily','scanner','série'];
+    var typeLabels = { analyse:'Analyses', hebdo:'Hebdo', daily:'Daily', scanner:'Scanner', 'série':'Séries' };
+
     function renderResults(q) {
         var el = document.getElementById('searchResults');
         q = q.toLowerCase().trim();
-        var filtered = q === '' ? searchData : searchData.filter(function(d) {
-            return d.ticker.toLowerCase().indexOf(q) !== -1;
+        var terms = q.split(/\s+/).filter(Boolean);
+
+        var scored;
+        if (!terms.length) {
+            // Show top analyses by default
+            scored = searchData.filter(function(d) { return d.type === 'analyse'; }).slice(0, 12).map(function(d) { return { item: d, score: 1 }; });
+        } else {
+            scored = searchData.map(function(d) { return { item: d, score: scoreItem(d, terms) }; })
+                .filter(function(s) { return s.score > 0; })
+                .sort(function(a, b) { return b.score - a.score; })
+                .slice(0, 25);
+        }
+
+        if (!scored.length) {
+            el.innerHTML = '';
+            return [];
+        }
+
+        // Group by type
+        var groups = {};
+        scored.forEach(function(s) {
+            var t = s.item.type;
+            if (!groups[t]) groups[t] = [];
+            groups[t].push(s.item);
         });
-        el.innerHTML = filtered.map(function(d, i) {
-            return '<a class="search-item' + (i === searchIdx ? ' active' : '') + '" href="' + d.href + '" data-idx="' + i + '">'
-                + '<img src="https://assets.parqet.com/logos/symbol/' + d.ticker + '?format=jpg" class="search-item-logo" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-                + '<div class="search-item-fallback" style="display:none;">' + d.ticker + '</div>'
-                + '<div class="search-item-info">'
-                + '<div class="search-item-ticker">' + d.ticker + ' <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">' + d.exchange + '</span></div>'
-                + '<div class="search-item-name">' + d.name + '</div>'
-                + '</div>'
-                + '<span class="search-item-arrow"><i class="fa-solid fa-arrow-right"></i></span>'
-                + '</a>';
-        }).join('');
-        return filtered;
+
+        var html = '';
+        var idx = 0;
+        typeOrder.forEach(function(type) {
+            if (!groups[type]) return;
+            html += '<div class="search-group-header"><i class="fa-solid ' +
+                (groups[type][0].icon || 'fa-file') + '"></i>' + (typeLabels[type] || type) + '</div>';
+            groups[type].forEach(function(d) {
+                var display = d.ticker || d.title.substring(0, 30);
+                var sub = d.ticker ? d.name : (d.date || d.desc.substring(0, 60));
+                var logoHtml;
+                if (d.ticker) {
+                    logoHtml = '<img src="https://assets.parqet.com/logos/symbol/' + d.ticker + '?format=jpg" class="search-item-logo" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+                        + '<div class="search-item-fallback" style="display:none;">' + d.ticker.substring(0,4) + '</div>';
+                } else {
+                    var iconMap = { hebdo:'fa-calendar-week', daily:'fa-sun', scanner:'fa-satellite-dish', 'série':'fa-graduation-cap' };
+                    logoHtml = '<div class="search-item-fallback" style="display:flex; background:linear-gradient(135deg,#2563eb,#7c3aed);"><i class="fa-solid ' + (iconMap[d.type] || 'fa-file') + '" style="font-size:0.7rem;"></i></div>';
+                }
+                html += '<a class="search-item' + (idx === searchIdx ? ' active' : '') + '" href="' + d.href + '" data-idx="' + idx + '">'
+                    + logoHtml
+                    + '<div class="search-item-info">'
+                    + '<div class="search-item-ticker">' + display + '</div>'
+                    + '<div class="search-item-name">' + sub + '</div>'
+                    + '</div>'
+                    + '<span class="search-item-type">' + (typeLabels[d.type] || d.type) + '</span>'
+                    + '</a>';
+                idx++;
+            });
+        });
+        el.innerHTML = html;
+        return scored;
     }
 
     document.getElementById('searchInput').addEventListener('input', function() {
@@ -5001,6 +5552,112 @@
             }
         }
     });
+
+    // ===================================================================
+    // INIT FROM URL PARAMS
+    // ===================================================================
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        var urlTab = params.get('tab');
+        if (urlTab) { switchTab(urlTab); }
+        var urlGrade = params.get('grade');
+        if (urlGrade) { switchTab('analyses'); setGradeFilter(urlGrade); }
+        var urlTags = params.get('tags');
+        if (urlTags) {
+            activeTags = urlTags.split(',').filter(Boolean);
+            renderTagFilterBar();
+            // Sync quick tags
+            document.querySelectorAll('.quick-tag').forEach(function(b) {
+                if (activeTags.indexOf(b.dataset.tag) !== -1) b.classList.add('active');
+            });
+        }
+        applyAllFilters();
+    })();
+    </script>
+
+    <!-- Scanner Performance Charts -->
+    <script>
+    // Initialize scanner charts when tab becomes visible
+    var scannerChartsInit = false;
+    function initScannerCharts() {
+        if (scannerChartsInit) return;
+        if (!document.getElementById('scannerTopChart')) return;
+        scannerChartsInit = true;
+
+        var darkText = '#94a3b8';
+        var darkAxis = '#334155';
+
+        // === TOP PICKS P&L CHART ===
+        var topChart = echarts.init(document.getElementById('scannerTopChart'));
+        topChart.setOption({
+            tooltip: { trigger:'axis', backgroundColor:'#1e293b', borderColor:'#334155', textStyle:{color:'#e2e8f0',fontSize:11} },
+            grid: { left:50, right:12, top:8, bottom:24 },
+            xAxis: { type:'value', axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:darkText,fontSize:10,formatter:'{value}%'}, splitLine:{lineStyle:{color:'rgba(255,255,255,0.04)'}} },
+            yAxis: { type:'category', data:['ACHC','ACM','ABBV','AAP','ACAD','AA','ACMR'], axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:darkText,fontSize:10} },
+            series: [{
+                type:'bar', barWidth:14,
+                data: [
+                    { value:-42, itemStyle:{color:'#ef4444'} },
+                    { value:-14, itemStyle:{color:'#f59e0b'} },
+                    { value:14, itemStyle:{color:'#10b981'} },
+                    { value:33, itemStyle:{color:'#10b981'} },
+                    { value:43, itemStyle:{color:'#10b981'} },
+                    { value:53, itemStyle:{color:'#22c55e'} },
+                    { value:184, itemStyle:{color:'#06b6d4'} }
+                ],
+                label: { show:true, position:'right', color:'#e2e8f0', fontSize:10, formatter:function(p){return (p.value>0?'+':'')+p.value+'%';} }
+            }]
+        });
+
+        // === RESULTS BY SCAN CHART ===
+        var resultsChart = echarts.init(document.getElementById('scannerResultsChart'));
+        resultsChart.setOption({
+            tooltip: { trigger:'axis', backgroundColor:'#1e293b', borderColor:'#334155', textStyle:{color:'#e2e8f0',fontSize:11} },
+            legend: { data:['TP1 Hit','Stop Hit','En cours','Invalide'], textStyle:{color:darkText,fontSize:9}, bottom:0, itemWidth:10, itemHeight:10 },
+            grid: { left:36, right:12, top:8, bottom:40 },
+            xAxis: { type:'category', data:['15 Fév','17 Fév','19 Fév','20 Fév'], axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:darkText,fontSize:10} },
+            yAxis: { type:'value', max:10, axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:darkText,fontSize:10}, splitLine:{lineStyle:{color:'rgba(255,255,255,0.04)'}} },
+            series: [
+                { name:'TP1 Hit', type:'bar', stack:'a', data:[5,0,0,0], itemStyle:{color:'#10b981'}, barWidth:24 },
+                { name:'Stop Hit', type:'bar', stack:'a', data:[2,0,0,0], itemStyle:{color:'#ef4444'} },
+                { name:'En cours', type:'bar', stack:'a', data:[1,7,10,10], itemStyle:{color:'#3b82f6'} },
+                { name:'Invalide', type:'bar', stack:'a', data:[2,3,0,0], itemStyle:{color:'#64748b'} }
+            ]
+        });
+
+        // === SCORE & QUALITY CHART ===
+        var scoreChart = echarts.init(document.getElementById('scannerScoreChart'));
+        scoreChart.setOption({
+            tooltip: { trigger:'axis', backgroundColor:'#1e293b', borderColor:'#334155', textStyle:{color:'#e2e8f0',fontSize:11} },
+            legend: { data:['Score Moyen','Tickers Uniques'], textStyle:{color:darkText,fontSize:9}, bottom:0, itemWidth:10, itemHeight:10 },
+            grid: { left:40, right:40, top:8, bottom:36 },
+            xAxis: { type:'category', data:['15 Fév','17 Fév','19 Fév','20 Fév'], axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:darkText,fontSize:10} },
+            yAxis: [
+                { type:'value', min:60, max:100, axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:'#3b82f6',fontSize:10}, splitLine:{lineStyle:{color:'rgba(255,255,255,0.04)'}} },
+                { type:'value', min:0, max:10, axisLine:{lineStyle:{color:darkAxis}}, axisLabel:{color:'#f59e0b',fontSize:10} }
+            ],
+            series: [
+                { name:'Score Moyen', type:'line', data:[74.2,91.5,85,83], smooth:true, symbolSize:8, lineStyle:{width:3,color:'#3b82f6'}, itemStyle:{color:'#3b82f6'}, areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(59,130,246,0.2)'},{offset:1,color:'rgba(59,130,246,0)'}]}} },
+                { name:'Tickers Uniques', type:'bar', yAxisIndex:1, data:[10,10,10,4], barWidth:18, itemStyle:{color:'#f59e0b',borderRadius:[4,4,0,0]} }
+            ]
+        });
+
+        // Resize on window resize
+        window.addEventListener('resize', function() {
+            topChart.resize(); resultsChart.resize(); scoreChart.resize();
+        });
+    }
+
+    // Init charts when scanner tab is opened
+    var origSwitchTab = switchTab;
+    switchTab = function(tab) {
+        origSwitchTab(tab);
+        if (tab === 'scanner') { setTimeout(initScannerCharts, 100); }
+    };
+    // Also init if scanner is default tab from URL
+    if (new URLSearchParams(window.location.search).get('tab') === 'scanner') {
+        setTimeout(initScannerCharts, 200);
+    }
     </script>
 
 </body>
