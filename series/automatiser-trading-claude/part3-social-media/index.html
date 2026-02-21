@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Réseaux Sociaux — Automatiser sa Présence sur StockTwits, X, Reddit, YouTube &amp; Telegram | Automatiser son Trading — Partie 3 | Market Watch</title>
+ <meta name="description" content="Série Automatiser son Trading avec Claude Code — Partie 3 : Automatiser la promotion de vos analyses financières sur StockTwits, X/Twitter, Reddit, YouTube et Telegram.">
+ <meta property="og:title" content="Réseaux Sociaux — Automatiser sa Présence | Market Watch">
+ <meta property="og:description" content="Publier automatiquement vos analyses sur toutes les plateformes : StockTwits, X, Reddit, YouTube et Telegram avec Claude Code.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/automatiser-trading-claude/part3-social-media/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+ .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+ .brand-logo:hover { color:#6366f1; }
+ .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+ .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+ .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+ .series-link:hover { border-color:#818cf8; color:#818cf8; }
+ .series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', 'Courier New', monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; font-family:'Inter', sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#818cf8; }
+ .code-block .string { color:#34d399; }
+ .code-block .function { color:#f59e0b; }
+ .code-block .variable { color:#38bdf8; }
+ .code-block .decorator { color:#f472b6; }
+ .terminal-box { background:#0f172a; color:#a3e635; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', 'Courier New', monospace; font-size:0.85rem; line-height:1.7; position:relative; border:1px solid #1e293b; }
+ .terminal-box .prompt { color:#6366f1; font-weight:700; }
+ .terminal-box .output { color:#94a3b8; }
+ .terminal-box .success { color:#34d399; }
+ .terminal-box .error { color:#f87171; }
+ .terminal-box .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; font-family:'Inter', sans-serif; font-weight:700; }
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+ details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+ .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+ .footer-bar a { color:#64748b; text-decoration:none; }
+ .footer-bar a:hover { color:#6366f1; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#6366f1; }
+ .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+ .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.25rem 2rem; background:#f8fafc; border:1px solid #e2e8f0; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; transition:all 0.2s; }
+ .prev-cta:hover { border-color:#6366f1; color:#6366f1; }
+ .prev-cta .next-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; }
+ .prev-cta .next-title { font-size:1rem; font-weight:700; }
+ .platform-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; transition:all 0.2s; }
+ .platform-card:hover { border-color:#6366f1; box-shadow:0 8px 24px rgba(99,102,241,0.08); }
+ .platform-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; }
+ .platform-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:white; flex-shrink:0; }
+ .platform-name { font-size:1.2rem; font-weight:800; color:#0f172a; }
+ .platform-desc { font-size:0.85rem; color:#64748b; margin-top:0.15rem; }
+ .stat-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:1.5rem 0; }
+ .stat-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.75rem 1rem; text-align:center; }
+ .stat-value { font-size:1.3rem; font-weight:800; color:#0f172a; }
+ .stat-label { font-size:0.7rem; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.2rem; }
+ .pipeline-step { display:flex; align-items:flex-start; gap:1.25rem; padding:1.25rem 0; border-bottom:1px solid #f1f5f9; }
+ .pipeline-step:last-child { border-bottom:none; }
+ .pipeline-number { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; flex-shrink:0; }
+ .pipeline-content h4 { margin:0 0 0.3rem; font-size:1rem; color:#0f172a; }
+ .pipeline-content p { margin:0; font-size:0.9rem; color:#64748b; line-height:1.6; }
+ .warning-box { background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+ .warning-box h4 { color:#d97706 !important; margin-top:0; }
+ .danger-box { background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+ .danger-box h4 { color:#dc2626 !important; margin-top:0; }
+ .ethics-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0; }
+ .ethics-do { background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; }
+ .ethics-do h4 { color:#16a34a !important; margin-top:0; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em; }
+ .ethics-dont { background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem; }
+ .ethics-dont h4 { color:#dc2626 !important; margin-top:0; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em; }
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .brand-bar { padding:0.75rem 1rem; }
+   .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+   .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+   .code-block, .terminal-box { font-size:0.75rem; padding:1rem; }
+   .next-cta, .prev-cta { flex-direction:column; text-align:center; }
+   .ethics-grid { grid-template-columns:1fr; }
+   .stat-row { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .series-title { display:none; }
+   .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+   .code-block, .terminal-box { font-size:0.7rem; padding:0.75rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-robot" style="margin-right:0.4rem;"></i> Automatiser son Trading</span>
+ <a href="../part1-introduction/" class="series-link">1 — Introduction</a>
+ <a href="../part2-screeners/" class="series-link">2 — Screeners</a>
+ <a href="../part3-social-media/" class="series-link current">3 — Réseaux</a>
+ <a href="../part4-bots/" class="series-link">4 — Bots</a>
+ <a href="../part5-avance/" class="series-link">5 — Avancé</a>
+</div>
+
+<div class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-graduation-cap" style="margin-right:0.4rem;"></i> Série Automatiser son Trading — Partie 3 sur 5</div>
+ <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:800px;">Réseaux Sociaux<br>Automatiser sa Présence</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto; line-height:1.7;">Automatiser la <strong>promotion de vos analyses</strong> sur tous les réseaux : StockTwits, X/Twitter, Reddit, YouTube et Telegram.</p>
+ <div class="hero-badges">
+   <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> StockTwits</span>
+   <span class="hero-badge hero-badge-blue"><i class="fa-brands fa-x-twitter"></i> X / Twitter</span>
+   <span class="hero-badge hero-badge-orange"><i class="fa-brands fa-reddit-alien"></i> Reddit</span>
+   <span class="hero-badge hero-badge-red"><i class="fa-brands fa-youtube"></i> YouTube</span>
+   <span class="hero-badge hero-badge-indigo"><i class="fa-brands fa-telegram"></i> Telegram</span>
+ </div>
+</div>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+ <a href="#pourquoi" class="nav-item"><i class="fa-solid fa-bullhorn" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pourquoi ?</a>
+ <a href="#stocktwits" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> StockTwits</a>
+ <a href="#twitter" class="nav-item"><i class="fa-brands fa-x-twitter" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> X / Twitter</a>
+ <a href="#reddit" class="nav-item"><i class="fa-brands fa-reddit-alien" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Reddit</a>
+ <a href="#youtube" class="nav-item"><i class="fa-brands fa-youtube" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> YouTube</a>
+ <a href="#telegram" class="nav-item"><i class="fa-brands fa-telegram" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Telegram</a>
+ <a href="#pipeline" class="nav-item"><i class="fa-solid fa-arrows-spin" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pipeline</a>
+ <a href="#ethique" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Éthique</a>
+ <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 1 : POURQUOI LES RÉSEAUX SOCIAUX ? -->
+<!-- ================================================================== -->
+<div class="section-divider" id="pourquoi"><i class="fa-solid fa-bullhorn" style="color:#6366f1;"></i> Pourquoi les Réseaux Sociaux ?</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-users" style="color:#6366f1;"></i> Construire une audience = crédibilité + deal flow</h2>
+
+ <p>Vous avez appris à <strong>automatiser vos screeners</strong> (Partie 2) et à <strong>configurer Claude Code</strong> (Partie 1). Mais à quoi servent les meilleures analyses du monde si personne ne les voit ?</p>
+
+ <p>Les réseaux sociaux financiers ne sont pas un simple canal de diffusion. C'est un <strong>écosystème complet</strong> qui amplifie votre trading de trois manières :</p>
+
+ <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1.5rem 0;">
+   <div style="background:#eef2ff; border:1px solid #6366f1; border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-medal" style="color:#6366f1;"></i></div>
+     <div style="font-size:0.8rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Crédibilité</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">Un track record public prouve vos compétences. Les analyses datées et vérifiables construisent la confiance.</p>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-satellite-dish" style="color:#16a34a;"></i></div>
+     <div style="font-size:0.8rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Signaux sociaux</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">Plus de followers = plus de retours, plus de discussions, plus de thèses alternatives qui enrichissent votre process.</p>
+   </div>
+   <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-coins" style="color:#d97706;"></i></div>
+     <div style="font-size:0.8rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Monétisation</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">Abonnements premium, alertes payantes, sponsoring : une audience fidèle se monétise.</p>
+   </div>
+ </div>
+
+ <h3>Les finfluencers à succès : comment ils ont commencé</h3>
+
+ <p>Tous les grands noms du <em>FinTwit</em> (Financial Twitter) ont commencé de la même manière : <strong>poster des analyses gratuites, régulièrement, avec un angle unique</strong>. Le volume et la constance battent toujours le génie ponctuel.</p>
+
+ <table class="compare-table">
+   <thead>
+     <tr><th>Profil type</th><th>Plateforme principale</th><th>Audience</th><th>Monétisation</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>Analyste technique</strong></td><td>X / StockTwits</td><td>10K-100K followers</td><td>Alertes premium ($50-200/mois)</td></tr>
+     <tr><td><strong>DD Writer</strong></td><td>Reddit / Substack</td><td>5K-50K subs</td><td>Newsletter payante ($10-30/mois)</td></tr>
+     <tr><td><strong>Vidéaste finance</strong></td><td>YouTube</td><td>50K-500K subs</td><td>AdSense + sponsoring ($2K-20K/mois)</td></tr>
+     <tr><td><strong>Signal provider</strong></td><td>Telegram / Discord</td><td>1K-20K membres</td><td>Canal premium ($30-100/mois)</td></tr>
+     <tr><td><strong>Quant / Data</strong></td><td>X + GitHub</td><td>5K-30K followers</td><td>Consulting + SaaS ($5K-50K/mois)</td></tr>
+   </tbody>
+ </table>
+
+ <h3>Engagement moyen par plateforme</h3>
+
+ <div id="chartEngagement" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> L'effet réseau composé</h4>
+   <p style="margin-bottom:0;">Un post StockTwits peut être repris sur X, qui génère un thread Reddit, qui inspire une vidéo YouTube, qui ramène du trafic vers votre Telegram. Chaque plateforme alimente les autres. C'est l'<strong>effet réseau composé</strong> : votre audience totale est supérieure à la somme de vos audiences individuelles. L'automatisation est la clé pour maintenir cette présence multi-plateforme sans y consacrer 8 heures par jour.</p>
+ </div>
+
+ <h3>Monétisation possible</h3>
+
+ <ul class="checklist">
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Alertes premium</strong> — Canal Telegram/Discord payant avec les signaux du scanner avant publication publique</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Newsletter Substack</strong> — Analyse hebdomadaire approfondie pour abonnés ($10-30/mois)</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>YouTube AdSense</strong> — Revenus publicitaires une fois le seuil de 1000 abonnés + 4000h de visionnage atteint</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Sponsoring / Affiliations</strong> — Courtiers, outils d'analyse, formations (attention à la transparence)</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> <strong>Consulting</strong> — Missions ponctuelles pour fonds, family offices ou particuliers fortunés</li>
+ </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 2 : STOCKTWITS -->
+<!-- ================================================================== -->
+<div class="section-divider" id="stocktwits"><i class="fa-solid fa-chart-line" style="color:#6366f1;"></i> StockTwits — Le Hub des Traders</div>
+
+<div class="content-card">
+ <div class="platform-header">
+   <div class="platform-icon" style="background:linear-gradient(135deg, #16a34a, #15803d);">
+     <i class="fa-solid fa-chart-line"></i>
+   </div>
+   <div>
+     <div class="platform-name">StockTwits — Le Hub des Traders</div>
+     <div class="platform-desc">Twitter pour les traders : conversations en temps réel autour des tickers</div>
+   </div>
+ </div>
+
+ <p>StockTwits est le <strong>réseau social #1 des traders actifs</strong>. Chaque message est tagué avec des <em>cashtags</em> (<code>$AAPL</code>, <code>$TSLA</code>) et un sentiment (bullish/bearish). C'est la source de données sentiment la plus directe du marché.</p>
+
+ <div class="stat-row">
+   <div class="stat-item">
+     <div class="stat-value">6M+</div>
+     <div class="stat-label">Utilisateurs</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">$AAPL</div>
+     <div class="stat-label">Cashtag format</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">30s</div>
+     <div class="stat-label">Durée de vie d'un post</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">Pre/Post</div>
+     <div class="stat-label">Meilleur timing</div>
+   </div>
+ </div>
+
+ <h3>Format optimal pour StockTwits</h3>
+
+ <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;">Exemple de post optimal</div>
+   <p style="font-size:0.95rem; color:#0f172a; margin:0; line-height:1.8; font-weight:500;">
+     <strong>$SMCI</strong> Momentum Expansion setup<br>
+     Entry: $42.50 | Stop: $38.80 | TP1: $48.00 | TP2: $55.00<br>
+     RSI 58 + volume 2.3x avg + above EMA50<br>
+     R:R 1:1.5 | Catalyst: earnings next week<br>
+     <span style="color:#16a34a; font-weight:700;">Bullish</span> | Full analysis: market-watch.xyz/analyses/SMCI/
+   </p>
+ </div>
+
+ <h3>API StockTwits : poster des messages</h3>
+
+ <p>StockTwits propose une API REST simple. Le endpoint principal est <code>/api/2/messages/create.json</code>. Vous avez besoin d'un access token obtenu via OAuth.</p>
+
+ <div class="code-block">
+   <span class="code-label">Python — stocktwits_poster.py</span>
+<span class="keyword">import</span> requests
+<span class="keyword">import</span> json
+<span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup
+<span class="keyword">import</span> re
+
+<span class="variable">STOCKTWITS_TOKEN</span> = <span class="string">"your_access_token_here"</span>
+<span class="variable">API_BASE</span> = <span class="string">"https://api.stocktwits.com/api/2"</span>
+
+<span class="keyword">def</span> <span class="function">extract_analysis_summary</span>(html_path, ticker):
+    <span class="string">"""Extrait les points clés d'une analyse HTML Market Watch."""</span>
+    <span class="keyword">with</span> <span class="function">open</span>(html_path, <span class="string">'r'</span>) <span class="keyword">as</span> f:
+        soup = BeautifulSoup(f.read(), <span class="string">'html.parser'</span>)
+
+    <span class="comment"># Extraire le trade idea s'il existe</span>
+    trade_box = soup.find(<span class="string">'div'</span>, class_=<span class="string">'trade-box'</span>)
+    entry, stop, tp1 = <span class="string">"N/A"</span>, <span class="string">"N/A"</span>, <span class="string">"N/A"</span>
+    <span class="keyword">if</span> trade_box:
+        levels = trade_box.find_all(<span class="string">'div'</span>, class_=<span class="string">'trade-level'</span>)
+        entry = levels[0].text <span class="keyword">if</span> len(levels) > 0 <span class="keyword">else</span> <span class="string">"N/A"</span>
+        stop = levels[1].text <span class="keyword">if</span> len(levels) > 1 <span class="keyword">else</span> <span class="string">"N/A"</span>
+        tp1 = levels[2].text <span class="keyword">if</span> len(levels) > 2 <span class="keyword">else</span> <span class="string">"N/A"</span>
+
+    <span class="comment"># Extraire le grade (A+, B, etc.)</span>
+    grade_el = soup.find(<span class="string">'span'</span>, class_=re.compile(<span class="string">'grade'</span>))
+    grade = grade_el.text.strip() <span class="keyword">if</span> grade_el <span class="keyword">else</span> <span class="string">""</span>
+
+    <span class="keyword">return</span> {
+        <span class="string">"ticker"</span>: ticker,
+        <span class="string">"entry"</span>: entry,
+        <span class="string">"stop"</span>: stop,
+        <span class="string">"tp1"</span>: tp1,
+        <span class="string">"grade"</span>: grade
+    }
+
+<span class="keyword">def</span> <span class="function">format_stocktwits_message</span>(data):
+    <span class="string">"""Formate le message pour StockTwits (max 1000 chars)."""</span>
+    sentiment = <span class="string">"bullish"</span> <span class="keyword">if</span> data[<span class="string">"grade"</span>] <span class="keyword">in</span> [<span class="string">"A+"</span>, <span class="string">"A"</span>, <span class="string">"B+"</span>] <span class="keyword">else</span> <span class="string">"bearish"</span>
+
+    msg = (
+        f<span class="string">"${data['ticker']} — Grade {data['grade']}\n"</span>
+        f<span class="string">"Entry: {data['entry']} | Stop: {data['stop']} | TP1: {data['tp1']}\n"</span>
+        f<span class="string">"Full analysis: market-watch.xyz/analyses/{data['ticker']}/"</span>
+    )
+
+    <span class="keyword">return</span> msg, sentiment
+
+<span class="keyword">def</span> <span class="function">post_to_stocktwits</span>(message, sentiment):
+    <span class="string">"""Poste un message sur StockTwits via l'API."""</span>
+    url = f<span class="string">"{API_BASE}/messages/create.json"</span>
+    payload = {
+        <span class="string">"access_token"</span>: <span class="variable">STOCKTWITS_TOKEN</span>,
+        <span class="string">"body"</span>: message,
+        <span class="string">"sentiment"</span>: sentiment
+    }
+    response = requests.<span class="function">post</span>(url, data=payload)
+    <span class="keyword">return</span> response.json()
+
+<span class="comment"># --- Utilisation ---</span>
+data = <span class="function">extract_analysis_summary</span>(<span class="string">"analyses/SMCI/index.html"</span>, <span class="string">"SMCI"</span>)
+msg, sent = <span class="function">format_stocktwits_message</span>(data)
+result = <span class="function">post_to_stocktwits</span>(msg, sent)
+<span class="function">print</span>(f<span class="string">"Posted: {result['response']['status']}"</span>)
+ </div>
+
+ <h3>Timing : quand poster sur StockTwits</h3>
+
+ <p>L'engagement sur StockTwits suit le rythme du marché américain. Les pics sont concentrés autour de l'ouverture (9h30 ET) et de la clôture (16h ET), avec un regain post-close pendant les earnings.</p>
+
+ <div id="chartHeatmapStocktwits" style="width:100%; height:340px; margin:1.5rem 0;"></div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Astuce : les cashtags sont essentiels</h4>
+   <p style="margin-bottom:0;">Sur StockTwits, un message sans cashtag (<code>$AAPL</code>) est invisible. Le cashtag indexe votre message dans le flux du ticker. Incluez toujours le cashtag principal en début de message, et ajoutez les cashtags corrélés si pertinent (<code>$SMCI $NVDA $AMD</code>). Évitez de mettre plus de 5 cashtags par message — cela ressemble à du spam.</p>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 3 : X / TWITTER -->
+<!-- ================================================================== -->
+<div class="section-divider" id="twitter"><i class="fa-brands fa-x-twitter" style="color:#6366f1;"></i> X (Twitter) — La Viralité</div>
+
+<div class="content-card">
+ <div class="platform-header">
+   <div class="platform-icon" style="background:linear-gradient(135deg, #0f172a, #1e293b);">
+     <i class="fa-brands fa-x-twitter"></i>
+   </div>
+   <div>
+     <div class="platform-name">X (Twitter) — La Viralité</div>
+     <div class="platform-desc">Le FinTwit : la plus grande communauté de traders et investisseurs au monde</div>
+   </div>
+ </div>
+
+ <p>Le <strong>FinTwit</strong> (Financial Twitter) est l'épicentre de la conversation financière mondiale. C'est là que les hedge fund managers, les analystes sell-side, les retail traders et les journalistes financiers se croisent. Le format roi : le <strong>thread</strong>.</p>
+
+ <div class="stat-row">
+   <div class="stat-item">
+     <div class="stat-value">500M+</div>
+     <div class="stat-label">Utilisateurs actifs</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">Thread</div>
+     <div class="stat-label">Format roi</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">8h-17h EST</div>
+     <div class="stat-label">Heures de pointe</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">2-5%</div>
+     <div class="stat-label">Taux d'engagement</div>
+   </div>
+ </div>
+
+ <h3>Anatomie d'un thread FinTwit parfait</h3>
+
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:1rem;">Structure du thread (10 tweets)</div>
+   <div style="display:grid; gap:0.5rem;">
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">1</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Hook</strong> — Accroche choc avec le ticker et la thèse en 1 phrase. Inclure <code>$TICKER</code>.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">2</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Contexte</strong> — Que fait cette société ? Pourquoi maintenant ? L'actualité clé.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">3</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Fondamentaux</strong> — Chiffres clés : revenue, EPS, marges, croissance.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">4</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Technique</strong> — Graphe avec niveaux clés (support, résistance, EMA). Inclure une image.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">5</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Catalyseur</strong> — L'événement qui va faire bouger le prix (earnings, FDA, contrat).</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">6</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Risques</strong> — Les bear cases. Montrer l'objectivité renforce la crédibilité.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">7</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Setup</strong> — Entrée, stop, TP1, TP2, ratio R:R.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">8</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Timing</strong> — Horizon, catalyseur calendrier, taille de position recommandée.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">9</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>Disclaimer</strong> — Pas un conseil financier, disclosure de position.</span>
+     </div>
+     <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+       <span style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800; flex-shrink:0;">10</span>
+       <span style="font-size:0.9rem; color:#334155;"><strong>CTA</strong> — Lien vers l'analyse complète + demande de follow/RT/like.</span>
+     </div>
+   </div>
+ </div>
+
+ <h3>Script : générer et poster un thread X</h3>
+
+ <div class="code-block">
+   <span class="code-label">Python — twitter_thread.py</span>
+<span class="keyword">import</span> tweepy
+<span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup
+
+<span class="comment"># --- Configuration OAuth 2.0 ---</span>
+<span class="variable">client</span> = tweepy.<span class="function">Client</span>(
+    consumer_key=<span class="string">"YOUR_API_KEY"</span>,
+    consumer_secret=<span class="string">"YOUR_API_SECRET"</span>,
+    access_token=<span class="string">"YOUR_ACCESS_TOKEN"</span>,
+    access_token_secret=<span class="string">"YOUR_ACCESS_SECRET"</span>
+)
+
+<span class="keyword">def</span> <span class="function">generate_thread</span>(analysis_path, ticker):
+    <span class="string">"""Génère un thread de 10 tweets depuis une analyse HTML."""</span>
+    <span class="keyword">with</span> <span class="function">open</span>(analysis_path, <span class="string">'r'</span>) <span class="keyword">as</span> f:
+        soup = BeautifulSoup(f.read(), <span class="string">'html.parser'</span>)
+
+    cards = soup.find_all(<span class="string">'div'</span>, class_=<span class="string">'content-card'</span>)
+    thread = []
+
+    <span class="comment"># Tweet 1 : Hook accrocheur</span>
+    thread.append(
+        f<span class="string">"${ticker} Deep Dive\n\n"</span>
+        f<span class="string">"I just published a comprehensive analysis.\n"</span>
+        f<span class="string">"Grade, technicals, fundamentals, trade setup.\n\n"</span>
+        f<span class="string">"A thread (1/10):"</span>
+    )
+
+    <span class="comment"># Tweets 2-8 : contenu des sections</span>
+    <span class="keyword">for</span> i, card <span class="keyword">in</span> enumerate(cards[:7], start=2):
+        h2 = card.find(<span class="string">'h2'</span>)
+        title = h2.text.strip() <span class="keyword">if</span> h2 <span class="keyword">else</span> f<span class="string">"Section {i}"</span>
+        paragraphs = card.find_all(<span class="string">'p'</span>)
+        summary = paragraphs[0].text[:200] <span class="keyword">if</span> paragraphs <span class="keyword">else</span> <span class="string">""</span>
+        thread.append(f<span class="string">"{title}\n\n{summary}\n\n({i}/10)"</span>)
+
+    <span class="comment"># Tweet 9 : Disclaimer</span>
+    thread.append(
+        f<span class="string">"Disclaimer: This is NOT financial advice.\n"</span>
+        f<span class="string">"I have no position in ${ticker}.\n"</span>
+        f<span class="string">"Analysis generated with AI assistance.\n"</span>
+        f<span class="string">"DYOR always. (9/10)"</span>
+    )
+
+    <span class="comment"># Tweet 10 : Call to action</span>
+    thread.append(
+        f<span class="string">"Full analysis with interactive charts:\n\n"</span>
+        f<span class="string">"https://market-watch.xyz/analyses/{ticker}/\n\n"</span>
+        f<span class="string">"Like + RT if useful.\n"</span>
+        f<span class="string">"Follow for daily scans.\n\n"</span>
+        f<span class="string">"#stocks #trading #{ticker} #fintwit (10/10)"</span>
+    )
+
+    <span class="keyword">return</span> thread
+
+<span class="keyword">def</span> <span class="function">post_thread</span>(thread):
+    <span class="string">"""Poste un thread sur X (réponse en chaîne)."""</span>
+    previous_id = <span class="keyword">None</span>
+    <span class="keyword">for</span> i, tweet <span class="keyword">in</span> enumerate(thread):
+        <span class="keyword">if</span> previous_id:
+            response = <span class="variable">client</span>.<span class="function">create_tweet</span>(
+                text=tweet,
+                in_reply_to_tweet_id=previous_id
+            )
+        <span class="keyword">else</span>:
+            response = <span class="variable">client</span>.<span class="function">create_tweet</span>(text=tweet)
+        previous_id = response.data[<span class="string">'id'</span>]
+        <span class="function">print</span>(f<span class="string">"Tweet {i+1}/10 posted: {previous_id}"</span>)
+
+<span class="comment"># --- Utilisation ---</span>
+thread = <span class="function">generate_thread</span>(<span class="string">"analyses/SMCI/index.html"</span>, <span class="string">"SMCI"</span>)
+<span class="function">post_thread</span>(thread)
+ </div>
+
+ <h3>Hashtags et horaires stratégiques</h3>
+
+ <table class="compare-table">
+   <thead>
+     <tr><th>Catégorie</th><th>Hashtags</th><th>Audience</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>Généralistes</strong></td><td><code>#stocks #trading #investing #fintwit</code></td><td>Large, toutes catégories</td></tr>
+     <tr><td><strong>Technique</strong></td><td><code>#technicalanalysis #chartpatterns #priceaction</code></td><td>Traders techniques</td></tr>
+     <tr><td><strong>Options</strong></td><td><code>#options #optionstrading #thetagang</code></td><td>Traders d'options</td></tr>
+     <tr><td><strong>Crypto</strong></td><td><code>#crypto #bitcoin #defi #web3</code></td><td>Communauté crypto</td></tr>
+     <tr><td><strong>Macro</strong></td><td><code>#macro #fed #inflation #bonds</code></td><td>Macro traders</td></tr>
+   </tbody>
+ </table>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Les 3 horaires d'or du FinTwit</h4>
+   <p style="margin-bottom:0;"><strong>8h00 EST</strong> (pre-market) : les traders préparent leurs setups. <strong>12h00 EST</strong> (pause midi) : engagement maximum, tout le monde scrolle. <strong>16h30 EST</strong> (post-close) : récap de la journée, analyses des mouvements. Utilisez l'API ou un outil comme Buffer/Typefully pour programmer vos posts sur ces créneaux.</p>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 4 : REDDIT -->
+<!-- ================================================================== -->
+<div class="section-divider" id="reddit"><i class="fa-brands fa-reddit-alien" style="color:#6366f1;"></i> Reddit — La Communauté</div>
+
+<div class="content-card">
+ <div class="platform-header">
+   <div class="platform-icon" style="background:linear-gradient(135deg, #f97316, #ea580c);">
+     <i class="fa-brands fa-reddit-alien"></i>
+   </div>
+   <div>
+     <div class="platform-name">Reddit — La Communauté</div>
+     <div class="platform-desc">Due Diligence détaillé, discussions approfondies et communauté exigeante</div>
+   </div>
+ </div>
+
+ <p>Reddit est la plateforme du <strong>contenu long format</strong> en finance. Les subreddits financiers exigent de la qualité, de la profondeur et de la transparence. Un bon post DD (Due Diligence) peut atteindre des centaines de milliers de vues.</p>
+
+ <h3>Subreddits clés pour les traders</h3>
+
+ <table class="compare-table">
+   <thead>
+     <tr><th>Subreddit</th><th>Membres</th><th>Style</th><th>Format attendu</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>r/wallstreetbets</strong></td><td>14M+</td><td>Agressif, memes, YOLO</td><td>DD, loss/gain porn</td></tr>
+     <tr><td><strong>r/stocks</strong></td><td>6M+</td><td>Modéré, sérieux</td><td>DD, questions, news</td></tr>
+     <tr><td><strong>r/investing</strong></td><td>3M+</td><td>Long terme, conservateur</td><td>DD, stratégie, allocation</td></tr>
+     <tr><td><strong>r/options</strong></td><td>1.5M+</td><td>Technique, Greeks</td><td>Setups, questions, P&amp;L</td></tr>
+     <tr><td><strong>r/ValueInvesting</strong></td><td>500K+</td><td>Fondamental, Buffett</td><td>DD approfondi, DCF</td></tr>
+     <tr><td><strong>r/thetagang</strong></td><td>300K+</td><td>Vente d'options, theta</td><td>Setups, roue, CSP/CC</td></tr>
+   </tbody>
+ </table>
+
+ <h3>Format d'un DD post Reddit</h3>
+
+ <div class="code-block">
+   <span class="code-label">Markdown — Reddit DD Format</span>
+<span class="comment"># $SMCI Deep Dive — Why This AI Infra Play Is Mispriced</span>
+
+<span class="string">**TL;DR:** SMCI trades at 12x forward P/E vs 25x for peers.</span>
+<span class="string">Revenue growing 100%+ YoY. Earnings beat 4 quarters straight.</span>
+<span class="string">Target: $55 (30% upside). Stop: $38.80.</span>
+
+<span class="comment">## Company Overview</span>
+Super Micro Computer designs server and storage solutions
+optimized for AI/ML workloads...
+
+<span class="comment">## Bull Case</span>
+1. AI infrastructure spending cycle (Nvidia partnership)
+2. Revenue acceleration: $14.9B TTM (+110% YoY)
+3. Margin expansion: gross margins improving to 15.2%
+
+<span class="comment">## Bear Case</span>
+1. Accounting concerns (delayed 10-K filing in 2024)
+2. Competition from Dell, HPE intensifying
+3. Customer concentration risk (top 3 = 45% revenue)
+
+<span class="comment">## Financials</span>
+| Metric    | Q3 2025 | Q2 2025 | YoY Change |
+|-----------|---------|---------|------------|
+| Revenue   | $5.8B   | $5.1B   | +110%      |
+| EPS       | $0.68   | $0.59   | +45%       |
+| Gross Mar | 15.2%   | 14.8%   | +40bps     |
+
+<span class="comment">## Technical Setup</span>
+- Entry: $42.50 (current support)
+- Stop: $38.80 (below 200 EMA)
+- TP1: $48.00 (resistance)
+- TP2: $55.00 (ATH retest)
+- R:R = 1:1.5 / 1:3.4
+
+<span class="comment">## Position &amp; Disclaimer</span>
+<span class="string">**Positions: None. This is NOT financial advice.**</span>
+Analysis assisted by AI. Full report at market-watch.xyz
+ </div>
+
+ <h3>Script : convertir une analyse HTML et poster sur Reddit</h3>
+
+ <div class="code-block">
+   <span class="code-label">Python — reddit_poster.py</span>
+<span class="keyword">import</span> praw
+<span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup
+<span class="keyword">import</span> html2text
+
+<span class="comment"># --- Configuration PRAW ---</span>
+<span class="variable">reddit</span> = praw.<span class="function">Reddit</span>(
+    client_id=<span class="string">"YOUR_CLIENT_ID"</span>,
+    client_secret=<span class="string">"YOUR_CLIENT_SECRET"</span>,
+    user_agent=<span class="string">"MarketWatch Analysis Bot v1.0"</span>,
+    username=<span class="string">"your_username"</span>,
+    password=<span class="string">"your_password"</span>
+)
+
+<span class="keyword">def</span> <span class="function">html_to_reddit_markdown</span>(html_path):
+    <span class="string">"""Convertit une analyse HTML en Markdown Reddit."""</span>
+    <span class="keyword">with</span> <span class="function">open</span>(html_path, <span class="string">'r'</span>) <span class="keyword">as</span> f:
+        soup = BeautifulSoup(f.read(), <span class="string">'html.parser'</span>)
+
+    container = soup.find(<span class="string">'div'</span>, class_=<span class="string">'container'</span>)
+    <span class="keyword">if</span> <span class="keyword">not</span> container:
+        <span class="keyword">return</span> <span class="string">""</span>
+
+    converter = html2text.<span class="function">HTML2Text</span>()
+    converter.ignore_links = <span class="keyword">False</span>
+    converter.ignore_images = <span class="keyword">True</span>
+    converter.body_width = 0
+
+    markdown = converter.<span class="function">handle</span>(str(container))
+
+    <span class="comment"># Ajouter le disclaimer Reddit</span>
+    markdown += <span class="string">"\n\n---\n"</span>
+    markdown += <span class="string">"**Disclaimer:** Not financial advice. DYOR.\n"</span>
+    markdown += <span class="string">"AI-assisted analysis. "</span>
+    markdown += <span class="string">"[Full report](https://market-watch.xyz)\n"</span>
+
+    <span class="keyword">return</span> markdown
+
+<span class="keyword">def</span> <span class="function">post_to_reddit</span>(subreddit_name, title, body):
+    <span class="string">"""Poste un DD sur un subreddit."""</span>
+    subreddit = <span class="variable">reddit</span>.subreddit(subreddit_name)
+    submission = subreddit.<span class="function">submit</span>(
+        title=title,
+        selftext=body
+    )
+    <span class="function">print</span>(f<span class="string">"Posted to r/{subreddit_name}: {submission.url}"</span>)
+    <span class="keyword">return</span> submission
+
+<span class="comment"># --- Utilisation ---</span>
+body = <span class="function">html_to_reddit_markdown</span>(<span class="string">"analyses/SMCI/index.html"</span>)
+<span class="function">post_to_reddit</span>(
+    <span class="string">"stocks"</span>,
+    <span class="string">"$SMCI Deep Dive — AI Infra Mispriced at 12x P/E"</span>,
+    body
+)
+ </div>
+
+ <div class="warning-box">
+   <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Attention : Reddit déteste le spam</h4>
+   <p style="margin-bottom:0;">Reddit a des <strong>règles strictes contre l'auto-promotion</strong>. Respectez le ratio 90/10 : 90% de participation communautaire (commentaires, réponses) et seulement 10% de promotion de votre propre contenu. Ne postez jamais la même analyse sur 5 subreddits en même temps. Les mods bannissent rapidement les spammeurs et un ban Reddit est souvent permanent.</p>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 5 : YOUTUBE -->
+<!-- ================================================================== -->
+<div class="section-divider" id="youtube"><i class="fa-brands fa-youtube" style="color:#6366f1;"></i> YouTube — Le Contenu Long</div>
+
+<div class="content-card">
+ <div class="platform-header">
+   <div class="platform-icon" style="background:linear-gradient(135deg, #dc2626, #b91c1c);">
+     <i class="fa-brands fa-youtube"></i>
+   </div>
+   <div>
+     <div class="platform-name">YouTube — Le Contenu Long</div>
+     <div class="platform-desc">Analyses vidéo détaillées : le format avec la meilleure rétention et monétisation</div>
+   </div>
+ </div>
+
+ <p>YouTube est le format le plus <strong>engageant et monétisable</strong> pour les analyses financières. Une vidéo de 10 minutes avec des graphes et une narration claire peut toucher des dizaines de milliers de personnes et générer des revenus passifs pendant des mois.</p>
+
+ <div class="stat-row">
+   <div class="stat-item">
+     <div class="stat-value">2B+</div>
+     <div class="stat-label">Utilisateurs</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">5-15min</div>
+     <div class="stat-label">Durée optimale</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">$3-8</div>
+     <div class="stat-label">RPM finance</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">1/sem</div>
+     <div class="stat-label">Fréquence min.</div>
+   </div>
+ </div>
+
+ <h3>Le pipeline YouTube automatisé</h3>
+
+ <div id="chartFunnelYoutube" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+ <h3>Étape 1 — Générer le script vidéo avec Claude</h3>
+
+ <div class="code-block">
+   <span class="code-label">Python — video_script_generator.py</span>
+<span class="keyword">import</span> anthropic
+<span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup
+
+<span class="variable">client</span> = anthropic.<span class="function">Anthropic</span>()
+
+<span class="keyword">def</span> <span class="function">generate_video_script</span>(analysis_path, ticker):
+    <span class="string">"""Génère un script vidéo YouTube de 8-12 minutes."""</span>
+    <span class="keyword">with</span> <span class="function">open</span>(analysis_path, <span class="string">'r'</span>) <span class="keyword">as</span> f:
+        html_content = f.read()
+
+    prompt = f<span class="string">"""Transform this financial analysis into a
+YouTube video script for a 10-minute video about {ticker}.
+
+Structure:
+- [0:00] HOOK: Attention-grabbing opening
+- [0:30] CONTEXT: What, why, now?
+- [2:00] FUNDAMENTALS: Revenue, earnings, margins
+- [4:00] TECHNICALS: Chart, support/resistance
+- [6:00] CATALYSTS: Upcoming events
+- [7:30] RISKS: Bear case
+- [8:30] TRADE SETUP: Entry, stop, targets
+- [9:30] OUTRO: Summary, disclaimer, CTA
+
+Include [SLIDE] and [CHART] markers.
+Tone: professional but accessible.
+
+HTML: {html_content[:15000]}"""</span>
+
+    response = <span class="variable">client</span>.messages.<span class="function">create</span>(
+        model=<span class="string">"claude-sonnet-4-20250514"</span>,
+        max_tokens=4000,
+        messages=[{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: prompt}]
+    )
+    <span class="keyword">return</span> response.content[0].text
+ </div>
+
+ <h3>Étape 2 — Text-to-Speech avec OpenAI TTS</h3>
+
+ <div class="code-block">
+   <span class="code-label">Python — tts_generator.py</span>
+<span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI
+<span class="keyword">import</span> subprocess
+
+<span class="variable">client</span> = <span class="function">OpenAI</span>()
+
+<span class="keyword">def</span> <span class="function">generate_audio</span>(script_text, output_path):
+    <span class="string">"""Génère l'audio via OpenAI TTS."""</span>
+    <span class="comment"># Diviser en chunks de 4096 chars (limite API)</span>
+    chunks = [script_text[i:i+4096]
+              <span class="keyword">for</span> i <span class="keyword">in</span> range(0, len(script_text), 4096)]
+
+    segments = []
+    <span class="keyword">for</span> i, chunk <span class="keyword">in</span> enumerate(chunks):
+        response = <span class="variable">client</span>.audio.speech.<span class="function">create</span>(
+            model=<span class="string">"tts-1-hd"</span>,
+            voice=<span class="string">"onyx"</span>,  <span class="comment"># Voix pro</span>
+            input=chunk,
+            response_format=<span class="string">"mp3"</span>
+        )
+        seg = f<span class="string">"output/segment_{i}.mp3"</span>
+        response.<span class="function">stream_to_file</span>(seg)
+        segments.append(seg)
+
+    <span class="comment"># Concaténer avec ffmpeg</span>
+    list_file = <span class="string">"output/segments.txt"</span>
+    <span class="keyword">with</span> <span class="function">open</span>(list_file, <span class="string">"w"</span>) <span class="keyword">as</span> f:
+        <span class="keyword">for</span> s <span class="keyword">in</span> segments:
+            f.write(f<span class="string">"file '{s}'\n"</span>)
+    subprocess.<span class="function">run</span>([
+        <span class="string">"ffmpeg"</span>, <span class="string">"-f"</span>, <span class="string">"concat"</span>,
+        <span class="string">"-safe"</span>, <span class="string">"0"</span>, <span class="string">"-i"</span>, list_file,
+        <span class="string">"-c"</span>, <span class="string">"copy"</span>, output_path
+    ])
+    <span class="function">print</span>(f<span class="string">"Audio: {output_path}"</span>)
+ </div>
+
+ <h3>SEO YouTube : les éléments clés</h3>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-heading"></i> Titre</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;"><strong>"$SMCI Analysis: Why This AI Stock Could Rally 30%"</strong> — Cashtag, % potentiel, et un mot-clé fort.</p>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-align-left"></i> Description</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">Les 3 premières lignes sont visibles sans cliquer "plus". Résumé, timestamps, liens, disclaimer.</p>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-tags"></i> Tags</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">15-20 tags : ticker, secteur, type d'analyse, mots-clés généraux (stock analysis, technical, etc.).</p>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-image"></i> Thumbnail</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">Graphe avec flèche verte/rouge, ticker en gros, % en gros. Les visages humains = +30% CTR.</p>
+   </div>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Alternative : ElevenLabs pour des voix plus naturelles</h4>
+   <p style="margin-bottom:0;">OpenAI TTS est solide, mais ElevenLabs offre des voix <strong>beaucoup plus naturelles</strong> avec le voice cloning. Vous pouvez cloner votre propre voix avec 30 secondes d'enregistrement, puis générer toutes vos vidéos avec votre voix sans jamais parler dans un micro. Environ $22/mois pour 100 minutes d'audio.</p>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 6 : TELEGRAM -->
+<!-- ================================================================== -->
+<div class="section-divider" id="telegram"><i class="fa-brands fa-telegram" style="color:#6366f1;"></i> Telegram — Les Alertes Premium</div>
+
+<div class="content-card">
+ <div class="platform-header">
+   <div class="platform-icon" style="background:linear-gradient(135deg, #6366f1, #4f46e5);">
+     <i class="fa-brands fa-telegram"></i>
+   </div>
+   <div>
+     <div class="platform-name">Telegram — Les Alertes Premium</div>
+     <div class="platform-desc">Notifications en temps réel, canal d'alertes et communauté privée</div>
+   </div>
+ </div>
+
+ <p>Telegram est la plateforme idéale pour les <strong>alertes en temps réel</strong>. Le taux d'ouverture dépasse 90%, loin devant l'email (20-30%) ou les posts sociaux (5-10% de reach). C'est aussi le format le plus facile à monétiser via un canal premium.</p>
+
+ <div class="stat-row">
+   <div class="stat-item">
+     <div class="stat-value">800M+</div>
+     <div class="stat-label">Utilisateurs</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">Instant</div>
+     <div class="stat-label">Push notification</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">Gratuit</div>
+     <div class="stat-label">API Bot</div>
+   </div>
+   <div class="stat-item">
+     <div class="stat-value">90%+</div>
+     <div class="stat-label">Taux d'ouverture</div>
+   </div>
+ </div>
+
+ <h3>Architecture du canal : gratuit vs premium</h3>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#eef2ff; border:1px solid #6366f1; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-unlock"></i> Canal Public (gratuit)</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem; line-height:1.8;">
+       <li>Résumé quotidien du scan (3 meilleurs setups)</li>
+       <li>Analyse hebdomadaire (résumé + lien)</li>
+       <li>Alertes macro (CPI, FOMC, earnings majeurs)</li>
+       <li>Récap de la semaine (hit rate du scanner)</li>
+     </ul>
+   </div>
+   <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-lock"></i> Canal Premium ($30/mois)</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem; line-height:1.8;">
+       <li>Tous les 10 setups du scan quotidien</li>
+       <li>Alertes en temps réel (prix atteint)</li>
+       <li>Trade updates (TP touché, stop ajusté)</li>
+       <li>Accès au groupe de discussion privé</li>
+     </ul>
+   </div>
+ </div>
+
+ <h3>Bot Telegram : alertes automatisées</h3>
+
+ <div class="code-block">
+   <span class="code-label">Python — telegram_bot.py</span>
+<span class="keyword">import</span> asyncio
+<span class="keyword">from</span> telegram <span class="keyword">import</span> Bot
+<span class="keyword">from</span> telegram.constants <span class="keyword">import</span> ParseMode
+<span class="keyword">import</span> json
+
+<span class="variable">BOT_TOKEN</span> = <span class="string">"123456789:ABCdefGHIjklMNOpqrsTUVwxyz"</span>
+<span class="variable">PUBLIC_CHANNEL</span> = <span class="string">"@marketwatch_signals"</span>
+<span class="variable">PREMIUM_CHANNEL</span> = <span class="string">"@marketwatch_premium"</span>
+
+<span class="variable">bot</span> = <span class="function">Bot</span>(token=<span class="variable">BOT_TOKEN</span>)
+
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">send_scan_alert</span>(scan_data, channel, is_premium=<span class="keyword">False</span>):
+    <span class="string">"""Envoie les résultats du scanner sur Telegram."""</span>
+    setups = scan_data[<span class="string">"setups"</span>]
+    <span class="keyword">if</span> <span class="keyword">not</span> is_premium:
+        setups = setups[:3]  <span class="comment"># Public = top 3 seulement</span>
+
+    header = (
+        f<span class="string">"&lt;b&gt;Daily Scan — {scan_data['date']}&lt;/b&gt;\n"</span>
+        f<span class="string">"Regime: &lt;code&gt;{scan_data['regime']}&lt;/code&gt;\n"</span>
+        f<span class="string">"Risk: {scan_data['risk_tolerance']:.0%}\n\n"</span>
+    )
+
+    <span class="keyword">for</span> s <span class="keyword">in</span> setups:
+        header += (
+            f<span class="string">"&lt;b&gt;${s['ticker']}&lt;/b&gt; — {s['strategy']}\n"</span>
+            f<span class="string">"  Entry: ${s['entry']:.2f} | Stop: ${s['stop']:.2f}\n"</span>
+            f<span class="string">"  TP1: ${s['tp1']:.2f} | R:R {s['rr']}\n\n"</span>
+        )
+
+    header += <span class="string">"&lt;i&gt;Not financial advice. DYOR.&lt;/i&gt;"</span>
+
+    <span class="keyword">await</span> <span class="variable">bot</span>.<span class="function">send_message</span>(
+        chat_id=channel,
+        text=header,
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=<span class="keyword">True</span>
+    )
+
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">send_price_alert</span>(ticker, price, target_type, target):
+    <span class="string">"""Alerte quand un prix cible est atteint."""</span>
+    emoji = <span class="string">"&#9989;"</span> <span class="keyword">if</span> target_type == <span class="string">"TP"</span> <span class="keyword">else</span> <span class="string">"&#9940;"</span>
+    msg = f<span class="string">"{emoji} &lt;b&gt;${ticker}&lt;/b&gt; {target_type} at ${price:.2f}"</span>
+    <span class="keyword">await</span> <span class="variable">bot</span>.<span class="function">send_message</span>(
+        chat_id=<span class="variable">PREMIUM_CHANNEL</span>,
+        text=msg,
+        parse_mode=ParseMode.HTML
+    )
+
+<span class="comment"># --- Utilisation quotidienne ---</span>
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">main</span>():
+    data = json.<span class="function">load</span>(<span class="function">open</span>(<span class="string">"scanner/latest/data.json"</span>))
+    <span class="keyword">await</span> <span class="function">send_scan_alert</span>(data, <span class="variable">PUBLIC_CHANNEL</span>)
+    <span class="keyword">await</span> <span class="function">send_scan_alert</span>(data, <span class="variable">PREMIUM_CHANNEL</span>, is_premium=<span class="keyword">True</span>)
+
+asyncio.<span class="function">run</span>(<span class="function">main</span>())
+ </div>
+
+ <h3>Aperçu d'un message Telegram formaté</h3>
+
+ <div style="background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; color:#e2e8f0; font-family:'Courier New', monospace; font-size:0.85rem; line-height:1.8;">
+   <div style="color:#6366f1; font-weight:700; margin-bottom:0.75rem;">@marketwatch_signals</div>
+   <div style="color:#f59e0b; font-weight:700;">Daily Scan — 2026-02-21</div>
+   <div style="color:#94a3b8;">Regime: <span style="color:#16a34a;">RiskOn</span> | Risk Tolerance: 72%</div>
+   <br>
+   <div><span style="color:#34d399; font-weight:700;">$SMCI</span> — Momentum Expansion</div>
+   <div style="color:#94a3b8;">&nbsp;&nbsp;Entry: $42.50 | Stop: $38.80</div>
+   <div style="color:#94a3b8;">&nbsp;&nbsp;TP1: $48.00 | TP2: $55.00 | R:R 1:1.5</div>
+   <br>
+   <div><span style="color:#34d399; font-weight:700;">$PLTR</span> — Breakout Squeeze</div>
+   <div style="color:#94a3b8;">&nbsp;&nbsp;Entry: $95.20 | Stop: $89.50</div>
+   <div style="color:#94a3b8;">&nbsp;&nbsp;TP1: $102.00 | TP2: $115.00 | R:R 1:1.2</div>
+   <br>
+   <div style="color:#64748b; font-size:0.8rem; font-style:italic;">Not financial advice. DYOR.</div>
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Monétiser via les Telegram Stars</h4>
+   <p style="margin-bottom:0;">Telegram a lancé les <strong>Telegram Stars</strong> pour la monétisation native. Vous pouvez créer un canal avec abonnement payant directement dans l'app, sans processeur de paiement externe. Apple/Google prennent 30%, mais l'UX est parfaite (un clic pour payer). Alternative : Stripe + un bot custom pour gérer les accès au canal premium.</p>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 7 : PIPELINE COMPLET -->
+<!-- ================================================================== -->
+<div class="section-divider" id="pipeline"><i class="fa-solid fa-arrows-spin" style="color:#6366f1;"></i> Le Pipeline Complet</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-diagram-project" style="color:#6366f1;"></i> De l'analyse au post : le pipeline multi-plateforme</h2>
+
+ <p>Voici le pipeline complet qui transforme une analyse Market Watch en posts optimisés pour chaque plateforme, <strong>automatiquement en moins de 15 secondes</strong>.</p>
+
+ <div class="pipeline-step">
+   <div class="pipeline-number">1</div>
+   <div class="pipeline-content">
+     <h4><i class="fa-solid fa-file-code" style="color:#6366f1; margin-right:0.5rem;"></i> Claude Code génère l'analyse (HTML)</h4>
+     <p>Le scanner quotidien ou l'analyse individuelle est générée en HTML complet avec graphes, niveaux et risk matrix. C'est la <strong>source de vérité</strong> pour tous les posts.</p>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="pipeline-number">2</div>
+   <div class="pipeline-content">
+     <h4><i class="fa-solid fa-scissors" style="color:#6366f1; margin-right:0.5rem;"></i> Extraction des points clés</h4>
+     <p>Un script Python parse le HTML avec BeautifulSoup et extrait : ticker, grade, niveaux (entry/stop/TP), stratégie, catalyseurs, risques et résumé de la thèse.</p>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="pipeline-number">3</div>
+   <div class="pipeline-content">
+     <h4><i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1; margin-right:0.5rem;"></i> Adaptation par plateforme</h4>
+     <p>Le contenu est reformaté pour chaque plateforme : message court (StockTwits), thread 10 tweets (X), DD Markdown (Reddit), script vidéo (YouTube), message HTML (Telegram).</p>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="pipeline-number">4</div>
+   <div class="pipeline-content">
+     <h4><i class="fa-solid fa-paper-plane" style="color:#6366f1; margin-right:0.5rem;"></i> Posting simultané via asyncio</h4>
+     <p>Les 4-5 APIs sont appelées en parallèle avec <code>asyncio.gather()</code>. Les posts sont programmés aux horaires optimaux ou publiés immédiatement pour les alertes.</p>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="pipeline-number">5</div>
+   <div class="pipeline-content">
+     <h4><i class="fa-solid fa-chart-simple" style="color:#6366f1; margin-right:0.5rem;"></i> Monitoring de l'engagement</h4>
+     <p>Collecte des métriques par plateforme : likes, RT, upvotes, vues, commentaires. Identification des formats et sujets qui performent le mieux.</p>
+   </div>
+ </div>
+
+ <div class="pipeline-step">
+   <div class="pipeline-number">6</div>
+   <div class="pipeline-content">
+     <h4><i class="fa-solid fa-comments" style="color:#6366f1; margin-right:0.5rem;"></i> Réponse aux commentaires (assistée par IA)</h4>
+     <p>Claude génère des réponses contextuelles basées sur l'analyse originale. Un humain valide avant publication pour maintenir l'authenticité.</p>
+   </div>
+ </div>
+
+ <h3>Le script orchestrateur</h3>
+
+ <div class="code-block">
+   <span class="code-label">Python — social_pipeline.py</span>
+<span class="keyword">import</span> asyncio
+<span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+
+<span class="keyword">from</span> platforms.stocktwits <span class="keyword">import</span> post_to_stocktwits
+<span class="keyword">from</span> platforms.twitter <span class="keyword">import</span> post_thread
+<span class="keyword">from</span> platforms.reddit <span class="keyword">import</span> post_to_reddit
+<span class="keyword">from</span> platforms.telegram <span class="keyword">import</span> send_scan_alert
+<span class="keyword">from</span> extractors.html_parser <span class="keyword">import</span> extract_analysis
+<span class="keyword">from</span> adapters.content_adapter <span class="keyword">import</span> adapt_for_platform
+
+<span class="keyword">async</span> <span class="keyword">def</span> <span class="function">publish_everywhere</span>(analysis_path, ticker):
+    <span class="string">"""Pipeline : analyse HTML vers tous les réseaux."""</span>
+
+    <span class="comment"># Étape 1 : Extraire les données</span>
+    data = <span class="function">extract_analysis</span>(analysis_path, ticker)
+    <span class="function">print</span>(f<span class="string">"Extracted: {ticker} grade={data['grade']}"</span>)
+
+    <span class="comment"># Étape 2 : Adapter par plateforme</span>
+    st_msg = <span class="function">adapt_for_platform</span>(data, <span class="string">"stocktwits"</span>)
+    tw_thread = <span class="function">adapt_for_platform</span>(data, <span class="string">"twitter"</span>)
+    rd_dd = <span class="function">adapt_for_platform</span>(data, <span class="string">"reddit"</span>)
+    tg_msg = <span class="function">adapt_for_platform</span>(data, <span class="string">"telegram"</span>)
+
+    <span class="comment"># Étape 3 : Poster en parallèle</span>
+    results = <span class="keyword">await</span> asyncio.<span class="function">gather</span>(
+        <span class="function">post_to_stocktwits</span>(st_msg),
+        <span class="function">post_thread</span>(tw_thread),
+        <span class="function">post_to_reddit</span>(<span class="string">"stocks"</span>, rd_dd),
+        <span class="function">send_scan_alert</span>(tg_msg),
+        return_exceptions=<span class="keyword">True</span>
+    )
+
+    <span class="comment"># Étape 4 : Rapport</span>
+    platforms = [<span class="string">"StockTwits"</span>, <span class="string">"X"</span>, <span class="string">"Reddit"</span>, <span class="string">"Telegram"</span>]
+    <span class="keyword">for</span> p, r <span class="keyword">in</span> zip(platforms, results):
+        status = <span class="string">"FAIL"</span> <span class="keyword">if</span> isinstance(r, Exception) <span class="keyword">else</span> <span class="string">"OK"</span>
+        <span class="function">print</span>(f<span class="string">"  {status} {p}"</span>)
+
+asyncio.<span class="function">run</span>(
+    <span class="function">publish_everywhere</span>(<span class="string">"analyses/SMCI/index.html"</span>, <span class="string">"SMCI"</span>)
+)
+ </div>
+
+ <div class="terminal-box">
+   <span class="code-label">Terminal</span>
+<span class="prompt">$</span> python social_pipeline.py
+<span class="output">Extracted: SMCI grade=B+</span>
+<span class="success">  OK StockTwits</span>
+<span class="success">  OK X (10 tweets posted)</span>
+<span class="success">  OK Reddit (r/stocks)</span>
+<span class="success">  OK Telegram (@marketwatch_signals)</span>
+<span class="output">Pipeline completed in 12.3s</span>
+ </div>
+
+ <div class="formula-box">
+   <div class="formula-label">Temps total du pipeline</div>
+   1 analyse HTML &rarr; <span class="formula-highlight">5 plateformes</span> &rarr; <span class="formula-highlight">&lt; 15 secondes</span>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SECTION 8 : ÉTHIQUE ET DISCLAIMER -->
+<!-- ================================================================== -->
+<div class="section-divider" id="ethique"><i class="fa-solid fa-scale-balanced" style="color:#6366f1;"></i> Éthique et Disclaimer</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-shield-halved" style="color:#6366f1;"></i> Les règles incontournables du finfluencing</h2>
+
+ <p>Automatiser sa présence sur les réseaux sociaux financiers comporte des <strong>responsabilités légales et éthiques majeures</strong>. Voici les règles absolues.</p>
+
+ <div class="ethics-grid">
+   <div class="ethics-do">
+     <h4><i class="fa-solid fa-check" style="margin-right:0.5rem;"></i> A faire</h4>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem; line-height:1.8;">
+       <li><strong>Disclaimer systématique</strong> sur chaque post</li>
+       <li><strong>Disclosure des positions</strong> obligatoire</li>
+       <li><strong>Transparence IA</strong> : mentionner l'utilisation de l'IA</li>
+       <li><strong>Sources vérifiables</strong> : citer SEC, Yahoo Finance, etc.</li>
+       <li><strong>Track record public</strong> : assumer les erreurs</li>
+       <li><strong>Éducation d'abord</strong> : expliquer le raisonnement</li>
+     </ul>
+   </div>
+   <div class="ethics-dont">
+     <h4><i class="fa-solid fa-xmark" style="margin-right:0.5rem;"></i> A ne JAMAIS faire</h4>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem; line-height:1.8;">
+       <li><strong>Pump &amp; Dump</strong> : promouvoir pour vendre ensuite</li>
+       <li><strong>Faux track record</strong> : supprimer les trades perdants</li>
+       <li><strong>Garanties de profit</strong> : "100% win rate"</li>
+       <li><strong>Front-running</strong> : acheter avant de poster</li>
+       <li><strong>Spam</strong> : même contenu partout sans adaptation</li>
+       <li><strong>Manipulation</strong> : coordonner des achats</li>
+     </ul>
+   </div>
+ </div>
+
+ <h3>Le cadre légal</h3>
+
+ <table class="compare-table">
+   <thead>
+     <tr><th>Juridiction</th><th>Régulateur</th><th>Règle clé</th><th>Sanction</th></tr>
+   </thead>
+   <tbody>
+     <tr><td><strong>USA</strong></td><td>SEC</td><td>Investment Advisers Act — interdiction de conseiller sans licence RIA</td><td>Amendes + prison</td></tr>
+     <tr><td><strong>France</strong></td><td>AMF</td><td>Abus de marché — manipulation de cours via réseaux sociaux</td><td>Jusqu'à 100M EUR + prison</td></tr>
+     <tr><td><strong>UK</strong></td><td>FCA</td><td>Financial promotions — "fair, clear, not misleading"</td><td>Amendes illimitées</td></tr>
+     <tr><td><strong>Global</strong></td><td>Plateformes</td><td>CGU de chaque plateforme (anti-spam, anti-manipulation)</td><td>Bannissement</td></tr>
+   </tbody>
+ </table>
+
+ <div class="danger-box">
+   <h4><i class="fa-solid fa-gavel" style="margin-right:0.5rem;"></i> Cas réels de poursuites</h4>
+   <p>En 2023, la SEC a poursuivi <strong>8 influenceurs</strong> pour un schéma de pump &amp; dump sur Twitter/Discord qui a généré $114M de profits illicites. En 2024, l'AMF a sanctionné plusieurs influenceurs français pour manipulation de cours via Telegram.</p>
+   <p style="margin-bottom:0;"><strong>Règle d'or</strong> : si vous ne seriez pas à l'aise de montrer votre post à un régulateur, ne le postez pas.</p>
+ </div>
+
+ <h3>Template de disclaimer à inclure systématiquement</h3>
+
+ <div class="code-block">
+   <span class="code-label">Template — Disclaimer</span>
+<span class="string">DISCLAIMER:</span>
+<span class="string">This content is for educational and informational</span>
+<span class="string">purposes only. It does NOT constitute financial advice,</span>
+<span class="string">investment advice, or a recommendation to buy or sell</span>
+<span class="string">any security.</span>
+
+<span class="string">Positions: [NONE / Long $TICKER / Short $TICKER]</span>
+<span class="string">AI Disclosure: Analysis assisted by AI (Claude).</span>
+<span class="string">Past performance does not guarantee future results.</span>
+<span class="string">Always do your own research (DYOR).</span>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> La transparence construit la confiance</h4>
+   <p style="margin-bottom:0;">Les meilleurs finfluenceurs partagent <strong>aussi leurs trades perdants</strong>. Montrer un stop touché avec l'analyse de ce qui n'a pas fonctionné génère plus de crédibilité que 10 trades gagnants. L'audience comprend que le trading est un jeu de probabilités. Ce qui compte, c'est le processus et la discipline, pas chaque trade individuel.</p>
+ </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- QUIZ -->
+<!-- ================================================================== -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#6366f1;"></i> Testez vos Connaissances</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-brain" style="color:#6366f1;"></i> Quiz — 6 questions</h2>
+
+ <details>
+   <summary>Q1 — Quel format fonctionne le mieux sur X/Twitter pour les analyses financières ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">Le <strong>thread</strong> (fil de discussion) est le format roi du FinTwit. Un thread de 10 tweets permet de dérouler une analyse complète : hook, contexte, fondamentaux, technique, setup, risques, disclaimer et CTA. Chaque tweet en réponse au précédent crée un contenu long format natif qui bénéficie de l'algorithme de X. Les threads ont en moyenne 3-5x plus d'engagement qu'un tweet unique.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q2 — Pourquoi Reddit exige-t-il le ratio 90/10 ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">Le ratio <strong>90/10</strong> signifie que 90% de votre activité doit être de la participation communautaire (commentaires, réponses, upvotes) et seulement 10% de l'auto-promotion. Reddit a été construit sur le principe de communauté et de contenu organique. Les utilisateurs qui ne font que poster leurs propres liens sont considérés comme des spammeurs et sont rapidement bannis. Pour réussir, il faut d'abord être un membre actif de la communauté.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q3 — Quel est l'avantage principal de Telegram par rapport aux autres plateformes ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">Le <strong>taux d'ouverture supérieur à 90%</strong>. Les notifications Telegram sont presque toujours vues, contrairement aux emails (20-30%) ou aux posts sociaux (5-10% de reach). C'est la plateforme idéale pour les alertes urgentes. De plus, Telegram offre une API bot gratuite, le formatage HTML riche et la possibilité de créer des canaux premium avec abonnement payant directement dans l'application.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q4 — Comment automatiser la création de vidéos YouTube à partir d'analyses écrites ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">Le pipeline comporte 5 étapes : (1) <strong>Extraction</strong> du contenu de l'analyse HTML, (2) <strong>Génération du script</strong> vidéo avec Claude (structuré en sections chronométrées avec marqueurs [SLIDE] et [CHART]), (3) <strong>Text-to-Speech</strong> avec OpenAI TTS ou ElevenLabs, (4) <strong>Génération des visuels</strong> (slides, graphes, screenshots), (5) <strong>Assemblage</strong> avec ffmpeg et upload via YouTube Data API. Le processus complet prend 5-10 minutes.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q5 — Qu'est-ce que le pump &amp; dump et pourquoi est-ce illégal ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">Le <strong>pump &amp; dump</strong> consiste à acheter un titre à bas prix, le promouvoir massivement sur les réseaux pour faire monter le prix (pump), puis vendre ses positions au sommet (dump), laissant les followers avec des pertes. C'est une forme de <strong>manipulation de marché</strong> sanctionnée par la SEC, l'AMF et tous les régulateurs. Les sanctions incluent des amendes de plusieurs millions et des peines de prison. En 2023, la SEC a obtenu $114M de restitution contre 8 finfluenceurs pour ce type de schéma.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q6 — Quel est l'intérêt de poster sur StockTwits par rapport à X/Twitter ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">StockTwits est un réseau <strong>100% dédié à la finance</strong>. Chaque message est indexé par cashtag (<code>$AAPL</code>) et sentiment (bullish/bearish), ce qui signifie que votre audience est pré-qualifiée : des traders et investisseurs actifs. Sur X, votre contenu financier est noyé dans les actualités, la politique et les memes. De plus, les données de sentiment StockTwits sont utilisées par les algorithmes de trading et les plateformes d'analyse (y compris le MCP Gateway Market Watch), ce qui donne à vos posts une portée indirecte au-delà de la plateforme.</p>
+   </div>
+ </details>
+</div>
+
+<!-- ================================================================== -->
+<!-- RÉSUMÉ -->
+<!-- ================================================================== -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#6366f1;"></i> Ce Qu'on Retient</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-list-check" style="color:#6366f1;"></i> Les 6 leçons essentielles</h2>
+
+ <div class="takeaway-box">
+   <h3><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Résumé de la Partie 3</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-chart-line"></i> <span><strong>StockTwits</strong> est le hub des traders : des messages courts avec cashtags et sentiment, publiés avant/après marché pour un impact maximum.</span></li>
+     <li><i class="fa-brands fa-x-twitter"></i> <span><strong>X/Twitter</strong> est le royaume des threads : un format en 10 tweets qui déroule l'analyse complète avec graphes, setup et disclaimer.</span></li>
+     <li><i class="fa-brands fa-reddit-alien"></i> <span><strong>Reddit</strong> exige de la qualité : des DD posts détaillés avec le ratio 90/10 entre participation communautaire et promotion.</span></li>
+     <li><i class="fa-brands fa-youtube"></i> <span><strong>YouTube</strong> se prête à l'automatisation complète : script IA, TTS, visuels et upload via API pour une production régulière.</span></li>
+     <li><i class="fa-brands fa-telegram"></i> <span><strong>Telegram</strong> est idéal pour les alertes : 90%+ de taux d'ouverture, API bot gratuite et monétisation via canal premium.</span></li>
+     <li><i class="fa-solid fa-scale-balanced"></i> <span><strong>L'éthique est non-négociable</strong> : disclaimer systématique, disclosure des positions, transparence IA, et jamais de pump &amp; dump.</span></li>
+   </ul>
+ </div>
+
+ <a href="../part2-screeners/" class="prev-cta">
+   <i class="fa-solid fa-arrow-left"></i>
+   <div>
+     <div class="next-label">Partie 2 — Leçon précédente</div>
+     <div class="next-title">Screeners Automatisés — DSL &amp; Alertes</div>
+   </div>
+ </a>
+
+ <a href="../part4-bots/" class="next-cta">
+   <div>
+     <div class="next-label">Partie 4 — Prochaine leçon</div>
+     <div class="next-title">Bots de Trading — Du Signal à l'Exécution</div>
+   </div>
+   <i class="fa-solid fa-arrow-right"></i>
+ </a>
+</div>
+
+</div><!-- /.container -->
+
+<div class="footer-bar">
+ <p>Série <strong>Automatiser son Trading avec Claude Code</strong> — Partie 3 sur 5</p>
+ <p style="margin-top:0.5rem;"><a href="../part1-introduction/">1. Introduction</a> &middot; <a href="../part2-screeners/">2. Screeners</a> &middot; <a href="../part3-social-media/">3. Réseaux</a> &middot; <a href="../part4-bots/">4. Bots</a> &middot; <a href="../part5-avance/">5. Avancé</a></p>
+ <p style="margin-top:1rem; font-size:0.7rem; color:#94a3b8;">Les informations présentées sont à but éducatif uniquement et ne constituent pas des conseils en investissement. L'automatisation du trading comporte des risques. Consultez un conseiller financier agréé avant toute décision.</p>
+ <p style="margin-top:0.5rem;"><a href="/">market-watch.xyz</a> &copy; 2025-2026</p>
+</div>
+
+<script>
+// ============================================================
+// EChart 1 : Engagement moyen par plateforme (Radar)
+// ============================================================
+(function() {
+ var dom = document.getElementById('chartEngagement');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ chart.setOption({
+   tooltip: { trigger: 'item' },
+   legend: {
+     data: ['Reach', 'Engagement', 'Conversion', 'Monétisation', 'Durée de vie'],
+     bottom: '2%',
+     textStyle: { color: '#64748b', fontSize: 11 }
+   },
+   radar: {
+     indicator: [
+       { name: 'StockTwits', max: 100 },
+       { name: 'X/Twitter', max: 100 },
+       { name: 'Reddit', max: 100 },
+       { name: 'YouTube', max: 100 },
+       { name: 'Telegram', max: 100 }
+     ],
+     center: ['50%', '45%'],
+     radius: '60%',
+     axisName: { color: '#334155', fontWeight: 700, fontSize: 12 },
+     splitArea: { areaStyle: { color: ['#f8fafc', '#f1f5f9', '#e2e8f0', '#f8fafc'] } },
+     axisLine: { lineStyle: { color: '#cbd5e1' } },
+     splitLine: { lineStyle: { color: '#e2e8f0' } }
+   },
+   series: [
+     {
+       name: 'Comparaison',
+       type: 'radar',
+       data: [
+         {
+           value: [45, 85, 60, 95, 70],
+           name: 'Reach',
+           lineStyle: { color: '#6366f1', width: 2 },
+           areaStyle: { color: 'rgba(99,102,241,0.15)' },
+           itemStyle: { color: '#6366f1' }
+         },
+         {
+           value: [70, 55, 80, 40, 92],
+           name: 'Engagement',
+           lineStyle: { color: '#16a34a', width: 2 },
+           areaStyle: { color: 'rgba(22,163,106,0.1)' },
+           itemStyle: { color: '#16a34a' }
+         },
+         {
+           value: [60, 40, 50, 65, 85],
+           name: 'Conversion',
+           lineStyle: { color: '#f59e0b', width: 2 },
+           areaStyle: { color: 'rgba(245,158,11,0.1)' },
+           itemStyle: { color: '#f59e0b' }
+         },
+         {
+           value: [20, 35, 25, 80, 75],
+           name: 'Monétisation',
+           lineStyle: { color: '#dc2626', width: 2 },
+           areaStyle: { color: 'rgba(220,38,38,0.08)' },
+           itemStyle: { color: '#dc2626' }
+         },
+         {
+           value: [10, 25, 90, 95, 60],
+           name: 'Durée de vie',
+           lineStyle: { color: '#9333ea', width: 2 },
+           areaStyle: { color: 'rgba(147,51,234,0.08)' },
+           itemStyle: { color: '#9333ea' }
+         }
+       ]
+     }
+   ]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ============================================================
+// EChart 2 : Heatmap StockTwits — Meilleurs moments pour poster
+// ============================================================
+(function() {
+ var dom = document.getElementById('chartHeatmapStocktwits');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ var hours = ['6h','7h','8h','9h','10h','11h','12h','13h','14h','15h','16h','17h','18h','19h','20h'];
+ var days = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+
+ var data = [
+   [0,0,15],[0,1,35],[0,2,72],[0,3,90],[0,4,78],[0,5,55],[0,6,62],[0,7,48],[0,8,52],[0,9,70],[0,10,85],[0,11,45],[0,12,30],[0,13,20],[0,14,12],
+   [1,0,18],[1,1,40],[1,2,75],[1,3,88],[1,4,72],[1,5,50],[1,6,58],[1,7,45],[1,8,48],[1,9,65],[1,10,80],[1,11,42],[1,12,28],[1,13,18],[1,14,10],
+   [2,0,20],[2,1,45],[2,2,80],[2,3,95],[2,4,82],[2,5,60],[2,6,68],[2,7,55],[2,8,58],[2,9,75],[2,10,90],[2,11,50],[2,12,35],[2,13,22],[2,14,15],
+   [3,0,16],[3,1,38],[3,2,70],[3,3,85],[3,4,75],[3,5,52],[3,6,60],[3,7,46],[3,8,50],[3,9,68],[3,10,82],[3,11,44],[3,12,30],[3,13,19],[3,14,11],
+   [4,0,22],[4,1,48],[4,2,82],[4,3,98],[4,4,88],[4,5,58],[4,6,55],[4,7,42],[4,8,45],[4,9,60],[4,10,75],[4,11,38],[4,12,25],[4,13,15],[4,14,8]
+ ];
+
+ chart.setOption({
+   tooltip: {
+     position: 'top',
+     formatter: function(p) {
+       return days[p.value[0]] + ' ' + hours[p.value[1]] + ' EST<br>Engagement: <strong>' + p.value[2] + '/100</strong>';
+     }
+   },
+   grid: { left: '12%', right: '10%', bottom: '15%', top: '5%' },
+   xAxis: {
+     type: 'category',
+     data: hours,
+     splitArea: { show: true },
+     axisLabel: { color: '#64748b', fontSize: 10, fontWeight: 600 }
+   },
+   yAxis: {
+     type: 'category',
+     data: days,
+     splitArea: { show: true },
+     axisLabel: { color: '#64748b', fontSize: 11, fontWeight: 600 }
+   },
+   visualMap: {
+     min: 0,
+     max: 100,
+     calculable: true,
+     orient: 'horizontal',
+     left: 'center',
+     bottom: '0%',
+     inRange: {
+       color: ['#eef2ff','#c7d2fe','#818cf8','#6366f1','#4f46e5','#3730a3']
+     },
+     textStyle: { color: '#64748b' }
+   },
+   series: [{
+     name: 'Engagement',
+     type: 'heatmap',
+     data: data,
+     label: {
+       show: true,
+       formatter: function(p) { return p.value[2]; },
+       fontSize: 9
+     },
+     emphasis: {
+       itemStyle: { shadowBlur: 10, shadowColor: 'rgba(99,102,241,0.5)' }
+     }
+   }]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ============================================================
+// EChart 3 : Funnel YouTube Pipeline
+// ============================================================
+(function() {
+ var dom = document.getElementById('chartFunnelYoutube');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ chart.setOption({
+   tooltip: {
+     trigger: 'item',
+     formatter: '{b}: {c} min'
+   },
+   series: [
+     {
+       name: 'Pipeline YouTube',
+       type: 'funnel',
+       left: '10%',
+       top: '5%',
+       bottom: '5%',
+       width: '80%',
+       min: 0,
+       max: 100,
+       minSize: '0%',
+       maxSize: '100%',
+       sort: 'descending',
+       gap: 4,
+       label: {
+         show: true,
+         position: 'inside',
+         formatter: '{b}\n{c} min',
+         fontSize: 12,
+         fontWeight: 700,
+         color: '#ffffff'
+       },
+       labelLine: { length: 10, lineStyle: { width: 1 } },
+       itemStyle: { borderColor: '#fff', borderWidth: 2 },
+       emphasis: { label: { fontSize: 14 } },
+       data: [
+         { value: 100, name: 'Analyse HTML (source)', itemStyle: { color: '#6366f1' } },
+         { value: 85, name: 'Script vidéo (Claude)', itemStyle: { color: '#818cf8' } },
+         { value: 70, name: 'Text-to-Speech (TTS)', itemStyle: { color: '#2563eb' } },
+         { value: 55, name: 'Génération visuels', itemStyle: { color: '#16a34a' } },
+         { value: 40, name: 'Assemblage FFmpeg', itemStyle: { color: '#f59e0b' } },
+         { value: 25, name: 'Upload YouTube API', itemStyle: { color: '#dc2626' } }
+       ]
+     }
+   ]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

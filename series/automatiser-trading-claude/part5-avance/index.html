@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Techniques Avancées — CoWork Multi-Agents, LLM Analysis & Portfolio Automation | Automatiser son Trading — Partie 5 | Market Watch</title>
+ <meta name="description" content="Série Automatiser son Trading avec Claude Code — Partie 5 : CoWork multi-agents en parallèle, LLM Analysis via DeepSeek, Portfolio VaR automatisé, sentiment monitoring continu, et l'avenir des agents autonomes.">
+ <meta property="og:title" content="Techniques Avancées — CoWork & Portfolio Automation | Market Watch">
+ <meta property="og:description" content="Multi-agents parallèles, VaR automatisé, sentiment monitoring, backtesting, et l'avenir des agents de trading autonomes.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/automatiser-trading-claude/part5-avance/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+ .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+ .brand-logo:hover { color:#6366f1; }
+ .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+ .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+ .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+ .series-link:hover { border-color:#818cf8; color:#818cf8; }
+ .series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code','Courier New',monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; font-family:'Inter',sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#818cf8; }
+ .code-block .string { color:#34d399; }
+ .code-block .function { color:#f59e0b; }
+ .code-block .variable { color:#38bdf8; }
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+ details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+ .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+ .footer-bar a { color:#64748b; text-decoration:none; }
+ .footer-bar a:hover { color:#6366f1; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#6366f1; }
+ .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+ .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.25rem 2rem; background:#f8fafc; border:1px solid #e2e8f0; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; transition:all 0.2s; }
+ .prev-cta:hover { border-color:#6366f1; color:#6366f1; }
+ .prev-cta .next-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; }
+ .prev-cta .next-title { font-size:1rem; font-weight:700; }
+ .series-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .series-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .brand-bar { padding:0.75rem 1rem; }
+   .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+   .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+   .code-block { font-size:0.75rem; padding:1rem; }
+   .prev-cta, .series-cta { flex-direction:column; text-align:center; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .series-title { display:none; }
+   .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+   .code-block { font-size:0.7rem; padding:0.75rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-robot" style="margin-right:0.4rem;"></i> Automatiser son Trading</span>
+ <a href="../part1-introduction/" class="series-link">1 — Introduction</a>
+ <a href="../part2-screeners/" class="series-link">2 — Screeners</a>
+ <a href="../part3-social-media/" class="series-link">3 — Réseaux</a>
+ <a href="../part4-bots/" class="series-link">4 — Bots</a>
+ <a href="../part5-avance/" class="series-link current">5 — Avancé</a>
+</div>
+
+<div class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-graduation-cap" style="margin-right:0.4rem;"></i> Série Automatiser son Trading — Partie 5 sur 5</div>
+ <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:800px;">Techniques Avancées<br>Multi-Agents & Portfolio</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto; line-height:1.7;"><strong>CoWork multi-agents</strong>, LLM Analysis, automatisation de portefeuille, sentiment monitoring, et l'avenir des agents de trading autonomes.</p>
+ <div class="hero-badges">
+   <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-users-gear"></i> CoWork</span>
+   <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-brain"></i> LLM</span>
+   <span class="hero-badge hero-badge-green"><i class="fa-solid fa-briefcase"></i> Portfolio</span>
+   <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-face-smile"></i> Sentiment</span>
+   <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-flask-vial"></i> Backtest</span>
+   <span class="hero-badge hero-badge-red"><i class="fa-solid fa-rocket"></i> Futur</span>
+ </div>
+</div>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+ <a href="#cowork" class="nav-item"><i class="fa-solid fa-users-gear" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> CoWork</a>
+ <a href="#llm" class="nav-item"><i class="fa-solid fa-brain" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> LLM Analysis</a>
+ <a href="#portfolio" class="nav-item"><i class="fa-solid fa-briefcase" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Portfolio</a>
+ <a href="#sentiment" class="nav-item"><i class="fa-solid fa-face-smile" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Sentiment</a>
+ <a href="#backtest" class="nav-item"><i class="fa-solid fa-flask-vial" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Backtest</a>
+ <a href="#mcp-custom" class="nav-item"><i class="fa-solid fa-plug" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> MCP Custom</a>
+ <a href="#futur" class="nav-item"><i class="fa-solid fa-rocket" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> L'Avenir</a>
+ <a href="#performance" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Performance</a>
+ <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz Final</a>
+</div>
+
+<!-- SECTION 1 : COWORK -->
+<div class="section-divider" id="cowork"><i class="fa-solid fa-users-gear" style="color:#6366f1;"></i> CoWork Multi-Agents</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-sitemap" style="color:#6366f1;"></i> Faire collaborer 8 agents en parallèle</h2>
+
+ <p>Le mode <strong>CoWork</strong> de Claude Code permet de paralléliser les tâches lourdes. Voici un exemple concret : analyser les 8 plus grandes capitalisations tech en une seule commande.</p>
+
+ <div class="code-block">
+   <span class="code-label">Terminal</span>
+<span class="comment"># Une seule commande :</span>
+<span class="keyword">claude</span> <span class="string">"Analyse NVDA, AAPL, MSFT, GOOGL, AMZN, META, TSLA, AMD — expert fr"</span>
+
+<span class="comment"># Claude Code orchestre automatiquement :</span>
+<span class="comment"># L'agent principal lit le CLAUDE.md</span>
+<span class="comment"># Il délègue 8 sous-tâches en parallèle</span>
+<span class="comment"># Chaque agent enfant :</span>
+<span class="comment">#   1. Appelle GetInstruments pour son ticker</span>
+<span class="comment">#   2. Appelle QueryData pour les données complémentaires</span>
+<span class="comment">#   3. Fait une WebSearch pour les actualités</span>
+<span class="comment">#   4. Génère le rapport HTML complet</span>
+<span class="comment">#   5. Crée les variantes multilangues</span>
+<span class="comment"># L'agent principal consolide et met à jour l'index</span>
+ </div>
+
+ <div class="metric-grid">
+   <div class="metric-card">
+     <div class="metric-value" style="color:#dc2626;">~6h</div>
+     <div class="metric-label">Manuel (8 analyses)</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#f59e0b;">~40 min</div>
+     <div class="metric-label">Séquentiel (1 agent)</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#16a34a;">~8 min</div>
+     <div class="metric-label">CoWork (8 agents)</div>
+   </div>
+   <div class="metric-card">
+     <div class="metric-value" style="color:#6366f1;">45x</div>
+     <div class="metric-label">Gain vs manuel</div>
+   </div>
+ </div>
+
+ <div style="background:#0f172a; border-radius:16px; padding:2rem; margin:1.5rem 0; color:white;">
+   <div style="text-align:center; margin-bottom:1.5rem;">
+     <div style="display:inline-block; background:rgba(99,102,241,0.3); border:2px solid #818cf8; border-radius:12px; padding:0.75rem 2rem;">
+       <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">Orchestrateur</div>
+       <div style="font-size:1.1rem; font-weight:800; color:#818cf8;">Agent Principal</div>
+     </div>
+   </div>
+   <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; text-align:center;">
+     <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#34d399;">NVDA</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 1</div>
+     </div>
+     <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#34d399;">AAPL</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 2</div>
+     </div>
+     <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#34d399;">MSFT</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 3</div>
+     </div>
+     <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#34d399;">GOOGL</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 4</div>
+     </div>
+     <div style="background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#f59e0b;">AMZN</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 5</div>
+     </div>
+     <div style="background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#f59e0b;">META</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 6</div>
+     </div>
+     <div style="background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#f59e0b;">TSLA</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 7</div>
+     </div>
+     <div style="background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.3); border-radius:8px; padding:0.75rem;">
+       <div style="font-size:0.85rem; font-weight:700; color:#f59e0b;">AMD</div>
+       <div style="font-size:0.65rem; color:#94a3b8;">Agent 8</div>
+     </div>
+   </div>
+ </div>
+</div>
+
+<!-- SECTION 2 : LLM ANALYSIS -->
+<div class="section-divider" id="llm"><i class="fa-solid fa-brain" style="color:#6366f1;"></i> LLM Analysis</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-microchip" style="color:#6366f1;"></i> LLM Analysis via MCP — DeepSeek</h2>
+
+ <p>L'outil <strong>LLMAnalysis</strong> du MCP Gateway utilise <strong>DeepSeek</strong> pour fournir une analyse structurée avec résumé, risques et actions recommandées.</p>
+
+ <div class="code-block">
+   <span class="code-label">Appel MCP</span>
+<span class="function">LLMAnalysis</span>({
+  <span class="string">"question"</span>: <span class="string">"Analyse fondamentale de NVDA : forces, faiblesses, catalyseurs et valorisation vs peers"</span>,
+  <span class="string">"perspective"</span>: <span class="string">"Investisseur long terme, horizon 12-18 mois"</span>
+})
+
+<span class="comment">// Retourne un objet structuré :</span>
+<span class="comment">// { "summary": "...", "risks": [...], "actions": [...] }</span>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Combiner Claude + DeepSeek</h4>
+   <p style="margin-bottom:0;">Claude Code peut appeler DeepSeek via MCP en complément de sa propre analyse. Cela combine les forces des deux modèles : la capacité d'exécution et d'orchestration de Claude avec l'expertise financière de DeepSeek. Le résultat est une analyse plus robuste et plus diversifiée.</p>
+ </div>
+</div>
+
+<!-- SECTION 3 : PORTFOLIO -->
+<div class="section-divider" id="portfolio"><i class="fa-solid fa-briefcase" style="color:#6366f1;"></i> Portfolio Automation</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-chart-pie" style="color:#6366f1;"></i> Automatiser la gestion de portefeuille</h2>
+
+ <h3>Value at Risk (VaR) automatisé</h3>
+ <div class="code-block">
+   <span class="code-label">Appel MCP</span>
+<span class="function">CalculatePortfolioVaR</span>({
+  <span class="string">"portfolio_value"</span>: 100000,
+  <span class="string">"symbols"</span>: <span class="string">'["NVDA", "AAPL", "MSFT", "GOOGL"]'</span>,
+  <span class="string">"weights"</span>: <span class="string">'[0.30, 0.25, 0.25, 0.20]'</span>,
+  <span class="string">"confidence_level"</span>: 0.95,
+  <span class="string">"method"</span>: <span class="string">"historical"</span>,
+  <span class="string">"lookback_days"</span>: 252
+})
+<span class="comment">// VaR 95% (1 jour) : -$2,340 (-2.34%)</span>
+<span class="comment">// Expected Shortfall (CVaR) : -$3,120 (-3.12%)</span>
+ </div>
+
+ <div class="formula-box">
+   <div class="formula-label">Value at Risk</div>
+   VaR<sub>95%</sub> = Perte maximale attendue avec <span class="formula-highlight">95% de confiance</span> sur 1 jour
+ </div>
+
+ <h3>Greeks de portefeuille (options)</h3>
+ <div class="code-block">
+   <span class="code-label">Appel MCP</span>
+<span class="function">CalculatePortfolioGreeks</span>({
+  <span class="string">"spot"</span>: 875,
+  <span class="string">"positions"</span>: <span class="string">'[
+    {"symbol":"NVDA","quantity":100,"isOption":false},
+    {"symbol":"NVDA","quantity":-2,"isOption":true,"strike":900,
+     "expiry":"2026-03-21","isCall":true,"impliedVol":0.35,"currentPrice":25}
+  ]'</span>
+})
+<span class="comment">// Delta total, Gamma, Vega, Theta + hedge suggestions</span>
+ </div>
+
+ <h3>Alertes de rebalancing</h3>
+ <div class="code-block">
+   <span class="code-label">Automation</span>
+<span class="comment"># Vérifier quotidiennement les allocations</span>
+<span class="keyword">claude</span> <span class="string">"Vérifie mon portfolio :
+- NVDA 30% cible (alerte si hors 25-35%)
+- AAPL 25% cible
+- MSFT 25% cible
+- GOOGL 20% cible
+Génère une alerte de rebalancing si déviation &gt; 5%."</span>
+ </div>
+</div>
+
+<!-- SECTION 4 : SENTIMENT -->
+<div class="section-divider" id="sentiment"><i class="fa-solid fa-face-smile" style="color:#6366f1;"></i> Sentiment Monitoring</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-gauge" style="color:#6366f1;"></i> Monitoring continu du sentiment</h2>
+
+ <p>Le MCP Gateway agrège le sentiment de <strong>StockTwits, Reddit et YouTube</strong>. Créez un monitoring continu qui alerte si le sentiment change drastiquement.</p>
+
+ <div class="code-block">
+   <span class="code-label">Monitoring Pipeline</span>
+<span class="comment"># Toutes les heures, vérifier le sentiment</span>
+<span class="function">QueryData</span>({
+  <span class="string">"types"</span>: <span class="string">"sentiment_overall,sentiment_stocktwits,sentiment_reddit"</span>,
+  <span class="string">"symbols"</span>: <span class="string">"NVDA,AAPL,TSLA,META"</span>
+})
+
+<span class="comment"># Si le sentiment flip bullish → bearish :</span>
+<span class="keyword">if</span> previous == <span class="string">"bullish"</span> <span class="keyword">and</span> current == <span class="string">"bearish"</span>:
+    <span class="function">send_alert</span>(f<span class="string">"Sentiment flip: {ticker}"</span>)
+    <span class="function">trigger_analysis</span>(ticker)
+ </div>
+
+ <div class="alert-box">
+   <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Attention au bruit</h4>
+   <p style="margin-bottom:0;">Le sentiment des réseaux sociaux est <strong>extrêmement bruité</strong>. Utilisez des seuils et des moyennes glissantes plutôt que des valeurs ponctuelles. Un changement de sentiment sur Reddit (posts longs, argumentés) est plus fiable qu'un flip sur StockTwits (posts courts, émotionnels).</p>
+ </div>
+</div>
+
+<!-- SECTION 5 : BACKTESTING -->
+<div class="section-divider" id="backtest"><i class="fa-solid fa-flask-vial" style="color:#6366f1;"></i> Backtesting Automatisé</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-vials" style="color:#6366f1;"></i> Tester des stratégies sur données historiques</h2>
+
+ <div class="code-block">
+   <span class="code-label">Backtest Workflow</span>
+<span class="keyword">claude</span> <span class="string">"Backteste la stratégie suivante sur 12 mois :
+- Acheter quand RSI14 &lt; 30 et volume &gt; 2x moyenne
+- Vendre quand RSI14 &gt; 70 ou stop -5%
+- Univers : S&P 500
+- Affiche hit rate, max drawdown, Sharpe ratio"</span>
+
+<span class="comment"># Claude Code :</span>
+<span class="comment"># 1. Appelle RunScreener avec la stratégie</span>
+<span class="comment"># 2. Le backtest intégré valide sur 6 périodes</span>
+<span class="comment"># 3. Génère un rapport avec graphiques de performance</span>
+ </div>
+
+ <div class="formula-box">
+   <div class="formula-label">Sharpe Ratio</div>
+   Sharpe = (<span class="formula-highlight">Rendement</span> - Taux Sans Risque) / <span class="formula-highlight">Volatilité</span>
+ </div>
+
+ <table class="compare-table">
+   <thead><tr><th>Métrique</th><th>Mauvais</th><th>Acceptable</th><th>Bon</th><th>Excellent</th></tr></thead>
+   <tbody>
+     <tr><td><strong>Sharpe Ratio</strong></td><td style="color:#dc2626;">&lt; 0.5</td><td style="color:#f59e0b;">0.5-1.0</td><td style="color:#16a34a;">1.0-2.0</td><td style="color:#6366f1;">&gt; 2.0</td></tr>
+     <tr><td><strong>Max Drawdown</strong></td><td style="color:#dc2626;">&gt; 30%</td><td style="color:#f59e0b;">20-30%</td><td style="color:#16a34a;">10-20%</td><td style="color:#6366f1;">&lt; 10%</td></tr>
+     <tr><td><strong>Win Rate</strong></td><td style="color:#dc2626;">&lt; 40%</td><td style="color:#f59e0b;">40-50%</td><td style="color:#16a34a;">50-60%</td><td style="color:#6366f1;">&gt; 60%</td></tr>
+   </tbody>
+ </table>
+</div>
+
+<!-- SECTION 6 : MCP CUSTOM -->
+<div class="section-divider" id="mcp-custom"><i class="fa-solid fa-plug" style="color:#6366f1;"></i> Serveur MCP Custom</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-server" style="color:#6366f1;"></i> Construire votre propre serveur MCP</h2>
+
+ <p>Si vous avez des <strong>données propriétaires</strong> (positions broker, données alternatives, modèles custom), créez votre propre serveur MCP.</p>
+
+ <div class="code-block">
+   <span class="code-label">TypeScript — Serveur MCP</span>
+<span class="keyword">import</span> { Server } <span class="keyword">from</span> <span class="string">"@modelcontextprotocol/sdk/server"</span>;
+
+<span class="keyword">const</span> server = <span class="keyword">new</span> <span class="function">Server</span>({
+  name: <span class="string">"my-trading-mcp"</span>,
+  version: <span class="string">"1.0.0"</span>
+});
+
+<span class="comment">// Outil : positions de votre broker</span>
+server.<span class="function">tool</span>(<span class="string">"get_positions"</span>, <span class="string">"Get current broker positions"</span>,
+  {},
+  <span class="keyword">async</span> () => {
+    <span class="keyword">const</span> positions = <span class="keyword">await</span> <span class="function">fetchFromBrokerAPI</span>();
+    <span class="keyword">return</span> { content: [{ type: <span class="string">"text"</span>, text: JSON.stringify(positions) }] };
+  }
+);
+
+<span class="comment">// Outil : signal ML propriétaire</span>
+server.<span class="function">tool</span>(<span class="string">"get_ml_signal"</span>, <span class="string">"Custom ML signal"</span>,
+  { symbol: { type: <span class="string">"string"</span> } },
+  <span class="keyword">async</span> ({ symbol }) => {
+    <span class="keyword">const</span> signal = <span class="keyword">await</span> <span class="function">runMLModel</span>(symbol);
+    <span class="keyword">return</span> { content: [{ type: <span class="string">"text"</span>, text: signal }] };
+  }
+);
+
+server.<span class="function">listen</span>();
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Cas d'usage MCP custom</h4>
+   <ul style="margin-bottom:0;">
+     <li><strong>Broker API</strong> : positions actuelles, historique de trades, P&L</li>
+     <li><strong>Données alternatives</strong> : satellite, transactions CB, trafic web</li>
+     <li><strong>Modèles ML</strong> : prédictions propriétaires, scoring custom</li>
+     <li><strong>Base de données interne</strong> : historique de vos analyses, track record</li>
+   </ul>
+ </div>
+</div>
+
+<!-- SECTION 7 : L'AVENIR -->
+<div class="section-divider" id="futur"><i class="fa-solid fa-rocket" style="color:#6366f1;"></i> L'Avenir</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-crystal-ball" style="color:#6366f1;"></i> Agents autonomes : promesses et risques</h2>
+
+ <p>L'étape ultime est un agent qui <strong>trade de manière autonome</strong>. C'est techniquement possible, mais voici pourquoi c'est dangereux.</p>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-check"></i> Ce qui fonctionne</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.2rem;">
+       <li>Collecte et analyse de données</li>
+       <li>Génération de rapports</li>
+       <li>Screening et alertes</li>
+       <li>Gestion de risque (VaR, Greeks)</li>
+       <li>Publication automatisée</li>
+     </ul>
+   </div>
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark"></i> Risques majeurs</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.2rem;">
+       <li>Flash crash automatisé</li>
+       <li>Hallucinations du LLM</li>
+       <li>Pas de « bon sens » humain</li>
+       <li>Réglementation floue (SEC, AMF)</li>
+       <li>Responsabilité en cas de perte</li>
+     </ul>
+   </div>
+ </div>
+
+ <div class="alert-box">
+   <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Grand Disclaimer</h4>
+   <p><strong>L'automatisation du trading ne garantit rien.</strong> Les modèles IA peuvent halluciner, les données peuvent être erronées, les marchés peuvent être irrationnels. Un agent autonome peut perdre l'intégralité de votre capital en quelques minutes.</p>
+   <p style="margin-bottom:0;">Notre recommandation : utilisez l'IA pour <strong>l'analyse, le screening et les rapports</strong>. La décision finale d'investir doit rester entre les mains d'un humain. L'IA est un copilote extraordinaire, pas un pilote automatique fiable.</p>
+ </div>
+</div>
+
+<!-- SECTION 8 : PERFORMANCE CHART -->
+<div class="section-divider" id="performance"><i class="fa-solid fa-chart-line" style="color:#6366f1;"></i> Performance Comparée</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-chart-area" style="color:#6366f1;"></i> Portfolio auto-assisté vs Benchmark</h2>
+
+ <p>Comparaison illustrative entre un portefeuille géré avec assistance IA et les benchmarks classiques sur 12 mois.</p>
+
+ <div id="chartPerformance" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Note importante</h4>
+   <p style="margin-bottom:0;">Ce graphique est <strong>illustratif</strong> et ne représente pas des performances réelles garanties. Un portefeuille assisté par IA a l'avantage de la rapidité d'analyse et de la discipline (pas d'émotions), mais peut sous-performer dans certaines conditions. Les performances passées ne garantissent pas les résultats futurs.</p>
+ </div>
+</div>
+
+<!-- QUIZ FINAL -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#6366f1;"></i> Quiz Final</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-trophy" style="color:#6366f1;"></i> Quiz Final — 5 questions</h2>
+
+ <details>
+   <summary>Q1 — Combien de temps gagne-t-on avec CoWork pour analyser 8 stocks ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">Manuellement : ~6 heures. Séquentiellement : ~40 minutes. Avec <strong>CoWork (8 agents)</strong> : ~8 minutes. Gain de <strong>45x par rapport au manuel</strong>.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q2 — Qu'est-ce que la VaR et pourquoi l'automatiser ?</summary>
+   <div class="quiz-answer">
+     <p>La <strong>Value at Risk</strong> estime la perte maximale potentielle d'un portefeuille avec un niveau de confiance donné. VaR 95% de -$2,340 = « 95% de chances que la perte quotidienne ne dépasse pas $2,340 ».</p>
+     <p style="margin-bottom:0;">L'automatiser permet un calcul <strong>quotidien</strong> avec les positions actuelles et des alertes si le risque augmente.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q3 — Pourquoi le sentiment Reddit est-il plus fiable que StockTwits ?</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">StockTwits = <strong>posts courts, émotionnels, réactifs</strong>. Reddit = <strong>posts longs, argumentés, réfléchis</strong> (DD posts). Un changement de sentiment Reddit reflète une analyse plus profonde. Un tweet viral peut faire basculer StockTwits en minutes, mais pas Reddit.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q4 — Peut-on créer un agent de trading entièrement autonome ?</summary>
+   <div class="quiz-answer">
+     <p>Techniquement <strong>oui</strong>. Claude Code + broker API via MCP custom = exécution automatique.</p>
+     <p style="margin-bottom:0;"><strong>Mais non recommandé</strong> : hallucinations, flash crash, responsabilité légale floue. IA pour l'analyse, <strong>humain pour la décision</strong>.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Q5 — Résumez le pipeline complet Market Watch en 6 étapes.</summary>
+   <div class="quiz-answer">
+     <p style="margin-bottom:0;">(1) <strong>Déclencheur</strong> : bot Discord/cron. (2) <strong>Collecte</strong> : MCP Gateway (AutoScreener, QueryData, WebSearch). (3) <strong>Analyse</strong> : rapport HTML + ECharts + trade ideas. (4) <strong>Publication</strong> : git push sur GitHub Pages. (5) <strong>Notification</strong> : Discord + Telegram. (6) <strong>Monitoring</strong> : healthchecks.io.</p>
+   </div>
+ </details>
+</div>
+
+<!-- RÉSUMÉ FINAL -->
+<div class="section-divider"><i class="fa-solid fa-flag-checkered" style="color:#6366f1;"></i> Conclusion de la Série</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-trophy" style="color:#6366f1;"></i> Ce que nous avons appris</h2>
+
+ <div class="takeaway-box">
+   <h3><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Résumé de la série complète</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-terminal"></i> <span><strong>Partie 1</strong> : Claude Code est un agent CLI avec code local, MCP, multi-agents et Git. Installation en 5 min, première analyse en 3 min.</span></li>
+     <li><i class="fa-solid fa-magnifying-glass-chart"></i> <span><strong>Partie 2</strong> : DSL pour screeners custom. AutoScreener avec détection de régime et 4 stratégies. Backtest intégré.</span></li>
+     <li><i class="fa-solid fa-share-nodes"></i> <span><strong>Partie 3</strong> : Publication auto sur StockTwits, X, Reddit, YouTube, Telegram. Compliance obligatoire.</span></li>
+     <li><i class="fa-solid fa-robot"></i> <span><strong>Partie 4</strong> : Bot Discord central, webhooks TradingView, pipeline 6 étapes, budget ~$65-125/mois.</span></li>
+     <li><i class="fa-solid fa-rocket"></i> <span><strong>Partie 5</strong> : CoWork 45x gain, VaR auto, sentiment monitoring, MCP custom, limites des agents autonomes.</span></li>
+   </ul>
+ </div>
+
+ <div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; color:white; text-align:center;">
+   <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem;">La leçon la plus importante</div>
+   <div style="font-size:1.5rem; font-weight:800; color:#818cf8; line-height:1.4; max-width:600px; margin:0 auto;">L'IA est un copilote extraordinaire pour le trading, pas un pilote automatique. La décision finale vous appartient toujours.</div>
+ </div>
+
+ <a href="../part4-bots/" class="prev-cta">
+   <i class="fa-solid fa-arrow-left"></i>
+   <div>
+     <div class="next-label">Partie 4 — Leçon précédente</div>
+     <div class="next-title">Bots de Trading — Discord, Telegram & Pipelines</div>
+   </div>
+ </a>
+
+ <a href="../part1-introduction/" class="series-cta">
+   <i class="fa-solid fa-rotate-left" style="font-size:1.5rem;"></i>
+   <div>
+     <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85;">Relire la série</div>
+     <div style="font-size:1.25rem; font-weight:800;">Retour à la Partie 1 — Introduction</div>
+   </div>
+ </a>
+</div>
+
+</div><!-- /.container -->
+
+<div class="footer-bar">
+ <p>Série <strong>Automatiser son Trading avec Claude Code</strong> — Partie 5 sur 5</p>
+ <p style="margin-top:0.5rem;"><a href="../part1-introduction/">1. Introduction</a> &middot; <a href="../part2-screeners/">2. Screeners</a> &middot; <a href="../part3-social-media/">3. Réseaux</a> &middot; <a href="../part4-bots/">4. Bots</a> &middot; <a href="../part5-avance/">5. Avancé</a></p>
+ <p style="margin-top:1rem; font-size:0.7rem; color:#94a3b8;">Les informations présentées sont à but éducatif uniquement et ne constituent pas des conseils en investissement. L'automatisation du trading comporte des risques significatifs. Les performances passées ne garantissent pas les résultats futurs.</p>
+ <p style="margin-top:0.5rem;"><a href="/">market-watch.xyz</a> &copy; 2025-2026</p>
+</div>
+
+<script>
+// ---- Chart: Portfolio Performance vs Benchmark ----
+(function() {
+ var dom = document.getElementById('chartPerformance');
+ if (!dom) return;
+ var chart = echarts.init(dom);
+
+ var months = ['Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc', 'Jan', 'Fév'];
+
+ chart.setOption({
+   tooltip: { trigger: 'axis' },
+   legend: { data: ['Portfolio IA-assisté', 'S&P 500', 'NASDAQ-100'], top: '3%', textStyle: { color: '#64748b' } },
+   grid: { left: '3%', right: '4%', bottom: '3%', top: '18%', containLabel: true },
+   xAxis: {
+     type: 'category',
+     data: months,
+     axisLabel: { color: '#64748b', fontWeight: 600 },
+     axisLine: { lineStyle: { color: '#e2e8f0' } }
+   },
+   yAxis: {
+     type: 'value',
+     axisLabel: { color: '#64748b', formatter: '{value}%' },
+     splitLine: { lineStyle: { color: '#f1f5f9' } }
+   },
+   series: [
+     {
+       name: 'Portfolio IA-assisté',
+       type: 'line',
+       data: [2.1, 4.5, 3.8, 7.2, 9.1, 11.5, 10.2, 13.8, 16.1, 18.5, 21.2, 24.8],
+       lineStyle: { color: '#6366f1', width: 3 },
+       itemStyle: { color: '#6366f1' },
+       symbol: 'circle',
+       symbolSize: 6,
+       areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(99,102,241,0.2)' }, { offset: 1, color: 'rgba(99,102,241,0)' }] } }
+     },
+     {
+       name: 'S&P 500',
+       type: 'line',
+       data: [1.5, 3.2, 2.8, 5.1, 6.8, 8.2, 7.5, 9.8, 11.2, 13.5, 15.1, 17.8],
+       lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
+       itemStyle: { color: '#f59e0b' },
+       symbol: 'diamond',
+       symbolSize: 5
+     },
+     {
+       name: 'NASDAQ-100',
+       type: 'line',
+       data: [2.8, 5.1, 4.2, 8.5, 10.2, 12.8, 11.1, 14.5, 17.2, 19.8, 22.5, 26.1],
+       lineStyle: { color: '#10b981', width: 2, type: 'dashed' },
+       itemStyle: { color: '#10b981' },
+       symbol: 'triangle',
+       symbolSize: 5
+     }
+   ]
+ });
+
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
