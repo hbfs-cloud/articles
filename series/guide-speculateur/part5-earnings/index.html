@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Exploiter les Earnings — IV Crush, Straddle, Whisper Numbers & Post-Earnings Drift | Le Guide du Super Spéculateur — Partie 5 | Market Watch</title>
+ <meta name="description" content="Série Le Guide du Super Spéculateur — Partie 5/8 : Comment exploiter la saison des earnings. IV Crush, straddle, whisper numbers, post-earnings drift, expected move. Les stratégies les plus profitables (et les plus dangereuses) de l'année.">
+ <meta property="og:title" content="Exploiter les Earnings — IV Crush, Straddle, Whisper Numbers & Post-Earnings Drift | Market Watch">
+ <meta property="og:description" content="Partie 5 du Guide du Super Spéculateur. Maîtrisez l'IV Crush, les straddles, le post-earnings drift et les whisper numbers pour transformer la saison des earnings en machine à profits.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/guide-speculateur/part5-earnings/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ /* Series-specific styles — RED THEME (#dc2626) */
+ .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+ .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+ .brand-logo:hover { color:#dc2626; }
+
+ .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+ .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+ .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+ .series-link:hover { border-color:#f87171; color:#f87171; }
+ .series-link.current { background:#dc2626; color:white; border-color:#dc2626; }
+
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ /* Quiz */
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#dc2626; margin-right:0.75rem; }
+ details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+ .footer-bar a { color:#64748b; text-decoration:none; }
+ .footer-bar a:hover { color:#dc2626; }
+
+ /* Formula box */
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#ef4444; }
+
+ /* Key takeaway box */
+ .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#dc2626; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+
+ /* Next article CTA */
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ /* Strategy number */
+ .strat-number { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:#dc2626; color:white; font-weight:800; font-size:1rem; flex-shrink:0; margin-right:0.75rem; }
+
+ /* Chart containers */
+ .chart-box { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:2rem 0; }
+ .chart-box h4 { margin:0 0 0.5rem; color:#0f172a; font-size:1rem; font-weight:700; }
+ .chart-box p { font-size:0.85rem; color:#64748b; margin:0 0 1rem; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .brand-bar { padding:0.75rem 1rem; }
+   .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+   .brand-logo { font-size:0.9rem; }
+   .series-title { font-size:0.65rem; margin-right:0.5rem; }
+   .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .chart-box { padding:1rem; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .brand-logo { font-size:0.85rem; }
+   .series-title { display:none; }
+   .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation — RED THEME -->
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-skull-crossbones" style="margin-right:0.4rem;"></i> Guide du Super Spéculateur</span>
+ <a href="../part1-philosophie/" class="series-link">1</a>
+ <a href="../part2-meme-stocks/" class="series-link">2</a>
+ <a href="../part3-short-squeeze/" class="series-link">3</a>
+ <a href="../part4-etf-levier/" class="series-link">4</a>
+ <a href="../part5-earnings/" class="series-link current">5</a>
+ <a href="../part6-max-pain/" class="series-link">6</a>
+ <a href="../part7-biotech/" class="series-link">7</a>
+ <a href="../part8-boite-outils/" class="series-link">8</a>
+</div>
+
+<!-- Hero -->
+<div class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-skull-crossbones" style="margin-right:0.4rem;"></i> Le Guide du Super Spéculateur — Partie 5 sur 8</div>
+ <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:850px;">Exploiter les Earnings<br><span style="color:#dc2626;">IV Crush, Straddle, Whisper Numbers<br>& Post-Earnings Drift</span></h1>
+ <p class="hero-subtitle" style="font-size:1.15rem; color:#64748b; max-width:750px; margin:0 auto; line-height:1.7;">La saison des earnings est le moment le plus <strong>explosif</strong> de l'année boursière. Des mouvements de 10-30% en une nuit. Voici comment les spéculateurs les exploitent — et comment ne pas se faire broyer.</p>
+ <div class="hero-badges">
+   <span class="hero-badge hero-badge-red"><i class="fa-solid fa-chart-column"></i> EARNINGS</span>
+   <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-explosion"></i> IV CRUSH</span>
+   <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-left-right"></i> STRADDLE</span>
+   <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrow-trend-up"></i> DRIFT</span>
+ </div>
+</div>
+
+<div class="container">
+
+<!-- Navigation Grid -->
+<div class="nav-grid" style="margin-top:-3rem;">
+ <a href="#intro" class="nav-item"><i class="fa-solid fa-bolt" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Introduction</a>
+ <a href="#iv-crush" class="nav-item"><i class="fa-solid fa-explosion" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> IV Crush</a>
+ <a href="#strategies" class="nav-item"><i class="fa-solid fa-chess" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> 5 Stratégies</a>
+ <a href="#calendrier" class="nav-item"><i class="fa-solid fa-calendar-days" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Calendrier</a>
+ <a href="#expected-move" class="nav-item"><i class="fa-solid fa-bullseye" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Expected Move</a>
+ <a href="#trade-pead" class="nav-item"><i class="fa-solid fa-rocket" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Trade PEAD</a>
+ <a href="#trade-runup" class="nav-item"><i class="fa-solid fa-wave-square" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Trade Run-Up</a>
+ <a href="#erreurs" class="nav-item"><i class="fa-solid fa-skull" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Erreurs Fatales</a>
+ <a href="#outils" class="nav-item"><i class="fa-solid fa-toolbox" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Outils</a>
+ <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- DISCLAIMER                                                     -->
+<!-- ============================================================ -->
+<div class="alert-box" style="margin-bottom:2rem;">
+ <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Avertissement — Contenu Spéculatif</h4>
+ <p style="margin-bottom:0; font-size:0.9rem;">Ce guide décrit des stratégies <strong>hautement spéculatives</strong> utilisées par des traders expérimentés. Les earnings sont des événements binaires : vous pouvez <strong>perdre 100% de votre mise</strong> en options en une nuit. Ce contenu est éducatif. Il ne constitue en aucun cas un conseil d'investissement. N'investissez que ce que vous pouvez vous permettre de perdre intégralement.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : INTRODUCTION                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="intro"><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> Introduction</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-chart-column" style="color:#dc2626;"></i> Pourquoi les earnings sont le moment le plus dangereux ET le plus profitable</h2>
+
+ <p>Quatre fois par an, le marché boursier connaît ses plus gros mouvements. Pendant la <strong>saison des earnings</strong> (résultats trimestriels), des centaines d'entreprises publient leurs chiffres financiers, et les actions bougent de 5%, 10%, parfois <strong>30% en une seule nuit</strong>. Pour un spéculateur, c'est le Graal absolu.</p>
+
+ <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:2rem 0;">
+   <div style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #fef2f2 0%, #fff 100%); border:1px solid #fecaca; border-radius:12px;">
+     <div style="font-size:2rem; font-weight:900; color:#dc2626;">Q4</div>
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem;">Janvier</div>
+   </div>
+   <div style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #fef2f2 0%, #fff 100%); border:1px solid #fecaca; border-radius:12px;">
+     <div style="font-size:2rem; font-weight:900; color:#dc2626;">Q1</div>
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem;">Avril</div>
+   </div>
+   <div style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #fef2f2 0%, #fff 100%); border:1px solid #fecaca; border-radius:12px;">
+     <div style="font-size:2rem; font-weight:900; color:#dc2626;">Q2</div>
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem;">Juillet</div>
+   </div>
+   <div style="text-align:center; padding:1.25rem; background:linear-gradient(135deg, #fef2f2 0%, #fff 100%); border:1px solid #fecaca; border-radius:12px;">
+     <div style="font-size:2rem; font-weight:900; color:#dc2626;">Q3</div>
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem;">Octobre</div>
+   </div>
+ </div>
+
+ <p>Voici pourquoi les earnings fascinent les spéculateurs :</p>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-trend-up"></i> L'Opportunité</div>
+     <div style="font-size:1.4rem; font-weight:800; color:#16a34a;">NVDA +16.4%</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0.5rem 0 0;">Mai 2024 — NVIDIA pulvérise les attentes avec un CA de $26 Mds (vs $24.6 Mds attendu). Guidance Q2 explosée. L'action bondit de +16% after-hours, ajoutant <strong>$200+ milliards</strong> de capitalisation en quelques minutes.</p>
+   </div>
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-trend-down"></i> Le Danger</div>
+     <div style="font-size:1.4rem; font-weight:800; color:#dc2626;">SNAP -28%</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0.5rem 0 0;">Février 2024 — Snap rate sa guidance publicitaire. Malgré un EPS correct, le marché panique sur la croissance future. L'action plonge de -28% en after-hours. Les calls achetés la veille perdent <strong>100% de leur valeur</strong>.</p>
+   </div>
+ </div>
+
+ <p>Les 3 raisons pour lesquelles les earnings sont <strong>le terrain de jeu favori des spéculateurs</strong> :</p>
+
+ <ul class="checklist">
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Mouvements explosifs</strong> — Des gaps de 10-30% en after-hours, impossibles à obtenir en temps normal</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Date connue à l'avance</strong> — Contrairement aux news, vous savez exactement QUAND l'événement aura lieu</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Options surpayées</strong> — L'incertitude gonfle les primes d'options, créant des opportunités de vente</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Patterns prévisibles</strong> — Le run-up avant earnings et le drift après sont des phénomènes documentés</li>
+ </ul>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> BMO vs AMC — le timing est crucial</h4>
+   <p style="margin-bottom:0.75rem;">Les entreprises publient leurs résultats à deux moments :</p>
+   <ul class="checklist" style="margin:0;">
+     <li><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> <strong>BMO (Before Market Open)</strong> — Résultats publiés avant l'ouverture du marché (6h-8h). L'action réagit dès l'open. Ex : JPMorgan, UnitedHealth, Walmart.</li>
+     <li><i class="fa-solid fa-moon" style="color:#6366f1;"></i> <strong>AMC (After Market Close)</strong> — Résultats publiés après la fermeture (16h-17h). La vraie réaction a lieu le lendemain à l'ouverture. Ex : Apple, Meta, NVIDIA, Netflix.</li>
+   </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : COMPRENDRE L'IV CRUSH                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="iv-crush"><i class="fa-solid fa-explosion" style="color:#dc2626;"></i> L'IV Crush</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-explosion" style="color:#dc2626;"></i> Comprendre l'IV Crush — Le piège n°1 des débutants</h2>
+
+ <p>L'<strong>IV Crush</strong> (effondrement de la volatilité implicite) est le phénomène le plus dévastateur pour les traders d'options pendant les earnings. C'est la raison pour laquelle <strong>la majorité des débutants perdent de l'argent</strong> même quand ils ont raison sur la direction.</p>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Qu'est-ce que la Volatilité Implicite (IV) ?</h4>
+   <p style="margin-bottom:0.75rem;">La <strong>volatilité implicite</strong> est une mesure de l'incertitude du marché sur le prix futur d'une action. Elle est intégrée dans le prix des options :</p>
+   <ul class="checklist" style="margin:0;">
+     <li><i class="fa-solid fa-arrow-up" style="color:#dc2626;"></i> <strong>IV haute</strong> = le marché anticipe un gros mouvement = les options sont CHÈRES</li>
+     <li><i class="fa-solid fa-arrow-down" style="color:#16a34a;"></i> <strong>IV basse</strong> = le marché anticipe peu de mouvement = les options sont BON MARCHÉ</li>
+   </ul>
+   <p style="margin:0.75rem 0 0; font-size:0.9rem;">Pensez à l'IV comme le prix de l'assurance. Quand un ouragan approche, le prix des assurances explose. Après l'ouragan, les prix redescendent. Les earnings, c'est l'ouragan des marchés financiers.</p>
+ </div>
+
+ <h3>Le mécanisme de l'IV Crush en 3 étapes</h3>
+
+ <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:1.5rem 0;">
+   <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:2rem; font-weight:900; color:#f59e0b;">1</div>
+     <div style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase; margin:0.5rem 0;">2-3 semaines avant</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">L'IV monte progressivement. Les traders achètent des options pour se positionner. Les primes augmentent.</p>
+     <div style="margin-top:0.75rem; font-size:1.5rem; font-weight:800; color:#f59e0b;">IV : 35%</div>
+   </div>
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:2rem; font-weight:900; color:#dc2626;">2</div>
+     <div style="font-size:0.75rem; font-weight:700; color:#991b1b; text-transform:uppercase; margin:0.5rem 0;">Le jour J</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">L'IV atteint son MAXIMUM juste avant l'annonce. L'incertitude est maximale. Les options sont au prix fort.</p>
+     <div style="margin-top:0.75rem; font-size:1.5rem; font-weight:800; color:#dc2626;">IV : 65%</div>
+   </div>
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:2rem; font-weight:900; color:#16a34a;">3</div>
+     <div style="font-size:0.75rem; font-weight:700; color:#166534; text-transform:uppercase; margin:0.5rem 0;">Le lendemain</div>
+     <p style="font-size:0.85rem; color:#334155; margin:0;">L'incertitude disparaît. L'IV s'effondre brutalement. Les options perdent une part massive de leur valeur.</p>
+     <div style="margin-top:0.75rem; font-size:1.5rem; font-weight:800; color:#16a34a;">IV : 28%</div>
+   </div>
+ </div>
+
+ <h3>Exemple concret : le piège AAPL</h3>
+
+ <div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; border-radius:16px; padding:2rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#f87171; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;"><i class="fa-solid fa-triangle-exclamation"></i> Scénario réel — Perte malgré une bonne direction</div>
+   <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+     <div>
+       <p style="color:#e2e8f0; font-size:0.9rem; margin:0 0 1rem;"><strong style="color:white;">Situation :</strong> AAPL annonce ses résultats ce soir. Vous êtes bullish. Vous achetez un call.</p>
+       <table style="width:100%; font-size:0.85rem; color:#e2e8f0;">
+         <tr><td style="padding:0.3rem 0; color:#94a3b8;">Action AAPL avant earnings</td><td style="padding:0.3rem 0; text-align:right; font-weight:700;">$185.00</td></tr>
+         <tr><td style="padding:0.3rem 0; color:#94a3b8;">Call $185 acheté (IV = 60%)</td><td style="padding:0.3rem 0; text-align:right; font-weight:700; color:#f87171;">$5.00</td></tr>
+         <tr><td style="padding:0.3rem 0; color:#94a3b8;">AAPL après earnings</td><td style="padding:0.3rem 0; text-align:right; font-weight:700; color:#86efac;">$188.50 (+1.9%)</td></tr>
+         <tr><td style="padding:0.3rem 0; color:#94a3b8;">IV après earnings</td><td style="padding:0.3rem 0; text-align:right; font-weight:700; color:#fbbf24;">25%</td></tr>
+         <tr style="border-top:1px solid #334155;"><td style="padding:0.5rem 0; color:#94a3b8;">Valeur du call le lendemain</td><td style="padding:0.5rem 0; text-align:right; font-weight:800; color:#f87171;">$2.10</td></tr>
+       </table>
+     </div>
+     <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+       <div style="font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Résultat</div>
+       <div style="font-size:3rem; font-weight:900; color:#f87171; margin:0.5rem 0;">-58%</div>
+       <p style="font-size:0.85rem; color:#94a3b8; margin:0;">Vous aviez raison (AAPL monte de +1.9%) mais vous perdez $2.90 par contrat. L'IV Crush a dévoré votre profit.</p>
+     </div>
+   </div>
+ </div>
+
+ <div class="formula-box">
+   <div class="formula-label">Le prix d'une option se décompose en</div>
+   Prix = <span class="formula-highlight">Valeur Intrinsèque</span> + Valeur Temps (influencée par l'<span class="formula-highlight">IV</span>)
+ </div>
+
+ <p>Quand l'IV passe de 60% à 25%, la <strong>valeur temps</strong> s'effondre. Même si la valeur intrinsèque augmente (l'action monte), la perte sur la valeur temps est souvent supérieure au gain. C'est l'IV Crush.</p>
+
+ <!-- ECharts: IV Curve -->
+ <div class="chart-box">
+   <h4><i class="fa-solid fa-chart-area" style="color:#dc2626; margin-right:0.5rem;"></i> Courbe de l'IV avant et après les earnings</h4>
+   <p>La volatilité implicite monte progressivement avant l'annonce, puis s'effondre brutalement le lendemain.</p>
+   <div id="chart-iv-curve" style="width:100%; height:350px;"></div>
+ </div>
+
+ <div class="takeaway-box">
+   <h3><i class="fa-solid fa-key" style="margin-right:0.5rem;"></i> Règle d'or de l'IV Crush</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-circle-exclamation"></i> <strong>Acheter des options juste avant les earnings est presque toujours un trade perdant</strong> — l'IV est au max, vous payez le prix fort</li>
+     <li><i class="fa-solid fa-circle-exclamation"></i> <strong>Le mouvement doit être SUPÉRIEUR à l'expected move</strong> pour que l'acheteur d'options gagne</li>
+     <li><i class="fa-solid fa-circle-exclamation"></i> <strong>Les vendeurs d'options gagnent ~70% du temps</strong> sur les earnings, mais les pertes peuvent être catastrophiques</li>
+   </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : LES 5 STRATÉGIES EARNINGS                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="strategies"><i class="fa-solid fa-chess" style="color:#dc2626;"></i> Les 5 Stratégies</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-chess" style="color:#dc2626;"></i> Les 5 stratégies Earnings des spéculateurs</h2>
+
+ <p>Chaque stratégie a son profil de risque, son timing et ses conditions de réussite. Aucune n'est un "money printer". Toutes requièrent discipline et gestion du risque.</p>
+
+ <!-- Strategy 1: Straddle/Strangle -->
+ <h3 style="display:flex; align-items:center;"><span class="strat-number">1</span> Straddle / Strangle avant earnings</h3>
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0;">
+   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+     <span class="badge badge-red">Risque : Élevé</span>
+     <span class="badge badge-blue">Timing : 1-3 jours avant</span>
+     <span class="badge badge-purple">Win rate : ~30%</span>
+   </div>
+   <p style="font-size:0.95rem; margin-bottom:1rem;"><strong>Principe :</strong> Acheter simultanément un <strong>call ET un put</strong> au même strike (straddle) ou à des strikes différents (strangle). Vous pariez sur un <strong>gros mouvement</strong>, peu importe la direction.</p>
+
+   <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+     <div style="background:#f0fdf4; border-left:3px solid #16a34a; padding:1rem; border-radius:0 8px 8px 0;">
+       <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;">Quand ça marche</div>
+       <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#334155;">
+         <li>Le mouvement réel > expected move</li>
+         <li>Surprise massive (beat/miss de +15%)</li>
+         <li>Guidance radicalement différente du consensus</li>
+         <li>Événement inattendu (split, acquisition, guidance retirée)</li>
+       </ul>
+     </div>
+     <div style="background:#fef2f2; border-left:3px solid #dc2626; padding:1rem; border-radius:0 8px 8px 0;">
+       <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;">Quand ça échoue</div>
+       <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#334155;">
+         <li>L'action bouge moins que l'expected move (70% des cas)</li>
+         <li>L'IV Crush dévore les deux jambes du trade</li>
+         <li>Mouvement correct mais pas assez violent</li>
+         <li>L'action bouge puis revient au point de départ</li>
+       </ul>
+     </div>
+   </div>
+
+   <div class="formula-box" style="margin:1rem 0;">
+     <div class="formula-label">Breakeven du Straddle</div>
+     Prix d'exercice <span class="formula-highlight">&plusmn;</span> (Prix du Call + Prix du Put)
+   </div>
+   <p style="font-size:0.85rem; color:#64748b; margin-bottom:0;">Exemple : Strike $100, call à $4, put à $3.50. Il faut que l'action aille au-dessus de $107.50 OU en dessous de $92.50 pour être rentable. Le mouvement nécessaire : <strong>&plusmn;7.5%</strong>.</p>
+ </div>
+
+ <!-- Strategy 2: Vendre le Straddle -->
+ <h3 style="display:flex; align-items:center;"><span class="strat-number">2</span> Vendre le Straddle (Iron Butterfly)</h3>
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0;">
+   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+     <span class="badge badge-red">Risque : Très élevé (pertes illimitées sans protection)</span>
+     <span class="badge badge-blue">Timing : Jour des earnings</span>
+     <span class="badge badge-green">Win rate : ~60-70%</span>
+   </div>
+   <p style="font-size:0.95rem; margin-bottom:1rem;"><strong>Principe :</strong> Être le "casino" en <strong>vendant les options</strong>. Vous collectez les primes gonflées par l'IV et profitez de l'IV Crush. L'iron butterfly ajoute des ailes (options achetées loin OTM) pour limiter la perte maximale.</p>
+
+   <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:12px; padding:1rem; margin:1rem 0;">
+     <p style="font-size:0.85rem; color:#92400e; margin:0;"><strong><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Attention :</strong> Le win rate élevé masque le risque. Quand vous perdez, vous perdez GROS. Un mouvement comme Netflix -35% (janv. 2022) ou Meta -26% (févr. 2022) peut effacer des mois de gains. Le R/R typique est de <strong>1:-3</strong> (vous gagnez $1 pour risquer $3).</p>
+   </div>
+
+   <p style="font-size:0.9rem;">La clé : <strong>ne jamais vendre des straddles nus</strong> (sans protection). Utilisez toujours un iron butterfly ou iron condor pour limiter votre perte maximale à un montant connu.</p>
+ </div>
+
+ <!-- Strategy 3: Post-Earnings Drift (PEAD) -->
+ <h3 style="display:flex; align-items:center;"><span class="strat-number">3</span> Post-Earnings Drift (PEAD)</h3>
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0;">
+   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+     <span class="badge badge-green">Risque : Modéré</span>
+     <span class="badge badge-blue">Timing : Le lendemain de l'annonce</span>
+     <span class="badge badge-purple">Win rate : ~55-60%</span>
+   </div>
+   <p style="font-size:0.95rem; margin-bottom:1rem;"><strong>Principe :</strong> Le <strong>Post-Earnings Announcement Drift</strong> est un phénomène académiquement prouvé. Après un gros beat (ou miss), le prix continue dans la même direction pendant <strong>30 à 60 jours</strong>. Le marché sous-réagit initialement à la surprise.</p>
+
+   <div class="didactic-box" style="margin:1rem 0;">
+     <h4 style="color:#10b981 !important;"><i class="fa-solid fa-microscope" style="margin-right:0.5rem;"></i> La recherche académique</h4>
+     <p style="font-size:0.9rem; margin-bottom:0.5rem;">Le PEAD est l'une des anomalies de marché les plus robustes et les plus étudiées en finance :</p>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+       <li><strong>Ball & Brown (1968)</strong> — Première documentation du drift post-earnings</li>
+       <li><strong>Bernard & Thomas (1989)</strong> — Confirmation que le drift persiste 60 jours, surtout pour les surprises extrêmes</li>
+       <li><strong>Chordia & Shivakumar (2006)</strong> — Le drift est plus fort sur les small caps et les actions moins suivies par les analystes</li>
+     </ul>
+     <p style="font-size:0.85rem; margin:0.75rem 0 0; color:#334155;">Le PEAD fonctionne parce que le marché <strong>met du temps à intégrer pleinement</strong> la surprise. Les investisseurs institutionnels rééquilibrent progressivement leurs portefeuilles sur des semaines, pas en un jour.</p>
+   </div>
+
+   <p style="font-size:0.9rem;"><strong>Avantage du PEAD :</strong> Vous entrez APRÈS l'annonce, donc il n'y a <strong>pas d'IV Crush</strong> à subir. Vous tradez en actions ou en options dont l'IV est déjà redescendue. Le risque est plus classique : direction pure.</p>
+ </div>
+
+ <!-- Strategy 4: Earnings Run-Up -->
+ <h3 style="display:flex; align-items:center;"><span class="strat-number">4</span> Earnings Run-Up</h3>
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0;">
+   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+     <span class="badge badge-green">Risque : Modéré</span>
+     <span class="badge badge-blue">Timing : 10-15 jours avant</span>
+     <span class="badge badge-purple">Win rate : ~60%</span>
+   </div>
+   <p style="font-size:0.95rem; margin-bottom:1rem;"><strong>Principe :</strong> Acheter l'action (ou des calls) <strong>2-3 semaines avant</strong> les earnings, puis <strong>vendre juste AVANT l'annonce</strong>. Vous captez le run-up de l'IV et de l'optimisme pré-earnings, sans subir le risque binaire de l'annonce.</p>
+
+   <p style="font-size:0.9rem;">Cette stratégie fonctionne particulièrement bien sur les <strong>"serial beaters"</strong> — les entreprises qui battent le consensus trimestre après trimestre :</p>
+
+   <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; margin:1rem 0;">
+     <div style="text-align:center; padding:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+       <div style="font-size:1.1rem; font-weight:800; color:#0f172a;">NVDA</div>
+       <div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:0.25rem;">16 trimestres de suite</div>
+     </div>
+     <div style="text-align:center; padding:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+       <div style="font-size:1.1rem; font-weight:800; color:#0f172a;">AAPL</div>
+       <div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:0.25rem;">12 trimestres de suite</div>
+     </div>
+     <div style="text-align:center; padding:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+       <div style="font-size:1.1rem; font-weight:800; color:#0f172a;">META</div>
+       <div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:0.25rem;">10 trimestres de suite</div>
+     </div>
+     <div style="text-align:center; padding:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+       <div style="font-size:1.1rem; font-weight:800; color:#0f172a;">MSFT</div>
+       <div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:0.25rem;">14 trimestres de suite</div>
+     </div>
+   </div>
+
+   <p style="font-size:0.85rem; color:#64748b; margin-bottom:0;"><strong>Le piège :</strong> Si le marché global corrige, le run-up n'a pas lieu. Et si vous oubliez de vendre avant l'annonce, vous subissez le risque binaire que vous vouliez éviter.</p>
+ </div>
+
+ <!-- Strategy 5: Whisper Numbers -->
+ <h3 style="display:flex; align-items:center;"><span class="strat-number">5</span> Whisper Numbers</h3>
+ <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0;">
+   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+     <span class="badge badge-purple">Type : Intelligence</span>
+     <span class="badge badge-amber">Difficulté : Avancé</span>
+   </div>
+   <p style="font-size:0.95rem; margin-bottom:1rem;"><strong>Principe :</strong> Le <strong>consensus officiel</strong> (moyenne des analystes sell-side) n'est souvent PAS ce que le marché attend vraiment. Le <strong>whisper number</strong> est l'attente "réelle" — souvent plus élevée que le consensus, surtout pour les favoris du marché.</p>
+
+   <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin:1rem 0;">
+     <div style="text-align:center; padding:1.25rem; background:#eff6ff; border:1px solid #93c5fd; border-radius:12px;">
+       <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.5rem;">Consensus Officiel</div>
+       <div style="font-size:1.5rem; font-weight:800; color:#2563eb;">$1.52</div>
+       <p style="font-size:0.75rem; color:#64748b; margin:0.5rem 0 0;">Moyenne des analystes Wall Street publiée sur Yahoo Finance, Bloomberg</p>
+     </div>
+     <div style="text-align:center; padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:12px;">
+       <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;">Whisper Number</div>
+       <div style="font-size:1.5rem; font-weight:800; color:#dc2626;">$1.61</div>
+       <p style="font-size:0.75rem; color:#64748b; margin:0.5rem 0 0;">Ce que le buy-side attend VRAIMENT. Disponible sur earningswhispers.com</p>
+     </div>
+     <div style="text-align:center; padding:1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:12px;">
+       <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;">EPS Réel Publié</div>
+       <div style="font-size:1.5rem; font-weight:800; color:#16a34a;">$1.57</div>
+       <p style="font-size:0.75rem; color:#64748b; margin:0.5rem 0 0;">Beat le consensus (+3.3%) mais MISS le whisper. L'action baisse.</p>
+     </div>
+   </div>
+
+   <div class="alert-box" style="margin:1rem 0;">
+     <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Le piège du "Beat & Drop"</h4>
+     <p style="font-size:0.9rem; margin-bottom:0;">C'est le scénario le plus frustrant : l'entreprise <strong>bat le consensus officiel</strong>, mais l'action BAISSE quand même. Pourquoi ? Parce que le marché attendait le <strong>whisper number</strong>, qui était plus élevé. Pour monter, il ne suffit pas de battre les analystes — il faut battre le whisper.</p>
+   </div>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : CALENDRIER DES EARNINGS                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="calendrier"><i class="fa-solid fa-calendar-days" style="color:#dc2626;"></i> Calendrier des Earnings</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-calendar-days" style="color:#dc2626;"></i> Le calendrier des Earnings Big Tech</h2>
+
+ <p>Les "Magnificent 7" et quelques autres noms clés sont les événements les plus suivis de chaque saison. Connaître leur historique est un avantage majeur.</p>
+
+ <table class="compare-table">
+   <thead>
+     <tr>
+       <th>Ticker</th>
+       <th>Saison</th>
+       <th>Timing</th>
+       <th>Move Moyen</th>
+       <th>Beat Rate</th>
+       <th>Pattern</th>
+     </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td><strong style="color:#0f172a;">AAPL</strong></td>
+       <td>Jan / Avr / Jul / Oct</td>
+       <td>AMC (jeudi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;4.2%</td>
+       <td style="color:#16a34a; font-weight:700;">88%</td>
+       <td>Serial beater, guidance prudente</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;">MSFT</strong></td>
+       <td>Jan / Avr / Jul / Oct</td>
+       <td>AMC (mardi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;5.1%</td>
+       <td style="color:#16a34a; font-weight:700;">90%</td>
+       <td>Cloud Azure = métrique clé</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;">GOOGL</strong></td>
+       <td>Jan / Avr / Jul / Oct</td>
+       <td>AMC (mardi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;6.3%</td>
+       <td style="color:#16a34a; font-weight:700;">82%</td>
+       <td>YouTube + Cloud = catalyseurs</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;">AMZN</strong></td>
+       <td>Jan / Avr / Jul / Oct</td>
+       <td>AMC (jeudi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;7.8%</td>
+       <td style="color:#16a34a; font-weight:700;">80%</td>
+       <td>AWS + guidance e-commerce</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;">META</strong></td>
+       <td>Jan / Avr / Jul / Oct</td>
+       <td>AMC (mercredi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;10.2%</td>
+       <td style="color:#16a34a; font-weight:700;">75%</td>
+       <td>Très volatile, capex Reality Labs</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;">NVDA</strong></td>
+       <td>Fév / Mai / Août / Nov</td>
+       <td>AMC (mercredi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;11.5%</td>
+       <td style="color:#16a34a; font-weight:700;">92%</td>
+       <td>Data center AI = narratif dominant</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;">TSLA</strong></td>
+       <td>Jan / Avr / Jul / Oct</td>
+       <td>AMC (mercredi)</td>
+       <td style="color:#dc2626; font-weight:700;">&plusmn;12.8%</td>
+       <td style="color:#f59e0b; font-weight:700;">65%</td>
+       <td>Le plus imprévisible — marges, deliveries, Musk</td>
+     </tr>
+   </tbody>
+ </table>
+
+ <!-- ECharts: Average Move -->
+ <div class="chart-box">
+   <h4><i class="fa-solid fa-chart-bar" style="color:#dc2626; margin-right:0.5rem;"></i> Mouvement moyen le jour des earnings (en %)</h4>
+   <p>Plus le mouvement moyen est élevé, plus la volatilité est forte autour des résultats. TSLA et NVDA sont les plus explosifs.</p>
+   <div id="chart-avg-moves" style="width:100%; height:350px;"></div>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> BMO vs AMC — impact sur votre stratégie</h4>
+   <p style="font-size:0.9rem; margin-bottom:0;">Les résultats <strong>AMC</strong> (after-hours) vous donnent toute la nuit pour analyser les chiffres et préparer votre trade du lendemain. Les résultats <strong>BMO</strong> (before open) créent un gap à l'ouverture que vous devez trader en temps réel. Pour un spéculateur débutant, les plays AMC sont préférables car vous avez le temps de réfléchir.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : EXPECTED MOVE VS ACTUAL MOVE                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="expected-move"><i class="fa-solid fa-bullseye" style="color:#dc2626;"></i> Expected Move</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-bullseye" style="color:#dc2626;"></i> Expected Move vs Actual Move — Le concept clé</h2>
+
+ <p>L'<strong>expected move</strong> (mouvement attendu) est LE chiffre que tout trader d'options doit connaître avant les earnings. Il vous dit combien le marché anticipe de mouvement, et donc combien de mouvement est déjà "pricé" dans les options.</p>
+
+ <div class="formula-box">
+   <div class="formula-label">Calcul de l'Expected Move (approximation rapide)</div>
+   Expected Move &asymp; <span class="formula-highlight">Prix du Straddle ATM</span> &times; 0.85
+ </div>
+
+ <h3>Comment le lire en pratique</h3>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Exemple</div>
+     <p style="font-size:0.9rem; color:#334155; margin:0 0 0.75rem;"><strong>NVDA à $900</strong>. Le straddle ATM (call + put) pour l'expiration la plus proche post-earnings coûte $75.</p>
+     <table style="width:100%; font-size:0.85rem;">
+       <tr><td style="padding:0.3rem 0; color:#64748b;">Straddle price</td><td style="text-align:right; font-weight:700;">$75</td></tr>
+       <tr><td style="padding:0.3rem 0; color:#64748b;">Expected move</td><td style="text-align:right; font-weight:700;">$75 &times; 0.85 = ~$64</td></tr>
+       <tr><td style="padding:0.3rem 0; color:#64748b;">En pourcentage</td><td style="text-align:right; font-weight:700; color:#dc2626;">$64 / $900 = &plusmn;7.1%</td></tr>
+       <tr style="border-top:1px solid #e2e8f0;"><td style="padding:0.5rem 0; color:#64748b;">Range attendu</td><td style="text-align:right; font-weight:700;">$836 — $964</td></tr>
+     </table>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Interprétation</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+       <li style="margin-bottom:0.5rem;"><strong>Si NVDA bouge de +12%</strong> (> expected move) : les acheteurs de straddle gagnent. Mouvement exceptionnel.</li>
+       <li style="margin-bottom:0.5rem;"><strong>Si NVDA bouge de +5%</strong> (< expected move) : les vendeurs de straddle gagnent. L'IV Crush domine.</li>
+       <li style="margin-bottom:0.5rem;"><strong>Si NVDA bouge de +7%</strong> (= expected move) : breakeven approximatif. Personne ne gagne vraiment.</li>
+       <li><strong>Si NVDA ne bouge pas</strong> : les vendeurs empochent la prime entière. Jackpot pour eux.</li>
+     </ul>
+   </div>
+ </div>
+
+ <h3>La statistique clé qui change tout</h3>
+
+ <div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; border-radius:16px; padding:2rem; text-align:center; margin:1.5rem 0;">
+   <div style="font-size:5rem; font-weight:900; color:#f87171; line-height:1;">~70%</div>
+   <div style="font-size:1.2rem; font-weight:700; color:#e2e8f0; margin-top:0.5rem;">du temps, le mouvement réel est INFÉRIEUR à l'expected move</div>
+   <p style="font-size:0.9rem; color:#94a3b8; margin:1rem auto 0; max-width:600px;">Cela signifie que le marché surestime systématiquement la volatilité des earnings. Les vendeurs d'options ont un avantage statistique structurel. Mais les 30% restants incluent des mouvements de -35% (Netflix) ou +25% (Meta) qui effacent tous les gains.</p>
+ </div>
+
+ <!-- ECharts: Scatter plot -->
+ <div class="chart-box">
+   <h4><i class="fa-solid fa-chart-scatter-bubble" style="color:#dc2626; margin-right:0.5rem;"></i> Expected Move vs Mouvement Réel — 20 derniers earnings Big Tech</h4>
+   <p>Les points sous la diagonale représentent les cas où le mouvement réel était inférieur à l'expected move (vendeurs gagnent). Au-dessus : les acheteurs gagnent.</p>
+   <div id="chart-scatter" style="width:100%; height:400px;"></div>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : STRATÉGIE CONCRÈTE — PEAD                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="trade-pead"><i class="fa-solid fa-rocket" style="color:#dc2626;"></i> Trade : Post-Earnings Momentum</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-rocket" style="color:#dc2626;"></i> Stratégie concrète : Post-Earnings Momentum</h2>
+
+ <p>C'est la stratégie la plus accessible pour un spéculateur : entrer APRÈS l'annonce, quand l'incertitude est levée, et surfer sur le drift.</p>
+
+ <div class="trade-box">
+   <h3><i class="fa-solid fa-crosshairs" style="margin-right:0.5rem;"></i> Post-Earnings Momentum Play</h3>
+   <div class="trade-levels" style="margin-bottom:1.5rem;">
+     <div class="trade-level trade-entry">
+       <div class="label">Scanner</div>
+       <div class="value" style="font-size:1.1rem;">Beat > 10%</div>
+     </div>
+     <div class="trade-level trade-entry">
+       <div class="label">Entrée</div>
+       <div class="value" style="font-size:1.1rem;">Gap High</div>
+     </div>
+     <div class="trade-level trade-stop">
+       <div class="label">Stop Loss</div>
+       <div class="value" style="font-size:1.1rem;">Gap Low</div>
+     </div>
+     <div class="trade-level trade-tp">
+       <div class="label">Target</div>
+       <div class="value" style="font-size:1.1rem;">+10-15%</div>
+     </div>
+     <div class="trade-level trade-rr">
+       <div class="label">R/R</div>
+       <div class="value">1:2</div>
+     </div>
+   </div>
+ </div>
+
+ <h3>Les critères du scanner</h3>
+ <ul class="checklist">
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>EPS beat > 10%</strong> — La surprise doit être massive, pas un simple +1%</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Guidance relevée</strong> — L'entreprise augmente ses prévisions pour le prochain trimestre</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Gap up > 5% à l'ouverture</strong> — Confirme que le marché valide la surprise</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Volume > 2x la moyenne</strong> — Les institutionnels participent au mouvement</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Pas de rouge intraday le jour J</strong> — Si l'action clôture dans le rouge malgré le beat, le drift ne marche pas</li>
+ </ul>
+
+ <h3>Le plan d'exécution</h3>
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-right-to-bracket"></i> Entrée</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+       <li><strong>Jour :</strong> Le lendemain de l'annonce (J+1)</li>
+       <li><strong>Prix :</strong> Au-dessus du high du gap d'ouverture</li>
+       <li><strong>Type :</strong> Actions ou calls (delta 0.70+, expiration 30-45 jours)</li>
+       <li><strong>Taille :</strong> 5% du portefeuille maximum</li>
+     </ul>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-right-from-bracket"></i> Sortie</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+       <li><strong>Stop :</strong> Sous le low du gap (si le gap se comble, la thèse est invalidée)</li>
+       <li><strong>TP1 :</strong> +10% (prendre 50% des profits)</li>
+       <li><strong>TP2 :</strong> +15% ou prochain niveau de résistance</li>
+       <li><strong>Durée :</strong> 2-4 semaines (ne pas overstay)</li>
+     </ul>
+   </div>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Pourquoi cette stratégie fonctionne</h4>
+   <p style="font-size:0.9rem; margin-bottom:0;">Le PEAD fonctionne parce que les <strong>gros institutionnels ne peuvent pas bouger en une nuit</strong>. Un fonds qui gère $50 Mds ne peut pas acheter 2 millions d'actions d'un coup après un earnings beat. Il le fait progressivement sur 20-40 jours. Ce flux acheteur continu pousse le prix à la hausse. Vous surfez sur ce flux.</p>
+ </div>
+
+ <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;"><i class="fa-solid fa-circle-check"></i> Signaux de renforcement</div>
+   <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+     <li>Plusieurs analystes relèvent leur target price dans les jours suivants</li>
+     <li>Le volume reste élevé les 2-3 jours après l'annonce</li>
+     <li>Le secteur est en tendance haussière (vent arrière)</li>
+     <li>L'entreprise annonce un rachat d'actions ou un dividende spécial en plus du beat</li>
+   </ul>
+ </div>
+
+ <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;"><i class="fa-solid fa-circle-xmark"></i> Signaux d'annulation</div>
+   <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+     <li>L'action comble le gap dans les 2 premiers jours — sortir immédiatement</li>
+     <li>Le marché global entre en mode risk-off (VIX > 25)</li>
+     <li>Un concurrent sort des résultats catastrophiques qui pèsent sur le secteur</li>
+     <li>Des insiders vendent massivement dans les jours suivant l'annonce</li>
+   </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : STRATÉGIE CONCRÈTE — EARNINGS RUN-UP              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="trade-runup"><i class="fa-solid fa-wave-square" style="color:#dc2626;"></i> Trade : Earnings Run-Up</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-wave-square" style="color:#dc2626;"></i> Stratégie concrète : Earnings Run-Up</h2>
+
+ <p>La stratégie du run-up est plus subtile : vous captez le mouvement haussier qui précède l'annonce, sans jamais vous exposer au risque binaire des résultats.</p>
+
+ <div class="trade-box">
+   <h3><i class="fa-solid fa-crosshairs" style="margin-right:0.5rem;"></i> Earnings Run-Up Play</h3>
+   <div class="trade-levels" style="margin-bottom:1.5rem;">
+     <div class="trade-level trade-entry">
+       <div class="label">Scanner</div>
+       <div class="value" style="font-size:1.1rem;">4x Beater</div>
+     </div>
+     <div class="trade-level trade-entry">
+       <div class="label">Entrée</div>
+       <div class="value" style="font-size:1.1rem;">J-15 à J-10</div>
+     </div>
+     <div class="trade-level trade-stop">
+       <div class="label">Stop Loss</div>
+       <div class="value" style="font-size:1.1rem;">EMA 20</div>
+     </div>
+     <div class="trade-level trade-tp">
+       <div class="label">Sortie</div>
+       <div class="value" style="font-size:1.1rem;">J-1</div>
+     </div>
+     <div class="trade-level trade-rr">
+       <div class="label">Win Rate</div>
+       <div class="value">~60%</div>
+     </div>
+   </div>
+ </div>
+
+ <h3>Les critères du scanner</h3>
+ <ul class="checklist">
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>4 derniers trimestres battus</strong> — L'entreprise est un "serial beater" confirmé</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Tendance haussière</strong> — L'action est au-dessus de sa SMA 50 jours</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Secteur porteur</strong> — Le secteur de l'action est en rotation positive</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Pas de bad news récent</strong> — Aucun avertissement sur résultats (profit warning) dans les 30 derniers jours</li>
+   <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Options IV en hausse</strong> — L'IV du prochain cycle d'expiration augmente (signe que le run-up commence)</li>
+ </ul>
+
+ <h3>Le plan d'exécution</h3>
+ <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-right-to-bracket"></i> Entrée</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+       <li><strong>Quand :</strong> 10-15 jours de bourse avant les earnings</li>
+       <li><strong>Instrument :</strong> Actions (plus sûr) ou calls ITM (delta > 0.70)</li>
+       <li><strong>Taille :</strong> 3-5% du portefeuille</li>
+       <li><strong>Note :</strong> Si vous utilisez des options, l'augmentation de l'IV joue EN VOTRE FAVEUR ici (elle monte avant les earnings)</li>
+     </ul>
+   </div>
+   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-right-from-bracket"></i> Sortie</div>
+     <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+       <li><strong>OBLIGATOIRE :</strong> Vendre AVANT la publication (J-1 au plus tard)</li>
+       <li><strong>Stop :</strong> Clôture sous l'EMA 20 jours</li>
+       <li><strong>Profit :</strong> Prendre les gains à J-1 quels qu'ils soient</li>
+       <li><strong>Discipline :</strong> NE JAMAIS "laisser courir" à travers les earnings</li>
+     </ul>
+   </div>
+ </div>
+
+ <div class="alert-box" style="margin:1.5rem 0;">
+   <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-skull-crossbones" style="margin-right:0.5rem;"></i> Erreur fatale : oublier de sortir</h4>
+   <p style="font-size:0.9rem; margin-bottom:0;">Le run-up a eu lieu, vous êtes en profit de +5%, et vous vous dites "les résultats seront bons aussi, je reste". C'est ainsi que des traders transforment un trade gagnant en catastrophe. <strong>La règle est non-négociable : sortir avant J-1.</strong> Si vous voulez jouer les earnings, c'est un trade séparé avec son propre sizing.</p>
+ </div>
+
+ <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;"><i class="fa-solid fa-circle-check"></i> Signaux de renforcement</div>
+   <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+     <li>Les analystes relèvent leurs estimations dans les 2 semaines précédant les earnings</li>
+     <li>Des achats d'insiders détectés (management achète avant l'annonce)</li>
+     <li>Le flow d'options est bullish (call/put ratio > 2 sur le ticker)</li>
+     <li>Le pair trade est confirmé : un concurrent a déjà publié de bons résultats</li>
+   </ul>
+ </div>
+
+ <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+   <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;"><i class="fa-solid fa-circle-xmark"></i> Signaux d'annulation</div>
+   <ul style="font-size:0.85rem; color:#334155; margin:0; padding-left:1.25rem;">
+     <li>Un profit warning est émis par l'entreprise ou un concurrent</li>
+     <li>L'action casse sous son EMA 20 avant les earnings</li>
+     <li>Le marché global entre en correction (SPY sous sa SMA 50)</li>
+     <li>Le short interest augmente significativement (> +20% sur la période)</li>
+   </ul>
+ </div>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Astuce avancée : le "pair trade" earnings</h4>
+   <p style="font-size:0.9rem; margin-bottom:0;">Quand une entreprise du même secteur publie de bons résultats, les autres actions du secteur montent en sympathie. Exemple : si AMD publie de bons résultats data center, NVDA monte dans les jours suivants avant ses propres earnings. C'est un <strong>signal de run-up renforcé</strong>. Utilisez le calendrier pour repérer l'ordre de publication des concurrents.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : LES ERREURS FATALES                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="erreurs"><i class="fa-solid fa-skull" style="color:#dc2626;"></i> Erreurs Fatales</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-skull" style="color:#dc2626;"></i> Les 5 erreurs fatales sur les earnings</h2>
+
+ <p>Ces erreurs ont détruit des comptes de trading entiers. Chacune est un piège classique dans lequel tombent la majorité des débutants.</p>
+
+ <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+
+   <!-- Erreur 1 -->
+   <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; overflow:hidden;">
+     <div style="background:#dc2626; color:white; padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem;">
+       <span style="font-size:1.5rem; font-weight:900;">1</span>
+       <span style="font-size:1rem; font-weight:700;">Acheter des calls OTM juste avant les earnings</span>
+     </div>
+     <div style="padding:1.25rem 1.5rem;">
+       <p style="font-size:0.9rem; color:#334155; margin:0 0 0.75rem;">C'est LE trade de débutant par excellence. "AAPL est à $185, j'achète le call $200 à $0.50, si ça monte à $200 je fais x40 !" En réalité : même si AAPL monte à $190 (+2.7%), votre call $200 ne vaudra que $0.05 après l'IV Crush. Vous perdez 90%.</p>
+       <p style="font-size:0.85rem; color:#991b1b; font-weight:600; margin:0;"><i class="fa-solid fa-arrow-right" style="margin-right:0.5rem;"></i> <strong>Alternative :</strong> Si vous voulez jouer directement, utilisez des calls ITM (delta > 0.70) ou des actions. L'IV Crush est proportionnellement moins destructeur sur les options deep ITM.</p>
+     </div>
+   </div>
+
+   <!-- Erreur 2 -->
+   <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; overflow:hidden;">
+     <div style="background:#dc2626; color:white; padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem;">
+       <span style="font-size:1.5rem; font-weight:900;">2</span>
+       <span style="font-size:1rem; font-weight:700;">Ne pas connaître l'Expected Move</span>
+     </div>
+     <div style="padding:1.25rem 1.5rem;">
+       <p style="font-size:0.9rem; color:#334155; margin:0 0 0.75rem;">Si l'expected move est &plusmn;8% et que l'action bouge de +5%, vous pourriez croire que c'est un bon résultat. Mais les vendeurs de straddle gagnent dans ce scénario. L'expected move est votre <strong>barre de référence</strong> pour savoir si un mouvement est "assez gros" pour justifier le trade.</p>
+       <p style="font-size:0.85rem; color:#991b1b; font-weight:600; margin:0;"><i class="fa-solid fa-arrow-right" style="margin-right:0.5rem;"></i> <strong>Habitude :</strong> Avant chaque trade earnings, notez l'expected move. Comparez-le au mouvement historique moyen. Si l'expected move est anormalement élevé, les options sont trop chères.</p>
+     </div>
+   </div>
+
+   <!-- Erreur 3 -->
+   <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; overflow:hidden;">
+     <div style="background:#dc2626; color:white; padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem;">
+       <span style="font-size:1.5rem; font-weight:900;">3</span>
+       <span style="font-size:1rem; font-weight:700;">Ignorer la guidance</span>
+     </div>
+     <div style="padding:1.25rem 1.5rem;">
+       <p style="font-size:0.9rem; color:#334155; margin:0 0 0.75rem;">L'EPS et le chiffre d'affaires sont des données <strong>du passé</strong>. Le marché, lui, regarde vers le <strong>futur</strong>. Une entreprise qui bat l'EPS mais baisse sa guidance pour le trimestre suivant va presque toujours <strong>baisser</strong>. La guidance représente 60-70% de la réaction du marché.</p>
+       <p style="font-size:0.85rem; color:#991b1b; font-weight:600; margin:0;"><i class="fa-solid fa-arrow-right" style="margin-right:0.5rem;"></i> <strong>Règle :</strong> Beat EPS + guidance hausse = bullish. Beat EPS + guidance baisse = bearish. Miss EPS + guidance hausse = souvent flat ou légère hausse. Tout le reste = bearish.</p>
+     </div>
+   </div>
+
+   <!-- Erreur 4 -->
+   <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; overflow:hidden;">
+     <div style="background:#dc2626; color:white; padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem;">
+       <span style="font-size:1.5rem; font-weight:900;">4</span>
+       <span style="font-size:1rem; font-weight:700;">Surdimensionner sur un événement binaire</span>
+     </div>
+     <div style="padding:1.25rem 1.5rem;">
+       <p style="font-size:0.9rem; color:#334155; margin:0 0 0.75rem;">Mettre 20-30% de son portefeuille sur un seul play earnings est un moyen garanti de détruire son compte. Même les meilleurs traders se trompent sur les earnings. La bonne taille : <strong>3-5% du portefeuille par trade, jamais plus de 10% d'exposition totale</strong> sur les earnings d'une même semaine.</p>
+       <p style="font-size:0.85rem; color:#991b1b; font-weight:600; margin:0;"><i class="fa-solid fa-arrow-right" style="margin-right:0.5rem;"></i> <strong>Sizing :</strong> Traitez chaque trade earnings comme un pari à 50/50 (car c'est à peu près le cas). Dimensionnez en conséquence.</p>
+     </div>
+   </div>
+
+   <!-- Erreur 5 -->
+   <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; overflow:hidden;">
+     <div style="background:#dc2626; color:white; padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem;">
+       <span style="font-size:1.5rem; font-weight:900;">5</span>
+       <span style="font-size:1rem; font-weight:700;">Hold through earnings sans stratégie claire</span>
+     </div>
+     <div style="padding:1.25rem 1.5rem;">
+       <p style="font-size:0.9rem; color:#334155; margin:0 0 0.75rem;">"Je vais voir ce qui se passe" n'est pas un plan de trading. Avant CHAQUE trade earnings, vous devez connaître : votre taille de position, votre stop loss, votre target profit, votre scénario bullish ET bearish, et votre plan d'action pour chacun. Sans ce plan écrit, ne touchez pas aux earnings.</p>
+       <p style="font-size:0.85rem; color:#991b1b; font-weight:600; margin:0;"><i class="fa-solid fa-arrow-right" style="margin-right:0.5rem;"></i> <strong>Discipline :</strong> Écrivez votre plan AVANT. Entry, stop, target, sizing, durée. Si une seule case est vide, n'entrez pas.</p>
+     </div>
+   </div>
+
+ </div>
+
+ <div class="takeaway-box" style="margin-top:2rem;">
+   <h3><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem;"></i> Le guide de survie en 4 règles</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-circle-1"></i> <strong>Connaître l'expected move</strong> — C'est votre boussole. Tout le reste est du bruit.</li>
+     <li><i class="fa-solid fa-circle-2"></i> <strong>Respecter le sizing</strong> — 3-5% max par trade. Les earnings sont des événements binaires.</li>
+     <li><i class="fa-solid fa-circle-3"></i> <strong>Avoir un plan AVANT</strong> — Entry, stop, target, durée. Par écrit.</li>
+     <li><i class="fa-solid fa-circle-4"></i> <strong>Accepter que 40-50% des trades seront perdants</strong> — L'objectif est la rentabilité sur la série, pas sur chaque trade.</li>
+   </ul>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9 : OUTILS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="outils"><i class="fa-solid fa-toolbox" style="color:#dc2626;"></i> Outils</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-toolbox" style="color:#dc2626;"></i> Les outils du spéculateur earnings</h2>
+
+ <p>Voici les outils indispensables pour préparer et exécuter vos trades earnings. La plupart sont gratuits ou offrent un tier gratuit suffisant.</p>
+
+ <table class="compare-table">
+   <thead>
+     <tr>
+       <th>Outil</th>
+       <th>Usage</th>
+       <th>Ce qu'il apporte</th>
+       <th>Prix</th>
+     </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td><strong style="color:#0f172a;"><i class="fa-solid fa-microphone-lines" style="color:#dc2626; margin-right:0.5rem;"></i> Earnings Whispers</strong></td>
+       <td>Whisper numbers</td>
+       <td>Le vrai consensus du marché (vs le consensus officiel). Calendrier complet. Historique des surprises.</td>
+       <td style="color:#16a34a; font-weight:600;">Gratuit</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;"><i class="fa-solid fa-chart-line" style="color:#2563eb; margin-right:0.5rem;"></i> OptionStrat</strong></td>
+       <td>Visualisation P&L</td>
+       <td>Simulez votre straddle, strangle, butterfly AVANT le trade. Visualisez le breakeven, le max loss, le P&L à chaque prix.</td>
+       <td style="color:#f59e0b; font-weight:600;">Freemium</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;"><i class="fa-solid fa-gauge-high" style="color:#9333ea; margin-right:0.5rem;"></i> Market Chameleon</strong></td>
+       <td>IV rank, expected move</td>
+       <td>IV rank historique, expected move vs actual move historique, earnings history détaillée par ticker.</td>
+       <td style="color:#f59e0b; font-weight:600;">Freemium</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;"><i class="fa-solid fa-table-cells-large" style="color:#f97316; margin-right:0.5rem;"></i> Barchart</strong></td>
+       <td>Options chain, IV</td>
+       <td>Options chain complète avec IV par strike, volume, open interest. Screener d'options intégré.</td>
+       <td style="color:#16a34a; font-weight:600;">Gratuit</td>
+     </tr>
+     <tr>
+       <td><strong style="color:#0f172a;"><i class="fa-solid fa-calendar" style="color:#16a34a; margin-right:0.5rem;"></i> Yahoo Finance</strong></td>
+       <td>Calendrier earnings</td>
+       <td>Calendrier complet des earnings. Consensus EPS et revenue. Historique des surprises par trimestre.</td>
+       <td style="color:#16a34a; font-weight:600;">Gratuit</td>
+     </tr>
+   </tbody>
+ </table>
+
+ <div class="pedagogy-box">
+   <h4 style="color:#2563eb !important;"><i class="fa-solid fa-route" style="margin-right:0.5rem;"></i> Workflow recommandé avant un trade earnings</h4>
+   <ol style="font-size:0.9rem; color:#334155; padding-left:1.5rem; margin-bottom:0;">
+     <li style="margin-bottom:0.5rem;"><strong>Yahoo Finance</strong> — Vérifier la date, BMO ou AMC, consensus EPS et revenue</li>
+     <li style="margin-bottom:0.5rem;"><strong>Earnings Whispers</strong> — Vérifier le whisper number (est-il significativement au-dessus du consensus ?)</li>
+     <li style="margin-bottom:0.5rem;"><strong>Market Chameleon</strong> — Vérifier l'expected move actuel et le comparer à l'historique (le marché sur-price-t-il ?)</li>
+     <li style="margin-bottom:0.5rem;"><strong>Barchart</strong> — Regarder l'options chain, l'IV par strike, le put/call ratio</li>
+     <li style="margin-bottom:0;"><strong>OptionStrat</strong> — Simuler votre trade (straddle, call spread, etc.) et vérifier que le P&L attendu justifie le risque</li>
+   </ol>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 10 : QUIZ                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#dc2626;"></i> Quiz</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-circle-question" style="color:#dc2626;"></i> Quiz — Testez vos connaissances</h2>
+
+ <p>Vérifiez que vous avez bien assimilé les concepts clés de ce chapitre. Cliquez sur chaque question pour révéler la réponse.</p>
+
+ <details>
+   <summary>Qu'est-ce que l'IV Crush et pourquoi est-il dangereux pour les acheteurs d'options ?</summary>
+   <div class="quiz-answer">
+     <p>L'<strong>IV Crush</strong> est l'effondrement brutal de la volatilité implicite qui se produit après une annonce de résultats. Avant les earnings, l'incertitude est maximale et les options sont très chères (IV haute). Après l'annonce, l'incertitude disparaît et l'IV s'effondre, souvent de 50% ou plus en une nuit.</p>
+     <p style="margin-bottom:0;">C'est dangereux car même si vous avez raison sur la direction (l'action monte), la perte de valeur temps due à la chute de l'IV peut être <strong>supérieure au gain</strong> en valeur intrinsèque. Résultat : vous perdez de l'argent malgré une bonne prédiction directionnelle.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Quelle est la différence entre le consensus officiel et le whisper number ?</summary>
+   <div class="quiz-answer">
+     <p>Le <strong>consensus officiel</strong> est la moyenne des estimations publiées par les analystes sell-side (Goldman, JPMorgan, etc.) et disponible sur Yahoo Finance, Bloomberg, etc.</p>
+     <p>Le <strong>whisper number</strong> est ce que le marché attend VRAIMENT, souvent plus élevé que le consensus, surtout pour les actions populaires. Il reflète les attentes non-publiées du buy-side (fonds d'investissement).</p>
+     <p style="margin-bottom:0;"><strong>Conséquence clé :</strong> Une entreprise peut battre le consensus officiel mais rater le whisper, et l'action baisse. Pour monter, il faut généralement battre le whisper, pas juste le consensus. C'est le fameux scénario "beat & drop".</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Comment calcule-t-on l'expected move à partir des options ?</summary>
+   <div class="quiz-answer">
+     <p>L'<strong>expected move</strong> se calcule approximativement ainsi :</p>
+     <p style="font-weight:700; text-align:center; font-size:1.1rem;">Expected Move &asymp; Prix du Straddle ATM &times; 0.85</p>
+     <p>Où le straddle ATM est la somme du call et du put au strike le plus proche du prix actuel, pour l'expiration la plus proche APRÈS les earnings.</p>
+     <p style="margin-bottom:0;">Exemple : si l'action est à $100 et le straddle ATM coûte $8, l'expected move est d'environ $6.80, soit &plusmn;6.8%. Si le mouvement réel est inférieur à 6.8%, les vendeurs de straddle gagnent. Historiquement, c'est le cas environ <strong>70% du temps</strong>.</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Qu'est-ce que le Post-Earnings Announcement Drift (PEAD) et pourquoi existe-t-il ?</summary>
+   <div class="quiz-answer">
+     <p>Le <strong>PEAD</strong> est le phénomène académiquement documenté selon lequel le prix d'une action continue dans la direction de la surprise pendant 30 à 60 jours après l'annonce des résultats. Si l'entreprise surprend positivement, l'action continue de monter. Si elle surprend négativement, l'action continue de baisser.</p>
+     <p style="margin-bottom:0;">Il existe parce que les <strong>gros institutionnels ne peuvent pas rééquilibrer instantanément</strong> leurs portefeuilles. Un fonds de $50 Mds qui décide d'augmenter sa position dans une action doit acheter progressivement sur des semaines pour ne pas faire monter le prix contre lui. Ce flux acheteur continu crée le drift. C'est l'une des anomalies de marché les plus robustes et les mieux documentées (Ball & Brown 1968, Bernard & Thomas 1989).</p>
+   </div>
+ </details>
+
+ <details>
+   <summary>Pourquoi la guidance est-elle plus importante que l'EPS pour la réaction du marché ?</summary>
+   <div class="quiz-answer">
+     <p>L'EPS trimestriel est une donnée <strong>rétrospective</strong> : elle mesure la performance passée. La <strong>guidance</strong> (prévisions du management pour les trimestres futurs) est <strong>prospective</strong> : elle donne une indication sur la trajectoire de l'entreprise.</p>
+     <p>Le marché est un mécanisme d'escompte qui regarde toujours vers l'avenir. Un EPS passé excellent mais une guidance en baisse signifie que <strong>le pic est peut-être derrière</strong>. À l'inverse, un miss EPS avec une guidance relevée suggère que les problèmes sont temporaires et que l'avenir est brillant.</p>
+     <p style="margin-bottom:0;">On estime que la guidance représente <strong>60-70% de la réaction du marché</strong> aux earnings. La règle : Beat EPS + guidance hausse = bullish. Beat EPS + guidance baisse = bearish. C'est la guidance qui tranche.</p>
+   </div>
+ </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ FINAL                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> Résumé</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> Ce qu'il faut retenir</h2>
+
+ <div class="takeaway-box">
+   <h3><i class="fa-solid fa-brain" style="margin-right:0.5rem;"></i> Les 7 leçons de ce chapitre</h3>
+   <ul class="takeaway-list">
+     <li><i class="fa-solid fa-circle-1"></i> <strong>L'IV Crush tue les acheteurs d'options</strong> — La volatilité implicite s'effondre après l'annonce. Même avec la bonne direction, vous pouvez perdre.</li>
+     <li><i class="fa-solid fa-circle-2"></i> <strong>L'expected move est votre boussole</strong> — Calculez-le avant chaque trade. Le mouvement doit le dépasser pour que l'achat de straddle soit rentable.</li>
+     <li><i class="fa-solid fa-circle-3"></i> <strong>Les vendeurs gagnent ~70% du temps</strong> — Mais les 30% restants peuvent être dévastateurs. Ne vendez jamais nu.</li>
+     <li><i class="fa-solid fa-circle-4"></i> <strong>Le PEAD est votre meilleur allié</strong> — Entrer après l'annonce, surfer sur le drift, pas d'IV Crush. La stratégie la plus accessible.</li>
+     <li><i class="fa-solid fa-circle-5"></i> <strong>Le run-up capture l'IV montante</strong> — Acheter 2 semaines avant, vendre avant l'annonce. Pas de risque binaire.</li>
+     <li><i class="fa-solid fa-circle-6"></i> <strong>Le whisper number est le vrai consensus</strong> — Battre les analystes ne suffit pas. Il faut battre le whisper.</li>
+     <li><i class="fa-solid fa-circle-7"></i> <strong>La guidance > l'EPS</strong> — Le marché regarde vers le futur. La guidance détermine 60-70% de la réaction.</li>
+   </ul>
+ </div>
+
+ <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin:2rem 0;">
+   <div style="text-align:center; padding:1.5rem; background:linear-gradient(135deg, #f0fdf4 0%, #fff 100%); border:1px solid #16a34a; border-radius:12px;">
+     <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;">Stratégie la plus sûre</div>
+     <div style="font-size:1.2rem; font-weight:800; color:#16a34a;">PEAD</div>
+     <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">Après l'annonce, pas d'IV Crush, risque direction pure</p>
+   </div>
+   <div style="text-align:center; padding:1.5rem; background:linear-gradient(135deg, #eff6ff 0%, #fff 100%); border:1px solid #2563eb; border-radius:12px;">
+     <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.5rem;">Meilleur R/R</div>
+     <div style="font-size:1.2rem; font-weight:800; color:#2563eb;">Run-Up</div>
+     <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">Capturer l'IV montante sans risque binaire</p>
+   </div>
+   <div style="text-align:center; padding:1.5rem; background:linear-gradient(135deg, #fef2f2 0%, #fff 100%); border:1px solid #dc2626; border-radius:12px;">
+     <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;">Le plus dangereux</div>
+     <div style="font-size:1.2rem; font-weight:800; color:#dc2626;">Straddle</div>
+     <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">Win rate ~30%, IV Crush hostile, mais gains explosifs quand ça marche</p>
+   </div>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- NEXT ARTICLE CTA                                              -->
+<!-- ============================================================ -->
+<a href="../part6-max-pain/" class="next-cta">
+ <div>
+   <div class="next-label">Partie 6 sur 8</div>
+   <div class="next-title">Max Pain & Options Flow</div>
+ </div>
+ <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<!-- ============================================================ -->
+<!-- DISCLAIMER FINAL                                              -->
+<!-- ============================================================ -->
+<div class="content-card" style="background:#f8fafc; border:1px solid #e2e8f0; margin-top:2rem;">
+ <h3 style="color:#64748b; font-size:1rem; margin-top:0;"><i class="fa-solid fa-scale-balanced" style="margin-right:0.5rem;"></i> Disclaimer</h3>
+ <p style="font-size:0.8rem; color:#94a3b8; line-height:1.6; margin-bottom:0.5rem;">Les informations fournies dans cet article sont purement éducatives et ne constituent en aucun cas un conseil en investissement, une recommandation d'achat ou de vente, ou une incitation à effectuer des transactions financières. Le trading d'options et les stratégies spéculatives comportent des risques élevés de perte en capital. Vous pouvez perdre la totalité de votre investissement.</p>
+ <p style="font-size:0.8rem; color:#94a3b8; line-height:1.6; margin-bottom:0.5rem;">Les performances passées ne préjugent pas des performances futures. Les exemples et statistiques cités sont à titre illustratif et peuvent ne pas refléter les conditions de marché actuelles. Chaque investisseur doit effectuer ses propres analyses et évaluer sa tolérance au risque avant de prendre toute décision d'investissement.</p>
+ <p style="font-size:0.8rem; color:#94a3b8; line-height:1.6; margin-bottom:0;">Sources : Recherche académique (Ball & Brown 1968, Bernard & Thomas 1989, Chordia & Shivakumar 2006), Yahoo Finance, Market Chameleon, Earnings Whispers, CBOE, OptionStrat. Article publié le 21 février 2026.</p>
+</div>
+
+</div><!-- End container -->
+
+<!-- Footer -->
+<div class="footer-bar">
+ <p style="margin:0 0 0.5rem;"><strong>Market Watch</strong> &mdash; Analyses financières indépendantes</p>
+ <p style="margin:0;"><a href="/">Accueil</a> &nbsp;|&nbsp; <a href="../part4-etf-levier/">Partie 4 : ETFs à Levier</a> &nbsp;|&nbsp; <a href="../part6-max-pain/">Partie 6 : Max Pain</a></p>
+</div>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: IV Curve avant/après earnings
+(function() {
+  var chart = echarts.init(document.getElementById('chart-iv-curve'));
+  var days = ['J-20','J-18','J-15','J-12','J-10','J-8','J-5','J-3','J-2','J-1','Jour J','J+1','J+2','J+3','J+5','J+10'];
+  var iv = [28, 30, 33, 36, 39, 43, 48, 55, 60, 65, 62, 28, 27, 26, 25, 24];
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        return params[0].name + '<br/>IV : <strong>' + params[0].value + '%</strong>';
+      }
+    },
+    grid: { left: '8%', right: '5%', bottom: '12%', top: '15%' },
+    xAxis: {
+      type: 'category',
+      data: days,
+      axisLabel: { fontSize: 11, color: '#64748b', rotate: 30 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'IV (%)',
+      nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+      axisLabel: { fontSize: 11, color: '#64748b', formatter: '{value}%' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [{
+      name: 'Volatilité Implicite',
+      type: 'line',
+      data: iv,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 6,
+      lineStyle: { color: '#dc2626', width: 3 },
+      itemStyle: { color: '#dc2626' },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(220,38,38,0.25)' },
+          { offset: 1, color: 'rgba(220,38,38,0.02)' }
+        ])
+      },
+      markPoint: {
+        data: [
+          { name: 'IV Max', coord: ['J-1', 65], symbol: 'pin', symbolSize: 50,
+            itemStyle: { color: '#dc2626' },
+            label: { show: true, formatter: 'IV MAX\n65%', color: '#fff', fontSize: 10, fontWeight: 700 }
+          },
+          { name: 'IV Crush', coord: ['J+1', 28], symbol: 'pin', symbolSize: 50,
+            itemStyle: { color: '#16a34a' },
+            label: { show: true, formatter: 'CRUSH\n28%', color: '#fff', fontSize: 10, fontWeight: 700 }
+          }
+        ]
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { xAxis: 'Jour J', lineStyle: { color: '#f97316', type: 'dashed', width: 2 },
+            label: { show: true, formatter: 'EARNINGS', position: 'insideStartTop', color: '#f97316', fontWeight: 700, fontSize: 11 }
+          }
+        ]
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 2: Average Earnings Day Move per Stock
+(function() {
+  var chart = echarts.init(document.getElementById('chart-avg-moves'));
+  var tickers = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA'];
+  var moves = [4.2, 5.1, 6.3, 7.8, 10.2, 11.5, 12.8];
+  var colors = ['#64748b','#64748b','#64748b','#f59e0b','#f97316','#dc2626','#991b1b'];
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        return params[0].name + '<br/>Mouvement moyen : <strong>\u00B1' + params[0].value + '%</strong>';
+      }
+    },
+    grid: { left: '8%', right: '5%', bottom: '12%', top: '10%' },
+    xAxis: {
+      type: 'category',
+      data: tickers,
+      axisLabel: { fontSize: 12, color: '#0f172a', fontWeight: 700 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Move moyen (%)',
+      nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+      axisLabel: { fontSize: 11, color: '#64748b', formatter: '\u00B1{value}%' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [{
+      type: 'bar',
+      data: moves.map(function(v, i) {
+        return { value: v, itemStyle: { color: colors[i], borderRadius: [6, 6, 0, 0] } };
+      }),
+      barWidth: '55%',
+      label: {
+        show: true,
+        position: 'top',
+        formatter: '\u00B1{c}%',
+        fontWeight: 700,
+        fontSize: 12,
+        color: '#0f172a'
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 3: Expected vs Actual Move (Scatter)
+(function() {
+  var chart = echarts.init(document.getElementById('chart-scatter'));
+  // [expected, actual, ticker, quarter]
+  var data = [
+    [4.5, 3.2, 'AAPL', 'Q4 2024'],
+    [5.0, 7.8, 'MSFT', 'Q4 2024'],
+    [6.8, 4.1, 'GOOGL', 'Q4 2024'],
+    [8.0, 12.5, 'AMZN', 'Q3 2024'],
+    [10.5, 20.3, 'META', 'Q4 2023'],
+    [11.0, 16.4, 'NVDA', 'Q1 2025'],
+    [13.0, 8.2, 'TSLA', 'Q4 2024'],
+    [4.2, 2.8, 'AAPL', 'Q3 2024'],
+    [5.5, 3.9, 'MSFT', 'Q3 2024'],
+    [7.0, 9.5, 'GOOGL', 'Q3 2024'],
+    [8.5, 5.2, 'AMZN', 'Q4 2024'],
+    [11.5, 26.0, 'META', 'Q3 2022'],
+    [12.0, 9.8, 'NVDA', 'Q4 2024'],
+    [14.0, 12.1, 'TSLA', 'Q3 2024'],
+    [4.8, 6.1, 'AAPL', 'Q2 2024'],
+    [5.2, 4.0, 'MSFT', 'Q2 2024'],
+    [7.2, 5.8, 'GOOGL', 'Q2 2024'],
+    [9.0, 3.5, 'AMZN', 'Q2 2024'],
+    [10.0, 8.5, 'META', 'Q2 2024'],
+    [12.5, 14.8, 'NVDA', 'Q3 2024']
+  ];
+  var aboveLine = [];
+  var belowLine = [];
+  data.forEach(function(d) {
+    if (d[1] >= d[0]) {
+      aboveLine.push(d);
+    } else {
+      belowLine.push(d);
+    }
+  });
+  var option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        var d = params.data;
+        var status = d[1] >= d[0] ? '<span style="color:#16a34a">Acheteurs gagnent</span>' : '<span style="color:#dc2626">Vendeurs gagnent</span>';
+        return '<strong>' + d[2] + '</strong> (' + d[3] + ')<br/>Expected : \u00B1' + d[0] + '%<br/>Actual : \u00B1' + d[1] + '%<br/>' + status;
+      }
+    },
+    legend: {
+      data: ['Actual > Expected (Acheteurs)', 'Actual < Expected (Vendeurs)'],
+      bottom: 0,
+      textStyle: { fontSize: 11, color: '#64748b' }
+    },
+    grid: { left: '10%', right: '5%', bottom: '15%', top: '10%' },
+    xAxis: {
+      type: 'value',
+      name: 'Expected Move (%)',
+      nameLocation: 'middle',
+      nameGap: 30,
+      nameTextStyle: { color: '#94a3b8', fontSize: 12 },
+      axisLabel: { fontSize: 11, color: '#64748b', formatter: '\u00B1{value}%' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+      min: 0, max: 16
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Actual Move (%)',
+      nameLocation: 'middle',
+      nameGap: 40,
+      nameTextStyle: { color: '#94a3b8', fontSize: 12 },
+      axisLabel: { fontSize: 11, color: '#64748b', formatter: '\u00B1{value}%' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+      min: 0, max: 28
+    },
+    series: [
+      {
+        name: 'Actual > Expected (Acheteurs)',
+        type: 'scatter',
+        data: aboveLine,
+        symbolSize: 14,
+        itemStyle: { color: '#16a34a', borderColor: '#fff', borderWidth: 1 },
+        label: {
+          show: true,
+          formatter: function(p) { return p.data[2]; },
+          position: 'top',
+          fontSize: 9,
+          color: '#16a34a',
+          fontWeight: 600
+        }
+      },
+      {
+        name: 'Actual < Expected (Vendeurs)',
+        type: 'scatter',
+        data: belowLine,
+        symbolSize: 14,
+        itemStyle: { color: '#dc2626', borderColor: '#fff', borderWidth: 1 },
+        label: {
+          show: true,
+          formatter: function(p) { return p.data[2]; },
+          position: 'top',
+          fontSize: 9,
+          color: '#dc2626',
+          fontWeight: 600
+        }
+      },
+      {
+        name: 'Diagonale',
+        type: 'line',
+        data: [[0, 0], [16, 16]],
+        lineStyle: { color: '#94a3b8', type: 'dashed', width: 1.5 },
+        symbol: 'none',
+        tooltip: { show: false },
+        silent: true
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

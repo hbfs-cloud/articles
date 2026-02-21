@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meme Stocks &amp; Intelligence Sociale &mdash; Scanner Reddit, Twitter, Telegram &amp; Discord | Le Guide du Super Sp&eacute;culateur &mdash; Partie 2/8 | Market Watch</title>
+  <meta name="description" content="Comment d&eacute;tecter un meme stock avant le pump. Guide complet pour scanner Reddit, Twitter, Telegram, Discord et StockTwits. Gamma squeeze, strat&eacute;gies de trading, case studies GME, BBBY, DJT.">
+  <meta property="og:title" content="Meme Stocks &amp; Intelligence Sociale | Le Guide du Super Sp&eacute;culateur &mdash; Partie 2/8">
+  <meta property="og:description" content="Scanner Reddit, Twitter, Telegram &amp; Discord pour d&eacute;tecter les meme stocks avant le pump. Gamma squeeze, strat&eacute;gies, case studies.">
+  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/series/guide-speculateur/part2-meme-stocks/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  /* Series-specific styles - RED/ORANGE THEME for Part 2 */
+  :root {
+    --theme-primary: #dc2626;
+    --theme-secondary: #f97316;
+    --theme-light: #fef2f2;
+    --theme-gradient: linear-gradient(135deg, #dc2626 0%, #f97316 100%);
+  }
+
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; }
+  .brand-logo:hover { color:#f97316; }
+
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#f97316; color:#f97316; }
+  .series-link.current { background:var(--theme-primary); color:white; border-color:var(--theme-primary); }
+  .series-link.disabled { opacity:0.4; pointer-events:none; }
+
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fff7ed 0%, #fef2f2 50%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:var(--theme-primary); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+
+  .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:var(--theme-primary); margin-right:0.75rem; }
+  details[open] summary { border-color:var(--theme-primary); background:#fef2f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; margin-top:0; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+  /* Timeline specific */
+  .timeline { position:relative; padding:2rem 0; }
+  .timeline::before { content:''; position:absolute; left:30px; top:0; bottom:0; width:3px; background:linear-gradient(180deg, #dc2626, #f97316); }
+  .timeline-item { position:relative; padding-left:70px; margin-bottom:2rem; }
+  .timeline-item::before { content:''; position:absolute; left:22px; top:8px; width:20px; height:20px; border-radius:50%; border:3px solid var(--theme-primary); background:white; z-index:1; }
+  .timeline-year { font-size:0.75rem; font-weight:800; color:var(--theme-primary); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.25rem; }
+  .timeline-title { font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:0.25rem; }
+  .timeline-desc { font-size:0.85rem; color:#64748b; line-height:1.5; }
+
+  /* Platform cards */
+  .platform-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin:2rem 0; }
+  .platform-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; transition:all 0.3s; border-top:4px solid #e2e8f0; }
+  .platform-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+  .platform-card.reddit { border-top-color:#ff4500; }
+  .platform-card.twitter { border-top-color:#1da1f2; }
+  .platform-card.telegram { border-top-color:#0088cc; }
+  .platform-card.discord { border-top-color:#5865f2; }
+  .platform-card.stocktwits { border-top-color:#ffb900; }
+  .platform-card.tiktok { border-top-color:#fe2c55; }
+  .platform-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:white; margin-bottom:1rem; }
+  .platform-card h4 { font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.5rem; }
+  .platform-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0 0 0.75rem; }
+  .platform-card .red-flag { display:flex; align-items:flex-start; gap:0.4rem; font-size:0.8rem; color:#dc2626; line-height:1.4; margin-top:0.5rem; }
+  .platform-card .red-flag i { margin-top:0.15rem; flex-shrink:0; font-size:0.7rem; }
+
+  /* Signal cards */
+  .signal-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin:2rem 0; }
+  .signal-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; transition:all 0.3s; position:relative; overflow:hidden; }
+  .signal-card:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.1); }
+  .signal-number { position:absolute; top:1rem; right:1rem; width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:900; color:white; background:var(--theme-gradient); }
+  .signal-card h4 { font-size:0.95rem; font-weight:700; color:#0f172a; margin:0 0 0.5rem; padding-right:2.5rem; }
+  .signal-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+  /* Phase steps */
+  .phase-step { display:flex; align-items:flex-start; gap:1.5rem; padding:1.5rem; margin:1rem 0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:16px; }
+  .phase-number { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; font-weight:900; color:white; flex-shrink:0; background:var(--theme-gradient); }
+
+  /* Case study cards */
+  .case-grid { display:grid; grid-template-columns:1fr; gap:1.5rem; margin:2rem 0; }
+  .case-card { background:white; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
+  .case-header { padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
+  .case-ticker { font-size:1.5rem; font-weight:900; }
+  .case-body { padding:0 1.5rem 1.5rem; }
+  .case-body p { font-size:0.9rem; }
+  .case-lesson { padding:1rem 1.5rem; border-top:1px solid #f1f5f9; font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:0.5rem; }
+
+  /* Trap cards */
+  .trap-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin:2rem 0; }
+  .trap-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #ef4444; }
+  .trap-card h4 { display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.75rem; }
+  .trap-card p { font-size:0.88rem; color:#475569; line-height:1.6; margin:0; }
+  .trap-number { width:28px; height:28px; border-radius:8px; background:#fef2f2; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; flex-shrink:0; }
+
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:var(--theme-primary); }
+
+  /* Gamma squeeze diagram */
+  .squeeze-flow { display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; margin:2rem 0; }
+  .squeeze-step { background:#0f172a; color:white; padding:0.75rem 1.25rem; border-radius:12px; font-size:0.85rem; font-weight:600; text-align:center; min-width:130px; }
+  .squeeze-arrow { color:#f97316; font-size:1.2rem; font-weight:800; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .brand-logo { font-size:0.9rem; }
+    .series-title { font-size:0.65rem; margin-right:0.5rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+    .timeline-item { padding-left:50px; }
+    .platform-grid { grid-template-columns:1fr; }
+    .signal-grid { grid-template-columns:1fr; }
+    .trap-grid { grid-template-columns:1fr; }
+    .phase-step { flex-direction:column; text-align:center; }
+    .squeeze-flow { flex-direction:column; }
+    .squeeze-arrow { transform:rotate(90deg); }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .brand-logo { font-size:0.85rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+    .hero-badges { gap:0.4rem; margin-top:1rem; }
+    .timeline::before { left:15px; }
+    .timeline-item { padding-left:45px; }
+    .timeline-item::before { left:7px; width:16px; height:16px; }
+  }
+  </style>
+</head>
+
+<body>
+<!-- GTM noscript -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation - 8 parts, Part 2 is current -->
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-fire" style="margin-right:0.4rem;"></i> Le Guide du Super Sp&eacute;culateur</span>
+  <a href="/series/guide-speculateur/part1-psychologie/" class="series-link">1 &mdash; Psychologie</a>
+  <a href="/series/guide-speculateur/part2-meme-stocks/" class="series-link current">2 &mdash; Meme Stocks</a>
+  <a href="/series/guide-speculateur/part3-options/" class="series-link disabled">3 &mdash; Options</a>
+  <a href="/series/guide-speculateur/part4-short-selling/" class="series-link disabled">4 &mdash; Short Selling</a>
+  <a href="/series/guide-speculateur/part5-crypto/" class="series-link disabled">5 &mdash; Crypto</a>
+  <a href="/series/guide-speculateur/part6-levier/" class="series-link disabled">6 &mdash; Levier</a>
+  <a href="/series/guide-speculateur/part7-ipo-spac/" class="series-link disabled">7 &mdash; IPO &amp; SPAC</a>
+  <a href="/series/guide-speculateur/part8-systeme/" class="series-link disabled">8 &mdash; Syst&egrave;me</a>
+</div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-fire-flame-curved" style="margin-right:0.4rem;"></i> Partie 2 sur 8 &mdash; F&eacute;vrier 2026</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem; background:linear-gradient(135deg, #dc2626 0%, #f97316 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Meme Stocks &amp; Intelligence Sociale</h1>
+  <p class="hero-subtitle">Scanner Reddit, Twitter, Telegram &amp; Discord pour d&eacute;tecter les mouvements viraux <strong>avant</strong> la foule. Anatomie d'un meme stock, m&eacute;canique du gamma squeeze, strat&eacute;gies de trading et pi&egrave;ges &agrave; &eacute;viter.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-fire"></i> MEME STOCKS</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-brands fa-reddit-alien"></i> WSB</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-share-nodes"></i> SOCIAL</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-virus"></i> VIRAL</span>
+  </div>
+</section>
+
+<!-- ==================== NAV GRID ==================== -->
+<div class="container">
+  <div class="nav-grid" style="margin-top:-3rem;">
+    <a href="#disclaimer" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="display:block; font-size:1.2rem; color:#dc2626; margin-bottom:0.3rem;"></i> Disclaimer</a>
+    <a href="#anatomie" class="nav-item"><i class="fa-solid fa-dna" style="display:block; font-size:1.2rem; color:#f97316; margin-bottom:0.3rem;"></i> Anatomie</a>
+    <a href="#plateformes" class="nav-item"><i class="fa-solid fa-satellite-dish" style="display:block; font-size:1.2rem; color:#2563eb; margin-bottom:0.3rem;"></i> Plateformes</a>
+    <a href="#outils" class="nav-item"><i class="fa-solid fa-toolbox" style="display:block; font-size:1.2rem; color:#10b981; margin-bottom:0.3rem;"></i> Outils</a>
+    <a href="#detection" class="nav-item"><i class="fa-solid fa-magnifying-glass" style="display:block; font-size:1.2rem; color:#eab308; margin-bottom:0.3rem;"></i> D&eacute;tection</a>
+    <a href="#gamma-squeeze" class="nav-item"><i class="fa-solid fa-bolt" style="display:block; font-size:1.2rem; color:#8b5cf6; margin-bottom:0.3rem;"></i> Gamma Squeeze</a>
+    <a href="#strategie" class="nav-item"><i class="fa-solid fa-chess" style="display:block; font-size:1.2rem; color:#0ea5e9; margin-bottom:0.3rem;"></i> Strat&eacute;gie</a>
+    <a href="#pieges" class="nav-item"><i class="fa-solid fa-skull-crossbones" style="display:block; font-size:1.2rem; color:#ef4444; margin-bottom:0.3rem;"></i> Pi&egrave;ges</a>
+    <a href="#case-studies" class="nav-item"><i class="fa-solid fa-microscope" style="display:block; font-size:1.2rem; color:#059669; margin-bottom:0.3rem;"></i> Case Studies</a>
+    <a href="#quiz" class="nav-item"><i class="fa-solid fa-graduation-cap" style="display:block; font-size:1.2rem; color:#d97706; margin-bottom:0.3rem;"></i> Quiz</a>
+  </div>
+
+  <!-- ==================== DISCLAIMER ==================== -->
+  <div class="section-divider" id="disclaimer">Avertissement L&eacute;gal</div>
+
+  <div class="alert-box" style="background:#fef2f2; border-left:6px solid #dc2626; padding:2rem; border-radius:16px;">
+    <h4 style="color:#dc2626; margin-top:0; font-size:1.1rem;"><i class="fa-solid fa-gavel"></i> AVERTISSEMENT &mdash; LISEZ AVANT DE CONTINUER</h4>
+    <p style="color:#991b1b; font-weight:600; font-size:1rem; line-height:1.7; margin-bottom:1rem;"><i class="fa-solid fa-ban" style="margin-right:0.4rem;"></i> Ne participez <strong>JAMAIS</strong> &agrave; un pump &amp; dump coordonn&eacute;. C'est ill&eacute;gal.</p>
+    <p style="color:#7f1d1d; font-size:0.9rem; line-height:1.7; margin-bottom:1rem;">La manipulation de march&eacute; est un d&eacute;lit p&eacute;nal sanctionn&eacute; par la <strong>SEC</strong> (Securities and Exchange Commission) aux &Eacute;tats-Unis, l'<strong>AMF</strong> en France et les r&eacute;gulateurs de chaque pays. Cela inclut :</p>
+    <ul style="color:#991b1b; font-size:0.9rem; line-height:1.8; padding-left:1.5rem;">
+      <li>Coordonner des achats group&eacute;s pour faire monter un titre artificiellement</li>
+      <li>Diffuser de fausses informations pour influencer le cours d'une action</li>
+      <li>Participer sciemment &agrave; un sch&eacute;ma de "pump and dump"</li>
+      <li>Utiliser des bots pour cr&eacute;er un faux sentiment social</li>
+    </ul>
+    <p style="color:#7f1d1d; font-size:0.9rem; line-height:1.7; margin-bottom:0;">Cet article est <strong>strictement &eacute;ducatif</strong>. Il vise &agrave; vous apprendre &agrave; <em>d&eacute;tecter</em> les mouvements de foule &mdash; pas &agrave; les cr&eacute;er. Sp&eacute;culer sur des meme stocks est <strong>extr&ecirc;mement risqu&eacute;</strong>. Vous pouvez perdre la totalit&eacute; de votre capital. Ne risquez jamais plus que ce que vous pouvez vous permettre de perdre.</p>
+  </div>
+
+  <!-- ==================== SECTION 1 : ANATOMIE ==================== -->
+  <div class="section-divider" id="anatomie">L'Anatomie d'un Meme Stock</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-dna" style="color:#f97316;"></i> Qu'est-ce qu'un meme stock ?</h2>
+
+    <p>Un <strong>meme stock</strong> est une action dont le cours est propuls&eacute; non pas par ses fondamentaux, mais par un <strong>engouement viral sur les r&eacute;seaux sociaux</strong>. Le terme est n&eacute; en janvier 2021 avec l'explosion de GameStop (GME) sur le subreddit r/wallstreetbets.</p>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Les 4 ingr&eacute;dients d'un meme stock</h4>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-circle-check" style="color:#dc2626;"></i> <strong>Faible capitalisation</strong> &mdash; March&eacute; plus facile &agrave; d&eacute;placer (small/mid cap)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#f97316;"></i> <strong>Float r&eacute;duit</strong> &mdash; Peu d'actions disponibles &agrave; l'&eacute;change (&lt; 50M shares)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#eab308;"></i> <strong>Short interest &eacute;lev&eacute;</strong> &mdash; Beaucoup de vendeurs &agrave; d&eacute;couvert (&gt; 20% du float)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Viralit&eacute; sociale</strong> &mdash; Hashtags, memes, communaut&eacute; passionn&eacute;e, narrative forte</li>
+      </ul>
+    </div>
+
+    <h3><i class="fa-solid fa-timeline" style="color:#dc2626; margin-right:0.5rem;"></i> La saga GameStop &mdash; Chronologie compl&egrave;te</h3>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">Septembre 2019</div>
+        <div class="timeline-title">DeepFuckingValue (DFV) publie sa th&egrave;se</div>
+        <div class="timeline-desc">Keith Gill, alias u/DeepFuckingValue sur Reddit et "Roaring Kitty" sur YouTube, publie son analyse fondamentale de GameStop &agrave; ~$4. Il ach&egrave;te des calls $8 pour janvier 2021. Le short interest atteint 140% du float &mdash; un chiffre th&eacute;oriquement impossible.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">Ao&ucirc;t 2020</div>
+        <div class="timeline-title">Ryan Cohen entre au capital</div>
+        <div class="timeline-desc">Le fondateur de Chewy ach&egrave;te 10% de GameStop et r&eacute;clame une transformation digitale. Le cours passe de $4 &agrave; $20. La th&egrave;se de DFV se r&eacute;pand sur r/wallstreetbets.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">11-22 Janvier 2021</div>
+        <div class="timeline-title">Le d&eacute;but du squeeze</div>
+        <div class="timeline-desc">WSB explose. Les mentions de GME passent de quelques dizaines &agrave; des milliers par jour. Le cours passe de $20 &agrave; $76. Les shorts commencent &agrave; paniquer. Melvin Capital perd des milliards.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">25-27 Janvier 2021</div>
+        <div class="timeline-title">Le gamma squeeze l&eacute;gendaire</div>
+        <div class="timeline-desc">Les acheteurs de calls OTM forcent les market makers &agrave; hedger en achetant l'action. GME passe de $76 &agrave; $347, puis touche <strong>$483</strong> en pr&eacute;-march&eacute;. Elon Musk tweete "Gamestonk!!". Le volume d&eacute;passe 175 millions d'actions en une journ&eacute;e.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">28 Janvier 2021</div>
+        <div class="timeline-title">Robinhood coupe le bouton "Acheter"</div>
+        <div class="timeline-desc">Robinhood et d'autres courtiers interdisent l'achat de GME, AMC et d'autres titres. Seule la vente est autoris&eacute;e. Le cours s'effondre de $483 &agrave; $112. Tol&eacute; g&eacute;n&eacute;ral. Vlad Tenev, PDG de Robinhood, sera convoqu&eacute; au Congr&egrave;s.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">18 F&eacute;vrier 2021</div>
+        <div class="timeline-title">Audition au Congr&egrave;s am&eacute;ricain</div>
+        <div class="timeline-desc">Keith Gill (DFV), Vlad Tenev (Robinhood), Ken Griffin (Citadel) et Gabe Plotkin (Melvin Capital) t&eacute;moignent devant le Financial Services Committee. DFV d&eacute;clare : "I like the stock." Le cours est &agrave; $44.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2024</div>
+        <div class="timeline-title">Le retour de Roaring Kitty</div>
+        <div class="timeline-desc">Keith Gill refait surface sur X (Twitter) avec un simple post cryptique. GME bondit de 100% en une journ&eacute;e. La communaut&eacute; WSB se r&eacute;veille. Le cours passe de $10 &agrave; $60+, avant de retomber &agrave; $25.</div>
+      </div>
+    </div>
+
+    <!-- ECharts GME Timeline -->
+    <div id="gme-timeline-chart" style="width:100%; height:400px; margin:2rem 0; background:white; border-radius:16px; border:1px solid #e2e8f0;"></div>
+
+    <h3><i class="fa-solid fa-users" style="color:#f97316; margin-right:0.5rem;"></i> Les autres meme stocks c&eacute;l&egrave;bres</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Nom</th>
+          <th>P&eacute;riode</th>
+          <th>Pic</th>
+          <th>M&eacute;canique</th>
+          <th>Issue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>AMC</strong></td>
+          <td>AMC Entertainment</td>
+          <td>Jan-Jun 2021</td>
+          <td>$72 &rarr; $4</td>
+          <td>Short squeeze + "Ape Army"</td>
+          <td>Dilution massive par le management</td>
+        </tr>
+        <tr>
+          <td><strong>BBBY</strong></td>
+          <td>Bed Bath &amp; Beyond</td>
+          <td>Ao&ucirc;t 2022</td>
+          <td>$30 &rarr; $0</td>
+          <td>Ryan Cohen pump &amp; dump</td>
+          <td>Faillite Ch.11 en avril 2023</td>
+        </tr>
+        <tr>
+          <td><strong>BB</strong></td>
+          <td>BlackBerry</td>
+          <td>Jan 2021</td>
+          <td>$28 &rarr; $3</td>
+          <td>Nostalgie + mentions WSB</td>
+          <td>Fondamentaux n&eacute;glig&eacute;s</td>
+        </tr>
+        <tr>
+          <td><strong>NOK</strong></td>
+          <td>Nokia</td>
+          <td>Jan 2021</td>
+          <td>$9 &rarr; $4</td>
+          <td>Float trop large pour squeeze</td>
+          <td>Pas de short interest significatif</td>
+        </tr>
+        <tr>
+          <td><strong>WISH</strong></td>
+          <td>ContextLogic</td>
+          <td>Jun 2021</td>
+          <td>$15 &rarr; $0.50</td>
+          <td>WSB hype + th&egrave;se "undervalued"</td>
+          <td>Business fondamentalement cass&eacute;</td>
+        </tr>
+        <tr>
+          <td><strong>CLOV</strong></td>
+          <td>Clover Health</td>
+          <td>Jun 2021</td>
+          <td>$28 &rarr; $1</td>
+          <td>SI + Chamath pump</td>
+          <td>Hindenburg short report</td>
+        </tr>
+        <tr>
+          <td><strong>DJT</strong></td>
+          <td>Trump Media</td>
+          <td>2024</td>
+          <td>$80 &rarr; $20</td>
+          <td>Politique + SPAC + lockup</td>
+          <td>Pas de revenus, pure sp&eacute;culation</td>
+        </tr>
+        <tr>
+          <td><strong>FFIE</strong></td>
+          <td>Faraday Future</td>
+          <td>2024</td>
+          <td>$1.20 &rarr; $0.05</td>
+          <td>Penny stock + Reddit hype</td>
+          <td>Dilution + fondamentaux catastrophiques</td>
+        </tr>
+        <tr>
+          <td><strong>MSTR</strong></td>
+          <td>MicroStrategy</td>
+          <td>2024-2025</td>
+          <td>$500+</td>
+          <td>Proxy Bitcoin + leverage</td>
+          <td>Premium vs NAV &eacute;lev&eacute;</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== SECTION 2 : PLATEFORMES ==================== -->
+  <div class="section-divider" id="plateformes">Les Plateformes &agrave; Surveiller</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-satellite-dish" style="color:#2563eb;"></i> O&ugrave; na&icirc;ssent les meme stocks ?</h2>
+
+    <p>Les mouvements viraux commencent <strong>toujours</strong> sur les r&eacute;seaux sociaux avant d'atteindre les march&eacute;s. Voici les 6 plateformes &agrave; surveiller en priorit&eacute; &mdash; avec pour chacune les signaux &agrave; rep&eacute;rer et les red flags &agrave; &eacute;viter.</p>
+
+    <div class="platform-grid">
+      <!-- Reddit -->
+      <div class="platform-card reddit">
+        <div class="platform-icon" style="background:#ff4500;"><i class="fa-brands fa-reddit-alien"></i></div>
+        <h4>Reddit (r/wallstreetbets)</h4>
+        <p><strong>Le berceau des meme stocks.</strong> 15M+ membres. Les "DD posts" (Due Diligence) sont des analyses d&eacute;taill&eacute;es par des anonymes. Les "YOLO posts" montrent des positions &agrave; risque extr&ecirc;me. Le "gain/loss porn" documente les r&eacute;sultats spectaculaires.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comment surveiller :</strong> Trier par "Hot" et "Rising". Surveiller les flairs "DD", "YOLO", "Catalyst". Compter les mentions d'un ticker sur 24h/7j.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Subreddits cl&eacute;s :</strong> r/wallstreetbets, r/stocks, r/options, r/shortsqueeze, r/superstonk</p>
+        <div class="red-flag"><i class="fa-solid fa-triangle-exclamation"></i> Red flag : comptes de &lt;30 jours qui poussent tous le m&ecirc;me ticker = probable coordination</div>
+      </div>
+
+      <!-- Twitter/X -->
+      <div class="platform-card twitter">
+        <div class="platform-icon" style="background:#1da1f2;"><i class="fa-brands fa-x-twitter"></i></div>
+        <h4>Twitter/X (FinTwit)</h4>
+        <p><strong>L'acc&eacute;l&eacute;rateur viral.</strong> Les $CASHTAGS permettent de suivre les mentions d'un ticker. Le "Crypto Twitter" (CT) est un &eacute;cosyst&egrave;me &agrave; part. Les influenceurs comme @unusual_whales, @TheSqueeze d&eacute;tectent les mouvements t&ocirc;t.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comment surveiller :</strong> Listes priv&eacute;es de comptes fiables. Recherche par $TICKER. TweetDeck/X Pro pour le monitoring en temps r&eacute;el.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comptes &agrave; suivre :</strong> @unusual_whales, @DeItaone, @zaborenko, @mcaboreal</p>
+        <div class="red-flag"><i class="fa-solid fa-triangle-exclamation"></i> Red flag : influenceur avec 500K followers qui mentionne un micro-cap pour la premi&egrave;re fois = probable pump</div>
+      </div>
+
+      <!-- Telegram -->
+      <div class="platform-card telegram">
+        <div class="platform-icon" style="background:#0088cc;"><i class="fa-brands fa-telegram"></i></div>
+        <h4>Telegram</h4>
+        <p><strong>La zone grise.</strong> Des groupes priv&eacute;s partagent des "alpha" (appels avant le mouvement). Certains sont l&eacute;gitimes, la plupart sont des pump groups d&eacute;guis&eacute;s. Les bots d'alerte (options flow, whale watching) sont utiles.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comment surveiller :</strong> Rejoindre les channels publics pour les alertes macro/options flow. &Eacute;viter les groupes payants "VIP signals".</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Channels utiles :</strong> Unusual Whales, Quiver Quantitative Alerts, CoinGecko Alerts</p>
+        <div class="red-flag"><i class="fa-solid fa-triangle-exclamation"></i> Red flag : groupe qui annonce "le prochain GME" avec un compte &agrave; rebours = pump &amp; dump coordonn&eacute;</div>
+      </div>
+
+      <!-- Discord -->
+      <div class="platform-card discord">
+        <div class="platform-icon" style="background:#5865f2;"><i class="fa-brands fa-discord"></i></div>
+        <h4>Discord</h4>
+        <p><strong>Les salons de trading communautaires.</strong> Des milliers de serveurs sp&eacute;cialis&eacute;s (stocks, options, crypto). Les "rooms VIP" sont souvent payantes. Les meilleurs serveurs ont des bots d'alertes int&eacute;gr&eacute;s (options flow, dark pool, SI%).</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comment surveiller :</strong> Rejoindre 2-3 serveurs de qualit&eacute;. Lire les channels #dd et #alerts. Ignorer les #general remplis de "to the moon".</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Serveurs de r&eacute;f&eacute;rence :</strong> The Squeeze, FlowAlgo Community, Market Watch</p>
+        <div class="red-flag"><i class="fa-solid fa-triangle-exclamation"></i> Red flag : serveur qui interdit de discuter les stop-loss ou de prendre des profits = mentalit&eacute; de secte</div>
+      </div>
+
+      <!-- StockTwits -->
+      <div class="platform-card stocktwits">
+        <div class="platform-icon" style="background:#ffb900;"><i class="fa-solid fa-chart-simple"></i></div>
+        <h4>StockTwits</h4>
+        <p><strong>Le Twitter des traders.</strong> Chaque message est tagu&eacute; bullish ou bearish. Le ratio bulls/bears est un indicateur de sentiment en temps r&eacute;el. Le "trending" identifie les tickers &agrave; momentum social croissant.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comment surveiller :</strong> Trending tickers + message volume. Ratio bulls/bears extr&ecirc;me (&gt;90% bulls = potentiel contrarian).</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Indicateurs cl&eacute;s :</strong> Sentiment score, message volume change 24h, watchers count</p>
+        <div class="red-flag"><i class="fa-solid fa-triangle-exclamation"></i> Red flag : 99% bulls sur un titre qui a d&eacute;j&agrave; fait +300% = euphorie de sommet</div>
+      </div>
+
+      <!-- TikTok -->
+      <div class="platform-card tiktok">
+        <div class="platform-icon" style="background:#fe2c55;"><i class="fa-brands fa-tiktok"></i></div>
+        <h4>TikTok</h4>
+        <p><strong>Le signal de top.</strong> Quand un stock appara&icirc;t sur TikTok, c'est g&eacute;n&eacute;ralement <em>trop tard</em>. Les "TikTok traders" sont des d&eacute;butants qui d&eacute;couvrent la bourse. Leur entr&eacute;e massive signale souvent la derni&egrave;re vague d'achat avant le crash.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Comment surveiller :</strong> Hashtags #stocks #investing #memestock. Utile comme indicateur <em>contrarian</em> : si TikTok en parle, c'est probablement le sommet.</p>
+        <p style="font-size:0.8rem; color:#334155;"><strong>Hashtags :</strong> #stocktok, #investing, #daytrading, #gme, #wallstreetbets</p>
+        <div class="red-flag"><i class="fa-solid fa-triangle-exclamation"></i> Red flag : vid&eacute;o virale de quelqu'un montrant ses gains sur un meme stock = indicateur de top fiable</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 3 : OUTILS ==================== -->
+  <div class="section-divider" id="outils">Outils de Social Scanning</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-toolbox" style="color:#10b981;"></i> Les outils pour scanner le sentiment social</h2>
+
+    <p>Surveiller manuellement 6 plateformes est impossible. Ces outils automatisent la d&eacute;tection de tendances sociales et vous donnent un avantage de <strong>quelques heures &agrave; quelques jours</strong> sur la masse.</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Outil</th>
+          <th>Source</th>
+          <th>Prix</th>
+          <th>Forces</th>
+          <th>Limites</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Quiver Quantitative</strong></td>
+          <td>Reddit, Congr&egrave;s, lobbying</td>
+          <td>Gratuit</td>
+          <td>WSB tracking, trades du Congr&egrave;s, dark pool, lobbying data</td>
+          <td>Interface basique, pas d'alertes temps r&eacute;el</td>
+        </tr>
+        <tr>
+          <td><strong>SwaggyStocks</strong></td>
+          <td>Reddit (WSB)</td>
+          <td>Freemium</td>
+          <td>Sentiment WSB, options flow, historique des mentions</td>
+          <td>Focus WSB uniquement, communaut&eacute; r&eacute;duite</td>
+        </tr>
+        <tr>
+          <td><strong>ApeWisdom</strong></td>
+          <td>Reddit (multi-subs)</td>
+          <td>Gratuit</td>
+          <td>Tracker de mentions Reddit en temps r&eacute;el, top trending</td>
+          <td>Reddit uniquement, pas de sentiment qualifi&eacute;</td>
+        </tr>
+        <tr>
+          <td><strong>StockTwits API</strong></td>
+          <td>StockTwits</td>
+          <td>Gratuit (limites)</td>
+          <td>Sentiment bull/bear, trending, message volume</td>
+          <td>Bruit &eacute;lev&eacute;, bots fr&eacute;quents</td>
+        </tr>
+        <tr>
+          <td><strong>Unusual Whales</strong></td>
+          <td>Options flow, dark pool</td>
+          <td>$40-65/mois</td>
+          <td>Options flow, dark pool, Congress trades, alertes Discord/Telegram</td>
+          <td>Payant, courbe d'apprentissage</td>
+        </tr>
+        <tr>
+          <td><strong>LunarCrush</strong></td>
+          <td>Twitter, Reddit (crypto)</td>
+          <td>Freemium</td>
+          <td>Social metrics crypto, Galaxy Score, alt rank</td>
+          <td>Crypto uniquement</td>
+        </tr>
+        <tr>
+          <td><strong>Sentifi / SMA</strong></td>
+          <td>Multi-sources</td>
+          <td>Institutionnel</td>
+          <td>NLP avanc&eacute;, scoring de sentiment, historique profond</td>
+          <td>Prix &eacute;lev&eacute;, orient&eacute; institutionnels</td>
+        </tr>
+        <tr>
+          <td><strong>TrendSpider</strong></td>
+          <td>Multi-sources</td>
+          <td>$35-75/mois</td>
+          <td>Social sentiment + analyse technique, multi-timeframe</td>
+          <td>Complexe pour d&eacute;butants</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-star"></i> Le stack gratuit du sp&eacute;culateur</h4>
+      <p style="margin:0; line-height:1.8;">Pour commencer <strong>sans d&eacute;penser un centime</strong> :<br>
+      <strong>1.</strong> <em>Quiver Quantitative</em> &mdash; pour le tracking WSB + Congr&egrave;s<br>
+      <strong>2.</strong> <em>ApeWisdom</em> &mdash; pour les mentions Reddit en temps r&eacute;el<br>
+      <strong>3.</strong> <em>StockTwits</em> &mdash; pour le sentiment bulls/bears + trending<br>
+      <strong>4.</strong> <em>Twitter/X</em> (listes priv&eacute;es) &mdash; pour les cashtags et influenceurs<br>
+      <strong>5.</strong> <em>Finviz</em> &mdash; pour le screener technique (SI%, float, volume)</p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 4 : DETECTION ==================== -->
+  <div class="section-divider" id="detection">D&eacute;tecter un Meme Stock AVANT le Pump</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-magnifying-glass" style="color:#eab308;"></i> Les 6 signaux d'alerte pr&eacute;coce</h2>
+
+    <p>La cl&eacute; du succ&egrave;s sur les meme stocks est d'entrer <strong>avant</strong> la foule. Quand CNN, Bloomberg et votre coiffeur en parlent, c'est d&eacute;j&agrave; trop tard. Voici les 6 signaux &agrave; surveiller simultan&eacute;ment :</p>
+
+    <div class="signal-grid">
+      <div class="signal-card">
+        <div class="signal-number">1</div>
+        <h4>Explosion des mentions Reddit</h4>
+        <p>Les mentions d'un ticker passent de <strong>10 &agrave; 500+ en 24 heures</strong> sur r/wallstreetbets. C'est le signal le plus pr&eacute;coce. Utilisez ApeWisdom ou Quiver Quant pour suivre ce chiffre. Un post DD qui re&ccedil;oit 1000+ upvotes et 50+ awards est un catalyseur.</p>
+      </div>
+
+      <div class="signal-card">
+        <div class="signal-number">2</div>
+        <h4>Short interest &gt; 20% du float</h4>
+        <p>Un SI% &eacute;lev&eacute; cr&eacute;e le carburant d'un short squeeze. <strong>GME avait 140% de SI</strong>. Tout titre avec &gt;20% de SI est une cible potentielle. V&eacute;rifiez sur Fintel, Ortex ou FINRA (donn&eacute;es bimensuelles). Le "days to cover" &gt; 5 est un signal suppl&eacute;mentaire.</p>
+      </div>
+
+      <div class="signal-card">
+        <div class="signal-number">3</div>
+        <h4>Surge de l'open interest calls OTM</h4>
+        <p>L'achat massif de <strong>calls out-of-the-money</strong> (strikes loin du prix actuel) est le pr&eacute;curseur d'un gamma squeeze. Si l'OI sur les calls $50 explose alors que le titre est &agrave; $20, les market makers devront hedger si le prix monte &mdash; cr&eacute;ant un feedback positif.</p>
+      </div>
+
+      <div class="signal-card">
+        <div class="signal-number">4</div>
+        <h4>Float r&eacute;duit (&lt; 50M actions)</h4>
+        <p>Moins il y a d'actions disponibles, plus le prix est facile &agrave; d&eacute;placer. Un float de <strong>&lt; 20M shares</strong> est id&eacute;al pour un meme stock. V&eacute;rifiez aussi l'insider ownership : si les insiders d&eacute;tiennent 40%+ du float, l'offre r&eacute;elle est encore plus r&eacute;duite.</p>
+      </div>
+
+      <div class="signal-card">
+        <div class="signal-number">5</div>
+        <h4>Catalyseur narratif</h4>
+        <p>Chaque meme stock a besoin d'une <strong>histoire</strong>. Un tweet du CEO, une approbation FDA, un partenariat surprise, une mention par Elon Musk, une apparition dans les m&eacute;dias. La narrative n'a pas besoin d'&ecirc;tre rationnelle &mdash; elle doit &ecirc;tre <em>partag&eacute;e et m&eacute;morable</em>.</p>
+      </div>
+
+      <div class="signal-card">
+        <div class="signal-number">6</div>
+        <h4>Volume spike &gt; 5x la moyenne</h4>
+        <p>Le volume est le <strong>carburant du mouvement</strong>. Si une action qui traite normalement 500K actions/jour voit soudainement 5M+, quelque chose se passe. Combinez avec les signaux 1-5 pour confirmer. Un volume spike sans les autres signaux est souvent un faux positif.</p>
+      </div>
+    </div>
+
+    <!-- ECharts Radar - Meme Stock Score -->
+    <h3 style="margin-top:2rem;"><i class="fa-solid fa-chart-pie" style="color:#f97316; margin-right:0.5rem;"></i> Scoring d'un meme stock potentiel</h3>
+    <p>Le radar ci-dessous compare le profil de GME (janvier 2021) avec celui d'un titre al&eacute;atoire. Plus le profil est large, plus le potentiel de meme stock est &eacute;lev&eacute;.</p>
+
+    <div id="meme-radar-chart" style="width:100%; height:420px; margin:2rem 0; background:white; border-radius:16px; border:1px solid #e2e8f0;"></div>
+
+    <div class="didactic-box">
+      <h4 style="color:#16a34a;"><i class="fa-solid fa-check-double"></i> R&egrave;gle pratique</h4>
+      <p style="margin:0; line-height:1.7;">Pour qu'un trade "meme stock" soit viable, vous devez observer au minimum <strong>4 signaux sur 6</strong> simultan&eacute;ment. Un seul signal isol&eacute; ne suffit jamais. La convergence des signaux est ce qui distingue un meme stock l&eacute;gitime d'un simple bruit social.</p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 5 : GAMMA SQUEEZE ==================== -->
+  <div class="section-divider" id="gamma-squeeze">La M&eacute;canique du Gamma Squeeze</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-bolt" style="color:#8b5cf6;"></i> Comprendre le gamma squeeze en 5 &eacute;tapes</h2>
+
+    <p>Le <strong>gamma squeeze</strong> est le m&eacute;canisme qui a propuls&eacute; GME de $76 &agrave; $483 en trois jours. Ce n'est pas de la magie &mdash; c'est de la m&eacute;canique de march&eacute;. Voici comment cela fonctionne, &eacute;tape par &eacute;tape.</p>
+
+    <div class="didactic-box" style="background:#f5f3ff; border-left-color:#8b5cf6;">
+      <h4 style="color:#7c3aed;"><i class="fa-solid fa-graduation-cap"></i> Pr&eacute;requis : le delta hedging</h4>
+      <p style="margin:0; line-height:1.7;">Quand vous achetez un <strong>call</strong> (option d'achat), c'est un <strong>market maker</strong> qui vous le vend. Le MM ne veut pas de risque directionnel &mdash; il veut gagner le spread. Pour rester <strong>delta-neutre</strong>, il doit acheter des actions du sous-jacent proportionnellement au delta de l'option qu'il a vendue. Plus le prix du sous-jacent monte, plus le delta augmente, et plus le MM doit acheter d'actions. C'est le <strong>delta hedging</strong>.</p>
+    </div>
+
+    <h3 style="margin-top:2rem;">Le feedback loop du gamma squeeze</h3>
+
+    <div class="squeeze-flow">
+      <div class="squeeze-step" style="background:linear-gradient(135deg, #2563eb, #3b82f6);">
+        <i class="fa-solid fa-cart-shopping" style="display:block; margin-bottom:0.3rem;"></i>
+        Retail ach&egrave;te<br>des calls OTM
+      </div>
+      <div class="squeeze-arrow">&rarr;</div>
+      <div class="squeeze-step" style="background:linear-gradient(135deg, #7c3aed, #8b5cf6);">
+        <i class="fa-solid fa-scale-balanced" style="display:block; margin-bottom:0.3rem;"></i>
+        MMs delta-hedge :<br>ach&egrave;tent des actions
+      </div>
+      <div class="squeeze-arrow">&rarr;</div>
+      <div class="squeeze-step" style="background:linear-gradient(135deg, #059669, #10b981);">
+        <i class="fa-solid fa-arrow-trend-up" style="display:block; margin-bottom:0.3rem;"></i>
+        Prix monte :<br>delta augmente
+      </div>
+      <div class="squeeze-arrow">&rarr;</div>
+      <div class="squeeze-step" style="background:linear-gradient(135deg, #d97706, #f59e0b);">
+        <i class="fa-solid fa-rotate" style="display:block; margin-bottom:0.3rem;"></i>
+        MMs ach&egrave;tent encore<br>plus d'actions
+      </div>
+      <div class="squeeze-arrow">&rarr;</div>
+      <div class="squeeze-step" style="background:linear-gradient(135deg, #dc2626, #f97316);">
+        <i class="fa-solid fa-explosion" style="display:block; margin-bottom:0.3rem;"></i>
+        Prix explose :<br>GAMMA SQUEEZE
+      </div>
+    </div>
+
+    <h3 style="margin-top:2.5rem;"><i class="fa-solid fa-calculator" style="color:#dc2626; margin-right:0.5rem;"></i> Exemple chiffr&eacute; avec GME</h3>
+
+    <div style="background:#0f172a; color:white; padding:2rem; border-radius:16px; margin:1.5rem 0;">
+      <p style="color:#94a3b8; font-size:0.9rem; line-height:1.8; margin-bottom:1.5rem;">
+        <strong style="color:white;">Situation initiale (22 janvier 2021) :</strong><br>
+        GME trade &agrave; $43. Le short interest est de 140% du float. Des milliers de contrats call $60 et $80 sont achet&eacute;s sur r/wallstreetbets.
+      </p>
+
+      <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+        <tr style="border-bottom:1px solid #334155;">
+          <td style="padding:0.75rem; color:#94a3b8; font-weight:700;">Jour</td>
+          <td style="padding:0.75rem; color:#94a3b8; font-weight:700;">Prix GME</td>
+          <td style="padding:0.75rem; color:#94a3b8; font-weight:700;">Action</td>
+          <td style="padding:0.75rem; color:#94a3b8; font-weight:700;">Delta calls $60</td>
+          <td style="padding:0.75rem; color:#94a3b8; font-weight:700;">Actions achet&eacute;es par MMs</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:0.75rem; color:#e2e8f0;">Ven 22 Jan</td>
+          <td style="padding:0.75rem; color:#3b82f6; font-weight:700;">$43</td>
+          <td style="padding:0.75rem; color:#94a3b8;">Calls $60 achet&eacute;s massivement</td>
+          <td style="padding:0.75rem; color:#e2e8f0;">0.15</td>
+          <td style="padding:0.75rem; color:#10b981;">15 actions/contrat</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:0.75rem; color:#e2e8f0;">Lun 25 Jan</td>
+          <td style="padding:0.75rem; color:#3b82f6; font-weight:700;">$76</td>
+          <td style="padding:0.75rem; color:#94a3b8;">Calls deviennent ITM, MMs hedgent</td>
+          <td style="padding:0.75rem; color:#e2e8f0;">0.65</td>
+          <td style="padding:0.75rem; color:#10b981;">+50 actions/contrat</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:0.75rem; color:#e2e8f0;">Mar 26 Jan</td>
+          <td style="padding:0.75rem; color:#f97316; font-weight:700;">$148</td>
+          <td style="padding:0.75rem; color:#94a3b8;">Short squeeze d&eacute;clenche aussi</td>
+          <td style="padding:0.75rem; color:#e2e8f0;">0.92</td>
+          <td style="padding:0.75rem; color:#10b981;">+27 actions/contrat</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:0.75rem; color:#e2e8f0;">Mer 27 Jan</td>
+          <td style="padding:0.75rem; color:#dc2626; font-weight:700;">$347</td>
+          <td style="padding:0.75rem; color:#94a3b8;">Gamma + short squeeze total</td>
+          <td style="padding:0.75rem; color:#e2e8f0;">0.99</td>
+          <td style="padding:0.75rem; color:#10b981;">+7 actions/contrat</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem; color:#e2e8f0;">Jeu 28 Jan</td>
+          <td style="padding:0.75rem; color:#dc2626; font-weight:700;">$483 (pr&eacute;-march&eacute;)</td>
+          <td style="padding:0.75rem; color:#fca5a5; font-weight:600;">Robinhood bloque les achats</td>
+          <td style="padding:0.75rem; color:#e2e8f0;">1.00</td>
+          <td style="padding:0.75rem; color:#ef4444;">Hedging impossible</td>
+        </tr>
+      </table>
+
+      <p style="color:#fbbf24; font-size:0.85rem; margin-top:1.5rem; margin-bottom:0;">
+        <strong><i class="fa-solid fa-star"></i> R&eacute;sultat :</strong> En 5 jours, le prix passe de $43 &agrave; $483 (+1 023%). Les market makers, forc&eacute;s d'acheter des millions d'actions pour hedger, <em>amplifient</em> la hausse au lieu de la freiner. Melvin Capital perd 53% en un mois. Citadel et Point72 injectent 2.75 milliards de dollars pour le renflouer.
+      </p>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Gamma squeeze vs Short squeeze : quelle diff&eacute;rence ?</h4>
+      <p style="margin:0; line-height:1.7;">
+        <strong>Short squeeze :</strong> Les vendeurs &agrave; d&eacute;couvert (shorts) sont forc&eacute;s de racheter leurs positions quand le prix monte, ce qui fait encore monter le prix. C'est une <em>panique des shorts</em>.<br><br>
+        <strong>Gamma squeeze :</strong> Les market makers sont forc&eacute;s d'acheter des actions pour couvrir le delta des options qu'ils ont vendues. C'est un <em>effet m&eacute;canique du march&eacute; des options</em>.<br><br>
+        <strong>Dans GME, les deux se sont produits simultan&eacute;ment</strong> &mdash; c'est pour cela que le mouvement a &eacute;t&eacute; aussi explosif. Le short squeeze a forc&eacute; les shorts &agrave; racheter, et le gamma squeeze a forc&eacute; les MMs &agrave; acheter pour hedger. Double pression acheteuse, offre limit&eacute;e.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 6 : STRATEGIE ==================== -->
+  <div class="section-divider" id="strategie">Strat&eacute;gie de Trading Meme Stock</div>
+
+  <div class="trade-box" style="padding:2.5rem;">
+    <h3 style="color:#f97316; font-size:1.4rem; margin-bottom:0.5rem;"><i class="fa-solid fa-chess"></i> Le protocole en 5 phases</h3>
+    <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:2rem;">Strat&eacute;gie syst&eacute;matique pour trader les meme stocks avec un risk management rigoureux.</p>
+
+    <!-- Phase 1 -->
+    <div class="phase-step">
+      <div class="phase-number" style="background:linear-gradient(135deg, #2563eb, #3b82f6);">1</div>
+      <div>
+        <h4 style="color:white; margin:0 0 0.5rem; font-size:1rem;">Phase 1 : D&eacute;tection</h4>
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.6; margin:0;">
+          Scannez quotidiennement vos outils : <strong>ApeWisdom</strong> (mentions Reddit), <strong>Finviz</strong> (SI% &gt; 20%, float &lt; 50M), <strong>StockTwits</strong> (trending). Cr&eacute;ez une watchlist de 5-10 tickers qui remplissent au moins 3 crit&egrave;res sur 6. Patience &mdash; vous pouvez attendre des semaines avant qu'un setup se forme.
+        </p>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase-step">
+      <div class="phase-number" style="background:linear-gradient(135deg, #059669, #10b981);">2</div>
+      <div>
+        <h4 style="color:white; margin:0 0 0.5rem; font-size:1rem;">Phase 2 : Entr&eacute;e &mdash; confirmation technique</h4>
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.6; margin:0;">
+          N'entrez <strong>jamais</strong> sur la base du social seul. Attendez la confirmation technique :<br>
+          &bull; Volume &gt; 5x la moyenne 20 jours<br>
+          &bull; Premi&egrave;re bougie verte au-dessus du VWAP<br>
+          &bull; Breakout d'une r&eacute;sistance identifi&eacute;e<br>
+          &bull; Pr&eacute;-march&eacute; gap up avec volume<br>
+          <strong>Le timing id&eacute;al :</strong> apr&egrave;s la premi&egrave;re consolidation intraday, pas sur la bougie d'ouverture.
+        </p>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase-step">
+      <div class="phase-number" style="background:linear-gradient(135deg, #d97706, #f59e0b);">3</div>
+      <div>
+        <h4 style="color:white; margin:0 0 0.5rem; font-size:1rem;">Phase 3 : Sizing &mdash; max 3-5% du portfolio</h4>
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.6; margin:0;">
+          <strong>R&egrave;gle d'or : ne risquez jamais plus de 3-5% de votre portfolio total sur un meme stock.</strong> Ce sont des trades haute conviction mais haute volatilit&eacute;. Avec un stop &agrave; -30%, votre perte maximale est de 1-1.5% du portfolio. Si vous avez 10 000 &euro;, c'est 300-500 &euro; max sur un seul meme trade. L'entr&eacute;e &eacute;chelonn&eacute;e (50% imm&eacute;diat, 50% sur pullback) r&eacute;duit le risque.
+        </p>
+      </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase-step">
+      <div class="phase-number" style="background:linear-gradient(135deg, #7c3aed, #8b5cf6);">4</div>
+      <div>
+        <h4 style="color:white; margin:0 0 0.5rem; font-size:1rem;">Phase 4 : Gestion &mdash; trailing stop + prise de profits</h4>
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.6; margin:0;">
+          &bull; <strong>Stop initial :</strong> -20 &agrave; -30% sous l'entr&eacute;e (ou sous le dernier support technique)<br>
+          &bull; <strong>Au premier +100% :</strong> vendez 50% de la position. Votre trade est d&eacute;sormais "gratuit"<br>
+          &bull; <strong>Runner le reste :</strong> trailing stop &agrave; -25% du dernier sommet<br>
+          &bull; <strong>Ne remontez jamais votre stop.</strong> Le stop ne va que dans un sens : vers le haut<br>
+          &bull; Prenez un autre 25% au prochain doublement. Gardez 25% comme "ticket de loterie".
+        </p>
+      </div>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="phase-step">
+      <div class="phase-number" style="background:linear-gradient(135deg, #dc2626, #ef4444);">5</div>
+      <div>
+        <h4 style="color:white; margin:0 0 0.5rem; font-size:1rem;">Phase 5 : Sortie &mdash; quand les m&eacute;dias mainstream en parlent</h4>
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.6; margin:0;">
+          <strong>Quand CNN, CNBC, Le Monde ou votre coiffeur parlent d'un meme stock, c'est le signal de sortie.</strong> La diffusion mainstream signifie que la "smart money" vend pendant que la "dumb money" entre. Autres signaux de top :<br>
+          &bull; TikTok viral sur le titre<br>
+          &bull; Mentions Reddit en baisse alors que le prix monte encore<br>
+          &bull; Insiders/management annoncent une &eacute;mission d'actions<br>
+          &bull; Volume en baisse sur les jours de hausse (divergence volume/prix)
+        </p>
+      </div>
+    </div>
+
+    <!-- R/R Box -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:2rem;">
+      <div style="background:rgba(16,185,129,0.15); padding:1.5rem; border-radius:12px; text-align:center;">
+        <div style="font-size:0.7rem; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Entr&eacute;e pr&eacute;coce (avant le pump)</div>
+        <div style="font-size:2rem; font-weight:900; color:#10b981; margin-top:0.5rem;">R/R 1:5+</div>
+        <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.25rem;">Risque -30% / Gain +150 &agrave; +500%</div>
+      </div>
+      <div style="background:rgba(239,68,68,0.15); padding:1.5rem; border-radius:12px; text-align:center;">
+        <div style="font-size:0.7rem; color:#ef4444; text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Entr&eacute;e tardive (apr&egrave;s CNN)</div>
+        <div style="font-size:2rem; font-weight:900; color:#ef4444; margin-top:0.5rem;">R/R 1:0.5</div>
+        <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.25rem;">Risque -50% / Gain +25% max</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 7 : PIEGES ==================== -->
+  <div class="section-divider" id="pieges">Les Pi&egrave;ges &amp; Erreurs Fatales</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-skull-crossbones" style="color:#ef4444;"></i> 6 erreurs qui d&eacute;truisent votre capital</h2>
+
+    <p>95% des traders de meme stocks <strong>perdent de l'argent</strong>. Pas parce que la strat&eacute;gie ne fonctionne pas, mais parce qu'ils commettent ces erreurs. Apprenez-les par c&oelig;ur.</p>
+
+    <div class="trap-grid">
+      <div class="trap-card">
+        <h4><div class="trap-number">1</div> FOMO &mdash; Acheter au sommet</h4>
+        <p>Le <strong>Fear Of Missing Out</strong> est le tueur n&deg;1. Vous voyez un titre faire +200% en un jour et vous vous dites "il va encore monter". Non. Si vous n'&eacute;tiez pas l&agrave; avant le pump, vous &ecirc;tes la <strong>liquidit&eacute; de sortie</strong> pour ceux qui &eacute;taient l&agrave; avant vous. R&egrave;gle : si le titre a d&eacute;j&agrave; fait +100%, c'est trop tard pour un risk/reward favorable.</p>
+      </div>
+
+      <div class="trap-card">
+        <h4><div class="trap-number">2</div> "Diamond Hands" aveugle</h4>
+        <p>La mentalit&eacute; WSB du "hold forever, never sell" est <strong>dangereuse</strong>. Les "diamond hands" ont un sens quand vous avez une th&egrave;se fondamentale solide. Sur un meme stock, <strong>prendre ses profits est une comp&eacute;tence</strong>, pas une faiblesse. Ceux qui ont vendu GME &agrave; $300 ont gagn&eacute;. Ceux qui ont attendu "la lune" l'ont vu revenir &agrave; $40.</p>
+      </div>
+
+      <div class="trap-card">
+        <h4><div class="trap-number">3</div> Pump &amp; Dump ill&eacute;gal</h4>
+        <p><strong>Ne coordonnez JAMAIS des achats group&eacute;s.</strong> Si un groupe Telegram vous dit "on ach&egrave;te tous TICKER &agrave; 14h", c'est un pump &amp; dump. C'est un d&eacute;lit. Les organisateurs vendent avant l'heure annonc&eacute;e. Les "membres" ach&egrave;tent au sommet et se retrouvent avec des pertes. La SEC surveille activement ces sch&eacute;mas.</p>
+      </div>
+
+      <div class="trap-card">
+        <h4><div class="trap-number">4</div> Rug Pulls crypto</h4>
+        <p>Dans l'univers crypto et meme coins, le "rug pull" est l'&eacute;quivalent du pump &amp; dump. Les cr&eacute;ateurs du token lancent un projet, cr&eacute;ent du hype, puis <strong>vident la liquidit&eacute;</strong> d'un coup. En 2021-2022, des milliards de dollars ont &eacute;t&eacute; perdus dans des rug pulls (Squid Game Token, etc.).</p>
+      </div>
+
+      <div class="trap-card">
+        <h4><div class="trap-number">5</div> Dilution surprise du management</h4>
+        <p>AMC en est l'exemple parfait. Le CEO Adam Aron a profit&eacute; de la hausse du cours pour <strong>&eacute;mettre des centaines de millions d'actions nouvelles</strong>, diluant massivement les actionnaires existants. Puis il a cr&eacute;&eacute; APE (une unit&eacute; privil&eacute;gi&eacute;e) pour &eacute;mettre encore plus. V&eacute;rifiez toujours les autorisations d'&eacute;mission en cours (shelf offerings).</p>
+      </div>
+
+      <div class="trap-card">
+        <h4><div class="trap-number">6</div> Halts de trading</h4>
+        <p>Les bourses et la SEC peuvent <strong>suspendre le trading</strong> d'un titre &agrave; tout moment (LULD halts, T12 halts, SEC suspensions). Pendant un halt, vous &ecirc;tes coinc&eacute; &mdash; impossible de vendre. GME a &eacute;t&eacute; halt&eacute; plus de <strong>20 fois en une seule journ&eacute;e</strong>. Chaque halt cr&eacute;e un gap potentiel contre vous &agrave; la r&eacute;ouverture.</p>
+      </div>
+    </div>
+
+    <div class="alert-box" style="margin-top:2rem;">
+      <h4 style="color:#dc2626;"><i class="fa-solid fa-heart-crack"></i> Statistique brutale</h4>
+      <p style="margin:0; color:#991b1b; line-height:1.7;">Selon une &eacute;tude de la <strong>SEC</strong> (2021), les investisseurs qui ont achet&eacute; des meme stocks <strong>apr&egrave;s</strong> la couverture m&eacute;diatique mainstream ont perdu en moyenne <strong>-44%</strong> dans les 30 jours suivants. &Agrave; l'inverse, ceux qui ont d&eacute;tect&eacute; le mouvement sur Reddit &gt;48h avant le pic ont r&eacute;alis&eacute; en moyenne <strong>+183%</strong> de gains. <em>Le timing est tout.</em></p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 8 : CASE STUDIES ==================== -->
+  <div class="section-divider" id="case-studies">Case Studies</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-microscope" style="color:#059669;"></i> 3 &eacute;tudes de cas d&eacute;taill&eacute;es</h2>
+
+    <div class="case-grid">
+      <!-- Case 1: GME -->
+      <div class="case-card" style="border-top:4px solid #10b981;">
+        <div class="case-header" style="background:#f0fdf4;">
+          <div>
+            <div class="case-ticker" style="color:#16a34a;">GME</div>
+            <div style="font-size:0.85rem; color:#64748b;">GameStop &mdash; Janvier 2021</div>
+          </div>
+          <span class="badge badge-green" style="font-size:0.85rem;">LE TRADE PARFAIT</span>
+        </div>
+        <div class="case-body">
+          <h4 style="color:#16a34a; margin-top:1rem;"><i class="fa-solid fa-bullseye"></i> Le setup</h4>
+          <p>DFV (DeepFuckingValue) identifie GME en <strong>septembre 2019</strong> &agrave; ~$4. Sa th&egrave;se : GameStop est <strong>fondamentalement sous-&eacute;valu&eacute;</strong> (book value &gt; market cap), le short interest est absurde (140% du float), et Ryan Cohen (fondateur de Chewy) entre au capital pour pivoter le business vers le e-commerce.</p>
+          <p>Il ach&egrave;te 50 000 actions &agrave; ~$5 et des calls $8 janvier 2021. Son investissement total : ~$53 000.</p>
+
+          <h4 style="color:#16a34a;"><i class="fa-solid fa-chart-line"></i> Le d&eacute;roulement</h4>
+          <ul style="font-size:0.9rem; color:#334155; line-height:1.7; padding-left:1.25rem;">
+            <li><strong>Sep 2019 - Dec 2020 :</strong> Le titre passe de $4 &agrave; $20. DFV publie ses "YOLO updates" mensuels. La communaut&eacute; WSB cro&icirc;t lentement.</li>
+            <li><strong>Janvier 2021 (semaine 1-2) :</strong> L'engagement WSB explose. Mentions passent de 100 &agrave; 10 000/jour. Le prix d&eacute;colle : $20 &rarr; $40 &rarr; $76.</li>
+            <li><strong>25-27 janvier :</strong> Gamma squeeze + short squeeze. $76 &rarr; $347 &rarr; $483 en pr&eacute;-march&eacute;.</li>
+            <li><strong>28 janvier :</strong> Robinhood bloque les achats. Le prix s'effondre &agrave; $112.</li>
+          </ul>
+
+          <h4 style="color:#16a34a;"><i class="fa-solid fa-sack-dollar"></i> Le r&eacute;sultat de DFV</h4>
+          <p>Son investissement de <strong>$53 000</strong> a atteint une valeur maximale de <strong>+$48 millions</strong>. M&ecirc;me apr&egrave;s le crash, sa position valait encore ~$30 millions lors de sa derni&egrave;re mise &agrave; jour publique.</p>
+
+          <div class="metric-grid" style="margin:1rem 0;">
+            <div class="metric-card">
+              <div class="metric-value" style="color:#16a34a;">$53K</div>
+              <div class="metric-label">Investissement initial</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" style="color:#f97316;">$48M</div>
+              <div class="metric-label">Valeur au pic</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" style="color:#dc2626;">+90 000%</div>
+              <div class="metric-label">Rendement maximal</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" style="color:#8b5cf6;">16 mois</div>
+              <div class="metric-label">Dur&eacute;e du trade</div>
+            </div>
+          </div>
+        </div>
+        <div class="case-lesson" style="background:#f0fdf4; color:#166534;">
+          <i class="fa-solid fa-lightbulb"></i> <strong>Le&ccedil;on :</strong> DFV avait une th&egrave;se FONDAMENTALE solide, pas juste du hype. Le social a amplifi&eacute; le mouvement, mais la base &eacute;tait rationnelle. Entr&eacute;e pr&eacute;coce + conviction + patience = trade g&eacute;n&eacute;rationnel.
+        </div>
+      </div>
+
+      <!-- Case 2: BBBY -->
+      <div class="case-card" style="border-top:4px solid #dc2626;">
+        <div class="case-header" style="background:#fef2f2;">
+          <div>
+            <div class="case-ticker" style="color:#dc2626;">BBBY</div>
+            <div style="font-size:0.85rem; color:#64748b;">Bed Bath &amp; Beyond &mdash; Ao&ucirc;t 2022</div>
+          </div>
+          <span class="badge badge-red" style="font-size:0.85rem;">LE PI&Egrave;GE</span>
+        </div>
+        <div class="case-body">
+          <h4 style="color:#dc2626; margin-top:1rem;"><i class="fa-solid fa-bullseye"></i> Le setup</h4>
+          <p>BBBY est en difficult&eacute; financi&egrave;re. Le short interest est &eacute;lev&eacute; (~40% du float). <strong>Ryan Cohen</strong> (le h&eacute;ros de GME) ach&egrave;te une position importante via RC Ventures : 9.8% des actions + des calls $60-$80. La communaut&eacute; WSB s'enflamme imm&eacute;diatement : "RC va faire la m&ecirc;me chose qu'avec GME !"</p>
+
+          <h4 style="color:#dc2626;"><i class="fa-solid fa-chart-line"></i> Le d&eacute;roulement</h4>
+          <ul style="font-size:0.9rem; color:#334155; line-height:1.7; padding-left:1.25rem;">
+            <li><strong>D&eacute;but ao&ucirc;t 2022 :</strong> Le prix passe de $5 &agrave; $30 en 2 semaines. WSB est en &eacute;bullition.</li>
+            <li><strong>16-17 ao&ucirc;t :</strong> Ryan Cohen <strong>vend la totalit&eacute; de sa position</strong> (filing SEC). Il r&eacute;alise un profit de ~$58 millions.</li>
+            <li><strong>18 ao&ucirc;t :</strong> L'information se r&eacute;pand. Le prix s'effondre de $30 &agrave; $10 en quelques heures.</li>
+            <li><strong>Septembre-Avril :</strong> Le prix continue de chuter. BBBY d&eacute;pose le bilan (Chapter 11) en avril 2023. L'action vaut $0.</li>
+          </ul>
+
+          <h4 style="color:#dc2626;"><i class="fa-solid fa-skull"></i> Le bilan</h4>
+          <p>Des milliers de traders retail qui ont achet&eacute; &agrave; $20-$30 en croyant au "squeeze" ont <strong>tout perdu</strong>. Un &eacute;tudiant de 20 ans s'est suicid&eacute; apr&egrave;s avoir perdu ses &eacute;conomies. Ryan Cohen a &eacute;t&eacute; poursuivi en justice (mais l'affaire a &eacute;t&eacute; class&eacute;e).</p>
+        </div>
+        <div class="case-lesson" style="background:#fef2f2; color:#991b1b;">
+          <i class="fa-solid fa-triangle-exclamation"></i> <strong>Le&ccedil;on :</strong> Ne faites JAMAIS confiance aveugl&eacute;ment &agrave; un "leader". M&ecirc;me Ryan Cohen, le h&eacute;ros de GME, peut vendre sans pr&eacute;venir. V&eacute;rifiez toujours les filings SEC (Form 4, 13D). Si un insider vend, VOUS devez vendre aussi.
+        </div>
+      </div>
+
+      <!-- Case 3: DJT -->
+      <div class="case-card" style="border-top:4px solid #f97316;">
+        <div class="case-header" style="background:#fff7ed;">
+          <div>
+            <div class="case-ticker" style="color:#f97316;">DJT</div>
+            <div style="font-size:0.85rem; color:#64748b;">Trump Media &amp; Technology &mdash; 2024</div>
+          </div>
+          <span class="badge" style="font-size:0.85rem; background:#fff7ed; color:#f97316;">POLITICAL TRADING</span>
+        </div>
+        <div class="case-body">
+          <h4 style="color:#f97316; margin-top:1rem;"><i class="fa-solid fa-bullseye"></i> Le setup</h4>
+          <p>Trump Media (Truth Social) fusionne avec le SPAC Digital World Acquisition Corp (DWAC) pour devenir <strong>$DJT</strong>. Le titre devient un <strong>proxy pour les &eacute;lections pr&eacute;sidentielles 2024</strong>. Le cours fluctue selon les sondages de Trump, pas selon les fondamentaux (le CA de Truth Social est de ~$4M/an pour une capitalisation de ~$8 milliards).</p>
+
+          <h4 style="color:#f97316;"><i class="fa-solid fa-chart-line"></i> Le d&eacute;roulement</h4>
+          <ul style="font-size:0.9rem; color:#334155; line-height:1.7; padding-left:1.25rem;">
+            <li><strong>Mars 2024 :</strong> Fusion DWAC/TMTG compl&eacute;t&eacute;e. DJT s'envole &agrave; $80+ (&eacute;quivalent ~$8Md de market cap).</li>
+            <li><strong>Avril-Septembre 2024 :</strong> Chute progressive jusqu'&agrave; $12 (le lockup de Trump expire en septembre, cr&eacute;ant une pression de vente anticip&eacute;e).</li>
+            <li><strong>Octobre 2024 :</strong> Rebond &agrave; $50+ quand les sondages deviennent favorables &agrave; Trump.</li>
+            <li><strong>Novembre 2024 - 2025 :</strong> Volatilit&eacute; extr&ecirc;me li&eacute;e aux nouvelles politiques.</li>
+          </ul>
+
+          <h4 style="color:#f97316;"><i class="fa-solid fa-scales-balanced"></i> Les enjeux uniques</h4>
+          <p>DJT est un cas unique : c'est un meme stock <strong>politique</strong>. Le cours n'a aucun lien avec les fondamentaux. Il est enti&egrave;rement driv&eacute; par le sentiment politique, les sondages, et la sp&eacute;culation sur l'&eacute;lection. Le lockup de Trump (impossibilit&eacute; de vendre ses parts pendant 6 mois apr&egrave;s la fusion) a cr&eacute;&eacute; un "wall of supply" anticip&eacute; qui a pes&eacute; sur le cours.</p>
+        </div>
+        <div class="case-lesson" style="background:#fff7ed; color:#9a3412;">
+          <i class="fa-solid fa-scale-balanced"></i> <strong>Le&ccedil;on :</strong> Les meme stocks politiques sont les plus impr&eacute;visibles. Les catalyseurs sont binaires (victoire/d&eacute;faite). Le lockup expiry est un &eacute;v&eacute;nement critique &agrave; surveiller dans tout SPAC. Ne tradez jamais sur conviction politique &mdash; tradez sur les flux.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 9 : QUIZ ==================== -->
+  <div class="section-divider" id="quiz">Quiz &mdash; Testez vos connaissances</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-graduation-cap" style="color:#d97706;"></i> 5 questions pour v&eacute;rifier votre compr&eacute;hension</h2>
+
+    <details>
+      <summary>Question 1 : Quel &eacute;tait le short interest de GME au moment du squeeze de janvier 2021 ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : ~140% du float.</strong><br>
+        Un chiffre th&eacute;oriquement impossible (plus d'actions vendues &agrave; d&eacute;couvert qu'il n'en existe), rendu possible par le re-lending des actions emprunt&eacute;es. C'est cette situation extr&ecirc;me qui a cr&eacute;&eacute; les conditions d'un short squeeze historique. En comparaison, un SI de 20% est d&eacute;j&agrave; consid&eacute;r&eacute; &eacute;lev&eacute;.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 2 : Qu'est-ce qui diff&eacute;rencie un gamma squeeze d'un short squeeze ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse :</strong> Un <strong>short squeeze</strong> se produit quand les vendeurs &agrave; d&eacute;couvert sont forc&eacute;s de racheter leurs positions (couvrir leurs shorts), cr&eacute;ant une pression acheteuse. Un <strong>gamma squeeze</strong> se produit quand les market makers sont forc&eacute;s d'acheter le sous-jacent pour couvrir le delta des options call qu'ils ont vendues. Les deux sont des m&eacute;canismes de feedback positif, mais l'un vient du march&eacute; actions (shorts) et l'autre du march&eacute; des options (delta hedging).
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 3 : Pourquoi le fait que TikTok parle d'un meme stock est g&eacute;n&eacute;ralement un signal de vente ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse :</strong> TikTok repr&eacute;sente la <strong>derni&egrave;re vague d'adoption</strong> &mdash; les investisseurs les moins inform&eacute;s et les plus tardifs. Quand un meme stock atteint TikTok, le cycle hype a d&eacute;j&agrave; pass&eacute; par Reddit (&eacute;tape 1), Twitter (&eacute;tape 2), et les m&eacute;dias mainstream (&eacute;tape 3). L'arriv&eacute;e de la "dumb money" en masse signale g&eacute;n&eacute;ralement l'euphorie de sommet. Les traders pr&eacute;coces prennent leurs profits pendant que les retardataires entrent.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 4 : Ryan Cohen a vendu toute sa position BBBY au sommet. Quel document SEC aurait pu vous alerter ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : Le Form 4 (Statement of Changes in Beneficial Ownership).</strong><br>
+        Tout insider ou actionnaire d&eacute;tenant &gt;10% d'une soci&eacute;t&eacute; cot&eacute;e doit d&eacute;clarer ses transactions &agrave; la SEC via un <strong>Form 4</strong>, g&eacute;n&eacute;ralement dans les <strong>2 jours ouvr&eacute;s</strong> suivant la transaction. Ryan Cohen a bien d&eacute;pos&eacute; ce formulaire, mais le temps que l'information se propage sur Reddit, le prix avait d&eacute;j&agrave; chut&eacute;. Surveillez EDGAR en temps r&eacute;el avec des outils comme OpenInsider ou SEC EDGAR RSS.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 5 : Vous d&eacute;tectez un titre avec SI=35%, float=15M, mentions Reddit x50 en 24h, volume x8. Quelle est la taille de position maximale recommand&eacute;e ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : 3-5% maximum de votre portfolio total.</strong><br>
+        Malgr&eacute; un setup attractif (4/6 signaux pr&eacute;sents), un meme stock reste un trade <strong>sp&eacute;culatif &agrave; haute volatilit&eacute;</strong>. Avec un stop &agrave; -30%, votre perte max est de 1-1.5% du portfolio. Entrez en 2 tranches (50%/50%), placez un stop technique, et prenez 50% de profit au premier doublement. M&ecirc;me le meilleur setup peut &eacute;chouer &agrave; cause d'un halt, d'une dilution surprise, ou d'un retournement de sentiment.
+      </div>
+    </details>
+  </div>
+
+  <!-- ==================== SERIES COMPLETION BANNER ==================== -->
+  <div style="background:linear-gradient(135deg, #dc2626 0%, #f97316 50%, #eab308 100%); color:white; padding:3rem 2rem; border-radius:20px; text-align:center; margin:3rem 0;">
+    <h3 style="color:white; font-size:1.5rem; font-weight:800; margin:0 0 1rem;">Partie 2/8 termin&eacute;e !</h3>
+    <p style="color:rgba(255,255,255,0.9); font-size:1rem; line-height:1.6; margin:0 0 0.75rem; max-width:600px; margin-left:auto; margin-right:auto;">Vous savez maintenant d&eacute;tecter un meme stock, comprendre la m&eacute;canique d'un gamma squeeze, et &eacute;viter les pi&egrave;ges les plus courants.</p>
+    <p style="color:rgba(255,255,255,0.9); font-size:1rem; line-height:1.6; margin:0 0 1.5rem; max-width:600px; margin-left:auto; margin-right:auto;"><strong>Prochaine &eacute;tape :</strong> Partie 3 &mdash; Les Options (l'arme secr&egrave;te du sp&eacute;culateur)</p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <a href="/series/guide-speculateur/part1-psychologie/" style="display:inline-flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.2); color:white; padding:12px 24px; border-radius:99px; font-weight:600; text-decoration:none; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.3); transition:background 0.2s;">
+        <i class="fa-solid fa-arrow-left"></i> Partie 1 : Psychologie
+      </a>
+      <a href="/series/guide-speculateur/part3-options/" style="display:inline-flex; align-items:center; gap:0.5rem; background:white; color:#dc2626; padding:12px 24px; border-radius:99px; font-weight:700; text-decoration:none; transition:background 0.2s;">
+        Partie 3 : Options <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- ==================== DISCLAIMER FOOTER ==================== -->
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin-bottom:2rem;">
+    <h4 style="color:#64748b; font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-top:0;"><i class="fa-solid fa-shield-halved"></i> Disclaimer</h4>
+    <p style="color:#94a3b8; font-size:0.8rem; line-height:1.7; margin-bottom:0.75rem;">Cet article est publi&eacute; &agrave; titre <strong>strictement &eacute;ducatif</strong>. Il ne constitue en aucun cas un conseil en investissement, une recommandation d'achat ou de vente, ni une incitation &agrave; sp&eacute;culer sur les march&eacute;s financiers. Les meme stocks sont des instruments <strong>extr&ecirc;mement volatils</strong> et risqu&eacute;s. Vous pouvez perdre la totalit&eacute; de votre capital.</p>
+    <p style="color:#94a3b8; font-size:0.8rem; line-height:1.7; margin-bottom:0.75rem;">Ne participez jamais &agrave; un sch&eacute;ma de manipulation de march&eacute; (pump &amp; dump). C'est ill&eacute;gal et passible de sanctions p&eacute;nales.</p>
+    <p style="color:#94a3b8; font-size:0.8rem; line-height:1.7; margin-bottom:0;">Les performances pass&eacute;es ne pr&eacute;jugent pas des performances futures. Consultez un conseiller financier agr&eacute;&eacute; avant toute d&eacute;cision d'investissement.</p>
+  </div>
+
+  <!-- Sources -->
+  <div style="margin-bottom:2rem;">
+    <h4 style="color:#64748b; font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;"><i class="fa-solid fa-book"></i> Sources &amp; R&eacute;f&eacute;rences</h4>
+    <ul style="font-size:0.8rem; color:#94a3b8; line-height:2; padding-left:1.25rem;">
+      <li>SEC Staff Report on Equity and Options Market Structure Conditions, January 2021 (GameStop)</li>
+      <li>U.S. House Committee on Financial Services &mdash; Game Stopped? Who Wins and Loses When Short Sellers, Social Media, and Retail Investors Collide (2021)</li>
+      <li>FINRA Short Interest Data &mdash; finra.org</li>
+      <li>Quiver Quantitative &mdash; quiverquant.com</li>
+      <li>ApeWisdom &mdash; apewisdom.io</li>
+      <li>SEC EDGAR Filings &mdash; sec.gov/edgar</li>
+      <li>r/wallstreetbets &mdash; reddit.com/r/wallstreetbets</li>
+    </ul>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Footer -->
+<div class="footer-bar">
+  <p><strong>Le Guide du Super Sp&eacute;culateur</strong> &mdash; Partie 2/8 : Meme Stocks &amp; Intelligence Sociale</p>
+  <p><a href="/">Market Watch</a> &mdash; Analyses financi&egrave;res ind&eacute;pendantes &mdash; &copy; 2026</p>
+  <p style="margin-top:0.75rem;"><a href="/series/guide-speculateur/part1-psychologie/">Partie 1</a> &bull; <strong>Partie 2</strong> &bull; <a href="/series/guide-speculateur/part3-options/">Partie 3</a> &bull; Partie 4 &bull; Partie 5 &bull; Partie 6 &bull; Partie 7 &bull; Partie 8</p>
+</div>
+
+<!-- ==================== ECHARTS SCRIPTS ==================== -->
+<script>
+// ==========================
+// CHART 1: GME Timeline - Prix + Mentions Sociales
+// ==========================
+(function() {
+  var chart = echarts.init(document.getElementById('gme-timeline-chart'));
+
+  var dates = [
+    'Sep 2019','Dec 2019','Mar 2020','Jun 2020','Sep 2020','Dec 2020',
+    'Jan 4','Jan 11','Jan 19','Jan 22','Jan 25','Jan 26','Jan 27','Jan 28','Jan 29',
+    'Feb 2021','Mar 2021','Jun 2021','Sep 2021','Dec 2021','Jun 2022','Dec 2022','Jun 2023','Dec 2023','Jun 2024'
+  ];
+
+  // GME price (approximate)
+  var price = [
+    4, 6, 3.5, 4.5, 7, 20,
+    17, 20, 35, 43, 76, 148, 347, 193, 325,
+    45, 190, 302, 190, 150, 120, 18, 22, 15, 46
+  ];
+
+  // Social mentions (relative scale, WSB)
+  var mentions = [
+    10, 15, 8, 12, 50, 200,
+    800, 2000, 5000, 12000, 30000, 50000, 80000, 100000, 60000,
+    15000, 25000, 20000, 8000, 5000, 3000, 500, 400, 300, 25000
+  ];
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      axisPointer: { type: 'cross' }
+    },
+    legend: {
+      data: ['Prix GME ($)', 'Mentions WSB'],
+      top: 10,
+      textStyle: { color: '#64748b', fontSize: 12 }
+    },
+    grid: { left: '8%', right: '8%', bottom: '12%', top: '15%' },
+    xAxis: {
+      type: 'category',
+      data: dates,
+      axisLabel: { color: '#94a3b8', fontSize: 10, rotate: 45 },
+      axisLine: { lineStyle: { color: '#334155' } }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'Prix ($)',
+        nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: '${value}' },
+        splitLine: { lineStyle: { color: '#f1f5f9' } }
+      },
+      {
+        type: 'value',
+        name: 'Mentions',
+        nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+        axisLabel: { color: '#94a3b8', fontSize: 10, formatter: function(v) { return v >= 1000 ? (v/1000)+'K' : v; } },
+        splitLine: { show: false }
+      }
+    ],
+    series: [
+      {
+        name: 'Prix GME ($)',
+        type: 'line',
+        data: price,
+        smooth: true,
+        lineStyle: { color: '#dc2626', width: 3 },
+        itemStyle: { color: '#dc2626' },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(220,38,38,0.25)' },
+              { offset: 1, color: 'rgba(220,38,38,0)' }
+            ]
+          }
+        },
+        markPoint: {
+          data: [
+            { name: 'DFV entre', coord: ['Sep 2019', 4], symbolSize: 40, label: { show: true, formatter: 'DFV\n$4', fontSize: 9, color: '#fff' }, itemStyle: { color: '#10b981' } },
+            { name: 'ATH', coord: ['Jan 27', 347], symbolSize: 50, label: { show: true, formatter: 'ATH\n$483', fontSize: 9, color: '#fff' }, itemStyle: { color: '#dc2626' } },
+            { name: 'Halt', coord: ['Jan 28', 193], symbolSize: 40, label: { show: true, formatter: 'RH\nHALT', fontSize: 8, color: '#fff' }, itemStyle: { color: '#7c3aed' } }
+          ]
+        }
+      },
+      {
+        name: 'Mentions WSB',
+        type: 'bar',
+        yAxisIndex: 1,
+        data: mentions,
+        barWidth: '40%',
+        itemStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(249,115,22,0.7)' },
+              { offset: 1, color: 'rgba(249,115,22,0.1)' }
+            ]
+          },
+          borderRadius: [4, 4, 0, 0]
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ==========================
+// CHART 2: Meme Stock Scoring Radar
+// ==========================
+(function() {
+  var chart = echarts.init(document.getElementById('meme-radar-chart'));
+
+  var option = {
+    tooltip: {
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 }
+    },
+    legend: {
+      data: ['GME (Jan 2021)', 'Titre Al\u00e9atoire', 'Seuil Minimum'],
+      top: 10,
+      textStyle: { color: '#64748b', fontSize: 12 }
+    },
+    radar: {
+      indicator: [
+        { name: 'Mentions Reddit\n(24h)', max: 100 },
+        { name: 'Short Interest\n(% float)', max: 100 },
+        { name: 'Options OI\n(calls OTM)', max: 100 },
+        { name: 'Float\nR\u00e9duit', max: 100 },
+        { name: 'Catalyseur\nNarratif', max: 100 },
+        { name: 'Volume\nSpike', max: 100 }
+      ],
+      center: ['50%', '55%'],
+      radius: '65%',
+      axisName: { color: '#475569', fontSize: 11, fontWeight: 600 },
+      splitArea: {
+        areaStyle: {
+          color: ['rgba(220,38,38,0.02)', 'rgba(220,38,38,0.04)', 'rgba(220,38,38,0.06)', 'rgba(220,38,38,0.08)', 'rgba(220,38,38,0.10)']
+        }
+      },
+      splitLine: { lineStyle: { color: '#e2e8f0' } },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    series: [
+      {
+        name: 'Meme Stock Score',
+        type: 'radar',
+        data: [
+          {
+            value: [98, 95, 90, 70, 85, 95],
+            name: 'GME (Jan 2021)',
+            symbol: 'circle',
+            symbolSize: 6,
+            lineStyle: { color: '#dc2626', width: 2 },
+            itemStyle: { color: '#dc2626' },
+            areaStyle: { color: 'rgba(220,38,38,0.2)' }
+          },
+          {
+            value: [15, 8, 10, 45, 20, 12],
+            name: 'Titre Al\u00e9atoire',
+            symbol: 'circle',
+            symbolSize: 6,
+            lineStyle: { color: '#94a3b8', width: 2, type: 'dashed' },
+            itemStyle: { color: '#94a3b8' },
+            areaStyle: { color: 'rgba(148,163,184,0.1)' }
+          },
+          {
+            value: [50, 40, 40, 50, 40, 50],
+            name: 'Seuil Minimum',
+            symbol: 'none',
+            lineStyle: { color: '#f97316', width: 2, type: 'dotted' },
+            itemStyle: { color: '#f97316' },
+            areaStyle: { color: 'rgba(249,115,22,0.05)' }
+          }
+        ]
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

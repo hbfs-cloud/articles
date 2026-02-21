@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Max Pain & Vendredi des Sorcieres — Options Expiration, Gamma Exposure & Dealer Hedging | Le Guide du Super Speculateur — Partie 6 | Market Watch</title>
+ <meta name="description" content="Le Guide du Super Speculateur — Partie 6/8 : Comprendre le Max Pain, le Gamma Exposure (GEX), le dealer hedging, les 0DTE et les strategies d'OpEx Friday. Le guide complet de la speculation sur les options expirations.">
+ <meta property="og:title" content="Max Pain & Vendredi des Sorcieres — Partie 6/8 | Le Guide du Super Speculateur">
+ <meta property="og:description" content="Max Pain, Gamma Exposure, Dealer Hedging, 0DTE, Triple Witching — tout comprendre sur les expirations d'options et comment les exploiter.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/guide-speculateur/part6-max-pain/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+ <style>
+ /* Guide du Super Speculateur — Red Theme (#dc2626) */
+ .brand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+ }
+ .brand-logo {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+ }
+ .brand-logo:hover { color: #dc2626; }
+
+ .switcher-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+ }
+ .switcher-btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+ }
+ .switcher-btn:hover { border-color: #dc2626; color: #dc2626; }
+ .switcher-btn.active {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+ }
+
+ /* Series Navigation */
+ .series-nav {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+ }
+ .series-title {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-right: 1rem;
+ }
+ .series-link {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  transition: all 0.2s;
+ }
+ .series-link:hover { border-color: #fca5a5; color: #fca5a5; }
+ .series-link.current {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+ }
+
+ .hero-section {
+  padding: 4rem 2rem 8rem 2rem;
+  background: linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%);
+ }
+ .hero-date {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #dc2626;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+ }
+ .hero-badges {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+ }
+ .hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+ }
+ .hero-badge-red { background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.2); }
+ .hero-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+ .hero-badge-green { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+ .hero-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
+ .hero-badge-amber { background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.2); }
+
+ /* Section headers with red accent */
+ .section-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: white;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+ }
+
+ /* Concept Cards */
+ .concept-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2.5rem;
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+ }
+ .concept-card:hover { border-color: #dc2626; }
+ .concept-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+ }
+ .concept-card.card-red::before { background: linear-gradient(90deg, #dc2626, #ef4444); }
+ .concept-card.card-blue::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+ .concept-card.card-green::before { background: linear-gradient(90deg, #10b981, #22c55e); }
+ .concept-card.card-amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+ .concept-card.card-purple::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+ .concept-card.card-dark::before { background: linear-gradient(90deg, #475569, #1e293b); }
+
+ /* GEX visual blocks */
+ .gex-block {
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+ }
+ .gex-positive {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 2px solid #16a34a;
+ }
+ .gex-negative {
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  border: 2px solid #dc2626;
+ }
+ .gex-block h4 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+ }
+ .gex-positive h4 { color: #16a34a; }
+ .gex-negative h4 { color: #dc2626; }
+
+ /* Timeline for calendar */
+ .timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin: 2rem 0;
+ }
+ .timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #dc2626, #f87171);
+  border-radius: 2px;
+ }
+ .timeline-item {
+  position: relative;
+  padding: 1rem 0 1.5rem 1.5rem;
+ }
+ .timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.35rem;
+  top: 1.25rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: 3px solid #fef2f2;
+ }
+ .timeline-item h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+ }
+ .timeline-item p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.6;
+ }
+
+ /* Strategy steps */
+ .step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+ }
+ .step-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+ }
+ .step-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #dc2626, #f87171);
+ }
+ .step-number {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+ }
+
+ /* Quiz styles */
+ .quiz-question {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+  transition: border-color 0.3s;
+ }
+ .quiz-question:hover { border-color: #dc2626; }
+ .quiz-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: #dc2626;
+  color: white;
+  font-weight: 800;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  margin-right: 0.75rem;
+ }
+ .quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+ }
+ .quiz-option {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  color: #334155;
+ }
+ .quiz-option:hover { border-color: #dc2626; background: #fef2f2; }
+ .quiz-option.correct { border-color: #16a34a; background: #f0fdf4; color: #166534; }
+ .quiz-option.incorrect { border-color: #dc2626; background: #fef2f2; color: #991b1b; }
+ .quiz-explanation {
+  display: none;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #475569;
+  border-left: 3px solid #dc2626;
+ }
+
+ /* Danger meter */
+ .danger-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+ }
+ .danger-meter-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  min-width: 80px;
+ }
+ .danger-meter-bar {
+  flex: 1;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+ }
+ .danger-meter-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+ }
+
+ /* Tool link cards */
+ .tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+ }
+ .tool-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: #334155;
+ }
+ .tool-card:hover {
+  border-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0,0,0,0.1);
+ }
+ .tool-card i {
+  font-size: 1.5rem;
+  color: #dc2626;
+  margin-bottom: 0.5rem;
+  display: block;
+ }
+ .tool-card .tool-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+ }
+ .tool-card .tool-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+ }
+
+ /* Footer */
+ .footer-section {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  padding: 3rem 2rem;
+  text-align: center;
+  margin-top: 3rem;
+ }
+ .footer-section p { color: #94a3b8; font-size: 0.85rem; }
+ .footer-section a { color: #fca5a5; text-decoration: none; }
+ .footer-section a:hover { color: #dc2626; }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+  .brand-bar { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+  .brand-logo { font-size: 0.85rem; }
+  .switcher-bar { gap: 0.35rem; }
+  .switcher-btn { padding: 0.25rem 0.5rem; font-size: 0.65rem; }
+  .series-nav { padding: 0.75rem 1rem; gap: 0.35rem; }
+  .series-title { font-size: 0.6rem; margin-right: 0.5rem; display: none; }
+  .series-link { padding: 0.3rem 0.6rem; font-size: 0.65rem; }
+  .hero-section { padding: 2rem 1rem 5rem 1rem; }
+  .concept-card { padding: 1.5rem; }
+  .step-grid { grid-template-columns: 1fr; }
+  .tool-grid { grid-template-columns: repeat(2, 1fr); }
+  .gex-block { padding: 1.25rem; }
+ }
+ @media (max-width: 480px) {
+  .series-nav { gap: 0.25rem; }
+  .series-link { padding: 0.2rem 0.4rem; font-size: 0.6rem; }
+  .hero-badges { gap: 0.5rem; }
+  .hero-badge { padding: 0.35rem 0.75rem; font-size: 0.7rem; }
+  .concept-card { padding: 1rem; border-radius: 12px; }
+  .tool-grid { grid-template-columns: 1fr; }
+  .quiz-question { padding: 1.25rem; }
+ }
+ </style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- ===== BRAND BAR ===== -->
+<div class="brand-bar">
+ <a href="https://articles.market-watch.xyz" class="brand-logo"><i class="fa-solid fa-chart-line"></i> Market Watch</a>
+ <div class="switcher-bar">
+  <a href="#" class="switcher-btn active"><i class="fa-solid fa-flag"></i> FR</a>
+  <span style="color:#e2e8f0; font-size:0.75rem;">|</span>
+  <span style="font-size:0.7rem; font-weight:600; color:#94a3b8;">PARTIE 6/8</span>
+ </div>
+</div>
+
+<!-- ===== SERIES NAVIGATION ===== -->
+<div class="series-nav">
+ <span class="series-title"><i class="fa-solid fa-fire"></i> Le Guide du Super Speculateur</span>
+ <a href="../part1-philosophie/" class="series-link">1. Philosophie</a>
+ <a href="../part2-meme-stocks/" class="series-link">2. Meme Stocks</a>
+ <a href="../part3-short-squeeze/" class="series-link">3. Short Squeeze</a>
+ <a href="../part4-etf-levier/" class="series-link">4. ETF Levier</a>
+ <a href="../part5-earnings/" class="series-link">5. Earnings</a>
+ <a href="../part6-max-pain/" class="series-link current">6. Max Pain</a>
+ <a href="../part7-momentum/" class="series-link">7. Momentum</a>
+ <a href="../part8-psychologie/" class="series-link">8. Psychologie</a>
+</div>
+
+<!-- ===== HERO SECTION ===== -->
+<div class="hero-section" style="text-align:center;">
+ <div class="hero-date"><i class="fa-solid fa-fire-flame-curved"></i> Le Guide du Super Speculateur — Partie 6/8</div>
+ <h1 class="hero-title" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #0f172a 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Max Pain & Vendredi des Sorcieres</h1>
+ <p class="hero-subtitle">Options Expiration, Gamma Exposure & Dealer Hedging — Comment les market makers manipulent le prix chaque vendredi et comment en profiter</p>
+ <div class="hero-badges">
+  <span class="hero-badge hero-badge-red"><i class="fa-solid fa-crosshairs"></i> MAX PAIN</span>
+  <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-calendar-day"></i> OPEX</span>
+  <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-wave-square"></i> GEX</span>
+  <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-clock"></i> VENDREDI</span>
+ </div>
+</div>
+
+<!-- ===== CONTENT ===== -->
+<div class="container">
+
+ <!-- Navigation Grid -->
+ <div class="nav-grid">
+  <a href="#maxpain" class="nav-item"><i class="fa-solid fa-crosshairs"></i> Max Pain</a>
+  <a href="#calendrier" class="nav-item"><i class="fa-solid fa-calendar"></i> Calendrier</a>
+  <a href="#gex" class="nav-item"><i class="fa-solid fa-wave-square"></i> GEX</a>
+  <a href="#strategie" class="nav-item"><i class="fa-solid fa-chess"></i> Strategie</a>
+  <a href="#opex-friday" class="nav-item"><i class="fa-solid fa-money-bill-trend-up"></i> OpEx Friday</a>
+  <a href="#0dte" class="nav-item"><i class="fa-solid fa-bolt"></i> 0DTE</a>
+  <a href="#dealer" class="nav-item"><i class="fa-solid fa-building-columns"></i> Dealer Flow</a>
+  <a href="#triple-witching" class="nav-item"><i class="fa-solid fa-hat-wizard"></i> Triple Witching</a>
+  <a href="#pieges" class="nav-item"><i class="fa-solid fa-triangle-exclamation"></i> Pieges</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question"></i> Quiz</a>
+ </div>
+
+ <!-- ===== DISCLAIMER ===== -->
+ <div class="alert-box" style="border-left-color:#dc2626;">
+  <h4 style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Avertissement Important</h4>
+  <p style="margin:0; font-size:0.9rem; color:#991b1b;">Ce guide est <strong>strictement educatif</strong>. Le trading d'options et de 0DTE comporte des risques de perte totale du capital investi. Les strategies presentees ne constituent en aucun cas des conseils en investissement. Le Max Pain est un outil statistique, pas une certitude. <strong>Ne risquez jamais plus que ce que vous pouvez vous permettre de perdre.</strong> Consultez un conseiller financier agree avant toute decision d'investissement.</p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 1: QU'EST-CE QUE LE MAX PAIN? -->
+ <!-- ============================================================ -->
+ <div id="maxpain" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-crosshairs"></i></span> Qu'est-ce que le Max Pain ?</h2>
+
+  <div class="pedagogy-box" style="border-left-color:#dc2626;">
+   <h4 style="color:#dc2626;"><i class="fa-solid fa-graduation-cap"></i> Definition Fondamentale</h4>
+   <p style="margin-bottom:1rem;"><strong>Le Max Pain (ou Maximum Pain)</strong> est le prix d'exercice (strike) auquel le <strong>maximum d'options (calls + puts) expirent sans valeur</strong> (Out of The Money). C'est le prix qui inflige la perte maximale aux acheteurs d'options et le profit maximal aux vendeurs d'options.</p>
+   <p style="margin-bottom:0;">En d'autres termes : c'est le prix ou les <strong>market makers et dealers</strong> gagnent le plus d'argent a l'expiration.</p>
+  </div>
+
+  <h3><i class="fa-solid fa-users" style="color:#dc2626;"></i> Qui en profite ?</h3>
+  <p>Les <strong>market makers</strong> (Goldman Sachs, Citadel Securities, Virtu Financial, Jane Street) sont generalement vendeurs nets d'options. Ils empochent les primes lorsque les options expirent sans valeur. Le Max Pain represente donc le prix ideal pour ces institutions.</p>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:2rem 0;">
+   <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:16px; padding:1.5rem;">
+    <h4 style="color:#16a34a; margin-top:0;"><i class="fa-solid fa-building-columns"></i> Vendeurs d'options (Dealers)</h4>
+    <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:1.8;">
+     <li>Empochent les <strong>primes</strong> quand les options expirent sans valeur</li>
+     <li>Ont les ressources pour <strong>hedger</strong> massivement</li>
+     <li>Leur hedging <strong>pousse le prix</strong> vers le Max Pain</li>
+     <li>Profitent du <strong>time decay</strong> (theta)</li>
+    </ul>
+   </div>
+   <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:16px; padding:1.5rem;">
+    <h4 style="color:#dc2626; margin-top:0;"><i class="fa-solid fa-user"></i> Acheteurs d'options (Retail)</h4>
+    <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:1.8;">
+     <li>Paient la <strong>prime</strong> a l'achat</li>
+     <li>Perdent quand le prix est au Max Pain</li>
+     <li><strong>90% des options</strong> expirent sans valeur</li>
+     <li>Subissent le time decay chaque jour</li>
+    </ul>
+   </div>
+  </div>
+
+  <h3><i class="fa-solid fa-magnet" style="color:#dc2626;"></i> La theorie de l'attraction gravitationnelle</h3>
+  <p>La theorie du Max Pain repose sur un mecanisme simple : les dealers qui ont vendu des options doivent <strong>hedger leurs positions</strong> en achetant ou vendant l'actif sous-jacent. Ce hedging massif cree une force gravitationnelle qui <strong>attire le prix vers le strike du Max Pain</strong> a mesure que l'expiration approche.</p>
+
+  <div style="background:#0f172a; border-radius:16px; padding:2rem; margin:2rem 0; color:white;">
+   <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+    <div style="background:#dc2626; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+     <i class="fa-solid fa-chart-bar"></i>
+    </div>
+    <h4 style="margin:0; color:white; font-size:1.1rem;">Efficacite statistique</h4>
+   </div>
+   <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; text-align:center;">
+    <div>
+     <div style="font-size:2rem; font-weight:900; color:#f87171;">55-65%</div>
+     <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Taux de reussite</div>
+    </div>
+    <div>
+     <div style="font-size:2rem; font-weight:900; color:#fbbf24;">+/- 1%</div>
+     <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Marge de tolerance</div>
+    </div>
+    <div>
+     <div style="font-size:2rem; font-weight:900; color:#34d399;">Indices</div>
+     <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Meilleure efficacite</div>
+    </div>
+   </div>
+   <p style="color:#94a3b8; font-size:0.85rem; margin:1rem 0 0; text-align:center;">Le Max Pain fonctionne mieux sur les indices (SPY, QQQ) que sur les actions individuelles. Il n'est PAS fiable a 100%.</p>
+  </div>
+
+  <!-- CHART 1: Max Pain Distribution -->
+  <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:2rem 0;">
+   <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-chart-bar" style="color:#dc2626;"></i> Exemple : Distribution du Max Pain — SPY (Expiration fictive)</h4>
+   <div id="chart-maxpain" style="width:100%; height:400px;"></div>
+   <p style="font-size:0.8rem; color:#94a3b8; margin:0.5rem 0 0; text-align:center;">Le Max Pain se situe au strike $450 ou la perte totale des acheteurs d'options est maximale</p>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 2: CALENDRIER DES EXPIRATIONS -->
+ <!-- ============================================================ -->
+ <div id="calendrier" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-calendar-days"></i></span> Le Calendrier des Expirations</h2>
+
+  <p>Toutes les expirations ne se valent pas. Comprendre le calendrier, c'est comprendre quand le marche est le plus influence par le hedging des dealers.</p>
+
+  <div class="timeline">
+   <div class="timeline-item">
+    <h4><i class="fa-solid fa-calendar-week" style="color:#3b82f6;"></i> Expiration Hebdomadaire</h4>
+    <p><strong>Chaque vendredi</strong> — Options sur SPY, QQQ, IWM et les grandes capitalisations. Volume moyen mais impact croissant depuis l'introduction des weeklies. Represente ~40% du volume total d'options.</p>
+   </div>
+   <div class="timeline-item">
+    <h4><i class="fa-solid fa-calendar" style="color:#dc2626;"></i> Expiration Mensuelle (OpEx)</h4>
+    <p><strong>3eme vendredi du mois</strong> — L'expiration la plus importante. Toutes les options mensuelles expirent. Volume 2-3x superieur a un vendredi normal. C'est le jour ou le Max Pain est le plus efficace. <strong>C'est LE jour a surveiller.</strong></p>
+   </div>
+   <div class="timeline-item">
+    <h4><i class="fa-solid fa-hat-wizard" style="color:#9333ea;"></i> Triple Witching / Vendredi des Sorcieres</h4>
+    <p><strong>3eme vendredi de mars, juin, septembre, decembre</strong> — Expiration simultanee de 3 types de contrats : options sur actions, options sur indices, et futures sur indices. Volume 3-5x superieur. Mouvements violents, surtout dans la derniere heure.</p>
+   </div>
+   <div class="timeline-item">
+    <h4><i class="fa-solid fa-ghost" style="color:#0f172a;"></i> Quad Witching (historique)</h4>
+    <p>Quand les <strong>futures sur actions individuelles</strong> (Single Stock Futures) expiraient aussi. Supprime depuis 2020 aux USA, mais le terme reste populaire. Aujourd'hui, on parle surtout de Triple Witching.</p>
+   </div>
+  </div>
+
+  <table class="data-table">
+   <thead>
+    <tr>
+     <th>Type d'expiration</th>
+     <th>Frequence</th>
+     <th>Volume relatif</th>
+     <th>Impact Max Pain</th>
+     <th>Volatilite</th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td><strong>Hebdomadaire</strong></td>
+     <td>Chaque vendredi</td>
+     <td>1x (base)</td>
+     <td style="color:#f59e0b; font-weight:700;">Modere</td>
+     <td style="color:#f59e0b;">Moyenne</td>
+    </tr>
+    <tr>
+     <td><strong>Mensuelle (OpEx)</strong></td>
+     <td>3eme vendredi/mois</td>
+     <td style="font-weight:700; color:#dc2626;">2-3x</td>
+     <td style="color:#16a34a; font-weight:700;">Fort</td>
+     <td style="color:#dc2626;">Elevee</td>
+    </tr>
+    <tr>
+     <td><strong>Triple Witching</strong></td>
+     <td>4x / an (mars, juin, sept, dec)</td>
+     <td style="font-weight:700; color:#dc2626;">3-5x</td>
+     <td style="color:#dc2626; font-weight:700;">Tres fort</td>
+     <td style="color:#dc2626;">Tres elevee</td>
+    </tr>
+    <tr>
+     <td><strong>0DTE (quotidien)</strong></td>
+     <td>Chaque jour</td>
+     <td>0.5-1x par jour</td>
+     <td style="color:#64748b; font-weight:700;">Faible</td>
+     <td style="color:#9333ea;">Intraday explosive</td>
+    </tr>
+   </tbody>
+  </table>
+
+  <div class="didactic-box" style="border-left-color:#16a34a;">
+   <h4 style="color:#16a34a;"><i class="fa-solid fa-lightbulb"></i> Pourquoi le vendredi est special</h4>
+   <p style="margin-bottom:0.5rem;">Le vendredi d'expiration, deux forces convergent :</p>
+   <ol style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:1.8;">
+    <li><strong>Gamma maximale</strong> : plus on approche de l'expiration, plus le gamma des options ATM (At The Money) augmente. Les dealers doivent hedger de plus en plus agressivement.</li>
+    <li><strong>Delta hedging accelere</strong> : chaque mouvement de $0.10 sur le sous-jacent force les dealers a acheter ou vendre des dizaines de milliers d'actions pour rester delta-neutral.</li>
+    <li><strong>Time decay maximal</strong> : le theta (perte de valeur temporelle) est a son maximum. Les options fondent comme neige au soleil.</li>
+   </ol>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 3: GAMMA EXPOSURE (GEX) -->
+ <!-- ============================================================ -->
+ <div id="gex" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-wave-square"></i></span> Gamma Exposure (GEX) Explique</h2>
+
+  <div class="pedagogy-box" style="border-left-color:#dc2626;">
+   <h4 style="color:#dc2626;"><i class="fa-solid fa-graduation-cap"></i> Le Gamma en 30 secondes</h4>
+   <p style="margin-bottom:0.5rem;"><strong>Delta</strong> = combien le prix de l'option change quand le sous-jacent bouge de $1.</p>
+   <p style="margin-bottom:0.5rem;"><strong>Gamma</strong> = combien le Delta change quand le sous-jacent bouge de $1. C'est la <strong>vitesse du changement</strong>.</p>
+   <p style="margin-bottom:0;"><strong>GEX (Gamma Exposure)</strong> = le gamma net de tous les market makers sur toutes les options d'un actif. C'est le <strong>thermometre de la volatilite</strong>.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem; margin:2rem 0;">
+   <!-- GEX Positif -->
+   <div class="gex-block gex-positive">
+    <h4><i class="fa-solid fa-shield-halved"></i> GEX Positif = STABILISATEUR</h4>
+    <p style="font-size:0.95rem; color:#166534; margin-bottom:1rem;">Les market makers sont <strong>long gamma</strong>. Leur comportement de hedging REDUIT la volatilite.</p>
+    <div style="background:white; border-radius:12px; padding:1.25rem;">
+     <p style="font-size:0.9rem; color:#475569; margin-bottom:0.75rem;"><strong>Mecanisme :</strong></p>
+     <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.9rem; line-height:1.8;">
+      <li>Prix monte <i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i> Dealers <strong>vendent</strong> (pour rester delta-neutral)</li>
+      <li>Prix baisse <i class="fa-solid fa-arrow-right" style="color:#dc2626;"></i> Dealers <strong>achetent</strong></li>
+      <li>Resultat : le prix est <strong>contenu</strong> dans un range</li>
+      <li>Volatilite realisee <strong>faible</strong></li>
+     </ul>
+    </div>
+    <div class="danger-meter" style="margin-top:1rem;">
+     <span class="danger-meter-label">Volatilite</span>
+     <div class="danger-meter-bar">
+      <div class="danger-meter-fill" style="width:25%; background:#16a34a;"></div>
+     </div>
+     <span style="font-size:0.75rem; font-weight:700; color:#16a34a;">Faible</span>
+    </div>
+   </div>
+
+   <!-- GEX Negatif -->
+   <div class="gex-block gex-negative">
+    <h4><i class="fa-solid fa-explosion"></i> GEX Negatif = AMPLIFICATEUR</h4>
+    <p style="font-size:0.95rem; color:#991b1b; margin-bottom:1rem;">Les market makers sont <strong>short gamma</strong>. Leur hedging AMPLIFIE la volatilite.</p>
+    <div style="background:white; border-radius:12px; padding:1.25rem;">
+     <p style="font-size:0.9rem; color:#475569; margin-bottom:0.75rem;"><strong>Mecanisme :</strong></p>
+     <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.9rem; line-height:1.8;">
+      <li>Prix monte <i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i> Dealers <strong>achetent</strong> (accelerent la hausse)</li>
+      <li>Prix baisse <i class="fa-solid fa-arrow-right" style="color:#dc2626;"></i> Dealers <strong>vendent</strong> (accelerent la baisse)</li>
+      <li>Resultat : <strong>mouvements amplifies</strong>, breakouts violents</li>
+      <li>Volatilite realisee <strong>elevee</strong></li>
+     </ul>
+    </div>
+    <div class="danger-meter" style="margin-top:1rem;">
+     <span class="danger-meter-label">Volatilite</span>
+     <div class="danger-meter-bar">
+      <div class="danger-meter-fill" style="width:85%; background:#dc2626;"></div>
+     </div>
+     <span style="font-size:0.75rem; font-weight:700; color:#dc2626;">Elevee</span>
+    </div>
+   </div>
+  </div>
+
+  <div class="concept-card card-dark">
+   <h3 style="margin-top:0;"><i class="fa-solid fa-arrows-turn-to-dots" style="color:#dc2626;"></i> Le Gamma Flip — le niveau cle</h3>
+   <p>Le <strong>Gamma Flip</strong> est le prix exact ou le GEX passe de positif a negatif. C'est le <strong>niveau le plus important</strong> a surveiller chaque jour.</p>
+   <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="background:#f0fdf4; border-radius:12px; padding:1rem; text-align:center;">
+     <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">Au-dessus du Gamma Flip</div>
+     <div style="font-size:1.3rem; font-weight:800; color:#16a34a; margin:0.5rem 0;">GEX +</div>
+     <div style="font-size:0.85rem; color:#475569;">March calme, range, mean-reversion</div>
+    </div>
+    <div style="background:#fef2f2; border-radius:12px; padding:1rem; text-align:center;">
+     <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">En-dessous du Gamma Flip</div>
+     <div style="font-size:1.3rem; font-weight:800; color:#dc2626; margin:0.5rem 0;">GEX -</div>
+     <div style="font-size:0.85rem; color:#475569;">Volatilite, trending, breakouts</div>
+    </div>
+   </div>
+  </div>
+
+  <!-- CHART 2: GEX par strike -->
+  <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:2rem 0;">
+   <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-wave-square" style="color:#dc2626;"></i> Gamma Exposure par Strike — SPY (Exemple)</h4>
+   <div id="chart-gex" style="width:100%; height:400px;"></div>
+   <p style="font-size:0.8rem; color:#94a3b8; margin:0.5rem 0 0; text-align:center;">Barres vertes = GEX positif (stabilisateur) | Barres rouges = GEX negatif (amplificateur) | Ligne = Gamma Flip</p>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 4: COMMENT UTILISER LE MAX PAIN -->
+ <!-- ============================================================ -->
+ <div id="strategie" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-chess"></i></span> Comment Utiliser le Max Pain</h2>
+
+  <p>Le Max Pain est un <strong>outil de probabilite</strong>, pas une boule de cristal. Voici comment l'integrer dans votre analyse.</p>
+
+  <div class="step-grid">
+   <div class="step-card">
+    <div class="step-number">1</div>
+    <h4 style="margin-top:0; font-size:1rem; font-weight:700;">Jeudi soir : calculer</h4>
+    <p style="font-size:0.9rem; color:#475569; margin-bottom:0;">Consultez le Max Pain pour l'expiration de vendredi. Comparez avec le prix actuel du sous-jacent. Notez l'ecart en %.</p>
+   </div>
+   <div class="step-card">
+    <div class="step-number">2</div>
+    <h4 style="margin-top:0; font-size:1rem; font-weight:700;">Evaluer l'ecart</h4>
+    <p style="font-size:0.9rem; color:#475569; margin-bottom:0;"><strong>Ecart &gt; 1%</strong> : signal fort d'attraction. <strong>Ecart &lt; 0.5%</strong> : deja au Max Pain, peu d'interet. Plus l'ecart est grand, plus la force d'attraction est potentiellement forte.</p>
+   </div>
+   <div class="step-card">
+    <div class="step-number">3</div>
+    <h4 style="margin-top:0; font-size:1rem; font-weight:700;">Verifier les catalyseurs</h4>
+    <p style="font-size:0.9rem; color:#475569; margin-bottom:0;">Un earnings, un rapport CPI ou une decision FOMC <strong>invalident</strong> le Max Pain. Les catalyseurs majeurs dominent toujours le hedging des dealers.</p>
+   </div>
+   <div class="step-card">
+    <div class="step-number">4</div>
+    <h4 style="margin-top:0; font-size:1rem; font-weight:700;">Prendre position</h4>
+    <p style="font-size:0.9rem; color:#475569; margin-bottom:0;">Si le prix est AU-DESSUS du Max Pain : biais baissier. Si EN-DESSOUS : biais haussier. Utilisez des options a courte echeance ou des actions.</p>
+   </div>
+  </div>
+
+  <div style="background:#0f172a; border-radius:16px; padding:2rem; margin:2rem 0; color:white;">
+   <h4 style="color:#fbbf24; margin-top:0;"><i class="fa-solid fa-arrows-up-down"></i> Regles de direction</h4>
+   <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1rem;">
+    <div style="background:rgba(220,38,38,0.15); border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#fca5a5; margin-bottom:0.5rem;">Prix AU-DESSUS du Max Pain</div>
+     <div style="font-size:1.5rem; margin:0.5rem 0;"><i class="fa-solid fa-arrow-down" style="color:#f87171;"></i></div>
+     <div style="font-size:1rem; font-weight:700; color:#fca5a5;">Tendance baissiere vendredi</div>
+     <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.5rem;">Les dealers vendent pour ramener le prix</div>
+    </div>
+    <div style="background:rgba(22,163,74,0.15); border-radius:12px; padding:1.25rem; text-align:center;">
+     <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#86efac; margin-bottom:0.5rem;">Prix EN-DESSOUS du Max Pain</div>
+     <div style="font-size:1.5rem; margin:0.5rem 0;"><i class="fa-solid fa-arrow-up" style="color:#34d399;"></i></div>
+     <div style="font-size:1rem; font-weight:700; color:#86efac;">Tendance haussiere vendredi</div>
+     <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.5rem;">Les dealers achetent pour ramener le prix</div>
+    </div>
+   </div>
+  </div>
+
+  <h3><i class="fa-solid fa-wrench" style="color:#dc2626;"></i> Outils pour calculer le Max Pain</h3>
+  <div class="tool-grid">
+   <div class="tool-card">
+    <i class="fa-solid fa-crosshairs"></i>
+    <div class="tool-name">Swaggystocks</div>
+    <div class="tool-desc">swaggystocks.com/maxpain — Gratuit, visuel</div>
+   </div>
+   <div class="tool-card">
+    <i class="fa-solid fa-chart-pie"></i>
+    <div class="tool-name">Optionistics</div>
+    <div class="tool-desc">optionistics.com — Max Pain + open interest</div>
+   </div>
+   <div class="tool-card">
+    <i class="fa-solid fa-bullseye"></i>
+    <div class="tool-name">Maximum Pain</div>
+    <div class="tool-desc">maximum-pain.com — Simple et direct</div>
+   </div>
+   <div class="tool-card">
+    <i class="fa-solid fa-wave-square"></i>
+    <div class="tool-name">SpotGamma</div>
+    <div class="tool-desc">spotgamma.com — GEX + Max Pain (payant)</div>
+   </div>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 5: OPEX FRIDAY TRADING -->
+ <!-- ============================================================ -->
+ <div id="opex-friday" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-money-bill-trend-up"></i></span> Le "Vendredi Pin" — OpEx Friday Trading</h2>
+
+  <p>Le <strong>pinning</strong> est le phenomene ou le prix du sous-jacent se "colle" au strike du Max Pain le jour d'expiration. Voici comment le trader.</p>
+
+  <div class="trade-box">
+   <h3><i class="fa-solid fa-crosshairs"></i> Setup : Max Pain Reversion Trade</h3>
+   <div class="trade-levels">
+    <div class="trade-level trade-entry">
+     <div class="label">Contexte</div>
+     <div class="value" style="font-size:1rem;">Vendredi OpEx</div>
+    </div>
+    <div class="trade-level trade-entry">
+     <div class="label">Entree</div>
+     <div class="value" style="font-size:1rem;">10h00-10h30</div>
+    </div>
+    <div class="trade-level trade-stop">
+     <div class="label">Stop</div>
+     <div class="value" style="font-size:1rem;">+1% du MP</div>
+    </div>
+    <div class="trade-level trade-tp">
+     <div class="label">Target</div>
+     <div class="value" style="font-size:1rem;">Max Pain</div>
+    </div>
+    <div class="trade-level trade-rr">
+     <div class="label">R/R typique</div>
+     <div class="value">1:1.5</div>
+    </div>
+   </div>
+  </div>
+
+  <div class="concept-card card-red">
+   <h3 style="margin-top:0;"><i class="fa-solid fa-route" style="color:#dc2626;"></i> Scenario concret</h3>
+
+   <div style="background:#f8fafc; border-radius:12px; padding:1.5rem; margin:1rem 0;">
+    <p style="margin:0 0 1rem; font-weight:700; color:#0f172a;">Jeudi soir — SPY cloture a $455</p>
+    <table class="data-table" style="margin:0;">
+     <tr><td style="font-weight:700;">Max Pain calcule</td><td>$450</td></tr>
+     <tr><td style="font-weight:700;">Ecart</td><td style="color:#dc2626; font-weight:700;">-1.1% ($5 au-dessus)</td></tr>
+     <tr><td style="font-weight:700;">Direction anticipee</td><td style="color:#dc2626;"><i class="fa-solid fa-arrow-down"></i> Baissiere (prix au-dessus du MP)</td></tr>
+     <tr><td style="font-weight:700;">Action</td><td>Acheter Puts SPY $450 expiration jour</td></tr>
+     <tr><td style="font-weight:700;">Stop</td><td>Si SPY depasse $459.50 (+1% du MP en sens inverse)</td></tr>
+     <tr><td style="font-weight:700;">Target</td><td>SPY $450 (Max Pain) ou $451 (proche)</td></tr>
+    </table>
+   </div>
+
+   <div class="pedagogy-box" style="border-left-color:#3b82f6; margin-top:1.5rem;">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-clock"></i> Timing optimal</h4>
+    <p style="margin-bottom:0;">Le pinning est plus actif entre <strong>10h00 et 14h00 (heure de New York)</strong>. Avant 10h00, les gaps d'ouverture et le flow retail brouillent le signal. Apres 14h00, les derniers ajustements des dealers commencent et le prix converge plus fortement vers le Max Pain. La derniere heure (<strong>15h00-16h00</strong>) peut etre tres volatile avec les dernieres clotures automatiques.</p>
+   </div>
+  </div>
+
+  <div class="alert-box" style="border-left-color:#f59e0b; background:#fffbeb;">
+   <h4 style="color:#d97706;"><i class="fa-solid fa-scale-balanced"></i> Gestion du risque</h4>
+   <ul style="margin:0; padding-left:1.25rem; color:#92400e; font-size:0.95rem; line-height:1.8;">
+    <li><strong>Ne jamais utiliser plus de 2-3% du portefeuille</strong> sur un trade Max Pain</li>
+    <li>Preferer les <strong>spreads</strong> aux options nues (risque limite)</li>
+    <li>Si le prix s'eloigne du Max Pain apres 13h00, <strong>couper la position</strong></li>
+    <li>Ne pas insister si un catalyseur macro domine la journee</li>
+   </ul>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 6: 0DTE OPTIONS -->
+ <!-- ============================================================ -->
+ <div id="0dte" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-bolt"></i></span> 0DTE Options — Zero Days to Expiry</h2>
+
+  <div class="pedagogy-box" style="border-left-color:#dc2626;">
+   <h4 style="color:#dc2626;"><i class="fa-solid fa-bolt-lightning"></i> Le phenomene qui a change le marche</h4>
+   <p style="margin-bottom:0;">Depuis 2022, le CBOE propose des <strong>options qui expirent le jour meme</strong> (0DTE) sur SPX chaque jour de bourse. Ce phenomene a transforme la microstructure du marche et represente desormais <strong>plus de 50% du volume total d'options SPX</strong>.</p>
+  </div>
+
+  <div class="metric-grid">
+   <div class="metric-card">
+    <div class="metric-value" style="color:#dc2626;">50%+</div>
+    <div class="metric-label">du volume SPX</div>
+    <div class="metric-change down">0DTE quotidien</div>
+   </div>
+   <div class="metric-card">
+    <div class="metric-value" style="color:#dc2626;">90%</div>
+    <div class="metric-label">Expirent sans valeur</div>
+    <div class="metric-change down">Perte totale</div>
+   </div>
+   <div class="metric-card">
+    <div class="metric-value" style="color:#f59e0b;">100-500x</div>
+    <div class="metric-label">Levier possible</div>
+    <div class="metric-change neutral">Intraday</div>
+   </div>
+   <div class="metric-card">
+    <div class="metric-value" style="color:#9333ea;">Minutes</div>
+    <div class="metric-label">Duree de vie</div>
+    <div class="metric-change down">Theta extreme</div>
+   </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; margin:2rem 0;">
+   <div class="concept-card card-green" style="padding:1.5rem;">
+    <h4 style="margin-top:0; color:#16a34a;"><i class="fa-solid fa-check-circle"></i> Opportunites</h4>
+    <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:1.8;">
+     <li><strong>Levier extreme</strong> : $100 peuvent devenir $5,000 en quelques minutes</li>
+     <li><strong>Risque defini</strong> : vous ne pouvez perdre que la prime payee</li>
+     <li><strong>Aucun risque overnight</strong> : position fermee le jour meme</li>
+     <li><strong>Ideal pour les events</strong> : CPI, FOMC, NFP a heure fixe</li>
+     <li><strong>Gamma elevee</strong> : mouvements rapides du prix de l'option</li>
+    </ul>
+   </div>
+   <div class="concept-card card-red" style="padding:1.5rem;">
+    <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-skull-crossbones"></i> DANGERS</h4>
+    <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:1.8;">
+     <li><strong>Perte totale en minutes</strong> : le theta vous mange vivant</li>
+     <li><strong>Bid-ask elargi</strong> : le spread vous coute cher a l'entree</li>
+     <li><strong>Addiction</strong> : le levier cree un comportement de casino</li>
+     <li><strong>Pas de rattrapage</strong> : pas de "demain ca va remonter"</li>
+     <li><strong>90% de perdants</strong> : la probabilite est contre vous</li>
+    </ul>
+   </div>
+  </div>
+
+  <!-- CHART 3: Volume 0DTE explosion -->
+  <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:2rem 0;">
+   <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Explosion du volume 0DTE — Part du volume total SPX</h4>
+   <div id="chart-0dte" style="width:100%; height:350px;"></div>
+   <p style="font-size:0.8rem; color:#94a3b8; margin:0.5rem 0 0; text-align:center;">Source : CBOE. Le volume 0DTE a explose depuis leur introduction quotidienne en 2022</p>
+  </div>
+
+  <div class="alert-box" style="border-left-color:#dc2626;">
+   <h4 style="color:#dc2626;"><i class="fa-solid fa-skull"></i> Regle d'or des 0DTE</h4>
+   <p style="margin:0; color:#991b1b; font-size:0.95rem;"><strong>Ne risquez JAMAIS plus de 0.5% de votre portefeuille sur un trade 0DTE.</strong> Si votre portefeuille est de $10,000, votre perte maximale sur un 0DTE doit etre de $50. Ce n'est pas un investissement, c'est un pari a haute frequence. Traitez-le comme tel.</p>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 7: DEALER HEDGING & FLOW -->
+ <!-- ============================================================ -->
+ <div id="dealer" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-building-columns"></i></span> Dealer Hedging & Options Flow</h2>
+
+  <h3><i class="fa-solid fa-scale-balanced" style="color:#dc2626;"></i> Comment les dealers hedgent</h3>
+  <p>Les market makers doivent rester <strong>delta-neutral</strong> en permanence. Quand un client achete un call, le dealer doit acheter l'action sous-jacente pour couvrir son risque. Ce mecanisme, repete des millions de fois, cree des flux massifs qui influencent le prix.</p>
+
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:2rem 0;">
+   <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-diagram-project" style="color:#dc2626;"></i> Chaine de causalite</h4>
+   <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; margin:1.5rem 0;">
+    <div style="background:#dc2626; color:white; padding:0.75rem 1rem; border-radius:10px; font-weight:700; font-size:0.85rem; text-align:center;">Client achete<br>des Calls</div>
+    <i class="fa-solid fa-arrow-right" style="color:#dc2626;"></i>
+    <div style="background:#f59e0b; color:white; padding:0.75rem 1rem; border-radius:10px; font-weight:700; font-size:0.85rem; text-align:center;">Dealer vend<br>les Calls</div>
+    <i class="fa-solid fa-arrow-right" style="color:#f59e0b;"></i>
+    <div style="background:#3b82f6; color:white; padding:0.75rem 1rem; border-radius:10px; font-weight:700; font-size:0.85rem; text-align:center;">Dealer achete<br>l'action (hedge)</div>
+    <i class="fa-solid fa-arrow-right" style="color:#3b82f6;"></i>
+    <div style="background:#16a34a; color:white; padding:0.75rem 1rem; border-radius:10px; font-weight:700; font-size:0.85rem; text-align:center;">Prix monte<br>(pression achat)</div>
+   </div>
+   <p style="font-size:0.85rem; color:#64748b; text-align:center; margin:0;">Ce cycle s'inverse quand le client achete des Puts (le dealer vend l'action pour hedger).</p>
+  </div>
+
+  <h3><i class="fa-solid fa-eye" style="color:#dc2626;"></i> Options Flow : suivre le "Smart Money"</h3>
+  <p>L'<strong>Unusual Options Activity (UOA)</strong> designe des ordres d'options anormalement gros par rapport au volume moyen. Ces ordres sont souvent passes par des institutionnels ou des insiders qui ont une conviction forte.</p>
+
+  <table class="data-table">
+   <thead>
+    <tr>
+     <th>Signal</th>
+     <th>Interpretation</th>
+     <th>Fiabilite</th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td><strong>Gros bloc de Calls OTM</strong></td>
+     <td>Pari haussier agressif — quelqu'un s'attend a un mouvement fort</td>
+     <td><span class="badge badge-green">Elevee</span></td>
+    </tr>
+    <tr>
+     <td><strong>Puts ITM accumules</strong></td>
+     <td>Hedge institutionnel — protection de portefeuille</td>
+     <td><span class="badge badge-blue">Moderee</span></td>
+    </tr>
+    <tr>
+     <td><strong>Sweep orders (urgent)</strong></td>
+     <td>L'acheteur veut etre execute immediatement, paie au Ask</td>
+     <td><span class="badge badge-green">Elevee</span></td>
+    </tr>
+    <tr>
+     <td><strong>Dark pool print</strong></td>
+     <td>Transaction hors-bourse — souvent institutionnel</td>
+     <td><span class="badge badge-purple">Variable</span></td>
+    </tr>
+    <tr>
+     <td><strong>Ratio Put/Call extreme</strong></td>
+     <td>Sentiment extreme — contrarian signal</td>
+     <td><span class="badge badge-blue">Moderee</span></td>
+    </tr>
+   </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-toolbox" style="color:#dc2626;"></i> Outils pour suivre le flow</h3>
+  <div class="tool-grid">
+   <div class="tool-card">
+    <i class="fa-solid fa-fish-fins"></i>
+    <div class="tool-name">Unusual Whales</div>
+    <div class="tool-desc">Flow en temps reel, alerts, dark pool</div>
+   </div>
+   <div class="tool-card">
+    <i class="fa-solid fa-chart-line"></i>
+    <div class="tool-name">FlowAlgo</div>
+    <div class="tool-desc">Options flow premium, sweep detection</div>
+   </div>
+   <div class="tool-card">
+    <i class="fa-solid fa-square"></i>
+    <div class="tool-name">BlackBox Stocks</div>
+    <div class="tool-desc">Dark pool + options flow + alerts</div>
+   </div>
+   <div class="tool-card">
+    <i class="fa-solid fa-cheese"></i>
+    <div class="tool-name">Cheddar Flow</div>
+    <div class="tool-desc">Visualisation du flow, heatmaps</div>
+   </div>
+  </div>
+
+  <div class="didactic-box" style="border-left-color:#f59e0b;">
+   <h4 style="color:#d97706;"><i class="fa-solid fa-lightbulb"></i> "Smart Money" vs "Dumb Money"</h4>
+   <p style="margin-bottom:0.75rem;">Le concept de "smart money" est a nuancer :</p>
+   <ul style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:1.8;">
+    <li><strong>Smart money</strong> : block trades &gt; $1M, sweeps urgents, accumulation progressive. Souvent institutionnel.</li>
+    <li><strong>Dumb money</strong> : options 0DTE a $0.05, loterie sur meme stocks, FOMO sur les calls du vendredi. Souvent retail.</li>
+    <li><strong>Attention</strong> : meme les institutions se trompent. Le flow est un <strong>indice</strong>, pas une certitude.</li>
+   </ul>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 8: TRIPLE WITCHING -->
+ <!-- ============================================================ -->
+ <div id="triple-witching" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-hat-wizard"></i></span> Strategie : Jouer le Triple Witching</h2>
+
+  <p>Le Triple Witching se produit <strong>4 fois par an</strong> et represente les journees avec le plus gros volume de l'annee. C'est un moment unique pour les speculateurs avertis.</p>
+
+  <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem; margin:2rem 0; text-align:center;">
+   <div style="background:linear-gradient(135deg, #fef2f2, #ffffff); border:2px solid #dc2626; border-radius:16px; padding:1.5rem;">
+    <div style="font-size:1.5rem; font-weight:900; color:#dc2626;">Mars</div>
+    <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">3eme vendredi</div>
+   </div>
+   <div style="background:linear-gradient(135deg, #fef2f2, #ffffff); border:2px solid #dc2626; border-radius:16px; padding:1.5rem;">
+    <div style="font-size:1.5rem; font-weight:900; color:#dc2626;">Juin</div>
+    <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">3eme vendredi</div>
+   </div>
+   <div style="background:linear-gradient(135deg, #fef2f2, #ffffff); border:2px solid #dc2626; border-radius:16px; padding:1.5rem;">
+    <div style="font-size:1.5rem; font-weight:900; color:#dc2626;">Sept</div>
+    <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">3eme vendredi</div>
+   </div>
+   <div style="background:linear-gradient(135deg, #fef2f2, #ffffff); border:2px solid #dc2626; border-radius:16px; padding:1.5rem;">
+    <div style="font-size:1.5rem; font-weight:900; color:#dc2626;">Dec</div>
+    <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">3eme vendredi</div>
+   </div>
+  </div>
+
+  <h3><i class="fa-solid fa-chart-area" style="color:#dc2626;"></i> Pattern historique</h3>
+  <p>Les Triple Witching suivent souvent un <strong>pattern reconnaissable</strong> :</p>
+
+  <div style="background:#0f172a; border-radius:16px; padding:2rem; margin:1.5rem 0; color:white;">
+   <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1.5rem; text-align:center;">
+    <div>
+     <div style="font-size:2rem;"><i class="fa-solid fa-arrow-trend-up" style="color:#34d399;"></i></div>
+     <div style="font-size:0.85rem; font-weight:700; color:white; margin:0.5rem 0;">Semaine precedente</div>
+     <div style="font-size:0.8rem; color:#94a3b8;">Souvent haussiere (anticipation, roll de positions)</div>
+    </div>
+    <div>
+     <div style="font-size:2rem;"><i class="fa-solid fa-arrow-trend-down" style="color:#f87171;"></i></div>
+     <div style="font-size:0.85rem; font-weight:700; color:white; margin:0.5rem 0;">Jour du Witching</div>
+     <div style="font-size:0.8rem; color:#94a3b8;">Dump matinal frequent, puis recovery en fin de journee</div>
+    </div>
+    <div>
+     <div style="font-size:2rem;"><i class="fa-solid fa-arrows-rotate" style="color:#fbbf24;"></i></div>
+     <div style="font-size:0.85rem; font-weight:700; color:white; margin:0.5rem 0;">Semaine suivante</div>
+     <div style="font-size:0.8rem; color:#94a3b8;">Nouvelle tendance possible (reset du positionnement)</div>
+    </div>
+   </div>
+  </div>
+
+  <div class="trade-box">
+   <h3><i class="fa-solid fa-hat-wizard"></i> Trade : Vendre la volatilite avant le Witching</h3>
+   <div class="trade-levels">
+    <div class="trade-level trade-entry">
+     <div class="label">Strategie</div>
+     <div class="value" style="font-size:0.9rem;">Iron Condor</div>
+    </div>
+    <div class="trade-level trade-entry">
+     <div class="label">Timing</div>
+     <div class="value" style="font-size:0.9rem;">J-5 a J-3</div>
+    </div>
+    <div class="trade-level trade-tp">
+     <div class="label">Profit max</div>
+     <div class="value" style="font-size:0.9rem;">Credit recu</div>
+    </div>
+    <div class="trade-level trade-stop">
+     <div class="label">Perte max</div>
+     <div class="value" style="font-size:0.9rem;">Largeur - credit</div>
+    </div>
+    <div class="trade-level trade-rr">
+     <div class="label">Probabilite</div>
+     <div class="value" style="font-size:0.9rem;">~65%</div>
+    </div>
+   </div>
+
+   <div style="margin-top:1.5rem; padding:1.25rem; background:rgba(255,255,255,0.08); border-radius:12px;">
+    <p style="color:#e2e8f0; margin:0 0 0.75rem; font-size:0.95rem;"><strong style="color:#fbbf24;">Principe :</strong> La volatilite implicite est souvent sur-estimee avant le Triple Witching. En vendant un Iron Condor (4 legs), vous profitez de la contraction de la volatilite et du time decay.</p>
+    <p style="color:#94a3b8; margin:0; font-size:0.85rem;"><strong>Exemple :</strong> SPY a $500. Vendre un Iron Condor $490/$485 put spread + $510/$515 call spread, expiration jour du Witching. Credit recu : ~$1.50. Profit max si SPY cloture entre $490 et $510.</p>
+   </div>
+  </div>
+
+  <div class="alert-box" style="border-left-color:#9333ea; background:#faf5ff;">
+   <h4 style="color:#9333ea;"><i class="fa-solid fa-clock"></i> Les 2 dernieres heures</h4>
+   <p style="margin:0; color:#581c87; font-size:0.95rem;">Les 2 dernieres heures du Triple Witching sont les plus volatiles de l'annee. Le <strong>"rebalancing"</strong> des indices (S&P 500, Russell) se fait souvent ce jour-la, generant des flux massifs dans les dernieres minutes. <strong>Ne prenez pas de nouvelles positions apres 14h00</strong> sauf si vous etes un trader experimente.</p>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 9: LES PIEGES -->
+ <!-- ============================================================ -->
+ <div id="pieges" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-triangle-exclamation"></i></span> Les Pieges a Eviter</h2>
+
+  <div class="risk-grid">
+   <!-- Piege 1 -->
+   <div class="risk-card risk-card-critical">
+    <div class="risk-card-header">
+     <div class="risk-card-icon"><i class="fa-solid fa-arrows-spin"></i></div>
+     <h4>Le Max Pain change tout le temps</h4>
+     <span class="risk-severity">Critique</span>
+    </div>
+    <div class="risk-card-body">
+     <ul>
+      <li>Le Max Pain calcule lundi peut etre totalement different vendredi</li>
+      <li>L'open interest change chaque jour avec les nouveaux ordres</li>
+      <li><strong>Toujours recalculer jeudi soir</strong> pour le vendredi</li>
+     </ul>
+    </div>
+   </div>
+
+   <!-- Piege 2 -->
+   <div class="risk-card risk-card-high">
+    <div class="risk-card-header">
+     <div class="risk-card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+     <h4>Mieux sur indices que sur actions</h4>
+     <span class="risk-severity">Eleve</span>
+    </div>
+    <div class="risk-card-body">
+     <ul>
+      <li>SPY, QQQ, IWM : Max Pain le plus fiable (volume enorme)</li>
+      <li>Actions individuelles : trop de bruit, catalyseurs specifiques</li>
+      <li>Meme stocks : oubliez le Max Pain, la foule domine</li>
+     </ul>
+    </div>
+   </div>
+
+   <!-- Piege 3 -->
+   <div class="risk-card risk-card-critical">
+    <div class="risk-card-header">
+     <div class="risk-card-icon"><i class="fa-solid fa-bolt"></i></div>
+     <h4>Les 0DTE peuvent vous ruiner</h4>
+     <span class="risk-severity">Critique</span>
+    </div>
+    <div class="risk-card-body">
+     <ul>
+      <li>Perte de 100% de la prime en <strong>30 minutes</strong></li>
+      <li>Theta = destruction massive de valeur</li>
+      <li>Le bid-ask spread rend le breakeven difficile</li>
+      <li><strong>Ne risquez jamais plus de 0.5% du portefeuille</strong></li>
+     </ul>
+    </div>
+   </div>
+
+   <!-- Piege 4 -->
+   <div class="risk-card risk-card-medium">
+    <div class="risk-card-header">
+     <div class="risk-card-icon"><i class="fa-solid fa-flask"></i></div>
+     <h4>Le GEX n'est pas une science exacte</h4>
+     <span class="risk-severity">Moyen</span>
+    </div>
+    <div class="risk-card-body">
+     <ul>
+      <li>Les donnees GEX publiques sont des <strong>estimations</strong></li>
+      <li>Les vrais positions des dealers ne sont pas publiques</li>
+      <li>Differents fournisseurs donnent des GEX differents</li>
+      <li>Utiliser comme un <strong>complement</strong>, jamais comme seul signal</li>
+     </ul>
+    </div>
+   </div>
+
+   <!-- Piege 5 -->
+   <div class="risk-card risk-card-high">
+    <div class="risk-card-header">
+     <div class="risk-card-icon"><i class="fa-solid fa-newspaper"></i></div>
+     <h4>Les catalyseurs l'emportent toujours</h4>
+     <span class="risk-severity">Eleve</span>
+    </div>
+    <div class="risk-card-body">
+     <ul>
+      <li>FOMC, CPI, NFP, earnings AAPL : le Max Pain est <strong>invalide</strong></li>
+      <li>Un evenement majeur genere des flux plus forts que le hedging</li>
+      <li><strong>Verifier le calendrier economique</strong> avant chaque trade OpEx</li>
+     </ul>
+    </div>
+   </div>
+
+   <!-- Piege 6 -->
+   <div class="risk-card risk-card-medium">
+    <div class="risk-card-header">
+     <div class="risk-card-icon"><i class="fa-solid fa-brain"></i></div>
+     <h4>Biais de confirmation</h4>
+     <span class="risk-severity">Moyen</span>
+    </div>
+    <div class="risk-card-body">
+     <ul>
+      <li>On retient les fois ou le Max Pain a fonctionne</li>
+      <li>On oublie les fois ou il a echoue</li>
+      <li><strong>Tenez un journal</strong> : trackez vos trades OpEx sur 3 mois minimum</li>
+     </ul>
+    </div>
+   </div>
+  </div>
+
+  <div class="didactic-box" style="border-left-color:#10b981;">
+   <h4 style="color:#16a34a;"><i class="fa-solid fa-check-double"></i> Checklist avant un trade OpEx</h4>
+   <ol style="margin:0; padding-left:1.25rem; color:#475569; font-size:0.95rem; line-height:2;">
+    <li>Max Pain recalcule jeudi soir (pas avant)</li>
+    <li>Ecart prix actuel vs Max Pain &gt; 1%</li>
+    <li>Aucun catalyseur majeur vendredi (earnings, FOMC, CPI)</li>
+    <li>GEX positif (stabilisateur, favorise le pinning)</li>
+    <li>Taille de position &lt; 3% du portefeuille</li>
+    <li>Stop loss defini AVANT l'entree</li>
+    <li>Pas d'insistance apres 14h00 si le prix ne converge pas</li>
+   </ol>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 10: QUIZ -->
+ <!-- ============================================================ -->
+ <div id="quiz" class="content-card">
+  <h2><span class="section-icon"><i class="fa-solid fa-circle-question"></i></span> Quiz — Testez vos connaissances</h2>
+
+  <!-- Q1 -->
+  <div class="quiz-question" id="q1">
+   <p style="font-weight:700; color:#0f172a; margin-bottom:1rem;"><span class="quiz-number">1</span> Qu'est-ce que le Max Pain ?</p>
+   <div class="quiz-options">
+    <div class="quiz-option" onclick="checkAnswer(1, this, false)">A) Le prix maximum qu'une option peut atteindre</div>
+    <div class="quiz-option" onclick="checkAnswer(1, this, true)">B) Le strike ou le maximum d'options expirent sans valeur</div>
+    <div class="quiz-option" onclick="checkAnswer(1, this, false)">C) La perte maximale d'un market maker</div>
+    <div class="quiz-option" onclick="checkAnswer(1, this, false)">D) Le prix d'ouverture du vendredi</div>
+   </div>
+   <div class="quiz-explanation" id="exp1">
+    <strong>Reponse B.</strong> Le Max Pain est le strike price auquel le maximum d'options (calls + puts) expirent Out of The Money, donc sans valeur. C'est le prix qui maximise les pertes des acheteurs d'options et les profits des vendeurs (market makers).
+   </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="quiz-question" id="q2">
+   <p style="font-weight:700; color:#0f172a; margin-bottom:1rem;"><span class="quiz-number">2</span> Quand le GEX est negatif, que font les market makers ?</p>
+   <div class="quiz-options">
+    <div class="quiz-option" onclick="checkAnswer(2, this, false)">A) Ils stabilisent le marche en achetant quand ca baisse</div>
+    <div class="quiz-option" onclick="checkAnswer(2, this, false)">B) Ils ne font rien, le GEX n'a pas d'impact</div>
+    <div class="quiz-option" onclick="checkAnswer(2, this, true)">C) Ils amplifient les mouvements en vendant quand ca baisse</div>
+    <div class="quiz-option" onclick="checkAnswer(2, this, false)">D) Ils achetent des 0DTE</div>
+   </div>
+   <div class="quiz-explanation" id="exp2">
+    <strong>Reponse C.</strong> En GEX negatif, les market makers sont short gamma. Pour maintenir leur delta-neutralite, ils vendent quand le prix baisse et achetent quand il monte, ce qui AMPLIFIE les mouvements. C'est le regime le plus dangereux.
+   </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="quiz-question" id="q3">
+   <p style="font-weight:700; color:#0f172a; margin-bottom:1rem;"><span class="quiz-number">3</span> Quand se produit le Triple Witching ?</p>
+   <div class="quiz-options">
+    <div class="quiz-option" onclick="checkAnswer(3, this, false)">A) Le dernier vendredi de chaque mois</div>
+    <div class="quiz-option" onclick="checkAnswer(3, this, false)">B) Chaque vendredi 13</div>
+    <div class="quiz-option" onclick="checkAnswer(3, this, true)">C) Le 3eme vendredi de mars, juin, septembre et decembre</div>
+    <div class="quiz-option" onclick="checkAnswer(3, this, false)">D) Le premier lundi de chaque trimestre</div>
+   </div>
+   <div class="quiz-explanation" id="exp3">
+    <strong>Reponse C.</strong> Le Triple Witching a lieu le 3eme vendredi des mois de fin de trimestre (mars, juin, septembre, decembre). C'est le jour ou expirent simultanement les options sur actions, les options sur indices et les futures sur indices.
+   </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="quiz-question" id="q4">
+   <p style="font-weight:700; color:#0f172a; margin-bottom:1rem;"><span class="quiz-number">4</span> Si SPY cloture a $460 le jeudi et que le Max Pain est a $455, quel est le biais pour vendredi ?</p>
+   <div class="quiz-options">
+    <div class="quiz-option" onclick="checkAnswer(4, this, true)">A) Baissier — le prix est au-dessus du Max Pain</div>
+    <div class="quiz-option" onclick="checkAnswer(4, this, false)">B) Haussier — le prix va continuer a monter</div>
+    <div class="quiz-option" onclick="checkAnswer(4, this, false)">C) Neutre — $5 d'ecart n'est pas significatif</div>
+    <div class="quiz-option" onclick="checkAnswer(4, this, false)">D) Impossible a determiner sans le VIX</div>
+   </div>
+   <div class="quiz-explanation" id="exp4">
+    <strong>Reponse A.</strong> Quand le prix est au-dessus du Max Pain, la theorie predit une tendance baissiere le vendredi d'expiration. L'ecart de ~1.1% ($5 sur $460) est significatif et renforce le signal. Les dealers devraient vendre pour ramener le prix vers $455.
+   </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="quiz-question" id="q5">
+   <p style="font-weight:700; color:#0f172a; margin-bottom:1rem;"><span class="quiz-number">5</span> Quel pourcentage des options 0DTE expirent sans valeur ?</p>
+   <div class="quiz-options">
+    <div class="quiz-option" onclick="checkAnswer(5, this, false)">A) 50%</div>
+    <div class="quiz-option" onclick="checkAnswer(5, this, false)">B) 70%</div>
+    <div class="quiz-option" onclick="checkAnswer(5, this, true)">C) 90%</div>
+    <div class="quiz-option" onclick="checkAnswer(5, this, false)">D) 99%</div>
+   </div>
+   <div class="quiz-explanation" id="exp5">
+    <strong>Reponse C.</strong> Environ 90% des options 0DTE expirent sans valeur (Out of The Money). Le time decay (theta) est extreme quand il reste quelques heures de vie. C'est pourquoi la majorite des acheteurs de 0DTE perdent de l'argent.
+   </div>
+  </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SERIES NAVIGATION (bottom) -->
+ <!-- ============================================================ -->
+ <div style="display:flex; justify-content:space-between; align-items:center; margin:2rem 0; gap:1rem; flex-wrap:wrap;">
+  <a href="../part5-earnings/" style="display:flex; align-items:center; gap:0.75rem; padding:1rem 1.5rem; background:white; border:1px solid #e2e8f0; border-radius:12px; text-decoration:none; color:#0f172a; font-weight:600; transition:all 0.2s; flex:1; min-width:200px;" onmouseover="this.style.borderColor='#dc2626'" onmouseout="this.style.borderColor='#e2e8f0'">
+   <i class="fa-solid fa-arrow-left" style="color:#dc2626;"></i>
+   <div>
+    <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">Partie 5</div>
+    <div>Earnings & Catalyseurs</div>
+   </div>
+  </a>
+  <a href="../part7-momentum/" style="display:flex; align-items:center; gap:0.75rem; padding:1rem 1.5rem; background:white; border:1px solid #e2e8f0; border-radius:12px; text-decoration:none; color:#0f172a; font-weight:600; transition:all 0.2s; flex:1; min-width:200px; justify-content:flex-end; text-align:right;" onmouseover="this.style.borderColor='#dc2626'" onmouseout="this.style.borderColor='#e2e8f0'">
+   <div>
+    <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">Partie 7</div>
+    <div>Momentum & Breakouts</div>
+   </div>
+   <i class="fa-solid fa-arrow-right" style="color:#dc2626;"></i>
+  </a>
+ </div>
+
+</div><!-- /.container -->
+
+<!-- ===== FOOTER ===== -->
+<div class="footer-section">
+ <div style="margin-bottom:1.5rem;">
+  <a href="https://articles.market-watch.xyz" style="font-size:1.2rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:white; text-decoration:none;"><i class="fa-solid fa-chart-line"></i> Market Watch</a>
+ </div>
+ <p>Le Guide du Super Speculateur — Partie 6/8 : Max Pain & Vendredi des Sorcieres</p>
+ <p style="margin-top:1rem; font-size:0.75rem; color:#64748b;">Ce contenu est strictement educatif et ne constitue pas un conseil en investissement. Les performances passees ne prejugent pas des performances futures. Le trading d'options comporte un risque de perte en capital. Consultez un conseiller financier agree avant toute decision d'investissement.</p>
+ <p style="margin-top:1.5rem; font-size:0.75rem; color:#475569;">&copy; 2026 Market Watch — <a href="https://articles.market-watch.xyz">articles.market-watch.xyz</a></p>
+</div>
+
+<!-- ===== CHARTS INITIALIZATION ===== -->
+<script>
+// ===== CHART 1: Max Pain Distribution =====
+(function() {
+ var chart = echarts.init(document.getElementById('chart-maxpain'));
+ var strikes = ['$440','$442','$444','$446','$448','$450','$452','$454','$456','$458','$460'];
+ var callOI = [12000, 18000, 25000, 35000, 42000, 55000, 48000, 38000, 28000, 15000, 8000];
+ var putOI  = [8000, 12000, 20000, 30000, 45000, 58000, 40000, 30000, 18000, 10000, 5000];
+ var totalPain = [];
+ for (var i = 0; i < strikes.length; i++) {
+  totalPain.push(callOI[i] + putOI[i]);
+ }
+ var option = {
+  tooltip: {
+   trigger: 'axis',
+   backgroundColor: '#0f172a',
+   borderColor: '#334155',
+   textStyle: { color: '#e2e8f0', fontSize: 12 },
+   axisPointer: { type: 'shadow' }
+  },
+  legend: {
+   data: ['Open Interest Calls', 'Open Interest Puts', 'Total Pain'],
+   bottom: 0,
+   textStyle: { fontSize: 11, color: '#64748b' }
+  },
+  grid: { top: 30, right: 60, bottom: 50, left: 60 },
+  xAxis: {
+   type: 'category',
+   data: strikes,
+   axisLabel: { color: '#64748b', fontSize: 11 },
+   axisLine: { lineStyle: { color: '#e2e8f0' } }
+  },
+  yAxis: [
+   {
+    type: 'value',
+    name: 'Open Interest',
+    nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+    axisLabel: { color: '#64748b', fontSize: 10, formatter: function(v) { return (v/1000) + 'K'; } },
+    splitLine: { lineStyle: { color: '#f1f5f9' } }
+   },
+   {
+    type: 'value',
+    name: 'Total',
+    nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+    axisLabel: { color: '#64748b', fontSize: 10, formatter: function(v) { return (v/1000) + 'K'; } },
+    splitLine: { show: false }
+   }
+  ],
+  series: [
+   {
+    name: 'Open Interest Calls',
+    type: 'bar',
+    stack: 'oi',
+    data: callOI,
+    itemStyle: { color: '#3b82f6', borderRadius: [0,0,0,0] },
+    barWidth: '40%'
+   },
+   {
+    name: 'Open Interest Puts',
+    type: 'bar',
+    stack: 'oi',
+    data: putOI,
+    itemStyle: { color: '#dc2626', borderRadius: [4,4,0,0] },
+    barWidth: '40%'
+   },
+   {
+    name: 'Total Pain',
+    type: 'line',
+    yAxisIndex: 1,
+    data: totalPain,
+    smooth: true,
+    lineStyle: { color: '#f59e0b', width: 3 },
+    itemStyle: { color: '#f59e0b' },
+    symbol: 'circle',
+    symbolSize: 8,
+    markPoint: {
+     data: [{ type: 'max', name: 'MAX PAIN', label: { formatter: 'MAX PAIN', color: '#fff', fontSize: 11, fontWeight: 700 }, itemStyle: { color: '#dc2626' } }]
+    }
+   }
+  ]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ===== CHART 2: GEX par Strike =====
+(function() {
+ var chart = echarts.init(document.getElementById('chart-gex'));
+ var strikes = ['$440','$442','$444','$446','$448','$450','$452','$454','$456','$458','$460'];
+ var gexData = [-15, -25, -10, 5, 30, 65, 45, 20, -5, -20, -35];
+ var colors = gexData.map(function(v) { return v >= 0 ? '#16a34a' : '#dc2626'; });
+ var option = {
+  tooltip: {
+   trigger: 'axis',
+   backgroundColor: '#0f172a',
+   borderColor: '#334155',
+   textStyle: { color: '#e2e8f0', fontSize: 12 },
+   formatter: function(params) {
+    var d = params[0];
+    var label = d.value >= 0 ? 'GEX Positif (Stabilisateur)' : 'GEX Negatif (Amplificateur)';
+    return d.name + '<br/>' + label + '<br/><strong>' + d.value + 'M$</strong>';
+   }
+  },
+  grid: { top: 30, right: 30, bottom: 40, left: 60 },
+  xAxis: {
+   type: 'category',
+   data: strikes,
+   axisLabel: { color: '#64748b', fontSize: 11 },
+   axisLine: { lineStyle: { color: '#e2e8f0' } }
+  },
+  yAxis: {
+   type: 'value',
+   name: 'GEX (M$)',
+   nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+   axisLabel: { color: '#64748b', fontSize: 10 },
+   splitLine: { lineStyle: { color: '#f1f5f9' } }
+  },
+  series: [
+   {
+    type: 'bar',
+    data: gexData.map(function(v, i) {
+     return { value: v, itemStyle: { color: colors[i], borderRadius: v >= 0 ? [4,4,0,0] : [0,0,4,4] } };
+    }),
+    barWidth: '50%',
+    markLine: {
+     silent: true,
+     data: [
+      { yAxis: 0, lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' }, label: { formatter: 'Gamma Flip', color: '#f59e0b', fontSize: 11, fontWeight: 700 } }
+     ]
+    }
+   }
+  ]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ===== CHART 3: 0DTE Volume Evolution =====
+(function() {
+ var chart = echarts.init(document.getElementById('chart-0dte'));
+ var years = ['2019','2020','2021','2022 (Q1)','2022 (Q3)','2023','2024','2025'];
+ var volume = [5, 8, 15, 22, 35, 44, 50, 53];
+ var option = {
+  tooltip: {
+   trigger: 'axis',
+   backgroundColor: '#0f172a',
+   borderColor: '#334155',
+   textStyle: { color: '#e2e8f0', fontSize: 12 },
+   formatter: function(params) {
+    return params[0].name + '<br/><strong>' + params[0].value + '% du volume SPX</strong>';
+   }
+  },
+  grid: { top: 30, right: 30, bottom: 40, left: 50 },
+  xAxis: {
+   type: 'category',
+   data: years,
+   axisLabel: { color: '#64748b', fontSize: 10, rotate: 20 },
+   axisLine: { lineStyle: { color: '#e2e8f0' } }
+  },
+  yAxis: {
+   type: 'value',
+   name: '% du volume SPX',
+   max: 70,
+   nameTextStyle: { color: '#94a3b8', fontSize: 10 },
+   axisLabel: { color: '#64748b', fontSize: 10, formatter: '{value}%' },
+   splitLine: { lineStyle: { color: '#f1f5f9' } }
+  },
+  series: [
+   {
+    type: 'line',
+    data: volume,
+    smooth: true,
+    lineStyle: { color: '#dc2626', width: 3 },
+    areaStyle: {
+     color: {
+      type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+      colorStops: [
+       { offset: 0, color: 'rgba(220,38,38,0.3)' },
+       { offset: 1, color: 'rgba(220,38,38,0.02)' }
+      ]
+     }
+    },
+    symbol: 'circle',
+    symbolSize: 10,
+    itemStyle: { color: '#dc2626', borderColor: '#fff', borderWidth: 2 },
+    markPoint: {
+     data: [
+      { coord: ['2022 (Q3)', 35], name: 'CBOE lance 0DTE quotidiens', symbol: 'pin', symbolSize: 40, itemStyle: { color: '#f59e0b' },
+        label: { formatter: 'Lancement\nquotidien', color: '#fff', fontSize: 9, fontWeight: 700, offset: [0, -10] } }
+     ]
+    },
+    markLine: {
+     silent: true,
+     data: [
+      { yAxis: 50, lineStyle: { color: '#dc2626', type: 'dashed', width: 1 }, label: { formatter: '50% du volume', color: '#dc2626', fontSize: 10 } }
+     ]
+    }
+   }
+  ]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ===== QUIZ LOGIC =====
+function checkAnswer(questionNum, element, isCorrect) {
+ var question = document.getElementById('q' + questionNum);
+ var options = question.querySelectorAll('.quiz-option');
+ var explanation = document.getElementById('exp' + questionNum);
+
+ // Disable all options
+ options.forEach(function(opt) {
+  opt.style.pointerEvents = 'none';
+ });
+
+ if (isCorrect) {
+  element.classList.add('correct');
+ } else {
+  element.classList.add('incorrect');
+  // Highlight correct answer
+  options.forEach(function(opt) {
+   if (opt.getAttribute('onclick') && opt.getAttribute('onclick').indexOf('true') !== -1) {
+    opt.classList.add('correct');
+   }
+  });
+ }
+
+ explanation.style.display = 'block';
+}
+</script>
+
+</body>
+</html>

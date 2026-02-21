@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETFs &agrave; Levier &mdash; TQQQ, SOXL, UVXY &amp; la Puissance du x3 | Le Guide du Super Sp&eacute;culateur &mdash; Partie 4 | Market Watch</title>
+  <meta name="description" content="Guide complet sur les ETFs &agrave; levier x2 et x3 : TQQQ, SOXL, UPRO, UVXY. Beta slippage, decay, strat&eacute;gie HFEA, DCA sur TQQQ, risk management. Tout ce que vous devez savoir avant de toucher au levier.">
+  <meta property="og:title" content="ETFs &agrave; Levier &mdash; TQQQ, SOXL, UVXY &amp; la Puissance du x3 | Le Guide du Super Sp&eacute;culateur &mdash; Partie 4">
+  <meta property="og:description" content="TQQQ, SOXL, UPRO, UVXY : comprendre le decay, le beta slippage, et savoir quand (et quand ne pas) utiliser le levier x3.">
+  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/series/guide-speculateur/part4-etf-levier/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://articles.market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  /* Series-specific styles - RED THEME for Part 4 (#dc2626) */
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; }
+  .brand-logo:hover { color:#dc2626; }
+
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fbbf24; color:#fbbf24; }
+  .series-link.current { background:#dc2626; color:white; border-color:#dc2626; }
+  .series-link.upcoming { color:#475569; border-color:#1e293b; opacity:0.5; pointer-events:none; }
+
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+
+  .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#dc2626; margin-right:0.75rem; }
+  details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; margin-top:0; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+  .formula-box { background:linear-gradient(135deg, #1e293b, #0f172a); color:white; padding:2rem; border-radius:16px; text-align:center; margin:2rem 0; }
+  .formula-box .formula { font-size:1.6rem; font-weight:800; letter-spacing:0.05em; margin:1rem 0; color:#fbbf24; }
+  .formula-box .formula-desc { font-size:0.9rem; color:#94a3b8; }
+
+  .danger-banner { background:linear-gradient(135deg, #dc2626, #991b1b); color:white; padding:2rem; border-radius:16px; margin:2rem 0; text-align:center; }
+  .danger-banner h3 { color:#fecaca; margin:0 0 1rem; font-size:1.3rem; }
+  .danger-banner p { color:#fecaca; margin:0; font-size:0.95rem; line-height:1.7; }
+
+  .yes-no-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0; }
+  .yes-box { background:#f0fdf4; border:1px solid #16a34a; border-radius:16px; padding:1.5rem; }
+  .yes-box h4 { color:#16a34a; margin:0 0 1rem; font-size:1.1rem; }
+  .no-box { background:#fef2f2; border:1px solid #dc2626; border-radius:16px; padding:1.5rem; }
+  .no-box h4 { color:#dc2626; margin:0 0 1rem; font-size:1.1rem; }
+
+  .series-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .series-cta a { padding:0.75rem 1.5rem; border-radius:12px; font-weight:700; font-size:0.9rem; text-decoration:none; transition:all 0.2s; }
+  .series-cta a.cta-primary { background:#dc2626; color:white; }
+  .series-cta a.cta-primary:hover { background:#b91c1c; }
+  .series-cta a.cta-secondary { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+  .series-cta a.cta-secondary:hover { border-color:#dc2626; color:#dc2626; }
+
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#dc2626; }
+
+  /* Fatal error cards */
+  .fatal-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin:2rem 0; }
+  .fatal-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #dc2626; }
+  .fatal-card h4 { display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.75rem; }
+  .fatal-card p { font-size:0.88rem; color:#475569; line-height:1.6; margin:0; }
+  .fatal-number { width:28px; height:28px; border-radius:8px; background:#fef2f2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; flex-shrink:0; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .brand-logo { font-size:0.9rem; }
+    .series-title { font-size:0.65rem; margin-right:0.5rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+    .formula-box .formula { font-size:1.2rem; }
+    .yes-no-grid { grid-template-columns:1fr; }
+    .series-cta { flex-direction:column; align-items:center; }
+    .fatal-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .brand-logo { font-size:0.85rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+    .hero-badges { gap:0.4rem; margin-top:1rem; }
+    .formula-box .formula { font-size:1rem; }
+    .formula-box { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- ============================================================ -->
+<!-- BRAND BAR                                                      -->
+<!-- ============================================================ -->
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem; vertical-align:middle;"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- ============================================================ -->
+<!-- SERIES NAVIGATION                                              -->
+<!-- ============================================================ -->
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-fire-flame-curved" style="margin-right:0.4rem;"></i> Le Guide du Super Sp&eacute;culateur</span>
+  <a href="/series/guide-speculateur/part1-intro/" class="series-link">1 &mdash; Intro</a>
+  <a href="/series/guide-speculateur/part2-options/" class="series-link">2 &mdash; Options</a>
+  <a href="/series/guide-speculateur/part3-short/" class="series-link">3 &mdash; Short</a>
+  <a href="/series/guide-speculateur/part4-etf-levier/" class="series-link current">4 &mdash; ETF Levier</a>
+  <a href="/series/guide-speculateur/part5-crypto/" class="series-link upcoming">5 &mdash; Crypto</a>
+  <a href="/series/guide-speculateur/part6-futures/" class="series-link upcoming">6 &mdash; Futures</a>
+  <a href="/series/guide-speculateur/part7-risques/" class="series-link upcoming">7 &mdash; Risques</a>
+  <a href="/series/guide-speculateur/part8-masterclass/" class="series-link upcoming">8 &mdash; Master</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- HERO SECTION                                                   -->
+<!-- ============================================================ -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Le Guide du Super Sp&eacute;culateur &mdash; Partie 4 sur 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">ETFs &agrave; Levier &mdash; TQQQ, SOXL, UVXY &amp; la Puissance du x3</h1>
+  <p class="hero-subtitle">Les ETFs &agrave; levier sont les armes les plus puissantes &mdash; et les plus dangereuses &mdash; du sp&eacute;culateur. x3 &agrave; la hausse, x3 &agrave; la baisse, et un decay qui d&eacute;vore votre capital en silence.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-bolt"></i> LEVIER x3</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-line"></i> DECAY</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrow-up-right-dots"></i> BULL/BEAR</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-hurricane"></i> VOLATILIT&Eacute;</span>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MAIN CONTAINER                                                 -->
+<!-- ============================================================ -->
+<div class="container" style="margin-top:-4rem;">
+
+  <!-- NAV GRID -->
+  <div class="nav-grid">
+    <a href="#disclaimer" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem; color:#dc2626;"></i> Avertissement</a>
+    <a href="#definition" class="nav-item"><i class="fa-solid fa-graduation-cap" style="margin-right:0.3rem; color:#2563eb;"></i> D&eacute;finition</a>
+    <a href="#catalogue" class="nav-item"><i class="fa-solid fa-list" style="margin-right:0.3rem; color:#dc2626;"></i> Catalogue</a>
+    <a href="#decay" class="nav-item"><i class="fa-solid fa-skull-crossbones" style="margin-right:0.3rem; color:#f97316;"></i> Decay</a>
+    <a href="#quand" class="nav-item"><i class="fa-solid fa-check-double" style="margin-right:0.3rem; color:#16a34a;"></i> Quand</a>
+    <a href="#hfea" class="nav-item"><i class="fa-solid fa-flask" style="margin-right:0.3rem; color:#9333ea;"></i> HFEA</a>
+    <a href="#dca" class="nav-item"><i class="fa-solid fa-piggy-bank" style="margin-right:0.3rem; color:#0ea5e9;"></i> DCA TQQQ</a>
+    <a href="#uvxy" class="nav-item"><i class="fa-solid fa-hurricane" style="margin-right:0.3rem; color:#dc2626;"></i> UVXY</a>
+    <a href="#sizing" class="nav-item"><i class="fa-solid fa-shield-halved" style="margin-right:0.3rem; color:#d97706;"></i> Sizing</a>
+    <a href="#erreurs" class="nav-item"><i class="fa-solid fa-bomb" style="margin-right:0.3rem; color:#991b1b;"></i> Erreurs</a>
+    <a href="#quiz" class="nav-item"><i class="fa-solid fa-brain" style="margin-right:0.3rem; color:#ec4899;"></i> Quiz</a>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DISCLAIMER                                                     -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="disclaimer">Avertissement</div>
+
+  <div class="danger-banner">
+    <h3><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> AVERTISSEMENT &mdash; LISEZ CECI AVANT DE CONTINUER</h3>
+    <p>Les ETFs &agrave; levier sont des <strong>instruments extr&ecirc;mement dangereux</strong> qui peuvent perdre <strong>90 %+</strong> de leur valeur. TQQQ a perdu <strong>79 %</strong> en 2022. UVXY a perdu <strong>99,97 %</strong> depuis sa cr&eacute;ation. Ces produits sont con&ccedil;us pour du <strong>trading court terme</strong> et ne conviennent PAS &agrave; la majorit&eacute; des investisseurs. Ce guide est &eacute;ducatif uniquement &mdash; il ne constitue en aucun cas un conseil en investissement. <strong>Ne risquez JAMAIS de l'argent que vous ne pouvez pas vous permettre de perdre.</strong></p>
+  </div>
+
+  <div class="alert-box">
+    <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-skull" style="margin-right:0.5rem;"></i> Le chiffre qui devrait vous faire r&eacute;fl&eacute;chir</h4>
+    <p style="margin-bottom:0;">Si vous aviez investi <strong>10 000 $</strong> dans TQQQ en <strong>novembre 2021</strong> (au plus haut), votre portefeuille valait <strong>2 100 $</strong> en d&eacute;cembre 2022. M&ecirc;me apr&egrave;s le rebond de 2023-2024, vous &eacute;tiez toujours en perte. <strong>Le levier amplifie tout</strong> &mdash; y compris vos pertes.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 1 : QU'EST-CE QU'UN ETF &Agrave; LEVIER ?               -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="definition">D&eacute;finition</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-graduation-cap" style="color:#dc2626;"></i> Qu'est-ce qu'un ETF &agrave; levier ?</h2>
+
+    <p>Un ETF &agrave; levier est un fonds n&eacute;goci&eacute; en Bourse qui utilise des <strong>d&eacute;riv&eacute;s financiers</strong> (swaps, futures, options) pour amplifier les rendements <strong>quotidiens</strong> d'un indice de r&eacute;f&eacute;rence. Le mot cl&eacute; ici est <strong>&laquo; quotidiens &raquo;</strong> &mdash; et c'est pr&eacute;cis&eacute;ment l&agrave; que r&eacute;side le pi&egrave;ge.</p>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Comprendre le m&eacute;canisme</h4>
+      <p>Un ETF x3 comme <strong>TQQQ</strong> promet de vous donner <strong>3 fois le rendement quotidien</strong> du Nasdaq-100. Si le Nasdaq monte de +1 % aujourd'hui, TQQQ monte de +3 %. Si le Nasdaq baisse de -2 %, TQQQ baisse de -6 %.</p>
+      <p>Un ETF inverse x3 comme <strong>SQQQ</strong> fait l'oppos&eacute; : si le Nasdaq baisse de -1 %, SQQQ monte de +3 %.</p>
+      <p style="margin-bottom:0;"><strong>Le probl&egrave;me</strong> : chaque soir, l'ETF &laquo; rebalance &raquo; son exposition. Cela signifie que sur une p&eacute;riode de plusieurs jours, <strong>2x le rendement quotidien &#8800; 2x le rendement p&eacute;riodique</strong>. C'est ce qu'on appelle le <em>beta slippage</em> ou <em>volatility drag</em>.</p>
+    </div>
+
+    <h3><i class="fa-solid fa-arrows-up-down" style="color:#dc2626; margin-right:0.5rem;"></i> Types d'ETFs &agrave; levier</h3>
+
+    <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="metric-card" style="border-top:3px solid #16a34a;">
+        <div class="metric-value" style="color:#16a34a; font-size:1.5rem;">Bull x2/x3</div>
+        <div class="metric-label">Amplifie &agrave; la hausse</div>
+        <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">TQQQ, UPRO, SOXL, TNA</p>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #dc2626;">
+        <div class="metric-value" style="color:#dc2626; font-size:1.5rem;">Bear/Inverse</div>
+        <div class="metric-label">Profite de la baisse</div>
+        <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">SQQQ, SPXU, SOXS, TZA</p>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #9333ea;">
+        <div class="metric-value" style="color:#9333ea; font-size:1.5rem;">Volatilit&eacute;</div>
+        <div class="metric-label">Joue le VIX</div>
+        <p style="font-size:0.8rem; color:#64748b; margin:0.5rem 0 0;">UVXY, SVXY, VXX</p>
+      </div>
+    </div>
+
+    <h3><i class="fa-solid fa-rotate" style="color:#f97316; margin-right:0.5rem;"></i> Le rebalancement quotidien expliqu&eacute;</h3>
+
+    <p>Imaginez que TQQQ g&egrave;re 1 milliard $ et a besoin de 3 milliards $ d'exposition au Nasdaq-100 (levier x3).</p>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1.5rem 0;">
+      <p style="margin:0 0 0.75rem;"><strong>Jour 1 :</strong> Le Nasdaq monte de +2 %. TQQQ gagne +6 %. La NAV passe &agrave; 1,06 Md $. Mais l'exposition est d&eacute;sormais de 3,06 Md $ au lieu des 3,18 Md $ n&eacute;cessaires (1,06 &times; 3). Le fonds doit <strong>acheter</strong> pour 120 M$ de d&eacute;riv&eacute;s suppl&eacute;mentaires.</p>
+      <p style="margin:0 0 0.75rem;"><strong>Jour 2 :</strong> Le Nasdaq baisse de -2 %. TQQQ perd -6 %. La NAV tombe &agrave; ~0,996 Md $. L'exposition est trop grande, le fonds doit <strong>vendre</strong> pour se r&eacute;ajuster.</p>
+      <p style="margin:0;"><strong>R&eacute;sultat :</strong> Le fonds a achet&eacute; cher (jour 1) et vendu bas (jour 2). Ce m&eacute;canisme &laquo; acheter haut, vendre bas &raquo; r&eacute;p&eacute;t&eacute; chaque jour <strong>d&eacute;truit de la valeur</strong> en march&eacute; volatile. C'est le decay.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 2 : LES ETFs INCONTOURNABLES                          -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="catalogue">Catalogue des ETFs &agrave; levier</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-list" style="color:#dc2626;"></i> Les ETFs &agrave; levier incontournables</h2>
+
+    <h3 style="color:#16a34a;"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.5rem;"></i> Bull x3 &mdash; Parier &agrave; la hausse</h3>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Nom</th>
+          <th>Sous-jacent</th>
+          <th>Levier</th>
+          <th>Frais</th>
+          <th>AUM</th>
+          <th>Vol. moyen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:#dc2626;">TQQQ</strong></td>
+          <td>ProShares UltraPro QQQ</td>
+          <td>Nasdaq-100</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>0,88 %</td>
+          <td>~25 Md $</td>
+          <td>~80 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong style="color:#dc2626;">UPRO</strong></td>
+          <td>ProShares UltraPro S&amp;P 500</td>
+          <td>S&amp;P 500</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>0,91 %</td>
+          <td>~3,5 Md $</td>
+          <td>~10 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong style="color:#dc2626;">SOXL</strong></td>
+          <td>Direxion Semiconductor Bull</td>
+          <td>ICE Semiconductor</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>0,76 %</td>
+          <td>~12 Md $</td>
+          <td>~55 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>TNA</strong></td>
+          <td>Direxion Small Cap Bull</td>
+          <td>Russell 2000</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>1,01 %</td>
+          <td>~1,5 Md $</td>
+          <td>~15 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>TMF</strong></td>
+          <td>Direxion Treasury Bull</td>
+          <td>Tr&eacute;sor US 20 ans</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>1,01 %</td>
+          <td>~0,8 Md $</td>
+          <td>~8 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>NUGT</strong></td>
+          <td>Direxion Gold Miners Bull</td>
+          <td>NYSE Arca Gold Miners</td>
+          <td style="color:#16a34a; font-weight:700;">x2</td>
+          <td>1,17 %</td>
+          <td>~0,5 Md $</td>
+          <td>~5 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>LABU</strong></td>
+          <td>Direxion Biotech Bull</td>
+          <td>S&amp;P Biotech Select</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>1,01 %</td>
+          <td>~0,6 Md $</td>
+          <td>~8 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>FNGU</strong></td>
+          <td>MicroSectors FANG+ Bull</td>
+          <td>NYSE FANG+</td>
+          <td style="color:#16a34a; font-weight:700;">x3</td>
+          <td>0,95 %</td>
+          <td>~4 Md $</td>
+          <td>~3 M/jour</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 style="color:#dc2626;"><i class="fa-solid fa-arrow-trend-down" style="margin-right:0.5rem;"></i> Bear / Inverse x3 &mdash; Profiter de la baisse</h3>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Nom</th>
+          <th>Sous-jacent</th>
+          <th>Levier</th>
+          <th>Frais</th>
+          <th>Vol. moyen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:#dc2626;">SQQQ</strong></td>
+          <td>ProShares UltraPro Short QQQ</td>
+          <td>Nasdaq-100 (inverse)</td>
+          <td style="color:#dc2626; font-weight:700;">x3 short</td>
+          <td>0,95 %</td>
+          <td>~100 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>SPXU</strong></td>
+          <td>ProShares UltraPro Short S&amp;P</td>
+          <td>S&amp;P 500 (inverse)</td>
+          <td style="color:#dc2626; font-weight:700;">x3 short</td>
+          <td>0,90 %</td>
+          <td>~15 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong style="color:#dc2626;">SOXS</strong></td>
+          <td>Direxion Semiconductor Bear</td>
+          <td>ICE Semiconductor (inverse)</td>
+          <td style="color:#dc2626; font-weight:700;">x3 short</td>
+          <td>1,01 %</td>
+          <td>~40 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>TZA</strong></td>
+          <td>Direxion Small Cap Bear</td>
+          <td>Russell 2000 (inverse)</td>
+          <td style="color:#dc2626; font-weight:700;">x3 short</td>
+          <td>1,01 %</td>
+          <td>~15 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>TMV</strong></td>
+          <td>Direxion Treasury Bear</td>
+          <td>Tr&eacute;sor US 20 ans (inverse)</td>
+          <td style="color:#dc2626; font-weight:700;">x3 short</td>
+          <td>1,01 %</td>
+          <td>~3 M/jour</td>
+        </tr>
+        <tr>
+          <td><strong>FAZ</strong></td>
+          <td>Direxion Financial Bear</td>
+          <td>Russell 1000 Financials (inverse)</td>
+          <td style="color:#dc2626; font-weight:700;">x3 short</td>
+          <td>1,01 %</td>
+          <td>~5 M/jour</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 style="color:#9333ea;"><i class="fa-solid fa-hurricane" style="margin-right:0.5rem;"></i> Volatilit&eacute; &mdash; Jouer le VIX</h3>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Nom</th>
+          <th>M&eacute;canisme</th>
+          <th>Levier</th>
+          <th>Frais</th>
+          <th>Decay annuel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:#9333ea;">UVXY</strong></td>
+          <td>ProShares Ultra VIX Short-Term</td>
+          <td>VIX futures 1-2 mois (long)</td>
+          <td style="color:#9333ea; font-weight:700;">x1.5</td>
+          <td>0,95 %</td>
+          <td style="color:#dc2626; font-weight:700;">~70 %</td>
+        </tr>
+        <tr>
+          <td><strong>SVXY</strong></td>
+          <td>ProShares Short VIX Short-Term</td>
+          <td>VIX futures 1-2 mois (short)</td>
+          <td style="font-weight:700;">x0.5 short</td>
+          <td>0,95 %</td>
+          <td style="color:#16a34a; font-weight:700;">Positif (contango)</td>
+        </tr>
+        <tr>
+          <td><strong>VXX</strong></td>
+          <td>iPath VIX Short-Term ETN</td>
+          <td>VIX futures 1-2 mois (long)</td>
+          <td style="font-weight:700;">x1</td>
+          <td>0,89 %</td>
+          <td style="color:#dc2626; font-weight:700;">~60 %</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb !important;"><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Liquidit&eacute; = s&eacute;curit&eacute;</h4>
+      <p style="margin-bottom:0;">TQQQ et SQQQ sont les ETFs &agrave; levier les plus liquides au monde, avec des volumes de <strong>80-100 millions d'actions/jour</strong>. Cela signifie des spreads tr&egrave;s serr&eacute;s (&lt; 0,01 $) et la possibilit&eacute; d'entrer et sortir instantan&eacute;ment. &Eacute;vitez les ETFs &agrave; levier avec moins de 1 million d'actions/jour de volume &mdash; le spread vous mangera.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 3 : LE PROBL&Egrave;ME DU DECAY                        -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="decay">Le probl&egrave;me du Decay</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-skull-crossbones" style="color:#dc2626;"></i> Le probl&egrave;me du Decay (Beta Slippage)</h2>
+
+    <p>Le <strong>decay</strong> (ou <em>beta slippage</em>, ou <em>volatility drag</em>) est <strong>l'ennemi n&deg;1</strong> de tout investisseur en ETFs &agrave; levier. C'est un m&eacute;canisme math&eacute;matique implacable qui fait que, sur le long terme, un ETF x3 ne rend JAMAIS 3 fois le rendement de son indice.</p>
+
+    <h3><i class="fa-solid fa-calculator" style="color:#f97316; margin-right:0.5rem;"></i> L'exemple qui tue</h3>
+
+    <div class="formula-box">
+      <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Le Nasdaq fait +10 % puis -10 %</p>
+      <div class="formula">100 &times; 1,10 &times; 0,90 = 99 $ &rarr; Net = -1 %</div>
+      <p style="color:#94a3b8; font-size:0.85rem; margin:0.5rem 0 0;">TQQQ (x3) fait +30 % puis -30 %</p>
+      <div class="formula">100 &times; 1,30 &times; 0,70 = 91 $ &rarr; Net = -9 %</div>
+      <div class="formula-desc">Le Nasdaq perd 1 %. TQQQ perd 9 % &mdash; et non 3 %.</div>
+    </div>
+
+    <div class="alert-box">
+      <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Le pi&egrave;ge invisible</h4>
+      <p style="margin-bottom:0;">En march&eacute; volatile sans direction claire, <strong>TQQQ ET SQQQ perdent TOUS LES DEUX de l'argent</strong>. Ce n'est pas un jeu &agrave; somme nulle. Le decay mange les deux c&ocirc;t&eacute;s. C'est comme si un casino prenait sa commission des deux c&ocirc;t&eacute;s de la table.</p>
+    </div>
+
+    <h3><i class="fa-solid fa-chart-area" style="color:#dc2626; margin-right:0.5rem;"></i> Visualisation : TQQQ vs QQQ vs SQQQ (5 ans)</h3>
+
+    <div id="chart-decay" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+    <h3><i class="fa-solid fa-table" style="color:#f97316; margin-right:0.5rem;"></i> Si le Nasdaq fait X % sur 1 an, TQQQ fait...</h3>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Nasdaq (1 an)</th>
+          <th>TQQQ th&eacute;orique (x3)</th>
+          <th>TQQQ r&eacute;el (avec decay)</th>
+          <th>Perte decay</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:#16a34a; font-weight:700;">+30 %</td><td>+90 %</td><td style="font-weight:700;">+72 &agrave; +85 %</td><td style="color:#dc2626;">-5 &agrave; -18 pts</td></tr>
+        <tr><td style="color:#16a34a; font-weight:700;">+20 %</td><td>+60 %</td><td style="font-weight:700;">+45 &agrave; +55 %</td><td style="color:#dc2626;">-5 &agrave; -15 pts</td></tr>
+        <tr><td style="color:#16a34a; font-weight:700;">+10 %</td><td>+30 %</td><td style="font-weight:700;">+18 &agrave; +26 %</td><td style="color:#dc2626;">-4 &agrave; -12 pts</td></tr>
+        <tr><td style="font-weight:700;">0 %</td><td>0 %</td><td style="color:#dc2626; font-weight:700;">-5 &agrave; -15 %</td><td style="color:#dc2626;">-5 &agrave; -15 pts</td></tr>
+        <tr><td style="color:#dc2626; font-weight:700;">-10 %</td><td>-30 %</td><td style="color:#dc2626; font-weight:700;">-35 &agrave; -42 %</td><td style="color:#dc2626;">-5 &agrave; -12 pts</td></tr>
+        <tr><td style="color:#dc2626; font-weight:700;">-20 %</td><td>-60 %</td><td style="color:#dc2626; font-weight:700;">-65 &agrave; -72 %</td><td style="color:#dc2626;">-5 &agrave; -12 pts</td></tr>
+        <tr><td style="color:#dc2626; font-weight:700;">-30 %</td><td>-90 %</td><td style="color:#dc2626; font-weight:700;">-88 &agrave; -93 %</td><td style="color:#dc2626;">+2 &agrave; -3 pts</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3><i class="fa-solid fa-square-root-variable" style="color:#9333ea; margin-right:0.5rem;"></i> La formule du decay</h3>
+
+    <div class="formula-box">
+      <div class="formula-desc">Perte due au decay (approximation) :</div>
+      <div class="formula">Decay &asymp; -L&sup2; &times; &sigma;&sup2; &times; T</div>
+      <div class="formula-desc">L = facteur de levier (3 pour x3) &nbsp;|&nbsp; &sigma; = volatilit&eacute; quotidienne annualis&eacute;e &nbsp;|&nbsp; T = temps en ann&eacute;es</div>
+    </div>
+
+    <div class="didactic-box">
+      <h4 style="color:#16a34a !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Ce que la formule nous dit</h4>
+      <p>Le decay est <strong>proportionnel au carr&eacute; du levier</strong>. Un ETF x3 subit 9x plus de decay qu'un ETF x1 (et non 3x). Il est aussi proportionnel au <strong>carr&eacute; de la volatilit&eacute;</strong> : quand le VIX double, le decay quadruple.</p>
+      <p style="margin-bottom:0;">Avec une volatilit&eacute; annualis&eacute;e de 20 % (march&eacute; normal), le decay d'un x3 est d'environ <strong>-3,6 %/an</strong>. Avec 40 % de vol (march&eacute; stress&eacute;), il passe &agrave; <strong>-14,4 %/an</strong>. Avec 60 % de vol (crise), c'est <strong>-32,4 %/an</strong>.</p>
+    </div>
+
+    <!-- Chart: Decay vs Volatilité -->
+    <h3><i class="fa-solid fa-chart-bar" style="color:#dc2626; margin-right:0.5rem;"></i> Impact du decay selon la volatilit&eacute;</h3>
+    <div id="chart-decay-vol" style="width:100%; height:380px; margin:2rem 0;"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 4 : QUAND UTILISER UN ETF &Agrave; LEVIER                -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="quand">Quand utiliser un ETF &agrave; levier</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-check-double" style="color:#16a34a;"></i> Quand utiliser (et ne PAS utiliser) un ETF &agrave; levier</h2>
+
+    <div class="yes-no-grid">
+      <div class="yes-box">
+        <h4><i class="fa-solid fa-circle-check" style="margin-right:0.5rem;"></i> OUI &mdash; Cas l&eacute;gitimes</h4>
+        <ul class="checklist">
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>Conviction forte + horizon court (1-5 jours)</strong> : Vous avez un catalyst technique ou fondamental clair et vous voulez amplifier le mouvement.</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>March&eacute; en tendance, VIX &lt; 20</strong> : Le decay est minimal quand le march&eacute; monte en ligne droite. Un trending market est l'ami du levier.</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>Hedging tactique</strong> : Acheter SQQQ pour prot&eacute;ger un portefeuille long pendant un &eacute;v&eacute;nement macro (FOMC, CPI).</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>Petit sizing + stop loss strict</strong> : Maximum 5-10 % du portefeuille, stop &agrave; -10/-15 %.</li>
+        </ul>
+      </div>
+      <div class="no-box">
+        <h4><i class="fa-solid fa-circle-xmark" style="margin-right:0.5rem;"></i> NON &mdash; Erreurs typiques</h4>
+        <ul class="checklist">
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> <strong>Buy &amp; hold long terme</strong> : Sauf strat&eacute;gie HFEA sp&eacute;cifique (voir plus bas), le levier x3 n'est PAS fait pour &ecirc;tre d&eacute;tenu des mois/ann&eacute;es.</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> <strong>March&eacute; range-bound volatile</strong> : Le pire sc&eacute;nario. Le march&eacute; oscille de +2 %/-2 % tous les jours, vous perdez des deux c&ocirc;t&eacute;s.</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> <strong>VIX &gt; 30</strong> : La volatilit&eacute; &eacute;lev&eacute;e multiplie le decay. Chaque jour co&ucirc;te plus cher.</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> <strong>Sans stop loss</strong> : Un ETF x3 peut perdre 15-20 % en une seule s&eacute;ance. Sans stop, un drawdown de 60 % n&eacute;cessite +150 % pour revenir &agrave; z&eacute;ro.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> La r&egrave;gle d'or du levier</h4>
+      <p style="margin-bottom:0;">Avant d'acheter un ETF &agrave; levier, posez-vous <strong>3 questions</strong> : (1) Quel est mon <strong>catalyst</strong> ? (2) Quel est mon <strong>horizon</strong> (en jours, pas en semaines) ? (3) O&ugrave; est mon <strong>stop loss</strong> ? Si vous ne pouvez pas r&eacute;pondre aux trois, <strong>n'achetez pas</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 5 : STRAT&Eacute;GIE HFEA                               -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="hfea">Strat&eacute;gie HFEA</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-flask" style="color:#9333ea;"></i> Strat&eacute;gie HFEA (Hedgefundie's Excellent Adventure)</h2>
+
+    <div class="didactic-box">
+      <h4 style="color:#16a34a !important;"><i class="fa-solid fa-flask-vial" style="margin-right:0.5rem;"></i> L'id&eacute;e g&eacute;niale (et risqu&eacute;e)</h4>
+      <p>En 2019, un utilisateur du forum Bogleheads sous le pseudo &laquo; Hedgefundie &raquo; a propos&eacute; une allocation radicale :</p>
+      <div class="metric-grid" style="grid-template-columns: 1fr 1fr; max-width:400px; margin:1.5rem auto;">
+        <div class="metric-card" style="border-top:3px solid #2563eb;">
+          <div class="metric-value" style="color:#2563eb;">55 %</div>
+          <div class="metric-label">UPRO (S&amp;P x3)</div>
+        </div>
+        <div class="metric-card" style="border-top:3px solid #f97316;">
+          <div class="metric-value" style="color:#f97316;">45 %</div>
+          <div class="metric-label">TMF (Tr&eacute;sor x3)</div>
+        </div>
+      </div>
+      <p style="margin-bottom:0;">Rebalanc&eacute; <strong>chaque trimestre</strong>. L'id&eacute;e : exploiter la <strong>d&eacute;corr&eacute;lation historique</strong> entre actions et obligations. Quand les actions baissent, les obligations montent (et vice versa), ce qui lisse la volatilit&eacute; et r&eacute;duit le decay.</p>
+    </div>
+
+    <h3><i class="fa-solid fa-chart-line" style="color:#9333ea; margin-right:0.5rem;"></i> Backtest HFEA vs S&amp;P 500 (1987-2021)</h3>
+
+    <div id="chart-hfea" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>M&eacute;trique</th>
+          <th>HFEA (55/45)</th>
+          <th>S&amp;P 500</th>
+          <th>60/40 classique</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>CAGR (1987-2021)</strong></td><td style="color:#16a34a; font-weight:700;">~20 %</td><td>~10,5 %</td><td>~9 %</td></tr>
+        <tr><td><strong>Max drawdown</strong></td><td style="color:#dc2626; font-weight:700;">-70 %</td><td>-55 %</td><td>-35 %</td></tr>
+        <tr><td><strong>Volatilit&eacute; annuelle</strong></td><td style="font-weight:700;">~35 %</td><td>~16 %</td><td>~10 %</td></tr>
+        <tr><td><strong>Sharpe Ratio</strong></td><td style="font-weight:700;">~0,55</td><td>~0,65</td><td>~0,70</td></tr>
+        <tr><td><strong>Meilleure ann&eacute;e</strong></td><td style="color:#16a34a; font-weight:700;">+120 %</td><td>+37 %</td><td>+28 %</td></tr>
+        <tr><td><strong>Pire ann&eacute;e</strong></td><td style="color:#dc2626; font-weight:700;">-50 %</td><td>-37 %</td><td>-22 %</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="alert-box">
+      <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> 2022 : l'ann&eacute;e o&ugrave; HFEA a cass&eacute;</h4>
+      <p>En 2022, les actions ET les obligations ont baiss&eacute; ensemble pour la premi&egrave;re fois depuis 50 ans. UPRO a perdu ~65 %, TMF a perdu ~70 %. Le portefeuille HFEA a subi un drawdown de <strong>~75 %</strong>.</p>
+      <p style="margin-bottom:0;">La th&egrave;se centrale &mdash; &laquo; quand les actions baissent, les obligations montent &raquo; &mdash; ne fonctionnait plus dans un environnement de hausse rapide des taux d'int&eacute;r&ecirc;t. <strong>Aucune strat&eacute;gie n'est infaillible.</strong></p>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Pourquoi HFEA a &laquo; march&eacute; &raquo; pendant 35 ans</h4>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>D&eacute;corr&eacute;lation actions/obligations</strong> : corr&eacute;lation historique n&eacute;gative (-0,3 &agrave; -0,5)</li>
+        <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>Tendance baissi&egrave;re des taux</strong> : de 1981 &agrave; 2021, les taux n'ont fait que baisser (= obligations qui montent)</li>
+        <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>March&eacute; actions haussier structurel</strong> : QE, buybacks, innovation tech</li>
+        <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>Rebalancement trimestriel</strong> : force &agrave; &laquo; vendre le gagnant, acheter le perdant &raquo; = buy low, sell high automatique</li>
+      </ul>
+      <p style="margin-bottom:0;"><strong>Le probl&egrave;me</strong> : dans un monde o&ugrave; l'inflation est structurellement plus &eacute;lev&eacute;e et les taux montent, la corr&eacute;lation peut rester positive pendant des ann&eacute;es. HFEA n'est pas mort, mais il n&eacute;cessite une compr&eacute;hension profonde du r&eacute;gime macro.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 6 : DCA SUR TQQQ                                      -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="dca">DCA sur TQQQ</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-piggy-bank" style="color:#0ea5e9;"></i> Strat&eacute;gie DCA sur TQQQ &mdash; Le d&eacute;bat</h2>
+
+    <p>L'id&eacute;e est tentante : investir un petit montant fixe chaque semaine dans TQQQ, et laisser le march&eacute; haussier long terme faire le travail. Les r&eacute;sultats historiques sont <strong>spectaculaires</strong> &mdash; mais les risques sont &eacute;normes.</p>
+
+    <div class="formula-box">
+      <div class="formula-desc">Simulation : 100 $/semaine dans TQQQ depuis 2010</div>
+      <div class="formula">Investi : ~83 200 $ &rarr; Valeur 2024 : ~1 800 000 $</div>
+      <div class="formula-desc">vs 100 $/semaine dans QQQ : ~83 200 $ &rarr; ~320 000 $</div>
+    </div>
+
+    <div class="didactic-box">
+      <h4 style="color:#16a34a !important;"><i class="fa-solid fa-check-double" style="margin-right:0.5rem;"></i> Pourquoi &ccedil;a a march&eacute; (2010-2024)</h4>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i> TQQQ a &eacute;t&eacute; lanc&eacute; en <strong>f&eacute;vrier 2010</strong> &mdash; pile au d&eacute;but du plus long bull market de l'histoire</li>
+        <li><i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i> Le Nasdaq-100 a fait ~+18 %/an en moyenne sur cette p&eacute;riode</li>
+        <li><i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i> Les krachs (2018, 2020, 2022) ont &eacute;t&eacute; <strong>suivis de rebonds rapides</strong>, ce qui a permis au DCA d'acheter bas</li>
+        <li><i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i> La volatilit&eacute; moyenne est rest&eacute;e mod&eacute;r&eacute;e (~18-22 %), limitant le decay</li>
+      </ul>
+    </div>
+
+    <div class="alert-box">
+      <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Le probl&egrave;me : survivorship bias</h4>
+      <p>TQQQ existe depuis 2010. Si un ETF x3 Nasdaq avait exist&eacute; de 2000 &agrave; 2002 :</p>
+      <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+      <table class="compare-table" style="margin:1rem 0;">
+        <thead>
+          <tr><th>Ann&eacute;e</th><th>Nasdaq-100</th><th>TQQQ hypoth&eacute;tique</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2000</td><td style="color:#dc2626; font-weight:700;">-36 %</td><td style="color:#dc2626; font-weight:700;">-83 %</td></tr>
+          <tr><td>2001</td><td style="color:#dc2626; font-weight:700;">-33 %</td><td style="color:#dc2626; font-weight:700;">-76 %</td></tr>
+          <tr><td>2002</td><td style="color:#dc2626; font-weight:700;">-38 %</td><td style="color:#dc2626; font-weight:700;">-85 %</td></tr>
+          <tr><td><strong>Cumul&eacute;</strong></td><td style="color:#dc2626; font-weight:700;">-75 %</td><td style="color:#dc2626; font-weight:700;">-99,5 %</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p style="margin-bottom:0;">Un investisseur qui aurait DCA 100 $/semaine dans un TQQQ hypoth&eacute;tique de 2000 &agrave; 2003 aurait perdu la quasi-totalit&eacute; de son capital sur les parts achet&eacute;es au d&eacute;but. <strong>Le DCA n'est pas une protection contre un bear market prolongé.</strong></p>
+    </div>
+
+    <h3><i class="fa-solid fa-scale-balanced" style="color:#0ea5e9; margin-right:0.5rem;"></i> Verdict : DCA sur TQQQ</h3>
+
+    <div class="yes-no-grid">
+      <div class="yes-box">
+        <h4><i class="fa-solid fa-circle-check" style="margin-right:0.5rem;"></i> Possible si...</h4>
+        <ul class="checklist">
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>5-10 % maximum</strong> de votre DCA total</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Vous gardez <strong>90 %+</strong> dans des ETFs classiques (QQQ, SPY, VTI)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Vous acceptez l'id&eacute;e de perdre <strong>100 %</strong> de cette portion</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Horizon <strong>&gt; 10 ans</strong>, pas besoin de l'argent</li>
+        </ul>
+      </div>
+      <div class="no-box">
+        <h4><i class="fa-solid fa-circle-xmark" style="margin-right:0.5rem;"></i> Dangereux si...</h4>
+        <ul class="checklist">
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> C'est votre <strong>seul investissement</strong></li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Vous avez besoin de l'argent &agrave; <strong>court/moyen terme</strong></li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Vous <strong>paniquez</strong> quand votre portefeuille baisse de 50 %</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Vous pensez que &laquo; le march&eacute; monte toujours &raquo;</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 7 : UVXY & JOUER LA VOLATILIT&Eacute;                  -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="uvxy">UVXY &amp; la Volatilit&eacute;</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-hurricane" style="color:#9333ea;"></i> UVXY &amp; Jouer la Volatilit&eacute;</h2>
+
+    <p>UVXY est l'un des instruments les plus mal compris &mdash; et les plus d&eacute;vastateurs &mdash; du march&eacute;. C'est un ETF qui suit les <strong>futures sur le VIX</strong> (pas le VIX spot) avec un levier x1.5. Et il perd de l'argent <strong>structurellement, chaque jour, pour toujours</strong>.</p>
+
+    <h3><i class="fa-solid fa-chart-line" style="color:#dc2626; margin-right:0.5rem;"></i> UVXY depuis sa cr&eacute;ation : le carnage</h3>
+
+    <div id="chart-uvxy" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+    <div class="formula-box">
+      <div class="formula-desc">Performance UVXY (ajust&eacute;e des reverse splits)</div>
+      <div class="formula">Lancement (2011) : ~400 000 $ &rarr; 2024 : ~25 $</div>
+      <div class="formula-desc">Perte : -99,99 %. Le decay le plus brutal du march&eacute;.</div>
+    </div>
+
+    <h3><i class="fa-solid fa-circle-question" style="color:#f97316; margin-right:0.5rem;"></i> Pourquoi UVXY perd tout le temps</h3>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Le contango expliqu&eacute;</h4>
+      <p>Le VIX spot mesure la volatilit&eacute; implicite &agrave; 30 jours. Les <strong>futures VIX</strong> sont des contrats sur le VIX futur. En temps normal, les futures sont <strong>plus chers que le spot</strong> (contango) car le march&eacute; exige une prime pour l'incertitude future.</p>
+      <p>UVXY doit <strong>rouler ses futures chaque jour</strong> : vendre les futures proches de l'expiration (moins chers) et acheter les futures plus lointains (plus chers). Ce &laquo; roll &raquo; co&ucirc;te de l'argent &mdash; environ <strong>5-8 % par mois</strong> en p&eacute;riode normale.</p>
+      <p style="margin-bottom:0;">Avec le levier x1.5, le decay total est d'environ <strong>60-80 % par an</strong>. C'est pourquoi UVXY fait des <strong>reverse splits</strong> r&eacute;guliers (1:10 ou 1:5) pour &eacute;viter de tomber sous 1 $.</p>
+    </div>
+
+    <h3><i class="fa-solid fa-crosshairs" style="color:#16a34a; margin-right:0.5rem;"></i> Comment trader UVXY intelligemment</h3>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin:2rem 0;">
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #16a34a;">
+        <h4 style="color:#16a34a; margin:0 0 0.75rem; font-size:1rem;"><i class="fa-solid fa-arrow-up" style="margin-right:0.4rem;"></i> Trade 1 : Acheter UVXY au spike</h4>
+        <p style="font-size:0.88rem; color:#475569; margin:0; line-height:1.6;">Quand le VIX est <strong>&lt; 15</strong> et qu'un &eacute;v&eacute;nement majeur approche (FOMC, CPI, &eacute;lections), acheter UVXY en anticipation d'un spike de volatilit&eacute;. <strong>Vendre d&egrave;s le spike</strong>, ne jamais hold.</p>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #2563eb;">
+        <h4 style="color:#2563eb; margin:0 0 0.75rem; font-size:1rem;"><i class="fa-solid fa-arrow-down" style="margin-right:0.4rem;"></i> Trade 2 : Acheter des puts UVXY</h4>
+        <p style="font-size:0.88rem; color:#475569; margin:0; line-height:1.6;">Acheter des puts OTM &agrave; 3-6 mois sur UVXY. Le decay structurel joue <strong>pour vous</strong>. Le risque : un spike VIX majeur peut faire monter UVXY de 200 %+ avant que vos puts n'expirent.</p>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #f97316;">
+        <h4 style="color:#f97316; margin:0 0 0.75rem; font-size:1rem;"><i class="fa-solid fa-scale-unbalanced" style="margin-right:0.4rem;"></i> Trade 3 : Short UVXY (tr&egrave;s risqu&eacute;)</h4>
+        <p style="font-size:0.88rem; color:#475569; margin:0; line-height:1.6;">Shorter UVXY pour profiter du decay permanent. <strong>Extr&ecirc;mement dangereux</strong> : un spike VIX peut multiplier UVXY par 3-5x en quelques jours. Risque de margin call. R&eacute;serv&eacute; aux experts avec sizing minuscule.</p>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-left:4px solid #9333ea;">
+        <h4 style="color:#9333ea; margin:0 0 0.75rem; font-size:1rem;"><i class="fa-solid fa-calendar-check" style="margin-right:0.4rem;"></i> Trade 4 : Timing &eacute;v&eacute;nementiel</h4>
+        <p style="font-size:0.88rem; color:#475569; margin:0; line-height:1.6;">Acheter UVXY <strong>2-3 jours avant</strong> un &eacute;v&eacute;nement (FOMC, earnings season, &eacute;lections). La volatilit&eacute; implicite monte avant l'&eacute;v&eacute;nement. Vendre <strong>avant</strong> ou <strong>juste apr&egrave;s</strong> l'annonce (vol crush).</p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-skull" style="margin-right:0.5rem;"></i> Le pi&egrave;ge UVXY n&deg;1</h4>
+      <p style="margin-bottom:0;">Beaucoup de d&eacute;butants ach&egrave;tent UVXY comme &laquo; assurance &raquo; contre un krach. <strong>C'est la pire strat&eacute;gie possible.</strong> UVXY perd ~70 %/an en contango. Votre &laquo; assurance &raquo; co&ucirc;te tellement cher qu'elle d&eacute;truit votre portefeuille m&ecirc;me si le krach arrive. Utilisez des <strong>puts sur SPY</strong> si vous voulez de la protection.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 8 : SIZING & RISK MANAGEMENT                          -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="sizing">Sizing &amp; Risk Management</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-shield-halved" style="color:#d97706;"></i> Sizing &amp; Risk Management</h2>
+
+    <div class="trade-box">
+      <h3><i class="fa-solid fa-sliders" style="margin-right:0.5rem;"></i> R&egrave;gles absolues pour les ETFs &agrave; levier</h3>
+      <div class="trade-levels" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <div class="trade-level trade-entry">
+          <div class="label">Allocation max</div>
+          <div class="value">10 %</div>
+          <p style="font-size:0.7rem; color:#94a3b8; margin:0.25rem 0 0;">du portefeuille total</p>
+        </div>
+        <div class="trade-level trade-stop">
+          <div class="label">Stop loss</div>
+          <div class="value">-10/-15 %</div>
+          <p style="font-size:0.7rem; color:#94a3b8; margin:0.25rem 0 0;">jamais plus loin</p>
+        </div>
+        <div class="trade-level trade-tp">
+          <div class="label">Horizon max</div>
+          <div class="value">5 jours</div>
+          <p style="font-size:0.7rem; color:#94a3b8; margin:0.25rem 0 0;">sauf HFEA/DCA</p>
+        </div>
+        <div class="trade-level trade-rr">
+          <div class="label">Drawdown max</div>
+          <div class="value">-20 %</div>
+          <p style="font-size:0.7rem; color:#94a3b8; margin:0.25rem 0 0;">sortir et r&eacute;&eacute;valuer</p>
+        </div>
+      </div>
+    </div>
+
+    <h3><i class="fa-solid fa-list-check" style="color:#d97706; margin-right:0.5rem;"></i> Checklist avant chaque trade</h3>
+
+    <div style="background:#fffbeb; border:1px solid #d97706; border-radius:16px; padding:1.5rem; margin:1.5rem 0;">
+      <ul class="checklist">
+        <li><i class="fa-solid fa-square-check" style="color:#d97706;"></i> <strong>Catalyst identifi&eacute;</strong> &mdash; Quel est le d&eacute;clencheur ? (earnings, FOMC, breakout technique, sentiment extr&ecirc;me)</li>
+        <li><i class="fa-solid fa-square-check" style="color:#d97706;"></i> <strong>VIX v&eacute;rifi&eacute;</strong> &mdash; Si VIX &gt; 25, r&eacute;duisez le sizing de moiti&eacute;. Si VIX &gt; 35, n'entrez pas.</li>
+        <li><i class="fa-solid fa-square-check" style="color:#d97706;"></i> <strong>Horizon d&eacute;fini</strong> &mdash; 1 jour ? 3 jours ? 5 jours max ? &Eacute;crivez-le avant d'entrer.</li>
+        <li><i class="fa-solid fa-square-check" style="color:#d97706;"></i> <strong>Stop loss plac&eacute;</strong> &mdash; Pas un stop &laquo; mental &raquo;. Un vrai ordre stop sur votre courtier.</li>
+        <li><i class="fa-solid fa-square-check" style="color:#d97706;"></i> <strong>Sizing respect&eacute;</strong> &mdash; 10 % max. Si vous &laquo; sentez &raquo; que c'est du s&ucirc;r et voulez mettre 30 %, c'est pr&eacute;cis&eacute;ment le moment de ne PAS le faire.</li>
+        <li><i class="fa-solid fa-square-check" style="color:#d97706;"></i> <strong>Plan de sortie</strong> &mdash; Avant m&ecirc;me d'entrer : &agrave; quel prix vendez-vous en gain ? En perte ? Apr&egrave;s combien de jours ?</li>
+      </ul>
+    </div>
+
+    <h3><i class="fa-solid fa-calculator" style="color:#dc2626; margin-right:0.5rem;"></i> Tableau de recovery : pourquoi les grosses pertes sont mortelles</h3>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Perte</th>
+          <th>Gain n&eacute;cessaire pour revenir &agrave; 0</th>
+          <th>Jours &agrave; +3 %/jour</th>
+          <th>Probabilit&eacute;</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:#d97706;">-10 %</td><td>+11 %</td><td>~4</td><td style="color:#16a34a;">Facile</td></tr>
+        <tr><td style="color:#d97706;">-20 %</td><td>+25 %</td><td>~8</td><td style="color:#16a34a;">Possible</td></tr>
+        <tr><td style="color:#dc2626;">-30 %</td><td>+43 %</td><td>~14</td><td style="color:#d97706;">Difficile</td></tr>
+        <tr><td style="color:#dc2626;">-50 %</td><td>+100 %</td><td>~24</td><td style="color:#dc2626;">Tr&egrave;s difficile</td></tr>
+        <tr><td style="color:#dc2626; font-weight:700;">-70 %</td><td style="font-weight:700;">+233 %</td><td>~41</td><td style="color:#dc2626; font-weight:700;">Quasi impossible</td></tr>
+        <tr><td style="color:#991b1b; font-weight:700;">-90 %</td><td style="font-weight:700;">+900 %</td><td>~80</td><td style="color:#991b1b; font-weight:700;">Game over</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#2563eb !important;"><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> La r&egrave;gle des -20 %</h4>
+      <p style="margin-bottom:0;">Si votre position ETF &agrave; levier atteint <strong>-20 %</strong>, sortez imm&eacute;diatement et r&eacute;&eacute;valuez votre th&egrave;se &agrave; froid. &Agrave; -20 %, il faut +25 % pour revenir &agrave; z&eacute;ro &mdash; c'est encore faisable. &Agrave; -50 %, il faut +100 % &mdash; c'est presque impossible avec le decay qui joue contre vous. <strong>Coupez vos pertes t&ocirc;t.</strong></p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 9 : ERREURS FATALES                                    -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="erreurs">Erreurs fatales</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-bomb" style="color:#dc2626;"></i> Les 4 erreurs fatales</h2>
+
+    <p>Ces erreurs ont co&ucirc;t&eacute; des milliers, parfois des millions de dollars &agrave; des investisseurs r&eacute;els. Ne les commettez pas.</p>
+
+    <div class="fatal-grid">
+      <div class="fatal-card">
+        <h4><span class="fatal-number">1</span> Hold TQQQ pendant un bear market</h4>
+        <p>En 2022, TQQQ est pass&eacute; de ~86 $ &agrave; ~17 $ (-80 %). Des milliers de d&eacute;butants Reddit avaient &laquo; YOLO all-in &raquo; TQQQ en 2021 au sommet du march&eacute;. Certains ont attendu, esp&eacute;rant un rebond. Le rebond a mis <strong>2 ans</strong> pour revenir au point initial.</p>
+        <p style="margin-top:0.75rem;"><strong>Solution</strong> : Stop loss syst&eacute;matique. Si votre th&egrave;se ne tient plus, sortez.</p>
+      </div>
+      <div class="fatal-card">
+        <h4><span class="fatal-number">2</span> Croire que x3 = x3 sur le long terme</h4>
+        <p>Le rebalancement quotidien fait que TQQQ ne rend JAMAIS exactement 3x le Nasdaq sur une p&eacute;riode &gt; 1 jour. En march&eacute; volatile, il rend beaucoup moins. En march&eacute; tr&egrave;s tendance, il peut rendre l&eacute;g&egrave;rement plus (compound effect positif).</p>
+        <p style="margin-top:0.75rem;"><strong>Solution</strong> : Comprenez le decay. Simulez avant d'investir. Ne projetez jamais &laquo; QQQ fait +20 % donc TQQQ fera +60 % &raquo;.</p>
+      </div>
+      <div class="fatal-card">
+        <h4><span class="fatal-number">3</span> Utiliser le levier sans stop loss</h4>
+        <p>Un ETF x3 peut bouger de <strong>-15 &agrave; -20 %</strong> en une seule s&eacute;ance lors d'&eacute;v&eacute;nements extr&ecirc;mes (COVID mars 2020 : TQQQ -30 % en une journ&eacute;e). Sans stop loss, vous &ecirc;tes &agrave; la merci du march&eacute;.</p>
+        <p style="margin-top:0.75rem;"><strong>Solution</strong> : Stop loss hardware (ordre plac&eacute; chez le courtier), pas un stop &laquo; mental &raquo; que vous d&eacute;placerez toujours plus bas.</p>
+      </div>
+      <div class="fatal-card">
+        <h4><span class="fatal-number">4</span> Shorter UVXY sans couverture</h4>
+        <p>UVXY perd ~70 %/an &mdash; shorter semble &laquo; gratuit &raquo;. Mais un spike VIX peut faire monter UVXY de <strong>300-500 %</strong> en quelques jours. En f&eacute;vrier 2018, le &laquo; Volmageddon &raquo; a vu le VIX passer de 10 &agrave; 50 en 24h. Les shorts UVXY non couverts ont &eacute;t&eacute; liquid&eacute;s.</p>
+        <p style="margin-top:0.75rem;"><strong>Solution</strong> : Si vous shortez UVXY, achetez toujours des calls UVXY OTM en protection. Le co&ucirc;t de la protection est votre &laquo; prime d'assurance &raquo;.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 10 : QUIZ                                              -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="quiz">Quiz</div>
+  <div class="content-card">
+    <h2><i class="fa-solid fa-brain" style="color:#ec4899;"></i> Quiz &mdash; Testez vos connaissances</h2>
+
+    <details>
+      <summary>Question 1 : Le Nasdaq fait +5 % puis -5 % sur deux jours. TQQQ fait +15 % puis -15 %. Quel est le rendement net de TQQQ ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : -2,25 %</strong><br>
+        100 &times; 1,15 &times; 0,85 = 97,75 $. TQQQ perd 2,25 %, alors que le Nasdaq ne perd que 0,25 % (100 &times; 1,05 &times; 0,95 = 99,75). Le levier x3 a transform&eacute; une perte minuscule en une perte 9 fois plus grande. C'est le beta slippage.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 2 : Pourquoi TQQQ et SQQQ peuvent-ils perdre tous les deux de l'argent en m&ecirc;me temps ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : &agrave; cause du rebalancement quotidien et du decay.</strong><br>
+        En march&eacute; volatile sans direction (range-bound), le m&eacute;canisme d'achat haut / vente bas forc&eacute; par le rebalancement quotidien d&eacute;truit la valeur des deux c&ocirc;t&eacute;s. TQQQ ach&egrave;te quand &ccedil;a monte et vend quand &ccedil;a baisse. SQQQ fait l'inverse mais subit le m&ecirc;me m&eacute;canisme. Les deux perdent de la valeur au profit du rebalancement.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 3 : Qu'est-ce que le contango et pourquoi d&eacute;truit-il la valeur de UVXY ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : le contango est la situation o&ugrave; les futures VIX sont plus chers que le VIX spot.</strong><br>
+        UVXY doit rouler ses futures chaque jour : vendre les futures proches (moins chers) et acheter les futures lointains (plus chers). Ce &laquo; roll cost &raquo; de 5-8 %/mois s'accumule et d&eacute;truit la valeur de l'ETF en permanence. Avec le levier x1.5, UVXY perd environ 60-80 % de sa valeur par an, ce qui explique les reverse splits r&eacute;currents.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 4 : Vous avez perdu 50 % sur votre position TQQQ. Combien devez-vous gagner pour revenir &agrave; z&eacute;ro ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : +100 %</strong><br>
+        Si votre position de 10 000 $ est tomb&eacute;e &agrave; 5 000 $, il faut que ces 5 000 $ doublent pour revenir &agrave; 10 000 $. C'est pourquoi couper ses pertes t&ocirc;t est crucial avec le levier : &agrave; -20 %, il faut &laquo; seulement &raquo; +25 % pour revenir. &Agrave; -50 %, c'est quasi impossible vu que le decay continue de jouer contre vous.
+      </div>
+    </details>
+
+    <details>
+      <summary>Question 5 : Dans quelles conditions le levier x3 peut-il surperformer (rendre PLUS que 3x) l'indice sous-jacent ?</summary>
+      <div class="quiz-answer">
+        <strong>R&eacute;ponse : en march&eacute; fortement directionnel avec faible volatilit&eacute;.</strong><br>
+        Quand le march&eacute; monte (ou baisse) de fa&ccedil;on r&eacute;guli&egrave;re, jour apr&egrave;s jour, sans retournements, le <strong>compound effect</strong> joue en faveur du levier. Par exemple, si le Nasdaq monte de +1 % chaque jour pendant 10 jours, QQQ fait +10,5 % mais TQQQ fait +34,4 % (et non +31,5 %). C'est l'effet inverse du decay &mdash; le &laquo; positive compounding &raquo;. Mais ce sc&eacute;nario est rare et impr&eacute;visible.
+      </div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- R&Eacute;SUM&Eacute; & CTA                                        -->
+  <!-- ============================================================ -->
+  <div class="section-divider">R&eacute;sum&eacute; &amp; suite</div>
+  <div class="content-card" style="text-align:center;">
+    <h2 style="justify-content:center;"><i class="fa-solid fa-flag-checkered" style="color:#dc2626;"></i> Ce qu'il faut retenir</h2>
+
+    <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin:2rem 0;">
+      <div class="metric-card" style="border-top:3px solid #dc2626;">
+        <div class="metric-value" style="color:#dc2626; font-size:1.3rem;">x3 &#8800; x3</div>
+        <div class="metric-label">Sur le long terme</div>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #f97316;">
+        <div class="metric-value" style="color:#f97316; font-size:1.3rem;">Decay</div>
+        <div class="metric-label">Ennemi n&deg;1</div>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #16a34a;">
+        <div class="metric-value" style="color:#16a34a; font-size:1.3rem;">1-5 jours</div>
+        <div class="metric-label">Horizon id&eacute;al</div>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #d97706;">
+        <div class="metric-value" style="color:#d97706; font-size:1.3rem;">10 % max</div>
+        <div class="metric-label">Du portefeuille</div>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #9333ea;">
+        <div class="metric-value" style="color:#9333ea; font-size:1.3rem;">VIX &lt; 20</div>
+        <div class="metric-label">Condition id&eacute;ale</div>
+      </div>
+      <div class="metric-card" style="border-top:3px solid #2563eb;">
+        <div class="metric-value" style="color:#2563eb; font-size:1.3rem;">Stop loss</div>
+        <div class="metric-label">Obligatoire</div>
+      </div>
+    </div>
+
+    <p>Les ETFs &agrave; levier sont des outils puissants dans les bonnes mains &mdash; et des machines &agrave; d&eacute;truire du capital dans les mauvaises. Utilisez-les avec <strong>discipline</strong>, <strong>sizing strict</strong>, et <strong>stop loss syst&eacute;matique</strong>.</p>
+
+    <div class="series-cta">
+      <a href="/series/guide-speculateur/part3-short/" class="cta-secondary"><i class="fa-solid fa-arrow-left" style="margin-right:0.4rem;"></i> Partie 3 &mdash; Short Selling</a>
+      <a href="/series/guide-speculateur/part5-crypto/" class="cta-primary">Partie 5 &mdash; Crypto <i class="fa-solid fa-arrow-right" style="margin-left:0.4rem;"></i></a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DISCLAIMER FINAL                                               -->
+  <!-- ============================================================ -->
+  <div class="content-card" style="background:#fef2f2; border:1px solid #fecaca;">
+    <h3 style="color:#dc2626; margin-top:0;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Avertissement l&eacute;gal</h3>
+    <p style="font-size:0.85rem; color:#64748b; line-height:1.7;">Ce contenu est strictement &eacute;ducatif et ne constitue en aucun cas un conseil en investissement, une recommandation d'achat ou de vente, ou une incitation &agrave; utiliser des produits financiers &agrave; levier. Les ETFs &agrave; levier sont des instruments complexes qui comportent un risque &eacute;lev&eacute; de perte rapide en capital. Vous pouvez perdre la totalit&eacute; de votre investissement. Les performances pass&eacute;es ne pr&eacute;jugent pas des performances futures. Consultez un conseiller financier agr&eacute;&eacute; avant toute d&eacute;cision d'investissement.</p>
+    <p style="font-size:0.85rem; color:#64748b; line-height:1.7; margin-bottom:0;">Donn&eacute;es : Yahoo Finance, ProShares, Direxion, CBOE. Les AUM, volumes et frais indiqu&eacute;s sont approximatifs et sujets &agrave; variation. Derni&egrave;re mise &agrave; jour : f&eacute;vrier 2026.</p>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                         -->
+<!-- ============================================================ -->
+<div class="footer-bar">
+  <p><strong>Le Guide du Super Sp&eacute;culateur</strong> &mdash; Partie 4 sur 8</p>
+  <p><a href="/">Market Watch</a> &mdash; Analyses financi&egrave;res &eacute;ducatives</p>
+  <p style="margin-top:0.5rem; font-size:0.7rem;">&copy; 2026 Market Watch. Tous droits r&eacute;serv&eacute;s. Contenu &eacute;ducatif uniquement.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                                -->
+<!-- ============================================================ -->
+<script>
+// ============================================================
+// CHART 1: TQQQ vs QQQ vs SQQQ — Decay Visualization (5 years)
+// ============================================================
+(function() {
+  var dom = document.getElementById('chart-decay');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  // Simulated data: QQQ grows ~15%/yr with volatility, TQQQ/SQQQ show decay
+  var months = [];
+  var qqq = [100];
+  var tqqq = [100];
+  var sqqq = [100];
+
+  // Generate 60 months of simulated data
+  var monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  for (var y = 0; y < 5; y++) {
+    for (var m = 0; m < 12; m++) {
+      months.push(monthNames[m] + ' ' + (2020 + y));
+    }
+  }
+
+  // Realistic monthly returns for QQQ with volatility
+  var qqqReturns = [
+    // 2020: COVID crash then recovery
+    -0.02, -0.07, -0.12, 0.15, 0.08, 0.06, 0.07, 0.11, -0.05, -0.03, 0.10, 0.05,
+    // 2021: Strong bull
+    0.01, 0.01, 0.02, 0.06, -0.01, 0.07, 0.03, 0.04, -0.05, 0.08, -0.01, 0.02,
+    // 2022: Bear market
+    -0.09, -0.04, 0.04, -0.13, -0.01, -0.09, 0.12, -0.05, -0.11, 0.04, -0.01, -0.09,
+    // 2023: Recovery
+    0.11, 0.01, 0.07, 0.01, 0.08, 0.06, 0.04, -0.02, -0.04, -0.03, 0.11, 0.05,
+    // 2024: Strong year
+    0.04, 0.05, 0.02, -0.04, 0.07, 0.06, -0.01, 0.01, 0.03, -0.01, 0.06, 0.03
+  ];
+
+  for (var i = 0; i < 60; i++) {
+    var r = qqqReturns[i];
+    var prevQ = qqq[qqq.length - 1];
+    var prevT = tqqq[tqqq.length - 1];
+    var prevS = sqqq[sqqq.length - 1];
+
+    qqq.push(+(prevQ * (1 + r)).toFixed(2));
+    tqqq.push(+(prevT * (1 + r * 3 * 0.97)).toFixed(2));  // 3% decay factor monthly
+    sqqq.push(+(prevS * (1 - r * 3 * 0.97)).toFixed(2));   // Inverse with decay
+  }
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: function(params) {
+        var s = '<strong>' + params[0].axisValue + '</strong><br>';
+        params.forEach(function(p) {
+          s += '<span style="color:' + p.color + '">●</span> ' + p.seriesName + ': <strong>' + p.data.toFixed(1) + '</strong><br>';
+        });
+        return s;
+      }
+    },
+    legend: { data: ['QQQ (x1)', 'TQQQ (x3 Bull)', 'SQQQ (x3 Bear)'], top: 10, textStyle: { fontSize: 12 } },
+    grid: { left: 60, right: 30, top: 50, bottom: 50 },
+    xAxis: {
+      type: 'category',
+      data: months,
+      axisLabel: { fontSize: 10, rotate: 45, interval: 5 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Valeur ($)',
+      nameTextStyle: { fontSize: 11, color: '#64748b' },
+      axisLabel: { fontSize: 10, formatter: '{value}' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [
+      {
+        name: 'QQQ (x1)',
+        type: 'line',
+        data: qqq,
+        smooth: true,
+        lineStyle: { width: 3, color: '#2563eb' },
+        itemStyle: { color: '#2563eb' },
+        showSymbol: false
+      },
+      {
+        name: 'TQQQ (x3 Bull)',
+        type: 'line',
+        data: tqqq,
+        smooth: true,
+        lineStyle: { width: 3, color: '#16a34a' },
+        itemStyle: { color: '#16a34a' },
+        showSymbol: false
+      },
+      {
+        name: 'SQQQ (x3 Bear)',
+        type: 'line',
+        data: sqqq,
+        smooth: true,
+        lineStyle: { width: 3, color: '#dc2626' },
+        itemStyle: { color: '#dc2626' },
+        showSymbol: false
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ============================================================
+// CHART 2: Decay vs Volatility (Bar Chart)
+// ============================================================
+(function() {
+  var dom = document.getElementById('chart-decay-vol');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: function(params) {
+        return '<strong>Volatilité : ' + params[0].axisValue + '</strong><br>' +
+          params.map(function(p) {
+            return '<span style="color:' + p.color + '">●</span> ' + p.seriesName + ': <strong>' + p.data + ' %/an</strong>';
+          }).join('<br>');
+      }
+    },
+    legend: { data: ['ETF x1', 'ETF x2', 'ETF x3'], top: 10, textStyle: { fontSize: 12 } },
+    grid: { left: 60, right: 30, top: 50, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      name: 'Volatilité annualisée',
+      nameLocation: 'center',
+      nameGap: 30,
+      nameTextStyle: { fontSize: 11, color: '#64748b' },
+      data: ['10 %', '15 %', '20 %', '25 %', '30 %', '35 %', '40 %', '50 %', '60 %'],
+      axisLabel: { fontSize: 11 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Decay annuel (%)',
+      nameTextStyle: { fontSize: 11, color: '#64748b' },
+      axisLabel: { fontSize: 10, formatter: '{value} %' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+      inverse: true
+    },
+    series: [
+      {
+        name: 'ETF x1',
+        type: 'bar',
+        data: [-0.5, -1.1, -2.0, -3.1, -4.5, -6.1, -8.0, -12.5, -18.0],
+        itemStyle: { color: '#2563eb', borderRadius: [4,4,0,0] }
+      },
+      {
+        name: 'ETF x2',
+        type: 'bar',
+        data: [-2.0, -4.5, -8.0, -12.5, -18.0, -24.5, -32.0, -50.0, -72.0],
+        itemStyle: { color: '#f97316', borderRadius: [4,4,0,0] }
+      },
+      {
+        name: 'ETF x3',
+        type: 'bar',
+        data: [-4.5, -10.1, -18.0, -28.1, -40.5, -55.1, -72.0, -112.5, -162.0],
+        itemStyle: { color: '#dc2626', borderRadius: [4,4,0,0] }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ============================================================
+// CHART 3: HFEA Backtest vs S&P 500
+// ============================================================
+(function() {
+  var dom = document.getElementById('chart-hfea');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  // Simulated cumulative growth: HFEA ~20% CAGR vs S&P ~10.5% CAGR over 35 years
+  var years = [];
+  var hfea = [100];
+  var sp500 = [100];
+  var classic6040 = [100];
+
+  // Generate from 1987 to 2024
+  for (var y = 1987; y <= 2024; y++) {
+    years.push(y.toString());
+  }
+
+  // Approximate annual returns
+  var hfeaReturns = [
+    0.05, 0.18, 0.45, -0.10, 0.60, 0.12, 0.15, -0.05, 0.55, 0.40,
+    0.50, 0.80, 0.30, -0.25, -0.50, -0.35, 0.55, 0.15, 0.10, 0.20,
+    0.10, -0.45, 0.50, 0.25, 0.05, 0.25, 0.50, 0.20, -0.05, 0.30,
+    0.55, -0.25, 0.60, -0.55, 0.65, 0.50, 0.10, 0.40, -0.10, 0.35
+  ];
+  var sp500Returns = [
+    0.05, 0.17, 0.31, -0.03, 0.30, 0.08, 0.10, 0.01, 0.38, 0.23,
+    0.33, 0.29, 0.21, -0.09, -0.12, -0.22, 0.29, 0.11, 0.05, 0.16,
+    0.05, -0.37, 0.26, 0.15, 0.02, 0.16, 0.32, 0.14, 0.01, 0.12,
+    0.22, -0.04, 0.31, -0.18, 0.29, 0.24, -0.01, 0.26, 0.12, 0.24
+  ];
+  var c6040Returns = [
+    0.04, 0.12, 0.22, -0.01, 0.22, 0.07, 0.08, 0.02, 0.28, 0.17,
+    0.24, 0.21, 0.16, -0.05, -0.06, -0.12, 0.21, 0.09, 0.04, 0.12,
+    0.05, -0.22, 0.19, 0.12, 0.02, 0.12, 0.22, 0.11, 0.01, 0.10,
+    0.16, -0.03, 0.22, -0.16, 0.20, 0.18, 0.02, 0.19, 0.08, 0.18
+  ];
+
+  for (var i = 0; i < years.length - 1; i++) {
+    var r1 = hfeaReturns[i] || 0.15;
+    var r2 = sp500Returns[i] || 0.10;
+    var r3 = c6040Returns[i] || 0.08;
+    hfea.push(+(hfea[hfea.length - 1] * (1 + r1)).toFixed(0));
+    sp500.push(+(sp500[sp500.length - 1] * (1 + r2)).toFixed(0));
+    classic6040.push(+(classic6040[classic6040.length - 1] * (1 + r3)).toFixed(0));
+  }
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: function(params) {
+        var s = '<strong>' + params[0].axisValue + '</strong><br>';
+        params.forEach(function(p) {
+          s += '<span style="color:' + p.color + '">●</span> ' + p.seriesName + ': <strong>$' + p.data.toLocaleString() + '</strong><br>';
+        });
+        return s;
+      }
+    },
+    legend: { data: ['HFEA (55% UPRO + 45% TMF)', 'S&P 500', '60/40 Classique'], top: 10, textStyle: { fontSize: 11 } },
+    grid: { left: 80, right: 30, top: 50, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: years,
+      axisLabel: { fontSize: 10, interval: 4 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'log',
+      name: 'Valeur ($, échelle log)',
+      nameTextStyle: { fontSize: 11, color: '#64748b' },
+      axisLabel: { fontSize: 10, formatter: function(v) { return '$' + v.toLocaleString(); } },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [
+      {
+        name: 'HFEA (55% UPRO + 45% TMF)',
+        type: 'line',
+        data: hfea,
+        smooth: true,
+        lineStyle: { width: 3, color: '#9333ea' },
+        itemStyle: { color: '#9333ea' },
+        showSymbol: false,
+        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(147,51,234,0.15)' }, { offset: 1, color: 'rgba(147,51,234,0)' }]) }
+      },
+      {
+        name: 'S&P 500',
+        type: 'line',
+        data: sp500,
+        smooth: true,
+        lineStyle: { width: 2, color: '#2563eb' },
+        itemStyle: { color: '#2563eb' },
+        showSymbol: false
+      },
+      {
+        name: '60/40 Classique',
+        type: 'line',
+        data: classic6040,
+        smooth: true,
+        lineStyle: { width: 2, color: '#64748b', type: 'dashed' },
+        itemStyle: { color: '#64748b' },
+        showSymbol: false
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ============================================================
+// CHART 4: UVXY Decay Since Inception
+// ============================================================
+(function() {
+  var dom = document.getElementById('chart-uvxy');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  // UVXY adjusted for reverse splits — shows the catastrophic decay
+  var years = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+  // Values adjusted for all reverse splits, starting from ~400,000 equivalent
+  var uvxy = [400000, 120000, 48000, 22000, 8000, 2800, 3500, 900, 1200, 250, 320, 75, 35, 28];
+
+  var option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: function(params) {
+        return '<strong>' + params[0].axisValue + '</strong><br>' +
+          '<span style="color:#9333ea">●</span> UVXY (ajusté splits): <strong>$' + params[0].data.toLocaleString() + '</strong>';
+      }
+    },
+    grid: { left: 80, right: 30, top: 30, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: years,
+      axisLabel: { fontSize: 11 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'log',
+      name: 'Prix UVXY ($, ajusté splits, log)',
+      nameTextStyle: { fontSize: 10, color: '#64748b' },
+      axisLabel: { fontSize: 10, formatter: function(v) { return '$' + v.toLocaleString(); } },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [
+      {
+        name: 'UVXY',
+        type: 'line',
+        data: uvxy,
+        smooth: true,
+        lineStyle: { width: 3, color: '#9333ea' },
+        itemStyle: { color: '#9333ea' },
+        showSymbol: true,
+        symbolSize: 8,
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(147,51,234,0.25)' },
+            { offset: 1, color: 'rgba(147,51,234,0)' }
+          ])
+        },
+        markPoint: {
+          data: [
+            { name: 'VIX spike 2018', xAxis: '2018', yAxis: 3500, label: { formatter: 'Volmageddon', fontSize: 10 } },
+            { name: 'COVID 2020', xAxis: '2020', yAxis: 1200, label: { formatter: 'COVID', fontSize: 10 } }
+          ],
+          itemStyle: { color: '#dc2626' }
+        },
+        markLine: {
+          data: [{ yAxis: 28, label: { formatter: 'Aujourd\'hui: ~$28', position: 'end', fontSize: 10 } }],
+          lineStyle: { color: '#dc2626', type: 'dashed' }
+        }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
