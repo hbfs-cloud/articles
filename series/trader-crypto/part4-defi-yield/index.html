@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeFi, Staking & Yield — Stratégies de Rendement | Trader les Crypto — Partie 4/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les Crypto — Partie 4/6 : DeFi 101, Liquidity Pools, AMM, staking PoS, yield farming, impermanent loss, lending/borrowing, stratégies de rendement et risques DeFi.">
+  <meta property="og:title" content="DeFi, Staking & Yield — Stratégies de Rendement | Trader les Crypto — Partie 4/6 | Market Watch">
+  <meta property="og:description" content="Liquidity Pools, AMM, staking PoS, yield farming, impermanent loss, lending, stratégies de rendement stablecoins et delta-neutral, risques smart contract, rug pulls, et protocoles majeurs 2025-2026.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-crypto/part4-defi-yield/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#f59e0b; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fbbf24; color:#fbbf24; }
+  .series-link.current { background:#f59e0b; color:white; border-color:#f59e0b; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-amber { background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#f59e0b; margin-right:0.75rem; }
+  details[open] summary { border-color:#f59e0b; background:#fffbeb; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#f59e0b; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fbbf24; }
+  .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fde68a 100%); border:1px solid #f59e0b; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#f59e0b; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(245,158,11,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#f59e0b; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(245,158,11,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#f59e0b; color:#f59e0b; }
+  .disclaimer-mega { background:linear-gradient(135deg, #78350f 0%, #d97706 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #f59e0b; }
+  .disclaimer-mega h3 { color:#fde68a; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fef3c7; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#fbbf24; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #f59e0b; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-brands fa-bitcoin" style="margin-right:0.4rem;"></i> Trader les Crypto</span>
+  <a href="/series/trader-crypto/part1-ecosysteme/" class="series-link">1 — L'Écosystème</a>
+  <a href="/series/trader-crypto/part2-analyse-technique/" class="series-link">2 — Analyse Technique</a>
+  <a href="/series/trader-crypto/part3-on-chain/" class="series-link">3 — On-Chain</a>
+  <a href="/series/trader-crypto/part4-defi-yield/" class="series-link current">4 — DeFi & Yield</a>
+  <a href="/series/trader-crypto/part5-altcoins-narratives/" class="series-link">5 — Altcoins & Narratives</a>
+  <a href="/series/trader-crypto/part6-risques-securite/" class="series-link">6 — Risques & Sécurité</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-bitcoin" style="margin-right:0.4rem;"></i> Série Trader les Crypto — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">DeFi, Staking & Yield : Stratégies de Rendement</h1>
+  <p class="hero-subtitle">Liquidity Pools, AMM, staking PoS, yield farming, impermanent loss... La DeFi offre des rendements inédits — mais avec des risques spécifiques. Maîtrisez les mécanismes avant de déployer votre capital.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-coins"></i> DeFi</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-layer-group"></i> Staking</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-percent"></i> Yield</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-shield-halved"></i> Risques</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#defi-101" class="nav-item"><i class="fa-solid fa-cubes" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> DeFi 101</a>
+  <a href="#staking" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#8b5cf6; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Staking</a>
+  <a href="#yield-farming" class="nav-item"><i class="fa-solid fa-seedling" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Yield Farming</a>
+  <a href="#impermanent-loss" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Impermanent Loss</a>
+  <a href="#lending" class="nav-item"><i class="fa-solid fa-building-columns" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Lending</a>
+  <a href="#strategies" class="nav-item"><i class="fa-solid fa-chess" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Stratégies</a>
+  <a href="#risques" class="nav-item"><i class="fa-solid fa-bug" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Risques DeFi</a>
+  <a href="#protocoles" class="nav-item"><i class="fa-solid fa-gear" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Protocoles 2025</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : DEFI 101                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="defi-101"><i class="fa-solid fa-cubes" style="color:#f59e0b;"></i> DeFi 101</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-cubes" style="color:#f59e0b;"></i> La finance décentralisée : les fondamentaux</h2>
+
+  <p>La <strong>DeFi</strong> (Decentralized Finance) est un écosystème de services financiers construits sur des blockchains publiques — principalement Ethereum, mais aussi Solana, Arbitrum, Base et Avalanche. Contrairement à la finance traditionnelle (banques, courtiers), la DeFi fonctionne sans intermédiaires : ce sont des <strong>smart contracts</strong> (programmes autonomes) qui exécutent les transactions.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Total Value Locked (TVL) — Février 2026</div>
+    <span class="formula-highlight">~$180 Mds</span> répartis sur <span class="formula-highlight">~2,500</span> protocoles actifs
+  </div>
+
+  <h3>Les 3 piliers de la DeFi</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-arrows-rotate"></i></div>
+      <h4 style="margin:0 0 0.5rem;">DEX (Échanges)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Uniswap, Curve, Jupiter — échanger des tokens sans intermédiaire. Utilise des AMM (Automated Market Makers) au lieu des carnets d'ordres traditionnels.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-building-columns"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Lending (Prêts)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Aave, Compound, Morpho — prêter et emprunter des crypto. Pas de KYC, pas de dossier bancaire : votre collatéral suffit.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#8b5cf6; margin-bottom:0.5rem;"><i class="fa-solid fa-layer-group"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Staking (Rendement)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Lido, Rocket Pool, EigenLayer — sécuriser le réseau en stakant vos tokens et recevoir des récompenses (~3-7% annuel).</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment fonctionne un AMM (Automated Market Maker) ?</h4>
+    <p style="margin:0;">Contrairement aux exchanges traditionnels qui utilisent un carnet d'ordres (acheteurs vs vendeurs), un AMM utilise des <strong>pools de liquidité</strong>. Des utilisateurs (les LP — Liquidity Providers) déposent deux tokens dans un pool (ex: ETH + USDC). Un algorithme — généralement la formule <strong>x * y = k</strong> — détermine le prix automatiquement en fonction des proportions dans le pool. Quand quelqu'un achète de l'ETH, il ajoute de l'USDC au pool et retire de l'ETH, ce qui fait monter le prix de l'ETH mécaniquement.</p>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule AMM — Constant Product</div>
+    <span class="formula-highlight">x</span> × <span class="formula-highlight">y</span> = <span class="formula-highlight">k</span> &nbsp;&nbsp;(où x et y = quantité de chaque token, k = constante)
+  </div>
+
+  <!-- CHART 1: TVL Evolution -->
+  <h3>Évolution de la TVL DeFi (2020-2026)</h3>
+  <div id="chart-tvl" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : STAKING                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="staking"><i class="fa-solid fa-layer-group" style="color:#8b5cf6;"></i> Le Staking</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#8b5cf6;"></i> Staking : sécuriser le réseau, gagner des récompenses</h2>
+
+  <p>Le <strong>staking</strong> est le mécanisme central des blockchains Proof of Stake (PoS). Vous verrouillez vos tokens pour participer à la validation des transactions du réseau. En échange, vous recevez des <strong>récompenses</strong> — comme un intérêt sur un livret d'épargne, mais en crypto.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Blockchain</th><th>Rendement annuel</th><th>Minimum requis</th><th>Période de déblocage</th><th>Mécanisme</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Ethereum (ETH)</strong></td>
+        <td style="color:#16a34a; font-weight:700;">~3.0-3.5%</td>
+        <td>32 ETH (validateur) ou via Lido/Rocket Pool (pas de min.)</td>
+        <td>Variable (~1-5 jours)</td>
+        <td>PoS natif depuis The Merge</td>
+      </tr>
+      <tr>
+        <td><strong>Solana (SOL)</strong></td>
+        <td style="color:#16a34a; font-weight:700;">~6.5-7.5%</td>
+        <td>Pas de minimum</td>
+        <td>~2-3 jours (1 epoch)</td>
+        <td>PoS + Proof of History</td>
+      </tr>
+      <tr>
+        <td><strong>Cosmos (ATOM)</strong></td>
+        <td style="color:#16a34a; font-weight:700;">~15-20%</td>
+        <td>Pas de minimum</td>
+        <td>21 jours</td>
+        <td>Tendermint BFT</td>
+      </tr>
+      <tr>
+        <td><strong>Polkadot (DOT)</strong></td>
+        <td style="color:#16a34a; font-weight:700;">~12-15%</td>
+        <td>Variable (~250 DOT)</td>
+        <td>28 jours</td>
+        <td>Nominated PoS</td>
+      </tr>
+      <tr>
+        <td><strong>Avalanche (AVAX)</strong></td>
+        <td style="color:#16a34a; font-weight:700;">~8-9%</td>
+        <td>25 AVAX (délégation)</td>
+        <td>14 jours</td>
+        <td>Snowball consensus</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Liquid Staking : le meilleur des deux mondes</h3>
+
+  <p>Le problème du staking traditionnel : vos tokens sont verrouillés. Vous ne pouvez pas les utiliser en DeFi pendant qu'ils stakent. Le <strong>liquid staking</strong> résout ce problème : vous recevez un token dérivé (stETH, rETH, mSOL) qui représente votre position stakée et que vous pouvez utiliser en DeFi.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Avantages du Liquid Staking</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Composabilité</strong> : utilisez stETH comme collatéral sur Aave</li>
+        <li><strong>Pas de lock-up</strong> : revendez stETH quand vous voulez</li>
+        <li><strong>Double rendement</strong> : staking + DeFi yield en même temps</li>
+        <li><strong>Pas de minimum</strong> : stakez 0.01 ETH via Lido</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Risques du Liquid Staking</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Smart contract risk</strong> : bug dans le code de Lido = perte</li>
+        <li><strong>Dépeg risk</strong> : stETH peut coter sous l'ETH en cas de panique</li>
+        <li><strong>Centralisation</strong> : Lido contrôle ~28% de l'ETH staké</li>
+        <li><strong>Slashing</strong> : pénalité si le validateur se comporte mal</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Restaking avec EigenLayer</h3>
+
+  <p>Le <strong>restaking</strong> est la grande innovation de 2024-2025. Avec EigenLayer, vous pouvez restaker votre ETH (ou stETH) pour sécuriser d'autres protocoles (appelés AVS — Actively Validated Services) en plus d'Ethereum. Résultat : un rendement additionnel de <strong>+1-3%</strong> par-dessus le staking ETH classique. Le risque supplémentaire : le slashing sur plusieurs protocoles simultanément.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : YIELD FARMING                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="yield-farming"><i class="fa-solid fa-seedling" style="color:#16a34a;"></i> Yield Farming</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-seedling" style="color:#16a34a;"></i> Yield Farming : fournir de la liquidité</h2>
+
+  <p>Le <strong>yield farming</strong> consiste à fournir de la liquidité à des protocoles DeFi en échange de récompenses. Vous déposez vos tokens dans un pool et vous gagnez des frais de trading + des tokens de gouvernance du protocole.</p>
+
+  <h3>Les principaux protocoles de yield farming</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Protocole</th><th>Type</th><th>Rendement typique</th><th>Chaîne</th><th>Spécialité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Uniswap v3/v4</strong></td>
+        <td>DEX / AMM</td>
+        <td>5-50% (variable)</td>
+        <td>Ethereum, Arbitrum, Base</td>
+        <td>Liquidité concentrée — rendement élevé mais gestion active requise</td>
+      </tr>
+      <tr>
+        <td><strong>Curve Finance</strong></td>
+        <td>DEX stablecoins</td>
+        <td>3-15%</td>
+        <td>Ethereum, multi-chain</td>
+        <td>Pools stablecoins à faible slippage — le roi des stablecoins</td>
+      </tr>
+      <tr>
+        <td><strong>Aave v3</strong></td>
+        <td>Lending</td>
+        <td>2-8% (supply)</td>
+        <td>Ethereum, Arbitrum, Optimism</td>
+        <td>Prêts overcollateralized — le plus sûr du lending</td>
+      </tr>
+      <tr>
+        <td><strong>Pendle</strong></td>
+        <td>Yield trading</td>
+        <td>10-40%</td>
+        <td>Ethereum, Arbitrum</td>
+        <td>Sépare yield fixe / variable — innovation yield 2024</td>
+      </tr>
+      <tr>
+        <td><strong>Convex / Yearn</strong></td>
+        <td>Yield optimizer</td>
+        <td>5-20%</td>
+        <td>Ethereum</td>
+        <td>Auto-compound des rewards Curve — set and forget</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Real Yield vs Inflationary Yield : la distinction cruciale</h4>
+    <p style="margin:0;">Tous les yields ne se valent pas. Le <strong>Real Yield</strong> provient de frais réels payés par des utilisateurs (frais de trading Uniswap, intérêts Aave). Le <strong>yield inflationniste</strong> provient de l'émission de nouveaux tokens par le protocole (il imprime de l'argent pour vous payer). En 2021-2022, beaucoup de protocoles offraient 1,000%+ APR en tokens natifs — qui perdaient 90% de leur valeur. <strong>Règle d'or : si le yield semble trop beau pour être vrai, c'est du yield inflationniste.</strong> Vérifiez toujours : d'où vient le rendement ?</p>
+  </div>
+
+  <!-- CHART 2: Yield Comparison Radar -->
+  <h3>Comparaison des stratégies de yield</h3>
+  <div id="chart-yield-radar" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : IMPERMANENT LOSS                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="impermanent-loss"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Impermanent Loss</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Impermanent Loss : le risque n°1 du LP</h2>
+
+  <p>L'<strong>Impermanent Loss</strong> (IL) est la perte que vous subissez en tant que Liquidity Provider par rapport au simple fait de <em>hold</em> vos tokens. Quand le prix d'un token dans le pool change, l'AMM rééquilibre automatiquement les proportions — ce qui vous laisse avec moins du token qui a monté et plus de celui qui a baissé.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule de l'Impermanent Loss</div>
+    IL = <span class="formula-highlight">2 × √(r)</span> / <span class="formula-highlight">(1 + r)</span> - 1 &nbsp;&nbsp;(où r = ratio de prix final/initial)
+  </div>
+
+  <h3>Impact de l'Impermanent Loss selon la variation de prix</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Variation de prix d'un token</th><th>Impermanent Loss</th><th>Interprétation</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>±10%</td><td style="color:#f59e0b;">-0.11%</td><td>Négligeable — les frais compensent facilement</td></tr>
+      <tr><td>±25%</td><td style="color:#f59e0b;">-0.6%</td><td>Faible — acceptable pour des pools actifs</td></tr>
+      <tr><td>±50%</td><td style="color:#dc2626;">-2.0%</td><td>Significatif — il faut un bon APR pour compenser</td></tr>
+      <tr><td>±100% (x2)</td><td style="color:#dc2626;">-5.7%</td><td>Élevé — attention au rapport yield/IL</td></tr>
+      <tr><td>±200% (x3)</td><td style="color:#dc2626;">-13.4%</td><td>Très élevé — typique des memecoins</td></tr>
+      <tr><td>±400% (x5)</td><td style="color:#dc2626;">-25.5%</td><td>Catastrophique — jamais de LP sur assets volatils sans stratégie</td></tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 3: Impermanent Loss Curve -->
+  <h3>Courbe de l'Impermanent Loss</h3>
+  <div id="chart-il" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Quand l'Impermanent Loss est-il acceptable ?</h4>
+    <p style="margin:0;">L'IL est acceptable quand les <strong>frais collectés dépassent la perte</strong>. Pour un pool ETH/USDC sur Uniswap v3 avec un fee tier de 0.3% et un volume journalier élevé, un LP actif peut gagner 20-40% APR en frais — suffisant pour compenser un IL de 5-10%. En revanche, pour un pool memecoin/ETH avec une variation de prix de x10, l'IL de ~60% est quasiment impossible à compenser. <strong>Règle : LP uniquement sur des paires corrélées ou stablecoins sauf si vous êtes un LP professionnel.</strong></p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : LENDING / BORROWING                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="lending"><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Lending & Borrowing</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Prêter et emprunter en DeFi</h2>
+
+  <p>Les protocoles de lending permettent de <strong>prêter vos crypto</strong> pour gagner des intérêts, ou d'<strong>emprunter</strong> en utilisant vos crypto comme collatéral. Tout est automatisé par smart contracts — pas de dossier, pas de banquier, pas de KYC.</p>
+
+  <h3>Comment fonctionne un emprunt DeFi ?</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">Étape 1 — Déposer un collatéral</strong>
+        <span class="badge badge-blue">Supply</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Vous déposez 10 ETH (~$30,000) sur Aave. Ce collatéral gagne déjà des intérêts (~2-3% APR).</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Étape 2 — Emprunter</strong>
+        <span class="badge badge-purple">Borrow</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Vous empruntez $20,000 d'USDC (67% LTV). Vous payez ~4-6% d'intérêts annuels sur l'emprunt.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Étape 3 — Utiliser les fonds</strong>
+        <span class="badge badge-green">Deploy</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Les $20,000 USDC peuvent être utilisés : acheter plus d'ETH (levier), farmer du yield, ou même en fiat via off-ramp.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Attention — Liquidation</strong>
+        <span class="badge badge-red">Risk</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Si le prix de l'ETH chute et que votre LTV dépasse ~80-85%, votre collatéral est <strong>liquidé automatiquement</strong> avec une pénalité de 5-10%. C'est le risque principal du lending DeFi.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> LTV, Health Factor et Liquidation</h4>
+    <p style="margin:0;">Le <strong>LTV</strong> (Loan-to-Value) est le ratio entre votre emprunt et votre collatéral. Sur Aave, le max LTV pour ETH est ~80%. Le <strong>Health Factor</strong> doit rester au-dessus de 1.0 — en dessous, vous êtes liquidé. <strong>Conseil : ne dépassez jamais 50% de LTV</strong> pour avoir un coussin de sécurité suffisant en cas de krach. Un LTV de 50% vous laisse respirer même avec un -40% sur votre collatéral.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : STRATÉGIES                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="strategies"><i class="fa-solid fa-chess" style="color:#f97316;"></i> Stratégies de Yield</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chess" style="color:#f97316;"></i> Stratégies de rendement : du conservateur à l'agressif</h2>
+
+  <h3>Stratégie 1 : Stablecoins Yield (5-10% APR) — Conservateur</h3>
+
+  <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px; margin:1.5rem 0;">
+    <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-shield-halved"></i> Le "compte épargne" DeFi</h4>
+    <p style="font-size:0.88rem; color:#334155; margin:0 0 0.75rem;">Déposez des stablecoins (USDC, USDT, DAI) sur des protocoles de lending. Pas d'impermanent loss, pas d'exposition au prix crypto. Rendement : <strong>5-10% APR</strong> selon les conditions de marché.</p>
+    <div style="font-size:0.85rem; color:#475569; line-height:1.6;">
+      <strong>Où :</strong> Aave (USDC supply), Curve (3pool), Morpho (vaults optimisés)<br>
+      <strong>Risque :</strong> Faible — smart contract risk + risque de dépeg du stablecoin<br>
+      <strong>Pour qui :</strong> Débutants, capital qu'on ne veut pas exposer à la volatilité
+    </div>
+  </div>
+
+  <h3>Stratégie 2 : Liquid Staking + DeFi (6-12% APR) — Modéré</h3>
+
+  <div style="padding:1.5rem; background:#fffbeb; border:2px solid #f59e0b; border-radius:16px; margin:1.5rem 0;">
+    <h4 style="color:#f59e0b; margin:0 0 0.75rem;"><i class="fa-solid fa-layer-group"></i> Staking composable</h4>
+    <p style="font-size:0.88rem; color:#334155; margin:0 0 0.75rem;">Stakez votre ETH via Lido (stETH, ~3.5% APR), puis utilisez le stETH comme collatéral sur Aave pour emprunter des USDC, puis déposez les USDC pour un yield additionnel. Rendement combiné : <strong>6-12% APR</strong> sur votre ETH.</p>
+    <div style="font-size:0.85rem; color:#475569; line-height:1.6;">
+      <strong>Où :</strong> Lido → Aave → Curve/Morpho<br>
+      <strong>Risque :</strong> Modéré — risque de liquidation si ETH chute + smart contract risk sur 3 protocoles<br>
+      <strong>Pour qui :</strong> Intermédiaires, long ETH avec envie de maximiser le rendement
+    </div>
+  </div>
+
+  <h3>Stratégie 3 : Delta-Neutral (10-25% APR) — Avancé</h3>
+
+  <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px; margin:1.5rem 0;">
+    <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrows-left-right"></i> Rendement sans exposition directionnelle</h4>
+    <p style="font-size:0.88rem; color:#334155; margin:0 0 0.75rem;">Ouvrez une position LP sur un pool ETH/USDC + un short ETH perp pour couvrir le delta. Vous collectez les frais du pool sans être exposé au prix de l'ETH. Rendement : <strong>10-25% APR</strong> selon la volatilité et le volume.</p>
+    <div style="font-size:0.85rem; color:#475569; line-height:1.6;">
+      <strong>Où :</strong> Uniswap v3 + GMX/Hyperliquid pour le hedge<br>
+      <strong>Risque :</strong> Élevé — gestion active requise, funding rate variable, liquidation du hedge<br>
+      <strong>Pour qui :</strong> Experts, compréhension des perps, des Greeks et de l'IL
+    </div>
+  </div>
+
+  <h3>Stratégie 4 : Loop Leveraging (15-40% APR) — Très agressif</h3>
+
+  <div style="padding:1.5rem; background:linear-gradient(135deg, #0f172a, #1e293b); border:2px solid #8b5cf6; border-radius:16px; margin:1.5rem 0; color:white;">
+    <h4 style="color:#8b5cf6; margin:0 0 0.75rem;"><i class="fa-solid fa-repeat"></i> La boucle de levier</h4>
+    <p style="font-size:0.88rem; color:#e2e8f0; margin:0 0 0.75rem;">Déposez stETH → Empruntez ETH → Convertissez en stETH → Redéposez → Empruntez à nouveau... Chaque boucle amplifie le rendement du staking. Avec 3 boucles : <strong>~15-20% APR</strong>. Avec 5+ boucles : <strong>30-40%</strong> mais risque de liquidation en cascade.</p>
+    <div style="font-size:0.85rem; color:#94a3b8; line-height:1.6;">
+      <strong>Où :</strong> Morpho, Aave (stETH/ETH market)<br>
+      <strong>Risque :</strong> Très élevé — dépeg stETH = liquidation de toutes les boucles<br>
+      <strong>Pour qui :</strong> Experts uniquement, gestion de risque sophistiquée
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : RISQUES DEFI                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="risques"><i class="fa-solid fa-bug" style="color:#dc2626;"></i> Risques DeFi</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bug" style="color:#dc2626;"></i> Les risques spécifiques à la DeFi</h2>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card" style="border-top-color:#dc2626;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-code"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Smart Contract Risk</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Un bug dans le code = perte totale des fonds. Même les protocoles audités ont été hackés. Euler Finance : $197M volés en mars 2023 (audit Certik). Vérifiez : audits multiples, bug bounty, ancienneté du protocole.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#f97316;">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-ghost"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Rug Pulls</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">L'équipe du projet retire toute la liquidité du pool. Commun sur les nouveaux protocoles non audités. Red flags : contrat non vérifié, pas de timelock, team anonyme sans track record.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#2563eb;">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-eye"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Oracle Manipulation</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Les oracles (Chainlink, Pyth) fournissent les prix aux smart contracts. Un oracle manipulé = prix erronés = liquidations injustes ou emprunts sur-collatéralisés à tort. Mango Markets : $114M exploités via oracle manipulation.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#8b5cf6;">
+      <div style="font-size:2rem; color:#8b5cf6; margin-bottom:0.5rem;"><i class="fa-solid fa-bridge"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Bridge Hacks</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Les bridges cross-chain sont les cibles favorites des hackers. Ronin Bridge : $620M volés (2022). Wormhole : $320M (2022). Nomad : $190M (2022). Utilisez uniquement des bridges éprouvés et limitez l'exposition.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le bilan des hacks DeFi</h4>
+    <p style="margin:0;">Depuis 2020, plus de <strong>$10 milliards</strong> ont été volés dans des exploits DeFi. Les bridges représentent ~45% des pertes, les protocoles de lending ~25%, et les DEX ~15%. La règle de survie : <strong>ne jamais mettre plus de 10-15% de son portefeuille crypto dans un seul protocole DeFi</strong>. Diversifiez entre protocoles ET entre chaînes.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : PROTOCOLES 2025-2026                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="protocoles"><i class="fa-solid fa-gear" style="color:#0891b2;"></i> Protocoles majeurs 2025-2026</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gear" style="color:#0891b2;"></i> L'écosystème DeFi en 2025-2026</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Protocole</th><th>Innovation</th><th>TVL</th><th>Pourquoi surveiller</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Aave v4</strong></td>
+        <td>Unified Liquidity Layer, GHO stablecoin</td>
+        <td>~$25Mds</td>
+        <td>Cross-chain natif, taux dynamiques, meilleure efficacité du capital</td>
+      </tr>
+      <tr>
+        <td><strong>Uniswap v4</strong></td>
+        <td>Hooks (plugins custom), singleton contract</td>
+        <td>~$8Mds</td>
+        <td>Les hooks permettent des stratégies LP sur mesure : TWAMM, limit orders, dynamic fees</td>
+      </tr>
+      <tr>
+        <td><strong>Lido</strong></td>
+        <td>stETH — leader liquid staking ETH</td>
+        <td>~$30Mds</td>
+        <td>~28% de l'ETH total staké — risque de centralisation mais incontournable</td>
+      </tr>
+      <tr>
+        <td><strong>EigenLayer</strong></td>
+        <td>Restaking ETH pour sécuriser des AVS</td>
+        <td>~$15Mds</td>
+        <td>Nouvelle couche de yield + risque. Le restaking est la narrative DeFi dominante</td>
+      </tr>
+      <tr>
+        <td><strong>Pendle</strong></td>
+        <td>Yield tokenization (PT/YT separation)</td>
+        <td>~$5Mds</td>
+        <td>Fixer son yield ou spéculer sur les taux futurs — le Aave des taux d'intérêt</td>
+      </tr>
+      <tr>
+        <td><strong>Morpho</strong></td>
+        <td>Peer-to-peer lending optimisé</td>
+        <td>~$4Mds</td>
+        <td>Meilleurs taux que Aave/Compound grâce au matching direct prêteur-emprunteur</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 4: TVL par protocole -->
+  <h3>TVL des protocoles majeurs — Répartition 2026</h3>
+  <div id="chart-tvl-protocols" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La tendance 2025-2026 : Real Yield et durabilité</h4>
+    <p style="margin:0;">Après l'effondrement des rendements inflationnistes en 2022-2023 (Terra/Luna, Olympus DAO), l'écosystème DeFi s'est recentré sur le <strong>real yield</strong> — des rendements issus de revenus réels (frais de trading, intérêts d'emprunts). Les protocoles qui survivent en 2025-2026 sont ceux qui génèrent des revenus durables. Aave génère $500M+/an en intérêts, Uniswap $1Mds+/an en frais de trading. C'est la maturité de la DeFi.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Dans un AMM à formule x × y = k, que se passe-t-il quand quelqu'un achète beaucoup d'ETH dans un pool ETH/USDC ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le prix de l'ETH monte dans le pool.</strong><br>
+      L'acheteur retire de l'ETH du pool et ajoute de l'USDC. La quantité d'ETH diminue (x baisse) donc, pour que k reste constant, la quantité d'USDC doit augmenter (y monte). Le ratio y/x augmente, ce qui signifie que chaque ETH coûte plus d'USDC. C'est le mécanisme de price discovery automatique des AMM.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est l'Impermanent Loss si un token fait x2 dans un pool 50/50 ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Environ -5.7%.</strong><br>
+      Avec la formule IL = 2√(r)/(1+r) - 1, pour r = 2 : IL = 2 × 1.414 / 3 - 1 = 2.828/3 - 1 = 0.943 - 1 = -5.7%. Cela signifie que si vous aviez simplement tenu les tokens, vous auriez 5.7% de plus qu'en les mettant dans le pool. Les frais du pool doivent dépasser 5.7% pour que le LP soit rentable.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Quelle est la différence entre Real Yield et yield inflationniste ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le Real Yield provient de revenus réels (frais, intérêts), le yield inflationniste provient de l'émission de nouveaux tokens.</strong><br>
+      Les frais de trading collectés par les LP sur Uniswap sont du Real Yield — des utilisateurs paient réellement pour le service. En revanche, quand un protocole vous distribue 500% APR en tokens de gouvernance, c'est de la dilution déguisée en rendement. Si tout le monde vend ses tokens rewards, le prix s'effondre et votre rendement réel est négatif. Vérifiez toujours la source du yield.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce que le Health Factor sur Aave et pourquoi ne faut-il jamais descendre sous 1.5 ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le Health Factor mesure la sécurité de votre position d'emprunt. En dessous de 1.0, vous êtes liquidé.</strong><br>
+      Health Factor = (Collatéral × Liquidation Threshold) / Dette. Si HF = 2.0, votre collatéral peut perdre 50% avant liquidation. Si HF = 1.5, il peut perdre 33%. Si HF = 1.1, il suffit de -9% pour être liquidé. En crypto, un -30% en 24h est fréquent, donc <strong>un HF minimum de 1.5 (idéalement 2.0+)</strong> est recommandé pour survivre aux crashes.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quel est le principal risque du restaking avec EigenLayer ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le slashing en cascade — votre ETH staké peut être pénalisé par plusieurs protocoles simultanément.</strong><br>
+      Avec le staking ETH classique, vous risquez le slashing uniquement si votre validateur Ethereum se comporte mal. Avec le restaking, votre ETH sécurise aussi des AVS (Actively Validated Services) tiers. Si un de ces AVS détecte un comportement malveillant (même involontaire, comme un bug), votre stake peut être slashé. Si plusieurs AVS slashent simultanément, les pertes se cumulent. C'est du rendement supplémentaire contre un risque multiplicatif.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#f59e0b;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-cubes"></i> <strong>La DeFi remplace les intermédiaires par des smart contracts</strong> — AMM pour le trading, pools de lending pour les prêts, staking pour la sécurité. $180Mds de TVL en 2026.</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>Le staking PoS offre 3-20% APR selon la blockchain</strong> — ETH ~3.5%, SOL ~7%, ATOM ~15%. Le liquid staking (stETH, rETH) vous permet de rester composable en DeFi.</li>
+      <li><i class="fa-solid fa-triangle-exclamation"></i> <strong>L'Impermanent Loss est le risque n°1 du LP</strong> — un token qui x2 = 5.7% de perte. Un token qui x5 = 25.5%. LP uniquement sur des paires corrélées ou stablecoins.</li>
+      <li><i class="fa-solid fa-lightbulb"></i> <strong>Real Yield > Inflationary Yield</strong> — si le rendement vient de l'émission de tokens et non de revenus réels, fuyez. Toujours demander : "d'où vient le yield ?"</li>
+      <li><i class="fa-solid fa-building-columns"></i> <strong>Ne dépassez jamais 50% de LTV en lending</strong> — un Health Factor de 2.0+ est votre filet de sécurité. La crypto peut perdre 30-40% en une journée.</li>
+      <li><i class="fa-solid fa-bug"></i> <strong>$10Mds volés en DeFi depuis 2020</strong> — bridges (45%), lending (25%), DEX (15%). Diversifiez entre protocoles et chaînes. Max 10-15% par protocole.</li>
+      <li><i class="fa-solid fa-chess"></i> <strong>4 stratégies de rendement du conservateur à l'expert</strong> — stablecoins (5-10%), liquid staking composable (6-12%), delta-neutral (10-25%), loop leveraging (15-40%).</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> La DeFi comporte des risques majeurs : smart contract, liquidation, rug pull, régulation. Vous pouvez perdre 100% de vos fonds.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les rendements passés ne garantissent pas les rendements futurs. Les APR fluctuent constamment.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-crypto/part3-on-chain/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">3. On-Chain Analysis</div>
+  </div>
+</a>
+
+<a href="/series/trader-crypto/part5-altcoins-narratives/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">Altcoins, Memecoins & Narratives — Surfer les Cycles</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-crypto/part1-ecosysteme/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. L'Écosystème</a>
+  <a href="/series/trader-crypto/part2-analyse-technique/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Analyse Technique</a>
+  <a href="/series/trader-crypto/part3-on-chain/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. On-Chain</a>
+  <a href="/series/trader-crypto/part4-defi-yield/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#f59e0b; color:white; border:1px solid #f59e0b;">4. DeFi & Yield</a>
+  <a href="/series/trader-crypto/part5-altcoins-narratives/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Altcoins & Narratives</a>
+  <a href="/series/trader-crypto/part6-risques-securite/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Risques & Sécurité</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les Crypto</strong> — Partie 4/6 : DeFi, Staking & Yield</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: TVL Evolution
+(function(){
+  var dom = document.getElementById('chart-tvl');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates = [];
+  var tvl = [];
+  var val = 1;
+  for(var y=2020; y<=2026; y++){
+    for(var m=1; m<=12; m++){
+      if(y===2026 && m>2) break;
+      dates.push(y+'-'+(m<10?'0':'')+m);
+      if(y===2020 && m<=6){ val = 1 + m*0.3; }
+      else if(y===2020){ val += 3; }
+      else if(y===2021 && m<=5){ val += 15; }
+      else if(y===2021 && m<=7){ val -= 8; }
+      else if(y===2021){ val += 12; }
+      else if(y===2022 && m<=4){ val = 200 + (Math.random()-0.5)*10; }
+      else if(y===2022 && m===5){ val = 110; }
+      else if(y===2022){ val = 50 + (Math.random()-0.5)*8; }
+      else if(y===2023){ val = 45 + m*3 + (Math.random()-0.5)*5; }
+      else if(y===2024){ val = 80 + m*7 + (Math.random()-0.5)*5; }
+      else if(y===2025){ val = 150 + m*3 + (Math.random()-0.5)*5; }
+      else { val = 175 + m*2; }
+      tvl.push(parseFloat(Math.max(1, val).toFixed(1)));
+    }
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+'<br/>TVL: <b>$'+p[0].value+'Mds</b>';}},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'12%'},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,interval:6,rotate:30}},
+    yAxis:{type:'value',name:'TVL ($Mds)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'line',data:tvl,smooth:true,symbol:'none',lineStyle:{color:'#f59e0b',width:2.5},
+      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(245,158,11,0.25)'},{offset:1,color:'rgba(245,158,11,0.02)'}])},
+      markPoint:{data:[{type:'max',name:'ATH',label:{fontSize:10}},{name:'Luna Crash',coord:['2022-05',110],value:'Luna Crash',itemStyle:{color:'#dc2626'},label:{show:true,fontSize:9,color:'#dc2626',position:'top'}}]}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Yield Comparison Radar
+(function(){
+  var dom = document.getElementById('chart-yield-radar');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{},
+    legend:{data:['Stablecoins Yield','Liquid Staking + DeFi','Delta-Neutral','Loop Leveraging'],bottom:0,textStyle:{fontSize:10}},
+    radar:{
+      indicator:[
+        {name:'Rendement',max:10},
+        {name:'Sécurité',max:10},
+        {name:'Simplicité',max:10},
+        {name:'Liquidité',max:10},
+        {name:'Composabilité',max:10}
+      ],
+      radius:'60%'
+    },
+    series:[{
+      type:'radar',
+      data:[
+        {value:[4,9,10,10,3],name:'Stablecoins Yield',lineStyle:{color:'#16a34a'},itemStyle:{color:'#16a34a'},areaStyle:{color:'rgba(22,163,74,0.1)'}},
+        {value:[6,7,6,8,9],name:'Liquid Staking + DeFi',lineStyle:{color:'#f59e0b'},itemStyle:{color:'#f59e0b'},areaStyle:{color:'rgba(245,158,11,0.1)'}},
+        {value:[8,5,3,6,5],name:'Delta-Neutral',lineStyle:{color:'#2563eb'},itemStyle:{color:'#2563eb'},areaStyle:{color:'rgba(37,99,235,0.1)'}},
+        {value:[10,2,2,4,7],name:'Loop Leveraging',lineStyle:{color:'#dc2626'},itemStyle:{color:'#dc2626'},areaStyle:{color:'rgba(220,38,38,0.1)'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Impermanent Loss Curve
+(function(){
+  var dom = document.getElementById('chart-il');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var ratios = [];
+  var ilValues = [];
+  for(var r=0.1; r<=5.0; r+=0.05){
+    ratios.push(r.toFixed(2)+'x');
+    var il = (2*Math.sqrt(r)/(1+r) - 1)*100;
+    ilValues.push(parseFloat(il.toFixed(2)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return 'Ratio prix: '+p[0].axisValueLabel+'<br/>Impermanent Loss: <b>'+p[0].value+'%</b>';}},
+    grid:{left:'10%',right:'4%',top:'8%',bottom:'12%'},
+    xAxis:{type:'category',data:ratios,name:'Ratio de prix (final/initial)',axisLabel:{fontSize:9,interval:19}},
+    yAxis:{type:'value',name:'Impermanent Loss (%)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}},max:0},
+    series:[{
+      type:'line',data:ilValues,smooth:true,symbol:'none',lineStyle:{color:'#dc2626',width:2.5},
+      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(220,38,38,0.02)'},{offset:1,color:'rgba(220,38,38,0.15)'}])},
+      markLine:{silent:true,lineStyle:{type:'dashed',color:'#f59e0b'},data:[{xAxis:'2.00x',label:{formatter:'x2 = -5.7%',fontSize:9,color:'#f59e0b'}},{xAxis:'5.00x',label:{formatter:'x5 = -25.5%',fontSize:9,color:'#dc2626'}}]}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 4: TVL by Protocol (Pie/Treemap)
+(function(){
+  var dom = document.getElementById('chart-tvl-protocols');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: ${c}Mds ({d}%)'},
+    series:[{
+      type:'treemap',
+      data:[
+        {name:'Lido',value:30,itemStyle:{color:'#f59e0b'}},
+        {name:'Aave',value:25,itemStyle:{color:'#2563eb'}},
+        {name:'EigenLayer',value:15,itemStyle:{color:'#8b5cf6'}},
+        {name:'Uniswap',value:8,itemStyle:{color:'#ec4899'}},
+        {name:'Maker/Sky',value:8,itemStyle:{color:'#16a34a'}},
+        {name:'Pendle',value:5,itemStyle:{color:'#0891b2'}},
+        {name:'Morpho',value:4,itemStyle:{color:'#f97316'}},
+        {name:'Curve',value:3,itemStyle:{color:'#dc2626'}},
+        {name:'Convex',value:3,itemStyle:{color:'#64748b'}},
+        {name:'Autres',value:79,itemStyle:{color:'#94a3b8'}}
+      ],
+      breadcrumb:{show:false},
+      label:{fontSize:12,fontWeight:700,color:'white',formatter:'{b}\n${c}Mds'},
+      levels:[{itemStyle:{borderColor:'#fff',borderWidth:2,gapWidth:2}}]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

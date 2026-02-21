@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEC Filings — 10-K, 10-Q, 8-K, Insider Forms | Lire le Marché — Partie 1/6 | Market Watch</title>
+  <meta name="description" content="Série Lire le Marché — Partie 1/6 : Maîtriser les SEC Filings (10-K, 10-Q, 8-K, Form 4, 13F). EDGAR, la mine d'or gratuite de la SEC. Comment lire un 10-K efficacement.">
+  <meta property="og:title" content="SEC Filings — 10-K, 10-Q, 8-K, Insider Forms | Lire le Marché — Partie 1/6 | Market Watch">
+  <meta property="og:description" content="EDGAR, les filings essentiels, insider forms, red flags, outils gratuits. Tout ce qu'il faut savoir pour exploiter les données publiques de la SEC.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-le-marche/part1-sec-filings/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#4f46e5; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#818cf8; color:#818cf8; }
+  .series-link.current { background:#4f46e5; color:white; border-color:#4f46e5; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; margin-right:0.75rem; }
+  details[open] summary { border-color:#4f46e5; background:#eef2ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#4f46e5; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#818cf8; }
+  .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#4f46e5; color:#4f46e5; }
+  .disclaimer-mega { background:linear-gradient(135deg, #312e81 0%, #4338ca 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #4f46e5; }
+  .disclaimer-mega h3 { color:#c7d2fe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#e0e7ff; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#818cf8; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #4f46e5; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Lire le Marché</span>
+  <a href="/series/lire-le-marche/part1-sec-filings/" class="series-link current">1 — SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" class="series-link">2 — Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" class="series-link">3 — Short Interest & FTD</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" class="series-link">4 — News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" class="series-link">5 — Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" class="series-link">6 — Dashboard Synthèse</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Série Lire le Marché — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">SEC Filings : 10-K, 10-Q, 8-K & Insider Forms</h1>
+  <p class="hero-subtitle">EDGAR est la mine d'or gratuite de la SEC. Chaque document déposé par une société cotée est accessible en quelques clics. Apprendre à les lire, c'est avoir le même niveau d'information que les analystes de Wall Street.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-file-lines"></i> 10-K / 10-Q</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bolt"></i> 8-K</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-user-tie"></i> Insider Forms</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-building-columns"></i> 13F Holdings</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Red Flags</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#edgar" class="nav-item"><i class="fa-solid fa-database" style="color:#4f46e5; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> EDGAR</a>
+  <a href="#filings" class="nav-item"><i class="fa-solid fa-file-lines" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Filings essentiels</a>
+  <a href="#insiders" class="nav-item"><i class="fa-solid fa-user-tie" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Insider Forms</a>
+  <a href="#lire-10k" class="nav-item"><i class="fa-solid fa-magnifying-glass" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Lire un 10-K</a>
+  <a href="#outils" class="nav-item"><i class="fa-solid fa-wrench" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Outils gratuits</a>
+  <a href="#red-flags" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Red Flags</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : EDGAR                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="edgar"><i class="fa-solid fa-database" style="color:#4f46e5;"></i> EDGAR : la mine d'or de la SEC</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-database" style="color:#4f46e5;"></i> La base de données la plus puissante du monde financier</h2>
+
+  <p><strong>EDGAR</strong> (Electronic Data Gathering, Analysis, and Retrieval) est le système de la Securities and Exchange Commission (SEC) qui collecte, valide et publie tous les documents déposés par les sociétés cotées aux États-Unis. C'est <strong>100% gratuit</strong>, accessible à tous, et mis à jour en temps réel.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Accès EDGAR</div>
+    <span class="formula-highlight">sec.gov/cgi-bin/browse-edgar</span> | <span class="formula-highlight">efts.sec.gov/LATEST/search-index</span> (full-text search)
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi EDGAR est-il si important ?</h4>
+    <p style="margin:0;">Toute société cotée aux États-Unis est <strong>légalement obligée</strong> de déposer ses rapports financiers, ses changements matériels et ses transactions d'insiders sur EDGAR. C'est la loi (Securities Exchange Act de 1934). Cela signifie que <strong>vous avez accès aux mêmes informations que Goldman Sachs ou BlackRock</strong>. La différence n'est pas l'accès — c'est la capacité à lire et interpréter ces documents.</p>
+  </div>
+
+  <h3>Les chiffres d'EDGAR</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#4f46e5;">21M+</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Filings disponibles</div>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#f97316;">~3,000</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Filings par jour</div>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#16a34a;">0 $</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Coût d'accès</div>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2.2rem; font-weight:900; color:#2563eb;">1993</div>
+      <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Début des archives</div>
+    </div>
+  </div>
+
+  <!-- CHART 1: Filing types volume -->
+  <h3>Volume de filings par type (2024)</h3>
+  <div id="chart-filing-types" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : FILINGS ESSENTIELS                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="filings"><i class="fa-solid fa-file-lines" style="color:#f97316;"></i> Les filings essentiels</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-file-lines" style="color:#f97316;"></i> Les 4 documents que tout investisseur doit connaître</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Filing</th><th>Nom complet</th><th>Fréquence</th><th>Délai</th><th>Utilité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#4f46e5;">10-K</strong></td>
+        <td>Annual Report</td>
+        <td>1x / an</td>
+        <td>60-90 jours après fin exercice</td>
+        <td style="color:#16a34a;"><strong>Le plus important</strong> — vision complète</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">10-Q</strong></td>
+        <td>Quarterly Report</td>
+        <td>3x / an (Q1, Q2, Q3)</td>
+        <td>40-45 jours après fin trimestre</td>
+        <td>Update trimestriel — tendances récentes</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f97316;">8-K</strong></td>
+        <td>Current Report</td>
+        <td>Ad hoc</td>
+        <td>4 jours ouvrés après l'événement</td>
+        <td style="color:#dc2626;"><strong>Alertes urgentes</strong> — événements matériels</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#9333ea;">DEF 14A</strong></td>
+        <td>Proxy Statement</td>
+        <td>1x / an</td>
+        <td>Avant l'assemblée générale</td>
+        <td>Rémunérations, gouvernance, votes</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-file-contract" style="color:#4f46e5;"></i> Le 10-K — Le rapport annuel complet</h3>
+
+  <p>Le 10-K est le document le <strong>plus important</strong> qu'une société publie. C'est un rapport exhaustif, audité par un cabinet indépendant, qui couvre absolument tout : états financiers, risques, stratégie, litiges en cours, et l'analyse du management (MD&A). Un 10-K typique fait entre 100 et 300 pages.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#eef2ff; border:1px solid #4f46e5; border-radius:16px;">
+      <h4 style="color:#4f46e5; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Ce que contient un 10-K</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Part I</strong> : Description de l'activité, risques, propriétés</li>
+        <li><strong>Part II</strong> : Données financières, MD&A, états financiers audités</li>
+        <li><strong>Part III</strong> : Gouvernance, rémunérations (parfois renvoyé au Proxy)</li>
+        <li><strong>Part IV</strong> : Annexes et certifications</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-clock"></i> 10-K vs Earnings Release</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>L'earnings release = résumé marketing, non audité</li>
+        <li>Le 10-K = version complète, auditée, légalement contraignante</li>
+        <li>Les "mauvaises surprises" sont dans le 10-K, pas dans le communiqué de presse</li>
+        <li>Le 10-K sort souvent 4-8 semaines après l'earnings call</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3><i class="fa-solid fa-bolt" style="color:#f97316;"></i> Le 8-K — L'alerte événementielle</h3>
+
+  <p>Le 8-K est déposé quand un <strong>événement matériel</strong> survient entre deux rapports trimestriels. C'est le filing le plus urgent — il doit être déposé dans les <strong>4 jours ouvrés</strong> suivant l'événement. Les 8-K à surveiller de près :</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">Item 1.01</strong> — Signature d'un contrat matériel
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <strong style="color:#f97316;">Item 2.01</strong> — Acquisition ou cession d'actifs
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <strong style="color:#9333ea;">Item 2.02</strong> — Résultats financiers (earnings release)
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #4f46e5; border-radius:0 12px 12px 0;">
+      <strong style="color:#4f46e5;">Item 2.05</strong> — Restructuration, coûts associés
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">Item 4.01</strong> — Changement d'auditeur (<span style="color:#dc2626;font-weight:700;">RED FLAG</span>)
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <strong style="color:#2563eb;">Item 5.02</strong> — Départ/arrivée de dirigeant (CEO, CFO)
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #d97706; border-radius:0 12px 12px 0;">
+      <strong style="color:#d97706;">Item 7.01</strong> — Guidance révisée, mise à jour Reg FD
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #0f172a; border-radius:0 12px 12px 0;">
+      <strong style="color:#0f172a;">Item 8.01</strong> — Autres événements jugés importants
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Astuce de pro : les 8-K déposés le vendredi soir</h4>
+    <p style="margin:0;">Les entreprises déposent souvent les <strong>mauvaises nouvelles</strong> en 8-K le vendredi après la clôture (après 17h EST), quand l'attention des médias est minimale. C'est le "Friday night dump". Si vous voyez un 8-K déposé un vendredi soir, lisez-le en priorité — il y a de fortes chances que ce soit une mauvaise surprise (guidance revue à la baisse, départ du CFO, restructuration).</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : INSIDER FORMS                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="insiders"><i class="fa-solid fa-user-tie" style="color:#2563eb;"></i> Les Insider & Institutional Forms</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-user-tie" style="color:#2563eb;"></i> Suivre le smart money : Form 4, 13D, 13F</h2>
+
+  <p>Les insiders (dirigeants, administrateurs, actionnaires à 10%+) et les institutionnels sont <strong>obligés de déclarer</strong> leurs transactions à la SEC. Ces déclarations sont publiques et constituent un des meilleurs signaux du marché.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Formulaire</th><th>Qui dépose</th><th>Quand</th><th>Signal</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#4f46e5;">Form 3</strong></td>
+        <td>Nouvel insider (director, officer, 10%+ holder)</td>
+        <td>Dans les 10 jours suivant la nomination</td>
+        <td>Déclaration initiale de position</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#16a34a;">Form 4</strong></td>
+        <td>Insiders existants</td>
+        <td>2 jours ouvrés après la transaction</td>
+        <td style="color:#16a34a;"><strong>Le plus utile</strong> — achats/ventes en temps réel</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">Form 13D</strong></td>
+        <td>Investisseur acquérant >5% d'une société</td>
+        <td>10 jours après avoir franchi le seuil de 5%</td>
+        <td style="color:#dc2626;"><strong>Activist alert</strong> — intention de changement</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#9333ea;">Form 13G</strong></td>
+        <td>Investisseur passif >5%</td>
+        <td>45 jours après fin d'année</td>
+        <td>Position passive (pas d'intention activiste)</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2563eb;">Form 13F</strong></td>
+        <td>Gestionnaires >$100M d'actifs</td>
+        <td>45 jours après fin de trimestre</td>
+        <td>Portfolio complet des hedge funds / fonds</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-cart-shopping" style="color:#16a34a;"></i> Form 4 : le signal le plus puissant</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-up"></i> Achats d'insiders (Bullish)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Signal fort</strong> : un insider achète avec son propre argent</li>
+        <li>Il n'y a qu'une seule raison d'acheter : croire que le prix va monter</li>
+        <li><strong>Cluster buying</strong> : plusieurs insiders achètent en même temps = signal encore plus fort</li>
+        <li>Les achats du CEO/CFO sont plus significatifs que ceux des directors</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-down"></i> Ventes d'insiders (Prudence)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Moins fiable</strong> : les insiders vendent pour de multiples raisons</li>
+        <li>Diversification, impôts, achat immobilier, exercice d'options...</li>
+        <li><strong>Plans 10b5-1</strong> : ventes programmées automatiquement = ignorer</li>
+        <li>Alerte si : vente massive + soudaine + hors plan + par le CFO</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La règle de Peter Lynch sur les insiders</h4>
+    <p style="margin:0;">Le légendaire Peter Lynch résumait parfaitement : <em>"Les insiders peuvent vendre pour des dizaines de raisons différentes, mais ils n'achètent que pour une seule : ils pensent que le prix va monter."</em> En moyenne, les actions avec des achats significatifs d'insiders surperforment le marché de <strong>7% sur 12 mois</strong> (étude de Lakonishok & Lee, 2001).</p>
+  </div>
+
+  <h3><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Form 13F : le portefeuille des hedge funds</h3>
+
+  <p>Chaque trimestre, les gestionnaires gérant plus de $100M doivent déclarer l'intégralité de leurs positions en actions US. C'est comme voir les cartes de Warren Buffett, Ray Dalio ou Bill Ackman — avec <strong>45 jours de retard</strong>.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège des 13F</h4>
+    <p style="margin:0;">Le 13F ne montre que les <strong>positions longues en actions US</strong>. Il ne montre ni les shorts, ni les options (sauf si convertibles), ni les obligations, ni les positions internationales. Un hedge fund peut afficher une position longue massive sur TSLA dans son 13F tout en étant net short via des puts non déclarés. Le 13F est une photo partielle, pas le film complet.</p>
+  </div>
+
+  <!-- CHART 2: Insider buying vs selling -->
+  <h3>Achats vs Ventes d'insiders (S&P 500, 12 mois)</h3>
+  <div id="chart-insider-activity" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : LIRE UN 10-K                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="lire-10k"><i class="fa-solid fa-magnifying-glass" style="color:#16a34a;"></i> Comment lire un 10-K efficacement</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass" style="color:#16a34a;"></i> La méthode en 30 minutes pour un 10-K de 200 pages</h2>
+
+  <p>Personne ne lit un 10-K de bout en bout — même les analystes de Wall Street. L'objectif est de savoir <strong>où chercher</strong> l'information pertinente et quels signaux surveiller.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #4f46e5; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#4f46e5;"><i class="fa-solid fa-1"></i> Section 1A — Risk Factors (10 min)</strong>
+        <span class="badge badge-red">Priorité #1</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">C'est la section la plus importante. Les avocats listent tous les risques matériels. L'astuce : <strong>comparez les Risk Factors du dernier 10-K avec le précédent</strong>. Les nouveaux risques ajoutés sont des signaux avancés de problèmes. Si "cybersecurity breach" ou "material weakness in internal controls" apparaît pour la première fois, c'est un drapeau rouge.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;"><i class="fa-solid fa-2"></i> Section 7 — MD&A (10 min)</strong>
+        <span class="badge badge-green">Priorité #2</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le Management Discussion & Analysis est la <strong>narration du management</strong> sur les résultats financiers. C'est ici que vous trouvez l'outlook, les explications sur les variations de revenus et de marges, et les tendances sectorielles. Cherchez les changements de ton par rapport au trimestre précédent.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;"><i class="fa-solid fa-3"></i> Notes de bas de page (5 min)</strong>
+        <span class="badge badge-blue">Priorité #3</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Les notes aux états financiers sont l'endroit où <strong>se cachent les mauvaises surprises</strong>. Dettes hors bilan, litiges en cours, engagements de retraite, changements de méthode comptable, related party transactions... Le management les place en notes parce qu'il espère que personne ne les lira.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#9333ea;"><i class="fa-solid fa-4"></i> États financiers (5 min)</strong>
+        <span class="badge badge-blue">Priorité #4</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Bilan, compte de résultat, tableau de flux de trésorerie. Vérifiez les tendances sur 3 ans : revenus, marges brutes, cash from operations, dette nette. Un revenu qui monte mais un cash flow qui baisse est un signal d'alerte majeur.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le test des "Related Party Transactions"</h4>
+    <p style="margin:0;">Cherchez le terme "related party" dans le 10-K. Si la société fait des transactions significatives avec des entités contrôlées par ses dirigeants ou leurs familles, c'est un <strong>conflit d'intérêts potentiel</strong>. Exemples célèbres : Enron utilisait des SPE (Special Purpose Entities) gérées par son CFO pour cacher sa dette. WeWork louait des bâtiments appartenant à son CEO Adam Neumann. C'est un red flag classique.</p>
+  </div>
+
+  <!-- CHART 3: 10-K structure treemap -->
+  <h3>Structure typique d'un 10-K — par taille de section</h3>
+  <div id="chart-10k-structure" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : OUTILS GRATUITS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="outils"><i class="fa-solid fa-wrench" style="color:#9333ea;"></i> Outils gratuits</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wrench" style="color:#9333ea;"></i> 6 outils gratuits pour exploiter les filings</h2>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#4f46e5; margin-bottom:0.5rem;"><i class="fa-solid fa-database"></i></div>
+      <h4 style="margin:0 0 0.5rem;">SEC EDGAR</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">La source officielle. Full-text search (efts.sec.gov). API XBRL pour les données structurées. Le plus complet mais interface austère.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-eye"></i></div>
+      <h4 style="margin:0 0 0.5rem;">OpenInsider</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Agrège toutes les Form 4. Filtres par cluster buying, taille de transaction, type d'insider. Interface claire et rapide. Gratuit.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-building-columns"></i></div>
+      <h4 style="margin:0 0 0.5rem;">WhaleWisdom</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Spécialisé 13F. Suivez les portefeuilles de Berkshire, Bridgewater, Renaissance Technologies, etc. Historique complet. Version gratuite limitée.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-bar"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Fintel</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">13F, insider transactions, short interest, institutional ownership, cost-to-borrow. Interface moderne. Partie gratuite généreuse.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-file-invoice"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Last10K.com</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Résumés IA de 10-K. Analyse automatique des Risk Factors, MD&A, et métriques clés. Idéal pour un premier survol rapide.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-robot"></i></div>
+      <h4 style="margin:0 0 0.5rem;">SEC AI (Experimental)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Outils IA émergents qui parsent les filings : ChatSEC, FinChat, AlphaSense (freemium). Posez des questions en langage naturel sur les 10-K.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : RED FLAGS                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="red-flags"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Red flags dans les filings</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> 8 signaux d'alerte à surveiller</h2>
+
+  <p>Ces red flags ne signifient pas forcément fraude, mais ils justifient une <strong>enquête approfondie</strong>. Plus vous en trouvez simultanément, plus le risque est élevé.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-1"></i> Changement d'auditeur</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Si une société change d'auditeur (surtout de Big 4 vers un petit cabinet), posez-vous la question : <strong>pourquoi ?</strong> L'ancien auditeur refusait-il de signer ? Item 4.01 du 8-K.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-2"></i> Restatements (corrections)</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">La société republier des états financiers corrigés. Cela signifie que les chiffres précédents étaient <strong>erronés</strong>. Cherchez "restatement" ou "material weakness".</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-3"></i> Going Concern</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">L'auditeur exprime un doute sur la capacité de l'entreprise à <strong>continuer son activité</strong> dans les 12 prochains mois. Signal de détresse financière grave.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-4"></i> Départ soudain du CFO</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le CFO est le gardien des chiffres. Son départ soudain, surtout "pour raisons personnelles" sans successeur nommé, est un <strong>signal d'alarme majeur</strong>.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-5"></i> Revenus en hausse, cash flow en baisse</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Si le chiffre d'affaires monte mais le cash from operations baisse, l'entreprise pourrait <strong>reconnaître des revenus de manière agressive</strong>. Le cash ne ment pas.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-6"></i> Ventes massives d'insiders</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Si le CEO, le CFO et plusieurs directeurs vendent <strong>massivement et simultanément</strong> (hors plan 10b5-1), ils savent quelque chose que vous ne savez pas.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-7"></i> Changement de méthode comptable</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Passage de LIFO à FIFO, changement de reconnaissance de revenus, modification d'amortissements... Souvent fait pour <strong>gonfler artificiellement</strong> les résultats.</p>
+    </div>
+    <div style="padding:1.25rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-8"></i> Related Party Transactions croissantes</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Transactions avec des entités liées aux dirigeants qui augmentent. Signe potentiel de <strong>self-dealing</strong> et de mauvaise gouvernance.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Cas d'école : les red flags de Wirecard (2020)</h4>
+    <p style="margin:0;">La fraude de Wirecard ($1.9Mrd manquant) présentait <strong>tous les red flags classiques</strong> : auditeur EY qui ne vérifiait pas les comptes fiduciaires, CFO avec des connexions douteuses, revenus en forte hausse mais cash flow suspect, related party transactions opaques en Asie, et short sellers (Dan McCrum du FT) bloqués par la BaFin. Les données étaient publiques — il fallait juste savoir où regarder.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quelle est la différence principale entre un 10-K et un earnings release ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le 10-K est audité, légalement contraignant et exhaustif. L'earnings release est un résumé marketing, non audité.</strong><br>
+      L'earnings release est publié le jour des résultats pour les médias et les analystes. Le 10-K sort 4 à 8 semaines plus tard et contient la version complète, vérifiée par un auditeur indépendant. Les "mauvaises surprises" (litiges, risques, notes de bas de page) ne sont pas dans l'earnings release — elles sont dans le 10-K.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi les achats d'insiders (Form 4) sont-ils un signal plus fiable que les ventes ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'il n'y a qu'une seule raison d'acheter sur le marché ouvert : croire que le prix va monter.</strong><br>
+      Comme le disait Peter Lynch, les insiders vendent pour de multiples raisons (diversification, impôts, achat immobilier, exercice d'options expirantes). En revanche, un insider qui achète avec son propre argent sur le marché ouvert fait un pari directionnel. Les études montrent une surperformance moyenne de 7% sur 12 mois après des achats significatifs d'insiders.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce qu'un Form 13D et pourquoi fait-il trembler les boards ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un 13D est déposé quand un investisseur acquiert plus de 5% d'une société avec l'intention d'influencer le management.</strong><br>
+      Contrairement au 13G (position passive), le 13D signale une intention <strong>activiste</strong>. L'investisseur peut vouloir changer la stratégie, remplacer le CEO, forcer un spin-off ou une vente de l'entreprise. Quand Carl Icahn, Elliott Management ou Bill Ackman déposent un 13D, le cours de l'action bouge souvent de 5-15% dans la journée, car le marché anticipe des changements créateurs de valeur.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel est le principal défaut du Form 13F ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le 13F ne montre que les positions longues en actions US, avec 45 jours de retard.</strong><br>
+      Il ne montre ni les positions short, ni les options (puts/calls), ni les obligations, ni les positions internationales. Un hedge fund peut avoir une position longue de $1Mrd sur Tesla dans son 13F tout en étant net short via $2Mrd de puts non déclarés. De plus, les données ont 45 jours de retard — dans un marché rapide, les positions peuvent avoir été entièrement liquidées entre-temps.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quelle section du 10-K faut-il lire en premier et pourquoi ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La Section 1A (Risk Factors), en comparant avec la version précédente.</strong><br>
+      Les Risk Factors sont rédigés par les avocats de la société et listent tout ce qui pourrait mal tourner. L'astuce des analystes professionnels est de comparer les Risk Factors du dernier filing avec le précédent pour identifier les <strong>nouveaux risques ajoutés</strong>. Un nouveau risque lié à "material weakness in internal controls" ou "regulatory investigation" est un signal d'alerte précoce avant que le marché ne réagisse.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#4f46e5;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-database"></i> <strong>EDGAR est gratuit et exhaustif</strong> — 21M+ filings, mis à jour en temps réel. Vous avez le même accès que Wall Street.</li>
+      <li><i class="fa-solid fa-file-lines"></i> <strong>Le 10-K est le document roi</strong> — audité, exhaustif, légalement contraignant. Priorité absolue : Risk Factors (1A) et MD&A (Section 7).</li>
+      <li><i class="fa-solid fa-bolt"></i> <strong>Les 8-K du vendredi soir cachent les mauvaises nouvelles</strong> — le "Friday night dump" est un pattern bien connu des entreprises en difficulté.</li>
+      <li><i class="fa-solid fa-user-tie"></i> <strong>Les achats d'insiders (Form 4) sont le meilleur signal</strong> — surperformance moyenne de +7% sur 12 mois. Surtout en cluster buying.</li>
+      <li><i class="fa-solid fa-building-columns"></i> <strong>Les 13F montrent les cartes des hedge funds</strong> — mais avec 45 jours de retard et uniquement les positions longues US.</li>
+      <li><i class="fa-solid fa-triangle-exclamation"></i> <strong>Les red flags se cachent dans les notes de bas de page</strong> — changement d'auditeur, restatements, going concern, related party transactions.</li>
+      <li><i class="fa-solid fa-magnifying-glass"></i> <strong>Comparez toujours avec le filing précédent</strong> — les nouveaux risques, changements de ton et modifications comptables sont les vrais signaux avancés.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les informations publiques doivent être interprétées dans leur contexte global.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/lire-le-marche/part2-options-darkpool/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 2 sur 6</div>
+    <div class="next-title">Options Flow & Dark Pool — Lire le Smart Money</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-le-marche/part1-sec-filings/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#4f46e5; color:white; border:1px solid #4f46e5;">1. SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Short Interest & FTD</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Dashboard Synthèse</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Lire le Marché — Données Publiques & Intelligence</strong> — Partie 1/6 : SEC Filings</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Filing types volume (pie chart)
+(function(){
+  var dom = document.getElementById('chart-filing-types');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+    legend:{bottom:0,textStyle:{fontSize:11}},
+    series:[{
+      type:'pie',
+      radius:['35%','70%'],
+      center:['50%','45%'],
+      avoidLabelOverlap:true,
+      itemStyle:{borderRadius:6,borderColor:'#fff',borderWidth:2},
+      label:{show:true,formatter:'{b}\n{d}%',fontSize:11},
+      data:[
+        {value:45200,name:'10-Q',itemStyle:{color:'#4f46e5'}},
+        {value:15100,name:'10-K',itemStyle:{color:'#818cf8'}},
+        {value:128000,name:'8-K',itemStyle:{color:'#f97316'}},
+        {value:312000,name:'Form 4',itemStyle:{color:'#16a34a'}},
+        {value:8500,name:'DEF 14A',itemStyle:{color:'#9333ea'}},
+        {value:42000,name:'13F-HR',itemStyle:{color:'#2563eb'}},
+        {value:18500,name:'13D/13G',itemStyle:{color:'#d97706'}},
+        {value:95000,name:'Autres',itemStyle:{color:'#94a3b8'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Insider buying vs selling bar chart
+(function(){
+  var dom = document.getElementById('chart-insider-activity');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months = ['Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc','Jan','Fév'];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Achats insiders ($M)','Ventes insiders ($M)'],bottom:0},
+    grid:{left:'10%',right:'4%',top:'8%',bottom:'18%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:11,fontWeight:600}},
+    yAxis:{type:'value',name:'Millions $',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Achats insiders ($M)',type:'bar',data:[480,320,290,350,410,520,680,890,720,450,380,560],
+       itemStyle:{color:'#16a34a',borderRadius:[4,4,0,0]},barWidth:'35%'},
+      {name:'Ventes insiders ($M)',type:'bar',data:[1250,1480,1320,1100,980,1150,1380,1050,1420,1680,1550,1290],
+       itemStyle:{color:'#dc2626',borderRadius:[4,4,0,0]},barWidth:'35%'}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: 10-K structure treemap
+(function(){
+  var dom = document.getElementById('chart-10k-structure');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: ~{c} pages'},
+    series:[{
+      type:'treemap',
+      roam:false,
+      breadcrumb:{show:false},
+      label:{show:true,formatter:'{b}\n~{c}p',fontSize:11,fontWeight:600},
+      itemStyle:{borderColor:'#fff',borderWidth:3,gapWidth:2},
+      data:[
+        {name:'Risk Factors (1A)',value:35,itemStyle:{color:'#dc2626'}},
+        {name:'MD&A (Section 7)',value:40,itemStyle:{color:'#4f46e5'}},
+        {name:'Financial Statements',value:30,itemStyle:{color:'#16a34a'}},
+        {name:'Notes aux états financiers',value:45,itemStyle:{color:'#f97316'}},
+        {name:'Business Description (1)',value:20,itemStyle:{color:'#2563eb'}},
+        {name:'Governance (Part III)',value:15,itemStyle:{color:'#9333ea'}},
+        {name:'Exhibits & Certifications',value:10,itemStyle:{color:'#d97706'}},
+        {name:'Autres sections',value:15,itemStyle:{color:'#94a3b8'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

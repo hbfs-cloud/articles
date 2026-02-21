@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synthèse — Construire son Dashboard de Veille | Lire le Marché — Partie 6/6 | Market Watch</title>
+  <meta name="description" content="Série Lire le Marché — Partie 6/6 : Dashboard quotidien en 15 minutes, outils gratuits, scoring de setup, automatisation, checklist avant chaque trade, études de cas et limites de l'approche.">
+  <meta property="og:title" content="Synthèse — Construire son Dashboard de Veille | Lire le Marché — Partie 6/6 | Market Watch">
+  <meta property="og:description" content="Combinez SEC filings, options flow, short interest, sentiment et earnings en un process systématique. 15 minutes par jour pour un edge data-driven.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-le-marche/part6-dashboard-synthese/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#4f46e5; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#818cf8; color:#818cf8; }
+  .series-link.current { background:#4f46e5; color:white; border-color:#4f46e5; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; margin-right:0.75rem; }
+  details[open] summary { border-color:#4f46e5; background:#eef2ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#4f46e5; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#818cf8; }
+  .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#4f46e5; color:#4f46e5; }
+  .disclaimer-mega { background:linear-gradient(135deg, #312e81 0%, #4338ca 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #4f46e5; }
+  .disclaimer-mega h3 { color:#c7d2fe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#e0e7ff; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#818cf8; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #4f46e5; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Lire le Marché — Données Publiques & Intelligence</span>
+  <a href="/series/lire-le-marche/part1-sec-filings/" class="series-link">1 — SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" class="series-link">2 — Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" class="series-link">3 — Short Interest</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" class="series-link">4 — News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" class="series-link">5 — Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" class="series-link current">6 — Dashboard Synthèse</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Série Lire le Marché — Partie 6 sur 6 (Finale)</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Synthèse — Construire son Dashboard de Veille</h1>
+  <p class="hero-subtitle">Vous avez maintenant toutes les pièces du puzzle. SEC filings, options flow, short interest, sentiment, earnings. Il est temps de tout assembler en un process systématique de 15 minutes par jour pour prendre des décisions data-driven.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-gauge"></i> Dashboard</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-toolbox"></i> Outils Gratuits</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-star"></i> Scoring</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-list-check"></i> Checklist</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-flask"></i> Études de Cas</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#framework" class="nav-item"><i class="fa-solid fa-sitemap" style="color:#4f46e5; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Framework</a>
+  <a href="#dashboard" class="nav-item"><i class="fa-solid fa-gauge" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Dashboard</a>
+  <a href="#outils" class="nav-item"><i class="fa-solid fa-toolbox" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Outils</a>
+  <a href="#scoring" class="nav-item"><i class="fa-solid fa-star" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Scoring</a>
+  <a href="#cas-pratiques" class="nav-item"><i class="fa-solid fa-flask" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Études de Cas</a>
+  <a href="#limites" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Limites</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : FRAMEWORK                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="framework"><i class="fa-solid fa-sitemap" style="color:#4f46e5;"></i> Le framework "Data-Driven Edge"</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-sitemap" style="color:#4f46e5;"></i> Combiner toutes les sources en un process systématique</h2>
+
+  <p>Au cours des 5 parties précédentes, vous avez appris à lire les SEC filings, interpréter l'options flow et les dark pools, comprendre le short interest, filtrer le bruit médiatique et décoder les earnings. Maintenant, il faut <strong>tout assembler</strong> en un système reproductible.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Le principe fondamental</div>
+    <span class="formula-highlight">1 source</span> = hypothèse | <span class="formula-highlight">2 sources</span> = signal | <span class="formula-highlight">3+ sources</span> = conviction
+  </div>
+
+  <p>L'edge ne vient jamais d'une seule source de données. Un insider qui achète, c'est intéressant. Un insider qui achète + un options flow bullish + un short interest en baisse + des révisions d'analystes positives = <strong>confluence de signaux</strong>. C'est là que la probabilité bascule en votre faveur.</p>
+
+  <!-- CHART 1: Multi-signal radar chart -->
+  <h3>Radar Multi-Signal — Évaluation d'un setup</h3>
+  <div id="chart-radar" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La règle de la confluence</h4>
+    <p style="margin:0;">Les traders institutionnels ne prennent jamais position sur un seul signal. Ils exigent une <strong>confluence</strong> — au moins 3 sources indépendantes qui pointent dans la même direction. Quand les insiders achètent, que l'options flow est bullish, que le short interest baisse, que le sentiment est bearish (contrarian) et que les earnings montrent une accélération — c'est le genre de setup qui justifie une position de conviction.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : DASHBOARD QUOTIDIEN                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="dashboard"><i class="fa-solid fa-gauge" style="color:#f59e0b;"></i> Dashboard quotidien en 5 étapes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge" style="color:#f59e0b;"></i> 15 minutes par jour pour un edge data-driven</h2>
+
+  <p>Vous n'avez pas besoin de passer 8 heures par jour devant un écran. Un <strong>processus structuré de 15 minutes</strong> chaque matin avant l'ouverture du marché suffit pour rester informé et identifier les opportunités.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#eef2ff; border:2px solid #4f46e5; border-radius:16px;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
+        <div style="width:40px; height:40px; background:#4f46e5; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">1</div>
+        <div>
+          <h4 style="margin:0; color:#4f46e5;">Macro Pulse (3 min)</h4>
+          <span style="font-size:0.75rem; color:#64748b;">Contexte global</span>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Vérifier 4 indicateurs : <strong>VIX</strong> (peur du marché), <strong>DXY</strong> (force du dollar), <strong>10Y Yield</strong> (taux d'intérêt), <strong>Fed Funds Futures</strong> (anticipations de politique monétaire). Si les 4 sont stables, le marché est en mode "normal". Si l'un d'eux bouge fortement (&gt;2%), investigation nécessaire.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
+        <div style="width:40px; height:40px; background:#16a34a; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">2</div>
+        <div>
+          <h4 style="margin:0; color:#16a34a;">Flow Check (4 min)</h4>
+          <span style="font-size:0.75rem; color:#64748b;">Flux "smart money"</span>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Scanner : <strong>unusual options activity</strong> (calls sweep &gt; $1M), <strong>dark pool prints</strong> (block trades significatifs), <strong>short interest changes</strong> (borrow rate spikes). Ce sont les "empreintes" de l'argent institutionnel qui se positionne avant un mouvement.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
+        <div style="width:40px; height:40px; background:#f97316; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">3</div>
+        <div>
+          <h4 style="margin:0; color:#f97316;">Sentiment Scan (3 min)</h4>
+          <span style="font-size:0.75rem; color:#64748b;">Pouls du marché</span>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Vérifier : <strong>Fear & Greed Index</strong> (CNN), <strong>AAII Survey</strong> (hebdo), <strong>Put/Call Ratio</strong> (CBOE), <strong>StockTwits trending</strong>. Les extrêmes de sentiment (&lt;20 ou &gt;80 sur F&G) sont des signaux contrarian exploitables.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f5f3ff; border:2px solid #9333ea; border-radius:16px;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
+        <div style="width:40px; height:40px; background:#9333ea; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">4</div>
+        <div>
+          <h4 style="margin:0; color:#9333ea;">Filing Alerts (3 min)</h4>
+          <span style="font-size:0.75rem; color:#64748b;">Mouvements réglementaires</span>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Vérifier : <strong>Form 4 insiders</strong> (achats cluster), <strong>13F changes</strong> (nouvelles positions hedge funds), <strong>8-K events</strong> (événements matériels). Un insider qui achète pour $500K+ de sa propre poche est le signal le plus fort que les données publiques peuvent offrir.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
+        <div style="width:40px; height:40px; background:#dc2626; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">5</div>
+        <div>
+          <h4 style="margin:0; color:#dc2626;">News Digest (2 min)</h4>
+          <span style="font-size:0.75rem; color:#64748b;">Catalyseurs du jour</span>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; color:#334155; margin:0;">Top 3 headlines, <strong>earnings du jour</strong>, <strong>upgrades/downgrades</strong> du matin, calendrier économique (CPI, FOMC, NFP...). Focalisez-vous sur ce qui peut causer un mouvement de &gt;2% sur vos positions.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : OUTILS GRATUITS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="outils"><i class="fa-solid fa-toolbox" style="color:#2563eb;"></i> Outils gratuits pour chaque composante</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-toolbox" style="color:#2563eb;"></i> La boîte à outils complète (gratuite ou freemium)</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Composante</th><th>Outil</th><th>Données</th><th>Coût</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="2"><strong>SEC Filings</strong></td>
+        <td><strong>SEC EDGAR</strong></td>
+        <td>Tous les filings officiels (10-K, 10-Q, 8-K, Form 4, 13F, SC 13D)</td>
+        <td>Gratuit</td>
+      </tr>
+      <tr>
+        <td><strong>OpenInsider</strong></td>
+        <td>Insider buying/selling tracker, filtres avancés, cluster buys</td>
+        <td>Gratuit</td>
+      </tr>
+      <tr>
+        <td rowspan="2"><strong>Options & Dark Pool</strong></td>
+        <td><strong>ChartExchange</strong></td>
+        <td>Dark pool prints, options flow, FTD data, GEX</td>
+        <td>Freemium</td>
+      </tr>
+      <tr>
+        <td><strong>Unusual Whales / FlowAlgo</strong></td>
+        <td>Options flow en temps réel, sweeps, large block trades</td>
+        <td>$$</td>
+      </tr>
+      <tr>
+        <td rowspan="2"><strong>Short Interest</strong></td>
+        <td><strong>Fintel</strong></td>
+        <td>Short interest, cost-to-borrow, institutional ownership, FTD</td>
+        <td>Freemium</td>
+      </tr>
+      <tr>
+        <td><strong>FINRA</strong></td>
+        <td>Short interest officiel (bi-mensuel), dark pool ATS data</td>
+        <td>Gratuit</td>
+      </tr>
+      <tr>
+        <td rowspan="2"><strong>Sentiment</strong></td>
+        <td><strong>CNN Fear & Greed</strong></td>
+        <td>Indice composite (7 indicateurs) mis à jour quotidiennement</td>
+        <td>Gratuit</td>
+      </tr>
+      <tr>
+        <td><strong>StockTwits</strong></td>
+        <td>Ratio bullish/bearish par ticker, trending tickers</td>
+        <td>Gratuit</td>
+      </tr>
+      <tr>
+        <td rowspan="2"><strong>Earnings & Analystes</strong></td>
+        <td><strong>Earnings Whispers</strong></td>
+        <td>Calendrier, whisper numbers, surprise history</td>
+        <td>Freemium</td>
+      </tr>
+      <tr>
+        <td><strong>Zacks</strong></td>
+        <td>Revision tracking, rankings, surprise scores</td>
+        <td>Freemium</td>
+      </tr>
+      <tr>
+        <td><strong>Hedge Funds</strong></td>
+        <td><strong>WhaleWisdom</strong></td>
+        <td>13F filings, hedge fund holdings, top buys/sells</td>
+        <td>Freemium</td>
+      </tr>
+      <tr>
+        <td><strong>Alternative Data</strong></td>
+        <td><strong>Quiver Quantitative</strong></td>
+        <td>Political trading, lobbying, gov contracts, Reddit sentiment</td>
+        <td>Gratuit</td>
+      </tr>
+      <tr>
+        <td><strong>Charts & Screener</strong></td>
+        <td><strong>TradingView</strong></td>
+        <td>Charts techniques, screener, alertes prix, community ideas</td>
+        <td>Freemium</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'avantage du retail en 2026</h4>
+    <p style="margin:0;">Il y a 10 ans, ces données étaient réservées aux institutionnels disposant de terminaux Bloomberg à $24,000/an. Aujourd'hui, <strong>95% de l'information est accessible gratuitement</strong>. SEC EDGAR est gratuit. FINRA publie le short interest gratuitement. Les options chain sont sur Yahoo Finance. L'edge n'est plus dans l'accès aux données — il est dans votre capacité à les <strong>combiner et interpréter</strong> systématiquement.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : SCORING                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scoring"><i class="fa-solid fa-star" style="color:#9333ea;"></i> Scorer un setup avec les données publiques</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#9333ea;"></i> Le système de scoring multi-signal</h2>
+
+  <p>Pour chaque idée de trade, attribuez un score de 0 à 10 sur chaque composante. Le total donne un <strong>score de conviction</strong> qui guide la taille de votre position.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Composante</th><th>Score 0-2 (Négatif)</th><th>Score 3-5 (Neutre)</th><th>Score 6-8 (Positif)</th><th>Score 9-10 (Fort)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Insider Activity</strong></td>
+        <td>Ventes massives, cluster sells</td>
+        <td>Pas d'activité récente</td>
+        <td>Achats modérés ($50K-$500K)</td>
+        <td>Cluster buys &gt;$500K, CEO/CFO</td>
+      </tr>
+      <tr>
+        <td><strong>Options Flow</strong></td>
+        <td>Large put blocks, bearish sweeps</td>
+        <td>Flow équilibré</td>
+        <td>Call sweeps modérés, OI bullish</td>
+        <td>Massive call sweeps &gt;$1M, unusual</td>
+      </tr>
+      <tr>
+        <td><strong>Short Interest</strong></td>
+        <td>SI en hausse, CTB élevé, bearish</td>
+        <td>SI stable, CTB normal</td>
+        <td>SI en baisse, short covering</td>
+        <td>SI chute rapide, potential squeeze</td>
+      </tr>
+      <tr>
+        <td><strong>Sentiment</strong></td>
+        <td>Extreme greed, euphorie</td>
+        <td>Neutre (F&G 40-60)</td>
+        <td>Sentiment bearish (contrarian)</td>
+        <td>Extreme fear + sur votre ticker</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings Momentum</strong></td>
+        <td>Misses récents, guidance abaissée</td>
+        <td>In-line, guidance stable</td>
+        <td>Beats modestes, guidance relevée</td>
+        <td>Beat &gt;10%, guidance forte, PEAD actif</td>
+      </tr>
+      <tr>
+        <td><strong>Analyst Revisions</strong></td>
+        <td>Downgrades, révisions baissières</td>
+        <td>Pas de changement</td>
+        <td>Quelques révisions haussières</td>
+        <td>Upgrade cluster, PT relevés &gt;20%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Interprétation du score total (sur 60)</div>
+    <span class="formula-highlight">&lt;20</span> = Pas de trade | <span class="formula-highlight">20-30</span> = Watchlist | <span class="formula-highlight">30-40</span> = Position normale | <span class="formula-highlight">40-50</span> = Position renforcée | <span class="formula-highlight">&gt;50</span> = Conviction maximale
+  </div>
+
+  <!-- CHART 2: Trade scoring waterfall -->
+  <h3>Scoring Waterfall — Exemple SOFI (Setup Q1 2026)</h3>
+  <div id="chart-waterfall" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <h3>Checklist avant chaque trade</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> AVANT d'acheter</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.8;">
+        <li><input type="checkbox" disabled> Insider activity checked ?</li>
+        <li><input type="checkbox" disabled> Options flow direction ?</li>
+        <li><input type="checkbox" disabled> Short interest trend ?</li>
+        <li><input type="checkbox" disabled> Sentiment extrême ou pas ?</li>
+        <li><input type="checkbox" disabled> Dernier earnings : beat ou miss ?</li>
+        <li><input type="checkbox" disabled> Catalyst identifié ?</li>
+        <li><input type="checkbox" disabled> Stop loss défini ?</li>
+        <li><input type="checkbox" disabled> Taille de position appropriée ?</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Red flags — NE PAS acheter si</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.8;">
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Insiders vendent massivement</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Short interest en forte hausse</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Analystes révisent à la baisse</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Guidance abaissée au dernier trimestre</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Votre seule source est un post Reddit</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Le ticker est en Tier 4 buzz (Telegram)</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Pas de stop loss défini</li>
+        <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Position &gt;5% du portfolio</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : ÉTUDES DE CAS                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cas-pratiques"><i class="fa-solid fa-flask" style="color:#dc2626;"></i> Études de cas</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#dc2626;"></i> 3 trades construits sur les données publiques</h2>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1.5rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:white; border:2px solid #16a34a; border-radius:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h4 style="color:#16a34a; margin:0;"><i class="fa-solid fa-check-circle"></i> Cas 1 : SOFI — Le trade data-driven parfait (score: 48/60)</h4>
+        <span style="background:#16a34a; color:white; padding:0.3rem 0.8rem; border-radius:99px; font-size:0.75rem; font-weight:700;">+35% en 3 mois</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1rem;">
+        <div style="padding:0.75rem; background:#f0fdf4; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#16a34a;">Insiders</strong><br>CEO achète $2M</div>
+        <div style="padding:0.75rem; background:#f0fdf4; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#16a34a;">Options</strong><br>Call sweeps $3M+</div>
+        <div style="padding:0.75rem; background:#f0fdf4; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#16a34a;">SI baisse</strong><br>12% → 8%</div>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0;"><strong>Contexte :</strong> Début 2025, SOFI affiche des insiders achats massifs (CEO + CFO, $3M+ combinés), un options flow massivement bullish (call sweeps de $1M+ sur les expirations 3 mois), un short interest en chute libre (de 12% à 8%), des révisions d'analystes positives (3 upgrades en 2 semaines) et un beat d'earnings de 15% avec guidance relevée. Score : 48/60. Le stock est passé de $10 à $13.50 en 3 mois.</p>
+    </div>
+
+    <div style="padding:1.5rem; background:white; border:2px solid #f59e0b; border-radius:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h4 style="color:#f59e0b; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> Cas 2 : SMCI — Le piège des données contradictoires (score: 28/60)</h4>
+        <span style="background:#f59e0b; color:white; padding:0.3rem 0.8rem; border-radius:99px; font-size:0.75rem; font-weight:700;">Mixte — Wait & See</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1rem;">
+        <div style="padding:0.75rem; background:#fef2f2; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#dc2626;">Insiders</strong><br>Ventes massives</div>
+        <div style="padding:0.75rem; background:#f0fdf4; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#16a34a;">Options</strong><br>Call flow bullish</div>
+        <div style="padding:0.75rem; background:#fef2f2; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#dc2626;">SI hausse</strong><br>8% → 15%</div>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0;"><strong>Contexte :</strong> Mi-2024, SMCI montrait un options flow bullish massif (spéculation AI) mais des insiders qui vendaient agressivement, un short interest en forte hausse (Hindenburg Research report), et des questions sur la comptabilité. Les signaux se contredisaient. Score : 28/60 — zone "pas de trade". Le stock a ensuite perdu 70% après les allégations comptables confirmées. <strong>La divergence entre les sources était le signal d'alarme.</strong></p>
+    </div>
+
+    <div style="padding:1.5rem; background:white; border:2px solid #dc2626; border-radius:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h4 style="color:#dc2626; margin:0;"><i class="fa-solid fa-xmark-circle"></i> Cas 3 : BYND — Le piège du sentiment seul (score: 15/60)</h4>
+        <span style="background:#dc2626; color:white; padding:0.3rem 0.8rem; border-radius:99px; font-size:0.75rem; font-weight:700;">-65% en 6 mois</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1rem;">
+        <div style="padding:0.75rem; background:#fef2f2; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#dc2626;">Insiders</strong><br>Aucun achat</div>
+        <div style="padding:0.75rem; background:#fef2f2; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#dc2626;">Earnings</strong><br>Miss + guidance baissée</div>
+        <div style="padding:0.75rem; background:#fff7ed; border-radius:8px; text-align:center; font-size:0.8rem;"><strong style="color:#f59e0b;">Reddit</strong><br>Bullish hype</div>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0;"><strong>Leçon :</strong> Le buzz Reddit était le SEUL signal bullish. Les données dures (insiders silencieux, earnings en déclin, short interest élevé, analystes bearish, cash burn accéléré) criaient tous "danger". Le stock est passé de $15 à $5. <strong>Ne tradez jamais sur du sentiment seul sans données dures pour confirmer.</strong></p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : LIMITES & AUTOMATISATION                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="limites"><i class="fa-solid fa-triangle-exclamation" style="color:#f97316;"></i> Limites et automatisation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#f97316;"></i> Les limites honnêtes de cette approche</h2>
+
+  <p>Les données publiques sont puissantes, mais elles ont des <strong>limites structurelles</strong> qu'il faut connaître pour ne pas tomber dans l'excès de confiance.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-clock"></i> Retard des données</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>13F</strong> : publié 45 jours après la fin du trimestre — les positions ont peut-être déjà changé</li>
+        <li><strong>Short interest</strong> : publié bi-mensuellement avec 10 jours de retard</li>
+        <li><strong>Form 4</strong> : 2 jours ouvrables de délai — mais les insiders peuvent planifier</li>
+        <li><strong>Dark pool</strong> : publié avec retard variable</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-ghost"></i> Faux signaux</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Insiders</strong> : ventes pour raisons personnelles (diversification, impôts) ≠ bearish</li>
+        <li><strong>Options flow</strong> : hedges, spreads, structures complexes — pas toujours directionnels</li>
+        <li><strong>Short interest élevé</strong> : pas toujours un short squeeze — peut être justifié (stock pourri)</li>
+        <li><strong>Sentiment</strong> : peut rester extrême très longtemps avant de se retourner</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le survivorship bias : l'ennemi silencieux</h4>
+    <p style="margin:0;">Toutes les études de cas que vous voyez (y compris les nôtres) souffrent de <strong>survivorship bias</strong>. On vous montre les trades qui ont fonctionné et les signaux qui se sont vérifiés. On ne montre pas les dizaines de signaux identiques qui n'ont rien donné. Un insider peut acheter et le stock peut quand même baisser de 50%. Un options flow bullish peut être un hedge, pas un pari directionnel. <strong>Gardez toujours un stop loss</strong> et ne risquez jamais plus de 2-3% de votre capital par trade.</p>
+  </div>
+
+  <h3>Automatiser votre veille</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Méthode</th><th>Difficulté</th><th>Coût</th><th>Ce que ça fait</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>RSS feeds SEC EDGAR</strong></td>
+        <td style="color:#16a34a;">Facile</td>
+        <td>Gratuit</td>
+        <td>Alerte quand un filing est soumis pour vos tickers suivis</td>
+      </tr>
+      <tr>
+        <td><strong>Email alerts (Fintel, OpenInsider)</strong></td>
+        <td style="color:#16a34a;">Facile</td>
+        <td>Gratuit</td>
+        <td>Notification quand un insider achète ou vend significativement</td>
+      </tr>
+      <tr>
+        <td><strong>TradingView alertes</strong></td>
+        <td style="color:#16a34a;">Facile</td>
+        <td>Gratuit (5 alertes)</td>
+        <td>Alerte prix, volume, indicateurs techniques sur vos tickers</td>
+      </tr>
+      <tr>
+        <td><strong>SEC EDGAR API + Python</strong></td>
+        <td style="color:#f59e0b;">Intermédiaire</td>
+        <td>Gratuit</td>
+        <td>Parser automatique des filings, extraction de données structurées</td>
+      </tr>
+      <tr>
+        <td><strong>Alpha Vantage API</strong></td>
+        <td style="color:#f59e0b;">Intermédiaire</td>
+        <td>Gratuit (5 calls/min)</td>
+        <td>Données de prix, fondamentaux, earnings en JSON pour vos scripts</td>
+      </tr>
+      <tr>
+        <td><strong>Script Python complet (scoring)</strong></td>
+        <td style="color:#dc2626;">Avancé</td>
+        <td>Gratuit</td>
+        <td>Scoring automatique multi-signal avec alertes — votre propre screener</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz final — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Combien de sources convergentes faut-il pour une position de conviction ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Au moins 3 sources indépendantes pointant dans la même direction.</strong><br>
+      1 source = simple hypothèse (non actionnable). 2 sources = signal intéressant (watchlist). 3+ sources = confluence suffisante pour une position. Plus les sources sont indépendantes (insider + options + earnings est mieux que 3 indicateurs techniques), plus la conviction est justifiée.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quel est le premier signe d'alarme quand les données se contredisent ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La divergence entre les sources est elle-même un signal — un signal de NE PAS trader.</strong><br>
+      Quand les insiders vendent mais l'options flow est bullish, ou quand les earnings sont bons mais le short interest monte, c'est une situation d'incertitude. Dans ces cas, le meilleur trade est de ne pas trader du tout. L'exemple SMCI illustre parfaitement ce principe : les données contradictoires étaient le signal d'alarme avant la chute de 70%.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi les données des 13F sont-elles souvent "périmées" ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'elles sont publiées 45 jours après la fin du trimestre.</strong><br>
+      Un 13F déposé le 14 février reflète les positions au 31 décembre — soit 6 semaines plus tôt. Un hedge fund a pu complètement changer ses positions entre-temps. Le 13F est utile pour identifier les tendances de long terme des institutionnels, mais pas pour du trading court terme. Focalisez-vous sur les Form 4 (insiders, délai de 2 jours) pour des signaux plus frais.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel est le principal risque du "survivorship bias" dans l'analyse des données publiques ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : On ne voit que les signaux qui ont fonctionné, pas les dizaines de signaux identiques qui n'ont rien donné.</strong><br>
+      Si vous cherchez des exemples d'insider buying qui a précédé une hausse de 50%, vous en trouverez facilement. Mais pour chaque exemple réussi, il existe de nombreux cas d'insider buying suivi d'une baisse. Le biais de survivabilité nous fait surestimer la fiabilité des signaux. C'est pourquoi le risk management (stop loss, sizing) est aussi important que l'analyse elle-même.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quelle est la durée optimale pour un dashboard de veille quotidien ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 15 minutes par jour, structurées en 5 étapes.</strong><br>
+      Plus longtemps et vous risquez l'analysis paralysis — trop d'information tue la décision. Les 5 étapes (Macro Pulse 3 min, Flow Check 4 min, Sentiment Scan 3 min, Filing Alerts 3 min, News Digest 2 min) couvrent l'essentiel sans vous noyer. Le surplus de temps doit aller à l'analyse approfondie de vos positions existantes et des opportunités identifiées, pas à scanner tout le marché.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS + CONCLUSION SÉRIE                         -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#4f46e5;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie (et de toute la série)</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-layer-group"></i> <strong>La confluence est tout</strong> — 1 source = hypothèse, 2 = signal, 3+ = conviction. Ne tradez jamais sur un seul signal.</li>
+      <li><i class="fa-solid fa-gauge"></i> <strong>15 minutes/jour suffisent</strong> — Macro Pulse, Flow Check, Sentiment Scan, Filing Alerts, News Digest. Un process structuré bat des heures de scrolling.</li>
+      <li><i class="fa-solid fa-toolbox"></i> <strong>95% des données sont gratuites</strong> — SEC EDGAR, FINRA, OpenInsider, CNN F&G, StockTwits, Yahoo Finance. L'edge est dans l'interprétation, pas l'accès.</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Scorez chaque setup de 0 à 60</strong> — 6 composantes x 10 points. En dessous de 30, ne tradez pas. Au-dessus de 40, renforcez la position.</li>
+      <li><i class="fa-solid fa-arrows-rotate"></i> <strong>Les divergences sont des signaux</strong> — quand insiders, options flow et short interest se contredisent, le meilleur trade est de ne PAS trader.</li>
+      <li><i class="fa-solid fa-triangle-exclamation"></i> <strong>Les données ont des limites</strong> — retard (13F = 45 jours), faux signaux (ventes pour raisons perso), survivorship bias. Un stop loss est non-négociable.</li>
+      <li><i class="fa-solid fa-graduation-cap"></i> <strong>Le process bat l'intuition</strong> — un système reproductible de scoring multi-signal surperforme le "feeling" à long terme. Soyez discipliné, pas émotionnel.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="content-card" style="background:linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); border:2px solid #4f46e5;">
+  <h2 style="color:#4f46e5; text-align:center;"><i class="fa-solid fa-flag-checkered"></i> Conclusion de la série</h2>
+
+  <p style="text-align:center; font-size:1.1rem; color:#334155; max-width:700px; margin:1rem auto;">En 6 parties, vous avez appris à lire les données que les professionnels utilisent chaque jour. <strong>SEC filings, options flow, dark pools, short interest, sentiment, earnings et analystes</strong> — tout est accessible. Maintenant, c'est à vous de construire votre process et de le suivre avec discipline.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.25rem; background:white; border-radius:12px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-book" style="color:#4f46e5;"></i></div>
+      <h4 style="margin:0 0 0.3rem; font-size:0.9rem;">6 parties</h4>
+      <p style="margin:0; font-size:0.8rem; color:#64748b;">De SEC EDGAR au Dashboard complet</p>
+    </div>
+    <div style="padding:1.25rem; background:white; border-radius:12px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-toolbox" style="color:#f59e0b;"></i></div>
+      <h4 style="margin:0 0 0.3rem; font-size:0.9rem;">15+ outils gratuits</h4>
+      <p style="margin:0; font-size:0.8rem; color:#64748b;">Toute la data sans terminal Bloomberg</p>
+    </div>
+    <div style="padding:1.25rem; background:white; border-radius:12px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-line" style="color:#16a34a;"></i></div>
+      <h4 style="margin:0 0 0.3rem; font-size:0.9rem;">1 framework</h4>
+      <p style="margin:0; font-size:0.8rem; color:#64748b;">Scoring multi-signal reproductible</p>
+    </div>
+  </div>
+
+  <p style="text-align:center; font-size:0.95rem; color:#475569;"><strong>Rappel final :</strong> les données vous donnent un edge statistique, pas une boule de cristal. Le risk management reste votre première défense. Bon trading.</p>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées et les études de cas ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Toute décision d'investissement comporte des risques de perte en capital.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/lire-le-marche/part5-earnings-analystes/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">5. Earnings, Analystes & Guidance</div>
+  </div>
+</a>
+
+<a href="/" class="next-cta">
+  <div>
+    <div class="next-label">Série terminée</div>
+    <div class="next-title">Retour à l'accueil — Market Watch</div>
+  </div>
+  <i class="fa-solid fa-house"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-le-marche/part1-sec-filings/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Short Interest</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#4f46e5; color:white; border:1px solid #4f46e5;">6. Dashboard Synthèse</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Lire le Marché — Données Publiques & Intelligence</strong> — Partie 6/6 : Dashboard Synthèse (Finale)</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Multi-signal radar
+(function(){
+  var dom = document.getElementById('chart-radar');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{},
+    legend:{data:['SOFI (Score: 48)','SMCI (Score: 28)','BYND (Score: 15)'],bottom:0},
+    radar:{
+      indicator:[
+        {name:'Insiders',max:10},
+        {name:'Options Flow',max:10},
+        {name:'Short Interest',max:10},
+        {name:'Sentiment\n(Contrarian)',max:10},
+        {name:'Earnings\nMomentum',max:10},
+        {name:'Analyst\nRevisions',max:10}
+      ],
+      radius:'65%',
+      splitArea:{areaStyle:{color:['#eef2ff','#f8fafc','#eef2ff','#f8fafc','#eef2ff']}},
+      axisLine:{lineStyle:{color:'#c7d2fe'}},
+      splitLine:{lineStyle:{color:'#c7d2fe'}}
+    },
+    series:[{
+      type:'radar',
+      data:[
+        {value:[9,8,8,7,9,7],name:'SOFI (Score: 48)',lineStyle:{color:'#16a34a',width:2},areaStyle:{color:'rgba(22,163,74,0.15)'},itemStyle:{color:'#16a34a'}},
+        {value:[2,7,3,5,6,5],name:'SMCI (Score: 28)',lineStyle:{color:'#f59e0b',width:2},areaStyle:{color:'rgba(245,158,11,0.1)'},itemStyle:{color:'#f59e0b'}},
+        {value:[1,2,2,6,2,2],name:'BYND (Score: 15)',lineStyle:{color:'#dc2626',width:2},areaStyle:{color:'rgba(220,38,38,0.1)'},itemStyle:{color:'#dc2626'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Trade scoring waterfall
+(function(){
+  var dom = document.getElementById('chart-waterfall');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var categories = ['Insiders','Options\nFlow','Short\nInterest','Sentiment','Earnings','Analyst\nRevisions','TOTAL'];
+  var values = [9,8,8,7,9,7,48];
+  var colors = ['#16a34a','#16a34a','#16a34a','#f59e0b','#16a34a','#16a34a','#4f46e5'];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel.replace('\n',' ')+': <b>'+p[0].value+'/10</b>';}},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'8%'},
+    xAxis:{type:'category',data:categories,axisLabel:{fontSize:10,fontWeight:600,interval:0}},
+    yAxis:{type:'value',name:'Score',max:60,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'bar',
+      data:values.map(function(v,i){return{value:v,itemStyle:{color:colors[i],borderRadius:[6,6,0,0]}};}),
+      barWidth:'50%',
+      label:{show:true,position:'top',fontWeight:700,fontSize:12,formatter:function(p){return p.dataIndex===6?p.value+'/60':p.value+'/10';}}
+    }],
+    markLine:{silent:true,data:[
+      {yAxis:30,lineStyle:{type:'dashed',color:'#f59e0b',width:2},label:{formatter:'Seuil trade (30)',fontSize:10,color:'#f59e0b'}},
+      {yAxis:40,lineStyle:{type:'dashed',color:'#16a34a',width:2},label:{formatter:'Position renforcée (40)',fontSize:10,color:'#16a34a'}}
+    ]}
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

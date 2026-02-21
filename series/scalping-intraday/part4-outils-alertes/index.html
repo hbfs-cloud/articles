@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils, Alertes & Setup de Trading | Le Scalping & Trading Intraday — Partie 4/6 | Market Watch</title>
+  <meta name="description" content="Série Le Scalping & Trading Intraday — Partie 4/6 : Choix du broker, plateformes de charting, scanners, flux d'ordres, alertes, setup multi-écrans et hotkeys pour le scalping.">
+  <meta property="og:title" content="Outils, Alertes & Setup de Trading | Le Scalping & Trading Intraday — Partie 4/6 | Market Watch">
+  <meta property="og:description" content="Broker, charting, scanner, order flow, alertes volume/prix, setup multi-écrans, hotkeys et types d'ordres pour le scalper professionnel.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/scalping-intraday/part4-outils-alertes/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#2563eb; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#60a5fa; color:#60a5fa; }
+  .series-link.current { background:#2563eb; color:white; border-color:#2563eb; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#2563eb; margin-right:0.75rem; }
+  details[open] summary { border-color:#2563eb; background:#eff6ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#2563eb; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#60a5fa; }
+  .takeaway-box { background:linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%); border:1px solid #2563eb; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#2563eb; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(37,99,235,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#2563eb; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(37,99,235,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#2563eb; color:#2563eb; }
+  .disclaimer-mega { background:linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #2563eb; }
+  .disclaimer-mega h3 { color:#bfdbfe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#dbeafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#60a5fa; margin-top:0.2rem; flex-shrink:0; }
+  .tool-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #2563eb; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Le Scalping & Trading Intraday</span>
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" class="series-link">1 — Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" class="series-link">2 — Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" class="series-link">3 — Détecter les Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" class="series-link current">4 — Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" class="series-link">5 — Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" class="series-link">6 — Discipline & Sortie</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Le Scalping & Trading Intraday — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Outils, Alertes & Setup de Trading</h1>
+  <p class="hero-subtitle">Le scalper est aussi bon que ses outils. Broker ultra-rapide, charting professionnel, scanners en temps réel, flux d'ordres et alertes intelligentes : voici l'arsenal complet du trader intraday.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-desktop"></i> Setup Multi-Écrans</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bell"></i> Alertes</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Charting</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-layer-group"></i> Order Flow</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#brokers" class="nav-item"><i class="fa-solid fa-building-columns" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Brokers</a>
+  <a href="#charting" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Charting</a>
+  <a href="#scanners" class="nav-item"><i class="fa-solid fa-magnifying-glass-chart" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Scanners</a>
+  <a href="#orderflow" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Order Flow</a>
+  <a href="#alertes" class="nav-item"><i class="fa-solid fa-bell" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Alertes</a>
+  <a href="#setup" class="nav-item"><i class="fa-solid fa-desktop" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Setup Écrans</a>
+  <a href="#hotkeys" class="nav-item"><i class="fa-solid fa-keyboard" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Hotkeys</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : BROKERS                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="brokers"><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Le choix du broker</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Le broker : votre arme numéro 1</h2>
+
+  <p>En scalping, chaque milliseconde compte. La différence entre un bon et un mauvais broker peut représenter <strong>plusieurs ticks par trade</strong> — ce qui, multiplié par des dizaines de trades par jour, impacte drastiquement votre P&L. Le choix du broker n'est pas un détail : c'est une décision stratégique.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Critères essentiels d'un broker pour scalper</div>
+    <span class="formula-highlight">Latence</span> < 10ms | <span class="formula-highlight">Commissions</span> ultra-basses | <span class="formula-highlight">Exécution</span> directe (DMA) | <span class="formula-highlight">API</span> robuste
+  </div>
+
+  <h3>Comparatif des brokers pour le scalping</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Broker</th><th>Latence</th><th>Commissions</th><th>Marchés</th><th>Idéal pour</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Interactive Brokers (IBKR)</strong></td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-bolt"></i> 1-5ms</td>
+        <td>$0.005/action (tiered)</td>
+        <td>150+ marchés, 33 pays</td>
+        <td>Pro, multi-marchés, futures</td>
+      </tr>
+      <tr>
+        <td><strong>TradeStation</strong></td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-bolt"></i> 3-8ms</td>
+        <td>$0/action (actions US)</td>
+        <td>US actions, options, futures</td>
+        <td>Charting intégré, automatisation</td>
+      </tr>
+      <tr>
+        <td><strong>Saxo Bank</strong></td>
+        <td style="color:#f59e0b;"><i class="fa-solid fa-clock"></i> 5-15ms</td>
+        <td>Variable par marché</td>
+        <td>40+ marchés, FX, CFD</td>
+        <td>Europe, FX, multi-devises</td>
+      </tr>
+      <tr>
+        <td><strong>Lightspeed</strong></td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-bolt"></i> 1-3ms</td>
+        <td>$0.004/action</td>
+        <td>US actions, options</td>
+        <td>Scalping pur, day trading US</td>
+      </tr>
+      <tr>
+        <td><strong>Cobra Trading</strong></td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-bolt"></i> 2-5ms</td>
+        <td>$0.003/action (volume)</td>
+        <td>US actions</td>
+        <td>Short selling, small caps</td>
+      </tr>
+      <tr>
+        <td><strong>Degiro / Trading 212</strong></td>
+        <td style="color:#dc2626;"><i class="fa-solid fa-snail"></i> 50-200ms</td>
+        <td>$0 (PFOF)</td>
+        <td>EU, US limité</td>
+        <td>Swing, PAS pour le scalping</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention au "gratuit" : le Payment for Order Flow (PFOF)</h4>
+    <p style="margin:0;">Les brokers "gratuits" (Robinhood, Trading 212, eToro) vendent votre flux d'ordres aux market makers. Résultat : votre exécution est <strong>systématiquement moins bonne</strong> de 0.5 à 2 cents par action. Sur 100 trades/jour de 500 actions, cela représente <strong>$250-$1,000/jour de coûts cachés</strong>. En scalping, le PFOF est votre ennemi mortel.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Direct Market Access (DMA) — Pourquoi c'est indispensable</h4>
+    <p style="margin:0;">Le DMA (accès direct au marché) signifie que votre ordre va directement sur le carnet d'ordres de la bourse (NYSE, NASDAQ, CBOE) sans passer par un intermédiaire. C'est la garantie d'une exécution au meilleur prix possible. Les brokers comme IBKR et Lightspeed offrent le DMA en mode "tiered pricing". Cherchez les termes <strong>"smart routing"</strong> et <strong>"direct routing"</strong> dans les options de votre broker.</p>
+  </div>
+
+  <!-- CHART 1: Broker comparison radar -->
+  <h3>Comparaison des brokers — Radar de performance</h3>
+  <div id="chart-broker-radar" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : CHARTING                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="charting"><i class="fa-solid fa-chart-line" style="color:#16a34a;"></i> Plateformes de charting</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#16a34a;"></i> Le charting : votre cockpit de trading</h2>
+
+  <p>La plateforme de charting est l'écran principal du scalper. Elle doit afficher en temps réel les bougies, les indicateurs, les niveaux clés et le volume — avec une fluidité irréprochable, même en période de forte volatilité.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="tool-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-candlestick"></i></div>
+      <h4 style="margin:0 0 0.5rem;">TradingView</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le plus populaire. Interface intuitive, communauté massive, Pine Script pour les indicateurs custom. Plan gratuit limité, Pro+ recommandé ($30/mois). Excellent pour débuter.</p>
+      <div style="margin-top:0.75rem; font-size:0.75rem;">
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Facilité</span>
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Communauté</span>
+        <span style="background:#fef2f2; color:#dc2626; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">- Latence web</span>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Sierra Chart</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le choix des pros des futures. Ultra-rapide (C++), données tick-by-tick, profondeur du marché intégrée. Courbe d'apprentissage raide. $36/mois + data feed.</p>
+      <div style="margin-top:0.75rem; font-size:0.75rem;">
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Vitesse</span>
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Précision</span>
+        <span style="background:#fef2f2; color:#dc2626; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">- Complexe</span>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-fire"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Bookmap</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Visualisation heatmap du carnet d'ordres en temps réel. Voir les murs de liquidité, les iceberg orders. Indispensable pour le scalping sur futures. $49/mois.</p>
+      <div style="margin-top:0.75rem; font-size:0.75rem;">
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Order flow</span>
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Liquidité</span>
+        <span style="background:#fef2f2; color:#dc2626; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">- Prix élevé</span>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-gauge-high"></i></div>
+      <h4 style="margin:0 0 0.5rem;">NinjaTrader</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Gratuit pour le charting, payant pour le trading live. Excellent pour les futures (ES, NQ, CL). Backtesting intégré. Grande communauté d'indicateurs.</p>
+      <div style="margin-top:0.75rem; font-size:0.75rem;">
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Gratuit</span>
+        <span style="background:#f0fdf4; color:#16a34a; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">+ Backtest</span>
+        <span style="background:#fef2f2; color:#dc2626; padding:0.2rem 0.5rem; border-radius:4px; font-weight:600;">- Interface datée</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Quel charting choisir selon votre niveau ?</h4>
+    <p style="margin:0;"><strong>Débutant</strong> : TradingView (interface claire, communauté active). <strong>Intermédiaire</strong> : TradingView Pro+ ou NinjaTrader (plus d'indicateurs, multi-timeframes). <strong>Avancé</strong> : Sierra Chart + Bookmap (vitesse maximale, order flow). <strong>La règle</strong> : maîtrisez parfaitement un outil avant de passer au suivant. Un scalper avec TradingView bien maîtrisé battra un novice sur Sierra Chart.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : SCANNERS                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scanners"><i class="fa-solid fa-magnifying-glass-chart" style="color:#f97316;"></i> Scanners & screeners temps réel</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass-chart" style="color:#f97316;"></i> Scanner : trouver les opportunités en temps réel</h2>
+
+  <p>Le scanner est l'outil qui vous <strong>trouve les trades</strong>. Au lieu de surveiller 500 actions manuellement, le scanner filtre le marché en temps réel selon vos critères : volume inhabituel, breakout de range, gap important, momentum soudain.</p>
+
+  <h3>Les scanners essentiels</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Scanner</th><th>Prix</th><th>Spécialité</th><th>Temps réel</th><th>Note</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Trade-Ideas</strong></td>
+        <td>$118/mois (Premium)</td>
+        <td>IA Holly, scans custom, alertes</td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-check"></i> Oui</td>
+        <td>Le meilleur pour day traders US</td>
+      </tr>
+      <tr>
+        <td><strong>Finviz Elite</strong></td>
+        <td>$40/mois</td>
+        <td>Screener large, heatmaps</td>
+        <td style="color:#f59e0b;"><i class="fa-solid fa-clock"></i> 1-5 min delay</td>
+        <td>Bon rapport qualité/prix</td>
+      </tr>
+      <tr>
+        <td><strong>Market Watch Scanner</strong></td>
+        <td>Gratuit</td>
+        <td>Scans quotidiens, DSL custom</td>
+        <td style="color:#f59e0b;"><i class="fa-solid fa-clock"></i> Quotidien</td>
+        <td>Idéal pour préparer la journée</td>
+      </tr>
+      <tr>
+        <td><strong>Benzinga Pro</strong></td>
+        <td>$117/mois</td>
+        <td>News + scans combo</td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-check"></i> Oui</td>
+        <td>Meilleur pour le news trading</td>
+      </tr>
+      <tr>
+        <td><strong>IBKR Scanner</strong></td>
+        <td>Inclus avec compte</td>
+        <td>Volume, prix, options</td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-check"></i> Oui</td>
+        <td>Gratuit et efficace</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Les 5 scans indispensables du scalper</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">1. Unusual Volume — Volume relatif > 2x</strong>
+        <span class="badge badge-blue">Essentiel</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Filtre : Volume actuel / Volume moyen 20 jours > 2.0. Détecte les actions avec une activité anormale — souvent signe d'un catalyseur (news, earnings, institutional flow).</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">2. Gap Scanner — Gaps > 3% au pre-market</strong>
+        <span class="badge badge-green">Matin</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Filtre : |Open - Close_veille| / Close_veille > 3%. Les gaps matinaux sont le pain quotidien du scalper. Gap up = momentum haussier potentiel. Gap down = short ou fade.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">3. Breakout — Cassure de range journalier</strong>
+        <span class="badge badge-orange">Intraday</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Filtre : Prix > High_5j ou Prix < Low_5j avec volume > 1.5x moyenne. Détecte les cassures de consolidation qui lancent des mouvements directionnels forts.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#9333ea;">4. Momentum — RSI extreme + volume</strong>
+        <span class="badge badge-purple">Signal fort</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Filtre : RSI(14) > 70 ou < 30 ET volume relatif > 1.5x. Identifie les actions en mouvement extrême — potentiel de continuation ou de reversal selon le contexte.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">5. Halt Resume — Reprise après halt de trading</strong>
+        <span class="badge badge-red">Avancé</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Alertes sur les LULD (Limit Up/Limit Down) halts et reprises. Les premières secondes après un halt sont parmi les moments les plus volatils — opportunité ET danger extrême.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : ORDER FLOW                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="orderflow"><i class="fa-solid fa-layer-group" style="color:#9333ea;"></i> Order flow & profondeur de marché</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#9333ea;"></i> Lire le carnet d'ordres comme un pro</h2>
+
+  <p>Le <strong>flux d'ordres</strong> (order flow) est l'information la plus pure du marché : qui achète, qui vend, à quel prix, et en quelle quantité. Là où les indicateurs techniques sont en retard (ils utilisent les prix passés), l'order flow vous montre ce qui se passe <strong>en ce moment</strong>.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#faf5ff; border:1px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.75rem;"><i class="fa-solid fa-book-open"></i> Level 2 (Carnet d'ordres)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Bid</strong> : ordres d'achat en attente (demande)</li>
+        <li><strong>Ask</strong> : ordres de vente en attente (offre)</li>
+        <li><strong>Spread</strong> : différence bid/ask = coût de transaction</li>
+        <li><strong>Mur de liquidité</strong> : gros bloc à un prix = support/résistance</li>
+        <li>Outils : IBKR BookTrader, Bookmap, DAS Trader</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#eff6ff; border:1px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem;"><i class="fa-solid fa-list-timeline"></i> Time & Sales (Tape)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Vert</strong> : transaction au prix ask (acheteur agressif)</li>
+        <li><strong>Rouge</strong> : transaction au prix bid (vendeur agressif)</li>
+        <li><strong>Gros blocs</strong> : ordres > 10,000 actions = institutionnel</li>
+        <li><strong>Vitesse</strong> : accélération du tape = momentum</li>
+        <li>Outils : Jigsaw, Bookmap, Sierra Chart</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Spoofing et ordres iceberg — Ce que le Level 2 ne vous montre pas</h4>
+    <p style="margin:0;">Le carnet d'ordres ne montre pas tout. Les <strong>ordres iceberg</strong> cachent 90% de leur taille (vous voyez 100 actions mais il y en a 10,000 derrière). Le <strong>spoofing</strong> (illégal) consiste à placer de faux gros ordres pour intimider, puis les annuler. Ne prenez jamais une décision uniquement sur un gros bloc visible dans le Level 2 — confirmez toujours avec le Time & Sales (les transactions réelles).</p>
+  </div>
+
+  <!-- CHART 2: Alert flow visualization -->
+  <h3>Flux d'informations du scalper — Du signal au trade</h3>
+  <div id="chart-alert-flow" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : ALERTES                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="alertes"><i class="fa-solid fa-bell" style="color:#dc2626;"></i> Systèmes d'alertes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bell" style="color:#dc2626;"></i> Alertes intelligentes : ne ratez aucune opportunité</h2>
+
+  <p>Le scalper ne peut pas surveiller 500 actions en même temps. Les alertes automatiques sont vos sentinelles : elles vous notifient quand un critère précis est rempli, vous permettant de vous concentrer sur l'exécution plutôt que la recherche.</p>
+
+  <h3>Les 4 catégories d'alertes</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-volume-high"></i> Alertes Volume</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Le volume est le carburant du mouvement. Un spike de volume précède souvent un mouvement de prix significatif.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Configs recommandées :</strong><br>
+        - Volume relatif > 2x la moyenne 20j<br>
+        - Volume 5 min > 50% du volume moyen journalier<br>
+        - Bloc > 50,000 actions sur une seule transaction
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#eff6ff; border:2px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.5rem;"><i class="fa-solid fa-crosshairs"></i> Alertes Prix</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Notifications quand le prix atteint un niveau clé prédéfini (support, résistance, VWAP, round number).</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Configs recommandées :</strong><br>
+        - Cassure du high/low de la veille<br>
+        - Croisement VWAP (passage au-dessus/en-dessous)<br>
+        - Approche d'un round number ($50, $100, $200)
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-chart-bar"></i> Alertes Options</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">L'activité sur les options est un indicateur avancé. Les smart money se positionnent souvent via les options avant un move.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Configs recommandées :</strong><br>
+        - Unusual options activity (volume > 5x OI)<br>
+        - Gros calls achetés (sweep) = bullish signal<br>
+        - Put/Call ratio extrême (> 2.0 ou < 0.5)
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-newspaper"></i> Alertes News & Social</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Les news déplacent les marchés instantanément. Être parmi les premiers informés = avantage compétitif majeur.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Outils recommandés :</strong><br>
+        - Benzinga Pro / NewsFilter.io (news ultra-rapide)<br>
+        - StockTwits trending (sentiment retail)<br>
+        - Twitter/X listes curatées (analystes, insiders)
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège des alertes excessives</h4>
+    <p style="margin:0;">Trop d'alertes = aucune alerte. Si votre téléphone vibre 200 fois par jour, vous finirez par tout ignorer. <strong>Limitez-vous à 10-15 alertes actives maximum</strong> sur les setups les plus importants. Ajustez vos seuils pour ne recevoir que les signaux à haute probabilité. Mieux vaut rater un trade que d'être paralysé par le bruit.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : SETUP MULTI-ÉCRANS                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="setup"><i class="fa-solid fa-desktop" style="color:#0891b2;"></i> Setup multi-écrans optimal</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-desktop" style="color:#0891b2;"></i> Le poste de trading : votre cockpit</h2>
+
+  <p>Un setup multi-écrans bien organisé est un multiplicateur de performance. Chaque écran a un rôle précis, et l'information doit couler naturellement de la détection (scanner) vers l'analyse (chart) puis l'exécution (order entry).</p>
+
+  <!-- CHART 3: Trading setup diagram -->
+  <h3>Layout optimal — 3 à 4 écrans</h3>
+  <div id="chart-setup-diagram" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#eff6ff; border:1px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem;"><i class="fa-solid fa-1"></i> Écran Principal — Chart & Exécution</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Chart 5 minutes (analyse principale)</li>
+        <li>Chart 1 minute (timing d'entrée/sortie)</li>
+        <li>Indicateurs : VWAP, EMA 9/20, Volume</li>
+        <li>Fenêtre d'exécution des ordres</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#faf5ff; border:1px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.75rem;"><i class="fa-solid fa-2"></i> Écran 2 — Level 2 & Tape</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Carnet d'ordres (Level 2 / DOM)</li>
+        <li>Time & Sales (tape reading)</li>
+        <li>Bookmap ou heatmap si disponible</li>
+        <li>Position tracker (P&L en temps réel)</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-3"></i> Écran 3 — Scanner & News</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Scanner temps réel (Trade-Ideas, etc.)</li>
+        <li>Feed de news (Benzinga, Reuters)</li>
+        <li>Alertes configurées</li>
+        <li>Calendrier économique du jour</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-4"></i> Écran 4 (Optionnel) — Vue macro</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>SPY / QQQ / IWM (indices US) daily</li>
+        <li>VIX en temps réel</li>
+        <li>Sector heatmap</li>
+        <li>Watchlist des 5-10 tickers du jour</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Avec 1 seul écran ? C'est possible !</h4>
+    <p style="margin:0;">Beaucoup de traders débutants n'ont qu'un seul écran. Pas de panique : utilisez des <strong>onglets</strong> et des <strong>workspaces</strong>. TradingView permet de créer des layouts multi-charts sur un écran. Ajoutez un deuxième écran (même un vieux moniteur ou une tablette) pour le scanner/news. L'essentiel n'est pas le nombre d'écrans, c'est l'<strong>organisation de l'information</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : HOTKEYS & TYPES D'ORDRES                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="hotkeys"><i class="fa-solid fa-keyboard" style="color:#d97706;"></i> Hotkeys & types d'ordres</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-keyboard" style="color:#d97706;"></i> Hotkeys : la vitesse d'exécution</h2>
+
+  <p>En scalping, chaque seconde passée à cliquer dans les menus est une seconde perdue. Les <strong>hotkeys</strong> (raccourcis clavier) permettent d'entrer et sortir d'un trade en moins d'une seconde. C'est la différence entre attraper le mouvement et le regarder passer.</p>
+
+  <h3>Hotkeys recommandées (exemple IBKR/DAS Trader)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Action</th><th>Hotkey</th><th>Description</th><th>Quand l'utiliser</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Acheter Market</strong></td>
+        <td><code style="background:#eff6ff; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">F1</code></td>
+        <td>Achat immédiat au prix du marché</td>
+        <td>Breakout rapide, urgence d'entrée</td>
+      </tr>
+      <tr>
+        <td><strong>Vendre Market</strong></td>
+        <td><code style="background:#fef2f2; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">F2</code></td>
+        <td>Vente immédiate au prix du marché</td>
+        <td>Sortie urgente, stop mental touché</td>
+      </tr>
+      <tr>
+        <td><strong>Acheter Limit (Ask)</strong></td>
+        <td><code style="background:#f0fdf4; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">F3</code></td>
+        <td>Ordre limit au prix ask actuel</td>
+        <td>Entrée contrôlée, spread raisonnable</td>
+      </tr>
+      <tr>
+        <td><strong>Vendre Limit (Bid)</strong></td>
+        <td><code style="background:#fff7ed; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">F4</code></td>
+        <td>Ordre limit au prix bid actuel</td>
+        <td>Sortie patiente, maximiser le prix</td>
+      </tr>
+      <tr>
+        <td><strong>Flat (tout fermer)</strong></td>
+        <td><code style="background:#fef2f2; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">F12</code></td>
+        <td>Ferme toutes les positions</td>
+        <td>Panique, fin de session, daily limit</td>
+      </tr>
+      <tr>
+        <td><strong>Annuler tous les ordres</strong></td>
+        <td><code style="background:#f8fafc; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">ESC</code></td>
+        <td>Annule tous les ordres en attente</td>
+        <td>Situation imprévue, changement de plan</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Types d'ordres essentiels</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="tool-card">
+      <div style="font-size:1.5rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Market Order</h4>
+      <p style="font-size:0.82rem; color:#475569; margin:0;">Exécution immédiate au meilleur prix disponible. Rapide mais risque de slippage sur les titres peu liquides. Utilisez pour les entrées/sorties urgentes.</p>
+    </div>
+    <div class="tool-card">
+      <div style="font-size:1.5rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-crosshairs"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Limit Order</h4>
+      <p style="font-size:0.82rem; color:#475569; margin:0;">Exécution à un prix spécifié ou mieux. Contrôle total du prix mais risque de non-exécution. Préféré pour le scalping (réduit le slippage).</p>
+    </div>
+    <div class="tool-card">
+      <div style="font-size:1.5rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-brackets-curly"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Bracket Order</h4>
+      <p style="font-size:0.82rem; color:#475569; margin:0;">3 ordres en 1 : entrée + stop loss + take profit. Quand un est exécuté, les autres s'activent. Indispensable pour le risk management automatique.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> OCO — One Cancels Other</h4>
+    <p style="margin:0;">L'ordre <strong>OCO</strong> lie deux ordres : quand l'un est exécuté, l'autre est automatiquement annulé. Exemple classique en scalping : vous placez un stop loss à -$0.20 et un take profit à +$0.40. Si le TP est touché, le stop est annulé (et vice versa). C'est la base du <strong>bracket order</strong>. Configurez vos bracket orders par défaut pour que chaque entrée soit automatiquement protégée.</p>
+  </div>
+
+  <h3>Le trading mobile : quand c'est acceptable</h3>
+
+  <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px; margin:1.5rem 0;">
+    <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-mobile-screen"></i> Trading sur mobile — Les règles</h4>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+      <div>
+        <p style="font-size:0.85rem; color:#16a34a; font-weight:700; margin:0 0 0.5rem;"><i class="fa-solid fa-check"></i> Acceptable pour :</p>
+        <ul style="margin:0; padding-left:1.25rem; font-size:0.82rem; color:#334155; line-height:1.7;">
+          <li>Surveiller des positions existantes</li>
+          <li>Fermer une position d'urgence</li>
+          <li>Vérifier les alertes</li>
+          <li>Swing trading (timeframe > 1h)</li>
+        </ul>
+      </div>
+      <div>
+        <p style="font-size:0.85rem; color:#dc2626; font-weight:700; margin:0 0 0.5rem;"><i class="fa-solid fa-xmark"></i> Jamais pour :</p>
+        <ul style="margin:0; padding-left:1.25rem; font-size:0.82rem; color:#334155; line-height:1.7;">
+          <li>Ouvrir de nouvelles positions de scalping</li>
+          <li>Trader pendant les annonces macro</li>
+          <li>Trader sans connexion stable</li>
+          <li>Remplacer un setup de bureau</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Pourquoi un broker "gratuit" (0 commission) peut-il coûter plus cher qu'IBKR pour un scalper ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À cause du Payment for Order Flow (PFOF).</strong><br>
+      Les brokers gratuits vendent votre flux d'ordres aux market makers qui exécutent vos trades à un prix légèrement moins favorable (0.5 à 2 cents/action). Sur 100 trades/jour avec 500 actions, ce slippage caché peut coûter $250-$1,000/jour — bien plus que les $5-$25/jour de commissions chez IBKR avec une exécution directe (DMA).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est la différence entre un ordre Market et un ordre Limit ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le Market order garantit l'exécution mais pas le prix. Le Limit order garantit le prix mais pas l'exécution.</strong><br>
+      Le Market order est exécuté immédiatement au meilleur prix disponible — rapide mais avec un risque de slippage (surtout sur les titres peu liquides). Le Limit order ne s'exécute qu'au prix spécifié ou mieux — contrôle total du prix mais risque de ne jamais être rempli si le marché s'éloigne. En scalping, on préfère les Limit orders pour les entrées planifiées et les Market orders pour les sorties urgentes.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce qu'un scan "Unusual Volume" et pourquoi est-il important ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un scan qui détecte les actions dont le volume est anormalement élevé par rapport à leur moyenne.</strong><br>
+      Le critère typique est un volume relatif > 2x la moyenne 20 jours. Un volume inhabituel indique qu'un catalyseur est en jeu (news, earnings, flux institutionnel, insider activity). Sans volume, il n'y a pas de mouvement — le volume est le carburant du prix. C'est souvent le premier signal qu'un scalper doit vérifier avant d'analyser le chart.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Pourquoi ne faut-il pas se fier uniquement au Level 2 pour prendre une décision ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À cause des ordres iceberg et du spoofing.</strong><br>
+      Les ordres iceberg ne montrent qu'une fraction de leur taille réelle (vous voyez 100 actions mais il y en a 10,000). Le spoofing (pratique illégale) consiste à placer de gros ordres pour intimider puis les annuler avant exécution. Le Level 2 montre les intentions, pas les actions. Toujours confirmer avec le Time & Sales (tape) qui montre les transactions réellement exécutées.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Qu'est-ce qu'un Bracket Order et pourquoi est-il indispensable en scalping ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un Bracket Order combine 3 ordres : entrée + stop loss + take profit, liés par une logique OCO.</strong><br>
+      Quand l'entrée est exécutée, le stop loss et le take profit s'activent automatiquement. Si l'un des deux est touché, l'autre est annulé (OCO = One Cancels Other). C'est indispensable en scalping car les mouvements sont rapides : sans stop automatique, vous risquez de ne pas réagir assez vite. Le bracket order transforme le risk management en automatisme plutôt qu'en décision émotionnelle.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#2563eb;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-building-columns"></i> <strong>Le broker est votre arme numéro 1</strong> — choisissez DMA (accès direct), latence < 10ms, et évitez le PFOF. IBKR et Lightspeed sont les références pour le scalping.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>Maîtrisez un outil de charting avant d'en changer</strong> — TradingView pour débuter, Sierra Chart + Bookmap pour le niveau avancé. L'outil ne fait pas le trader.</li>
+      <li><i class="fa-solid fa-magnifying-glass-chart"></i> <strong>5 scans essentiels</strong> — Unusual Volume, Gap Scanner, Breakout, Momentum RSI, et Halt Resume couvrent 90% des setups intraday.</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>L'order flow est l'information la plus pure</strong> — le Level 2 montre les intentions, le Time & Sales montre la réalité. Combinez les deux.</li>
+      <li><i class="fa-solid fa-bell"></i> <strong>Limitez vos alertes à 10-15 max</strong> — trop d'alertes = bruit. Configurez uniquement les signaux à haute probabilité.</li>
+      <li><i class="fa-solid fa-desktop"></i> <strong>Organisez votre information par écran</strong> — Chart + exécution, Level 2 + Tape, Scanner + News, Vue macro. Même avec 1 écran, l'organisation est la clé.</li>
+      <li><i class="fa-solid fa-keyboard"></i> <strong>Bracket orders + hotkeys = risk management automatique</strong> — chaque trade doit avoir un stop et un TP dès l'entrée. Les hotkeys réduisent le temps d'exécution de 10x.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les outils mentionnés ne sont pas des recommandations — faites vos propres recherches avant de souscrire.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le scalping comporte des risques élevés de perte en capital. Ne tradez qu'avec de l'argent que vous pouvez vous permettre de perdre.</li>
+  </ul>
+</div>
+
+
+<a href="/series/scalping-intraday/part3-detecter-tendances/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">3. Détecter les Tendances</div>
+  </div>
+</a>
+
+<a href="/series/scalping-intraday/part5-annonces-catalyseurs/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">Annonces Fed, Macro & Catalyseurs — Trader l'Événement</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Détecter Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#2563eb; color:white; border:1px solid #2563eb;">4. Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Discipline & Sortie</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Le Scalping & Trading Intraday</strong> — Partie 4/6 : Outils, Alertes & Setup de Trading</p>
+  <p style="margin:0 0 0.5rem;">Publication : 21 février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Broker comparison radar
+(function(){
+  var dom = document.getElementById('chart-broker-radar');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item'},
+    legend:{data:['IBKR','TradeStation','Lightspeed','Saxo','Trading 212'],bottom:0,textStyle:{fontSize:11}},
+    radar:{
+      indicator:[
+        {name:'Vitesse\n(latence)',max:10},
+        {name:'Commissions',max:10},
+        {name:'Marchés\ndisponibles',max:10},
+        {name:'Outils\ncharting',max:10},
+        {name:'API &\nautomation',max:10},
+        {name:'Facilité\nd\'utilisation',max:10}
+      ],
+      shape:'polygon',
+      splitArea:{areaStyle:{color:['#eff6ff','#f8fafc','#eff6ff','#f8fafc','#eff6ff']}},
+      axisName:{color:'#475569',fontSize:10}
+    },
+    series:[{
+      type:'radar',
+      data:[
+        {value:[9,7,10,7,10,5],name:'IBKR',lineStyle:{color:'#2563eb',width:2},areaStyle:{color:'rgba(37,99,235,0.1)'},itemStyle:{color:'#2563eb'}},
+        {value:[8,9,7,9,7,7],name:'TradeStation',lineStyle:{color:'#16a34a',width:2},areaStyle:{color:'rgba(22,163,106,0.1)'},itemStyle:{color:'#16a34a'}},
+        {value:[10,8,5,6,6,4],name:'Lightspeed',lineStyle:{color:'#f97316',width:2},areaStyle:{color:'rgba(249,115,22,0.1)'},itemStyle:{color:'#f97316'}},
+        {value:[6,5,8,6,5,7],name:'Saxo',lineStyle:{color:'#9333ea',width:2},areaStyle:{color:'rgba(147,51,234,0.1)'},itemStyle:{color:'#9333ea'}},
+        {value:[2,10,4,3,1,10],name:'Trading 212',lineStyle:{color:'#dc2626',width:2},areaStyle:{color:'rgba(220,38,38,0.1)'},itemStyle:{color:'#dc2626'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Alert flow visualization (funnel/sankey style)
+(function(){
+  var dom = document.getElementById('chart-alert-flow');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+    series:[{
+      type:'funnel',
+      left:'10%',
+      top:10,
+      bottom:10,
+      width:'80%',
+      min:0,
+      max:100,
+      sort:'descending',
+      gap:4,
+      label:{show:true,position:'inside',fontSize:12,fontWeight:600,color:'white'},
+      labelLine:{show:false},
+      itemStyle:{borderWidth:0},
+      data:[
+        {value:100,name:'Scanner : 500+ actions filtrées',itemStyle:{color:'#2563eb'}},
+        {value:75,name:'Alertes volume/prix : 20-30 alertes/jour',itemStyle:{color:'#3b82f6'}},
+        {value:50,name:'Analyse chart : 8-12 setups validés',itemStyle:{color:'#f97316'}},
+        {value:30,name:'Order flow confirme : 4-6 trades',itemStyle:{color:'#16a34a'}},
+        {value:15,name:'Exécution : 3-5 trades pris',itemStyle:{color:'#9333ea'}},
+        {value:8,name:'Résultat : 2-3 trades gagnants',itemStyle:{color:'#10b981'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Trading setup diagram (treemap)
+(function(){
+  var dom = document.getElementById('chart-setup-diagram');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>'+p.data.desc;}},
+    series:[{
+      type:'treemap',
+      roam:false,
+      nodeClick:false,
+      breadcrumb:{show:false},
+      label:{show:true,fontSize:12,fontWeight:700,color:'white',formatter:function(p){return p.name;}},
+      levels:[{itemStyle:{borderWidth:3,borderColor:'#1e293b',gapWidth:3}}],
+      data:[
+        {name:'Écran 1\nChart Principal',value:35,desc:'Chart 5min + 1min, VWAP, EMA, Volume, Exécution',itemStyle:{color:'#2563eb'}},
+        {name:'Écran 2\nLevel 2 & Tape',value:25,desc:'Carnet d\'ordres, Time & Sales, Bookmap, P&L tracker',itemStyle:{color:'#9333ea'}},
+        {name:'Écran 3\nScanner & News',value:25,desc:'Trade-Ideas, Benzinga Pro, Alertes, Calendrier économique',itemStyle:{color:'#f97316'}},
+        {name:'Écran 4\nVue Macro',value:15,desc:'SPY/QQQ daily, VIX, Sector heatmap, Watchlist',itemStyle:{color:'#16a34a'}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

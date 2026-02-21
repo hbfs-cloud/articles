@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETF par Classe d'Actifs — Actions, Obligations, Commodités | Trader les ETF — Partie 2/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les ETF — Partie 2/6 : ETF actions (US, international, émergents), obligations (Treasuries, High Yield, TIPS), commodités (or, pétrole, argent), et immobilier (REITs).">
+  <meta property="og:title" content="ETF par Classe d'Actifs — Actions, Obligations, Commodités | Trader les ETF — Partie 2/6 | Market Watch">
+  <meta property="og:description" content="Maîtriser les ETF par classe d'actifs : SPY vs QQQ vs IWM, duration obligataire, contango sur le pétrole, ratio or/argent, et REITs comme proxy immobilier.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-etf/part2-classes-actifs/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#059669; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#34d399; color:#34d399; }
+  .series-link.current { background:#059669; color:white; border-color:#059669; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-teal { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#059669; margin-right:0.75rem; }
+  details[open] summary { border-color:#059669; background:#ecfdf5; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#059669; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#34d399; }
+  .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%); border:1px solid #059669; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#059669; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(5,150,105,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#059669; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(5,150,105,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#059669; color:#059669; }
+  .disclaimer-mega { background:linear-gradient(135deg, #064e3b 0%, #047857 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #059669; }
+  .disclaimer-mega h3 { color:#a7f3d0; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#d1fae5; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#34d399; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #059669; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Trader les ETF</span>
+  <a href="/series/trader-etf/part1-comprendre-etf/" class="series-link">1 — Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" class="series-link current">2 — Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" class="series-link">3 — Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" class="series-link">4 — Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" class="series-link">5 — Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" class="series-link">6 — Portefeuille</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Série Trader les ETF — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">ETF par Classe d'Actifs — Actions, Obligations, Commodités</h1>
+  <p class="hero-subtitle">Actions large cap et small cap, obligations courtes et longues, or physique et pétrole en futures : chaque classe d'actifs a ses ETF dédiés. Maîtrisez-les pour construire un portefeuille complet et résilient.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-chart-line"></i> Actions</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-landmark"></i> Obligations</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-coins"></i> Commodités</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-building"></i> Immobilier</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#actions-us" class="nav-item"><i class="fa-solid fa-flag-usa" style="color:#059669; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Actions US</a>
+  <a href="#actions-intl" class="nav-item"><i class="fa-solid fa-earth-americas" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> International</a>
+  <a href="#obligations" class="nav-item"><i class="fa-solid fa-landmark" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Obligations</a>
+  <a href="#commodites" class="nav-item"><i class="fa-solid fa-coins" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Commodités</a>
+  <a href="#immobilier" class="nav-item"><i class="fa-solid fa-building" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Immobilier</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : ETF ACTIONS US                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="actions-us"><i class="fa-solid fa-flag-usa" style="color:#059669;"></i> ETF Actions US</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flag-usa" style="color:#059669;"></i> Large cap, Mid cap, Small cap : choisir le bon segment</h2>
+
+  <h3>Les trois piliers : SPY, QQQ, DIA</h3>
+
+  <p>Ces trois ETF sont les plus tradés au monde. Ils couvrent les plus grandes entreprises américaines, mais avec des biais très différents. Comprendre ces différences est essentiel pour choisir le bon véhicule selon votre thèse de marché.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Critère</th><th>SPY (S&P 500)</th><th>QQQ (Nasdaq-100)</th><th>DIA (Dow Jones)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Nombre de titres</strong></td>
+        <td>503</td>
+        <td>101</td>
+        <td>30</td>
+      </tr>
+      <tr>
+        <td><strong>Pondération</strong></td>
+        <td>Cap-weighted</td>
+        <td>Cap-weighted (modifié)</td>
+        <td>Price-weighted</td>
+      </tr>
+      <tr>
+        <td><strong>Biais sectoriel</strong></td>
+        <td>Tech ~30%, Health ~13%, Finance ~13%</td>
+        <td>Tech ~50%, Consumer ~15%, Health ~7%</td>
+        <td>Diversifié (pas de financials dominantes)</td>
+      </tr>
+      <tr>
+        <td><strong>Top holding</strong></td>
+        <td>Apple, Microsoft, NVIDIA (~20% top 3)</td>
+        <td>Apple, Microsoft, NVIDIA (~25% top 3)</td>
+        <td>UnitedHealth, Goldman, Microsoft</td>
+      </tr>
+      <tr>
+        <td><strong>Volatilité</strong></td>
+        <td>Modérée</td>
+        <td style="color:#dc2626;">Élevée (beta ~1.15)</td>
+        <td>Faible (beta ~0.90)</td>
+      </tr>
+      <tr>
+        <td><strong>Quand surperforme</strong></td>
+        <td>Marché haussier large</td>
+        <td>Rally tech / AI / Growth</td>
+        <td>Rotation value / défensive</td>
+      </tr>
+      <tr>
+        <td><strong>Volume quotidien</strong></td>
+        <td>~$30B</td>
+        <td>~$20B</td>
+        <td>~$1.5B</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'erreur du débutant : confondre SPY et QQQ</h4>
+    <p style="margin:0;">SPY et QQQ ne sont <strong>pas</strong> interchangeables. QQQ surperforme massivement quand la tech monte (2020-2021 : QQQ +100%, SPY +50%), mais il chute plus fort lors des corrections (2022 : QQQ -33%, SPY -19%). Si vous voulez "le marché US", prenez SPY. Si vous voulez parier sur la tech/growth, prenez QQQ. Si vous voulez les deux, pondérez : <strong>70% SPY + 30% QQQ</strong> est une allocation populaire.</p>
+  </div>
+
+  <h3>Mid cap & Small cap : IWM, MDY, IJR</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #059669; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#059669;">IWM — Russell 2000 (Small cap)</strong>
+        <span class="badge badge-blue">TER 0.19%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">2,000 petites capitalisations US. Proxy de l'économie domestique américaine (peu d'exposition internationale). Surperforme en début de cycle économique et quand le dollar baisse. <strong>Beta ~1.25</strong> — plus volatile que le S&P 500. Sous-performant depuis 2018 vs large caps à cause de la concentration tech.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">MDY — S&P MidCap 400</strong>
+        <span class="badge badge-blue">TER 0.23%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">400 mid caps US ($3B-$15B de capitalisation). Le "sweet spot" historique : assez grandes pour être stables, assez petites pour croître. Historiquement, les mid caps ont le meilleur rendement ajusté du risque sur 20+ ans. Moins volatile que IWM, plus de potentiel que SPY.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">IJR — S&P SmallCap 600</strong>
+        <span class="badge badge-blue">TER 0.06%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Alternative à IWM avec un filtre qualité : le S&P 600 exige la rentabilité pour l'inclusion, contrairement au Russell 2000 qui inclut toutes les small caps (y compris les non-rentables). Résultat : IJR a historiquement battu IWM de ~1%/an grâce à ce filtre.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : ETF ACTIONS INTERNATIONALES                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="actions-intl"><i class="fa-solid fa-earth-americas" style="color:#2563eb;"></i> ETF Actions Internationales</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-earth-americas" style="color:#2563eb;"></i> Marchés développés, émergents et single-country</h2>
+
+  <h3>Marchés développés : EFA et au-delà</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-globe-europe"></i></div>
+      <h4 style="margin:0 0 0.25rem;">EFA — MSCI EAFE</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">$60B AUM | TER 0.32%</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Europe, Australie, Asie développée (Japon). Exclut les US et le Canada. ~800 titres. Biais value/cyclique. Surperforme quand le dollar baisse et la rotation value s'installe.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#059669; margin-bottom:0.5rem;"><i class="fa-solid fa-earth-asia"></i></div>
+      <h4 style="margin:0 0 0.25rem;">VWO / EEM — Emerging Markets</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">VWO: $85B | EEM: $20B</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Chine (~30%), Inde (~20%), Taïwan (~17%), Brésil, Corée. Plus volatils, plus sensibles au DXY et aux taux US. VWO (0.08%) est moins cher qu'EEM (0.68%).</p>
+    </div>
+  </div>
+
+  <h3>ETF Single Country — Parier sur un pays</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>ETF</th><th>Pays</th><th>Indice</th><th>Caractéristique clé</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>FXI</strong></td>
+        <td>Chine</td>
+        <td>FTSE China 50</td>
+        <td>Les 50 plus grosses entreprises chinoises. Très concentré (Tencent, Alibaba, Meituan). Proxy du stimulus chinois.</td>
+      </tr>
+      <tr>
+        <td><strong>EWJ</strong></td>
+        <td>Japon</td>
+        <td>MSCI Japan</td>
+        <td>Toyota, Sony, Mitsubishi. Bénéficie du yen faible et de la réforme corporate (TSE). En rallye depuis 2023.</td>
+      </tr>
+      <tr>
+        <td><strong>EWG</strong></td>
+        <td>Allemagne</td>
+        <td>MSCI Germany</td>
+        <td>SAP, Siemens, Allianz. Proxy industriel européen. Sensible au cycle manufacturier mondial et au prix de l'énergie.</td>
+      </tr>
+      <tr>
+        <td><strong>EWZ</strong></td>
+        <td>Brésil</td>
+        <td>MSCI Brazil</td>
+        <td>Petrobras, Vale, Itaú. Très lié aux commodités. Le réal brésilien ajoute une couche de volatilité FX.</td>
+      </tr>
+      <tr>
+        <td><strong>INDA</strong></td>
+        <td>Inde</td>
+        <td>MSCI India</td>
+        <td>Reliance, Infosys, HDFC. La success story démographique. Croissance structurelle mais valorisations élevées.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le risque FX des ETF internationaux</h4>
+    <p style="margin:0;">Quand vous achetez EWJ (Japon) en dollars, vous êtes exposé au yen. Si le Nikkei monte de 10% mais le yen baisse de 15% face au dollar, votre ETF <strong>perd 5%</strong> en dollar. C'est pourquoi il existe des versions "hedged" (couvertes en devise) comme <strong>DXJ</strong> (Japon hedged) ou <strong>HEWG</strong> (Allemagne hedged). Utilisez les versions hedged quand vous êtes baissier sur la devise locale.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : ETF OBLIGATIONS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="obligations"><i class="fa-solid fa-landmark" style="color:#9333ea;"></i> ETF Obligations</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-landmark" style="color:#9333ea;"></i> Treasuries, Corporate, High Yield, TIPS</h2>
+
+  <p>Les ETF obligataires sont essentiels pour la diversification et la gestion du risque. La clé est de comprendre la <strong>duration</strong> — la sensibilité du prix aux variations de taux d'intérêt.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle de duration simplifiée</div>
+    Si les taux montent de <span class="formula-highlight">1%</span>, un ETF de duration <span class="formula-highlight">X ans</span> perd environ <span class="formula-highlight">X%</span>
+  </div>
+
+  <h3>ETF Treasuries : la colonne vertébrale</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>ETF</th><th>Maturité</th><th>Duration</th><th>Si taux +1%</th><th>Usage</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>SHY</strong></td>
+        <td>1-3 ans</td>
+        <td>~1.8 ans</td>
+        <td style="color:#f59e0b;">-1.8%</td>
+        <td>Cash amélioré. Quasi sans risque de taux. Parking de liquidités.</td>
+      </tr>
+      <tr>
+        <td><strong>IEF</strong></td>
+        <td>7-10 ans</td>
+        <td>~7.5 ans</td>
+        <td style="color:#dc2626;">-7.5%</td>
+        <td>Le "belly" de la courbe. Bon équilibre rendement/risque. Diversificateur de portefeuille classique.</td>
+      </tr>
+      <tr>
+        <td><strong>TLT</strong></td>
+        <td>20+ ans</td>
+        <td>~17 ans</td>
+        <td style="color:#dc2626;">-17%</td>
+        <td>Maximum de sensibilité aux taux. Safe haven extrême. Spéculatif sur la direction des taux.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Quand acheter des obligations ETF ?</h4>
+    <p style="margin:0;">Historiquement, le meilleur moment pour acheter TLT est quand la Fed atteint son <strong>pic de taux</strong> et commence à signaler des baisses. En 2019, TLT a gagné +20% quand la Fed a pivoté. En 2022, TLT a perdu -30% quand la Fed a monté les taux de 0% à 5.25%. Le timing sur TLT est essentiellement un pari sur la politique monétaire. Pour les investisseurs prudents, <strong>IEF offre un meilleur rapport rendement/risque</strong>.</p>
+  </div>
+
+  <h3>ETF Corporate & High Yield</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-building"></i> LQD — Investment Grade Corporate</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">Obligations d'entreprises notées BBB et au-dessus (Apple, Microsoft, JP Morgan). Rendement supérieur aux Treasuries de ~1%. Duration ~8.5 ans. Risque : spread de crédit s'écarte en récession.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-fire"></i> HYG / JNK — High Yield (Junk Bonds)</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">Obligations notées BB et en-dessous. Rendement ~7-9%. <strong>Attention</strong> : corrélé aux actions (~0.70 avec SPY). En récession, les spreads HY explosent et l'ETF chute comme les actions. Ce n'est PAS un diversificateur — c'est un actif risqué déguisé en obligation.</p>
+    </div>
+  </div>
+
+  <h3>TIP — Protection contre l'inflation</h3>
+
+  <p>Les <strong>TIPS</strong> (Treasury Inflation-Protected Securities) ajustent leur principal en fonction de l'inflation CPI. L'ETF <strong>TIP</strong> offre une protection directe contre l'inflation. Il surperforme quand l'inflation réalisée dépasse les anticipations du marché (breakeven inflation). En 2021-2022, TIP a bien fonctionné comme hedge contre la flambée de l'inflation.</p>
+
+  <!-- CHART 1: Duration sensitivity chart -->
+  <h3>Sensibilité aux taux par duration</h3>
+  <div id="chart-duration" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : ETF COMMODITÉS                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="commodites"><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> ETF Commodités</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> Or, argent, pétrole, agriculture</h2>
+
+  <h3>Or : GLD, IAU, SGOL — le safe haven</h3>
+
+  <p>L'or est la commodité la plus tradée via ETF. Plusieurs options existent, toutes adossées à de l'or physique stocké dans des coffres.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>ETF</th><th>AUM</th><th>TER</th><th>Stockage</th><th>Spécificité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>GLD</strong></td>
+        <td>$75B</td>
+        <td>0.40%</td>
+        <td>HSBC London</td>
+        <td>Le plus liquide. Options très actives. Le choix des traders.</td>
+      </tr>
+      <tr>
+        <td><strong>IAU</strong></td>
+        <td>$35B</td>
+        <td>0.25%</td>
+        <td>JP Morgan London</td>
+        <td>Moins cher que GLD. Prix par part plus bas (~$50 vs ~$260). Le choix des investisseurs long terme.</td>
+      </tr>
+      <tr>
+        <td><strong>SGOL</strong></td>
+        <td>$3B</td>
+        <td>0.17%</td>
+        <td>Zurich (Suisse)</td>
+        <td>Le moins cher. Stockage suisse (perçu comme plus sûr). Chaque barre est auditée individuellement.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Argent : SLV et le ratio or/argent</h3>
+
+  <p><strong>SLV</strong> ($12B, TER 0.50%) est l'ETF argent de référence. L'argent est plus volatile que l'or car il a une composante industrielle (panneaux solaires, électronique) en plus de sa fonction de métal précieux.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Le ratio or/argent — Signal de timing</div>
+    Ratio = <span class="formula-highlight">Prix Or</span> / <span class="formula-highlight">Prix Argent</span> | Moyenne historique : ~65 | &gt;80 = argent sous-évalué | &lt;50 = argent surévalué
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le trade du ratio or/argent</h4>
+    <p style="margin:0;">Quand le ratio dépasse 80, les traders achètent SLV et vendent GLD (ou simplement surpondèrent l'argent). En mars 2020, le ratio a atteint <strong>125</strong> — un extrême historique. L'argent a ensuite rallié de +140% en 5 mois. Le ratio est actuellement autour de 90, ce qui suggère que l'argent est encore relativement bon marché par rapport à l'or.</p>
+  </div>
+
+  <h3>Pétrole : USO — le piège du contango</h3>
+
+  <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px; margin:1.5rem 0;">
+    <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-triangle-exclamation"></i> ATTENTION : USO n'est PAS de l'or noir physique</h4>
+    <p style="font-size:0.88rem; color:#334155; margin:0 0 1rem;">Contrairement à GLD qui détient de l'or physique, <strong>USO détient des contrats à terme (futures)</strong> sur le pétrole WTI. Chaque mois, il doit "rouler" ses positions du contrat expirant vers le suivant. Si le marché est en <strong>contango</strong> (contrat futur plus cher que le spot), ce roll coûte de l'argent — et ce coût peut atteindre <strong>10-20% par an</strong> en période de contango fort.</p>
+    <p style="font-size:0.88rem; color:#334155; margin:0;"><strong>Résultat</strong> : le pétrole spot peut monter de 50% et USO ne monter que de 20%. En avril 2020, quand le WTI est tombé à -$37, USO a perdu 80% de sa valeur et a dû restructurer sa stratégie. USO est un outil de <strong>trading court terme</strong> uniquement — ne le gardez jamais plus de quelques semaines.</p>
+  </div>
+
+  <h3>Broad Commodities et Agriculture</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <strong style="color:#f59e0b;">DBC — Invesco DB Commodity Index</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">14 commodités futures : énergie (60%), métaux, agriculture. Utilise une optimisation du roll pour minimiser le coût du contango. Meilleur que les anciens ETF commodités. TER 0.85%.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">DBA — Invesco DB Agriculture</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Exposition pure agriculture : blé, maïs, soja, sucre, cacao, café, bétail, porcs. Hedge contre l'inflation alimentaire. Sensible aux conditions climatiques et aux chocs d'approvisionnement. TER 0.85%.</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: Asset class correlation heatmap -->
+  <h3>Corrélations entre classes d'actifs (5 ans)</h3>
+  <div id="chart-correlation" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : ETF IMMOBILIER                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="immobilier"><i class="fa-solid fa-building" style="color:#dc2626;"></i> ETF Immobilier (REITs)</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building" style="color:#dc2626;"></i> VNQ, XLRE — L'immobilier coté</h2>
+
+  <p>Les <strong>REITs</strong> (Real Estate Investment Trusts) sont des sociétés qui détiennent et gèrent des biens immobiliers (bureaux, centres commerciaux, data centers, tours de télécom). Par obligation légale, elles distribuent au moins <strong>90% de leurs revenus</strong> en dividendes, ce qui en fait des machines à rendement.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-city"></i></div>
+      <h4 style="margin:0 0 0.25rem;">VNQ — Vanguard Real Estate</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">$35B AUM | TER 0.12% | Yield ~3.8%</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">~170 REITs US. Diversifié : data centers (Equinix), tours telecom (American Tower), self-storage (Public Storage), résidentiel, santé. Le REIT ETF de référence.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-building-columns"></i></div>
+      <h4 style="margin:0 0 0.25rem;">XLRE — Real Estate Select Sector</h4>
+      <div style="font-size:0.75rem; color:#059669; font-weight:700; margin-bottom:0.5rem;">$6B AUM | TER 0.09% | Yield ~3.5%</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Les REITs du S&P 500 uniquement (~30 titres). Plus concentré que VNQ. Fortement pondéré en Prologis, American Tower, Equinix. Moins de small REITs.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> REITs et taux d'intérêt : la relation toxique</h4>
+    <p style="margin:0;">Les REITs sont très sensibles aux taux d'intérêt pour deux raisons : (1) ils sont fortement endettés (leverage de 30-50%) donc le coût de la dette augmente quand les taux montent, et (2) leur rendement de dividende entre en compétition avec les obligations sans risque. En 2022, quand les taux sont passés de 0% à 5%, VNQ a chuté de <strong>-28%</strong>. Les REITs surperforment quand la Fed baisse les taux et quand l'immobilier est en expansion.</p>
+  </div>
+
+  <!-- CHART 3: Commodity cycle visualization -->
+  <h3>Performance par classe d'actifs selon le cycle économique</h3>
+  <div id="chart-cycle" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quelle est la différence fondamentale entre SPY et QQQ ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : SPY réplique le S&P 500 (503 titres, tous secteurs) tandis que QQQ réplique le Nasdaq-100 (101 titres, biais tech ~50%).</strong><br>
+      QQQ est essentiellement un pari sur la tech américaine. Il surperforme SPY quand la tech monte, mais sous-performe (et chute plus) en rotation value ou en hausse de taux. SPY est plus diversifié avec une représentation significative de la finance, la santé, l'énergie et l'industrie. Pour un investisseur qui veut "le marché US", SPY est le choix par défaut.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi TLT est-il considéré comme un instrument spéculatif ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À cause de sa duration extrême (~17 ans), qui amplifie l'impact des mouvements de taux.</strong><br>
+      Une hausse de taux de 1% fait chuter TLT d'environ 17%. En 2022, la hausse de taux de 0% à 5.25% a fait perdre à TLT plus de 30% — une perte historique pour un "safe haven". TLT est utile comme hedge en cas de crise (flight to quality) ou comme pari directionnel sur les baisses de taux, mais ce n'est pas un investissement "sûr" au sens traditionnel. Pour la partie obligataire d'un portefeuille, IEF (duration 7.5 ans) offre un bien meilleur rapport rendement/risque.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi ne faut-il jamais garder USO en buy & hold ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À cause du coût de roll des contrats futures (contango).</strong><br>
+      USO détient des futures sur le pétrole WTI, pas du pétrole physique. Chaque mois, il roule sa position du contrat proche vers le contrat suivant. En contango (situation la plus fréquente), le contrat futur est plus cher que le spot — l'ETF "achète haut et vend bas" à chaque roll. Ce coût invisible peut atteindre 10-20% par an. Sur 5 ans, le pétrole spot pourrait être flat alors qu'USO aura perdu 40-50% de sa valeur. Pour un hold long terme, utilisez des actions pétrolières (XLE) ou un ETF commodités optimisé (DBC).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel est l'intérêt du ratio or/argent pour un trader ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : C'est un indicateur de valeur relative entre les deux métaux précieux, avec une tendance au retour à la moyenne.</strong><br>
+      Le ratio or/argent (prix de l'or divisé par le prix de l'argent) oscille historiquement entre 50 et 80. Au-dessus de 80, l'argent est considéré comme sous-évalué par rapport à l'or — c'est le moment d'acheter SLV ou de surpondérer l'argent. En dessous de 50, l'or est relativement bon marché. En mars 2020, le ratio a atteint 125, suivi d'un rallye de l'argent de +140%. C'est un signal de mean reversion fiable sur le moyen terme.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Pourquoi HYG (High Yield bonds) n'est pas un bon diversificateur de portefeuille actions ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'il est fortement corrélé aux actions (~0.70 avec SPY).</strong><br>
+      Les obligations high yield (junk bonds) sont émises par des entreprises à faible qualité de crédit. En récession, ces entreprises font défaut — ce qui fait chuter HYG exactement quand les actions chutent aussi. Vous n'obtenez aucune diversification. En 2008, HYG a perdu 25% tandis que TLT gagnait 33%. Pour diversifier un portefeuille actions, utilisez des Treasuries (TLT, IEF) ou de l'or (GLD), pas du high yield. HYG est plus proche d'un actif risqué avec un coupon que d'un vrai actif défensif.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-chart-line"></i> <strong>SPY = le marché, QQQ = la tech</strong> — ne les confondez pas. QQQ a un beta de 1.15 et surperforme/sous-performe de manière amplifiée. 70% SPY + 30% QQQ est un bon compromis.</li>
+      <li><i class="fa-solid fa-flag-usa"></i> <strong>IJR > IWM pour les small caps</strong> — le filtre qualité du S&P 600 (rentabilité requise) bat le Russell 2000 d'environ 1%/an historiquement.</li>
+      <li><i class="fa-solid fa-earth-americas"></i> <strong>Le risque FX est réel sur les ETF internationaux</strong> — un rallye local de 10% peut devenir une perte si la devise locale chute face au dollar. Versions hedged disponibles (DXJ, HEWG).</li>
+      <li><i class="fa-solid fa-landmark"></i> <strong>Duration = risque de taux</strong> — TLT (duration 17 ans) peut perdre 17% si les taux montent de 1%. IEF (duration 7.5 ans) offre un meilleur rapport rendement/risque.</li>
+      <li><i class="fa-solid fa-coins"></i> <strong>GLD = or physique, USO = futures avec contango</strong> — GLD est un vrai holding d'or, USO souffre du coût de roll des futures. Ne jamais garder USO en long terme.</li>
+      <li><i class="fa-solid fa-fire"></i> <strong>HYG est corrélé aux actions, pas aux obligations</strong> — il ne diversifie rien. Pour la partie défensive, utilisez TLT/IEF ou GLD.</li>
+      <li><i class="fa-solid fa-building"></i> <strong>Les REITs surperforment quand les taux baissent</strong> — très sensibles à la politique monétaire. VNQ est le standard, XLRE pour les large caps du S&P 500 uniquement.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne préjugent pas des performances futures.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-etf/part1-comprendre-etf/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">1. Comprendre les ETF</div>
+  </div>
+</a>
+
+<a href="/series/trader-etf/part3-thematiques-sectoriels/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 3 sur 6</div>
+    <div class="next-title">ETF Thématiques & Sectoriels — AI, Clean Energy, Défense</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-etf/part1-comprendre-etf/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#059669; color:white; border:1px solid #059669;">2. Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Portefeuille</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les ETF</strong> — Partie 2/6 : ETF par Classe d'Actifs</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Duration sensitivity chart
+(function(){
+  var dom = document.getElementById('chart-duration');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var scenarios = ['-2%','-1%','-0.5%','0%','+0.5%','+1%','+2%'];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){var s=p[0].axisValueLabel+'<br/>';p.forEach(function(i){s+=i.marker+' '+i.seriesName+': <b>'+i.value+'%</b><br/>';});return s;}},
+    legend:{data:['SHY (1.8Y)','IEF (7.5Y)','TLT (17Y)'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:scenarios,name:'Variation des taux',axisLabel:{fontSize:11,fontWeight:600}},
+    yAxis:{type:'value',name:'Impact sur le prix (%)',axisLabel:{fontSize:10,formatter:'{value}%'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'SHY (1.8Y)',type:'bar',data:[3.6,1.8,0.9,0,-0.9,-1.8,-3.6],itemStyle:{color:'#059669'},barGap:'15%'},
+      {name:'IEF (7.5Y)',type:'bar',data:[15,7.5,3.75,0,-3.75,-7.5,-15],itemStyle:{color:'#2563eb'}},
+      {name:'TLT (17Y)',type:'bar',data:[34,17,8.5,0,-8.5,-17,-34],itemStyle:{color:'#dc2626'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Asset class correlation heatmap
+(function(){
+  var dom = document.getElementById('chart-correlation');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var assets = ['SPY','QQQ','IWM','EFA','EEM','TLT','GLD','HYG','VNQ','USO'];
+  var data = [];
+  var corr = [
+    [1.00,0.92,0.88,0.85,0.72,-0.35,0.05,0.70,0.65,0.45],
+    [0.92,1.00,0.82,0.80,0.68,-0.40,0.00,0.65,0.58,0.38],
+    [0.88,0.82,1.00,0.82,0.75,-0.25,0.08,0.72,0.70,0.48],
+    [0.85,0.80,0.82,1.00,0.78,-0.20,0.15,0.68,0.60,0.42],
+    [0.72,0.68,0.75,0.78,1.00,-0.15,0.20,0.62,0.55,0.50],
+    [-0.35,-0.40,-0.25,-0.20,-0.15,1.00,0.30,-0.30,-0.15,-0.20],
+    [0.05,0.00,0.08,0.15,0.20,0.30,1.00,0.10,0.12,0.15],
+    [0.70,0.65,0.72,0.68,0.62,-0.30,0.10,1.00,0.65,0.40],
+    [0.65,0.58,0.70,0.60,0.55,-0.15,0.12,0.65,1.00,0.30],
+    [0.45,0.38,0.48,0.42,0.50,-0.20,0.15,0.40,0.30,1.00]
+  ];
+  for(var i=0;i<assets.length;i++){
+    for(var j=0;j<assets.length;j++){
+      data.push([i,j,corr[i][j]]);
+    }
+  }
+  chart.setOption({
+    tooltip:{formatter:function(p){return assets[p.value[0]]+' / '+assets[p.value[1]]+'<br/>Corrélation: <b>'+p.value[2].toFixed(2)+'</b>';}},
+    grid:{left:'12%',right:'8%',top:'5%',bottom:'12%'},
+    xAxis:{type:'category',data:assets,axisLabel:{fontSize:10,fontWeight:700},splitArea:{show:true}},
+    yAxis:{type:'category',data:assets,axisLabel:{fontSize:10,fontWeight:700},splitArea:{show:true}},
+    visualMap:{min:-0.5,max:1,calculable:false,orient:'horizontal',left:'center',bottom:'0',inRange:{color:['#dc2626','#fca5a5','#f8fafc','#86efac','#059669']},text:['Positive','Négative'],textStyle:{fontSize:10}},
+    series:[{
+      type:'heatmap',
+      data:data,
+      label:{show:true,formatter:function(p){return p.value[2].toFixed(2);},fontSize:9,fontWeight:600},
+      itemStyle:{borderColor:'#fff',borderWidth:2}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Performance by economic cycle
+(function(){
+  var dom = document.getElementById('chart-cycle');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Actions (SPY)','Obligations (TLT)','Or (GLD)','Commodités (DBC)','REITs (VNQ)'],bottom:0,textStyle:{fontSize:10}},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'18%'},
+    xAxis:{type:'category',data:['Expansion\n(début)','Expansion\n(fin)','Contraction\n(début)','Contraction\n(fin)'],axisLabel:{fontSize:10,fontWeight:600}},
+    yAxis:{type:'value',name:'Performance typique (%)',axisLabel:{fontSize:10,formatter:'{value}%'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Actions (SPY)',type:'bar',data:[15,8,-5,-15],itemStyle:{color:'#059669'}},
+      {name:'Obligations (TLT)',type:'bar',data:[5,-5,10,20],itemStyle:{color:'#2563eb'}},
+      {name:'Or (GLD)',type:'bar',data:[0,10,15,5],itemStyle:{color:'#f59e0b'}},
+      {name:'Commodités (DBC)',type:'bar',data:[10,15,-10,-20],itemStyle:{color:'#f97316'}},
+      {name:'REITs (VNQ)',type:'bar',data:[12,5,-10,-20],itemStyle:{color:'#9333ea'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

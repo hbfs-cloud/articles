@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion du Risque : Survivre à la Volatilité | Trader les Proxys à Haut Beta — Partie 5/6 | Market Watch</title>
+  <meta name="description" content="Série Proxys à Haut Beta — Partie 5/6 : Position sizing adapté au beta, stop loss intelligents, correlation breakdown, hedging et drawdown management pour survivre au haut beta.">
+  <meta property="og:title" content="Gestion du Risque : Survivre à la Volatilité | Trader les Proxys à Haut Beta — Partie 5/6 | Market Watch">
+  <meta property="og:description" content="Le paradoxe du haut beta : gros gains possibles, grosses pertes certaines. Maîtrisez le position sizing, les stops ajustés au beta, le hedging et le drawdown management.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/proxys-haut-beta/part5-gestion-risque/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#e11d48; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fb7185; color:#fb7185; }
+  .series-link.current { background:#e11d48; color:white; border-color:#e11d48; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fff1f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#e11d48; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-rose { background:rgba(225,29,72,0.1); color:#e11d48; border:1px solid rgba(225,29,72,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#e11d48; margin-right:0.75rem; }
+  details[open] summary { border-color:#e11d48; background:#fff1f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#e11d48; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fb7185; }
+  .takeaway-box { background:linear-gradient(135deg, #fff1f2 0%, #fecdd3 100%); border:1px solid #e11d48; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#e11d48; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(225,29,72,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#e11d48; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #e11d48 0%, #be123c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(225,29,72,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#e11d48; color:#e11d48; }
+  .disclaimer-mega { background:linear-gradient(135deg, #881337 0%, #be123c 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #e11d48; }
+  .disclaimer-mega h3 { color:#fecdd3; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#ffe4e6; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#fb7185; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #e11d48; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Proxys à Haut Beta</span>
+  <a href="/series/proxys-haut-beta/part1-comprendre-beta/" class="series-link">1 — Comprendre le Beta</a>
+  <a href="/series/proxys-haut-beta/part2-identifier-proxys/" class="series-link">2 — Identifier les Proxys</a>
+  <a href="/series/proxys-haut-beta/part3-strategies-trading/" class="series-link">3 — Stratégies de Trading</a>
+  <a href="/series/proxys-haut-beta/part4-secteurs-leaders/" class="series-link">4 — Secteurs Leaders</a>
+  <a href="/series/proxys-haut-beta/part5-gestion-risque/" class="series-link current">5 — Gestion du Risque</a>
+  <a href="/series/proxys-haut-beta/part6-portefeuille-beta/" class="series-link">6 — Portefeuille Beta</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Proxys à Haut Beta — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Gestion du Risque : Survivre à la Volatilité</h1>
+  <p class="hero-subtitle">Le haut beta est une arme à double tranchant. Gros gains possibles, grosses pertes certaines. Cette partie vous apprend à dimensionner vos positions, placer vos stops, détecter les breakdowns de corrélation et gérer les drawdowns.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-rose"><i class="fa-solid fa-shield-halved"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-hand"></i> Stop Loss</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-link-slash"></i> Corrélation</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Drawdown</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#paradoxe" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#e11d48; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Le Paradoxe</a>
+  <a href="#sizing" class="nav-item"><i class="fa-solid fa-calculator" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Position Sizing</a>
+  <a href="#stops" class="nav-item"><i class="fa-solid fa-hand" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Stop Loss</a>
+  <a href="#correlation" class="nav-item"><i class="fa-solid fa-link-slash" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Corrélation</a>
+  <a href="#hedging" class="nav-item"><i class="fa-solid fa-umbrella" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Hedging</a>
+  <a href="#drawdown" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Drawdowns</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : LE PARADOXE DU HAUT BETA                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="paradoxe"><i class="fa-solid fa-scale-balanced" style="color:#e11d48;"></i> Le paradoxe du haut beta</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#e11d48;"></i> Gros gains possibles, grosses pertes certaines</h2>
+
+  <p>Un beta de 2.0 signifie que si le SPY fait <strong>+10%</strong>, votre proxy fait <strong>+20%</strong>. Séduisant. Mais cela signifie aussi que si le SPY fait <strong>-10%</strong>, votre proxy fait <strong>-20%</strong>. Et c'est là que l'asymétrie mathématique devient votre pire ennemi.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">L'asymétrie des pertes</div>
+    -50% → Il faut <span class="formula-highlight">+100%</span> pour récupérer | -60% → Il faut <span class="formula-highlight">+150%</span> | -75% → Il faut <span class="formula-highlight">+300%</span>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> L'amplification des drawdowns</h4>
+    <p style="margin:0;">Un crash de <strong>-30% sur le SPY</strong> (ce qui arrive environ une fois par décennie) se traduit par <strong>-60% sur un proxy beta 2.0</strong>. Pour récupérer de -60%, il faut un rallye de +150%. Si le SPY met 2 ans à récupérer ses -30%, votre proxy mettra potentiellement <strong>3-4 ans</strong> à récupérer ses -60%. Le beta amplifie les gains pendant les bonnes années, mais il <strong>détruit du capital</strong> pendant les mauvaises — et le temps de recovery est disproportionnellement plus long.</p>
+  </div>
+
+  <h3>Drawdown comparé : SPY vs Proxys haut beta</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Scénario SPY</th><th>Beta 1.0 (SPY)</th><th>Beta 1.5</th><th>Beta 2.0</th><th>Beta 3.0 (SOXL)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Correction -10%</strong></td>
+        <td>-10%</td>
+        <td style="color:#f59e0b;">-15%</td>
+        <td style="color:#dc2626;">-20%</td>
+        <td style="color:#dc2626; font-weight:700;">-30%</td>
+      </tr>
+      <tr>
+        <td><strong>Bear -20%</strong></td>
+        <td>-20%</td>
+        <td style="color:#dc2626;">-30%</td>
+        <td style="color:#dc2626; font-weight:700;">-40%</td>
+        <td style="color:#dc2626; font-weight:700;">-60%</td>
+      </tr>
+      <tr>
+        <td><strong>Crash -30%</strong></td>
+        <td>-30%</td>
+        <td style="color:#dc2626; font-weight:700;">-45%</td>
+        <td style="color:#dc2626; font-weight:700;">-60%</td>
+        <td style="color:#dc2626; font-weight:700;">-90%</td>
+      </tr>
+      <tr>
+        <td><strong>Recovery nécessaire</strong></td>
+        <td>+43%</td>
+        <td style="color:#f59e0b;">+82%</td>
+        <td style="color:#dc2626;">+150%</td>
+        <td style="color:#dc2626; font-weight:700;">+900%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 1: Drawdown comparison -->
+  <h3>Simulation de drawdown : SPY vs Beta 2.0</h3>
+  <div id="chart-drawdown" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : POSITION SIZING                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Position sizing adapté au beta</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Dimensionner ses positions avec le beta</h2>
+
+  <p>La règle fondamentale du haut beta est simple : <strong>divisez votre taille de position par le beta</strong>. Si vous mettriez normalement 10% de votre capital sur un trade SPY, mettez seulement 5% sur un proxy beta 2.0. Vous aurez la même exposition au risque de marché, mais avec un levier naturel.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule de position sizing ajustée au beta</div>
+    Taille = (<span class="formula-highlight">Capital</span> x <span class="formula-highlight">Risque %</span>) / (<span class="formula-highlight">ATR</span> x <span class="formula-highlight">Beta</span>)
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Exemple concret</strong>
+        <span class="badge badge-blue">Calcul</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">
+        <strong>Compte :</strong> $100,000 | <strong>Risque par trade :</strong> 1% = $1,000<br>
+        <strong>Proxy :</strong> NVDA | <strong>ATR(14) :</strong> $5.00 | <strong>Beta :</strong> 1.8<br>
+        <strong>Calcul :</strong> $1,000 / ($5.00 x 1.8) = <strong>111 actions</strong><br>
+        Si NVDA est à $130, cela représente ~$14,430, soit <strong>14.4% du compte</strong>.<br>
+        Comparez : sans ajustement beta, vous auriez acheté $1,000/$5.00 = 200 actions ($26,000 = 26% du compte).
+      </p>
+    </div>
+  </div>
+
+  <h3>Règles de sizing par niveau de beta</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Beta du proxy</th><th>Taille max par position</th><th>Nombre max de positions</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1.0 - 1.3</strong></td>
+        <td>15-20% du capital</td>
+        <td>5-7 positions</td>
+        <td>SPY, SMH, QQQ</td>
+      </tr>
+      <tr>
+        <td><strong>1.3 - 1.8</strong></td>
+        <td>8-12% du capital</td>
+        <td>4-6 positions</td>
+        <td>NVDA, XBI, ARKK</td>
+      </tr>
+      <tr>
+        <td><strong>1.8 - 2.5</strong></td>
+        <td>5-8% du capital</td>
+        <td>3-5 positions</td>
+        <td>TSLA, MARA, GDXJ</td>
+      </tr>
+      <tr>
+        <td><strong>2.5 - 4.0+</strong></td>
+        <td style="color:#dc2626; font-weight:700;">2-5% du capital</td>
+        <td>1-3 positions</td>
+        <td>SOXL, LABU, RIOT</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pyramiding : commencer petit, ajouter si ça marche</h4>
+    <p style="margin:0;">Le <strong>pyramiding</strong> (ou scaling in) est la technique idéale pour le haut beta. Au lieu d'entrer avec 100% de la position, commencez par <strong>33%</strong>. Si le trade se développe favorablement, ajoutez 33% supplémentaires. Si la tendance se confirme, ajoutez les 33% restants. Avantage : votre coût moyen est meilleur si le trade fonctionne, et votre perte est réduite si ça ne marche pas. Règle d'or : <strong>n'ajoutez jamais à une position perdante</strong> sur du haut beta.</p>
+  </div>
+
+  <!-- CHART 2: Position sizing calculator visual -->
+  <h3>Impact du beta sur la taille de position</h3>
+  <div id="chart-sizing" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : STOP LOSS                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stops"><i class="fa-solid fa-hand" style="color:#f97316;"></i> Stop loss pour le haut beta</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hand" style="color:#f97316;"></i> Des stops plus larges en prix, plus serrés en capital</h2>
+
+  <p>Le haut beta signifie des mouvements quotidiens plus amples. Un stop trop serré sera touché par le bruit normal du marché. Un stop trop large détruira votre capital. La solution : <strong>calibrer le stop à l'ATR ajusté du beta</strong>, tout en gardant le risque en dollars constant.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-arrows-left-right"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Stop ATR ajusté</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Stop = Prix d'entrée - (ATR x multiplicateur). Pour le haut beta, utilisez un multiplicateur de <strong>2.0-2.5x ATR</strong> au lieu de 1.5x. Le beta amplifie le bruit, il faut donner de l'espace au trade.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-clock"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Time Stop</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Si le proxy ne bouge pas en <strong>5-7 jours</strong>, sortez. Le haut beta <strong>doit</strong> bouger. Un proxy haut beta immobile signifie que la thèse est probablement invalide ou que le timing est mauvais.</p>
+    </div>
+  </div>
+
+  <h3>Types de stops comparés</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Type de stop</th><th>Formule</th><th>Quand l'utiliser</th><th>Piège</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>ATR Stop</strong></td>
+        <td>Entrée - (ATR x 2.0)</td>
+        <td>Swing trading, tendances</td>
+        <td>Trop large en range</td>
+      </tr>
+      <tr>
+        <td><strong>% du capital</strong></td>
+        <td>Max -1% du compte</td>
+        <td>Toujours (règle de base)</td>
+        <td>Peut être trop serré sur le haut beta</td>
+      </tr>
+      <tr>
+        <td><strong>Technique</strong></td>
+        <td>Sous support / SMA clé</td>
+        <td>Breakout, tendance confirmée</td>
+        <td>Le support peut être loin sur le haut beta</td>
+      </tr>
+      <tr>
+        <td><strong>Trailing ATR</strong></td>
+        <td>Plus haut - (ATR x 2.5)</td>
+        <td>Tendance forte confirmée</td>
+        <td>Trop de whipsaws si beta >2.0</td>
+      </tr>
+      <tr>
+        <td><strong>Time Stop</strong></td>
+        <td>Sortie après X jours</td>
+        <td>Le proxy ne bouge pas</td>
+        <td>Peut couper avant le mouvement</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La règle du 1% ajustée au beta</h4>
+    <p style="margin:0;">La règle classique est : ne jamais risquer plus de <strong>1% du capital</strong> sur un seul trade. Avec le haut beta, cette règle reste la même en dollars, mais la distance du stop et la taille de la position s'ajustent. Avec un proxy beta 2.0, votre stop sera plus large en points mais votre position sera plus petite en actions. Le résultat : <strong>même risque en dollars, même 1% du capital</strong>, mais avec le levier naturel du beta.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : CORRÉLATION BREAKDOWN                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="correlation"><i class="fa-solid fa-link-slash" style="color:#9333ea;"></i> Corrélation breakdown risk</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-link-slash" style="color:#9333ea;"></i> Quand le proxy ne suit plus l'indice</h2>
+
+  <p>Le plus grand risque du trading de proxys n'est pas la volatilité — c'est la <strong>perte de corrélation</strong>. Votre proxy est censé suivre l'indice avec amplification. Mais si un événement idiosyncratique survient (earnings ratés, scandale, FDA rejet), le proxy décroche de l'indice et votre thèse directionnelle devient invalide.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Événements qui cassent la corrélation</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Earnings surprise</strong> : résultats bien au-dessus/dessous des attentes</li>
+        <li><strong>FDA verdict</strong> : approbation ou rejet inattendu</li>
+        <li><strong>Scandale/Fraude</strong> : ex. CrowdStrike crash, SVB collapse</li>
+        <li><strong>Guidance change</strong> : abaissement soudain des prévisions</li>
+        <li><strong>Short squeeze</strong> : mouvement déconnecté du marché (GME, AMC)</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Comment détecter et gérer</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Rolling corrélation 20j</strong> : surveiller, alerter si < 0.5</li>
+        <li><strong>Divergence intraday</strong> : si le proxy diverge du marché >2 jours, évaluer</li>
+        <li><strong>Diversifier les proxys</strong> : ne pas tout mettre sur un seul nom</li>
+        <li><strong>ETF > Actions individuelles</strong> : SMH plutôt que NVDA seul</li>
+        <li><strong>Réduire immédiatement</strong> si corrélation casse sur événement</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CHART 3: Correlation breakdown detection -->
+  <h3>Rolling corrélation — Détection de breakdown</h3>
+  <div id="chart-correlation" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le risque de hedging invalide</h4>
+    <p style="margin:0;">Si vous utilisez un proxy haut beta comme couverture (ex : short NVDA pour hedger un portefeuille tech long), la <strong>perte de corrélation est catastrophique</strong>. Votre hedge ne hedge plus, et vous avez une position nue. C'est pourquoi les hedges sur proxy doivent être monitorés quotidiennement et ajustés si la corrélation rolling 20j passe sous 0.5. Préférez les ETF (SMH, XBI) aux actions individuelles pour les hedges.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : HEDGING                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="hedging"><i class="fa-solid fa-umbrella" style="color:#16a34a;"></i> Hedging un portefeuille haut beta</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-umbrella" style="color:#16a34a;"></i> Protéger son capital sans tuer le rendement</h2>
+
+  <p>L'objectif n'est pas d'éliminer le risque (sinon, tradez du SPY), mais de <strong>limiter les pertes catastrophiques</strong> tout en conservant le potentiel de hausse. Voici les 4 stratégies de hedging adaptées au haut beta.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#eff6ff; border:2px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.5rem;"><i class="fa-solid fa-shield-halved"></i> 1. Puts SPY/QQQ proportionnels</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Achetez des puts sur l'indice proportionnellement au beta de votre portefeuille.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Formule :</strong> Notionnel puts = Valeur portefeuille x Beta moyen<br>
+        <strong>Exemple :</strong> Portefeuille $100K, beta 1.8 → $180K de notionnel en puts SPY<br>
+        <strong>Coût :</strong> ~2-4% du portefeuille par trimestre
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fff1f2; border:2px solid #e11d48; border-radius:16px;">
+      <h4 style="color:#e11d48; margin:0 0 0.5rem;"><i class="fa-solid fa-bolt"></i> 2. VIX calls (catastrophe insurance)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Les calls VIX explosent quand le marché crash — c'est l'assurance ultime.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Position :</strong> 1-2% du portefeuille en calls VIX OTM (strike 25-30)<br>
+        <strong>Quand :</strong> VIX < 15 (coût faible, protection max)<br>
+        <strong>Attention :</strong> Les calls VIX perdent de la valeur rapidement (theta)
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-arrows-left-right"></i> 3. Collar strategy</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Vendre un call couvert + acheter un put protecteur sur le proxy.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Structure :</strong> Long proxy + Short call OTM + Long put OTM<br>
+        <strong>Effet :</strong> Limite le gain max ET la perte max. Coût quasi nul.<br>
+        <strong>Idéal :</strong> Quand vous voulez garder la position mais craignez un retournement
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fefce8; border:2px solid #eab308; border-radius:16px;">
+      <h4 style="color:#ca8a04; margin:0 0 0.5rem;"><i class="fa-solid fa-scale-balanced"></i> 4. Réduire le beta global</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Mixer haut beta + actifs anti-beta pour réduire le beta du portefeuille.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Méthode :</strong> 60% haut beta + 40% TLT/GLD/SGOV<br>
+        <strong>Effet :</strong> Beta portefeuille passe de 1.8 à ~1.0<br>
+        <strong>Avantage :</strong> Pas de coût d'options, simple et efficace
+      </div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le hedge parfait n'existe pas</h4>
+    <p style="margin:0;">Chaque stratégie de hedging a un coût : les puts coûtent du premium, les calls VIX décayent, les collars limitent votre upside, et mixer avec des anti-beta dilue votre performance. La clé est de <strong>choisir son poison</strong> : accepter un coût fixe (puts), accepter une limite de gain (collar), ou accepter une dilution de performance (mixte). En pratique, la combinaison la plus utilisée par les pros est : <strong>collars sur les positions concentrées + mixte anti-beta pour le reste</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : DRAWDOWN MANAGEMENT                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="drawdown"><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Drawdown management</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Survivre aux séries perdantes</h2>
+
+  <p>Le drawdown management n'est pas sexy — mais c'est ce qui sépare les traders qui durent de ceux qui disparaissent. En haut beta, un drawdown de 20% arrive <strong>plusieurs fois par an</strong>. Vous devez avoir un protocole défini <strong>avant</strong> que ça arrive.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Règle 1 — Max drawdown personnel</strong>
+        <span class="badge badge-red">Critique</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Définissez à l'avance votre limite : <strong>-15%? -20%? -25%?</strong> Quand elle est atteinte, vous coupez tout et vous passez en cash pendant minimum 48h. Pas de négociation, pas d'exceptions. Cette règle préserve votre capital ET votre santé mentale.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">Règle 2 — Circuit breaker : 3 stops consécutifs = pause</strong>
+        <span class="badge badge-purple">Discipline</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Si 3 trades consécutifs touchent le stop, c'est que quelque chose ne va pas : votre lecture du marché, votre timing, ou le régime a changé. Prenez une <strong>pause de 48h minimum</strong>. Analysez ce qui n'a pas marché. Le marché sera toujours là lundi prochain.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Règle 3 — Réduire les tailles pendant les drawdowns</strong>
+        <span class="badge badge-blue">Capital preservation</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand vous êtes en drawdown de -10%, réduisez vos tailles de position de 50%. Quand vous êtes à -20%, réduisez de 75%. <strong>Ne moyennez JAMAIS à la baisse</strong> sur du haut beta. Le "doubling down" sur un proxy qui chute est le chemin le plus rapide vers la ruine.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Règle 4 — Journal de trading : beta réalisé vs attendu</strong>
+        <span class="badge badge-green">Amélioration</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Après chaque trade, notez : le beta attendu du proxy, le beta réalisé pendant la durée du trade, et la corrélation effective. Si le beta réalisé diverge constamment de l'attendu, votre modèle a un problème. Le journal est votre outil de <strong>feedback quantitatif</strong>.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La psychologie du drawdown haut beta</h4>
+    <p style="margin:0;">Le plus grand danger du drawdown n'est pas financier — c'est <strong>psychologique</strong>. Un proxy beta 2.0 qui perd -30% en 2 semaines génère de la panique, de la colère, et l'envie de "se refaire" en prenant encore plus de risque. C'est exactement ce qu'il ne faut pas faire. Le protocole de drawdown doit être écrit, affiché devant votre écran, et suivi à la lettre. La discipline en drawdown est ce qui sépare les amateurs des professionnels.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Si le SPY baisse de 30%, combien perd un proxy beta 2.0 et quel pourcentage de hausse faut-il pour récupérer ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le proxy perd ~60% et il faut +150% pour récupérer.</strong><br>
+      Un beta de 2.0 amplifie le mouvement par 2 : -30% x 2 = -60%. Pour récupérer de -60%, il faut calculer : si vous avez $100 et perdez 60%, il vous reste $40. Pour revenir à $100 depuis $40, il faut gagner $60/$40 = +150%. C'est l'asymétrie mathématique des pertes — plus vous perdez, plus il est difficile de récupérer.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est la formule de position sizing ajustée au beta ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Taille = (Capital x Risque%) / (ATR x Beta)</strong><br>
+      Le beta agit comme un diviseur de taille. Avec un compte de $100K, 1% de risque ($1,000), un ATR de $5 et un beta de 1.8, la taille est $1,000/($5 x 1.8) = 111 actions. Sans l'ajustement beta, vous auriez pris 200 actions — soit presque le double. L'ajustement garantit que le risque en dollars reste constant quel que soit le beta du proxy.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi faut-il des stops plus larges en prix mais pas en capital sur du haut beta ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce que le bruit quotidien est amplifié par le beta, mais le sizing ajusté compense.</strong><br>
+      Un proxy beta 2.0 bouge 2 fois plus que le marché chaque jour. Un stop à 1.5x ATR sera touché par le bruit normal bien plus souvent. En utilisant un stop à 2.0-2.5x ATR, on donne de l'espace au trade. Mais comme la taille de position est divisée par le beta, le risque en dollars reste le même : stop plus large x position plus petite = même perte maximale en dollars.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce qu'un "correlation breakdown" et pourquoi est-ce le pire risque du trading de proxys ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : C'est quand le proxy cesse de suivre l'indice qu'il est censé amplifier, à cause d'un événement idiosyncratique.</strong><br>
+      Si vous êtes long NVDA comme proxy du Nasdaq et que NVDA publie des earnings catastrophiques, NVDA peut chuter de 20% alors que le QQQ est stable. Votre thèse directionnelle (le marché monte, donc NVDA monte plus) est invalide. Pire : si vous avez des hedges basés sur la corrélation, ils ne fonctionnent plus. La solution : surveiller la corrélation rolling 20j, préférer les ETF aux actions individuelles pour les grosses positions, et diversifier les proxys.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Citez les 4 règles du protocole de drawdown management.</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 1) Max drawdown personnel défini à l'avance, 2) Circuit breaker après 3 stops consécutifs, 3) Réduire les tailles pendant les drawdowns, 4) Journal de trading beta réalisé vs attendu.</strong><br>
+      Ces 4 règles forment un système anti-catastrophe. Le max drawdown évite la ruine totale. Le circuit breaker force une pause pour analyser. La réduction des tailles préserve le capital restant. Et le journal permet d'apprendre et d'ajuster. Sans ce protocole, le trader haut beta est condamné à subir les drawdowns sans capacité de réaction rationnelle.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#e11d48;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>L'asymétrie des pertes est impitoyable</strong> — Un drawdown de -60% (courant en beta 2.0 lors d'un crash) nécessite +150% pour récupérer. Le temps de recovery est disproportionnel.</li>
+      <li><i class="fa-solid fa-calculator"></i> <strong>Divisez votre taille par le beta</strong> — Formule : Size = (Capital x Risk%) / (ATR x Beta). Un proxy beta 2.0 = position 2x plus petite qu'un SPY trade.</li>
+      <li><i class="fa-solid fa-hand"></i> <strong>Stops plus larges en prix, même risque en dollars</strong> — Utilisez 2.0-2.5x ATR comme stop. La taille réduite compense la distance accrue du stop.</li>
+      <li><i class="fa-solid fa-link-slash"></i> <strong>La corrélation breakdown est le risque #1</strong> — Surveillez la rolling corrélation 20j. Si elle passe sous 0.5, réévaluez immédiatement la position.</li>
+      <li><i class="fa-solid fa-umbrella"></i> <strong>Le hedging a toujours un coût</strong> — Puts (premium), collars (cap le gain), VIX calls (theta decay), ou dilution anti-beta. Choisissez votre poison.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>Le protocole de drawdown se définit AVANT le drawdown</strong> — Max DD personnel, circuit breaker 3 stops, réduction des tailles, journal de trading.</li>
+      <li><i class="fa-solid fa-brain"></i> <strong>Ne moyennez JAMAIS à la baisse sur du haut beta</strong> — Le "doubling down" sur un proxy en chute libre est le chemin le plus rapide vers la ruine. Pyramidez à la hausse uniquement.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le trading de proxys à haut beta comporte un risque élevé de perte en capital.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/proxys-haut-beta/part4-secteurs-leaders/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">4. Secteurs Leaders</div>
+  </div>
+</a>
+
+<a href="/series/proxys-haut-beta/part6-portefeuille-beta/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 6 sur 6</div>
+    <div class="next-title">Portefeuille Beta — Construction & Rotation</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/proxys-haut-beta/part1-comprendre-beta/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Comprendre le Beta</a>
+  <a href="/series/proxys-haut-beta/part2-identifier-proxys/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Identifier les Proxys</a>
+  <a href="/series/proxys-haut-beta/part3-strategies-trading/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Stratégies de Trading</a>
+  <a href="/series/proxys-haut-beta/part4-secteurs-leaders/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Secteurs Leaders</a>
+  <a href="/series/proxys-haut-beta/part5-gestion-risque/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#e11d48; color:white; border:1px solid #e11d48;">5. Gestion du Risque</a>
+  <a href="/series/proxys-haut-beta/part6-portefeuille-beta/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Portefeuille Beta</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les Proxys à Haut Beta</strong> — Partie 5/6 : Gestion du Risque</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Drawdown comparison SPY vs Beta 2.0
+(function(){
+  var dom = document.getElementById('chart-drawdown');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months = [];
+  var spy = [], proxy = [];
+  var spyVal = 100, proxyVal = 100;
+  var labels = [];
+  // Simulate a crash and recovery over 36 months
+  for(var i=0; i<=36; i++){
+    labels.push('M'+i);
+    if(i<=6){
+      // Crash phase: SPY drops ~30%
+      var spyDrop = -5 + Math.random()*2;
+      spyVal *= (1 + spyDrop/100);
+      proxyVal *= (1 + (spyDrop*2)/100);
+    } else if(i<=12){
+      // Bottom/consolidation
+      var spyMove = -1 + Math.random()*3;
+      spyVal *= (1 + spyMove/100);
+      proxyVal *= (1 + (spyMove*2)/100);
+    } else {
+      // Recovery
+      var spyUp = 2 + Math.random()*2;
+      spyVal *= (1 + spyUp/100);
+      proxyVal *= (1 + (spyUp*2)/100);
+    }
+    spy.push(parseFloat(spyVal.toFixed(1)));
+    proxy.push(parseFloat(proxyVal.toFixed(1)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+'<br/>SPY: '+p[0].value+'<br/>Beta 2.0: '+p[1].value;}},
+    legend:{data:['SPY (Beta 1.0)','Proxy (Beta 2.0)'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:labels,axisLabel:{fontSize:10}},
+    yAxis:{type:'value',name:'Valeur ($100 initial)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'SPY (Beta 1.0)',type:'line',data:spy,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:2.5}},
+      {name:'Proxy (Beta 2.0)',type:'line',data:proxy,smooth:true,symbol:'none',lineStyle:{color:'#e11d48',width:2.5},areaStyle:{color:'rgba(225,29,72,0.06)'}}
+    ],
+    markLine:{silent:true,data:[{yAxis:100,lineStyle:{type:'dashed',color:'#94a3b8'}}]}
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Position sizing calculator visual
+(function(){
+  var dom = document.getElementById('chart-sizing');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var betas = ['1.0','1.3','1.5','1.8','2.0','2.5','3.0','4.0'];
+  var positions = [200,154,133,111,100,80,67,50];
+  var pctCapital = [26.0,20.0,17.3,14.4,13.0,10.4,8.7,6.5];
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return 'Beta: '+p[0].axisValueLabel+'<br/>Actions: '+p[0].value+'<br/>% du capital: '+pctCapital[p[0].dataIndex]+'%';}},
+    grid:{left:'10%',right:'8%',top:'8%',bottom:'12%'},
+    xAxis:{type:'category',data:betas,name:'Beta du proxy',axisLabel:{fontSize:11,fontWeight:600}},
+    yAxis:{type:'value',name:'Nombre d\'actions',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'bar',data:positions,
+      itemStyle:{color:function(p){
+        var colors=['#16a34a','#16a34a','#f59e0b','#f59e0b','#f97316','#dc2626','#dc2626','#881337'];
+        return colors[p.dataIndex];
+      }},
+      barWidth:'55%',
+      label:{show:true,position:'top',formatter:'{c}',fontWeight:700,fontSize:11}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Correlation breakdown detection
+(function(){
+  var dom = document.getElementById('chart-correlation');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var days = [];
+  var corr = [];
+  var val = 0.85;
+  for(var i=1; i<=120; i++){
+    days.push('J'+i);
+    if(i<=40){
+      val += (Math.random()-0.5)*0.04;
+      val = Math.max(0.7,Math.min(0.95,val));
+    } else if(i<=55){
+      // Correlation breakdown event
+      val -= 0.04 + Math.random()*0.02;
+      val = Math.max(0.1,val);
+    } else if(i<=75){
+      // Stays low
+      val += (Math.random()-0.4)*0.03;
+      val = Math.max(0.15,Math.min(0.45,val));
+    } else {
+      // Recovery
+      val += 0.02 + Math.random()*0.01;
+      val = Math.min(0.9,val);
+    }
+    corr.push(parseFloat(val.toFixed(2)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+'<br/>Corrélation rolling 20j: <b>'+p[0].value+'</b>';}},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'12%'},
+    xAxis:{type:'category',data:days,axisLabel:{fontSize:9,interval:19}},
+    yAxis:{type:'value',name:'Corrélation',min:0,max:1,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'line',data:corr,smooth:true,symbol:'none',
+      lineStyle:{width:2.5},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(225,29,72,0.15)'},{offset:1,color:'rgba(225,29,72,0)'}]}},
+      itemStyle:{color:'#e11d48'},
+      markLine:{silent:true,lineStyle:{type:'dashed',color:'#dc2626',width:2},data:[{yAxis:0.5,label:{formatter:'Zone danger < 0.5',fontSize:10,color:'#dc2626'}}]},
+      markArea:{silent:true,data:[[{yAxis:0,itemStyle:{color:'rgba(220,38,38,0.06)'}},{yAxis:0.5}]]}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

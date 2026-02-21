@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ouvrir la Journée — Trader l'Open comme un Pro | Le Scalping & Trading Intraday — Partie 1/6 | Market Watch</title>
+  <meta name="description" content="Série Le Scalping & Trading Intraday — Partie 1/6 : Préparation pré-marché, Opening Range Breakout (ORB), gap trading, VWAP, volume profile à l'ouverture et gestion du risque sur les 30 premières minutes.">
+  <meta property="og:title" content="Ouvrir la Journée — Trader l'Open comme un Pro | Le Scalping & Trading Intraday — Partie 1/6 | Market Watch">
+  <meta property="og:description" content="Les 30 premières minutes sont les plus volatiles et les plus rentables. Apprenez à préparer votre journée, trader l'Opening Range Breakout, et maîtriser le gap trading.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/scalping-intraday/part1-ouvrir-la-journee/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#2563eb; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#60a5fa; color:#60a5fa; }
+  .series-link.current { background:#2563eb; color:white; border-color:#2563eb; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#2563eb; margin-right:0.75rem; }
+  details[open] summary { border-color:#2563eb; background:#eff6ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#2563eb; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#60a5fa; }
+  .takeaway-box { background:linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%); border:1px solid #2563eb; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#2563eb; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(37,99,235,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#2563eb; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(37,99,235,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#2563eb; color:#2563eb; }
+  .disclaimer-mega { background:linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #2563eb; }
+  .disclaimer-mega h3 { color:#bfdbfe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#dbeafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#60a5fa; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #2563eb; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Le Scalping & Trading Intraday</span>
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" class="series-link current">1 — Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" class="series-link">2 — Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" class="series-link">3 — Détecter les Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" class="series-link">4 — Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" class="series-link">5 — Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" class="series-link">6 — Discipline & Sortie</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Le Scalping & Trading Intraday — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Ouvrir la Journée — Trader l'Open comme un Pro</h1>
+  <p class="hero-subtitle">Les 30 premières minutes concentrent 35% du volume quotidien. C'est le moment où les gaps se comblent, les tendances se dessinent, et les opportunités explosent. Maîtriser l'ouverture, c'est avoir un avantage décisif.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-clock"></i> Opening Range</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-column"></i> Volume Profile</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrow-trend-up"></i> Gap Trading</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-shield-halved"></i> Risk Management</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#pre-market" class="nav-item"><i class="fa-solid fa-sun" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pré-Marché</a>
+  <a href="#orb" class="nav-item"><i class="fa-solid fa-chart-bar" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> ORB Strategy</a>
+  <a href="#gaps" class="nav-item"><i class="fa-solid fa-arrow-up-right-dots" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Gap Trading</a>
+  <a href="#vwap" class="nav-item"><i class="fa-solid fa-wave-square" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> VWAP à l'Open</a>
+  <a href="#patterns" class="nav-item"><i class="fa-solid fa-arrows-split-up-and-left" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Patterns d'Open</a>
+  <a href="#risk" class="nav-item"><i class="fa-solid fa-shield-halved" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Gestion du Risque</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : PRÉ-MARCHÉ                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pre-market"><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> La préparation pré-marché</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Pourquoi les 30 premières minutes sont critiques</h2>
+
+  <p>L'ouverture des marchés (9h30 ET pour le NYSE/NASDAQ, soit 15h30 heure de Paris) est le moment le plus <strong>volatile</strong> et le plus <strong>liquide</strong> de la journée. Pendant les 30 premières minutes, les ordres accumulés overnight se déversent sur le marché, les algorithmes ajustent leurs positions, et les institutionnels exécutent leurs blocs.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">La règle des 30 minutes</div>
+    <span class="formula-highlight">35%</span> du volume quotidien | <span class="formula-highlight">60%</span> de la volatilité | <span class="formula-highlight">50%</span> des opportunités intraday
+  </div>
+
+  <p>Le trader intraday qui maîtrise l'ouverture a un <strong>avantage structurel</strong>. Mais cette fenêtre est aussi la plus dangereuse : les faux breakouts, les reversals violents et le slippage sont à leur maximum. La préparation est donc essentielle.</p>
+
+  <h3>La checklist pré-marché (avant 15h30 Paris)</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#eff6ff; border:1px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem;"><i class="fa-solid fa-chart-line"></i> 1. Analyser les futures (dès 8h)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>ES (S&P 500 futures)</strong> : direction du marché</li>
+        <li><strong>NQ (Nasdaq futures)</strong> : appétit pour la tech</li>
+        <li><strong>VIX futures</strong> : niveau de peur</li>
+        <li>Comparer le niveau actuel au close de la veille</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-newspaper"></i> 2. Scanner les news (8h-14h)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Earnings</strong> : résultats publiés avant l'open</li>
+        <li><strong>Macro</strong> : CPI, PPI, NFP, FOMC minutes</li>
+        <li><strong>Géopolitique</strong> : tariffs, conflits, décisions</li>
+        <li><strong>Pre-market movers</strong> : top gainers/losers &gt;5%</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-crosshairs"></i> 3. Identifier les niveaux clés</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>High/Low de la veille</strong> (PDH/PDL)</li>
+        <li><strong>Pre-market high/low</strong> (PMH/PML)</li>
+        <li><strong>VWAP de la veille</strong> (closing VWAP)</li>
+        <li><strong>Supports/résistances</strong> sur daily</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#faf5ff; border:1px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.75rem;"><i class="fa-solid fa-list-check"></i> 4. Préparer le plan de trade</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Scénario haussier</strong> : si gap up, si breakout</li>
+        <li><strong>Scénario baissier</strong> : si gap down, si rejection</li>
+        <li><strong>Taille de position</strong> : max 1-2% de risque</li>
+        <li><strong>Stops prédéfinis</strong> : AVANT d'entrer</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le piège du "je regarde et je décide"</h4>
+    <p style="margin:0;">La pire erreur du trader intraday débutant est d'arriver à l'ouverture sans plan. L'adrénaline de la volatilité pousse à des décisions impulsives. Les pros ont leurs niveaux, leurs scénarios et leurs tailles de position <strong>avant</strong> que la cloche sonne. Comme un pilote qui fait son briefing avant le décollage — jamais pendant.</p>
+  </div>
+
+  <!-- CHART 1: Volume intraday profile -->
+  <h3>Profil de volume intraday typique (SPY)</h3>
+  <div id="chart-volume-profile" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : ORB                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="orb"><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> L'Opening Range Breakout (ORB)</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> La stratégie ORB — Le classique du trading intraday</h2>
+
+  <p>L'<strong>Opening Range Breakout</strong> (ORB) est l'une des stratégies intraday les plus étudiées et les plus utilisées. Le principe est simple : on attend que le marché établisse un range pendant les premières minutes (5, 15, ou 30 minutes), puis on trade la cassure de ce range dans la direction du breakout.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Principe de l'ORB</div>
+    <span class="formula-highlight">Long</span> si cassure du High du range | <span class="formula-highlight">Short</span> si cassure du Low du range
+  </div>
+
+  <h3>Les 3 variantes de l'ORB</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Variante</th><th>Fenêtre</th><th>Win Rate</th><th>R/R moyen</th><th>Idéal pour</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>ORB 5 min</strong></td>
+        <td>15h30-15h35</td>
+        <td style="color:#f59e0b;">45-50%</td>
+        <td>1:2 à 1:3</td>
+        <td>Scalpers rapides, volatilité élevée</td>
+      </tr>
+      <tr>
+        <td><strong>ORB 15 min</strong></td>
+        <td>15h30-15h45</td>
+        <td style="color:#16a34a;">52-58%</td>
+        <td>1:1.5 à 1:2.5</td>
+        <td>Day traders, meilleur compromis</td>
+      </tr>
+      <tr>
+        <td><strong>ORB 30 min</strong></td>
+        <td>15h30-16h00</td>
+        <td style="color:#16a34a;">55-62%</td>
+        <td>1:1 à 1:2</td>
+        <td>Swing intraday, moins de faux signaux</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi l'ORB 15 minutes est le plus populaire ?</h4>
+    <p style="margin:0;">L'ORB 5 minutes capture trop de bruit — les ordres initiaux n'ont pas encore été absorbés. L'ORB 30 minutes donne un range trop large, ce qui réduit le ratio risque/récompense. Le <strong>15 minutes</strong> offre le meilleur compromis : assez de temps pour que le marché "digère" les ordres d'ouverture, mais pas trop pour que le range devienne excessif. Statistiquement, les breakouts de l'ORB 15 min ont un taux de suivi de <strong>55-58%</strong> sur le S&P 500.</p>
+  </div>
+
+  <h3>Les règles d'exécution de l'ORB</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Règle 1 — Attendre la clôture de la bougie</strong>
+        <span class="badge badge-blue">Essentiel</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Ne jamais anticiper le breakout. Attendre que la bougie de 15 min clôture <strong>au-dessus</strong> du high (ou en-dessous du low) du range. Une mèche qui dépasse puis rentre = faux signal.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Règle 2 — Confirmer par le volume</strong>
+        <span class="badge badge-green">Confirmation</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Un breakout valide s'accompagne d'une <strong>augmentation de volume de 50% minimum</strong> par rapport à la moyenne des bougies précédentes. Un breakout sans volume est un piège.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">Règle 3 — Stop au milieu du range</strong>
+        <span class="badge badge-red">Protection</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Placer le stop-loss au <strong>milieu de l'opening range</strong> (50% retracement). Si le prix revient au milieu du range, le breakout a échoué. Certains traders utilisent le bas du range — plus conservateur mais stop plus large.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#9333ea;">Règle 4 — Target = 1.5x à 2x le range</strong>
+        <span class="badge badge-purple">Objectif</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Si le range est de 5 points, votre premier objectif est à +7.5 points (1.5x) et le second à +10 points (2x). Prendre 50% de la position au TP1, laisser courir le reste avec un trailing stop.</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: ORB Illustration -->
+  <h3>Illustration d'un ORB 15 minutes (SPY)</h3>
+  <div id="chart-orb" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : GAP TRADING                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="gaps"><i class="fa-solid fa-arrow-up-right-dots" style="color:#16a34a;"></i> Le Gap Trading</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-up-right-dots" style="color:#16a34a;"></i> Gaps à l'ouverture : fader ou suivre ?</h2>
+
+  <p>Un <strong>gap</strong> se produit quand le prix d'ouverture est significativement différent du prix de clôture de la veille. Les gaps sont créés par les news overnight, les earnings, les données macro, ou les mouvements des marchés asiatiques/européens. La question clé : faut-il <strong>fader le gap</strong> (parier sur un retour au prix de clôture) ou <strong>suivre le momentum</strong> ?</p>
+
+  <h3>Statistiques de gap fill (S&P 500, 2015-2025)</h3>
+
+  <!-- CHART 3: Gap statistics -->
+  <div id="chart-gap-stats" style="width:100%; height:380px; margin:1.5rem 0;"></div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-rotate-left"></i> Fader le gap (Gap Fill)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Quand ?</strong> Gap &lt; 1% sans catalyst majeur</li>
+        <li>Gap dans une zone de résistance/support connue</li>
+        <li>Volume pré-market faible (pas de conviction)</li>
+        <li><strong>Win rate :</strong> ~65% pour les gaps &lt; 0.5%</li>
+        <li><strong>Stop :</strong> au-delà du high/low pré-market</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#eff6ff; border:1px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-trend-up"></i> Suivre le gap (Continuation)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li><strong>Quand ?</strong> Gap &gt; 1% avec catalyst fort (earnings, FOMC)</li>
+        <li>Volume pré-market très élevé (&gt;2x la moyenne)</li>
+        <li>Gap au-dessus d'une résistance majeure (breakout)</li>
+        <li><strong>Win rate :</strong> ~58% pour les gaps &gt; 1.5%</li>
+        <li><strong>Stop :</strong> sous le VWAP ou le low de la 1ère bougie 5 min</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le gap "monstre" (&gt;3%) — Ne jamais fader</h4>
+    <p style="margin:0;">Les gaps supérieurs à 3% sont presque toujours causés par un événement majeur (earnings catastrophiques, acquisition, changement de guidance). Ces gaps ont un taux de fill inférieur à <strong>25% le jour même</strong>. Fader un gap monstre, c'est se mettre devant un train. La seule approche viable : attendre un pullback vers le VWAP et entrer dans la direction du gap.</p>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La règle du "gap and go" vs "gap and fade"</h4>
+    <p style="margin:0;">Résumé simple : <strong>Petits gaps (&lt;0.5%)</strong> = fade vers le close de la veille. <strong>Gaps moyens (0.5-1.5%)</strong> = attendre l'ORB pour décider. <strong>Grands gaps (&gt;1.5%)</strong> = suivre le momentum après un pullback. Le volume pré-market est l'arbitre : s'il est 2x supérieur à la moyenne, le gap a de la conviction et tend à continuer.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : VWAP                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="vwap"><i class="fa-solid fa-wave-square" style="color:#9333ea;"></i> Le VWAP à l'ouverture</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wave-square" style="color:#9333ea;"></i> VWAP : l'ancre du trading intraday</h2>
+
+  <p>Le <strong>VWAP</strong> (Volume Weighted Average Price) est le prix moyen pondéré par le volume depuis l'ouverture. C'est l'indicateur le plus important pour le trader intraday, car il représente le "prix juste" de la journée. Les institutionnels utilisent le VWAP comme benchmark — et quand vous tradez autour du VWAP, vous tradez avec les gros.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Calcul du VWAP</div>
+    VWAP = <span class="formula-highlight">Σ(Prix × Volume)</span> / <span class="formula-highlight">Σ(Volume)</span>
+  </div>
+
+  <h3>Les 3 utilisations du VWAP à l'ouverture</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-compass"></i></div>
+      <h4 style="margin:0 0 0.5rem;">1. Direction du marché</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Prix <strong>au-dessus</strong> du VWAP = biais haussier, chercher des longs. Prix <strong>en-dessous</strong> = biais baissier, chercher des shorts. Aussi simple que ça.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-rotate-left"></i></div>
+      <h4 style="margin:0 0 0.5rem;">2. Zone de pullback</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Après un mouvement directional, le prix revient souvent <strong>tester le VWAP</strong>. C'est le pullback idéal pour entrer dans la direction de la tendance.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-arrows-left-right"></i></div>
+      <h4 style="margin:0 0 0.5rem;">3. Support/Résistance</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le premier test du VWAP après l'ouverture est souvent rejeté. Utilisez-le comme <strong>support</strong> en tendance haussière, <strong>résistance</strong> en tendance baissière.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le "VWAP bounce" — Le setup le plus fiable de l'intraday</h4>
+    <p style="margin:0;">Quand le marché ouvre en gap up, fait un mouvement initial vers le haut, puis pullback vers le VWAP et <strong>rebondit</strong> avec du volume — c'est le setup intraday le plus fiable qui existe. Le taux de réussite du premier VWAP bounce de la journée est d'environ <strong>65-70%</strong> dans un marché en tendance. Stop sous le VWAP, target = high du jour. Ratio R/R typique : 1:2.</p>
+  </div>
+
+  <h3>VWAP + Bandes de déviation standard</h3>
+
+  <p>Les bandes de déviation standard autour du VWAP (±1σ, ±2σ) agissent comme des niveaux de support/résistance dynamiques. En range, le prix oscille entre +1σ et -1σ. Les touches de ±2σ sont des zones d'excès — idéales pour des trades de retour à la moyenne.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Niveau VWAP</th><th>Signification</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>+2σ</strong></td>
+        <td>Excès haussier — prix "trop cher"</td>
+        <td style="color:#dc2626;">Prendre profits longs / Short agressif</td>
+      </tr>
+      <tr>
+        <td><strong>+1σ</strong></td>
+        <td>Résistance intraday en range</td>
+        <td style="color:#f59e0b;">Prudence — alléger longs</td>
+      </tr>
+      <tr>
+        <td><strong>VWAP</strong></td>
+        <td>Prix juste — équilibre acheteurs/vendeurs</td>
+        <td style="color:#2563eb;">Zone de décision — observer la réaction</td>
+      </tr>
+      <tr>
+        <td><strong>-1σ</strong></td>
+        <td>Support intraday en range</td>
+        <td style="color:#f59e0b;">Prudence — alléger shorts</td>
+      </tr>
+      <tr>
+        <td><strong>-2σ</strong></td>
+        <td>Excès baissier — prix "trop bas"</td>
+        <td style="color:#16a34a;">Prendre profits shorts / Long agressif</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : PATTERNS D'OPEN                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="patterns"><i class="fa-solid fa-arrows-split-up-and-left" style="color:#dc2626;"></i> Les patterns d'ouverture</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-split-up-and-left" style="color:#dc2626;"></i> Opening Drive vs Opening Reversal</h2>
+
+  <p>Dès les premières minutes, le marché vous dit quel type de journée ce sera. Il existe deux grands patterns d'ouverture que tout trader intraday doit savoir reconnaître immédiatement.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border:2px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem; font-size:1.1rem;"><i class="fa-solid fa-rocket"></i> Opening Drive (Journée de tendance)</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0 0 0.75rem;">Le prix ouvre et part immédiatement dans une direction <strong>sans retest</strong> du prix d'ouverture. Le volume est élevé et croissant. Le marché ne regarde pas en arrière.</p>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+        <li>Se produit ~15% des jours</li>
+        <li>Souvent après un catalyst majeur (earnings, FOMC)</li>
+        <li>Le VWAP reste au-dessus/en-dessous du prix toute la journée</li>
+        <li><strong>Comment trader :</strong> entrer tôt, ne pas attendre un pullback qui ne viendra pas. Trailing stop agressif.</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem; font-size:1.1rem;"><i class="fa-solid fa-arrow-rotate-left"></i> Opening Reversal (Faux départ)</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0 0 0.75rem;">Le prix ouvre dans une direction pendant 10-20 minutes, puis <strong>reverse violemment</strong> et part dans l'autre direction pour le reste de la journée.</p>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+        <li>Se produit ~25% des jours</li>
+        <li>Piège les traders qui entrent trop tôt</li>
+        <li>Souvent lié à un "stop hunt" des market makers</li>
+        <li><strong>Comment trader :</strong> attendre l'ORB 15 min. Si le breakout initial échoue et le prix casse l'autre côté = signal fort de reversal.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Les 4 types de journées intraday</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Type</th><th>Fréquence</th><th>Caractéristique</th><th>Meilleure stratégie</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Trend Day Up</strong></td>
+        <td>~12%</td>
+        <td>Monte toute la journée, close near high</td>
+        <td>Buy & hold intraday, trailing stop</td>
+      </tr>
+      <tr>
+        <td><strong>Trend Day Down</strong></td>
+        <td>~10%</td>
+        <td>Baisse toute la journée, close near low</td>
+        <td>Short & hold intraday, trailing stop</td>
+      </tr>
+      <tr>
+        <td><strong>Range/Chop Day</strong></td>
+        <td>~55%</td>
+        <td>Oscille autour du VWAP, pas de direction</td>
+        <td>Fade les extrêmes, mean reversion VWAP</td>
+      </tr>
+      <tr>
+        <td><strong>Reversal Day</strong></td>
+        <td>~23%</td>
+        <td>Faux départ puis tendance inverse</td>
+        <td>Attendre le reversal, puis suivre la tendance</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Les "chop days" — Le tueur silencieux</h4>
+    <p style="margin:0;">55% des jours sont des jours de range (chop). Le prix oscille sans direction, prenant les stops des deux côtés. Les traders qui insistent à chercher une tendance ces jours-là enchaînent les petites pertes qui s'accumulent. <strong>La meilleure stratégie un jour de chop ?</strong> Réduire la taille de position de 50%, limiter le nombre de trades à 3 maximum, ou simplement ne pas trader. Savoir reconnaître un chop day <strong>avant</strong> d'être pris dedans est une compétence cruciale.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : GESTION DU RISQUE                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="risk"><i class="fa-solid fa-shield-halved" style="color:#0891b2;"></i> Gestion du risque à l'ouverture</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#0891b2;"></i> Risk management pour les 30 premières minutes</h2>
+
+  <p>L'ouverture est le moment le plus dangereux pour le capital. Les spreads sont plus larges, le slippage est maximal, et les mouvements sont imprévisibles. Le trader qui survit à l'open est celui qui gère son risque de manière rigoureuse.</p>
+
+  <h3>Les règles d'or du risk management à l'open</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card" style="border-top-color:#dc2626;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-expand"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Stops plus larges</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">La volatilité est 2-3x supérieure aux heures normales. Élargir vos stops de <strong>30-50%</strong> pendant les 30 premières minutes pour éviter les stop hunts.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#f59e0b;">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-minimize"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Position plus petite</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Compenser les stops plus larges par une <strong>taille de position réduite de 50%</strong>. Le risque en dollars reste identique, mais vous résistez aux whipsaws.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#2563eb;">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-clock"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Pas de trade avant 15h35</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Les 5 premières minutes sont du <strong>pur bruit</strong>. Laissez le marché s'installer. Les meilleures entrées viennent entre 15h35 et 16h00 (Paris).</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#16a34a;">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-hand"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Max 2 trades à l'open</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Limitez-vous à <strong>2 trades maximum</strong> pendant les 30 premières minutes. Si les deux échouent, attendez 16h00 pour réévaluer. Pas de revenge trading.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le ratio risque/position : la formule de survie</h4>
+    <p style="margin:0;"><strong>Taille de position = (Capital × Risque%) / (Stop en $)</strong>. Si votre capital est de 25 000 €, votre risque max est 1% (250 €), et votre stop est à 2 $ du prix d'entrée, alors votre taille maximum est de 125 actions. À l'ouverture, avec un stop 50% plus large (3 $), la taille descend à 83 actions. C'est la formule qui protège votre capital et vous permet de survivre aux séries perdantes.</p>
+  </div>
+
+  <h3>Checklist de sortie</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Signal</th><th>Action</th><th>Raison</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Stop touché</td>
+        <td style="color:#dc2626;"><strong>Sortie immédiate</strong></td>
+        <td>Pas de discussion. Le marché a invalidé votre thèse.</td>
+      </tr>
+      <tr>
+        <td>TP1 atteint</td>
+        <td style="color:#16a34a;"><strong>Sortir 50%</strong></td>
+        <td>Sécuriser les profits, laisser courir le reste.</td>
+      </tr>
+      <tr>
+        <td>Volume s'effondre</td>
+        <td style="color:#f59e0b;"><strong>Réduire/Sortir</strong></td>
+        <td>Le mouvement perd sa conviction — les gros sont sortis.</td>
+      </tr>
+      <tr>
+        <td>Prix revient au VWAP</td>
+        <td style="color:#f59e0b;"><strong>Trailing stop serré</strong></td>
+        <td>Le VWAP est la ligne de démarcation — surveiller la réaction.</td>
+      </tr>
+      <tr>
+        <td>16h15 sans direction</td>
+        <td style="color:#64748b;"><strong>Fermer tout</strong></td>
+        <td>Probablement un chop day — pas la peine d'insister.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 4 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quel pourcentage du volume quotidien se concentre dans les 30 premières minutes de trading ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Environ 35% du volume quotidien.</strong><br>
+      Les 30 premières minutes (et les 30 dernières) sont les périodes les plus actives de la journée. C'est le moment où les ordres accumulés overnight et les décisions des institutionnels se matérialisent. Ce pic de volume crée à la fois les meilleures opportunités et les plus grands risques de la journée.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est la différence entre l'ORB 5 min, 15 min et 30 min, et lequel est recommandé pour les débutants ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : L'ORB 15 minutes est le meilleur compromis et le plus recommandé.</strong><br>
+      L'ORB 5 min capture trop de bruit avec un win rate de 45-50%. L'ORB 30 min offre un meilleur win rate (55-62%) mais des ranges plus larges qui réduisent le R/R. L'ORB 15 min (52-58% win rate, R/R 1:1.5 à 1:2.5) offre le meilleur équilibre entre fiabilité et potentiel de gain. Il laisse assez de temps au marché pour "digérer" les ordres initiaux sans attendre trop longtemps.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Quand faut-il "fader" un gap (parier sur le retour au prix de clôture) et quand faut-il le suivre ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Fader les petits gaps (&lt;0.5%) sans catalyst, suivre les grands gaps (&gt;1.5%) avec catalyst fort.</strong><br>
+      Les petits gaps sans raison particulière ont un taux de fill d'environ 65%. En revanche, les grands gaps causés par des earnings, des données macro ou des événements géopolitiques ont beaucoup moins de chances d'être comblés dans la journée. Le volume pré-market est l'indicateur clé : un volume 2x supérieur à la moyenne indique que le gap a de la conviction et tend à continuer.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Pourquoi faut-il élargir ses stops et réduire sa taille de position pendant les 30 premières minutes ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce que la volatilité est 2-3x supérieure aux heures normales.</strong><br>
+      Les spreads sont plus larges, le slippage est maximal, et les mouvements rapides ("whipsaws") chassent les stops trop serrés. En élargissant vos stops de 30-50% et en réduisant votre taille de position de 50%, vous maintenez le même risque en dollars tout en donnant au trade assez d'espace pour respirer. C'est la différence entre être stoppé sur un faux mouvement et capturer la vraie tendance de l'ouverture.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#2563eb;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-clock"></i> <strong>Les 30 premières minutes = 35% du volume</strong> — C'est le moment le plus volatile et le plus rentable de la journée, mais aussi le plus dangereux.</li>
+      <li><i class="fa-solid fa-list-check"></i> <strong>La préparation pré-marché est non-négociable</strong> — Futures, news, niveaux clés et plan de trade doivent être prêts avant la cloche.</li>
+      <li><i class="fa-solid fa-chart-bar"></i> <strong>L'ORB 15 min est le meilleur compromis</strong> — Win rate de 55%, R/R de 1:2. Attendre la clôture de la bougie et confirmer par le volume.</li>
+      <li><i class="fa-solid fa-arrow-up-right-dots"></i> <strong>Petits gaps = fade, grands gaps = follow</strong> — Le volume pré-market est l'arbitre. Jamais fader un gap &gt;3%.</li>
+      <li><i class="fa-solid fa-wave-square"></i> <strong>Le VWAP est votre boussole intraday</strong> — Au-dessus = biais haussier, en-dessous = biais baissier. Le premier VWAP bounce est le setup le plus fiable.</li>
+      <li><i class="fa-solid fa-arrows-split-up-and-left"></i> <strong>55% des jours sont des chop days</strong> — Apprenez à les reconnaître tôt et réduisez votre activité. Le meilleur trade est parfois de ne pas trader.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Stops larges + positions petites à l'open</strong> — La volatilité 2-3x impose des ajustements. Max 2 trades dans les 30 premières minutes.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le trading intraday comporte un risque élevé de perte en capital. La majorité des traders particuliers perdent de l'argent.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les statistiques citées sont des moyennes historiques et ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/scalping-intraday/part2-sessions-mondiales/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 2 sur 6</div>
+    <div class="next-title">Sessions Mondiales — Asie, Europe, US depuis Paris</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#2563eb; color:white; border:1px solid #2563eb;">1. Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Détecter les Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Discipline & Sortie</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Le Scalping & Trading Intraday</strong> — Partie 1/6 : Ouvrir la Journée</p>
+  <p style="margin:0 0 0.5rem;">Publication : 21 février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Volume intraday profile
+(function(){
+  var dom = document.getElementById('chart-volume-profile');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var times = ['15:30','15:35','15:40','15:45','15:50','15:55','16:00','16:05','16:10','16:15','16:20','16:30','16:45','17:00','17:15','17:30','17:45','18:00','18:15','18:30','18:45','19:00','19:15','19:30','19:45','20:00','20:15','20:30','20:45','21:00'];
+  var volumes = [85,72,58,50,42,38,35,30,27,25,22,20,18,17,16,15,14,13,12,12,11,11,12,14,16,18,22,30,55,80];
+  var colors = volumes.map(function(v){ return v > 50 ? '#2563eb' : v > 30 ? '#60a5fa' : v > 20 ? '#93c5fd' : '#bfdbfe'; });
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+' (Paris)<br/>Volume relatif: <b>'+p[0].value+'%</b>';}},
+    grid:{left:'8%',right:'4%',top:'12%',bottom:'12%'},
+    xAxis:{type:'category',data:times,axisLabel:{fontSize:9,rotate:45}},
+    yAxis:{type:'value',name:'Volume relatif (%)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[{
+      type:'bar',data:volumes,
+      itemStyle:{color:function(params){return colors[params.dataIndex];},borderRadius:[4,4,0,0]},
+      markArea:{silent:true,data:[[{xAxis:'15:30',itemStyle:{color:'rgba(37,99,235,0.08)'},label:{show:true,position:'top',formatter:'Zone d\'ouverture\n(35% du volume)',fontSize:10,color:'#2563eb',fontWeight:700}},{xAxis:'16:00'}],[{xAxis:'20:30',itemStyle:{color:'rgba(37,99,235,0.08)'},label:{show:true,position:'top',formatter:'Zone de clôture\n(25% du volume)',fontSize:10,color:'#2563eb',fontWeight:700}},{xAxis:'21:00'}]]},
+      markLine:{silent:true,lineStyle:{type:'dashed',color:'#dc2626',width:1.5},data:[{xAxis:'16:00',label:{formatter:'Fin ORB 30min',fontSize:9,color:'#dc2626'}}]}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: ORB Illustration
+(function(){
+  var dom = document.getElementById('chart-orb');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  // Simulate 5-min candles for ORB
+  var times = ['15:30','15:35','15:40','15:45','15:50','15:55','16:00','16:05','16:10','16:15','16:20','16:25','16:30','16:35','16:40','16:45','16:50','16:55','17:00'];
+  // OHLC data [open, close, low, high]
+  var data = [
+    [502.50,503.80,502.10,504.20],  // 15:30 - opening candle
+    [503.80,503.20,502.90,504.10],  // 15:35
+    [503.20,503.60,502.80,504.00],  // 15:40 - end of ORB range
+    [503.60,504.50,503.40,504.80],  // 15:45 - breakout candle!
+    [504.50,505.20,504.30,505.50],  // 15:50 - continuation
+    [505.20,505.00,504.60,505.40],  // 15:55
+    [505.00,505.80,504.80,506.10],  // 16:00
+    [505.80,506.30,505.50,506.50],  // 16:05
+    [506.30,506.00,505.70,506.60],  // 16:10
+    [506.00,506.50,505.80,506.80],  // 16:15
+    [506.50,506.80,506.20,507.00],  // 16:20 - TP1 zone
+    [506.80,507.20,506.60,507.40],  // 16:25
+    [507.20,507.50,507.00,507.80],  // 16:30
+    [507.50,507.30,507.00,507.60],  // 16:35
+    [507.30,507.80,507.10,508.00],  // 16:40
+    [507.80,508.20,507.50,508.40],  // 16:45 - TP2 zone
+    [508.20,508.00,507.80,508.30],  // 16:50
+    [508.00,508.30,507.70,508.50],  // 16:55
+    [508.30,508.10,507.90,508.40]   // 17:00
+  ];
+  chart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'}},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:times,axisLabel:{fontSize:10}},
+    yAxis:{type:'value',min:501,max:510,scale:true,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {type:'candlestick',data:data,itemStyle:{color:'#16a34a',color0:'#dc2626',borderColor:'#16a34a',borderColor0:'#dc2626'},
+        markLine:{silent:true,data:[
+          {yAxis:504.20,lineStyle:{color:'#2563eb',type:'dashed',width:2},label:{formatter:'ORB High: 504.20',fontSize:10,color:'#2563eb',fontWeight:700}},
+          {yAxis:502.10,lineStyle:{color:'#2563eb',type:'dashed',width:2},label:{formatter:'ORB Low: 502.10',fontSize:10,color:'#2563eb',fontWeight:700}},
+          {yAxis:503.15,lineStyle:{color:'#f59e0b',type:'dotted',width:1.5},label:{formatter:'Stop (milieu): 503.15',fontSize:9,color:'#f59e0b'}},
+          {yAxis:507.35,lineStyle:{color:'#16a34a',type:'dotted',width:1.5},label:{formatter:'TP1 (1.5x): 507.35',fontSize:9,color:'#16a34a'}},
+          {yAxis:508.40,lineStyle:{color:'#10b981',type:'dotted',width:1.5},label:{formatter:'TP2 (2x): 508.40',fontSize:9,color:'#10b981'}}
+        ]},
+        markArea:{silent:true,data:[[{xAxis:'15:30',yAxis:504.20,itemStyle:{color:'rgba(37,99,235,0.06)'}},{xAxis:'15:40',yAxis:502.10}]]}
+      }
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Gap statistics
+(function(){
+  var dom = document.getElementById('chart-gap-stats');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['Taux de fill (jour même)','Taux de continuation'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'18%'},
+    xAxis:{type:'category',data:['< 0.25%','0.25-0.5%','0.5-1%','1-1.5%','1.5-2%','2-3%','> 3%'],axisLabel:{fontSize:10}},
+    yAxis:{type:'value',name:'%',max:100,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Taux de fill (jour même)',type:'bar',data:[78,65,52,40,32,28,22],itemStyle:{color:'#2563eb',borderRadius:[4,4,0,0]},barGap:'15%'},
+      {name:'Taux de continuation',type:'bar',data:[22,35,48,60,68,72,78],itemStyle:{color:'#16a34a',borderRadius:[4,4,0,0]}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

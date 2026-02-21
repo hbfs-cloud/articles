@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratégies ETF : DCA, Rotation, Hedging | Trader les ETF — Partie 4/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les ETF — Partie 4/6 : Dollar Cost Averaging, rotation sectorielle, momentum, hedging, core-satellite et tax-loss harvesting avec les ETF.">
+  <meta property="og:title" content="Stratégies ETF : DCA, Rotation, Hedging | Trader les ETF — Partie 4/6 | Market Watch">
+  <meta property="og:description" content="DCA vs lump sum, rotation sectorielle par cycle économique, dual momentum, hedging avec ETF inverse, core-satellite et tax-loss harvesting.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-etf/part4-strategies/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#059669; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#34d399; color:#34d399; }
+  .series-link.current { background:#059669; color:white; border-color:#059669; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-emerald { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#059669; margin-right:0.75rem; }
+  details[open] summary { border-color:#059669; background:#ecfdf5; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#059669; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#34d399; }
+  .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%); border:1px solid #059669; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#059669; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(5,150,105,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#059669; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(5,150,105,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#059669; color:#059669; }
+  .disclaimer-mega { background:linear-gradient(135deg, #064e3b 0%, #047857 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #059669; }
+  .disclaimer-mega h3 { color:#a7f3d0; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#d1fae5; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#34d399; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #059669; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Trader les ETF</span>
+  <a href="/series/trader-etf/part1-comprendre-etf/" class="series-link">1 — Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" class="series-link">2 — Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" class="series-link">3 — Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" class="series-link current">4 — Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" class="series-link">5 — Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" class="series-link">6 — Portefeuille</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Série Trader les ETF — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Stratégies ETF : DCA, Rotation, Hedging</h1>
+  <p class="hero-subtitle">Du DCA mensuel à la rotation sectorielle, en passant par le momentum et le hedging. Les stratégies éprouvées pour optimiser vos investissements en ETF et protéger votre portefeuille.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-arrows-rotate"></i> DCA</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-rotate"></i> Rotation</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-rocket"></i> Momentum</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-shield-halved"></i> Hedging</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-bullseye"></i> Core-Satellite</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#dca" class="nav-item"><i class="fa-solid fa-arrows-rotate" style="color:#059669; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> DCA</a>
+  <a href="#rotation" class="nav-item"><i class="fa-solid fa-rotate" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rotation</a>
+  <a href="#momentum" class="nav-item"><i class="fa-solid fa-rocket" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Momentum</a>
+  <a href="#hedging" class="nav-item"><i class="fa-solid fa-shield-halved" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Hedging</a>
+  <a href="#core-satellite" class="nav-item"><i class="fa-solid fa-bullseye" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Core-Satellite</a>
+  <a href="#tax-loss" class="nav-item"><i class="fa-solid fa-receipt" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Tax-Loss</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : DCA                                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="dca"><i class="fa-solid fa-arrows-rotate" style="color:#059669;"></i> Dollar Cost Averaging (DCA)</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-rotate" style="color:#059669;"></i> Investir régulièrement pour éliminer le timing risk</h2>
+
+  <p>Le <strong>Dollar Cost Averaging (DCA)</strong> consiste à investir un montant fixe à intervalles réguliers, quelles que soient les conditions de marché. C'est la stratégie la plus recommandée pour les investisseurs particuliers car elle élimine le risque de timing et exploite la volatilité à votre avantage.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Principe du DCA</div>
+    <span class="formula-highlight">500€</span> investis chaque mois &rarr; plus de parts quand le prix baisse, moins quand il monte
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi le DCA fonctionne-t-il ?</h4>
+    <p style="margin:0;">En investissant un montant fixe, vous achetez <strong>mécaniquement plus de parts quand le prix est bas</strong> et moins quand il est haut. Votre prix moyen d'achat est donc inférieur au prix moyen du marché sur la période. C'est mathématique : la moyenne harmonique (DCA) est toujours inférieure ou égale à la moyenne arithmétique (prix moyen). En période de forte volatilité, l'avantage du DCA est encore plus prononcé.</p>
+  </div>
+
+  <h3>DCA mensuel vs hebdomadaire : quelle fréquence ?</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Critère</th><th>DCA Mensuel</th><th>DCA Hebdomadaire</th><th>Verdict</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Performance historique (S&P 500, 20 ans)</strong></td>
+        <td>+9.8% annualisé</td>
+        <td>+9.9% annualisé</td>
+        <td style="color:#f59e0b;">Quasi identique</td>
+      </tr>
+      <tr>
+        <td><strong>Volatilité du prix moyen</strong></td>
+        <td>Moyenne</td>
+        <td>Plus lissée</td>
+        <td style="color:#16a34a;">Hebdo légèrement mieux</td>
+      </tr>
+      <tr>
+        <td><strong>Frais de transaction</strong></td>
+        <td>12/an</td>
+        <td>52/an</td>
+        <td style="color:#dc2626;">Mensuel si frais fixes</td>
+      </tr>
+      <tr>
+        <td><strong>Simplicité</strong></td>
+        <td>Simple</td>
+        <td>Plus contraignant</td>
+        <td style="color:#16a34a;">Mensuel plus pratique</td>
+      </tr>
+      <tr>
+        <td><strong>Recommandation</strong></td>
+        <td colspan="2" style="text-align:center;"><strong>Mensuel pour la plupart des investisseurs</strong></td>
+        <td style="color:#059669;"><i class="fa-solid fa-check"></i></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Lump Sum vs DCA : l'étude Vanguard</h3>
+
+  <p>L'étude Vanguard (2023) sur 92 ans de données montre que le <strong>lump sum (investir tout d'un coup) bat le DCA environ 68% du temps</strong>. Pourquoi ? Parce que les marchés montent plus souvent qu'ils ne baissent. Mais le DCA gagne sur un critère crucial : <strong>le risque psychologique</strong>.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-bolt"></i> Lump Sum gagne quand...</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le marché est en tendance haussière claire</li>
+        <li>Vous avez un horizon long (&gt;10 ans)</li>
+        <li>Vous tolérez bien la volatilité court terme</li>
+        <li>Vous recevez un héritage ou un bonus</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#ecfdf5; border:1px solid #059669; border-radius:16px;">
+      <h4 style="color:#059669; margin:0 0 0.75rem;"><i class="fa-solid fa-shield-halved"></i> DCA gagne quand...</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le marché est proche de sommets historiques</li>
+        <li>La volatilité est élevée (VIX &gt; 25)</li>
+        <li>Vous êtes nerveux et risquez de tout vendre en panique</li>
+        <li>Vous investissez votre salaire chaque mois (DCA naturel)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CHART 1: DCA vs Lump Sum -->
+  <h3>DCA vs Lump Sum sur le S&P 500 (2020-2025)</h3>
+  <div id="chart-dca-lumpsum" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> L'automatisation : la clé du DCA</h4>
+    <p style="margin:0;">La plupart des courtiers (Trade Republic, Degiro, Interactive Brokers) proposent des <strong>plans d'investissement programmés</strong> (PIPs). Configurez un virement automatique + achat automatique chaque mois. Cela élimine l'émotion et la procrastination. Les meilleurs ETF pour le DCA sont les <strong>ETF accumulants</strong> (capitalisant) car ils réinvestissent automatiquement les dividendes, maximisant l'effet composé.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : ROTATION SECTORIELLE                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="rotation"><i class="fa-solid fa-rotate" style="color:#f97316;"></i> Rotation sectorielle</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rotate" style="color:#f97316;"></i> Suivre le cycle économique avec les ETF sectoriels</h2>
+
+  <p>La <strong>rotation sectorielle</strong> consiste à surpondérer les secteurs qui performent le mieux dans chaque phase du cycle économique. Les cycles durent en moyenne 5-7 ans et se répètent de manière prévisible.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-seedling"></i> Early Cycle (reprise)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">L'économie repart après une récession. Taux bas, crédit en expansion, confiance des consommateurs en hausse.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>ETF gagnants :</strong> XLY (Consumer Discretionary), XLF (Financials)<br>
+        <strong>Logique :</strong> Consommateurs dépensent, banques prêtent, immobilier repart
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#ecfdf5; border:2px solid #059669; border-radius:16px;">
+      <h4 style="color:#059669; margin:0 0 0.5rem;"><i class="fa-solid fa-industry"></i> Mid Cycle (expansion)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Croissance établie. Investissements d'entreprise en hausse. Innovation et productivité.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>ETF gagnants :</strong> XLK (Technology), XLI (Industrials)<br>
+        <strong>Logique :</strong> Capex en hausse, adoption tech, infrastructure
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-fire"></i> Late Cycle (surchauffe)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Inflation en hausse, Fed resserre. Marges sous pression, mais l'énergie et les matières premières explosent.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>ETF gagnants :</strong> XLE (Energy), XLB (Materials)<br>
+        <strong>Logique :</strong> Demande forte + prix en hausse = profits records pour les commodities
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:2px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;"><i class="fa-solid fa-cloud-rain"></i> Recession (contraction)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Économie en contraction. Flight to quality. Secteurs défensifs et obligations surperforment.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>ETF gagnants :</strong> XLP (Staples), XLU (Utilities), TLT (Treasuries 20Y+)<br>
+        <strong>Logique :</strong> Produits de première nécessité, dividendes stables, obligations montent
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART 2: Sector Rotation Cycle -->
+  <h3>Performances sectorielles par phase du cycle (historique 2000-2025)</h3>
+  <div id="chart-rotation" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment identifier la phase du cycle ?</h4>
+    <p style="margin:0;">Surveillez trois indicateurs clés : <strong>1)</strong> La yield curve (inversée = récession dans 12-18 mois), <strong>2)</strong> Le PMI manufacturier (au-dessus de 50 = expansion, en dessous = contraction), <strong>3)</strong> Le taux de chômage (en hausse = late cycle/récession). Pas besoin de prédire exactement : même un timing approximatif améliore significativement la performance.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : MOMENTUM                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="momentum"><i class="fa-solid fa-rocket" style="color:#2563eb;"></i> Momentum ETF</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rocket" style="color:#2563eb;"></i> Acheter ce qui monte, vendre ce qui baisse</h2>
+
+  <p>Le <strong>momentum</strong> est l'anomalie de marché la plus documentée en finance académique. Les actifs qui ont bien performé sur 3-12 mois tendent à continuer de performer. Appliqué aux ETF, c'est une stratégie systématique et simple.</p>
+
+  <h3>Dual Momentum (Gary Antonacci)</h3>
+
+  <p>La stratégie <strong>Dual Momentum</strong> combine deux types de momentum pour maximiser les gains et minimiser les drawdowns :</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Les deux momentum</div>
+    <span class="formula-highlight">Absolu</span> : l'actif bat le cash (T-Bills) sur 12 mois &rarr; <span class="formula-highlight">Relatif</span> : l'actif bat les alternatives
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Étape</th><th>Action</th><th>Détail</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Momentum relatif</strong></td>
+        <td>Comparer SPY vs EFA (international)</td>
+        <td>Quel ETF a la meilleure performance sur 12 mois ?</td>
+      </tr>
+      <tr>
+        <td><strong>2. Momentum absolu</strong></td>
+        <td>Le gagnant bat-il les T-Bills ?</td>
+        <td>Si oui &rarr; investir dans le gagnant. Si non &rarr; obligations (BND/TLT)</td>
+      </tr>
+      <tr>
+        <td><strong>3. Rééquilibrage</strong></td>
+        <td>Mensuel (1er jour ouvrable)</td>
+        <td>Réévaluer le signal et ajuster. Max 12 trades/an</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Stratégie SMA 200 jours : la plus simple</h3>
+
+  <p>Encore plus simple que le Dual Momentum : si le prix de l'ETF est <strong>au-dessus de sa moyenne mobile 200 jours</strong>, vous êtes investis. S'il passe en dessous, vous passez en cash ou en obligations.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Avantages SMA 200</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Évite les bear markets majeurs (-30% à -50%)</li>
+        <li>Réduit le max drawdown de 50% en moyenne</li>
+        <li>Simple à suivre : un check par semaine</li>
+        <li>Backtest positif sur 100 ans de données</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Inconvénients SMA 200</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Whipsaws : faux signaux en marché latéral</li>
+        <li>Sous-performe en bull market continu</li>
+        <li>Signaux en retard (lagging indicator)</li>
+        <li>Fiscalité : chaque vente est un événement fiscal</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CHART 3: Momentum backtest -->
+  <h3>Backtest : SPY Buy & Hold vs SMA 200 (2005-2025)</h3>
+  <div id="chart-momentum" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : HEDGING                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="hedging"><i class="fa-solid fa-shield-halved" style="color:#d97706;"></i> Hedging avec les ETF</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#d97706;"></i> Protéger son portefeuille avec les ETF</h2>
+
+  <p>Le <strong>hedging</strong> consiste à prendre des positions qui gagnent quand votre portefeuille perd. Avec les ETF, plusieurs outils de couverture sont disponibles, chacun avec ses avantages et ses coûts.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Instrument</th><th>ETF</th><th>Usage</th><th>Coût annuel</th><th>Efficacité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Short S&P 500</strong></td>
+        <td>SH (-1x SPY)</td>
+        <td>Hedge modéré, court terme</td>
+        <td>~0.90% TER + decay</td>
+        <td style="color:#16a34a;">Bonne sur 1-4 semaines</td>
+      </tr>
+      <tr>
+        <td><strong>3x Short S&P 500</strong></td>
+        <td>SPXS (-3x SPY)</td>
+        <td>Hedge agressif, très court terme</td>
+        <td>~1.10% TER + decay fort</td>
+        <td style="color:#f59e0b;">Jours seulement</td>
+      </tr>
+      <tr>
+        <td><strong>VIX Long</strong></td>
+        <td>VXX / UVXY</td>
+        <td>Tail risk hedge (crashes)</td>
+        <td>~60-80% decay/an</td>
+        <td style="color:#dc2626;">Très cher, uniquement panique</td>
+      </tr>
+      <tr>
+        <td><strong>Obligations long terme</strong></td>
+        <td>TLT (20Y+ Treasuries)</td>
+        <td>Flight to quality</td>
+        <td>~0.15% TER</td>
+        <td style="color:#16a34a;">Efficace en récession</td>
+      </tr>
+      <tr>
+        <td><strong>Or</strong></td>
+        <td>GLD / IAU</td>
+        <td>Hedge géopolitique & inflation</td>
+        <td>~0.25-0.40% TER</td>
+        <td style="color:#16a34a;">Bon diversificateur</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Currency hedge pour investisseurs européens</h4>
+    <p style="margin:0;">Si vous investissez dans un ETF américain (SPY, QQQ) depuis la zone euro, vous êtes exposé au risque EUR/USD. Un ETF <strong>hedged</strong> (couvert en change) neutralise cette exposition. Exemples : <strong>iShares S&P 500 EUR Hedged (IUSE)</strong> vs la version non-hedgée. Le coût du hedge est d'environ <strong>1-2%/an</strong> (différentiel de taux). Sur le long terme (&gt;10 ans), le hedge n'est généralement pas nécessaire car les effets de change se neutralisent.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check"></i> Hedger son portefeuille</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Horizon court (&lt; 3 ans)</li>
+        <li>Besoin de préserver le capital (retraite proche)</li>
+        <li>Forte exposition à une seule devise</li>
+        <li>Volatilité extrême anticipée (événement macro)</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f59e0b; border-radius:16px;">
+      <h4 style="color:#f59e0b; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark"></i> Ne pas hedger</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Horizon long (&gt; 10 ans) : les devises se rééquilibrent</li>
+        <li>Portefeuille déjà diversifié géographiquement</li>
+        <li>Le coût du hedge (1-2%/an) mange la performance</li>
+        <li>La devise forte (USD) est un hedge naturel en crise</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : CORE-SATELLITE                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="core-satellite"><i class="fa-solid fa-bullseye" style="color:#9333ea;"></i> Core-Satellite</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bullseye" style="color:#9333ea;"></i> La stratégie Core-Satellite : le meilleur des deux mondes</h2>
+
+  <p>La stratégie <strong>Core-Satellite</strong> divise votre portefeuille en deux parties : un <strong>cœur stable</strong> (80%) composé d'ETF diversifiés à faible coût, et des <strong>satellites tactiques</strong> (20%) pour surperformer via des paris thématiques ou sectoriels.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#059669; margin-bottom:0.5rem;"><i class="fa-solid fa-anchor"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Core — 80% du portefeuille</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">ETF diversifiés, buy & hold. VTI (US total market), VXUS (International), BND (Obligations). TER &lt; 0.10%. Rééquilibrage annuel.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-satellite"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Satellites — 20% du portefeuille</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">ETF thématiques, sectoriels, ou régionaux. ARKK (Innovation), SOXX (Semis), EEM (Émergents), GLD (Or). Rotation active selon convictions.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi 80/20 ?</h4>
+    <p style="margin:0;">Le core (80%) vous garantit de capter la performance globale du marché, qui bat 90% des gérants actifs sur 15 ans (étude SPIVA). Les satellites (20%) vous permettent d'exprimer des convictions sans risquer la performance globale. Si vos satellites sous-performent de 30%, l'impact sur le portefeuille total n'est que de -6%. Vous pouvez ajuster le ratio : 90/10 pour les conservateurs, 70/30 pour les plus agressifs.</p>
+  </div>
+
+  <h3>Exemples de portefeuilles Core-Satellite</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Profil</th><th>Core (80%)</th><th>Satellites (20%)</th><th>TER moyen</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Prudent</strong></td>
+        <td>50% VTI + 20% VXUS + 10% BND</td>
+        <td>10% GLD + 5% XLU + 5% TIP</td>
+        <td>0.08%</td>
+      </tr>
+      <tr>
+        <td><strong>Équilibré</strong></td>
+        <td>45% VTI + 25% VXUS + 10% BND</td>
+        <td>8% SOXX + 7% EEM + 5% ARKK</td>
+        <td>0.15%</td>
+      </tr>
+      <tr>
+        <td><strong>Agressif</strong></td>
+        <td>50% VTI + 20% VXUS + 10% QQQ</td>
+        <td>8% SOXX + 7% KWEB + 5% IBIT</td>
+        <td>0.18%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : TAX-LOSS HARVESTING                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tax-loss"><i class="fa-solid fa-receipt" style="color:#dc2626;"></i> Tax-Loss Harvesting</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-receipt" style="color:#dc2626;"></i> Transformer ses pertes en économie d'impôts</h2>
+
+  <p>Le <strong>Tax-Loss Harvesting</strong> (récolte des pertes fiscales) consiste à vendre un ETF en perte latente pour cristalliser la moins-value fiscale, puis à racheter immédiatement un ETF <strong>similaire mais non identique</strong> pour maintenir votre exposition au marché.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Principe du Tax-Loss Harvesting</div>
+    Vendre <span class="formula-highlight">VTI</span> en perte &rarr; Acheter <span class="formula-highlight">ITOT</span> (même exposition) &rarr; Déduire la perte
+  </div>
+
+  <h3>Paires d'ETF pour le Tax-Loss Harvesting</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Exposition</th><th>ETF A</th><th>ETF B (swap)</th><th>Corrélation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>US Total Market</strong></td>
+        <td>VTI (Vanguard)</td>
+        <td>ITOT (iShares)</td>
+        <td>&gt;0.99</td>
+      </tr>
+      <tr>
+        <td><strong>S&P 500</strong></td>
+        <td>SPY (SPDR)</td>
+        <td>IVV (iShares) / VOO (Vanguard)</td>
+        <td>&gt;0.99</td>
+      </tr>
+      <tr>
+        <td><strong>International Dev.</strong></td>
+        <td>VXUS (Vanguard)</td>
+        <td>IXUS (iShares)</td>
+        <td>&gt;0.99</td>
+      </tr>
+      <tr>
+        <td><strong>Émergents</strong></td>
+        <td>VWO (Vanguard)</td>
+        <td>EEM (iShares)</td>
+        <td>&gt;0.98</td>
+      </tr>
+      <tr>
+        <td><strong>Obligations US</strong></td>
+        <td>BND (Vanguard)</td>
+        <td>AGG (iShares)</td>
+        <td>&gt;0.99</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention : la wash sale rule (US) et équivalent français</h4>
+    <p style="margin:0;">Aux États-Unis, la <strong>wash sale rule</strong> interdit de racheter un titre "substantiellement identique" dans les 30 jours. C'est pourquoi on swap entre VTI et ITOT (même exposition mais émetteurs différents). En France, cette règle n'existe pas pour le CTO, mais le PEA a ses propres contraintes. Sur PEA, les moins-values ne sont imputables que sur les plus-values PEA. Sur CTO, les moins-values sont reportables 10 ans et compensent tout type de plus-value mobilière.</p>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> L'impact réel du tax-loss harvesting</h4>
+    <p style="margin:0;">Selon les études de Wealthfront et Betterment, le tax-loss harvesting peut ajouter <strong>0.5% à 1.5% de performance annuelle après impôts</strong>. Sur 30 ans, cela peut représenter 15-30% de richesse supplémentaire grâce à l'effet composé. Le meilleur moment pour récolter les pertes : les <strong>corrections de marché</strong> (-10% à -20%), quand les moins-values sont les plus importantes.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : L'étude Vanguard montre que le lump sum bat le DCA dans quel pourcentage des cas ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Environ 68% du temps.</strong><br>
+      Le lump sum gagne parce que les marchés montent plus souvent qu'ils ne baissent. Cependant, le DCA réduit le risque de timing et la volatilité émotionnelle. Pour la plupart des investisseurs qui investissent leur salaire chaque mois, le DCA est de toute façon la stratégie naturelle et la plus pratique.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Dans quelle phase du cycle économique les ETF énergie (XLE) et matériaux (XLB) performent-ils le mieux ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : En late cycle (fin de cycle / surchauffe).</strong><br>
+      Quand l'économie est en surchauffe, la demande est forte et l'inflation monte. Les matières premières et l'énergie voient leurs prix exploser, ce qui profite directement aux entreprises du secteur. C'est typiquement la phase juste avant la récession, quand la Fed commence à resserrer agressivement sa politique monétaire.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce que le "dual momentum" de Gary Antonacci ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : C'est la combinaison du momentum absolu et relatif.</strong><br>
+      Le momentum <strong>relatif</strong> compare la performance de deux actifs (ex : SPY vs EFA sur 12 mois) pour choisir le gagnant. Le momentum <strong>absolu</strong> vérifie que le gagnant bat le rendement sans risque (T-Bills). Si le gagnant ne bat pas le cash, on passe en obligations. Cette double vérification permet de rester investi en tendance haussière et de se protéger en bear market.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Pourquoi les ETF VIX (VXX, UVXY) sont-ils de mauvais investissements à long terme ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À cause du contango et du roll cost.</strong><br>
+      Les ETF VIX détiennent des futures sur le VIX, pas le VIX spot. En temps normal, les futures VIX sont en <strong>contango</strong> (le futur coûte plus cher que le spot). Chaque mois, l'ETF doit "rouler" ses positions en vendant le future qui expire et en achetant le suivant, plus cher. Ce coût de roulement provoque une perte de 60-80% par an. Le VXX a perdu plus de 99.9% de sa valeur depuis sa création. Ces ETF ne servent qu'en <strong>hedging tactique très court terme</strong> (quelques jours).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : En quoi consiste le tax-loss harvesting avec les ETF ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Vendre un ETF en perte pour cristalliser la moins-value fiscale, puis racheter un ETF similaire.</strong><br>
+      L'idée est de réaliser la perte fiscale (déductible des plus-values) tout en maintenant votre exposition au marché via un ETF quasi identique mais émis par un autre fournisseur (ex : VTI &rarr; ITOT). La corrélation entre les deux est supérieure à 0.99, donc votre exposition reste la même. En France, les moins-values sur CTO sont reportables 10 ans.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrows-rotate"></i> <strong>Le DCA élimine le timing risk</strong> — investir régulièrement bat le market timing dans 100% des cas sur le long terme. Automatisez vos investissements.</li>
+      <li><i class="fa-solid fa-rotate"></i> <strong>La rotation sectorielle suit le cycle économique</strong> — early cycle (XLY, XLF), mid cycle (XLK, XLI), late cycle (XLE, XLB), récession (XLP, XLU, TLT).</li>
+      <li><i class="fa-solid fa-rocket"></i> <strong>Le dual momentum combine relatif et absolu</strong> — restez investi quand la tendance est haussière, passez en obligations quand elle casse. 12 trades/an maximum.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>La SMA 200 divise le max drawdown par 2</strong> — au-dessus = investi, en dessous = cash. Simple mais efficace pour éviter les bear markets.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Les ETF inverse et VIX sont des outils de court terme</strong> — le decay rend tout hedge long terme ruineux. Utilisez TLT et GLD pour le hedging structurel.</li>
+      <li><i class="fa-solid fa-bullseye"></i> <strong>Core-Satellite = 80% passif + 20% actif</strong> — captez la performance du marché avec le core, exprimez vos convictions avec les satellites.</li>
+      <li><i class="fa-solid fa-receipt"></i> <strong>Le tax-loss harvesting ajoute 0.5-1.5%/an après impôts</strong> — swappez entre ETF similaires (VTI/ITOT) pour cristalliser les pertes sans changer d'exposition.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne préjugent pas des performances futures.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-etf/part3-thematiques-sectoriels/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">3. Thématiques & Sectoriels</div>
+  </div>
+</a>
+
+<a href="/series/trader-etf/part5-leveraged-options/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">ETF Leveraged, Inverse & Options sur ETF</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-etf/part1-comprendre-etf/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#059669; color:white; border:1px solid #059669;">4. Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Portefeuille</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les ETF</strong> — Partie 4/6 : Stratégies ETF</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: DCA vs Lump Sum comparison
+(function(){
+  var dom = document.getElementById('chart-dca-lumpsum');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months = [];
+  var lumpSum = [];
+  var dcaValues = [];
+  var spyPrice = 320;
+  var dcaInvested = 0;
+  var dcaShares = 0;
+  var lumpShares = 60000 / 320; // $60,000 lump sum at start
+  for(var m=0; m<60; m++){
+    var yr = 2020 + Math.floor(m/12);
+    var mo = (m % 12) + 1;
+    months.push(yr+'-'+(mo<10?'0':'')+mo);
+    // Simulate SPY price path
+    if(m<3) spyPrice *= (1 - 0.08 + Math.random()*0.04); // COVID crash
+    else if(m<15) spyPrice *= (1 + 0.025 + Math.random()*0.015); // Recovery
+    else if(m<24) spyPrice *= (1 + 0.01 + Math.random()*0.012); // 2021-2022
+    else if(m<30) spyPrice *= (1 - 0.015 + Math.random()*0.02); // 2022 bear
+    else if(m<36) spyPrice *= (1 - 0.005 + Math.random()*0.015); // late 2022
+    else if(m<48) spyPrice *= (1 + 0.018 + Math.random()*0.01); // 2023 recovery
+    else spyPrice *= (1 + 0.012 + Math.random()*0.01); // 2024-2025
+
+    // DCA: $1000/month
+    dcaInvested += 1000;
+    dcaShares += 1000 / spyPrice;
+    dcaValues.push(parseFloat((dcaShares * spyPrice).toFixed(0)));
+    lumpSum.push(parseFloat((lumpShares * spyPrice).toFixed(0)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValueLabel+'<br/>'+p.map(function(s){return s.marker+' '+s.seriesName+': <b>$'+s.value.toLocaleString()+'</b>';}).join('<br/>');}},
+    legend:{data:['Lump Sum ($60K jour 1)','DCA ($1,000/mois)'],bottom:0},
+    grid:{left:'10%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:9,interval:11,rotate:30}},
+    yAxis:{type:'value',name:'Valeur ($)',axisLabel:{fontSize:10,formatter:function(v){return '$'+Math.round(v/1000)+'K';}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Lump Sum ($60K jour 1)',type:'line',data:lumpSum,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:2.5},areaStyle:{color:'rgba(37,99,235,0.06)'}},
+      {name:'DCA ($1,000/mois)',type:'line',data:dcaValues,smooth:true,symbol:'none',lineStyle:{color:'#059669',width:2.5},areaStyle:{color:'rgba(5,150,105,0.06)'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Sector Rotation Radar
+(function(){
+  var dom = document.getElementById('chart-rotation');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['Early Cycle','Mid Cycle','Late Cycle','Recession'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'18%'},
+    xAxis:{type:'category',data:['XLY\nDiscret.','XLF\nFinancials','XLK\nTech','XLI\nIndustrials','XLE\nEnergy','XLB\nMaterials','XLP\nStaples','XLU\nUtilities','TLT\nTreasuries'],axisLabel:{fontSize:9,interval:0}},
+    yAxis:{type:'value',name:'Perf. moy. annualisée (%)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Early Cycle',type:'bar',data:[18,16,12,14,8,10,5,4,2],itemStyle:{color:'#16a34a'}},
+      {name:'Mid Cycle',type:'bar',data:[10,8,20,16,6,8,4,3,0],itemStyle:{color:'#059669'}},
+      {name:'Late Cycle',type:'bar',data:[2,4,5,8,22,18,6,5,-2],itemStyle:{color:'#f97316'}},
+      {name:'Recession',type:'bar',data:[-15,-20,-25,-18,-12,-10,2,5,15],itemStyle:{color:'#dc2626'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: SPY Buy & Hold vs SMA 200
+(function(){
+  var dom = document.getElementById('chart-momentum');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates = [];
+  var buyHold = [];
+  var sma200 = [];
+  var bhVal = 100, smaVal = 100;
+  var prices = [];
+  var p = 120;
+  for(var y=2005; y<=2025; y++){
+    for(var m=1; m<=12; m++){
+      if(y===2025 && m>2) break;
+      dates.push(y+'-'+(m<10?'0':'')+m);
+      // Simulate SPY monthly returns
+      if(y<=2007) p *= (1 + 0.008 + Math.random()*0.015);
+      else if(y===2008) p *= (1 - 0.03 + Math.random()*0.02);
+      else if(y===2009 && m<=3) p *= (1 - 0.04 + Math.random()*0.03);
+      else if(y===2009) p *= (1 + 0.04 + Math.random()*0.015);
+      else if(y<=2019) p *= (1 + 0.01 + Math.random()*0.012);
+      else if(y===2020 && m<=3) p *= (1 - 0.06 + Math.random()*0.03);
+      else if(y===2020) p *= (1 + 0.03 + Math.random()*0.015);
+      else if(y<=2021) p *= (1 + 0.018 + Math.random()*0.01);
+      else if(y===2022) p *= (1 - 0.01 + Math.random()*0.015);
+      else p *= (1 + 0.015 + Math.random()*0.01);
+      prices.push(p);
+      var len = prices.length;
+      // Simple SMA check: if price above rolling avg of last 10 months ~ 200 day approx
+      var smaAvg = 0;
+      var smaLen = Math.min(10, len);
+      for(var k=len-smaLen; k<len; k++) smaAvg += prices[k];
+      smaAvg /= smaLen;
+      var monthReturn = len > 1 ? (prices[len-1] / prices[len-2] - 1) : 0;
+      bhVal *= (1 + monthReturn);
+      if(prices[len-1] > smaAvg) {
+        smaVal *= (1 + monthReturn);
+      } else {
+        smaVal *= (1 + 0.003); // cash/bonds return
+      }
+      buyHold.push(parseFloat(bhVal.toFixed(1)));
+      sma200.push(parseFloat(smaVal.toFixed(1)));
+    }
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['SPY Buy & Hold','SMA 200 Strategy'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,interval:24,rotate:30}},
+    yAxis:{type:'value',name:'Valeur (base 100)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'SPY Buy & Hold',type:'line',data:buyHold,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:2.5}},
+      {name:'SMA 200 Strategy',type:'line',data:sma200,smooth:true,symbol:'none',lineStyle:{color:'#059669',width:2.5},areaStyle:{color:'rgba(5,150,105,0.06)'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

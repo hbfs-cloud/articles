@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Les 3 Indicateurs Essentiels (RSI, MACD, Moyennes Mobiles) | Savoir Lire un Chart — Partie 4/6 | Market Watch</title>
+  <meta name="description" content="Série Savoir Lire un Chart — Partie 4/6 : Moyennes mobiles SMA/EMA, RSI 14, MACD — les 3 indicateurs techniques que tout trader doit maîtriser.">
+  <meta property="og:title" content="Les 3 Indicateurs Essentiels (RSI, MACD, Moyennes Mobiles) | Savoir Lire un Chart — Partie 4/6 | Market Watch">
+  <meta property="og:description" content="Maîtrisez les 3 indicateurs fondamentaux : Moyennes Mobiles (Golden Cross, Death Cross), RSI (surachat, survente, divergences) et MACD (signal line, histogramme).">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-un-chart/part4-indicateurs/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#ea580c; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fb923c; color:#fb923c; }
+  .series-link.current { background:#ea580c; color:white; border-color:#ea580c; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fff7ed 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#ea580c; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-orange { background:rgba(234,88,12,0.1); color:#ea580c; border:1px solid rgba(234,88,12,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#ea580c; margin-right:0.75rem; }
+  details[open] summary { border-color:#ea580c; background:#fff7ed; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#ea580c; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fb923c; }
+  .takeaway-box { background:linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); border:1px solid #ea580c; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#ea580c; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(234,88,12,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#ea580c; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(234,88,12,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border:1px solid #e2e8f0; border-radius:16px; margin:1rem 0; text-decoration:none; transition:transform 0.2s; }
+  .prev-cta:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.08); border-color:#ea580c; }
+  .prev-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; }
+  .prev-cta .next-title { font-size:1.1rem; font-weight:700; }
+
+  .indicator-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1.25rem 0; border-left:4px solid #ea580c; transition:all 0.3s; }
+  .indicator-card:hover { transform:translateY(-2px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+  .indicator-card h4 { color:#ea580c; margin-top:0; font-size:1.05rem; font-weight:800; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-line" style="margin-right:0.4rem;"></i> Savoir Lire un Chart</span>
+  <a href="/series/lire-un-chart/part1-les-bases/" class="series-link">1 — Les Bases</a>
+  <a href="/series/lire-un-chart/part2-chandeliers/" class="series-link">2 — Chandeliers</a>
+  <a href="/series/lire-un-chart/part3-supports-resistances/" class="series-link">3 — Supports</a>
+  <a href="/series/lire-un-chart/part4-indicateurs/" class="series-link current">4 — Indicateurs</a>
+  <a href="/series/lire-un-chart/part5-evaluer-bottom-esperance/" class="series-link">5 — Bottoms</a>
+  <a href="/series/lire-un-chart/part6-cas-pratiques/" class="series-link">6 — Cas Pratiques</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:0.4rem;"></i> Série Savoir Lire un Chart — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Les 3 Indicateurs Essentiels</h1>
+  <p class="hero-subtitle">RSI, MACD et Moyennes Mobiles — les 3 outils que tout trader doit maîtriser. Apprenez à les lire, à détecter les divergences et à combiner leurs signaux pour des trades à haute probabilité.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-simple"></i> RSI</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-wave-square"></i> MACD</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-left-right"></i> Moyennes Mobiles</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-graduation-cap"></i> Débutant</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#ma" class="nav-item"><i class="fa-solid fa-arrows-left-right" style="color:#ea580c; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Moyennes Mobiles</a>
+  <a href="#golden-death" class="nav-item"><i class="fa-solid fa-cross" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Golden & Death Cross</a>
+  <a href="#rsi" class="nav-item"><i class="fa-solid fa-gauge-high" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> RSI</a>
+  <a href="#macd" class="nav-item"><i class="fa-solid fa-wave-square" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> MACD</a>
+  <a href="#divergences" class="nav-item"><i class="fa-solid fa-code-branch" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Divergences</a>
+  <a href="#combiner" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Combiner</a>
+  <a href="#erreurs" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="color:#ea580c; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Erreurs</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : MOYENNES MOBILES                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="ma"><i class="fa-solid fa-arrows-left-right" style="color:#ea580c;"></i> Moyennes Mobiles — Le Filtre de Tendance</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-left-right" style="color:#ea580c;"></i> SMA vs EMA : comprendre la différence</h2>
+
+  <p>La moyenne mobile est l'indicateur le plus utilisé au monde. Elle lisse les fluctuations du prix pour révéler la <strong>tendance de fond</strong>. Il en existe deux types principaux :</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+    <div style="background:#eff6ff; border:1px solid #2563eb; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-calculator"></i> SMA (Simple Moving Average)</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">Moyenne arithmétique simple des N derniers prix de clôture. <strong>SMA 20</strong> = moyenne des 20 dernières clôtures. Chaque jour a le même poids. Plus lente à réagir, mais plus stable et moins sujette aux faux signaux.</p>
+    </div>
+    <div style="background:#fff7ed; border:1px solid #ea580c; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#ea580c; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-bolt"></i> EMA (Exponential Moving Average)</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">Donne <strong>plus de poids aux prix récents</strong>, ce qui la rend plus réactive aux changements de tendance. Préférée par les traders actifs et les algorithmes. Plus rapide, mais génère plus de faux signaux en marché choppy.</p>
+    </div>
+  </div>
+
+  <h3>Les 3 moyennes mobiles essentielles</h3>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Moyenne Mobile</th><th>Période</th><th>Utilisation</th><th>Ce qu'elle montre</th></tr>
+    </thead>
+    <tbody>
+      <tr><td style="color:#ea580c; font-weight:700;">MA 20</td><td>20 jours (~1 mois)</td><td>Court terme / Swing trading</td><td>Tendance immédiate. Si le prix est au-dessus = momentum positif.</td></tr>
+      <tr><td style="color:#2563eb; font-weight:700;">MA 50</td><td>50 jours (~2.5 mois)</td><td>Moyen terme / Position trading</td><td>Tendance intermédiaire. Support dynamique en tendance haussière saine.</td></tr>
+      <tr><td style="color:#9333ea; font-weight:700;">MA 200</td><td>200 jours (~10 mois)</td><td>Long terme / Investissement</td><td>Tendance de fond. La plus surveillée au monde. Au-dessus = bull market, en dessous = bear market.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">La règle d'or</div>
+    Prix > <span class="formula-highlight">MA 200</span> = Bull Market | Prix < <span class="formula-highlight">MA 200</span> = Bear Market
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'ordre des moyennes mobiles</h4>
+    <p style="margin:0;">En tendance haussière saine, les moyennes mobiles sont empilées dans l'ordre : prix > MA20 > MA50 > MA200. Si cet ordre est respecté, la tendance est <strong>solide</strong>. Dès qu'une MA courte passe sous une MA longue, c'est un signal d'alerte. C'est ce qui crée les fameux "Golden Cross" et "Death Cross".</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : GOLDEN CROSS & DEATH CROSS                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="golden-death"><i class="fa-solid fa-cross" style="color:#d97706;"></i> Golden Cross & Death Cross</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-cross" style="color:#d97706;"></i> Les deux signaux les plus célèbres</h2>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+    <div class="indicator-card" style="border-left-color:#16a34a;">
+      <h4 style="color:#16a34a;"><i class="fa-solid fa-star"></i> Golden Cross</h4>
+      <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin-bottom:0.5rem;">La <strong>MA 50 croise au-dessus de la MA 200</strong>. Signal haussier majeur. Historiquement, le SPY a généré un rendement moyen de +15% dans les 12 mois suivant un Golden Cross. Le plus récent sur le SPY (octobre 2023) a lancé un rallye de +25%.</p>
+      <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+        <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:6px; color:#16a34a; font-weight:700;">Signal : Haussier fort</span>
+        <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#eff6ff; border:1px solid #2563eb; border-radius:6px; color:#2563eb; font-weight:700;">Horizon : Long terme</span>
+      </div>
+    </div>
+    <div class="indicator-card" style="border-left-color:#dc2626;">
+      <h4 style="color:#dc2626;"><i class="fa-solid fa-skull-crossbones"></i> Death Cross</h4>
+      <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin-bottom:0.5rem;">La <strong>MA 50 croise en dessous de la MA 200</strong>. Signal baissier majeur. Historiquement précède des baisses significatives. Le Death Cross de mars 2022 sur le SPY a précédé une correction de -15%. Cependant, il génère des faux signaux (environ 30% du temps).</p>
+      <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+        <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#fef2f2; border:1px solid #dc2626; border-radius:6px; color:#dc2626; font-weight:700;">Signal : Baissier fort</span>
+        <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#fff7ed; border:1px solid #ea580c; border-radius:6px; color:#ea580c; font-weight:700;">Faux signaux : ~30%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le problème du retard (lag)</h4>
+    <p style="margin:0; font-size:0.9rem; color:#334155; line-height:1.7;">Les Golden Cross et Death Cross sont des indicateurs <strong>retardés</strong> (lagging indicators). La MA 200 utilise 200 jours de données — quand le croisement se produit, une bonne partie du mouvement a déjà eu lieu. C'est pourquoi ces signaux sont meilleurs pour confirmer un changement de tendance que pour le prédire. Les traders pros utilisent ces croisements comme <strong>confirmation</strong>, pas comme signal d'entrée unique.</p>
+  </div>
+
+  <!-- ECharts: Golden Cross / Death Cross -->
+  <h3>Visualisation : Prix avec MA 50 et MA 200</h3>
+  <div id="chart-ma-cross" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : RSI                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="rsi"><i class="fa-solid fa-gauge-high" style="color:#16a34a;"></i> RSI — Relative Strength Index</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#16a34a;"></i> RSI 14 : le thermomètre du momentum</h2>
+
+  <p>Le RSI (créé par J. Welles Wilder en 1978) mesure la <strong>vitesse et la magnitude</strong> des mouvements de prix récents sur une échelle de 0 à 100. La période standard est de 14 jours. Il répond à la question : "Le mouvement récent est-il excessif ?"</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Les zones du RSI</div>
+    RSI > <span class="formula-highlight">70</span> = Surachat (overbought) | RSI < <span class="formula-highlight">30</span> = Survente (oversold)
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div style="text-align:center; padding:1.25rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <div style="font-size:2rem; font-weight:900; color:#dc2626;">70-100</div>
+      <div style="font-size:0.8rem; color:#475569; font-weight:600;">Zone de surachat</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">Potentiel correction baissière</div>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:#eff6ff; border:1px solid #2563eb; border-radius:16px;">
+      <div style="font-size:2rem; font-weight:900; color:#2563eb;">30-70</div>
+      <div style="font-size:0.8rem; color:#475569; font-weight:600;">Zone neutre</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">Pas de signal particulier</div>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <div style="font-size:2rem; font-weight:900; color:#16a34a;">0-30</div>
+      <div style="font-size:0.8rem; color:#475569; font-weight:600;">Zone de survente</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">Potentiel rebond haussier</div>
+    </div>
+  </div>
+
+  <h3>RSI avec le contexte : la nuance essentielle</h3>
+
+  <p>La plupart des débutants utilisent le RSI comme un simple signal binaire : "RSI > 70 = vendre, RSI < 30 = acheter". C'est une erreur grossière. Le RSI doit être interprété <strong>dans le contexte de la tendance</strong> :</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-arrow-trend-up"></i> En tendance haussière</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#334155; line-height:1.6;">
+        <li>RSI oscille entre <strong>40 et 80</strong> (pas entre 30 et 70)</li>
+        <li>RSI à 40-45 = <strong>zone de recharge</strong> (achat !), pas de panique</li>
+        <li>RSI > 70 n'est PAS un signal de vente — c'est normal en bull market</li>
+        <li>Le vrai signal baissier = RSI casse sous 40</li>
+      </ul>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-arrow-trend-down"></i> En tendance baissière</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#334155; line-height:1.6;">
+        <li>RSI oscille entre <strong>20 et 60</strong> (pas entre 30 et 70)</li>
+        <li>RSI à 55-60 = <strong>zone de rejet</strong> (résistance), pas d'achat</li>
+        <li>RSI < 30 n'est PAS un signal d'achat — le prix peut continuer à baisser</li>
+        <li>Le vrai signal haussier = RSI casse au-dessus de 60</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'erreur fatale : "C'est survendu, j'achète !"</h4>
+    <p style="margin:0;">Un RSI à 25 signifie que le prix baisse rapidement. Cela ne signifie PAS qu'il va remonter. En bear market, le RSI peut rester en zone de survente pendant <strong>des semaines</strong>. Acheter uniquement parce que le RSI est bas, c'est essayer d'attraper un couteau qui tombe. Attendez toujours un signal de <strong>retournement</strong> (divergence RSI, pattern de chandelier, cassure de résistance) avant d'agir.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : MACD                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="macd"><i class="fa-solid fa-wave-square" style="color:#2563eb;"></i> MACD — Moving Average Convergence Divergence</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wave-square" style="color:#2563eb;"></i> MACD : 3 composantes, un signal puissant</h2>
+
+  <p>Le MACD, créé par Gerald Appel en 1979, est un indicateur de <strong>momentum et de tendance</strong>. Il se compose de 3 éléments :</p>
+
+  <div class="indicator-card" style="border-left-color:#2563eb;">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-minus"></i> Ligne MACD (bleue)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0;">Différence entre l'EMA 12 et l'EMA 26. MACD = EMA(12) - EMA(26). Quand l'EMA 12 est au-dessus de l'EMA 26, le MACD est positif (momentum haussier). Quand il est en dessous, le MACD est négatif (momentum baissier).</p>
+  </div>
+
+  <div class="indicator-card" style="border-left-color:#ea580c;">
+    <h4 style="color:#ea580c;"><i class="fa-solid fa-minus"></i> Signal Line (orange)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0;">EMA 9 de la ligne MACD. C'est une version lissée du MACD qui sert de <strong>déclencheur de signal</strong>. Quand le MACD croise au-dessus de la signal line = signal haussier. Quand il croise en dessous = signal baissier.</p>
+  </div>
+
+  <div class="indicator-card" style="border-left-color:#16a34a;">
+    <h4 style="color:#16a34a;"><i class="fa-solid fa-chart-bar"></i> Histogramme</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0;">Différence visuelle entre le MACD et la signal line. Quand les barres grandissent = le momentum accélère. Quand elles diminuent = le momentum ralentit. Le passage de barres positives à négatives (et vice versa) coïncide avec les croisements MACD/signal.</p>
+  </div>
+
+  <h3>Le passage par la ligne zéro</h3>
+
+  <p>Le MACD a une ligne zéro qui sépare le territoire haussier (au-dessus) du territoire baissier (en dessous). Quand le MACD <strong>croise au-dessus de zéro</strong>, l'EMA 12 passe au-dessus de l'EMA 26 — confirmation de tendance haussière. Quand il <strong>croise en dessous de zéro</strong>, c'est l'inverse — confirmation de tendance baissière.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Les 3 signaux du MACD</div>
+    <span class="formula-highlight">MACD > Signal</span> = Haussier |
+    <span class="formula-highlight">MACD > 0</span> = Tendance haussière |
+    <span class="formula-highlight">Histogramme croissant</span> = Momentum accélère
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : DIVERGENCES                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="divergences"><i class="fa-solid fa-code-branch" style="color:#9333ea;"></i> Divergences — Le Signal Le Plus Puissant</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-code-branch" style="color:#9333ea;"></i> Divergences RSI et MACD</h2>
+
+  <p>Une divergence se produit quand le prix et un indicateur (RSI ou MACD) vont dans des <strong>directions opposées</strong>. C'est l'un des signaux les plus fiables en analyse technique car il révèle que le momentum sous-jacent s'affaiblit avant même que le prix ne change de direction.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-arrow-trend-up"></i> Divergence Haussière (Bullish)</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0 0 0.75rem;">Le prix fait des <strong>creux de plus en plus bas</strong>, mais le RSI/MACD fait des <strong>creux de plus en plus hauts</strong>. Cela signifie que la pression vendeuse s'affaiblit malgré la baisse du prix. Un retournement haussier est probable.</p>
+      <div style="font-size:0.8rem; color:#16a34a; font-weight:700;">Signal d'achat potentiel</div>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-arrow-trend-down"></i> Divergence Baissière (Bearish)</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0 0 0.75rem;">Le prix fait des <strong>sommets de plus en plus hauts</strong>, mais le RSI/MACD fait des <strong>sommets de plus en plus bas</strong>. Cela signifie que la pression acheteuse s'affaiblit malgré la hausse du prix. Un retournement baissier est probable.</p>
+      <div style="font-size:0.8rem; color:#dc2626; font-weight:700;">Signal de vente potentiel</div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi les divergences sont si puissantes</h4>
+    <p style="margin:0;">Les divergences sont un signal "avancé" (leading) — elles apparaissent <strong>avant</strong> le retournement, contrairement aux croisements de moyennes mobiles qui sont retardés. Une divergence haussière sur le RSI combinée avec un support clé et un pattern de chandelier (marteau, morning star) est l'un des setups les plus fiables en trading. Les études montrent un taux de réussite de <strong>70-80%</strong> quand combinées avec d'autres confirmations.</p>
+  </div>
+
+  <!-- ECharts: RSI Panel + MACD Panel -->
+  <h3>Visualisation : Prix, RSI et MACD avec divergence</h3>
+  <div id="chart-rsi-macd" style="width:100%; height:550px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : COMBINER LES 3                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="combiner"><i class="fa-solid fa-layer-group" style="color:#dc2626;"></i> Combiner les 3 Indicateurs</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#dc2626;"></i> Quand les 3 indicateurs convergent</h2>
+
+  <p>Le vrai pouvoir de l'analyse technique vient de la <strong>convergence</strong> — quand plusieurs indicateurs indépendants pointent dans la même direction. Voici le système de confluence idéal :</p>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; margin:2rem 0;">
+    <div style="text-align:center; padding:1.5rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; color:white; font-size:1.2rem; font-weight:900;">MA</div>
+      <div style="font-size:1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;">Tendance</div>
+      <p style="font-size:0.8rem; color:#64748b; margin:0; line-height:1.5;">Prix > MA50 > MA200 = tendance haussière confirmée. On ne prend que des positions longues.</p>
+    </div>
+    <div style="text-align:center; padding:1.5rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; color:white; font-size:1.2rem; font-weight:900;">RSI</div>
+      <div style="font-size:1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;">Timing</div>
+      <p style="font-size:0.8rem; color:#64748b; margin:0; line-height:1.5;">RSI à 40-45 en tendance haussière = zone de recharge idéale. Le pullback est une opportunité, pas un danger.</p>
+    </div>
+    <div style="text-align:center; padding:1.5rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; color:white; font-size:1.2rem; font-weight:900;">MACD</div>
+      <div style="font-size:1rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;">Confirmation</div>
+      <p style="font-size:0.8rem; color:#64748b; margin:0; line-height:1.5;">MACD croise au-dessus de la signal line. L'histogramme passe de négatif à positif = momentum reprend.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#16a34a !important;"><i class="fa-solid fa-check-circle"></i> Exemple de setup parfait (achat)</h4>
+    <p style="margin:0; font-size:0.9rem; color:#334155; line-height:1.7;">NVDA est en tendance haussière (prix > MA50 > MA200). Le prix corrige de 8% et touche la MA50. Le RSI descend à 42 (zone de recharge). Un marteau se forme sur la MA50 avec un volume élevé. Le MACD croise la signal line vers le haut et l'histogramme redevient positif. <strong>4 confirmations alignées</strong> : support (MA50) + pattern (marteau) + RSI (recharge) + MACD (crossover). C'est un achat à haute probabilité.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : ERREURS                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="erreurs"><i class="fa-solid fa-triangle-exclamation" style="color:#ea580c;"></i> Les Erreurs Communes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#ea580c;"></i> Les pièges à éviter absolument</h2>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Erreur 1 : Utiliser le RSI seul</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">"RSI est à 25, j'achète." Non. Le RSI seul ne suffit jamais. En bear market, un RSI survendu peut rester survendu pendant des semaines. Attendez toujours un signal de retournement combiné.</p>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Erreur 2 : Ignorer la tendance</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">Chercher des achats en bear market ou des ventes en bull market. La tendance est votre amie. Si le prix est sous la MA200, les signaux d'achat du MACD sont beaucoup moins fiables.</p>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Erreur 3 : Surcharger le chart</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">Mettre 15 indicateurs sur un chart. Vous aurez toujours un indicateur qui dit "achat" et un autre qui dit "vente". 3 indicateurs suffisent. Plus n'est pas mieux — c'est de la confusion.</p>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Erreur 4 : Optimiser les paramètres</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">Changer le RSI à 7 ou le MACD à 5/35/5 pour "améliorer" les résultats sur le passé (overfitting). Les paramètres standards (RSI 14, MACD 12/26/9) sont les plus utilisés — donc les plus auto-réalisateurs.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : QUIZ                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quelle est la différence entre SMA et EMA ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : L'EMA donne plus de poids aux prix récents, la SMA traite tous les prix de manière égale.</strong><br>
+      La SMA (Simple Moving Average) est une moyenne arithmétique simple. L'EMA (Exponential Moving Average) applique un coefficient exponentiel qui rend les prix récents plus importants. Résultat : l'EMA réagit plus vite aux changements de prix, mais génère plus de faux signaux. La SMA est plus stable et préférée pour les analyses long terme (MA 200).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : AAPL est en tendance haussière forte. Le RSI est à 72. Faut-il vendre ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Non, pas nécessairement.</strong><br>
+      En tendance haussière forte, le RSI oscille entre 40 et 80. Un RSI à 72 est parfaitement normal en bull market — ce n'est pas un signal de vente. Le vrai signal de faiblesse serait un RSI qui ne parvient plus à dépasser 60-65 (affaiblissement du momentum) ou une divergence baissière (le prix fait un nouveau sommet mais le RSI fait un sommet plus bas).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce qu'un Golden Cross et est-il toujours fiable ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La MA 50 croise au-dessus de la MA 200. Historiquement fiable mais retardé.</strong><br>
+      Le Golden Cross est un signal haussier à long terme avec un bon taux de réussite historique (~70%). Cependant, c'est un indicateur retardé — quand le croisement se produit, le prix a souvent déjà monté significativement. Il est plus utile comme confirmation qu'une tendance haussière est bien établie que comme signal d'entrée précis. Combiné avec du volume et du momentum, sa fiabilité augmente.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce qu'une divergence haussière sur le RSI ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le prix fait un nouveau creux plus bas, mais le RSI fait un creux plus haut.</strong><br>
+      Cela signifie que malgré la baisse du prix, la pression vendeuse diminue (le momentum baissier s'affaiblit). C'est un signal avancé (leading) de retournement haussier potentiel. Les divergences sont parmi les signaux les plus fiables, surtout quand elles apparaissent sur un support clé et sont confirmées par un pattern de chandelier (marteau, morning star).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Pourquoi ne faut-il jamais mettre plus de 3-4 indicateurs sur un chart ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce que plus d'indicateurs = plus de confusion, pas plus de clarté.</strong><br>
+      Avec 15 indicateurs, vous trouverez toujours un indicateur bullish et un indicateur bearish — vous serez paralysé ou biaisé par confirmation. Les 3 indicateurs essentiels (MA, RSI, MACD) couvrent les 3 dimensions clés : tendance, momentum et timing. Tout indicateur supplémentaire devrait apporter une information VRAIMENT différente, pas redondante.
+    </div>
+  </details>
+</div>
+
+
+<!-- TAKEAWAYS -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#ea580c;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 6 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrows-left-right"></i> <strong>MA 200 = la ligne de démarcation</strong> — Prix au-dessus = bull market, en dessous = bear market. C'est l'indicateur le plus surveillé au monde. Respectez-le.</li>
+      <li><i class="fa-solid fa-cross"></i> <strong>Golden Cross et Death Cross sont retardés</strong> — Utilisez-les comme confirmation, pas comme signal d'entrée. Le mouvement a souvent déjà commencé quand le croisement se produit.</li>
+      <li><i class="fa-solid fa-gauge-high"></i> <strong>Le RSI dépend du contexte</strong> — RSI 40 en tendance haussière = zone de recharge (achat). RSI 40 en tendance baissière = rien de spécial. Ne jamais utiliser le RSI sans connaître la tendance.</li>
+      <li><i class="fa-solid fa-code-branch"></i> <strong>Les divergences sont les signaux les plus puissants</strong> — Une divergence RSI/MACD sur un support avec du volume est un signal de retournement à haute probabilité (70-80%).</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>Combinez les 3 pour la confluence</strong> — MA pour la tendance, RSI pour le timing, MACD pour la confirmation. Quand les 3 convergent, le signal est fort.</li>
+      <li><i class="fa-solid fa-triangle-exclamation"></i> <strong>Moins d'indicateurs = plus de clarté</strong> — 3 indicateurs suffisent. Les paramètres standards sont les meilleurs car tout le monde les utilise, ce qui les rend auto-réalisateurs.</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- NAVIGATION -->
+<a href="/series/lire-un-chart/part3-supports-resistances/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie précédente</div>
+    <div class="next-title">Partie 3 — Supports, Résistances & Tendances</div>
+  </div>
+</a>
+
+<a href="/series/lire-un-chart/part5-evaluer-bottom-esperance/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">Évaluer un Bottom & l'Espérance de Gain</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-un-chart/part1-les-bases/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Les Bases</a>
+  <a href="/series/lire-un-chart/part2-chandeliers/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Chandeliers</a>
+  <a href="/series/lire-un-chart/part3-supports-resistances/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Supports</a>
+  <a href="/series/lire-un-chart/part4-indicateurs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#ea580c; color:white; border:1px solid #ea580c;">4. Indicateurs</a>
+  <a href="/series/lire-un-chart/part5-evaluer-bottom-esperance/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Bottoms</a>
+  <a href="/series/lire-un-chart/part6-cas-pratiques/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Cas Pratiques</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Savoir Lire un Chart</strong> — Partie 4/6 : Les 3 Indicateurs Essentiels</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// ============================
+// CHART 1: MA 50, MA 200, Golden Cross
+// ============================
+(function(){
+  var dom = document.getElementById('chart-ma-cross');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  // Generate 120 days of price data with trend change
+  var dates = [];
+  var prices = [];
+  var ma50 = [];
+  var ma200 = [];
+  var p = 100;
+
+  // Downtrend then uptrend
+  for(var i=0; i<120; i++){
+    dates.push('D'+(i+1));
+    if(i < 40) p = 100 - i*0.4 + (Math.random()-0.5)*2;
+    else if(i < 50) p = 84 + (Math.random()-0.5)*2;
+    else p = 84 + (i-50)*0.55 + (Math.random()-0.5)*2;
+    prices.push(+p.toFixed(2));
+  }
+
+  // Calculate MAs
+  for(var j=0; j<120; j++){
+    if(j >= 49){
+      var sum50 = 0;
+      for(var k=j-49; k<=j; k++) sum50 += prices[k];
+      ma50.push(+(sum50/50).toFixed(2));
+    } else { ma50.push(null); }
+
+    if(j >= 99){
+      // Simplified: use approximate for demo
+      var sum200 = 0;
+      var start = Math.max(0, j-99);
+      var cnt = j - start + 1;
+      for(var m=start; m<=j; m++) sum200 += prices[m];
+      ma200.push(+(sum200/cnt).toFixed(2));
+    } else { ma200.push(null); }
+  }
+
+  var option = {
+    tooltip:{ trigger:'axis' },
+    legend:{ data:['Prix','MA 50','MA 200'], top:'2%', textStyle:{fontSize:11} },
+    grid:{ left:'8%', right:'3%', top:'12%', bottom:'10%' },
+    xAxis:{ type:'category', data:dates, axisLabel:{ fontSize:8, color:'#64748b', interval:14 }},
+    yAxis:{ type:'value', axisLabel:{ fontSize:10, color:'#64748b', formatter:'${value}' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}},
+    series:[
+      { name:'Prix', type:'line', data:prices, lineStyle:{ color:'#0f172a', width:1.5 }, symbol:'none', z:3 },
+      { name:'MA 50', type:'line', data:ma50, lineStyle:{ color:'#ea580c', width:2 }, symbol:'none', z:2 },
+      { name:'MA 200', type:'line', data:ma200, lineStyle:{ color:'#9333ea', width:2, type:'dashed' }, symbol:'none', z:1 }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 2: Price + RSI + MACD with divergence
+// ============================
+(function(){
+  var dom = document.getElementById('chart-rsi-macd');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var dates = [];
+  var prices = [];
+  var rsiData = [];
+  var macdLine = [];
+  var signalLine = [];
+  var histogram = [];
+
+  // Simulated data: downtrend with bullish divergence, then reversal
+  var priceArr = [180,178,175,172,170,168,165,163,160,158,155,153,151,149,148,146,145,143,142,141,140,139,138,140,143,147,150,155,160,165,170,175,180,185,190,195];
+  var rsiArr =   [55,50,45,40,38,35,33,30,28,26,25,24,28,30,32,35,28,30,33,35,32,34,36,42,48,55,60,62,65,68,70,72,74,72,70,68];
+  var macdArr =  [-1,-1.5,-2,-2.5,-3,-3.2,-3.5,-3.8,-4,-4.2,-4,-3.8,-3.5,-3,-2.5,-2,-2.8,-2.5,-2,-1.5,-1.8,-1.5,-1,0,0.5,1.2,2,2.5,3,3.2,3.5,3.2,3,2.8,2.5,2.2];
+  var sigArr =   [-0.5,-0.8,-1.2,-1.6,-2,-2.4,-2.8,-3.1,-3.4,-3.6,-3.7,-3.8,-3.7,-3.5,-3.2,-2.9,-2.8,-2.7,-2.5,-2.2,-2.1,-1.9,-1.6,-1.2,-0.7,0,0.6,1.1,1.6,2,2.4,2.7,2.8,2.9,2.8,2.7];
+
+  for(var i=0; i<priceArr.length; i++){
+    dates.push('D'+(i+1));
+    prices.push(priceArr[i]);
+    rsiData.push(rsiArr[i]);
+    macdLine.push(macdArr[i]);
+    signalLine.push(sigArr[i]);
+    histogram.push(+(macdArr[i]-sigArr[i]).toFixed(2));
+  }
+
+  var option = {
+    tooltip:{ trigger:'axis' },
+    grid:[
+      { left:'10%', right:'3%', top:'3%', height:'30%' },
+      { left:'10%', right:'3%', top:'38%', height:'20%' },
+      { left:'10%', right:'3%', top:'63%', height:'30%' }
+    ],
+    xAxis:[
+      { type:'category', data:dates, gridIndex:0, axisLabel:{ show:false }},
+      { type:'category', data:dates, gridIndex:1, axisLabel:{ show:false }},
+      { type:'category', data:dates, gridIndex:2, axisLabel:{ fontSize:8, color:'#64748b', interval:4 }}
+    ],
+    yAxis:[
+      { type:'value', gridIndex:0, axisLabel:{ fontSize:9, color:'#64748b', formatter:'${value}' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}, name:'Prix', nameTextStyle:{fontSize:9, color:'#94a3b8'} },
+      { type:'value', gridIndex:1, min:0, max:100, axisLabel:{ fontSize:9, color:'#64748b' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}, name:'RSI', nameTextStyle:{fontSize:9, color:'#94a3b8'} },
+      { type:'value', gridIndex:2, axisLabel:{ fontSize:9, color:'#64748b' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}, name:'MACD', nameTextStyle:{fontSize:9, color:'#94a3b8'} }
+    ],
+    series:[
+      // Price
+      { type:'line', data:prices, xAxisIndex:0, yAxisIndex:0, lineStyle:{ color:'#0f172a', width:2 }, symbol:'none',
+        markLine:{ silent:true, symbol:'none', data:[
+          [{ coord:['D11',155], lineStyle:{color:'#dc2626', type:'dashed'} }, { coord:['D17',145] }],
+        ], label:{ formatter:'Creux\nplus bas', fontSize:8, color:'#dc2626' }}
+      }},
+      // RSI
+      { type:'line', data:rsiData, xAxisIndex:1, yAxisIndex:1, lineStyle:{ color:'#16a34a', width:2 }, symbol:'none', areaStyle:{ color:'rgba(22,163,74,0.05)' },
+        markLine:{ silent:true, symbol:'none', data:[
+          { yAxis:70, lineStyle:{ color:'#dc2626', type:'dashed' }, label:{ formatter:'70', fontSize:8, color:'#dc2626' }},
+          { yAxis:30, lineStyle:{ color:'#16a34a', type:'dashed' }, label:{ formatter:'30', fontSize:8, color:'#16a34a' }},
+          [{ coord:['D11',25], lineStyle:{color:'#16a34a', type:'solid', width:2} }, { coord:['D17',28] }]
+        ], label:{ formatter:'Creux\nplus haut', fontSize:8, color:'#16a34a' }}
+      },
+      // MACD Line
+      { type:'line', data:macdLine, xAxisIndex:2, yAxisIndex:2, lineStyle:{ color:'#2563eb', width:2 }, symbol:'none', name:'MACD' },
+      // Signal Line
+      { type:'line', data:signalLine, xAxisIndex:2, yAxisIndex:2, lineStyle:{ color:'#ea580c', width:1.5, type:'dashed' }, symbol:'none', name:'Signal' },
+      // Histogram
+      { type:'bar', data:histogram.map(function(v){ return { value:v, itemStyle:{ color: v >= 0 ? 'rgba(22,163,74,0.5)' : 'rgba(220,38,38,0.5)' }}; }),
+        xAxisIndex:2, yAxisIndex:2 }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

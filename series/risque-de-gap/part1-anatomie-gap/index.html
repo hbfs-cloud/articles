@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anatomie d'un Gap — Comprendre le Danger | Gérer le Risque de Gap — Partie 1/5 | Market Watch</title>
+  <meta name="description" content="Série Gérer le Risque de Gap — Partie 1/5 : Qu'est-ce qu'un gap ? Les 4 types de gaps, pourquoi ils existent, statistiques historiques, les plus grands gaps de l'histoire et le concept de gap fill.">
+  <meta property="og:title" content="Anatomie d'un Gap | Gérer le Risque de Gap — Partie 1/5 | Market Watch">
+  <meta property="og:description" content="Comprendre les gaps boursiers : common, breakaway, runaway, exhaustion. Statistiques, historique et concept de gap fill.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/risque-de-gap/part1-anatomie-gap/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  /* Series-specific styles — RED/CRIMSON THEME (#dc2626) */
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#dc2626; }
+
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#f87171; color:#f87171; }
+  .series-link.current { background:#dc2626; color:white; border-color:#dc2626; }
+
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+
+  .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+  /* Quiz */
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#dc2626; margin-right:0.75rem; }
+  details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#dc2626; }
+
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#f87171; }
+
+  .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#dc2626; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+
+  .disclaimer-mega { background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #dc2626; }
+  .disclaimer-mega h3 { color:#fca5a5; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fecaca; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#f87171; margin-top:0.2rem; flex-shrink:0; }
+
+  /* Gap type cards */
+  .gap-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1.5rem 0; border-left:4px solid #dc2626; transition:all 0.3s; }
+  .gap-card:hover { transform:translateY(-2px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+  .gap-card h4 { font-size:1.1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+  .gap-card .gap-tag { display:inline-block; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; }
+
+  /* History event cards */
+  .event-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0; display:flex; align-items:flex-start; gap:1.25rem; transition:all 0.3s; }
+  .event-card:hover { border-color:#dc2626; transform:translateY(-1px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+  .event-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; flex-shrink:0; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .brand-logo { font-size:0.9rem; }
+    .series-title { font-size:0.65rem; margin-right:0.5rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+    .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+    .event-card { flex-direction:column; text-align:center; align-items:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .brand-logo { font-size:0.85rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+    .hero-badges { gap:0.4rem; margin-top:1rem; }
+    .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation — RED THEME — 5 Parts -->
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Gérer le Risque de Gap</span>
+  <a href="/series/risque-de-gap/part1-anatomie-gap/" class="series-link current">1 — Anatomie</a>
+  <a href="/series/risque-de-gap/part2-gap-par-actif/" class="series-link">2 — Par Actif</a>
+  <a href="/series/risque-de-gap/part3-protection/" class="series-link">3 — Protection</a>
+  <a href="/series/risque-de-gap/part4-trader-les-gaps/" class="series-link">4 — Trader</a>
+  <a href="/series/risque-de-gap/part5-survivre/" class="series-link">5 — Survivre</a>
+</div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Gérer le Risque de Gap — Partie 1 sur 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Anatomie d'un Gap</h1>
+  <p class="hero-subtitle">Qu'est-ce qu'un gap ? Les 4 types fondamentaux, pourquoi ils existent, l'asymétrie psychologique, les statistiques historiques et le concept crucial de gap fill — tout ce que vous devez comprendre avant de trader.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-bolt"></i> Gaps</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-bar"></i> Statistiques</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Risque</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-graduation-cap"></i> Éducatif</span>
+  </div>
+</section>
+
+<!-- ==================== CONTAINER ==================== -->
+<div class="container">
+
+<!-- Navigation Grid -->
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#definition" class="nav-item"><i class="fa-solid fa-bolt" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Définition</a>
+  <a href="#types" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> 4 Types</a>
+  <a href="#pourquoi" class="nav-item"><i class="fa-solid fa-clock" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pourquoi</a>
+  <a href="#asymetrie" class="nav-item"><i class="fa-solid fa-scale-unbalanced" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Asymétrie</a>
+  <a href="#stats" class="nav-item"><i class="fa-solid fa-chart-pie" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Statistiques</a>
+  <a href="#histoire" class="nav-item"><i class="fa-solid fa-landmark" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Historique</a>
+  <a href="#gapfill" class="nav-item"><i class="fa-solid fa-fill" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Gap Fill</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 0 : DISCLAIMER                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="disclaimer"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Avertissement Important</div>
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT — CE GUIDE EST STRICTEMENT ÉDUCATIF</h3>
+  <ul>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Ce guide est STRICTEMENT ÉDUCATIF.</strong> Il ne constitue en aucun cas un conseil en investissement, une recommandation d'achat ou de vente, ni une incitation à trader.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Les gaps représentent un risque majeur de perte en capital.</strong> Un gap adverse peut provoquer une perte bien supérieure à votre stop loss initial. Avec l'effet de levier, les pertes peuvent excéder le capital investi.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Ne jamais investir de l'argent que vous ne pouvez pas vous permettre de perdre.</strong></li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Les performances passées ne garantissent pas les performances futures.</strong> Les statistiques historiques présentées sont indicatives.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Consultez un conseiller financier agréé</strong> avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : DÉFINITION                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="definition"><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> Qu'est-ce qu'un Gap ?</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> La Discontinuité de Prix</h2>
+
+  <p>Un <strong>gap</strong> (ou "saut de cotation") est une zone de prix sur un graphique où <strong>aucune transaction n'a eu lieu</strong>. Visuellement, c'est un "trou" entre la clôture d'une bougie et l'ouverture de la suivante. Le prix saute d'un niveau à un autre sans passer par les niveaux intermédiaires.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> En termes simples</h4>
+    <p style="margin:0;">Imaginez un escalier. Normalement, vous montez marche par marche (le prix évolue tick par tick). Un gap, c'est comme si quelqu'un avait retiré 5 marches d'un coup : vous passez directement du palier 100 au palier 105 sans jamais toucher 101, 102, 103 ou 104. Si vous aviez un stop loss à 102... il n'a pas pu s'exécuter.</p>
+  </div>
+
+  <p>Concrètement, un gap se produit quand :</p>
+  <ul style="font-size:0.95rem; color:#334155; line-height:1.8;">
+    <li><strong>Gap Up (haussier)</strong> : le prix d'ouverture est <em>supérieur</em> au plus haut de la veille</li>
+    <li><strong>Gap Down (baissier)</strong> : le prix d'ouverture est <em>inférieur</em> au plus bas de la veille</li>
+  </ul>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule du Gap</div>
+    Gap Up = <span class="formula-highlight">Open(t)</span> > High(t-1) &nbsp;&nbsp;|&nbsp;&nbsp; Gap Down = <span class="formula-highlight">Open(t)</span> < Low(t-1)
+  </div>
+
+  <p>Il existe aussi des gaps "partiels" (partial gaps) où l'ouverture est au-dessus de la clôture précédente mais pas au-dessus du plus haut. Les vrais gaps (ou "full gaps") sont les plus significatifs techniquement car ils représentent un déséquilibre complet entre offre et demande.</p>
+
+  <!-- Chart: Anatomy of a Gap -->
+  <div id="chart-gap-anatomy" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Pourquoi les gaps sont dangereux</h4>
+    <p style="margin:0;">Le problème fondamental des gaps est qu'ils <strong>rendent vos stop loss inefficaces</strong>. Un stop loss à 95$ ne peut pas s'exécuter si le prix ouvre directement à 85$. Votre perte réelle sera de 15$ par action au lieu des 5$ prévus. C'est le risque de gap — et c'est le sujet de toute cette série.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : LES 4 TYPES DE GAPS                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="types"><i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> Les 4 Types de Gaps</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> Taxonomie Complète</h2>
+
+  <p>Tous les gaps ne se valent pas. La classification en 4 types, développée par les analystes techniques classiques (Edwards & Magee, 1948), reste la référence. Chaque type a une signification différente et implique des stratégies radicalement différentes.</p>
+
+  <!-- Common Gap -->
+  <div class="gap-card" style="border-left-color:#94a3b8;">
+    <span class="gap-tag" style="background:#f1f5f9; color:#64748b;">Type 1</span>
+    <h4><i class="fa-solid fa-minus" style="color:#94a3b8;"></i> Common Gap (Gap Ordinaire)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6;">Le gap le plus fréquent et le moins significatif. Il se produit dans des zones de consolidation, souvent sur faible volume, sans catalyseur particulier. C'est du "bruit" de marché.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+      <div style="background:#f8fafc; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.5rem;">Caractéristiques</div>
+        <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#475569; line-height:1.6;">
+          <li>Volume faible ou normal</li>
+          <li>Pas de catalyseur identifiable</li>
+          <li>Se produit dans un range</li>
+          <li>Taille généralement < 1%</li>
+        </ul>
+      </div>
+      <div style="background:#f0fdf4; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;">Probabilité de Fill</div>
+        <div style="font-size:2rem; font-weight:900; color:#16a34a;">~90%</div>
+        <div style="font-size:0.8rem; color:#475569;">Comblé en quelques jours à quelques semaines</div>
+      </div>
+    </div>
+    <div class="didactic-box" style="margin-top:0.5rem;">
+      <h4 style="color:#16a34a !important;"><i class="fa-solid fa-lightbulb"></i> Ce qu'il faut retenir</h4>
+      <p style="margin:0;">Les common gaps sont le "bruit de fond" du marché. Ils se comblent presque toujours et n'offrent que peu d'information directionnelle. Stratégie : les ignorer ou les fader (parier sur le comblement).</p>
+    </div>
+  </div>
+
+  <!-- Breakaway Gap -->
+  <div class="gap-card" style="border-left-color:#dc2626;">
+    <span class="gap-tag" style="background:#fef2f2; color:#dc2626;">Type 2</span>
+    <h4><i class="fa-solid fa-right-from-bracket" style="color:#dc2626;"></i> Breakaway Gap (Gap de Rupture)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6;">Le gap le plus puissant et le plus significatif. Il marque le <strong>début d'une nouvelle tendance</strong>. Le prix sort d'une zone de consolidation avec une force explosive, laissant un gap derrière lui. C'est le signal que "quelque chose a fondamentalement changé".</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+      <div style="background:#f8fafc; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.5rem;">Caractéristiques</div>
+        <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#475569; line-height:1.6;">
+          <li><strong>Volume explosif</strong> (2-5x la moyenne)</li>
+          <li>Sort d'un range/pattern (triangle, rectangle)</li>
+          <li>Catalyseur fondamental souvent présent</li>
+          <li>Taille souvent > 3%</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;">Probabilité de Fill</div>
+        <div style="font-size:2rem; font-weight:900; color:#dc2626;">~30%</div>
+        <div style="font-size:0.8rem; color:#475569;">Rarement comblé — le prix continue dans la direction du gap</div>
+      </div>
+    </div>
+    <div class="alert-box" style="margin-top:0.5rem;">
+      <h4><i class="fa-solid fa-skull-crossbones"></i> Piège mortel</h4>
+      <p style="margin:0;"><strong>Ne JAMAIS fader un breakaway gap.</strong> C'est l'erreur n1 des débutants. Si vous shortez un breakaway gap haussier parce que "c'est trop monté", le prix continuera probablement à monter pendant des jours ou des semaines. Vous serez écrasé.</p>
+    </div>
+  </div>
+
+  <!-- Runaway Gap -->
+  <div class="gap-card" style="border-left-color:#f97316;">
+    <span class="gap-tag" style="background:#fff7ed; color:#f97316;">Type 3</span>
+    <h4><i class="fa-solid fa-forward" style="color:#f97316;"></i> Runaway Gap (Gap de Continuation)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6;">Aussi appelé "measuring gap" ou "gap de mesure". Il se produit <strong>au milieu d'une tendance</strong> déjà établie. Le prix accélère brutalement dans la direction de la tendance. On l'appelle "measuring gap" parce qu'il indique souvent que la tendance est à mi-parcours.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+      <div style="background:#f8fafc; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.5rem;">Caractéristiques</div>
+        <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#475569; line-height:1.6;">
+          <li>Tendance déjà en cours</li>
+          <li>Volume élevé mais pas aussi explosif que le breakaway</li>
+          <li>Souvent accompagné d'un catalyseur (upgrade analyst, news)</li>
+          <li>Peut servir de "point médian" de la tendance</li>
+        </ul>
+      </div>
+      <div style="background:#fff7ed; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#f97316; text-transform:uppercase; margin-bottom:0.5rem;">Probabilité de Fill</div>
+        <div style="font-size:2rem; font-weight:900; color:#f97316;">~50%</div>
+        <div style="font-size:0.8rem; color:#475569;">Comblé éventuellement, mais pas rapidement</div>
+      </div>
+    </div>
+    <div class="pedagogy-box" style="margin-top:0.5rem;">
+      <h4><i class="fa-solid fa-ruler"></i> La règle de mesure</h4>
+      <p style="margin:0;">Si un breakaway gap a lancé une tendance à 100$ et qu'un runaway gap se produit à 115$, l'objectif théorique de la tendance est 130$ (la même distance de 15$ projetée depuis le runaway gap). C'est un outil de mesure imprécis mais utile.</p>
+    </div>
+  </div>
+
+  <!-- Exhaustion Gap -->
+  <div class="gap-card" style="border-left-color:#9333ea;">
+    <span class="gap-tag" style="background:#faf5ff; color:#9333ea;">Type 4</span>
+    <h4><i class="fa-solid fa-battery-empty" style="color:#9333ea;"></i> Exhaustion Gap (Gap d'Épuisement)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6;">Le gap le plus <strong>trompeur et dangereux</strong>. Il se produit en <strong>fin de tendance</strong> et ressemble à un runaway gap... mais c'est en réalité le dernier souffle des acheteurs (ou vendeurs). Le prix fait un gap dans la direction de la tendance, puis <strong>reverse brutalement</strong> dans les jours qui suivent.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+      <div style="background:#f8fafc; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:0.5rem;">Caractéristiques</div>
+        <ul style="margin:0; padding-left:1rem; font-size:0.85rem; color:#475569; line-height:1.6;">
+          <li>Tendance déjà prolongée (souvent après un runaway gap)</li>
+          <li>Volume très élevé (euphorie ou panique finale)</li>
+          <li>Souvent accompagné de RSI extrême (>80 ou <20)</li>
+          <li>Reversal dans les 1-5 jours suivants</li>
+        </ul>
+      </div>
+      <div style="background:#faf5ff; border-radius:10px; padding:1rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#9333ea; text-transform:uppercase; margin-bottom:0.5rem;">Probabilité de Fill</div>
+        <div style="font-size:2rem; font-weight:900; color:#9333ea;">~85%</div>
+        <div style="font-size:0.8rem; color:#475569;">Comblé rapidement — souvent en quelques jours</div>
+      </div>
+    </div>
+    <div class="alert-box" style="margin-top:0.5rem;">
+      <h4><i class="fa-solid fa-mask"></i> Le piège de l'exhaustion</h4>
+      <p style="margin:0;">L'exhaustion gap est un <strong>piège classique</strong>. Les débutants le voient et pensent "la tendance continue !" alors que c'est exactement l'inverse : les "smart money" vendent dans le gap pendant que les retardataires achètent. Si un gap se produit après une longue tendance avec un RSI extrême, méfiez-vous.</p>
+    </div>
+  </div>
+
+  <!-- Comparison Chart -->
+  <div id="chart-gap-types" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Volume</th>
+        <th>Position</th>
+        <th>Fill Rate</th>
+        <th>Signal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Common</strong></td>
+        <td>Faible/Normal</td>
+        <td>Dans un range</td>
+        <td style="color:#16a34a; font-weight:700;">~90%</td>
+        <td>Aucun (bruit)</td>
+      </tr>
+      <tr>
+        <td><strong>Breakaway</strong></td>
+        <td style="color:#dc2626; font-weight:700;">Explosif (2-5x)</td>
+        <td>Sortie de range</td>
+        <td style="color:#dc2626; font-weight:700;">~30%</td>
+        <td>Nouvelle tendance</td>
+      </tr>
+      <tr>
+        <td><strong>Runaway</strong></td>
+        <td>Élevé</td>
+        <td>Milieu de tendance</td>
+        <td style="color:#f97316; font-weight:700;">~50%</td>
+        <td>Continuation</td>
+      </tr>
+      <tr>
+        <td><strong>Exhaustion</strong></td>
+        <td style="color:#9333ea; font-weight:700;">Très élevé</td>
+        <td>Fin de tendance</td>
+        <td style="color:#9333ea; font-weight:700;">~85%</td>
+        <td>Reversal imminent</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : POURQUOI LES GAPS EXISTENT                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pourquoi"><i class="fa-solid fa-clock" style="color:#2563eb;"></i> Pourquoi les Gaps Existent</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clock" style="color:#2563eb;"></i> Les Causes Fondamentales</h2>
+
+  <p>Les gaps existent pour une raison simple : les marchés sont fermés pendant une partie de la journée, mais les informations et les événements ne s'arrêtent jamais. Quand le marché rouvre, il doit instantanément réévaluer des centaines de nouvelles informations accumulées pendant la fermeture.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #dc2626;">
+      <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-moon" style="color:#dc2626;"></i> Overnight News</h4>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6;">Les résultats trimestriels sont publiés après la clôture (16h-17h) ou avant l'ouverture (7h-9h30). Un résultat inattendu peut provoquer un gap de 5% à 25% à l'ouverture. Exemples : META -25% en février 2022, NFLX +15% en janvier 2023.</p>
+    </div>
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #f97316;">
+      <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-globe" style="color:#f97316;"></i> Géopolitique</h4>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6;">Les événements géopolitiques ne respectent pas les horaires de marché. L'invasion de l'Ukraine (24 février 2022) s'est produite dans la nuit européenne — les marchés ont ouvert en gap down massif le lendemain matin.</p>
+    </div>
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #2563eb;">
+      <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Banques Centrales</h4>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6;">Les décisions de taux inattendues provoquent des gaps violents sur le forex et les obligations. La SNB en janvier 2015 a retiré le peg EURCHF sans prévenir : gap de -30% en quelques secondes.</p>
+    </div>
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #9333ea;">
+      <h4 style="margin-top:0; color:#0f172a;"><i class="fa-solid fa-pills" style="color:#9333ea;"></i> FDA / Réglementation</h4>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6;">Les décisions FDA (approbation/rejet de médicaments) sont annoncées en dehors des heures de marché. Une biotech small cap peut gagner +100% ou perdre -70% overnight sur une décision binaire.</p>
+    </div>
+  </div>
+
+  <h3>Le problème du Pre-Market et After-Hours</h3>
+  <p>Les marchés américains (NYSE, NASDAQ) sont ouverts de 9h30 à 16h00 ET. Mais il existe des sessions étendues :</p>
+  <ul style="font-size:0.95rem; color:#334155; line-height:1.8;">
+    <li><strong>Pre-market</strong> : 4h00 - 9h30 ET (liquidité très faible)</li>
+    <li><strong>After-hours</strong> : 16h00 - 20h00 ET (liquidité faible)</li>
+    <li><strong>Fermé</strong> : 20h00 - 4h00 ET (aucune liquidité US)</li>
+  </ul>
+  <p>Le vrai gap se mesure entre la clôture de 16h00 et l'ouverture de 9h30. Les transactions pre-market et after-hours sont sur des volumes très faibles (souvent 1-5% du volume normal) et avec des spreads larges — ce n'est pas un marché "normal".</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le concept d'accumulation d'information</h4>
+    <p style="margin:0;">Entre 16h00 et 9h30, c'est <strong>17,5 heures</strong> sans marché ouvert normal. Pendant ce temps, les marchés asiatiques et européens tradent, les entreprises publient des résultats, les banques centrales parlent, les événements géopolitiques se produisent. À 9h30, le marché américain doit "pricer" instantanément toutes ces informations. Plus il y a d'informations nouvelles, plus le gap est important.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : ASYMÉTRIE PSYCHOLOGIQUE                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="asymetrie"><i class="fa-solid fa-scale-unbalanced" style="color:#9333ea;"></i> L'Asymétrie Psychologique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-unbalanced" style="color:#9333ea;"></i> Gap Up vs Gap Down : la Peur > la Cupidité</h2>
+
+  <p>Un principe fondamental de la finance comportementale : <strong>la douleur d'une perte est environ 2,5 fois plus intense que le plaisir d'un gain équivalent</strong> (Kahneman & Tversky, Prospect Theory, 1979). Cette asymétrie a des conséquences directes sur les gaps.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0;">
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:16px; padding:1.5rem;">
+      <h4 style="margin-top:0; color:#16a34a;"><i class="fa-solid fa-arrow-up"></i> Gap Up (haussier)</h4>
+      <ul style="margin:0; padding-left:1rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Généralement <strong>moins violent</strong> que les gap down</li>
+        <li>Les acheteurs sont méthodiques, ils "cherchent le meilleur prix"</li>
+        <li>L'euphorie monte progressivement (greed is slow)</li>
+        <li>Souvent suivi de profit-taking → retrace partielle</li>
+        <li>Exception : M&A premium (+20-50% en 1 gap)</li>
+      </ul>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:16px; padding:1.5rem;">
+      <h4 style="margin-top:0; color:#dc2626;"><i class="fa-solid fa-arrow-down"></i> Gap Down (baissier)</h4>
+      <ul style="margin:0; padding-left:1rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Généralement <strong>plus violent</strong> que les gap up</li>
+        <li>Les vendeurs paniquent, ils vendent "à tout prix"</li>
+        <li>La peur est instantanée (fear is fast)</li>
+        <li>Souvent suivi de continuation (selling cascade)</li>
+        <li>Les margin calls amplifient les gaps down</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Asymétrie des Gaps — S&P 500 (2000-2024)</div>
+    Gap Down moyen : <span class="formula-highlight">-2,1%</span> &nbsp;vs&nbsp; Gap Up moyen : <span class="formula-highlight">+1,4%</span> &nbsp;&nbsp;|&nbsp;&nbsp; Ratio : <span class="formula-highlight">1,5x</span>
+  </div>
+
+  <p>Cette asymétrie s'explique par plusieurs mécanismes :</p>
+  <ul style="font-size:0.95rem; color:#334155; line-height:1.8;">
+    <li><strong>Margin calls</strong> : quand le marché baisse, les brokers forcent la vente des positions à levier, créant une pression vendeuse supplémentaire</li>
+    <li><strong>Stops en cascade</strong> : les stop loss clustérisés créent un effet domino à la baisse</li>
+    <li><strong>Liquidité asymétrique</strong> : en panique, les market makers élargissent les spreads, réduisant la liquidité exactement quand on en a le plus besoin</li>
+    <li><strong>Biais de négativité</strong> : les humains réagissent plus fortement aux mauvaises nouvelles qu'aux bonnes</li>
+  </ul>
+
+  <!-- Chart: Asymmetry -->
+  <div id="chart-asymmetry" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : STATISTIQUES HISTORIQUES                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stats"><i class="fa-solid fa-chart-pie" style="color:#dc2626;"></i> Statistiques Historiques</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-pie" style="color:#dc2626;"></i> Fréquence et Taille des Gaps</h2>
+
+  <p>Analysons 24 ans de données sur le S&P 500 (2000-2024) pour comprendre à quelle fréquence les gaps se produisent et quelle est leur taille typique.</p>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value" style="color:#dc2626;">68%</div>
+      <div class="metric-label">des jours avec un gap</div>
+      <div class="metric-change neutral">S&P 500 2000-2024</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#2563eb;">0,4%</div>
+      <div class="metric-label">gap moyen (abs)</div>
+      <div class="metric-change neutral">Médiane des gaps</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#f97316;">12x/an</div>
+      <div class="metric-label">gaps > 1%</div>
+      <div class="metric-change neutral">Environ 1/mois</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#9333ea;">2-3x/an</div>
+      <div class="metric-label">gaps > 2%</div>
+      <div class="metric-change neutral">Les plus dangereux</div>
+    </div>
+  </div>
+
+  <h3>Distribution des Gaps par Taille</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Taille du Gap</th>
+        <th>Fréquence Annuelle</th>
+        <th>% des Jours</th>
+        <th>Risque</th>
+        <th>Exemples</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>< 0,5%</strong></td>
+        <td>~125 jours/an</td>
+        <td>50%</td>
+        <td><span class="badge badge-green">Faible</span></td>
+        <td>Bruit quotidien normal</td>
+      </tr>
+      <tr>
+        <td><strong>0,5% - 1%</strong></td>
+        <td>~45 jours/an</td>
+        <td>18%</td>
+        <td><span class="badge badge-blue">Modéré</span></td>
+        <td>Data macro, earnings mineurs</td>
+      </tr>
+      <tr>
+        <td><strong>1% - 2%</strong></td>
+        <td>~12 jours/an</td>
+        <td>5%</td>
+        <td><span class="badge badge-purple">Élevé</span></td>
+        <td>FOMC surprise, CPI choc</td>
+      </tr>
+      <tr>
+        <td><strong>2% - 3%</strong></td>
+        <td>~3 jours/an</td>
+        <td>1,2%</td>
+        <td><span class="badge badge-red">Très élevé</span></td>
+        <td>Crise sectorielle, géopolitique</td>
+      </tr>
+      <tr>
+        <td><strong>3% - 5%</strong></td>
+        <td>~1 jour/an</td>
+        <td>0,4%</td>
+        <td><span class="badge badge-red">Extrême</span></td>
+        <td>Crise majeure (COVID, Lehman)</td>
+      </tr>
+      <tr>
+        <td><strong>> 5%</strong></td>
+        <td>~0,3 jour/an</td>
+        <td>0,1%</td>
+        <td><span class="badge badge-red">Catastrophique</span></td>
+        <td>Black Monday, Circuit Breakers</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Chart: Distribution -->
+  <div id="chart-distribution" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-calculator"></i> Ce que ça signifie concrètement</h4>
+    <p style="margin:0;">Si vous détenez une position overnight pendant 1 an, vous subirez en moyenne <strong>12 gaps de plus de 1%</strong> et <strong>3 gaps de plus de 2%</strong>. Sur une position de 10 000$, un gap de 3% représente 300$ de perte potentielle <em>non protégeable par un stop loss classique</em>. Sur 10 ans de trading actif, vous traverserez statistiquement au moins 2-3 gaps de plus de 5% sur les indices, et potentiellement des gaps de 10-50% sur des actions individuelles.</p>
+  </div>
+
+  <h3>Gaps par Jour de la Semaine</h3>
+  <p>Les lundis sont les jours les plus propices aux gaps importants car le marché intègre 2 jours de nouvelles (samedi et dimanche). Les vendredis après les earnings overnight sont également dangereux.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0.75rem; margin:1.5rem 0;">
+    <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:1rem; text-align:center;">
+      <div style="font-size:1.3rem; font-weight:900; color:#dc2626;">0,52%</div>
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">Lundi</div>
+    </div>
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1rem; text-align:center;">
+      <div style="font-size:1.3rem; font-weight:900; color:#475569;">0,38%</div>
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">Mardi</div>
+    </div>
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1rem; text-align:center;">
+      <div style="font-size:1.3rem; font-weight:900; color:#475569;">0,35%</div>
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">Mercredi</div>
+    </div>
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1rem; text-align:center;">
+      <div style="font-size:1.3rem; font-weight:900; color:#475569;">0,37%</div>
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">Jeudi</div>
+    </div>
+    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:1rem; text-align:center;">
+      <div style="font-size:1.3rem; font-weight:900; color:#f97316;">0,41%</div>
+      <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700;">Vendredi</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : LES PLUS GRANDS GAPS DE L'HISTOIRE                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="histoire"><i class="fa-solid fa-landmark" style="color:#d97706;"></i> Les Plus Grands Gaps de l'Histoire</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-landmark" style="color:#d97706;"></i> Quand le Marché a Sauté dans le Vide</h2>
+
+  <p>Ces événements historiques illustrent la puissance destructrice (et parfois créatrice) des gaps. Chacun porte une leçon essentielle pour la gestion du risque.</p>
+
+  <div class="event-card">
+    <div class="event-number">1</div>
+    <div>
+      <h4 style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:#0f172a;">Black Monday — 19 octobre 1987</h4>
+      <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.5rem;"><strong>Dow Jones : -22,6% en 1 séance</strong> | Le plus grand gap/crash en une journée de l'histoire moderne</p>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6; margin:0;">Le Dow Jones a ouvert en gap down de -7% puis a continué à chuter pour finir à -22,6%. Les market makers ont simplement arrêté de répondre au téléphone. Les ordres de vente s'accumulaient sans contrepartie. Le "portfolio insurance" (hedging algorithmique) a amplifié la chute en créant une boucle de rétroaction négative. Leçon : la corrélation entre actifs tend vers 1 en crise.</p>
+    </div>
+  </div>
+
+  <div class="event-card">
+    <div class="event-number">2</div>
+    <div>
+      <h4 style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:#0f172a;">Lehman Brothers — 15 septembre 2008</h4>
+      <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.5rem;"><strong>Secteur bancaire : -15% à -50% en gap</strong> | La faillite qui a déclenché la crise financière mondiale</p>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6; margin:0;">La faillite de Lehman a été annoncée le dimanche soir. Le lundi matin, toutes les actions bancaires ont ouvert en gap down massif : Goldman Sachs -12%, Morgan Stanley -14%, AIG -60% (avant le bailout). Les CDS (Credit Default Swaps) ont explosé à la hausse. Leçon : le risque de contagion peut transformer un événement isolé en crise systémique.</p>
+    </div>
+  </div>
+
+  <div class="event-card">
+    <div class="event-number">3</div>
+    <div>
+      <h4 style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:#0f172a;">COVID-19 — 9-16 mars 2020</h4>
+      <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.5rem;"><strong>S&P 500 : 4 circuit breakers en 2 semaines</strong> | 4 gaps de -3% à -7% en séances successives</p>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6; margin:0;">La semaine du 9 au 16 mars 2020 a vu 4 journées avec circuit breakers (Level 1 : -7%). Le 16 mars, le S&P 500 a ouvert en gap down de -8,1%, déclenchant le circuit breaker dès les premières minutes. Le VIX a atteint 82,69 — plus haut que pendant la crise de 2008. Leçon : les événements "impensables" se produisent, et quand ils arrivent, tous les actifs corrèlent.</p>
+    </div>
+  </div>
+
+  <div class="event-card">
+    <div class="event-number">4</div>
+    <div>
+      <h4 style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:#0f172a;">SNB Peg Removal — 15 janvier 2015</h4>
+      <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.5rem;"><strong>EURCHF : -30% en 1 minute</strong> | Plusieurs brokers forex en faillite instantanée</p>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6; margin:0;">La Banque Nationale Suisse a retiré le peg de l'EUR/CHF (plancher à 1,20) sans prévenir. En quelques secondes, le CHF a gagné 30% contre l'euro. Des brokers comme Alpari UK et FXCM ont frôlé la faillite (FXCM a perdu $225M de fonds propres en minutes). Les clients avec levier 100:1 ont perdu plus que leur dépôt. Leçon : les garanties de banques centrales peuvent être retirées à tout moment.</p>
+    </div>
+  </div>
+
+  <div class="event-card">
+    <div class="event-number">5</div>
+    <div>
+      <h4 style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:#0f172a;">META Earnings — 3 février 2022</h4>
+      <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.5rem;"><strong>META : -26,4% en gap ($230Mds de market cap évaporés)</strong> | Le plus gros earnings gap de l'histoire en valeur absolue</p>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6; margin:0;">Meta a annoncé la première baisse de son nombre d'utilisateurs quotidiens et des dépenses massives dans le metaverse. Le titre a ouvert en gap down de -26%, effaçant $230 milliards de capitalisation en une nuit — un record historique. Même les investisseurs avec un stop loss à -10% ont subi une perte de -26%. Leçon : les earnings des méga-caps ne sont pas "sûrs".</p>
+    </div>
+  </div>
+
+  <div class="event-card">
+    <div class="event-number">6</div>
+    <div>
+      <h4 style="margin:0 0 0.35rem; font-size:1rem; font-weight:700; color:#0f172a;">Volkswagen Short Squeeze — octobre 2008</h4>
+      <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.5rem;"><strong>VW : +200% en 2 jours</strong> | Gap up cataclysmique pour les shorts</p>
+      <p style="font-size:0.88rem; color:#475569; line-height:1.6; margin:0;">Porsche a révélé détenir 74% de VW via options, laissant seulement 6% de free float. Les hedge funds shorts ont dû racheter dans un marché sans vendeurs. VW est brièvement devenue la plus grande capitalisation boursière mondiale. Les pertes des shorts sont estimées à $30 milliards. Leçon : la position short a un risque de perte théoriquement infini.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : LE CONCEPT DE GAP FILL                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="gapfill"><i class="fa-solid fa-fill" style="color:#10b981;"></i> Le Concept de Gap Fill</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-fill" style="color:#10b981;"></i> "80% des Gaps Sont Comblés" — Vrai ou Faux ?</h2>
+
+  <p>Vous entendrez souvent cette statistique : "80% des gaps sont comblés". C'est <strong>vrai... mais trompeur</strong>. Le diable est dans les détails : <em>quand</em> sont-ils comblés, et <em>que se passe-t-il entre-temps</em> ?</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Définition du Gap Fill</div>
+    Un gap est "comblé" quand le prix revient toucher le niveau de clôture précédent (<span class="formula-highlight">close[t-1]</span>)
+  </div>
+
+  <h3>Taux de Comblement par Type et par Horizon</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Type de Gap</th>
+        <th>Fill en 1 semaine</th>
+        <th>Fill en 1 mois</th>
+        <th>Fill en 3 mois</th>
+        <th>Fill en 1 an</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Common Gap</strong></td>
+        <td style="color:#16a34a; font-weight:700;">72%</td>
+        <td style="color:#16a34a; font-weight:700;">88%</td>
+        <td style="color:#16a34a; font-weight:700;">94%</td>
+        <td style="color:#16a34a; font-weight:700;">97%</td>
+      </tr>
+      <tr>
+        <td><strong>Breakaway Gap</strong></td>
+        <td style="color:#dc2626; font-weight:700;">8%</td>
+        <td style="color:#dc2626; font-weight:700;">15%</td>
+        <td style="color:#f97316; font-weight:700;">25%</td>
+        <td style="color:#f97316; font-weight:700;">35%</td>
+      </tr>
+      <tr>
+        <td><strong>Runaway Gap</strong></td>
+        <td style="color:#f97316; font-weight:700;">15%</td>
+        <td style="color:#f97316; font-weight:700;">30%</td>
+        <td style="color:#f97316; font-weight:700;">45%</td>
+        <td style="font-weight:700;">55%</td>
+      </tr>
+      <tr>
+        <td><strong>Exhaustion Gap</strong></td>
+        <td style="color:#16a34a; font-weight:700;">65%</td>
+        <td style="color:#16a34a; font-weight:700;">82%</td>
+        <td style="color:#16a34a; font-weight:700;">90%</td>
+        <td style="color:#16a34a; font-weight:700;">95%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du gap fill tardif</h4>
+    <p style="margin:0;">Un breakaway gap down de -20% peut mettre <strong>des années</strong> à être comblé — ou ne jamais l'être (si l'entreprise fait faillite). Dire "le gap sera comblé" quand le gap down est de -50% sur une biotech dont le médicament a été rejeté par la FDA, c'est de l'aveuglement. Le gap fill est une <strong>tendance statistique, pas une garantie</strong>.</p>
+  </div>
+
+  <!-- Chart: Gap Fill Rates -->
+  <div id="chart-gapfill" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Les 3 règles du gap fill</h4>
+    <p style="margin:0 0 0.5rem;"><strong>1. Identifier le type AVANT de parier sur le fill.</strong> Common gap → forte probabilité de fill. Breakaway gap → ne pas parier dessus.</p>
+    <p style="margin:0 0 0.5rem;"><strong>2. Le volume est votre meilleur indicateur.</strong> Gap sur faible volume → probable fill. Gap sur volume explosif → probable continuation.</p>
+    <p style="margin:0;"><strong>3. Le contexte de tendance compte.</strong> Un gap dans le sens de la tendance a moins de chances d'être comblé qu'un gap contre la tendance.</p>
+  </div>
+
+  <h3>L'Île de Reversal (Island Reversal)</h3>
+  <p>Un pattern rare mais très puissant : un <strong>exhaustion gap</strong> suivi, quelques jours plus tard, d'un <strong>breakaway gap dans la direction opposée</strong>. Le résultat est une "île" de prix isolée des deux côtés par des gaps. C'est l'un des signaux de reversal les plus fiables en analyse technique.</p>
+
+  <div class="didactic-box">
+    <h4 style="color:#16a34a !important;"><i class="fa-solid fa-island-tropical"></i> Comment identifier une Island Reversal</h4>
+    <p style="margin:0;">1. Gap up (exhaustion) en fin de tendance haussière &rarr; 2. Quelques jours de trading dans une zone étroite &rarr; 3. Gap down (breakaway) qui laisse "l'île" isolée. Signal fortement baissier. L'inverse est vrai pour un reversal haussier. Volume élevé sur les deux gaps confirme le signal.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : QUIZ                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos Connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 Questions</h2>
+
+  <details>
+    <summary>Question 1 : Un gap se produit sur un volume 4x supérieur à la moyenne, en sortie d'un triangle de consolidation. De quel type de gap s'agit-il ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Breakaway Gap (Gap de Rupture)</strong><br>
+      Les caractéristiques sont claires : volume explosif + sortie d'un pattern de consolidation (triangle). C'est le signal classique d'un breakaway gap. Ce type de gap a seulement ~30% de chances d'être comblé. Ne le fadez pas — suivez la direction du gap.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi les gaps down sont-ils statistiquement plus violents que les gaps up ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La peur est plus forte que la cupidité (Prospect Theory) + mécanismes amplificateurs.</strong><br>
+      Trois facteurs expliquent l'asymétrie : 1) La théorie des perspectives de Kahneman montre que la douleur d'une perte est 2,5x plus intense que le plaisir d'un gain équivalent, donc les vendeurs paniqués sont plus agressifs que les acheteurs euphoriques. 2) Les margin calls forcent des ventes supplémentaires. 3) Les stops en cascade créent un effet domino baissier. En moyenne, les gaps down sur le S&P 500 sont 1,5x plus grands que les gaps up.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Votre stop loss est à 95$ sur une action qui clôture à 100$. Le lendemain, l'action ouvre à 82$ après un earnings catastrophique. À quel prix votre stop s'exécute-t-il ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À environ 82$ (le prix d'ouverture), PAS à 95$.</strong><br>
+      Un stop loss market s'exécute au meilleur prix disponible. Comme le prix a "sauté" de 100$ à 82$ sans passer par 95$, votre stop ne peut s'exécuter qu'au premier prix disponible : ~82$ (avec potentiellement du slippage supplémentaire si la liquidité est faible). Votre perte est de 18$ par action au lieu des 5$ prévus. Un stop limit à 95$ ne se serait même pas exécuté — il serait resté en attente pendant que le prix continue de baisser.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : "80% des gaps sont comblés" — pourquoi cette statistique est-elle trompeuse ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'elle ne précise ni le type de gap, ni le délai de comblement.</strong><br>
+      La statistique agrège tous les types de gaps. Les common gaps sont comblés à ~90% en quelques jours, ce qui "gonfle" la moyenne. Mais les breakaway gaps ne sont comblés qu'à ~30%, et certains ne le sont jamais (entreprise en faillite, changement de paradigme). De plus, un gap peut mettre des mois ou des années à être comblé — pendant lesquels votre position accumule des pertes. Un gap down de -50% comblé 3 ans plus tard ne vous aide pas si vous avez été liquidé entre-temps.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Un titre est en tendance haussière depuis 3 mois, RSI à 85, et produit un gap up de +8% sur volume explosif. Que devez-vous suspecter ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un Exhaustion Gap (Gap d'Épuisement).</strong><br>
+      Les indices sont clairs : tendance prolongée (3 mois), RSI en surachat extrême (>80), gap dans le sens de la tendance avec volume très élevé. Ce sont les caractéristiques classiques d'un exhaustion gap. Les retardataires achètent dans l'euphorie finale, tandis que les "smart money" vendent dans le gap. Attendez-vous à un reversal dans les 1-5 jours suivants. Ce gap a ~85% de chances d'être comblé rapidement. C'est potentiellement un excellent signal de vente.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- TAKEAWAYS                                                      -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> À Retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 Enseignements Clés</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-bolt"></i> <strong>Un gap est une discontinuité de prix</strong> — une zone où aucune transaction n'a eu lieu. Votre stop loss ne peut pas s'exécuter dans le vide.</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>4 types, 4 stratégies différentes</strong> — Common (ignorer/fader), Breakaway (suivre), Runaway (mesurer), Exhaustion (reversal). Confondre un breakaway avec un exhaustion peut être fatal.</li>
+      <li><i class="fa-solid fa-scale-unbalanced"></i> <strong>Les gaps down sont plus violents</strong> — 1,5x plus grands que les gaps up en moyenne. La peur est plus rapide que la cupidité.</li>
+      <li><i class="fa-solid fa-chart-pie"></i> <strong>68% des jours ont un gap</strong> — les gaps sont la norme, pas l'exception. Environ 12 gaps de >1% par an sur le S&P 500.</li>
+      <li><i class="fa-solid fa-landmark"></i> <strong>L'histoire se répète</strong> — De Black Monday à COVID, les gaps catastrophiques surviennent régulièrement. La question n'est pas "si" mais "quand".</li>
+      <li><i class="fa-solid fa-fill"></i> <strong>"80% de fill" est trompeur</strong> — Ce chiffre masque des réalités très différentes selon le type de gap. Un breakaway gap n'est comblé qu'à ~30%.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Le volume est la clé</strong> — Volume explosif = gap significatif (breakaway/exhaustion). Volume faible = common gap (bruit).</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- Disclaimer Final -->
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> RAPPEL FINAL — AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-xmark-circle"></i> Ce guide est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Les gaps peuvent causer des <strong>pertes supérieures à votre stop loss</strong>. Le risque de perte totale est réel.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Ne jamais investir de l'argent que vous ne pouvez pas perdre.</strong></li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Les statistiques historiques présentées sont indicatives et ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Consultez un conseiller financier agréé avant toute décision.</li>
+  </ul>
+</div>
+
+
+<!-- Next CTA -->
+<a href="/series/risque-de-gap/part2-gap-par-actif/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 2 sur 5</div>
+    <div class="next-title">Gaps par Classe d'Actifs — Stocks, ETFs, Crypto, Forex</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<!-- Series Navigation Bottom -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/risque-de-gap/part1-anatomie-gap/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#dc2626; color:white; border:1px solid #dc2626;">1. Anatomie</a>
+  <a href="/series/risque-de-gap/part2-gap-par-actif/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Par Actif</a>
+  <a href="/series/risque-de-gap/part3-protection/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Protection</a>
+  <a href="/series/risque-de-gap/part4-trader-les-gaps/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Trader</a>
+  <a href="/series/risque-de-gap/part5-survivre/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Survivre</a>
+</div>
+
+</div><!-- end container -->
+
+<!-- ==================== FOOTER ==================== -->
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Gérer le Risque de Gap</strong> — Partie 1/5 : Anatomie d'un Gap</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement. Les gaps représentent un risque de perte en capital supérieure au stop loss. Les performances passées ne garantissent pas les performances futures. Consultez un conseiller financier agréé.</p>
+</div>
+
+<!-- ==================== ECHARTS SCRIPTS ==================== -->
+<script>
+// ============================
+// CHART 1: Gap Anatomy (Candlestick with gap)
+// ============================
+(function(){
+  var dom = document.getElementById('chart-gap-anatomy');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  // Simulated candlestick data showing a gap
+  var data = [
+    ['2024-01-02', 100, 102.5, 99.5, 101.8],
+    ['2024-01-03', 101.5, 103.2, 101.0, 102.8],
+    ['2024-01-04', 103.0, 104.1, 102.3, 103.5],
+    ['2024-01-05', 103.2, 103.8, 102.0, 102.5],
+    ['2024-01-08', 102.8, 103.5, 102.2, 103.0],
+    ['2024-01-09', 103.2, 103.9, 102.8, 103.5],
+    // GAP UP HERE
+    ['2024-01-10', 107.0, 109.2, 106.5, 108.5],
+    ['2024-01-11', 108.8, 110.0, 108.0, 109.5],
+    ['2024-01-12', 109.2, 110.5, 108.5, 110.0],
+    ['2024-01-15', 110.2, 111.0, 109.0, 109.5],
+    ['2024-01-16', 109.8, 110.5, 109.0, 110.2],
+  ];
+  var dates = data.map(function(d){return d[0];});
+  var values = data.map(function(d){return [d[1],d[4],d[3],d[2]];});
+
+  var option = {
+    title: { text: 'Anatomie d\'un Gap Up', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    grid: { left: '8%', right: '5%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10, color: '#64748b' } },
+    yAxis: { type: 'value', min: 98, max: 112, axisLabel: { fontSize: 10, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      {
+        type: 'candlestick',
+        data: values,
+        itemStyle: { color: '#16a34a', color0: '#dc2626', borderColor: '#16a34a', borderColor0: '#dc2626' },
+        markArea: {
+          silent: true,
+          data: [[
+            { yAxis: 103.9, itemStyle: { color: 'rgba(220,38,38,0.12)' } },
+            { yAxis: 106.5 }
+          ]]
+        },
+        markLine: {
+          silent: true,
+          data: [
+            { yAxis: 103.9, label: { formatter: 'High veille: 103.9', position: 'insideEndTop', fontSize: 10, color: '#dc2626' }, lineStyle: { color: '#dc2626', type: 'dashed' } },
+            { yAxis: 106.5, label: { formatter: 'Open gap: 107.0', position: 'insideEndTop', fontSize: 10, color: '#dc2626' }, lineStyle: { color: '#dc2626', type: 'dashed' } }
+          ]
+        }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 2: Gap Types Comparison (Radar)
+// ============================
+(function(){
+  var dom = document.getElementById('chart-gap-types');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var option = {
+    title: { text: 'Profil des 4 Types de Gaps', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: {},
+    legend: { data: ['Common', 'Breakaway', 'Runaway', 'Exhaustion'], bottom: 0, textStyle: { fontSize: 11 } },
+    radar: {
+      indicator: [
+        { name: 'Volume', max: 10 },
+        { name: 'Taille', max: 10 },
+        { name: 'Fill Rate', max: 10 },
+        { name: 'Fréquence', max: 10 },
+        { name: 'Danger', max: 10 }
+      ],
+      radius: '60%',
+      nameGap: 8,
+      axisName: { fontSize: 11, color: '#475569' }
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        { value: [2, 2, 9, 9, 2], name: 'Common', lineStyle: { color: '#94a3b8' }, areaStyle: { color: 'rgba(148,163,184,0.15)' }, itemStyle: { color: '#94a3b8' } },
+        { value: [9, 8, 3, 3, 9], name: 'Breakaway', lineStyle: { color: '#dc2626' }, areaStyle: { color: 'rgba(220,38,38,0.15)' }, itemStyle: { color: '#dc2626' } },
+        { value: [7, 5, 5, 4, 6], name: 'Runaway', lineStyle: { color: '#f97316' }, areaStyle: { color: 'rgba(249,115,22,0.15)' }, itemStyle: { color: '#f97316' } },
+        { value: [8, 6, 8, 3, 8], name: 'Exhaustion', lineStyle: { color: '#9333ea' }, areaStyle: { color: 'rgba(147,51,234,0.15)' }, itemStyle: { color: '#9333ea' } }
+      ]
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 3: Gap Asymmetry (Bar Chart)
+// ============================
+(function(){
+  var dom = document.getElementById('chart-asymmetry');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var option = {
+    title: { text: 'Asymétrie Gap Up vs Gap Down — S&P 500 (2000-2024)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis' },
+    grid: { left: '10%', right: '5%', bottom: '12%', top: '18%' },
+    xAxis: { type: 'category', data: ['Gap moyen', 'Gap médian', 'Gap max (5%ile)', 'Gap 1%ile'], axisLabel: { fontSize: 10, color: '#64748b' } },
+    yAxis: { type: 'value', name: '%', axisLabel: { fontSize: 10, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      { name: 'Gap Up', type: 'bar', data: [1.4, 0.8, 3.2, 5.1], itemStyle: { color: '#16a34a', borderRadius: [6,6,0,0] }, barGap: '10%' },
+      { name: 'Gap Down', type: 'bar', data: [2.1, 1.1, 4.8, 8.3], itemStyle: { color: '#dc2626', borderRadius: [6,6,0,0] } }
+    ],
+    legend: { bottom: 0, textStyle: { fontSize: 11 } }
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 4: Gap Size Distribution (Histogram-like)
+// ============================
+(function(){
+  var dom = document.getElementById('chart-distribution');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var option = {
+    title: { text: 'Distribution des Gaps S&P 500 — Fréquence par Taille', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', formatter: function(params) { var p = params[0]; return '<strong>' + p.name + '</strong><br/>Fréquence annuelle : ' + p.value + ' jours'; } },
+    grid: { left: '8%', right: '5%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: ['< 0.25%', '0.25-0.5%', '0.5-0.75%', '0.75-1%', '1-1.5%', '1.5-2%', '2-3%', '3-5%', '> 5%'], axisLabel: { fontSize: 9, color: '#64748b', rotate: 30 } },
+    yAxis: { type: 'value', name: 'Jours/an', axisLabel: { fontSize: 10, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 80, itemStyle: { color: '#94a3b8' } },
+        { value: 45, itemStyle: { color: '#64748b' } },
+        { value: 28, itemStyle: { color: '#475569' } },
+        { value: 17, itemStyle: { color: '#f97316' } },
+        { value: 8, itemStyle: { color: '#ea580c' } },
+        { value: 4, itemStyle: { color: '#dc2626' } },
+        { value: 3, itemStyle: { color: '#b91c1c' } },
+        { value: 1, itemStyle: { color: '#991b1b' } },
+        { value: 0.3, itemStyle: { color: '#450a0a' } }
+      ],
+      barWidth: '60%',
+      itemStyle: { borderRadius: [6,6,0,0] },
+      label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: '#334155' }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 5: Gap Fill Rates by Type (Grouped Bar)
+// ============================
+(function(){
+  var dom = document.getElementById('chart-gapfill');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var option = {
+    title: { text: 'Taux de Comblement (Gap Fill) par Type et Horizon', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['1 semaine', '1 mois', '3 mois', '1 an'], bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: '8%', right: '5%', bottom: '18%', top: '15%' },
+    xAxis: { type: 'category', data: ['Common', 'Breakaway', 'Runaway', 'Exhaustion'], axisLabel: { fontSize: 11, color: '#475569', fontWeight: 600 } },
+    yAxis: { type: 'value', max: 100, name: '% comblé', axisLabel: { fontSize: 10, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      { name: '1 semaine', type: 'bar', data: [72, 8, 15, 65], itemStyle: { color: '#dbeafe', borderRadius: [4,4,0,0] } },
+      { name: '1 mois', type: 'bar', data: [88, 15, 30, 82], itemStyle: { color: '#93c5fd', borderRadius: [4,4,0,0] } },
+      { name: '3 mois', type: 'bar', data: [94, 25, 45, 90], itemStyle: { color: '#3b82f6', borderRadius: [4,4,0,0] } },
+      { name: '1 an', type: 'bar', data: [97, 35, 55, 95], itemStyle: { color: '#1e40af', borderRadius: [4,4,0,0] } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

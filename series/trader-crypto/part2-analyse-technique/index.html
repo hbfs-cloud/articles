@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyse Technique Crypto — Spécificités & Indicateurs | Trader les Crypto — Partie 2/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les Crypto — Partie 2/6 : Pourquoi l'AT fonctionne en crypto, supports/résistances, RSI, MACD, Bollinger, funding rate contrarian, liquidation cascades, patterns Wyckoff.">
+  <meta property="og:title" content="Analyse Technique Crypto — Spécificités & Indicateurs | Trader les Crypto — Partie 2/6 | Market Watch">
+  <meta property="og:description" content="Supports psychologiques, RSI adapté crypto, funding rate comme signal contrarian, open interest, liquidations en cascade, patterns Wyckoff, timeframes optimaux.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-crypto/part2-analyse-technique/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#f59e0b; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fbbf24; color:#fbbf24; }
+  .series-link.current { background:#f59e0b; color:white; border-color:#f59e0b; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-amber { background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; border:1px solid rgba(139,92,246,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#f59e0b; margin-right:0.75rem; }
+  details[open] summary { border-color:#f59e0b; background:#fffbeb; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#f59e0b; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fbbf24; }
+  .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fde68a 100%); border:1px solid #f59e0b; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#f59e0b; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(245,158,11,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#f59e0b; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(245,158,11,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#f59e0b; color:#f59e0b; }
+  .disclaimer-mega { background:linear-gradient(135deg, #78350f 0%, #d97706 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #f59e0b; }
+  .disclaimer-mega h3 { color:#fde68a; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fef3c7; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#fbbf24; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #f59e0b; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-brands fa-bitcoin" style="margin-right:0.4rem;"></i> Trader les Crypto</span>
+  <a href="/series/trader-crypto/part1-ecosysteme/" class="series-link">1 — L'Écosystème</a>
+  <a href="/series/trader-crypto/part2-analyse-technique/" class="series-link current">2 — Analyse Technique</a>
+  <a href="/series/trader-crypto/part3-on-chain/" class="series-link">3 — On-Chain</a>
+  <a href="/series/trader-crypto/part4-defi-yield/" class="series-link">4 — DeFi & Yield</a>
+  <a href="/series/trader-crypto/part5-altcoins-narratives/" class="series-link">5 — Altcoins & Narratives</a>
+  <a href="/series/trader-crypto/part6-risques-securite/" class="series-link">6 — Risques & Sécurité</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-bitcoin" style="margin-right:0.4rem;"></i> Série Trader les Crypto — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Analyse Technique Crypto — Spécificités & Indicateurs</h1>
+  <p class="hero-subtitle">L'analyse technique fonctionne particulièrement bien en crypto : un marché dominé par le retail, les bots et les niveaux psychologiques. RSI, funding rates, liquidations — voici les outils du trader crypto.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-chart-line"></i> Supports/Résistances</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-wave-square"></i> RSI & MACD</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-percent"></i> Funding Rate</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-water"></i> Liquidations</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#pourquoi-at" class="nav-item"><i class="fa-solid fa-bullseye" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pourquoi l'AT</a>
+  <a href="#supports" class="nav-item"><i class="fa-solid fa-arrows-up-down" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Supports/Rés.</a>
+  <a href="#indicateurs" class="nav-item"><i class="fa-solid fa-wave-square" style="color:#8b5cf6; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Indicateurs</a>
+  <a href="#funding" class="nav-item"><i class="fa-solid fa-percent" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Funding & OI</a>
+  <a href="#liquidations" class="nav-item"><i class="fa-solid fa-water" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Liquidations</a>
+  <a href="#wyckoff" class="nav-item"><i class="fa-solid fa-diagram-project" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Wyckoff</a>
+  <a href="#timeframes" class="nav-item"><i class="fa-solid fa-clock" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Timeframes</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : POURQUOI L'AT EN CRYPTO                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pourquoi-at"><i class="fa-solid fa-bullseye" style="color:#f59e0b;"></i> Pourquoi l'AT fonctionne en crypto</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bullseye" style="color:#f59e0b;"></i> Un marché retail-driven = AT efficace</h2>
+
+  <p>L'analyse technique fonctionne mieux quand les participants <strong>réagissent aux mêmes signaux</strong>. En crypto, le marché est dominé par les traders retail, les bots qui tradent sur des indicateurs techniques, et les market makers qui lisent l'order flow. Résultat : les niveaux techniques sont <strong>auto-réalisateurs</strong>.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-users"></i></div>
+      <h4 style="margin:0 0 0.5rem;">70%+ retail</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Contrairement aux actions (60% institutionnels), la crypto est dominée par le retail qui trade sur les charts.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-robot"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Bots omniprésents</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Les bots de trading automatisé exécutent des stratégies basées sur RSI, MACD, Bollinger — renforçant les niveaux techniques.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-brain"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Niveaux psychologiques</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">$50K, $100K, $1.00 — les round numbers en crypto agissent comme des aimants à liquidité et des barrières.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> L'AT ne prédit pas, elle probabilise</h4>
+    <p style="margin:0;">L'analyse technique ne "prédit" pas le futur. Elle identifie des zones de <strong>probabilité asymétrique</strong> — des niveaux où le risque/récompense est favorable. Un support à $90K sur BTC ne garantit pas un rebond, mais il indique une zone où les acheteurs sont historiquement plus nombreux que les vendeurs. C'est un avantage statistique, pas une certitude.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : SUPPORTS / RÉSISTANCES                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="supports"><i class="fa-solid fa-arrows-up-down" style="color:#2563eb;"></i> Supports & résistances en crypto</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-up-down" style="color:#2563eb;"></i> Les niveaux clés du marché crypto</h2>
+
+  <p>En crypto, les supports et résistances ont des caractéristiques uniques. Les <strong>round numbers</strong> ($10K, $50K, $100K) jouent un rôle psychologique massif, et les niveaux de liquidation créent des zones de support/résistance "cachées".</p>
+
+  <h3>Les 5 types de niveaux en crypto</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Type</th><th>Exemples</th><th>Force</th><th>Comment l'utiliser</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Round numbers</strong></td>
+        <td>$50K, $100K, $1.00, $10</td>
+        <td style="color:#16a34a;"><strong>Très forte</strong></td>
+        <td>Barrières psychologiques majeures, zones de prise de profit/stop loss</td>
+      </tr>
+      <tr>
+        <td><strong>Anciens ATH/ATL</strong></td>
+        <td>$69K (ATH 2021), $15.5K (bottom 2022)</td>
+        <td style="color:#16a34a;"><strong>Très forte</strong></td>
+        <td>Résistance forte au premier test, support après break</td>
+      </tr>
+      <tr>
+        <td><strong>Moyennes mobiles</strong></td>
+        <td>MA 200 daily, MA 50 daily</td>
+        <td style="color:#f59e0b;">Forte</td>
+        <td>Support dynamique en tendance haussière, résistance en baissière</td>
+      </tr>
+      <tr>
+        <td><strong>Clusters de liquidation</strong></td>
+        <td>Niveaux visibles sur CoinGlass</td>
+        <td style="color:#f59e0b;">Forte</td>
+        <td>"Aimant" à prix — le prix est attiré vers la liquidité</td>
+      </tr>
+      <tr>
+        <td><strong>Volume Profile POC</strong></td>
+        <td>Point of Control (niveau le plus tradé)</td>
+        <td style="color:#2563eb;">Modérée</td>
+        <td>Zone de convergence, "fair value" statistique</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège des round numbers</h4>
+    <p style="margin:0;">Quand BTC approche un round number comme $100K, des milliers de traders placent des ordres d'achat/vente et des stop loss exactement sur ce niveau. Les whales et market makers le savent. Ils poussent souvent le prix <strong>juste au-delà</strong> du niveau pour déclencher les stops, puis inversent la direction. C'est le fameux <strong>"stop hunt"</strong>. Solution : ne placez jamais vos ordres <strong>exactement</strong> sur un round number — décalez de 1-2%.</p>
+  </div>
+
+  <!-- CHART 1: BTC with key levels -->
+  <h3>BTC/USD — Niveaux clés et zones psychologiques</h3>
+  <div id="chart-btc-levels" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : INDICATEURS                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="indicateurs"><i class="fa-solid fa-wave-square" style="color:#8b5cf6;"></i> Indicateurs clés adaptés crypto</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wave-square" style="color:#8b5cf6;"></i> RSI, MACD, Bollinger — avec les bons réglages</h2>
+
+  <p>Les indicateurs classiques fonctionnent en crypto, mais les <strong>seuils standards doivent être ajustés</strong>. La volatilité plus élevée de la crypto signifie que les niveaux "oversold/overbought" sont différents de ceux des actions.</p>
+
+  <h3>RSI (Relative Strength Index) — Le roi des oscillateurs</h3>
+
+  <div class="formula-box">
+    <div class="formula-label">RSI adapté crypto</div>
+    Oversold = <span class="formula-highlight">25</span> (pas 30) | Overbought = <span class="formula-highlight">80</span> (pas 70) | Neutre = <span class="formula-highlight">40-60</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-down"></i> RSI < 25 (oversold crypto)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>En crypto, RSI 30 est souvent juste une <strong>pause</strong> dans une tendance</li>
+        <li>Le vrai oversold crypto commence à <strong>RSI 25</strong> ou moins</li>
+        <li>BTC en RSI daily < 25 = signal d'achat historiquement fiable</li>
+        <li>Combiner avec un support majeur pour confirmer</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-up"></i> RSI > 80 (overbought crypto)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>En bull market, BTC peut rester en RSI > 70 pendant des <strong>semaines</strong></li>
+        <li>Le signal de vente fiable commence à <strong>RSI 80+</strong> en daily</li>
+        <li>Divergence bearish RSI + RSI > 80 = signal puissant</li>
+        <li>Ne shortez jamais uniquement sur RSI > 70 en crypto</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>MACD — Signal + Histogramme</h3>
+
+  <p>Le <strong>MACD (12, 26, 9)</strong> reste le standard en crypto. L'histogramme est plus utile que le croisement de lignes pour mesurer le <strong>momentum</strong>. Un histogramme qui diminue (même s'il reste positif) signale un affaiblissement de la tendance.</p>
+
+  <h3>Bollinger Bands — Volatilité et squeeze</h3>
+
+  <p>Les <strong>Bollinger Bands (20, 2)</strong> sont particulièrement efficaces en crypto pour détecter les <strong>squeezes de volatilité</strong>. Quand les bandes se resserrent (compression), un mouvement explosif est imminent — la direction est déterminée par d'autres facteurs (tendance, volume, funding).</p>
+
+  <h3>Comparatif des indicateurs en crypto</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Indicateur</th><th>Réglage crypto</th><th>Signal d'achat</th><th>Signal de vente</th><th>Fiabilité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>RSI 14</strong></td>
+        <td>Oversold: 25, Overbought: 80</td>
+        <td>RSI < 25 + divergence bullish</td>
+        <td>RSI > 80 + divergence bearish</td>
+        <td style="color:#16a34a;"><strong>Élevée</strong></td>
+      </tr>
+      <tr>
+        <td><strong>MACD (12,26,9)</strong></td>
+        <td>Standard, focus histogramme</td>
+        <td>Crossover bullish + histogramme croissant</td>
+        <td>Crossover bearish + histogramme décroissant</td>
+        <td style="color:#f59e0b;">Modérée</td>
+      </tr>
+      <tr>
+        <td><strong>Bollinger (20,2)</strong></td>
+        <td>Standard</td>
+        <td>Prix touche bande basse + squeeze</td>
+        <td>Prix touche bande haute + expansion</td>
+        <td style="color:#f59e0b;">Modérée</td>
+      </tr>
+      <tr>
+        <td><strong>EMA 200</strong></td>
+        <td>Tendance long terme</td>
+        <td>Prix repasse au-dessus</td>
+        <td>Prix passe en-dessous</td>
+        <td style="color:#16a34a;"><strong>Élevée</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Volume Profile</strong></td>
+        <td>POC = Point of Control</td>
+        <td>Prix revient au POC dans un uptrend</td>
+        <td>Prix rejette le POC dans un downtrend</td>
+        <td style="color:#16a34a;"><strong>Élevée</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART 2: BTC with RSI and Volume -->
+  <h3>BTC/USD — Prix, RSI et Volume (simulation)</h3>
+  <div id="chart-btc-rsi" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : FUNDING RATE                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="funding"><i class="fa-solid fa-percent" style="color:#16a34a;"></i> Funding Rate comme indicateur contrarian</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-percent" style="color:#16a34a;"></i> Le funding rate : le thermomètre du sentiment</h2>
+
+  <p>Le funding rate est <strong>unique aux marchés crypto</strong>. Il n'existe pas d'équivalent en bourse traditionnelle. C'est un des indicateurs les plus puissants pour le timing contrarian.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment fonctionne le funding</h4>
+    <p style="margin:0;">Les contrats perpétuels (perps) n'ont pas de date d'expiration. Pour maintenir le prix du perp aligné avec le spot, un mécanisme de <strong>funding</strong> s'applique toutes les 8 heures : si les longs dominent, ils paient un "loyer" aux shorts (funding positif). Si les shorts dominent, ils paient les longs (funding négatif). <strong>Le side qui paie est le side sur-engagé</strong> — et statistiquement, il perd.</p>
+  </div>
+
+  <!-- CHART 3: Funding Rate Heatmap -->
+  <h3>Funding Rate BTC — Heatmap historique</h3>
+  <div id="chart-funding" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <h3>Stratégie contrarian basée sur le funding</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Signal d'achat : Funding très négatif (< -0.03%)</strong>
+        <span class="badge badge-green">Bullish</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Les shorts paient les longs. Le marché est extrêmement bearish. Historiquement, les retournements haussiers les plus violents se produisent depuis ces niveaux de funding. Attendre un début de retournement du prix avant d'entrer.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Signal de vente : Funding très positif (> +0.05%)</strong>
+        <span class="badge badge-red">Bearish</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Les longs paient les shorts. L'euphorie est maximale. Les corrections de -10 à -20% sur BTC ont souvent été précédées par 2-3 jours de funding > 0.05%. C'est un moment pour prendre des profits, pas pour ajouter du leverage.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">Zone neutre : Funding entre 0% et +0.02%</strong>
+        <span class="badge badge-blue">Neutre</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Un léger biais long est normal en tendance haussière. Tant que le funding reste sous +0.03%, la tendance est considérée saine. Pas de signal contrarian.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le funding rate sur les altcoins</h4>
+    <p style="margin:0;">Le funding rate est encore plus utile sur les <strong>altcoins</strong> que sur BTC. Les altcoins ont moins de liquidité, ce qui amplifie les déséquilibres. Un altcoin avec un funding de +0.1% perd 0.3%/jour juste en frais de funding. Les traders qui ne surveillent pas le funding <strong>se font "grinder" lentement</strong> même si leur direction est correcte.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : LIQUIDATIONS                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="liquidations"><i class="fa-solid fa-water" style="color:#dc2626;"></i> Liquidation Cascades</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-water" style="color:#dc2626;"></i> Les cascades de liquidation : le mécanisme dévastateur</h2>
+
+  <p>En crypto, le <strong>leverage trading</strong> est accessible à tous. Binance propose jusqu'à 125x, Bybit 100x. Quand le prix atteint le niveau de liquidation d'un trader, sa position est fermée de force — ce qui accélère le mouvement et déclenche d'autres liquidations.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Prix de liquidation (simplifié)</div>
+    Liq. Price = Entry Price <span class="formula-highlight">x</span> (1 - 1/<span class="formula-highlight">Leverage</span>) pour les longs
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-down"></i> Long Squeeze (cascade baissière)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le prix baisse → longs liquidés (vente forcée)</li>
+        <li>La vente forcée fait baisser le prix davantage</li>
+        <li>Plus de longs sont liquidés → cycle accéléré</li>
+        <li><strong>Mai 2021</strong> : $8B de liquidations longs en 24h, BTC -30%</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-up"></i> Short Squeeze (cascade haussière)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le prix monte → shorts liquidés (achat forcé)</li>
+        <li>L'achat forcé fait monter le prix davantage</li>
+        <li>Plus de shorts sont liquidés → cycle accéléré</li>
+        <li><strong>Oct 2023</strong> : BTC +15% en 24h, $500M shorts liquidés</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Comment anticiper les cascades</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Signal</th><th>Outil</th><th>Interprétation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>OI élevé + funding extrême</strong></td>
+        <td>CoinGlass, Laevitas</td>
+        <td>Le carburant est chargé — un mouvement violent est probable dans la direction opposée au funding</td>
+      </tr>
+      <tr>
+        <td><strong>Cluster de liquidation visible</strong></td>
+        <td>CoinGlass Liquidation Map</td>
+        <td>Le prix sera "attiré" vers ces clusters — les whales chassent la liquidité</td>
+      </tr>
+      <tr>
+        <td><strong>Divergence OI / prix</strong></td>
+        <td>Coinalyze</td>
+        <td>OI monte + prix stagne = position trop leveragée, squeeze imminent</td>
+      </tr>
+      <tr>
+        <td><strong>Volumes spot faibles + OI élevé</strong></td>
+        <td>TradingView + CoinGlass</td>
+        <td>Le marché est "papier" — un petit mouvement spot peut déclencher une cascade</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Règle de survie : le leverage</h4>
+    <p style="margin:0;">La règle pour le leverage en crypto est simple : <strong>maximum 3-5x pour les swing trades, 10x pour le scalping avec stop serré</strong>. À 10x, un mouvement de 10% vous liquide. À 100x, un mouvement de 1% vous liquide. Les traders débutants qui utilisent 50-100x sont statistiquement certains de se faire liquider à court terme. <strong>Le leverage est un outil de précision, pas un levier de gains.</strong></p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : WYCKOFF                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="wyckoff"><i class="fa-solid fa-diagram-project" style="color:#f97316;"></i> Patterns Wyckoff</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-diagram-project" style="color:#f97316;"></i> Wyckoff en crypto : accumulation, distribution, spring</h2>
+
+  <p>La méthode <strong>Wyckoff</strong> (développée en 1930) est devenue la méthode d'analyse préférée des traders crypto car elle décrit parfaitement comment les <strong>whales</strong> manipulent le prix pour accumuler/distribuer.</p>
+
+  <h3>Accumulation Wyckoff — Le schéma</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:0.75rem; margin:1.5rem 0;">
+    <div style="padding:1rem 1.25rem; background:#fffbeb; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <strong style="color:#f59e0b;">Phase A — Selling Climax (SC)</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Vente panique massive, volume record. Le prix fait un bottom brutal. C'est la capitulation du retail.</p>
+    </div>
+    <div style="padding:1rem 1.25rem; background:#fffbeb; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <strong style="color:#f59e0b;">Phase B — Range (consolidation)</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le prix oscille dans un range. Les whales accumulent silencieusement. Le volume diminue. Le marché semble "mort".</p>
+    </div>
+    <div style="padding:1rem 1.25rem; background:#f0fdf4; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">Phase C — Spring (piège baissier)</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le prix casse le support du range brièvement, déclenchant les stop loss. C'est un <strong>piège</strong> — les whales achètent la liquidité. Le prix remonte immédiatement.</p>
+    </div>
+    <div style="padding:1rem 1.25rem; background:#f0fdf4; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">Phase D — Breakout</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le prix casse le haut du range avec volume. La tendance haussière commence. C'est le signal d'entrée.</p>
+    </div>
+    <div style="padding:1rem 1.25rem; background:#f0fdf4; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">Phase E — Markup (trend)</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">La tendance haussière s'accélère. Les retails achètent le breakout. Le volume confirme. Ride the trend.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le Spring : le signal le plus puissant</h4>
+    <p style="margin:0;">Le <strong>Spring</strong> est le moment clé de Wyckoff. C'est un faux breakout baissier qui piège les shorts et déclenche les stop loss des acheteurs faibles. En crypto, on le voit fréquemment : BTC casse un support, tout le monde panique, puis le prix reverse violemment. <strong>Le spring avec un volume croissant sur le rebond est le signal d'achat le plus fiable en crypto.</strong> Exemple parfait : janvier 2023, BTC "casse" les $16K puis reverse vers $25K.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : TIMEFRAMES                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="timeframes"><i class="fa-solid fa-clock" style="color:#d97706;"></i> Timeframes en crypto</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clock" style="color:#d97706;"></i> Quels timeframes utiliser ?</h2>
+
+  <p>En crypto, tous les timeframes ne se valent pas. Le <strong>bruit</strong> est inversement proportionnel au timeframe. Le 1 minute est du pur bruit (domination des bots), tandis que le daily donne les signaux les plus fiables.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Timeframe</th><th>Bruit</th><th>Fiabilité</th><th>Usage</th><th>Pour qui</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1 min / 5 min</strong></td>
+        <td style="color:#dc2626;">Très élevé</td>
+        <td style="color:#dc2626;">Faible</td>
+        <td>Scalping, exécution</td>
+        <td>Traders pro + bots uniquement</td>
+      </tr>
+      <tr>
+        <td><strong>15 min / 1h</strong></td>
+        <td style="color:#f59e0b;">Modéré</td>
+        <td style="color:#f59e0b;">Modérée</td>
+        <td>Day trading, timing d'entrée</td>
+        <td>Traders expérimentés</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#16a34a;">4h</strong></td>
+        <td style="color:#16a34a;"><strong>Faible</strong></td>
+        <td style="color:#16a34a;"><strong>Élevée</strong></td>
+        <td><strong>Sweet spot crypto</strong></td>
+        <td><strong>Tous traders</strong></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#16a34a;">Daily</strong></td>
+        <td style="color:#16a34a;"><strong>Très faible</strong></td>
+        <td style="color:#16a34a;"><strong>Très élevée</strong></td>
+        <td><strong>Swing trading, tendance</strong></td>
+        <td><strong>Tous traders</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Weekly</strong></td>
+        <td style="color:#16a34a;">Minimal</td>
+        <td style="color:#16a34a;"><strong>Maximale</strong></td>
+        <td>Tendance macro, cycles</td>
+        <td>Investisseurs, position traders</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#fffbeb; border:1px solid #f59e0b; border-radius:16px;">
+      <h4 style="color:#f59e0b; margin:0 0 0.75rem;"><i class="fa-solid fa-chart-line"></i> BTC : privilégiez le 4h et daily</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">BTC est assez liquide pour que le 4h filtre le bruit tout en donnant des signaux réactifs. Le daily est le timeframe de référence pour les supports/résistances et les indicateurs (RSI, MACD). Analysez en daily, exécutez en 4h.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-coins"></i> Altcoins : passez au daily</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0;">Les altcoins sont moins liquides — le bruit est plus élevé sur les timeframes courts. Le 4h est le minimum fiable, le daily est recommandé. Les altcoins à faible liquidité (< $50M/jour) ne sont fiables qu'en daily/weekly.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Pourquoi le RSI oversold en crypto est-il à 25 plutôt qu'à 30 ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : La volatilité plus élevée de la crypto pousse le RSI plus loin dans les extrêmes.</strong><br>
+      En bourse traditionnelle, RSI 30 est considéré oversold parce que les mouvements sont plus modérés. En crypto, la volatilité est 2-3x plus élevée, ce qui signifie que RSI 30 est souvent atteint lors de simples corrections normales. Le vrai "oversold" en crypto — celui qui correspond à un retournement probable — se situe plutôt à RSI 25 ou moins. De même, le "overbought" fiable est à 80+ (pas 70).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Qu'est-ce qu'un "Spring" dans la méthode Wyckoff ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un faux breakout baissier qui piège les shorts et déclenche les stop loss avant un retournement haussier.</strong><br>
+      Le Spring est un mouvement typique de manipulation : le prix casse brièvement un support clé (déclenchant les stops des acheteurs et attirant de nouveaux shorts), puis reverse rapidement au-dessus du support. C'est le signe que les "smart money" (whales) absorbent la liquidité vendeuse pour accumuler à bas prix. Un spring confirmé par un volume croissant sur le rebond est l'un des signaux d'achat les plus fiables.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : À 20x de leverage, quel mouvement de prix vous liquide ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un mouvement de ~5% contre votre position (sans marge de maintenance).</strong><br>
+      La formule simplifiée est : mouvement de liquidation = 100% / leverage. À 20x, c'est ~5%. À 100x, c'est ~1%. À 3x, c'est ~33%. C'est pourquoi le leverage excessif est si dangereux en crypto : un mouvement de 5% est banal (il arrive plusieurs fois par semaine sur BTC). Les traders professionnels utilisent rarement plus de 3-5x sur leurs swing trades.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel est le meilleur timeframe pour le swing trading crypto ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le daily (1D) pour l'analyse, le 4h pour le timing d'entrée.</strong><br>
+      Le daily filtre la majorité du bruit et donne les signaux les plus fiables pour les supports/résistances, le RSI et le MACD. Le 4h est le "sweet spot" crypto — assez long pour être fiable, assez court pour être réactif. L'approche optimale : identifiez la tendance et les niveaux clés en daily, puis utilisez le 4h pour affiner votre entrée et votre stop loss.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Que signifie un funding rate de +0.08% sur BTC perps ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Les longs paient 0.08% aux shorts toutes les 8h — le marché est extrêmement bullish et un retournement est probable.</strong><br>
+      Un funding de +0.08% signifie que les longs paient 0.24%/jour (~88%/an) pour maintenir leur position. C'est un signe d'euphorie extrême. Historiquement, un funding aussi élevé précède souvent une correction de -10 à -20%. C'est un signal pour prendre des profits (pas nécessairement pour shorter), réduire le leverage, et attendre un reset du funding vers ~0% avant de réentrer.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#f59e0b;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-bullseye"></i> <strong>L'AT fonctionne bien en crypto</strong> — marché retail-driven où les bots et les traders réagissent aux mêmes niveaux techniques. Les niveaux sont auto-réalisateurs.</li>
+      <li><i class="fa-solid fa-arrows-up-down"></i> <strong>Les round numbers sont des aimants à liquidité</strong> — $50K, $100K sont des barrières psychologiques majeures. Ne placez jamais vos stops exactement dessus.</li>
+      <li><i class="fa-solid fa-wave-square"></i> <strong>RSI oversold = 25, overbought = 80 en crypto</strong> — les seuils standards (30/70) sont trop conservateurs pour la volatilité crypto.</li>
+      <li><i class="fa-solid fa-percent"></i> <strong>Le funding rate est le meilleur indicateur contrarian</strong> — funding extrême (> +0.05% ou < -0.03%) précède souvent un retournement.</li>
+      <li><i class="fa-solid fa-water"></i> <strong>Les cascades de liquidation créent les mouvements extrêmes</strong> — l'OI élevé + funding extrême = carburant pour une cascade.</li>
+      <li><i class="fa-solid fa-diagram-project"></i> <strong>Wyckoff décrit parfaitement la manipulation crypto</strong> — le Spring (faux breakout baissier) est le signal d'achat le plus puissant.</li>
+      <li><i class="fa-solid fa-clock"></i> <strong>4h et daily sont les timeframes de référence</strong> — analysez en daily, exécutez en 4h. Le 1min est du bruit pur.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le trading de cryptomonnaies avec leverage comporte un risque de perte totale du capital.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne garantissent pas les résultats futurs. Consultez un professionnel avant toute décision.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-crypto/part1-ecosysteme/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">1. L'Écosystème Crypto</div>
+  </div>
+</a>
+
+<a href="/series/trader-crypto/part3-on-chain/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 3 sur 6</div>
+    <div class="next-title">On-Chain Analysis — Lire la Blockchain</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-crypto/part1-ecosysteme/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. L'Écosystème</a>
+  <a href="/series/trader-crypto/part2-analyse-technique/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#f59e0b; color:white; border:1px solid #f59e0b;">2. Analyse Technique</a>
+  <a href="/series/trader-crypto/part3-on-chain/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. On-Chain</a>
+  <a href="/series/trader-crypto/part4-defi-yield/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. DeFi & Yield</a>
+  <a href="/series/trader-crypto/part5-altcoins-narratives/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Altcoins & Narratives</a>
+  <a href="/series/trader-crypto/part6-risques-securite/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Risques & Sécurité</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les Crypto</strong> — Partie 2/6 : Analyse Technique Crypto</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: BTC with key levels
+(function(){
+  var dom = document.getElementById('chart-btc-levels');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates = [];
+  var prices = [];
+  var volumes = [];
+  var base = 42000;
+  for(var i=0; i<120; i++){
+    var d = new Date(2025, 0, 1);
+    d.setDate(d.getDate() + i);
+    dates.push((d.getMonth()+1)+'/'+(d.getDate())+'/25');
+    if(i<20){ base += (Math.random()-0.4)*2000; }
+    else if(i<40){ base += (Math.random()-0.35)*2500; }
+    else if(i<60){ base += (Math.random()-0.45)*3000; }
+    else if(i<80){ base += (Math.random()-0.3)*2000; }
+    else if(i<100){ base += (Math.random()-0.5)*2500; }
+    else { base += (Math.random()-0.4)*1500; }
+    base = Math.max(85000, Math.min(108000, base));
+    prices.push(parseFloat(base.toFixed(0)));
+    volumes.push(parseFloat((Math.random()*30+10).toFixed(1)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:[{left:'10%',right:'4%',top:'5%',height:'60%'},{left:'10%',right:'4%',top:'72%',height:'20%'}],
+    xAxis:[
+      {type:'category',data:dates,axisLabel:{fontSize:8,interval:20,rotate:30},gridIndex:0},
+      {type:'category',data:dates,axisLabel:{show:false},gridIndex:1}
+    ],
+    yAxis:[
+      {type:'value',min:82000,max:112000,axisLabel:{fontSize:9,formatter:function(v){return '$'+(v/1000)+'K';}},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:0},
+      {type:'value',axisLabel:{show:false},splitLine:{show:false},gridIndex:1}
+    ],
+    series:[
+      {
+        type:'line',data:prices,smooth:true,symbol:'none',
+        lineStyle:{color:'#f59e0b',width:2},
+        areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(245,158,11,0.15)'},{offset:1,color:'rgba(245,158,11,0.01)'}]}},
+        markLine:{silent:true,lineStyle:{type:'dashed',width:1.5},data:[
+          {yAxis:100000,lineStyle:{color:'#dc2626'},label:{formatter:'$100K (psycho)',fontSize:9,color:'#dc2626'}},
+          {yAxis:90000,lineStyle:{color:'#16a34a'},label:{formatter:'$90K (support)',fontSize:9,color:'#16a34a'}},
+          {yAxis:105000,lineStyle:{color:'#8b5cf6'},label:{formatter:'$105K (ATH zone)',fontSize:9,color:'#8b5cf6'}}
+        ]},
+        xAxisIndex:0,yAxisIndex:0
+      },
+      {
+        type:'bar',data:volumes,
+        itemStyle:{color:function(p){return p.dataIndex>0&&prices[p.dataIndex]>prices[p.dataIndex-1]?'rgba(16,163,74,0.4)':'rgba(220,38,38,0.4)';}},
+        xAxisIndex:1,yAxisIndex:1
+      }
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: BTC RSI
+(function(){
+  var dom = document.getElementById('chart-btc-rsi');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates=[], prices=[], rsi=[], vol=[];
+  var base=90000, rsiVal=55;
+  for(var i=0;i<90;i++){
+    var d=new Date(2025,10,1); d.setDate(d.getDate()+i);
+    dates.push((d.getMonth()+1)+'/'+(d.getDate()));
+    var change=(Math.random()-0.48)*3000;
+    base+=change; base=Math.max(82000,Math.min(110000,base));
+    rsiVal+=change/1000*3+(Math.random()-0.5)*5;
+    rsiVal=Math.max(18,Math.min(88,rsiVal));
+    prices.push(parseFloat(base.toFixed(0)));
+    rsi.push(parseFloat(rsiVal.toFixed(1)));
+    vol.push(parseFloat((Math.random()*25+8).toFixed(1)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:[{left:'10%',right:'4%',top:'5%',height:'40%'},{left:'10%',right:'4%',top:'50%',height:'20%'},{left:'10%',right:'4%',top:'75%',height:'18%'}],
+    xAxis:[
+      {type:'category',data:dates,axisLabel:{show:false},gridIndex:0},
+      {type:'category',data:dates,axisLabel:{show:false},gridIndex:1},
+      {type:'category',data:dates,axisLabel:{fontSize:8,interval:14,rotate:30},gridIndex:2}
+    ],
+    yAxis:[
+      {type:'value',axisLabel:{fontSize:9,formatter:function(v){return '$'+(v/1000)+'K';}},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:0},
+      {type:'value',min:15,max:90,axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:1},
+      {type:'value',axisLabel:{show:false},splitLine:{show:false},gridIndex:2}
+    ],
+    series:[
+      {type:'line',data:prices,smooth:true,symbol:'none',lineStyle:{color:'#f59e0b',width:2},xAxisIndex:0,yAxisIndex:0,
+       areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(245,158,11,0.12)'},{offset:1,color:'rgba(245,158,11,0.01)'}]}}},
+      {type:'line',data:rsi,smooth:true,symbol:'none',lineStyle:{color:'#8b5cf6',width:2},xAxisIndex:1,yAxisIndex:1,
+       markLine:{silent:true,lineStyle:{type:'dashed',width:1},data:[
+         {yAxis:25,lineStyle:{color:'#16a34a'},label:{formatter:'Oversold 25',fontSize:8,color:'#16a34a'}},
+         {yAxis:80,lineStyle:{color:'#dc2626'},label:{formatter:'Overbought 80',fontSize:8,color:'#dc2626'}}
+       ]},
+       markArea:{silent:true,data:[[{yAxis:0,itemStyle:{color:'rgba(22,163,74,0.06)'}},{yAxis:25}],[{yAxis:80,itemStyle:{color:'rgba(220,38,38,0.06)'}},{yAxis:100}]]}},
+      {type:'bar',data:vol,itemStyle:{color:'rgba(148,163,184,0.4)'},xAxisIndex:2,yAxisIndex:2}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Funding Rate Heatmap
+(function(){
+  var dom = document.getElementById('chart-funding');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  var years=['2023','2024','2025'];
+  var data=[];
+  for(var y=0;y<3;y++){
+    for(var m=0;m<12;m++){
+      if(y===2&&m>1) continue;
+      var val;
+      if(y===0&&m<3){val=-0.01+Math.random()*0.015-0.005;}
+      else if(y===0&&m<6){val=0.005+Math.random()*0.02;}
+      else if(y===0){val=0.01+Math.random()*0.02;}
+      else if(y===1&&m<3){val=0.02+Math.random()*0.03;}
+      else if(y===1&&m<6){val=0.03+Math.random()*0.04;}
+      else if(y===1&&m<9){val=0.01+Math.random()*0.02;}
+      else if(y===1){val=0.02+Math.random()*0.04;}
+      else{val=0.01+Math.random()*0.025;}
+      data.push([m,y,parseFloat(val.toFixed(3))]);
+    }
+  }
+  chart.setOption({
+    tooltip:{formatter:function(p){return years[p.value[1]]+' '+months[p.value[0]]+'<br/>Funding: <b>'+p.value[2]+'%</b>';}},
+    grid:{left:'12%',right:'15%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:10},splitArea:{show:true}},
+    yAxis:{type:'category',data:years,axisLabel:{fontSize:11,fontWeight:600}},
+    visualMap:{min:-0.02,max:0.08,calculable:true,orient:'vertical',right:10,top:'center',
+      inRange:{color:['#16a34a','#86efac','#f1f5f9','#fca5a5','#dc2626']},
+      textStyle:{fontSize:9}
+    },
+    series:[{type:'heatmap',data:data,label:{show:true,fontSize:9,formatter:function(p){return p.value[2].toFixed(3)+'%';}},
+      emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.3)'}}}]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

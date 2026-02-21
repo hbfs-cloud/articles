@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Évaluer un Bottom & l'Espérance de Gain | Savoir Lire un Chart — Partie 5/6 | Market Watch</title>
+  <meta name="description" content="Série Savoir Lire un Chart — Partie 5/6 : Reconnaître un bottom, patterns de capitulation, espérance de gain, risk/reward, ATR et drawdown recovery.">
+  <meta property="og:title" content="Évaluer un Bottom & l'Espérance de Gain | Savoir Lire un Chart — Partie 5/6 | Market Watch">
+  <meta property="og:description" content="Apprenez à identifier un bottom de marché, calculer l'espérance de gain, mesurer le risk/reward et calibrer votre stop loss avec l'ATR.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-un-chart/part5-evaluer-bottom-esperance/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#ea580c; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#fb923c; color:#fb923c; }
+  .series-link.current { background:#ea580c; color:white; border-color:#ea580c; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fff7ed 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#ea580c; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-orange { background:rgba(234,88,12,0.1); color:#ea580c; border:1px solid rgba(234,88,12,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#ea580c; margin-right:0.75rem; }
+  details[open] summary { border-color:#ea580c; background:#fff7ed; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#ea580c; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#fb923c; }
+  .takeaway-box { background:linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); border:1px solid #ea580c; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#ea580c; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(234,88,12,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#ea580c; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(234,88,12,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border:1px solid #e2e8f0; border-radius:16px; margin:1rem 0; text-decoration:none; transition:transform 0.2s; }
+  .prev-cta:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.08); border-color:#ea580c; }
+  .prev-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; }
+  .prev-cta .next-title { font-size:1.1rem; font-weight:700; }
+
+  .concept-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1.25rem 0; border-left:4px solid #ea580c; transition:all 0.3s; }
+  .concept-card:hover { transform:translateY(-2px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+  .concept-card h4 { color:#ea580c; margin-top:0; font-size:1.05rem; font-weight:800; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-line" style="margin-right:0.4rem;"></i> Savoir Lire un Chart</span>
+  <a href="/series/lire-un-chart/part1-les-bases/" class="series-link">1 — Les Bases</a>
+  <a href="/series/lire-un-chart/part2-chandeliers/" class="series-link">2 — Chandeliers</a>
+  <a href="/series/lire-un-chart/part3-supports-resistances/" class="series-link">3 — Supports</a>
+  <a href="/series/lire-un-chart/part4-indicateurs/" class="series-link">4 — Indicateurs</a>
+  <a href="/series/lire-un-chart/part5-evaluer-bottom-esperance/" class="series-link current">5 — Bottoms</a>
+  <a href="/series/lire-un-chart/part6-cas-pratiques/" class="series-link">6 — Cas Pratiques</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:0.4rem;"></i> Série Savoir Lire un Chart — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Évaluer un Bottom & l'Espérance de Gain</h1>
+  <p class="hero-subtitle">Apprenez à reconnaître les vrais bottoms de marché, à calculer votre espérance de gain et à mesurer le risk/reward AVANT d'entrer en position. Le secret des traders rentables.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-arrow-down"></i> Bottoms</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-calculator"></i> Espérance</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-scale-balanced"></i> Risk/Reward</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-graduation-cap"></i> Intermédiaire</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#reconnaitre-bottom" class="nav-item"><i class="fa-solid fa-arrow-down" style="color:#ea580c; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Reconnaître un Bottom</a>
+  <a href="#patterns-bottom" class="nav-item"><i class="fa-solid fa-shapes" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Patterns de Bottom</a>
+  <a href="#volume-capitulation" class="nav-item"><i class="fa-solid fa-chart-bar" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Volume & Capitulation</a>
+  <a href="#esperance" class="nav-item"><i class="fa-solid fa-calculator" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Espérance de Gain</a>
+  <a href="#risk-reward" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Risk/Reward</a>
+  <a href="#atr" class="nav-item"><i class="fa-solid fa-ruler" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> ATR & Stop Loss</a>
+  <a href="#drawdown" class="nav-item"><i class="fa-solid fa-arrow-trend-down" style="color:#ea580c; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Drawdown Recovery</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : RECONNAITRE UN BOTTOM                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="reconnaitre-bottom"><i class="fa-solid fa-arrow-down" style="color:#ea580c;"></i> Comment Reconnaître un Bottom</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-down" style="color:#ea580c;"></i> Les 5 signes de capitulation</h2>
+
+  <p>Un bottom (point bas) de marché ne se forme pas au hasard. Il suit un processus psychologique prévisible appelé <strong>capitulation</strong> — le moment où les derniers vendeurs paniqués jettent l'éponge. Voici les 5 signes qui indiquent qu'un bottom est en cours de formation :</p>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:1.5rem 0;">
+    <div style="text-align:center; padding:1.25rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; color:white; font-weight:900;">1</div>
+      <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">Volume Climax</div>
+      <p style="font-size:0.75rem; color:#64748b; margin:0; line-height:1.4;">Volume 3-5x la moyenne sur une grande bougie rouge. Les derniers paniqués vendent.</p>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; color:white; font-weight:900;">2</div>
+      <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">RSI Divergence</div>
+      <p style="font-size:0.75rem; color:#64748b; margin:0; line-height:1.4;">Le prix fait un nouveau creux, mais le RSI fait un creux plus haut. Le momentum baissier s'essouffle.</p>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; color:white; font-weight:900;">3</div>
+      <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">Chandelier de Retournement</div>
+      <p style="font-size:0.75rem; color:#64748b; margin:0; line-height:1.4;">Marteau, morning star, engulfing haussier sur le support. Les acheteurs reprennent le contrôle.</p>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; color:white; font-weight:900;">4</div>
+      <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">Sentiment Extrême</div>
+      <p style="font-size:0.75rem; color:#64748b; margin:0; line-height:1.4;">Fear & Greed Index < 15, VIX > 30, médias paniqués. "Cette fois c'est différent."</p>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:white; border:2px solid #ea580c; border-radius:16px;">
+      <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #ea580c, #c2410c); display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; color:white; font-weight:900;">5</div>
+      <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">Support Technique</div>
+      <p style="font-size:0.75rem; color:#64748b; margin:0; line-height:1.4;">MA 200, Fibonacci 61.8%, support horizontal majeur, ou ancien sommet (polarité).</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention : "Falling Knife"</h4>
+    <p style="margin:0; font-size:0.9rem; color:#334155; line-height:1.7;">Le plus grand danger est d'essayer d'attraper un bottom trop tôt — c'est le fameux "catch a falling knife" (attraper un couteau qui tombe). Un prix qui baisse de 50% peut encore baisser de 50% supplémentaires. <strong>N'essayez jamais d'acheter le point bas exact.</strong> Attendez au moins 2-3 des 5 signes ci-dessus avant d'agir. Il vaut mieux rater les premiers 10% du rebond que de subir les derniers 20% de la baisse.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : PATTERNS DE BOTTOM                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="patterns-bottom"><i class="fa-solid fa-shapes" style="color:#d97706;"></i> Les Patterns de Bottom</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shapes" style="color:#d97706;"></i> Les 3 patterns de retournement majeurs</h2>
+
+  <div class="concept-card" style="border-left-color:#16a34a;">
+    <h4 style="color:#16a34a;"><i class="fa-solid fa-w"></i> Double Bottom (W)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin-bottom:0.5rem;">Le prix descend à un support, rebondit, redescend au <strong>même niveau</strong> (ou légèrement au-dessus), puis repart à la hausse. Forme un "W" caractéristique. Le signal d'achat est confirmé quand le prix casse le "neckline" (le point haut entre les deux creux). Le deuxième creux avec un volume plus faible est plus fiable (les vendeurs s'épuisent).</p>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+      <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:6px; color:#16a34a; font-weight:700;">Fiabilité : Très haute</span>
+      <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#eff6ff; border:1px solid #2563eb; border-radius:6px; color:#2563eb; font-weight:700;">Objectif : Hauteur du W</span>
+    </div>
+  </div>
+
+  <div class="concept-card" style="border-left-color:#2563eb;">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-person"></i> Head & Shoulders Inversé (Épaule-Tête-Épaule inversée)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin-bottom:0.5rem;">Trois creux successifs : le premier (épaule gauche), un creux plus profond (tête), puis un creux <strong>plus haut que la tête</strong> (épaule droite). La "neckline" connecte les deux points hauts entre les creux. La cassure de la neckline avec du volume confirme le retournement. C'est le pattern de bottom le plus fiable du répertoire classique.</p>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+      <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:6px; color:#16a34a; font-weight:700;">Fiabilité : Excellente</span>
+      <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#eff6ff; border:1px solid #2563eb; border-radius:6px; color:#2563eb; font-weight:700;">Objectif : Tête → Neckline</span>
+    </div>
+  </div>
+
+  <div class="concept-card" style="border-left-color:#9333ea;">
+    <h4 style="color:#9333ea;"><i class="fa-solid fa-angle-down"></i> Falling Wedge (Biseau descendant)</h4>
+    <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin-bottom:0.5rem;">Le prix fait des sommets de plus en plus bas ET des creux de plus en plus bas, mais l'amplitude diminue (les deux lignes de tendance convergent vers le bas). C'est un pattern de <strong>compression</strong> : les vendeurs perdent de la force. Le breakout haussier (cassure de la ligne supérieure) est le signal. La cible est la hauteur du wedge projetée depuis le point de breakout.</p>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+      <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:6px; color:#16a34a; font-weight:700;">Fiabilité : Haute</span>
+      <span style="font-size:0.75rem; padding:0.2rem 0.6rem; background:#faf5ff; border:1px solid #9333ea; border-radius:6px; color:#9333ea; font-weight:700;">Souvent vu en crypto</span>
+    </div>
+  </div>
+
+  <!-- ECharts: Bottom patterns -->
+  <h3>Visualisation : Double Bottom avec volume et divergence RSI</h3>
+  <div id="chart-double-bottom" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : VOLUME & CAPITULATION                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="volume-capitulation"><i class="fa-solid fa-chart-bar" style="color:#16a34a;"></i> Volume Climax — La Signature de la Capitulation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#16a34a;"></i> Quand le volume explose sur un bottom</h2>
+
+  <p>Le "volume climax" est le moment où le volume d'échanges atteint un pic extrême (3x à 5x la moyenne) accompagné d'une grande bougie rouge. C'est la <strong>capitulation</strong> : les derniers détenteurs paniqués vendent à n'importe quel prix, créant l'opportunité d'achat pour les acheteurs institutionnels qui attendent patiemment.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Signature du volume climax</div>
+    Volume > <span class="formula-highlight">3x moyenne 20 jours</span> + Grande bougie rouge + Support clé = <span class="formula-highlight">Capitulation potentielle</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi le volume climax marque souvent le bottom</h4>
+    <p style="margin:0;">Quand tout le monde qui voulait vendre a vendu (volume extrême), il ne reste <strong>plus de vendeurs</strong>. La pression vendeuse s'évapore d'un coup. Il suffit alors d'une demande modeste pour faire remonter le prix. C'est le principe de "selling exhaustion". Les smart money (institutionnels, hedge funds) accumulent silencieusement pendant ce volume climax — ils sont de l'autre côté de ces ventes paniquées.</p>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#16a34a !important;"><i class="fa-solid fa-check-circle"></i> Divergence RSI/MACD sur les bottoms</h4>
+    <p style="margin:0; font-size:0.9rem; color:#334155; line-height:1.7;">La divergence haussière est le complément idéal du volume climax. Quand le prix fait un nouveau creux mais que le RSI ou le MACD fait un creux plus haut, cela signifie que <strong>malgré le nouveau prix bas, le momentum baissier s'affaiblit</strong>. La combinaison volume climax + divergence RSI + pattern de chandelier (marteau) est considérée comme l'une des configurations les plus fiables pour identifier un bottom.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : ESPÉRANCE DE GAIN                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="esperance"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> L'Espérance de Gain</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Le concept le plus important en trading</h2>
+
+  <p>L'espérance de gain (Expected Value, EV) est le concept mathématique qui sépare les traders rentables des perdants. Ce n'est pas le taux de réussite qui compte — c'est la <strong>combinaison du taux de réussite ET de la taille des gains/pertes</strong>.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">La formule de l'espérance</div>
+    E = (<span class="formula-highlight">P(win)</span> x Gain moyen) - (<span class="formula-highlight">P(loss)</span> x Perte moyenne)
+  </div>
+
+  <p>Si E est positif, votre système est rentable à long terme. Si E est négatif, vous perdrez de l'argent, même avec un bon taux de réussite.</p>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Scénario</th><th>Taux de réussite</th><th>Gain moyen</th><th>Perte moyenne</th><th>Espérance</th><th>Résultat</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Trader A</strong></td><td>70%</td><td>+$100</td><td>-$300</td><td style="color:#dc2626; font-weight:700;">-$20</td><td style="color:#dc2626;">Perdant</td></tr>
+      <tr><td><strong>Trader B</strong></td><td>40%</td><td>+$400</td><td>-$100</td><td style="color:#16a34a; font-weight:700;">+$100</td><td style="color:#16a34a;">Gagnant</td></tr>
+      <tr><td><strong>Trader C</strong></td><td>50%</td><td>+$200</td><td>-$100</td><td style="color:#16a34a; font-weight:700;">+$50</td><td style="color:#16a34a;">Gagnant</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La leçon essentielle</h4>
+    <p style="margin:0;">Le Trader A gagne 70% de ses trades mais perd de l'argent parce que ses pertes sont 3x plus grosses que ses gains. Le Trader B ne gagne que 40% du temps mais est rentable car ses gains sont 4x plus grands que ses pertes. <strong>Ce qui compte n'est pas d'avoir raison souvent, mais d'avoir raison en grand et tort en petit.</strong> C'est pourquoi le risk/reward est plus important que le taux de réussite.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : RISK/REWARD                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="risk-reward"><i class="fa-solid fa-scale-balanced" style="color:#9333ea;"></i> Risk/Reward Ratio</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#9333ea;"></i> Calculer le R/R AVANT d'entrer</h2>
+
+  <p>Le Risk/Reward ratio (R/R) compare le montant que vous risquez de perdre (distance jusqu'au stop loss) au montant que vous espérez gagner (distance jusqu'au target). Vous devez le calculer <strong>AVANT</strong> chaque trade, pas après.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule du Risk/Reward</div>
+    R/R = <span class="formula-highlight">Distance au Target</span> / <span class="formula-highlight">Distance au Stop Loss</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div style="text-align:center; padding:1.25rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <div style="font-size:2rem; font-weight:900; color:#dc2626;">1:1</div>
+      <div style="font-size:0.8rem; color:#475569; font-weight:600;">Minimum absolu</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">Nécessite >50% win rate</div>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:#fff7ed; border:1px solid #ea580c; border-radius:16px;">
+      <div style="font-size:2rem; font-weight:900; color:#ea580c;">1:2</div>
+      <div style="font-size:0.8rem; color:#475569; font-weight:600;">Standard recommandé</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">Rentable dès 34% win rate</div>
+    </div>
+    <div style="text-align:center; padding:1.25rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <div style="font-size:2rem; font-weight:900; color:#16a34a;">1:3+</div>
+      <div style="font-size:0.8rem; color:#475569; font-weight:600;">Excellent</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">Rentable dès 26% win rate</div>
+    </div>
+  </div>
+
+  <h3>Mesurer le potentiel de hausse</h3>
+
+  <p>Pour calculer votre target (objectif), utilisez ces repères :</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-bullseye"></i> Méthodes pour les targets</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#334155; line-height:1.6;">
+        <li><strong>Résistance suivante</strong> — le niveau technique le plus évident</li>
+        <li><strong>Consensus analystes</strong> — le prix cible moyen de Wall Street</li>
+        <li><strong>Fibonacci extensions</strong> — 1.272x, 1.618x depuis le creux</li>
+        <li><strong>Anciens sommets</strong> — ATH ou sommets précédents</li>
+        <li><strong>Hauteur du pattern</strong> — projetée depuis le breakout</li>
+      </ul>
+    </div>
+    <div style="background:#eff6ff; border:1px solid #2563eb; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.75rem;"><i class="fa-solid fa-calculator"></i> Exemple concret</div>
+      <p style="font-size:0.85rem; color:#334155; line-height:1.6; margin:0;">AAPL est à <strong>$165</strong>. Support à $160. Résistance à $185.<br><br>
+      <strong>Entrée :</strong> $165<br>
+      <strong>Stop :</strong> $158 (sous le support, risque = $7)<br>
+      <strong>Target :</strong> $185 (résistance, gain = $20)<br>
+      <strong>R/R = 20/7 = 1:2.86</strong> — Excellent.</p>
+    </div>
+  </div>
+
+  <!-- ECharts: R/R Calculator Visualization -->
+  <h3>Visualisation : Zones d'entrée, stop et target</h3>
+  <div id="chart-risk-reward" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : ATR & STOP LOSS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="atr"><i class="fa-solid fa-ruler" style="color:#dc2626;"></i> ATR — Calibrer le Stop Loss</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-ruler" style="color:#dc2626;"></i> ATR : l'outil scientifique du stop loss</h2>
+
+  <p>L'<strong>ATR (Average True Range)</strong> mesure la volatilité moyenne d'un actif sur les 14 derniers jours. C'est l'outil idéal pour calibrer votre stop loss de manière <strong>objective</strong>, adapté à la volatilité réelle de l'actif.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle du stop loss ATR</div>
+    Stop Loss = Prix d'entrée - (<span class="formula-highlight">1.5 à 2.0</span> x ATR)
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Actif</th><th>Prix</th><th>ATR 14j</th><th>Stop (1.5x ATR)</th><th>Stop (2x ATR)</th><th>Risque %</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>AAPL</strong></td><td>$185</td><td>$3.20</td><td>$180.20</td><td>$178.60</td><td>2.6% - 3.5%</td></tr>
+      <tr><td><strong>TSLA</strong></td><td>$250</td><td>$12.50</td><td>$231.25</td><td>$225.00</td><td>7.5% - 10%</td></tr>
+      <tr><td><strong>BTC</strong></td><td>$95 000</td><td>$3 200</td><td>$90 200</td><td>$88 600</td><td>5.1% - 6.7%</td></tr>
+      <tr><td><strong>SPY</strong></td><td>$580</td><td>$6.80</td><td>$569.80</td><td>$566.40</td><td>1.8% - 2.3%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi l'ATR est supérieur aux stops fixes</h4>
+    <p style="margin:0;">Un stop loss de "-5%" ne fait aucun sens si l'actif bouge de 8% par jour en moyenne (comme TSLA ou les cryptos). Vous serez stoppé constamment. L'ATR adapte votre stop à la <strong>volatilité réelle</strong> de l'actif. Un stop de 2x ATR signifie que vous laissez le prix fluctuer dans sa range normale sans être éjecté. Seul un mouvement anormalement grand (au-delà du bruit habituel) déclenchera votre stop.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : DRAWDOWN RECOVERY                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="drawdown"><i class="fa-solid fa-arrow-trend-down" style="color:#ea580c;"></i> Drawdown Recovery — La Mathématique Cruelle</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-trend-down" style="color:#ea580c;"></i> Pourquoi -50% nécessite +100% pour revenir à zéro</h2>
+
+  <p>C'est la réalité mathématique la plus cruelle du trading : les pertes et les gains ne sont <strong>pas symétriques</strong>. Une perte de 50% nécessite un gain de 100% pour revenir au point de départ. C'est pourquoi la gestion du risque est plus importante que la recherche du gain.</p>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Perte subie</th><th>Gain nécessaire pour récupérer</th><th>Difficulté</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>-10%</strong></td><td style="color:#16a34a;">+11.1%</td><td>Facile — quelques semaines</td></tr>
+      <tr><td><strong>-20%</strong></td><td style="color:#d97706;">+25.0%</td><td>Modérée — quelques mois</td></tr>
+      <tr><td><strong>-33%</strong></td><td style="color:#ea580c;">+50.0%</td><td>Difficile — 6-12 mois</td></tr>
+      <tr><td><strong>-50%</strong></td><td style="color:#dc2626;">+100.0%</td><td>Très difficile — 1-3 ans</td></tr>
+      <tr><td><strong>-75%</strong></td><td style="color:#dc2626;">+300.0%</td><td>Quasi impossible — 5+ ans</td></tr>
+      <tr><td><strong>-90%</strong></td><td style="color:#dc2626;">+900.0%</td><td>Game over pour la plupart</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ECharts: Drawdown recovery chart -->
+  <h3>Visualisation : La courbe de récupération</h3>
+  <div id="chart-drawdown" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> La règle de survie</h4>
+    <p style="margin:0; font-size:0.9rem; color:#334155; line-height:1.7;">C'est pour cette raison que les traders professionnels <strong>ne risquent jamais plus de 1-2% de leur capital</strong> par trade. Avec un risque de 1% par trade, il faudrait 50 trades perdants consécutifs pour perdre 40% du capital. Avec un risque de 5% par trade, il suffit de 10 trades perdants pour perdre 40%. La survie passe avant le profit.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : QUIZ                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quels sont les 3 signes les plus fiables d'un bottom ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Volume climax + divergence RSI + pattern de chandelier sur un support clé.</strong><br>
+      Le volume climax (3-5x la moyenne) indique la capitulation des derniers vendeurs. La divergence RSI haussière montre que le momentum baissier s'affaiblit. Un pattern de chandelier (marteau, morning star) sur un support technique (MA 200, Fibonacci 61.8%) confirme le retournement. Plus il y a de confluences, plus le bottom est fiable.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Un trader gagne 80% de ses trades mais perd de l'argent. Comment est-ce possible ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Ses pertes sont beaucoup plus grosses que ses gains (mauvais R/R).</strong><br>
+      Exemple : il gagne $50 en moyenne quand il a raison (80%) mais perd $300 en moyenne quand il a tort (20%). Espérance = (0.80 x $50) - (0.20 x $300) = $40 - $60 = <strong>-$20 par trade</strong>. Le taux de réussite élevé masque un R/R catastrophique. C'est le piège du trader qui ne coupe jamais ses pertes.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi un R/R de 1:2 est-il considéré comme le minimum recommandé ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'il permet d'être rentable même avec un taux de réussite modeste de 34%.</strong><br>
+      Avec un R/R de 1:2, vous gagnez 2x ce que vous risquez. Même en ne gagnant qu'un tiers de vos trades (34%), vous êtes à l'équilibre. En gagnant 40-50%, vous êtes solidement rentable. Un R/R de 1:3 est encore mieux — rentable dès 26% de réussite. Le R/R vous donne une marge d'erreur confortable.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Comment l'ATR aide-t-il à placer un stop loss ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : L'ATR mesure la volatilité réelle et permet d'adapter le stop à chaque actif.</strong><br>
+      Un stop de 1.5 à 2x ATR en dessous de l'entrée laisse le prix fluctuer dans sa range normale sans être stoppé par le "bruit". Un actif volatile (TSLA, BTC) aura un stop plus large en dollars mais proportionnel à sa volatilité. Un actif stable (SPY, AAPL) aura un stop plus serré. C'est plus scientifique qu'un stop fixe de -5%.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Après une perte de 50%, quel gain est nécessaire pour revenir à zéro ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : +100%. Et c'est pour cela que la gestion du risque est primordiale.</strong><br>
+      Si vous avez $10 000 et perdez 50%, il vous reste $5 000. Pour revenir à $10 000 depuis $5 000, il faut +100% (doubler). C'est asymétrique et cruel. Avec -75%, il faudrait +300%. C'est pourquoi les pros risquent 1-2% max par trade et se concentrent d'abord sur la préservation du capital. "Rule #1: Don't lose money. Rule #2: Don't forget Rule #1." — Warren Buffett.
+    </div>
+  </details>
+</div>
+
+
+<!-- TAKEAWAYS -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#ea580c;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 6 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrow-down"></i> <strong>Un bottom a une signature</strong> — Volume climax + divergence RSI + pattern de chandelier + support technique. Attendez au moins 2-3 de ces signaux avant d'agir.</li>
+      <li><i class="fa-solid fa-shapes"></i> <strong>Double bottom et H&S inversé sont les plus fiables</strong> — Confirmés quand le prix casse la neckline avec du volume. L'objectif de prix est la hauteur du pattern projetée.</li>
+      <li><i class="fa-solid fa-calculator"></i> <strong>L'espérance de gain est plus importante que le win rate</strong> — Un trader avec 40% de réussite et un R/R de 1:3 bat un trader avec 70% de réussite et un R/R de 1:0.3.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>Jamais un trade avec un R/R inférieur à 1:1.5</strong> — Calculez le R/R AVANT d'entrer. Si le R/R est mauvais, passez au trade suivant. La discipline paie.</li>
+      <li><i class="fa-solid fa-ruler"></i> <strong>L'ATR est le stop loss scientifique</strong> — 1.5 à 2x ATR sous l'entrée adapte votre stop à la volatilité réelle de l'actif. Fini les stops arbitraires.</li>
+      <li><i class="fa-solid fa-shield"></i> <strong>La survie d'abord, le profit ensuite</strong> — -50% nécessite +100%. Risquez 1-2% max par trade. Préservez votre capital : c'est votre outil de travail.</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- NAVIGATION -->
+<a href="/series/lire-un-chart/part4-indicateurs/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie précédente</div>
+    <div class="next-title">Partie 4 — Les 3 Indicateurs Essentiels</div>
+  </div>
+</a>
+
+<a href="/series/lire-un-chart/part6-cas-pratiques/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 6 sur 6 — Finale</div>
+    <div class="next-title">Cas Pratiques — 10 Trades Réels Analysés</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-un-chart/part1-les-bases/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Les Bases</a>
+  <a href="/series/lire-un-chart/part2-chandeliers/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Chandeliers</a>
+  <a href="/series/lire-un-chart/part3-supports-resistances/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Supports</a>
+  <a href="/series/lire-un-chart/part4-indicateurs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Indicateurs</a>
+  <a href="/series/lire-un-chart/part5-evaluer-bottom-esperance/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#ea580c; color:white; border:1px solid #ea580c;">5. Bottoms</a>
+  <a href="/series/lire-un-chart/part6-cas-pratiques/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Cas Pratiques</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Savoir Lire un Chart</strong> — Partie 5/6 : Évaluer un Bottom & l'Espérance de Gain</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// ============================
+// CHART 1: Double Bottom with volume and RSI divergence
+// ============================
+(function(){
+  var dom = document.getElementById('chart-double-bottom');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  // Simulated double bottom scenario
+  var dates = [];
+  var data = [];
+  var vols = [];
+  var prices = [180,177,174,170,167,163,160,157,155,152,150,148,150,153,157,160,163,160,157,154,151,149,148,150,153,157,162,167,172,177,182,187,192];
+
+  for(var i=0; i<prices.length; i++){
+    dates.push('D'+(i+1));
+    var o = i>0 ? prices[i-1] : 180;
+    var c = prices[i];
+    var h = Math.max(o,c) + Math.random()*2;
+    var l = Math.min(o,c) - Math.random()*2;
+    data.push([+o.toFixed(1), +c.toFixed(1), +l.toFixed(1), +h.toFixed(1)]);
+    // Volume spikes at bottoms
+    var vol = 20 + Math.random()*10;
+    if(i===10 || i===11) vol = 55 + Math.random()*15; // First bottom volume climax
+    if(i===21 || i===22) vol = 40 + Math.random()*10; // Second bottom (lower volume)
+    if(i===26 || i===27) vol = 45 + Math.random()*10; // Breakout volume
+    vols.push(Math.round(vol));
+  }
+
+  var option = {
+    tooltip:{ trigger:'axis' },
+    grid:[
+      { left:'8%', right:'3%', top:'5%', height:'55%' },
+      { left:'8%', right:'3%', top:'68%', height:'25%' }
+    ],
+    xAxis:[
+      { type:'category', data:dates, gridIndex:0, axisLabel:{ show:false }},
+      { type:'category', data:dates, gridIndex:1, axisLabel:{ fontSize:8, color:'#64748b', interval:3 }}
+    ],
+    yAxis:[
+      { type:'value', gridIndex:0, min:140, max:200, axisLabel:{ fontSize:10, color:'#64748b', formatter:'${value}' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}},
+      { type:'value', gridIndex:1, axisLabel:{ fontSize:9, color:'#64748b' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}}
+    ],
+    series:[
+      {
+        type:'candlestick', data:data, xAxisIndex:0, yAxisIndex:0,
+        itemStyle:{ color:'#16a34a', color0:'#dc2626', borderColor:'#16a34a', borderColor0:'#dc2626' },
+        markLine:{
+          silent:true, symbol:'none',
+          data:[
+            { yAxis:148, label:{ formatter:'Support $148', fontSize:10, color:'#2563eb', fontWeight:700 }, lineStyle:{ color:'#2563eb', type:'dashed', width:2 }},
+            { yAxis:163, label:{ formatter:'Neckline $163', fontSize:10, color:'#ea580c', fontWeight:700 }, lineStyle:{ color:'#ea580c', type:'dashed', width:1.5 }}
+          ]
+        },
+        markPoint:{
+          symbol:'pin', symbolSize:45, symbolOffset:[0,-15],
+          data:[
+            { coord:['D11', 143], value:'Bottom 1', itemStyle:{color:'#dc2626'}, label:{fontSize:8, fontWeight:700} },
+            { coord:['D23', 143], value:'Bottom 2', itemStyle:{color:'#16a34a'}, label:{fontSize:8, fontWeight:700} },
+            { coord:['D27', 170], value:'Breakout!', itemStyle:{color:'#ea580c'}, label:{fontSize:8, fontWeight:700} }
+          ]
+        }
+      },
+      {
+        type:'bar', data:vols.map(function(v,i){ return { value:v, itemStyle:{ color: data[i][1]>=data[i][0] ? 'rgba(22,163,74,0.5)' : 'rgba(220,38,38,0.5)' }}; }),
+        xAxisIndex:1, yAxisIndex:1
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 2: Risk/Reward Visualization
+// ============================
+(function(){
+  var dom = document.getElementById('chart-risk-reward');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var dates = [];
+  var prices = [170,168,166,165,164,163,162,161,160,159,160,162,165,163,161,160,162,165,168,170,173,176,178,180,182,185];
+  var data = [];
+
+  for(var i=0; i<prices.length; i++){
+    dates.push('D'+(i+1));
+    var o = i>0 ? prices[i-1] : 170;
+    var c = prices[i];
+    var h = Math.max(o,c) + Math.random()*1.5;
+    var l = Math.min(o,c) - Math.random()*1.5;
+    data.push([+o.toFixed(1), +c.toFixed(1), +l.toFixed(1), +h.toFixed(1)]);
+  }
+
+  var option = {
+    tooltip:{ trigger:'axis' },
+    grid:{ left:'10%', right:'8%', top:'5%', bottom:'12%' },
+    xAxis:{ type:'category', data:dates, axisLabel:{ fontSize:9, color:'#64748b', interval:3 }},
+    yAxis:{ type:'value', min:150, max:195, axisLabel:{ fontSize:10, color:'#64748b', formatter:'${value}' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}},
+    series:[{
+      type:'candlestick', data:data,
+      itemStyle:{ color:'#16a34a', color0:'#dc2626', borderColor:'#16a34a', borderColor0:'#dc2626' },
+      markLine:{
+        silent:true, symbol:'none',
+        data:[
+          { yAxis:165, label:{ formatter:'Entrée $165', fontSize:10, color:'#2563eb', fontWeight:700, position:'insideEndTop' }, lineStyle:{ color:'#2563eb', width:2 }},
+          { yAxis:158, label:{ formatter:'Stop Loss $158 (risque: $7)', fontSize:10, color:'#dc2626', fontWeight:700, position:'insideEndTop' }, lineStyle:{ color:'#dc2626', width:2, type:'dashed' }},
+          { yAxis:185, label:{ formatter:'Target $185 (gain: $20)', fontSize:10, color:'#16a34a', fontWeight:700, position:'insideEndTop' }, lineStyle:{ color:'#16a34a', width:2, type:'dashed' }}
+        ]
+      },
+      markArea:{
+        silent:true,
+        data:[
+          [{ yAxis:165, itemStyle:{ color:'rgba(220,38,38,0.08)' }}, { yAxis:158 }],
+          [{ yAxis:165, itemStyle:{ color:'rgba(22,163,74,0.08)' }}, { yAxis:185 }]
+        ]
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 3: Drawdown Recovery Curve
+// ============================
+(function(){
+  var dom = document.getElementById('chart-drawdown');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var losses = ['-5%','-10%','-15%','-20%','-25%','-30%','-35%','-40%','-50%','-60%','-70%','-80%','-90%'];
+  var recoveries = [5.3, 11.1, 17.6, 25.0, 33.3, 42.9, 53.8, 66.7, 100, 150, 233, 400, 900];
+
+  var option = {
+    tooltip:{ trigger:'axis', formatter:function(p){ return 'Perte : ' + p[0].name + '<br>Gain nécessaire : +' + p[0].value + '%'; }},
+    grid:{ left:'12%', right:'5%', top:'8%', bottom:'15%' },
+    xAxis:{ type:'category', data:losses, axisLabel:{ fontSize:10, color:'#dc2626', fontWeight:600 }, name:'Perte subie', nameLocation:'center', nameGap:35, nameTextStyle:{fontSize:11, color:'#64748b'} },
+    yAxis:{ type:'value', axisLabel:{ fontSize:10, color:'#64748b', formatter:'+{value}%' }, splitLine:{ lineStyle:{ color:'#f1f5f9' }}, name:'Gain pour récupérer', nameTextStyle:{fontSize:11, color:'#64748b'} },
+    series:[{
+      type:'bar',
+      data:recoveries.map(function(v){
+        var color = '#16a34a';
+        if(v > 50) color = '#d97706';
+        if(v > 100) color = '#ea580c';
+        if(v > 200) color = '#dc2626';
+        return { value:v, itemStyle:{ color:color, borderRadius:[4,4,0,0] }};
+      }),
+      barWidth:'60%',
+      label:{ show:true, position:'top', fontSize:9, fontWeight:700, formatter:'+{c}%', color:'#334155' },
+      markLine:{
+        silent:true, symbol:'none',
+        data:[
+          { yAxis:100, label:{ formatter:'+100%', fontSize:10, color:'#dc2626', fontWeight:700 }, lineStyle:{ color:'#dc2626', type:'dashed' }}
+        ]
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

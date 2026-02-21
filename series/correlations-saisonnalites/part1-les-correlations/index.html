@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Les Corrélations — Comprendre les Liens Invisibles | Corrélations & Saisonnalités — Partie 1/6 | Market Watch</title>
+  <meta name="description" content="Série Corrélations & Saisonnalités — Partie 1/6 : Comprendre les corrélations financières, coefficient de Pearson, matrice de corrélation interactive, corrélation vs causalité, et comment les liens entre actifs changent en temps de crise.">
+  <meta property="og:title" content="Les Corrélations — Comprendre les Liens Invisibles | Corrélations & Saisonnalités — Partie 1/6 | Market Watch">
+  <meta property="og:description" content="Coefficient de Pearson, matrice de corrélation interactive 8x8, corrélation vs causalité, les grandes corrélations des marchés, et comment tout change en temps de crise.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/correlations-saisonnalites/part1-les-correlations/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  /* Series-specific styles — TEAL THEME */
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#0891b2; }
+
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#22d3ee; color:#22d3ee; }
+  .series-link.current { background:#0891b2; color:white; border-color:#0891b2; }
+
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfeff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#0891b2; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-teal { background:rgba(8,145,178,0.1); color:#0891b2; border:1px solid rgba(8,145,178,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+
+  .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+  /* Quiz */
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0891b2; margin-right:0.75rem; }
+  details[open] summary { border-color:#0891b2; background:#ecfeff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#0891b2; }
+
+  /* Formula box */
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#22d3ee; }
+
+  /* Key takeaway box */
+  .takeaway-box { background:linear-gradient(135deg, #ecfeff 0%, #a5f3fc 100%); border:1px solid #0891b2; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#0891b2; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(8,145,178,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#0891b2; margin-top:0.2rem; flex-shrink:0; }
+
+  /* Next article CTA */
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(8,145,178,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+
+  /* Correlation card */
+  .corr-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1rem 0; border-left:4px solid #0891b2; transition:all 0.3s; }
+  .corr-card:hover { transform:translateY(-2px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+  .corr-value { font-size:2rem; font-weight:900; }
+  .corr-positive { color:#16a34a; }
+  .corr-negative { color:#dc2626; }
+  .corr-neutral { color:#64748b; }
+
+  /* Disclaimer box */
+  .disclaimer-mega { background:linear-gradient(135deg, #164e63 0%, #0e7490 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #0891b2; }
+  .disclaimer-mega h3 { color:#a5f3fc; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#cffafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#22d3ee; margin-top:0.2rem; flex-shrink:0; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .brand-logo { font-size:0.9rem; }
+    .series-title { font-size:0.65rem; margin-right:0.5rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+    .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .brand-logo { font-size:0.85rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+    .hero-badges { gap:0.4rem; margin-top:1rem; }
+    .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<!-- Series Navigation — TEAL THEME — 6 Parts -->
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-link" style="margin-right:0.4rem;"></i> Corrélations & Saisonnalités</span>
+  <a href="/series/correlations-saisonnalites/part1-les-correlations/" class="series-link current">1 — Corrélations</a>
+  <a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" class="series-link">2 — Or, Dollar, Taux</a>
+  <a href="/series/correlations-saisonnalites/part3-saisonnalites/" class="series-link">3 — Saisonnalités</a>
+  <a href="/series/correlations-saisonnalites/part4-crypto-cycles/" class="series-link">4 — Crypto Cycles</a>
+  <a href="/series/correlations-saisonnalites/part5-strategies/" class="series-link">5 — Stratégies</a>
+  <a href="/series/correlations-saisonnalites/part6-outils/" class="series-link">6 — Outils</a>
+</div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-link" style="margin-right:0.4rem;"></i> Série Corrélations & Saisonnalités — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Les Corrélations</h1>
+  <p class="hero-subtitle">Comprendre les liens invisibles entre les actifs financiers : coefficient de Pearson, matrice de corrélation, corrélation vs causalité, et pourquoi tout change en temps de crise.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-link"></i> Corrélation</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-scatter"></i> Pearson</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Causalité</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-area"></i> Matrices</span>
+  </div>
+</section>
+
+<!-- ==================== CONTAINER ==================== -->
+<div class="container">
+
+<!-- Navigation Grid -->
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#definition" class="nav-item"><i class="fa-solid fa-book" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Définition</a>
+  <a href="#pearson" class="nav-item"><i class="fa-solid fa-calculator" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pearson</a>
+  <a href="#causalite" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> vs Causalité</a>
+  <a href="#grandes" class="nav-item"><i class="fa-solid fa-globe" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Grandes Corrélations</a>
+  <a href="#matrice" class="nav-item"><i class="fa-solid fa-table-cells" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Matrice 8x8</a>
+  <a href="#crises" class="nav-item"><i class="fa-solid fa-bolt" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> En Crise</a>
+  <a href="#scatter" class="nav-item"><i class="fa-solid fa-chart-scatter" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Scatter Plots</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : DÉFINITION                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="definition"><i class="fa-solid fa-book" style="color:#0891b2;"></i> Qu'est-ce qu'une corrélation ?</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-link" style="color:#0891b2;"></i> Les liens invisibles des marchés</h2>
+
+  <p>Imaginez que vous observez deux actifs financiers. L'or monte, le dollar baisse. Le S&P 500 chute, les obligations d'État montent. Le pétrole grimpe, les compagnies aériennes souffrent. Ces mouvements synchronisés ne sont pas le fruit du hasard : ce sont des <strong>corrélations</strong>.</p>
+
+  <p>Une corrélation mesure la <strong>force et la direction du lien statistique</strong> entre deux variables. En finance, elle nous dit dans quelle mesure deux actifs ont tendance à évoluer ensemble — ou en sens opposé.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi c'est crucial ?</h4>
+    <p style="margin:0;">Comprendre les corrélations, c'est comprendre le <strong>tissu connectif</strong> des marchés financiers. Un portefeuille composé uniquement d'actifs fortement corrélés (+0.9) n'est pas diversifié — il se comporte comme un seul actif. C'est comme avoir 10 parapluies identiques et aucun parasol : vous êtes protégé contre la pluie mais pas contre le soleil.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="text-align:center; padding:1.5rem; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius:16px; border:1px solid #86efac;">
+      <div style="font-size:2.5rem; font-weight:900; color:#16a34a;">+1</div>
+      <div style="font-size:0.8rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.5rem;">Corrélation positive parfaite</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0.75rem 0 0;">Les deux actifs montent et descendent <strong>exactement</strong> ensemble. Ex: SPY et VOO (même indice, ETFs différents).</p>
+    </div>
+    <div style="text-align:center; padding:1.5rem; background:linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius:16px; border:1px solid #94a3b8;">
+      <div style="font-size:2.5rem; font-weight:900; color:#64748b;">0</div>
+      <div style="font-size:0.8rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.5rem;">Aucune corrélation</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0.75rem 0 0;">Aucun lien statistique entre les deux actifs. Mouvements indépendants. La diversification idéale.</p>
+    </div>
+    <div style="text-align:center; padding:1.5rem; background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius:16px; border:1px solid #fca5a5;">
+      <div style="font-size:2.5rem; font-weight:900; color:#dc2626;">-1</div>
+      <div style="font-size:0.8rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.5rem;">Corrélation négative parfaite</div>
+      <p style="font-size:0.85rem; color:#475569; margin:0.75rem 0 0;">Quand l'un monte, l'autre descend <strong>exactement</strong> de la même amplitude. Le hedge parfait.</p>
+    </div>
+  </div>
+
+  <h3>L'échelle de corrélation en pratique</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Plage</th>
+        <th>Interprétation</th>
+        <th>Exemple</th>
+        <th>Implication</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#16a34a;">+0.80 à +1.00</strong></td>
+        <td>Très forte positive</td>
+        <td>SPY / QQQ (~0.92)</td>
+        <td>Quasi même mouvement — diversification nulle</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#16a34a;">+0.50 à +0.80</strong></td>
+        <td>Forte positive</td>
+        <td>BTC / NASDAQ (~0.65)</td>
+        <td>Tendance similaire mais avec des écarts</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#64748b;">+0.20 à +0.50</strong></td>
+        <td>Modérée positive</td>
+        <td>Or / Argent en certaines périodes</td>
+        <td>Diversification partielle</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#94a3b8;">-0.20 à +0.20</strong></td>
+        <td>Faible / nulle</td>
+        <td>Actions US / Soja</td>
+        <td>Bonne diversification</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">-0.50 à -0.20</strong></td>
+        <td>Modérée négative</td>
+        <td>SPY / TLT (-0.40)</td>
+        <td>Hedge partiel en période normale</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#dc2626;">-1.00 à -0.50</strong></td>
+        <td>Forte négative</td>
+        <td>Or / DXY (-0.60)</td>
+        <td>Excellent hedge — portefeuille équilibré</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : COEFFICIENT DE PEARSON                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pearson"><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Le coefficient de Pearson</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> La mathématique derrière les corrélations</h2>
+
+  <p>Le coefficient de corrélation de <strong>Karl Pearson</strong> (1896) est la mesure standard utilisée en finance. Noté <strong>r</strong> ou <strong>&rho;</strong> (rho), il quantifie la relation linéaire entre deux séries de données.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Coefficient de corrélation de Pearson</div>
+    r = <span class="formula-highlight">&Sigma;(xi - x&#772;)(yi - y&#772;)</span> / <span class="formula-highlight">&radic;[&Sigma;(xi - x&#772;)&sup2; &times; &Sigma;(yi - y&#772;)&sup2;]</span>
+  </div>
+
+  <p>Ne paniquez pas devant cette formule. En pratique, elle compare les <strong>déviations</strong> de chaque point par rapport à sa moyenne. Si quand X est au-dessus de sa moyenne, Y est aussi au-dessus de la sienne, la corrélation est positive. Si c'est l'inverse, elle est négative.</p>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Exemple simplifié</h4>
+    <p style="margin:0;">Prenons 5 jours de rendements pour le S&P 500 et le NASDAQ :</p>
+    <table class="data-table" style="margin:1rem 0 0;">
+      <thead>
+        <tr><th>Jour</th><th>SPY</th><th>QQQ</th><th>Déviation SPY</th><th>Déviation QQQ</th><th>Produit</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Lundi</td><td style="color:#16a34a;">+1.2%</td><td style="color:#16a34a;">+1.5%</td><td>+0.88</td><td>+1.06</td><td style="color:#16a34a;">+0.93</td></tr>
+        <tr><td>Mardi</td><td style="color:#dc2626;">-0.8%</td><td style="color:#dc2626;">-1.1%</td><td>-1.12</td><td>-1.54</td><td style="color:#16a34a;">+1.72</td></tr>
+        <tr><td>Mercredi</td><td style="color:#16a34a;">+0.5%</td><td style="color:#16a34a;">+0.8%</td><td>+0.18</td><td>+0.36</td><td style="color:#16a34a;">+0.06</td></tr>
+        <tr><td>Jeudi</td><td style="color:#dc2626;">-0.3%</td><td style="color:#dc2626;">-0.2%</td><td>-0.62</td><td>-0.64</td><td style="color:#16a34a;">+0.40</td></tr>
+        <tr><td>Vendredi</td><td style="color:#16a34a;">+1.0%</td><td style="color:#16a34a;">+1.2%</td><td>+0.68</td><td>+0.76</td><td style="color:#16a34a;">+0.52</td></tr>
+      </tbody>
+    </table>
+    <p style="margin:1rem 0 0; font-size:0.9rem;"><strong>Résultat :</strong> Tous les produits sont positifs (quand SPY dévie dans un sens, QQQ dévie dans le même sens). Le r sera proche de <strong>+0.95</strong> — corrélation très forte positive. Ces deux ETFs bougent presque toujours ensemble.</p>
+  </div>
+
+  <h3>Les limites de Pearson</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark-circle"></i> Ce que Pearson ne capture PAS</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.6;">
+        <li><strong>Relations non-linéaires</strong> : deux actifs peuvent avoir un lien fort mais courbe (ex: options vs sous-jacent)</li>
+        <li><strong>Causalité</strong> : r = 0.9 ne signifie PAS que A cause B</li>
+        <li><strong>Changements de régime</strong> : la corrélation de 2019 n'est pas celle de 2020</li>
+        <li><strong>Valeurs extrêmes</strong> : quelques points aberrants peuvent fausser le résultat</li>
+      </ul>
+    </div>
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle"></i> Ce que Pearson fait BIEN</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.6;">
+        <li><strong>Mesure standard</strong> : universellement compris et comparable</li>
+        <li><strong>Simple à calculer</strong> : disponible dans Excel, Python, TradingView</li>
+        <li><strong>Utile pour la diversification</strong> : construire des portefeuilles équilibrés</li>
+        <li><strong>Base du pair trading</strong> : détecter les opportunités de spread</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Alternatives à Pearson</h3>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Méthode</th><th>Type</th><th>Avantage</th><th>Usage</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Spearman (rang)</strong></td><td>Non-paramétrique</td><td>Capture les relations monotones non-linéaires</td><td>Commodities, crypto</td></tr>
+      <tr><td><strong>Kendall (tau)</strong></td><td>Non-paramétrique</td><td>Robuste aux outliers</td><td>Petits échantillons</td></tr>
+      <tr><td><strong>Rolling correlation</strong></td><td>Fenêtre glissante</td><td>Capture les changements dans le temps</td><td>Gestion du risque dynamique</td></tr>
+      <tr><td><strong>Copules</strong></td><td>Distribution jointe</td><td>Modélise la dépendance dans les queues</td><td>Risk management avancé</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : CORRÉLATION VS CAUSALITÉ                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="causalite"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Corrélation vs Causalité</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Le piège le plus dangereux en finance</h2>
+
+  <p>C'est probablement la leçon la plus importante de cette série : <strong>corrélation n'implique PAS causalité</strong>. Deux actifs peuvent bouger ensemble pendant des années sans qu'il y ait le moindre lien logique entre eux.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-skull-crossbones"></i> Danger : biais de confirmation</h4>
+    <p style="margin:0;">Le cerveau humain est câblé pour trouver des patterns partout, même là où il n'y en a pas. Quand on cherche une corrélation, on la trouve toujours — le dataset est assez grand. C'est le fondement du <strong>data mining bias</strong> qui ruine les backtests et les stratégies.</p>
+  </div>
+
+  <h3>Exemples absurdes de corrélations élevées</h3>
+
+  <p>Le site "Spurious Correlations" de Tyler Vigen a rendu célèbres ces absurdités statistiques :</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="corr-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size:1rem;">Consommation de fromage</strong><br>
+          <span style="font-size:0.85rem; color:#64748b;">vs morts par étranglement dans les draps</span>
+        </div>
+        <div class="corr-value corr-positive">+0.95</div>
+      </div>
+      <p style="font-size:0.85rem; color:#94a3b8; margin:0.5rem 0 0;">Corrélation sur 10 ans. Évidemment aucun lien causal.</p>
+    </div>
+    <div class="corr-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size:1rem;">Budget spatial NASA</strong><br>
+          <span style="font-size:0.85rem; color:#64748b;">vs suicides par pendaison</span>
+        </div>
+        <div class="corr-value corr-positive">+0.99</div>
+      </div>
+      <p style="font-size:0.85rem; color:#94a3b8; margin:0.5rem 0 0;">r = 0.99 ! Mais aucun humain sensé n'y verrait un lien.</p>
+    </div>
+    <div class="corr-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size:1rem;">Films de Nicolas Cage</strong><br>
+          <span style="font-size:0.85rem; color:#64748b;">vs noyades dans les piscines</span>
+        </div>
+        <div class="corr-value corr-positive">+0.67</div>
+      </div>
+      <p style="font-size:0.85rem; color:#94a3b8; margin:0.5rem 0 0;">Plus Nicolas Cage tourne, plus les gens se noient. Logique ?</p>
+    </div>
+    <div class="corr-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size:1rem;">Divorce dans le Maine</strong><br>
+          <span style="font-size:0.85rem; color:#64748b;">vs consommation de margarine</span>
+        </div>
+        <div class="corr-value corr-positive">+0.99</div>
+      </div>
+      <p style="font-size:0.85rem; color:#94a3b8; margin:0.5rem 0 0;">Le beurre sauve les couples ? Évidemment non.</p>
+    </div>
+  </div>
+
+  <h3>Les 3 types de relations</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#ecfeff; border:1px solid #0891b2; border-radius:16px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-right" style="color:#0891b2;"></i></div>
+      <h4 style="color:#0891b2; margin:0 0 0.5rem;">Causalité directe</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">A cause B directement. Ex: une hausse des taux de la Fed <strong>cause</strong> une baisse des obligations existantes (relation mécanique).</p>
+    </div>
+    <div style="padding:1.5rem; background:#fef9c3; border:1px solid #ca8a04; border-radius:16px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-arrows-left-right" style="color:#ca8a04;"></i></div>
+      <h4 style="color:#ca8a04; margin:0 0 0.5rem;">Variable confondante</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">C cause à la fois A et B. Ex: l'appétit pour le risque fait monter <strong>à la fois</strong> les actions et le BTC, créant une corrélation artificielle.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;"><i class="fa-solid fa-shuffle" style="color:#dc2626;"></i></div>
+      <h4 style="color:#dc2626; margin:0 0 0.5rem;">Coïncidence pure</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Aucun lien réel. Pure hasard statistique. Ex: Nicolas Cage et les noyades. Ne JAMAIS trader sur ce type de corrélation.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment distinguer corrélation et causalité ?</h4>
+    <p style="margin:0;">Posez-vous 3 questions : <strong>1)</strong> Y a-t-il un mécanisme économique logique qui relie A et B ? <strong>2)</strong> La corrélation est-elle stable dans le temps ou apparaît-elle sur une seule période ? <strong>3)</strong> Existe-t-il une variable confondante C qui pourrait expliquer le lien ? Si vous ne pouvez pas répondre "oui" à la question 1, ne tradez pas cette corrélation.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : LES GRANDES CORRÉLATIONS                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="grandes"><i class="fa-solid fa-globe" style="color:#0891b2;"></i> Les grandes corrélations des marchés</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-globe" style="color:#0891b2;"></i> Les liens qui font tourner la finance mondiale</h2>
+
+  <p>Certaines corrélations sont au cœur du fonctionnement des marchés depuis des décennies. Les comprendre, c'est comprendre le langage secret de la finance.</p>
+
+  <h3>Actions : les corrélations intra-marché</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="corr-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>SPY / QQQ</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.92</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le S&P 500 et le NASDAQ 100 sont très corrélés car le NASDAQ est dominé par les mêmes méga-caps tech (Apple, Microsoft, Amazon) qui pèsent 30%+ du S&P 500. Quand le QQQ bouge, le SPY suit — mais le QQQ est plus volatile (beta ~1.15).</p>
+    </div>
+    <div class="corr-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>SPY / IWM</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.85</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Les large-caps (SPY) et small-caps (IWM) sont corrélées mais les small-caps sont plus sensibles à l'économie domestique US, aux taux d'intérêt et au crédit. En récession, l'IWM sous-performe significativement.</p>
+    </div>
+  </div>
+
+  <h3>Le duo classique : Actions vs Obligations</h3>
+
+  <div class="corr-card" style="border-left-color:#dc2626;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+      <div>
+        <strong style="font-size:1.1rem;">SPY / TLT (Obligations long terme)</strong><br>
+        <span style="font-size:0.8rem; color:#64748b;">La relation la plus importante en allocation d'actifs</span>
+      </div>
+      <div class="corr-value corr-negative" style="font-size:1.5rem;">-0.40</div>
+    </div>
+    <p style="font-size:0.9rem; color:#475569; margin:0 0 1rem;">Historiquement, quand les actions baissent (risk-off), les investisseurs se réfugient dans les obligations d'État, faisant monter leur prix. C'est le fondement du portefeuille 60/40 (60% actions, 40% obligations). <strong>Mais attention</strong> : cette corrélation a été <strong>positive</strong> en 2022 quand les taux montaient — les deux ont chuté simultanément, détruisant des milliers de milliards.</p>
+    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+      <span class="badge badge-green">Négatif en risk-off classique</span>
+      <span class="badge badge-red">Positif en choc de taux (2022)</span>
+      <span class="badge badge-blue">Variable selon le régime</span>
+    </div>
+  </div>
+
+  <h3>Matières premières & Devises</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="corr-card" style="border-left-color:#f59e0b;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>Or / Dollar (DXY)</strong>
+        <div class="corr-value corr-negative" style="font-size:1.5rem;">-0.60</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">L'or est coté en dollars. Quand le dollar s'affaiblit, l'or devient moins cher pour les acheteurs non-américains, augmentant la demande. Relation inverse solide mais pas parfaite — en 2024-2025, l'or a monté MALGRÉ un dollar fort (achats des banques centrales).</p>
+    </div>
+    <div class="corr-card" style="border-left-color:#16a34a;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>Pétrole / Dollar canadien (CAD)</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.70</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le Canada est le 4e producteur mondial de pétrole. Quand le brut monte, les revenus d'exportation canadiens augmentent, renforçant le CAD. Les traders Forex utilisent cette corrélation pour des pairs trades USD/CAD vs pétrole.</p>
+    </div>
+    <div class="corr-card" style="border-left-color:#2563eb;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>Cuivre / Actions chinoises</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.65</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">La Chine consomme 50% du cuivre mondial. Le cuivre est surnommé "Dr. Copper" car il prédit l'activité économique. Quand le cuivre monte, cela signale une croissance chinoise forte, ce qui fait monter FXI et les actions chinoises.</p>
+    </div>
+    <div class="corr-card" style="border-left-color:#9333ea;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>AUD/USD / Minerai de fer</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.75</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">L'Australie est le 1er exportateur mondial de minerai de fer. Le dollar australien (AUD) suit fidèlement les prix du minerai de fer, qui dépendent eux-mêmes de la demande chinoise. Triple corrélation : Chine → minerai → AUD.</p>
+    </div>
+  </div>
+
+  <h3>Crypto : un monde de corrélations</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div class="corr-card" style="border-left-color:#f97316;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>BTC / ETH</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.87</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Bitcoin et Ethereum bougent presque toujours ensemble. L'ETH est souvent plus volatile (beta ~1.3 par rapport au BTC). Quand cette corrélation casse (ETH sous-performe), c'est souvent un signal de faiblesse de l'écosystème altcoin.</p>
+    </div>
+    <div class="corr-card" style="border-left-color:#f97316;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>BTC / NASDAQ</strong>
+        <div class="corr-value corr-positive" style="font-size:1.5rem;">+0.65</div>
+      </div>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Depuis 2020, le BTC est devenu un "risk asset" corrélé au tech. En 2022, BTC et NASDAQ ont chuté ensemble. Cette corrélation varie entre +0.3 et +0.8 selon les périodes. Elle tend à augmenter en période de stress.</p>
+    </div>
+  </div>
+
+  <!-- CHART 1: Corrélation rolling SPY/TLT -->
+  <h3>Évolution de la corrélation SPY/TLT (rolling 90 jours)</h3>
+  <div id="chart-rolling-corr" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : MATRICE DE CORRÉLATION                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="matrice"><i class="fa-solid fa-table-cells" style="color:#9333ea;"></i> Matrice de corrélation interactive</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-table-cells" style="color:#9333ea;"></i> La matrice 8x8 des actifs majeurs</h2>
+
+  <p>Une matrice de corrélation est l'outil fondamental de tout gestionnaire de portefeuille. Elle montre en un coup d'œil les liens entre tous les actifs. La diagonale est toujours 1.0 (chaque actif est parfaitement corrélé avec lui-même).</p>
+
+  <!-- CHART 2: Heatmap corrélation -->
+  <div id="chart-corr-heatmap" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment lire cette matrice ?</h4>
+    <p style="margin:0;"><strong>Rouge foncé = forte corrélation positive</strong> (les actifs bougent ensemble). <strong>Bleu foncé = forte corrélation négative</strong> (les actifs bougent en sens inverse). <strong>Blanc/gris = pas de corrélation</strong> (mouvements indépendants). Cherchez les cases bleues : ce sont vos <strong>diversificateurs naturels</strong>.</p>
+  </div>
+
+  <h3>Les enseignements clés de cette matrice</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#0891b2;"></i> <strong>SPY et QQQ sont quasi interchangeables</strong> pour la diversification (+0.92). Avoir les deux ne diversifie quasiment rien.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#0891b2;"></i> <strong>TLT est le meilleur diversificateur</strong> avec une corrélation négative aux actions (-0.40 avec SPY). Mais cette relation n'est pas gravée dans le marbre.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#0891b2;"></i> <strong>GLD (Or) est modérément décorrélé</strong> de tout le reste, ce qui en fait un excellent ajout à tout portefeuille.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#0891b2;"></i> <strong>BTC est corrélé aux actions</strong> en période normale, mais peut décorréler lors d'événements crypto-spécifiques (halving, régulation).</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#0891b2;"></i> <strong>Le pétrole (USO) a sa propre dynamique</strong> — corrélé aux actions mais aussi à la géopolitique (OPEC, Iran, Russie).</li>
+  </ul>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : CORRÉLATIONS EN TEMPS DE CRISE                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="crises"><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> Quand les corrélations explosent</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> Le phénomène "Correlation to 1" en crise</h2>
+
+  <p>C'est le cauchemar de tout gestionnaire de portefeuille : en temps de crise, <strong>toutes les corrélations convergent vers +1</strong>. Les actifs qui étaient censés diversifier votre portefeuille chutent tous en même temps. C'est ce qu'on appelle le <strong>"flight to quality"</strong> ou la <strong>contagion</strong>.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-skull-crossbones"></i> Le paradoxe mortel de la diversification</h4>
+    <p style="margin:0;">Votre diversification fonctionne <strong>exactement quand vous n'en avez pas besoin</strong> (marchés calmes) et <strong>échoue quand vous en avez le plus besoin</strong> (crises). C'est pour cela que les hedge funds utilisent des <strong>stratégies long/short</strong> et des <strong>options</strong> plutôt que de se reposer uniquement sur la diversification.</p>
+  </div>
+
+  <!-- CHART 3: Corrélations en crise vs normal -->
+  <div id="chart-crisis-corr" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <h3>Les grandes crises et leurs corrélations</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Crise</th>
+        <th>SPY/TLT</th>
+        <th>SPY/GLD</th>
+        <th>SPY/BTC</th>
+        <th>Observation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Avant 2008</strong></td>
+        <td style="color:#dc2626;">-0.35</td>
+        <td style="color:#64748b;">-0.10</td>
+        <td style="color:#94a3b8;">N/A</td>
+        <td>Corrélations "normales"</td>
+      </tr>
+      <tr>
+        <td><strong>Crise 2008</strong></td>
+        <td style="color:#dc2626;">-0.55</td>
+        <td style="color:#16a34a;">+0.30</td>
+        <td style="color:#94a3b8;">N/A</td>
+        <td>TLT = refuge parfait, or volatile</td>
+      </tr>
+      <tr>
+        <td><strong>COVID mars 2020</strong></td>
+        <td style="color:#16a34a;">+0.40</td>
+        <td style="color:#16a34a;">+0.60</td>
+        <td style="color:#16a34a;">+0.80</td>
+        <td>TOUT a chuté — liquidation forcée</td>
+      </tr>
+      <tr>
+        <td><strong>Inflation 2022</strong></td>
+        <td style="color:#16a34a;">+0.50</td>
+        <td style="color:#64748b;">-0.05</td>
+        <td style="color:#16a34a;">+0.70</td>
+        <td>Actions ET obligations en baisse</td>
+      </tr>
+      <tr>
+        <td><strong>Normalisation 2023-24</strong></td>
+        <td style="color:#dc2626;">-0.30</td>
+        <td style="color:#64748b;">+0.10</td>
+        <td style="color:#16a34a;">+0.55</td>
+        <td>Retour progressif à la "normale"</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Leçon du COVID (mars 2020)</h4>
+    <p style="margin:0;">Pendant la semaine du 9-13 mars 2020, le S&P 500 a chuté de 8.8% en un jour. L'or a chuté aussi (-3.5%), les obligations corporates se sont effondrées, et le Bitcoin a perdu 40% en 24h. <strong>Pourquoi ?</strong> Les fonds surendettés (leverage) ont été forcés de vendre TOUT pour répondre aux appels de marge (margin calls). Quand tout le monde vend en même temps, les corrélations convergent vers 1. Seuls les bons du Trésor US court terme (T-Bills) et le cash ont tenu. <strong>Leçon :</strong> en crise extrême, le seul vrai hedge est le cash.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : SCATTER PLOTS                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scatter"><i class="fa-solid fa-chart-scatter" style="color:#10b981;"></i> Visualiser les corrélations</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-scatter" style="color:#10b981;"></i> Scatter plots : voir la corrélation</h2>
+
+  <p>Un scatter plot (nuage de points) est la meilleure façon de <strong>visualiser</strong> une corrélation. Chaque point représente un jour de trading : l'axe X est le rendement de l'actif A, l'axe Y le rendement de l'actif B.</p>
+
+  <!-- CHART 4: Scatter SPY vs QQQ -->
+  <div id="chart-scatter" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment lire un scatter plot ?</h4>
+    <ul style="margin:0; padding-left:1.25rem; font-size:0.9rem; line-height:1.7;">
+      <li><strong>Nuage serré et orienté haut-droite</strong> = forte corrélation positive (SPY vs QQQ)</li>
+      <li><strong>Nuage serré orienté bas-droite</strong> = forte corrélation négative (SPY vs TLT)</li>
+      <li><strong>Nuage circulaire/dispersé</strong> = pas de corrélation (SPY vs Or en certaines périodes)</li>
+      <li><strong>Points isolés loin du nuage</strong> = outliers (jours de crash, flash crash)</li>
+    </ul>
+  </div>
+
+  <h3>Ce que les scatter plots révèlent et que les chiffres cachent</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.5rem; background:#ecfeff; border:1px solid #0891b2; border-radius:16px;">
+      <h4 style="color:#0891b2; margin:0 0 0.5rem;"><i class="fa-solid fa-eye"></i> L'asymétrie cachée</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Pearson donne un chiffre unique (+0.65). Mais le scatter peut montrer que la corrélation est <strong>+0.80 en baisse</strong> et <strong>+0.40 en hausse</strong>. Cela signifie que les actifs chutent plus ensemble qu'ils ne montent ensemble — information cruciale pour le hedging.</p>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-arrows-rotate"></i> Les régimes visibles</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Parfois, le scatter montre <strong>deux nuages distincts</strong> — signe de deux régimes de marché (risk-on vs risk-off). Pearson moyenne les deux régimes, masquant l'information. Le scatter la révèle visuellement.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : QUIZ                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Que signifie une corrélation de -0.60 entre l'or et le dollar ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Quand le dollar monte de 1%, l'or tend à baisser d'environ 0.6% (et inversement).</strong><br>
+      Une corrélation de -0.60 indique une relation inverse modérément forte. Le signe négatif signifie que les deux actifs bougent en sens opposé. La valeur absolue (0.60) indique la force du lien. Ce n'est pas parfait (-1.0) donc il y a des exceptions, mais la tendance générale est claire : dollar fort = or faible, dollar faible = or fort. L'explication est que l'or est coté en dollars — quand le dollar s'affaiblit, l'or devient moins cher pour les acheteurs étrangers.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi les corrélations augmentent-elles en temps de crise ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : À cause des liquidations forcées et du "flight to quality".</strong><br>
+      En crise, les investisseurs en levier reçoivent des appels de marge (margin calls) et doivent vendre tout — actions, obligations, or, crypto — peu importe les fondamentaux. Cette vente forcée synchronise les baisses de tous les actifs. De plus, la peur collective pousse tout le monde à vendre en même temps, amplifiant le phénomène. Seul le cash et les T-Bills très court terme restent stables. C'est le "correlation to 1" qui a surpris des milliers de portefeuilles "diversifiés" en mars 2020.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Deux actifs ont une corrélation de +0.95 sur 10 ans. Peut-on affirmer que l'un cause l'autre ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Non, absolument pas.</strong><br>
+      Corrélation n'implique jamais causalité, quelle que soit sa force ou sa durée. La consommation de fromage et les morts par étranglement dans les draps ont une corrélation de +0.95 sur 10 ans — évidemment sans aucun lien causal. Pour établir la causalité, il faut : un mécanisme économique logique, la reproductibilité dans différentes périodes et contextes, et l'exclusion des variables confondantes. En finance, très peu de corrélations sont vraiment causales (les taux → prix des obligations est une des rares exceptions mécaniques).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce qu'une rolling correlation et pourquoi est-elle plus utile qu'une corrélation statique ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : C'est une corrélation calculée sur une fenêtre glissante (ex: 90 jours) qui évolue dans le temps.</strong><br>
+      Une corrélation statique (sur 10 ans par exemple) donne un chiffre moyen qui masque les variations. La rolling correlation recalcule le coefficient chaque jour en utilisant les N derniers jours. Elle permet de voir que la corrélation SPY/TLT est passée de -0.40 (2019) à +0.50 (2022) puis -0.30 (2024). Cette information est cruciale pour le rebalancement du portefeuille : si votre hedge (TLT) n'est plus négativement corrélé, votre portefeuille n'est plus protégé.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Un portefeuille contient SPY, QQQ et IWM. Est-il bien diversifié ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Non, c'est une illusion de diversification.</strong><br>
+      SPY/QQQ = +0.92, SPY/IWM = +0.85, QQQ/IWM = +0.78. Ce portefeuille est composé de 3 ETFs qui bougent quasiment ensemble. C'est comme avoir 3 parapluies de couleurs différentes — vous êtes toujours exposé à la pluie de la même façon. Pour vraiment diversifier, il faudrait ajouter des actifs avec des corrélations faibles ou négatives : TLT (obligations), GLD (or), EEM (émergents), ou même du cash. La vraie diversification vient de la <strong>décorrélation</strong>, pas du nombre d'actifs.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#0891b2;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-link"></i> <strong>La corrélation mesure le lien entre deux actifs</strong> — de -1 (inverse parfait) à +1 (identique). C'est l'outil fondamental de la diversification de portefeuille.</li>
+      <li><i class="fa-solid fa-calculator"></i> <strong>Pearson est la mesure standard</strong> — mais elle ne capture que les relations linéaires et donne un chiffre statique. Utilisez toujours la rolling correlation pour suivre les changements dans le temps.</li>
+      <li><i class="fa-solid fa-triangle-exclamation"></i> <strong>Corrélation ≠ Causalité</strong> — le piège numéro 1 en finance. Toujours chercher le mécanisme économique sous-jacent avant de trader une corrélation.</li>
+      <li><i class="fa-solid fa-globe"></i> <strong>Les grandes corrélations structurent les marchés</strong> — SPY/QQQ (+0.92), Or/DXY (-0.60), SPY/TLT (-0.40), BTC/NASDAQ (+0.65). Connaître ces chiffres par cœur.</li>
+      <li><i class="fa-solid fa-bolt"></i> <strong>En crise, tout converge vers +1</strong> — la diversification échoue quand on en a le plus besoin. Les margin calls et la panique synchronisent toutes les ventes.</li>
+      <li><i class="fa-solid fa-chart-scatter"></i> <strong>Les scatter plots révèlent l'asymétrie</strong> — les corrélations sont souvent plus fortes en baisse qu'en hausse. L'information que Pearson cache.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>La vraie diversification vient de la décorrélation</strong> — pas du nombre d'actifs. 3 ETFs corrélés à +0.90 ne diversifient rien.</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- DISCLAIMER FINAL                                              -->
+<!-- ============================================================ -->
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les corrélations historiques présentées sont indicatives et <strong>changent dans le temps</strong>. Elles ne garantissent pas les relations futures.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne garantissent pas les performances futures.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- NEXT ARTICLE CTA                                              -->
+<!-- ============================================================ -->
+<a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 2 sur 6</div>
+    <div class="next-title">Or, Dollar, Taux : Le Triangle Magique</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+
+<!-- ============================================================ -->
+<!-- SERIES NAVIGATION (bottom)                                     -->
+<!-- ============================================================ -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/correlations-saisonnalites/part1-les-correlations/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#0891b2; color:white; border:1px solid #0891b2;">1. Corrélations</a>
+  <a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Or, Dollar, Taux</a>
+  <a href="/series/correlations-saisonnalites/part3-saisonnalites/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Saisonnalités</a>
+  <a href="/series/correlations-saisonnalites/part4-crypto-cycles/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Crypto Cycles</a>
+  <a href="/series/correlations-saisonnalites/part5-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Stratégies</a>
+  <a href="/series/correlations-saisonnalites/part6-outils/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Outils</a>
+</div>
+
+
+</div><!-- end container -->
+
+<!-- ==================== FOOTER ==================== -->
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Corrélations & Saisonnalités</strong> — Partie 1/6 : Les Corrélations</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement. Les corrélations historiques ne garantissent pas les relations futures. Consultez un conseiller financier agréé avant toute décision.</p>
+</div>
+
+<!-- ==================== ECHARTS SCRIPTS ==================== -->
+<script>
+// ============================
+// CHART 1: Rolling Correlation SPY/TLT (90 days)
+// ============================
+(function(){
+  var dom = document.getElementById('chart-rolling-corr');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  // Simulated rolling correlation data 2018-2025
+  var dates = [];
+  var values = [];
+  var baseDate = new Date('2018-01-01');
+  for(var i=0; i<2000; i++){
+    var d = new Date(baseDate.getTime() + i * 86400000);
+    if(d.getDay() === 0 || d.getDay() === 6) continue;
+    dates.push(d.toISOString().slice(0,10));
+    // Simulate regime changes
+    var year = d.getFullYear();
+    var month = d.getMonth();
+    var val;
+    if(year < 2020) val = -0.35 + Math.random()*0.15 - 0.075;
+    else if(year === 2020 && month < 6) val = 0.10 + Math.random()*0.4 - 0.1;
+    else if(year === 2020) val = -0.20 + Math.random()*0.2 - 0.1;
+    else if(year === 2021) val = -0.15 + Math.random()*0.2 - 0.1;
+    else if(year === 2022 && month < 9) val = 0.45 + Math.random()*0.15 - 0.075;
+    else if(year === 2022) val = 0.30 + Math.random()*0.15 - 0.075;
+    else if(year === 2023) val = -0.10 + Math.random()*0.25 - 0.125;
+    else if(year === 2024) val = -0.25 + Math.random()*0.2 - 0.1;
+    else val = -0.30 + Math.random()*0.15 - 0.075;
+    values.push(parseFloat(val.toFixed(3)));
+  }
+
+  var option = {
+    tooltip: { trigger:'axis', formatter:function(p){ return p[0].axisValueLabel + '<br/>Corrélation: <b>' + p[0].value + '</b>'; } },
+    grid: { left:'8%', right:'4%', top:'12%', bottom:'15%' },
+    xAxis: { type:'category', data:dates, axisLabel:{ fontSize:10, interval:200, rotate:30 }, axisLine:{lineStyle:{color:'#e2e8f0'}} },
+    yAxis: { type:'value', min:-0.8, max:0.8, splitLine:{lineStyle:{color:'#f1f5f9'}}, axisLabel:{fontSize:10}, axisLine:{show:false} },
+    visualMap: { show:false, min:-0.8, max:0.8, inRange:{ color:['#2563eb','#94a3b8','#dc2626'] } },
+    series: [{
+      type:'line', data:values, smooth:true, symbol:'none', lineStyle:{width:2},
+      markLine:{ silent:true, lineStyle:{type:'dashed', color:'#94a3b8'}, data:[{yAxis:0, label:{formatter:'Décorrélé', fontSize:10}}] },
+      markArea:{ silent:true, data:[
+        [{yAxis:0.3, itemStyle:{color:'rgba(220,38,38,0.08)'}}, {yAxis:0.8}],
+        [{yAxis:-0.8, itemStyle:{color:'rgba(37,99,235,0.08)'}}, {yAxis:-0.3}]
+      ]}
+    }],
+    graphic:[
+      {type:'text',left:'12%',top:'5%',style:{text:'COVID', fill:'#dc2626', fontSize:11, fontWeight:700}},
+      {type:'text',left:'55%',top:'5%',style:{text:'Inflation 2022', fill:'#dc2626', fontSize:11, fontWeight:700}}
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 2: Correlation Heatmap 8x8
+// ============================
+(function(){
+  var dom = document.getElementById('chart-corr-heatmap');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var assets = ['SPY','QQQ','IWM','TLT','GLD','USO','BTC','EEM'];
+  var matrix = [
+    [1.00, 0.92, 0.85,-0.40, 0.05, 0.35, 0.65, 0.70],
+    [0.92, 1.00, 0.78,-0.38, 0.02, 0.30, 0.68, 0.65],
+    [0.85, 0.78, 1.00,-0.35, 0.08, 0.40, 0.55, 0.72],
+    [-0.40,-0.38,-0.35,1.00, 0.25,-0.15,-0.20,-0.25],
+    [0.05, 0.02, 0.08, 0.25, 1.00, 0.15, 0.20, 0.18],
+    [0.35, 0.30, 0.40,-0.15, 0.15, 1.00, 0.25, 0.45],
+    [0.65, 0.68, 0.55,-0.20, 0.20, 0.25, 1.00, 0.50],
+    [0.70, 0.65, 0.72,-0.25, 0.18, 0.45, 0.50, 1.00]
+  ];
+
+  var data = [];
+  for(var i=0; i<assets.length; i++){
+    for(var j=0; j<assets.length; j++){
+      data.push([i, j, matrix[i][j]]);
+    }
+  }
+
+  var option = {
+    tooltip: { formatter:function(p){ return assets[p.value[0]] + ' / ' + assets[p.value[1]] + '<br/><b>r = ' + p.value[2].toFixed(2) + '</b>'; }},
+    grid: { left:'12%', right:'12%', top:'8%', bottom:'12%' },
+    xAxis: { type:'category', data:assets, axisLabel:{fontSize:11, fontWeight:700}, splitArea:{show:true}, axisLine:{show:false} },
+    yAxis: { type:'category', data:assets, axisLabel:{fontSize:11, fontWeight:700}, splitArea:{show:true}, axisLine:{show:false} },
+    visualMap: { min:-1, max:1, calculable:false, orient:'horizontal', left:'center', bottom:'0%', inRange:{color:['#2563eb','#93c5fd','#f1f5f9','#fca5a5','#dc2626']}, textStyle:{fontSize:10} },
+    series:[{
+      type:'heatmap',
+      data:data,
+      label:{ show:true, formatter:function(p){ return p.value[2].toFixed(2); }, fontSize:11, fontWeight:700, color:'#0f172a' },
+      itemStyle:{ borderWidth:2, borderColor:'#ffffff' }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 3: Crisis Correlation Comparison
+// ============================
+(function(){
+  var dom = document.getElementById('chart-crisis-corr');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var option = {
+    tooltip: { trigger:'axis' },
+    legend: { data:['Normal (2019)','COVID (Mar 2020)','Inflation (2022)'], bottom:0, textStyle:{fontSize:11} },
+    grid: { left:'8%', right:'4%', top:'8%', bottom:'18%' },
+    xAxis: { type:'category', data:['SPY/TLT','SPY/GLD','SPY/BTC','SPY/EEM','SPY/USO','GLD/DXY','BTC/ETH'], axisLabel:{fontSize:10, rotate:20} },
+    yAxis: { type:'value', min:-0.8, max:1.0, axisLabel:{fontSize:10}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+    series: [
+      { name:'Normal (2019)', type:'bar', data:[-0.35,-0.10,0.45,0.70,0.35,-0.55,0.88], itemStyle:{color:'#0891b2'}, barGap:'15%' },
+      { name:'COVID (Mar 2020)', type:'bar', data:[0.40,0.60,0.80,0.85,0.75,-0.20,0.95], itemStyle:{color:'#dc2626'} },
+      { name:'Inflation (2022)', type:'bar', data:[0.50,-0.05,0.70,0.65,0.40,-0.45,0.90], itemStyle:{color:'#f97316'} }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 4: Scatter Plot SPY vs QQQ
+// ============================
+(function(){
+  var dom = document.getElementById('chart-scatter');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  // Generate realistic correlated returns
+  var spyQqq = [];
+  var spyTlt = [];
+  for(var i=0; i<250; i++){
+    var spy = (Math.random()-0.48)*3;
+    var qqq = spy * 1.15 + (Math.random()-0.5)*0.8;
+    var tlt = spy * -0.4 + (Math.random()-0.5)*1.5;
+    spyQqq.push([parseFloat(spy.toFixed(2)), parseFloat(qqq.toFixed(2))]);
+    spyTlt.push([parseFloat(spy.toFixed(2)), parseFloat(tlt.toFixed(2))]);
+  }
+
+  var option = {
+    tooltip: { formatter:function(p){ return 'SPY: ' + p.value[0] + '%<br/>' + p.seriesName + ': ' + p.value[1] + '%'; }},
+    legend: { data:['SPY vs QQQ (r=+0.92)','SPY vs TLT (r=-0.40)'], bottom:0, textStyle:{fontSize:11} },
+    grid: { left:'10%', right:'5%', top:'5%', bottom:'15%' },
+    xAxis: { type:'value', name:'SPY rendement quotidien (%)', nameLocation:'center', nameGap:30, splitLine:{lineStyle:{color:'#f1f5f9'}}, axisLabel:{fontSize:10} },
+    yAxis: { type:'value', name:'Rendement quotidien (%)', nameLocation:'center', nameGap:40, splitLine:{lineStyle:{color:'#f1f5f9'}}, axisLabel:{fontSize:10} },
+    series: [
+      { name:'SPY vs QQQ (r=+0.92)', type:'scatter', data:spyQqq, symbolSize:5, itemStyle:{color:'rgba(8,145,178,0.5)'} },
+      { name:'SPY vs TLT (r=-0.40)', type:'scatter', data:spyTlt, symbolSize:5, itemStyle:{color:'rgba(220,38,38,0.4)'} }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Construire son Portefeuille ETF — Allocation & Rééquilibrage | Trader les ETF — Partie 6/6 | Market Watch</title>
+  <meta name="description" content="Série Trader les ETF — Partie 6/6 : Portefeuilles modèles (60/40, All-Weather, Permanent Portfolio), allocation par profil, rééquilibrage, PEA vs CTO, backtesting.">
+  <meta property="og:title" content="Construire son Portefeuille ETF — Allocation & Rééquilibrage | Trader les ETF — Partie 6/6 | Market Watch">
+  <meta property="og:description" content="Les portefeuilles classiques (60/40, All-Weather, 3-Fund), allocation selon l'âge, rééquilibrage calendaire vs seuils, PEA et CTO en France, backtesting.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/trader-etf/part6-portefeuille-allocation/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#059669; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#34d399; color:#34d399; }
+  .series-link.current { background:#059669; color:white; border-color:#059669; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-emerald { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#059669; margin-right:0.75rem; }
+  details[open] summary { border-color:#059669; background:#ecfdf5; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#059669; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#34d399; }
+  .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%); border:1px solid #059669; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#059669; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(5,150,105,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#059669; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(5,150,105,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#059669; color:#059669; }
+  .disclaimer-mega { background:linear-gradient(135deg, #064e3b 0%, #047857 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #059669; }
+  .disclaimer-mega h3 { color:#a7f3d0; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#d1fae5; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#34d399; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #059669; }
+  .conclusion-card { background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border:2px solid #059669; border-radius:20px; padding:2.5rem; margin:2rem 0; text-align:center; }
+  .conclusion-card h2 { color:#059669; margin-top:0; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Trader les ETF</span>
+  <a href="/series/trader-etf/part1-comprendre-etf/" class="series-link">1 — Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" class="series-link">2 — Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" class="series-link">3 — Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" class="series-link">4 — Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" class="series-link">5 — Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" class="series-link current">6 — Portefeuille</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-pie" style="margin-right:0.4rem;"></i> Série Trader les ETF — Partie 6 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Construire son Portefeuille ETF : Allocation & Rééquilibrage</h1>
+  <p class="hero-subtitle">Du classique 60/40 au All-Weather de Ray Dalio. PEA ou CTO ? Rééquilibrage calendaire ou par seuils ? Construisez un portefeuille ETF adapté à votre profil, testez-le, et suivez-le sereinement.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-chart-pie"></i> Allocation</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-scale-balanced"></i> Rééquilibrage</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-landmark-dome"></i> PEA / CTO</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-flask"></i> Backtesting</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-flag-checkered"></i> Conclusion</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#modeles" class="nav-item"><i class="fa-solid fa-chart-pie" style="color:#059669; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Modèles</a>
+  <a href="#profils" class="nav-item"><i class="fa-solid fa-users" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Profils</a>
+  <a href="#reequilibrage" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rééquilibrage</a>
+  <a href="#france" class="nav-item"><i class="fa-solid fa-landmark-dome" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> PEA / CTO</a>
+  <a href="#backtesting" class="nav-item"><i class="fa-solid fa-flask" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Backtesting</a>
+  <a href="#suivi" class="nav-item"><i class="fa-solid fa-gauge-high" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Suivi</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : PORTEFEUILLES MODÈLES                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="modeles"><i class="fa-solid fa-chart-pie" style="color:#059669;"></i> Portefeuilles modèles classiques</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-pie" style="color:#059669;"></i> Les 5 portefeuilles éprouvés par l'histoire</h2>
+
+  <p>Ces portefeuilles ont traversé des décennies de marchés haussiers, de crises, et d'inflation. Chacun repose sur une philosophie d'allocation différente, mais tous partagent un point commun : la <strong>diversification systématique via les ETF</strong>.</p>
+
+  <!-- CHART 1: Portfolio Allocation Donuts -->
+  <h3>Comparaison des allocations</h3>
+  <div id="chart-allocations" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 16px 16px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb; font-size:1.1rem;">1. Le 60/40 — Le classique intemporel</strong>
+        <span class="badge badge-blue">Modéré</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">60% actions (SPY/VTI) + 40% obligations (BND/AGG). Inventé dans les années 1950, il a généré ~8-9% annualisé historiquement. <strong>Débat actuel :</strong> est-il "mort" après 2022 où actions ET obligations ont baissé ensemble ? Non, mais il fonctionne mieux quand l'inflation est maîtrisée et les corrélations actions/obligations sont négatives.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 16px 16px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b; font-size:1.1rem;">2. All-Weather — Ray Dalio</strong>
+        <span class="badge badge-green">Conservateur+</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">30% actions (VTI) + 40% obligations LT (TLT) + 15% obligations MT (IEF) + 7.5% or (GLD) + 7.5% matières premières (DBC). Conçu pour performer dans les 4 environnements économiques (croissance/inflation &times; hausse/baisse). Max drawdown historique ~-12% vs ~-50% pour le S&P 500.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 16px 16px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a; font-size:1.1rem;">3. Permanent Portfolio — Harry Browne</strong>
+        <span class="badge badge-green">Conservateur</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">25% actions (VTI) + 25% obligations LT (TLT) + 25% or (GLD) + 25% cash (SHV/BIL). Philosophie : toujours un quart du portefeuille qui gagne dans n'importe quel environnement. Rendement modeste (~6-7%) mais max drawdown remarquablement faible (~-8%).</p>
+    </div>
+    <div style="padding:1.5rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 16px 16px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#9333ea; font-size:1.1rem;">4. Golden Butterfly</strong>
+        <span class="badge badge-blue">Modéré</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">20% US Total Market (VTI) + 20% Small Cap Value (VBR) + 20% obligations LT (TLT) + 20% obligations CT (SHY) + 20% or (GLD). Variante optimisée du Permanent Portfolio avec une surpondération des small cap value (prime de risque historique). Rendement ~7-8% avec faible volatilité.</p>
+    </div>
+    <div style="padding:1.5rem; background:#f8fafc; border-left:4px solid #059669; border-radius:0 16px 16px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#059669; font-size:1.1rem;">5. 3-Fund Portfolio — Bogleheads</strong>
+        <span class="badge badge-blue">Modéré-Agressif</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">40-60% US Total Market (VTI) + 20-30% International (VXUS) + 10-30% Obligations (BND). La simplicité de Jack Bogle : 3 ETF couvrent l'intégralité des marchés mondiaux. TER total &lt; 0.07%. Le ratio actions/obligations s'ajuste selon l'âge : <strong>règle "110 - âge" en actions</strong>.</p>
+    </div>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Portefeuille</th><th>Rendement annuel</th><th>Max Drawdown</th><th>Sharpe Ratio</th><th>Meilleur pour</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>60/40</strong></td>
+        <td>~8.5%</td>
+        <td>-30%</td>
+        <td>0.65</td>
+        <td>Investisseur classique, horizon 10-20 ans</td>
+      </tr>
+      <tr>
+        <td><strong>All-Weather</strong></td>
+        <td>~7.5%</td>
+        <td>-12%</td>
+        <td>0.70</td>
+        <td>Aversion au risque, toutes conditions</td>
+      </tr>
+      <tr>
+        <td><strong>Permanent Portfolio</strong></td>
+        <td>~6.5%</td>
+        <td>-8%</td>
+        <td>0.65</td>
+        <td>Ultra-conservateur, préservation capital</td>
+      </tr>
+      <tr>
+        <td><strong>Golden Butterfly</strong></td>
+        <td>~7.8%</td>
+        <td>-11%</td>
+        <td>0.72</td>
+        <td>Optimisation risque/rendement</td>
+      </tr>
+      <tr>
+        <td><strong>3-Fund (50/30/20)</strong></td>
+        <td>~8.2%</td>
+        <td>-35%</td>
+        <td>0.55</td>
+        <td>Jeune investisseur, horizon &gt;20 ans</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : ALLOCATION PAR PROFIL                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="profils"><i class="fa-solid fa-users" style="color:#2563eb;"></i> Allocation selon le profil</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-users" style="color:#2563eb;"></i> Votre allocation dépend de votre âge et tolérance au risque</h2>
+
+  <p>L'allocation idéale évolue avec l'âge car votre <strong>capital humain</strong> (capacité à générer des revenus futurs) diminue au fil du temps. Un jeune de 25 ans peut tolérer un crash de -40% car il a 30 ans pour récupérer. Un retraité de 65 ans ne peut pas se le permettre.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle classique d'allocation</div>
+    <span class="formula-highlight">110 - votre âge</span> = % en actions | le reste en obligations et alternatives
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-rocket"></i> Agressif (20-35 ans)</h4>
+      <div style="font-size:0.85rem; color:#334155; line-height:1.7;">
+        <strong>90% actions :</strong><br>
+        40% VTI + 25% VXUS + 15% QQQ + 10% VWO<br><br>
+        <strong>10% alternatives :</strong><br>
+        5% BTC (IBIT) + 5% GLD<br><br>
+        <strong>Horizon :</strong> &gt;20 ans<br>
+        <strong>Max drawdown toléré :</strong> -50%
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#ecfdf5; border:2px solid #059669; border-radius:16px;">
+      <h4 style="color:#059669; margin:0 0 0.5rem;"><i class="fa-solid fa-scale-balanced"></i> Modéré (35-50 ans)</h4>
+      <div style="font-size:0.85rem; color:#334155; line-height:1.7;">
+        <strong>70% actions :</strong><br>
+        35% VTI + 20% VXUS + 15% QQQ<br><br>
+        <strong>20% obligations :</strong><br>
+        15% BND + 5% TIP<br><br>
+        <strong>10% alternatives :</strong><br>
+        5% GLD + 5% VNQ (REIT)<br>
+        <strong>Max drawdown toléré :</strong> -30%
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-shield-halved"></i> Conservateur (50+ ans)</h4>
+      <div style="font-size:0.85rem; color:#334155; line-height:1.7;">
+        <strong>40% actions :</strong><br>
+        20% VTI + 10% VXUS + 10% SCHD (dividendes)<br><br>
+        <strong>50% obligations :</strong><br>
+        25% BND + 15% TLT + 10% TIP<br><br>
+        <strong>10% alternatives :</strong><br>
+        10% GLD<br>
+        <strong>Max drawdown toléré :</strong> -15%
+      </div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La règle "110 - âge" est un point de départ, pas une loi</h4>
+    <p style="margin:0;">Ajustez selon votre situation personnelle : un patrimoine immobilier conséquent vous permet plus d'agressivité en bourse. Des charges fixes élevées (prêt immobilier) exigent plus de prudence. Un emploi stable dans le secteur public autorise plus de risque qu'un indépendant aux revenus variables. L'important est de choisir une allocation que vous <strong>pouvez tenir pendant une crise</strong> sans paniquer.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : RÉÉQUILIBRAGE                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="reequilibrage"><i class="fa-solid fa-scale-balanced" style="color:#f97316;"></i> Rééquilibrage</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#f97316;"></i> Rééquilibrer : quand et comment</h2>
+
+  <p>Le rééquilibrage consiste à ramener votre portefeuille à son allocation cible. Après un bull market, vos actions auront grossi et les obligations diminué en proportion. Sans rééquilibrage, un portefeuille 60/40 peut dériver vers 75/25, augmentant votre risque sans que vous vous en rendiez compte.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#ecfdf5; border:1px solid #059669; border-radius:16px;">
+      <h4 style="color:#059669; margin:0 0 0.75rem;"><i class="fa-solid fa-calendar-days"></i> Rééquilibrage calendaire</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0 0 0.5rem;">Rééquilibrer à date fixe : trimestriel ou annuel.</p>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+        <li><strong>Annuel</strong> : le plus simple, suffisant pour la plupart</li>
+        <li><strong>Trimestriel</strong> : légèrement meilleur en risque ajusté</li>
+        <li><strong>Mensuel</strong> : peu d'avantage supplémentaire, plus de frais</li>
+        <li>Choisir une date fixe (1er janvier, anniversaire...)</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:1px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem;"><i class="fa-solid fa-arrows-left-right"></i> Rééquilibrage par seuils (bandes)</h4>
+      <p style="font-size:0.88rem; color:#334155; margin:0 0 0.5rem;">Rééquilibrer quand un actif dévie de plus de 5% de sa cible.</p>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+        <li><strong>Bande &plusmn;5%</strong> : si cible 60% actions, rééquilibrer si &lt;55% ou &gt;65%</li>
+        <li>Réagit aux mouvements de marché, pas au calendrier</li>
+        <li>Meilleur historiquement que le calendaire pur</li>
+        <li>Nécessite un suivi régulier (mensuel minimum)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CHART 2: Rebalancing Impact -->
+  <h3>Impact du rééquilibrage sur un portefeuille 60/40 (2005-2025)</h3>
+  <div id="chart-rebalancing" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <h3>Rééquilibrage avec les flux : la méthode intelligente</h3>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Rééquilibrer sans vendre</h4>
+    <p style="margin:0;">Au lieu de vendre les actifs surpondérés (ce qui génère des événements fiscaux), utilisez vos <strong>nouveaux investissements mensuels</strong> pour rééquilibrer naturellement. Si vos actions sont à 65% au lieu de 60%, dirigez 100% de votre DCA du mois vers les obligations. Cette méthode est <strong>fiscalement optimale</strong> car aucune plus-value n'est réalisée. Elle fonctionne particulièrement bien quand vos flux mensuels représentent au moins 1-2% de votre portefeuille total.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Impact fiscal du rééquilibrage : PEA vs CTO</h4>
+    <p style="margin:0;">En <strong>PEA</strong>, le rééquilibrage est fiscalement neutre tant que vous ne retirez pas de fonds (les plus-values ne sont pas taxées à l'intérieur de l'enveloppe). En <strong>CTO</strong>, chaque vente avec plus-value est un événement fiscal : flat tax de 30% (PFU) ou barème progressif + 17.2% de prélèvements sociaux. Privilégiez le rééquilibrage via les flux sur CTO et réservez les ventes/rachats au PEA.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : INVESTISSEUR FRANÇAIS                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="france"><i class="fa-solid fa-landmark-dome" style="color:#9333ea;"></i> Mise en pratique pour un investisseur français</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-landmark-dome" style="color:#9333ea;"></i> PEA, CTO et Assurance-Vie : le guide français</h2>
+
+  <p>L'investisseur français dispose de trois enveloppes fiscales pour ses ETF, chacune avec ses avantages et contraintes. Le choix de l'enveloppe est <strong>aussi important que le choix des ETF</strong>.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Critère</th><th>PEA</th><th>CTO</th><th>Assurance-Vie</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Plafond versements</strong></td>
+        <td>150,000 &euro;</td>
+        <td>Illimité</td>
+        <td>Illimité</td>
+      </tr>
+      <tr>
+        <td><strong>Fiscalité (après 5 ans PEA / 8 ans AV)</strong></td>
+        <td style="color:#16a34a;">17.2% PS uniquement</td>
+        <td>30% flat tax (PFU)</td>
+        <td style="color:#16a34a;">Abattement 4,600&euro;/9,200&euro; + 24.7%/30%</td>
+      </tr>
+      <tr>
+        <td><strong>ETF éligibles</strong></td>
+        <td>UCITS européens uniquement</td>
+        <td style="color:#16a34a;">Tous (US, européens, monde)</td>
+        <td>Liste de l'assureur (UC)</td>
+      </tr>
+      <tr>
+        <td><strong>ETF US (SPY, QQQ, VOO)</strong></td>
+        <td style="color:#dc2626;">Non éligibles directement</td>
+        <td style="color:#16a34a;">Oui (retenue 15% dividendes)</td>
+        <td style="color:#dc2626;">Rarement disponibles</td>
+      </tr>
+      <tr>
+        <td><strong>Retrait</strong></td>
+        <td>Clôture si &lt;5 ans</td>
+        <td style="color:#16a34a;">Libre</td>
+        <td>Rachat partiel/total</td>
+      </tr>
+      <tr>
+        <td><strong>Succession</strong></td>
+        <td>Droit commun</td>
+        <td>Droit commun</td>
+        <td style="color:#16a34a;">Hors succession (&lt;152,500&euro;/bénéf.)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Les meilleurs ETF UCITS pour le PEA</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Exposition</th><th>ETF PEA</th><th>ISIN</th><th>TER</th><th>Méthode</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>MSCI World</strong></td>
+        <td>Amundi MSCI World (CW8)</td>
+        <td>LU1681043599</td>
+        <td>0.38%</td>
+        <td>Swap (réplication synthétique)</td>
+      </tr>
+      <tr>
+        <td><strong>MSCI World (alt.)</strong></td>
+        <td>iShares MSCI World Swap (EWLD)</td>
+        <td>IE0002XZSHO1</td>
+        <td>0.25%</td>
+        <td>Swap</td>
+      </tr>
+      <tr>
+        <td><strong>S&P 500</strong></td>
+        <td>Amundi S&P 500 (PE500)</td>
+        <td>FR0011871128</td>
+        <td>0.15%</td>
+        <td>Swap</td>
+      </tr>
+      <tr>
+        <td><strong>Nasdaq-100</strong></td>
+        <td>Amundi Nasdaq-100 (PANX)</td>
+        <td>LU1681038243</td>
+        <td>0.23%</td>
+        <td>Swap</td>
+      </tr>
+      <tr>
+        <td><strong>Émergents</strong></td>
+        <td>Amundi MSCI Emerging Markets (PAEEM)</td>
+        <td>LU1681045370</td>
+        <td>0.20%</td>
+        <td>Swap</td>
+      </tr>
+      <tr>
+        <td><strong>Europe</strong></td>
+        <td>Amundi STOXX Europe 600 (C6E)</td>
+        <td>LU0908500753</td>
+        <td>0.18%</td>
+        <td>Physique</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Stratégie optimale pour un investisseur français</h4>
+    <p style="margin:0;"><strong>Ordre de priorité des enveloppes :</strong> 1) Remplir le PEA en premier (meilleure fiscalité après 5 ans), 2) CTO pour les ETF non éligibles PEA (obligations, or, crypto, US direct), 3) Assurance-vie pour la succession et l'épargne de précaution. Un portefeuille PEA simple et efficace : <strong>80% CW8 (MSCI World) + 20% PAEEM (Émergents)</strong> = exposition mondiale en 2 lignes, TER moyen ~0.35%.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : BACKTESTING                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="backtesting"><i class="fa-solid fa-flask" style="color:#d97706;"></i> Backtesting son portefeuille</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#d97706;"></i> Tester avant d'investir</h2>
+
+  <p>Le <strong>backtesting</strong> consiste à simuler la performance de votre portefeuille sur des données historiques. C'est essentiel pour valider votre allocation, comprendre les drawdowns potentiels, et ajuster votre stratégie avant de risquer de l'argent réel.</p>
+
+  <h3>Les outils de backtesting</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-line"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Portfolio Visualizer</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">portfoliovisualizer.com — L'outil de référence. Backtest d'allocations, Monte Carlo, efficient frontier, factor analysis. <strong>Gratuit</strong> pour les fonctions de base. Données US remontant à 1972.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#059669; margin-bottom:0.5rem;"><i class="fa-solid fa-calculator"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Backtest Portfolio</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">backtestportfolio.com — Interface simplifiée, comparaison rapide de portefeuilles, intégration des dividendes et inflation. <strong>Gratuit</strong>. Idéal pour les débutants.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-globe"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Curvo (Europe)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">curvo.eu/backtest — Spécialement conçu pour les ETF européens UCITS. Données en euros, inclut les frais de courtage européens. <strong>Gratuit</strong>. Parfait pour le PEA.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-code"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Python + yfinance</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Pour les développeurs : backtests personnalisés avec pandas, numpy et matplotlib. Contrôle total sur la logique. Données via Yahoo Finance. <strong>Gratuit et open source.</strong></p>
+    </div>
+  </div>
+
+  <!-- CHART 3: Backtest Performance Comparison -->
+  <h3>Backtest comparatif des 5 portefeuilles modèles (2005-2025)</h3>
+  <div id="chart-backtest" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Les limites du backtesting</h4>
+    <p style="margin:0;">Le backtest vous dit ce qui <strong>s'est passé</strong>, pas ce qui <strong>se passera</strong>. Pièges courants : <strong>1)</strong> Over-fitting : optimiser les paramètres sur les données passées garantit de bons résultats passés mais pas futurs. <strong>2)</strong> Survivorship bias : les ETF qui existent aujourd'hui sont les gagnants. <strong>3)</strong> Le régime change : la corrélation actions/obligations de -0.40 (2000-2020) est devenue +0.50 en 2022. Utilisez le backtest comme <strong>validation</strong>, pas comme prédiction.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : SUIVI ET REVIEW                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="suivi"><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Suivi et review</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Le dashboard trimestriel : surveiller sans obsèder</h2>
+
+  <p>Un bon portefeuille ETF ne nécessite pas un suivi quotidien. Un check <strong>trimestriel</strong> de 30 minutes suffit. L'objectif : vérifier que votre allocation est toujours dans les bandes, que vos ETF n'ont pas de problème, et décider si un ajustement est nécessaire.</p>
+
+  <h3>Checklist trimestrielle</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Vérification</th><th>Action si nécessaire</th><th>Fréquence</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Allocation vs cible</strong></td>
+        <td>Rééquilibrer si déviation &gt;5%</td>
+        <td>Trimestriel</td>
+      </tr>
+      <tr>
+        <td><strong>TER des ETF</strong></td>
+        <td>Vérifier si un ETF moins cher est apparu</td>
+        <td>Annuel</td>
+      </tr>
+      <tr>
+        <td><strong>Tracking error</strong></td>
+        <td>Changer d'ETF si l'écart avec l'indice est anormal</td>
+        <td>Annuel</td>
+      </tr>
+      <tr>
+        <td><strong>Encours de l'ETF (AUM)</strong></td>
+        <td>Surveiller si &lt;100M&euro; (risque de fermeture)</td>
+        <td>Annuel</td>
+      </tr>
+      <tr>
+        <td><strong>Situation personnelle</strong></td>
+        <td>Ajuster l'allocation si changement majeur (mariage, enfant, retraite)</td>
+        <td>Événementiel</td>
+      </tr>
+      <tr>
+        <td><strong>Fiscalité</strong></td>
+        <td>Tax-loss harvesting en fin d'année si pertes latentes sur CTO</td>
+        <td>Annuel (novembre-décembre)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Quand changer d'allocation ?</h4>
+    <p style="margin:0;">Changez votre allocation uniquement pour des raisons <strong>personnelles</strong> (changement de situation), jamais pour des raisons de marché. "Le marché va crasher" n'est pas une raison de changer — vous avez déjà intégré le risque dans votre allocation cible. Les seuls déclencheurs valables : <strong>1)</strong> Changement d'horizon (retraite dans 5 ans au lieu de 20), <strong>2)</strong> Changement de tolérance au risque (vous avez paniqué pendant une correction &rarr; réduire les actions), <strong>3)</strong> Changement de revenus (promotion ou perte d'emploi).</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quelle est la composition du portefeuille All-Weather de Ray Dalio ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 30% actions + 40% obligations LT + 15% obligations MT + 7.5% or + 7.5% matières premières.</strong><br>
+      Le All-Weather est conçu pour performer dans les 4 environnements économiques possibles (combinaisons de croissance et d'inflation en hausse ou en baisse). La surpondération des obligations (55%) et la diversification avec l'or et les matières premières lui donnent un max drawdown historique remarquablement faible (~-12%) comparé au S&P 500 (~-50%). Le compromis : un rendement plus modeste (~7.5% vs ~10% pour le S&P 500 seul).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi le PEA est-il généralement préférable au CTO pour un investisseur français ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'après 5 ans, les plus-values ne sont taxées qu'à 17.2% (prélèvements sociaux) au lieu de 30% (PFU) sur CTO.</strong><br>
+      Le PEA offre une enveloppe fiscale avantageuse : pas d'imposition sur les plus-values et dividendes tant que les fonds restent dans le PEA, et seulement 17.2% de PS à la sortie après 5 ans. Sur CTO, chaque vente avec plus-value est taxée à 30% (PFU). Sur 20 ans, cette différence fiscale peut représenter 20-30% de performance en plus pour le PEA. Limitation : le PEA est plafonné à 150,000 euros de versements et n'accepte que des ETF UCITS européens.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Quelle est la différence entre rééquilibrage calendaire et par seuils ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le calendaire rééquilibre à date fixe (trimestriel/annuel), les seuils rééquilibrent quand un actif dévie de plus de X% de sa cible.</strong><br>
+      Le rééquilibrage <strong>calendaire</strong> est plus simple : vous choisissez une date (ex : 1er janvier) et rééquilibrez quoi qu'il arrive. Le rééquilibrage <strong>par seuils</strong> (bandes de &plusmn;5%) est légèrement meilleur en termes de risque ajusté car il réagit aux mouvements de marché. La méthode hybride (vérifier trimestriellement mais ne rééquilibrer que si les bandes sont dépassées) combine les avantages des deux approches.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel portefeuille PEA simple recommanderiez-vous à un débutant français ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 80% CW8 (Amundi MSCI World) + 20% PAEEM (Amundi Emerging Markets).</strong><br>
+      Avec seulement 2 lignes, vous obtenez une exposition à plus de 2,000 actions dans 47 pays. Le CW8 couvre les 23 marchés développés (US, Europe, Japon, etc.) et le PAEEM ajoute les émergents (Chine, Inde, Brésil, etc.). Le TER moyen est d'environ 0.35%. C'est le portefeuille "lazy" par excellence : DCA mensuel + rééquilibrage annuel. Un investisseur qui a fait ça depuis 10 ans aurait battu 90% des gérants actifs.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quels sont les principaux pièges du backtesting ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Over-fitting, survivorship bias et changement de régime.</strong><br>
+      <strong>Over-fitting :</strong> optimiser 15 paramètres sur 20 ans de données produit un backtest parfait mais ne prédit rien. <strong>Survivorship bias :</strong> les ETF et actions qui existent aujourd'hui sont les survivants — ceux qui ont fait faillite ne sont pas dans vos données. <strong>Changement de régime :</strong> les corrélations entre classes d'actifs changent (actions/obligations : -0.40 avant 2022, +0.50 en 2022). Le backtest est utile pour la <strong>validation</strong> et la compréhension des risques, pas pour prédire les rendements futurs.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-chart-pie"></i> <strong>5 portefeuilles éprouvés</strong> — du 60/40 classique au All-Weather de Dalio, chacun adapté à un profil de risque. Le 3-Fund Bogleheads est le plus simple et parmi les plus efficaces.</li>
+      <li><i class="fa-solid fa-users"></i> <strong>Règle "110 - âge" en actions</strong> — ajustez selon votre situation personnelle. Un jeune peut tolérer 90% actions, un retraité devrait être à 40% maximum.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>Rééquilibrez par les flux, pas par les ventes</strong> — dirigez vos investissements mensuels vers l'actif sous-pondéré. Fiscalement optimal sur CTO.</li>
+      <li><i class="fa-solid fa-landmark-dome"></i> <strong>PEA d'abord, CTO ensuite</strong> — 17.2% de taxe après 5 ans sur PEA vs 30% sur CTO. 80% CW8 + 20% PAEEM : le portefeuille PEA ultime en 2 lignes.</li>
+      <li><i class="fa-solid fa-flask"></i> <strong>Backtestez mais ne sur-optimisez pas</strong> — Portfolio Visualizer et Curvo sont gratuits. Le backtest valide, il ne prédit pas.</li>
+      <li><i class="fa-solid fa-gauge-high"></i> <strong>Check trimestriel de 30 minutes</strong> — vérifiez l'allocation, le TER, la tracking error. Pas de suivi quotidien, pas de panique.</li>
+      <li><i class="fa-solid fa-heart"></i> <strong>Changez d'allocation pour des raisons personnelles, jamais pour le marché</strong> — "le marché va crasher" n'est pas un motif. Changement d'horizon ou de tolérance : oui.</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CONCLUSION DE LA SÉRIE                                         -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-flag-checkered" style="color:#059669;"></i> Conclusion de la série</div>
+
+<div class="content-card">
+  <div class="conclusion-card">
+    <h2><i class="fa-solid fa-flag-checkered"></i> Félicitations ! Vous avez terminé la série "Trader les ETF"</h2>
+    <p style="font-size:1.1rem; color:#334155; max-width:700px; margin:1rem auto;">En 6 parties, vous avez appris à comprendre les ETF, explorer les classes d'actifs, identifier les thématiques, maîtriser les stratégies, comprendre le levier et les options, et construire votre portefeuille. <strong>L'étape suivante : passer à l'action.</strong></p>
+
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:2rem 0; text-align:left;">
+      <div style="padding:1rem; background:white; border-radius:12px; border:1px solid #d1fae5;">
+        <h4 style="color:#059669; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-1"></i> Choisissez votre enveloppe</h4>
+        <p style="font-size:0.8rem; color:#475569; margin:0;">Ouvrez un PEA si ce n'est pas déjà fait. Les 5 ans commencent à la date d'ouverture.</p>
+      </div>
+      <div style="padding:1rem; background:white; border-radius:12px; border:1px solid #d1fae5;">
+        <h4 style="color:#059669; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-2"></i> Sélectionnez 2-3 ETF</h4>
+        <p style="font-size:0.8rem; color:#475569; margin:0;">CW8 + PAEEM sur PEA. Ou VTI + VXUS + BND sur CTO. Pas plus de 5 lignes.</p>
+      </div>
+      <div style="padding:1rem; background:white; border-radius:12px; border:1px solid #d1fae5;">
+        <h4 style="color:#059669; margin:0 0 0.5rem; font-size:0.9rem;"><i class="fa-solid fa-3"></i> Automatisez le DCA</h4>
+        <p style="font-size:0.8rem; color:#475569; margin:0;">Mettez en place un virement automatique mensuel. Oubliez le market timing.</p>
+      </div>
+    </div>
+
+    <p style="font-size:0.95rem; color:#475569; font-style:italic; margin:1rem 0 0;">Le meilleur portefeuille n'est pas le plus optimisé — c'est celui que vous maintiendrez sur 20 ans sans paniquer.</p>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les performances passées ne préjugent pas des performances futures.</li>
+    <li><i class="fa-solid fa-info-circle"></i> La fiscalité décrite correspond au droit français en vigueur en 2026 et peut évoluer.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/trader-etf/part5-leveraged-options/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">5. Leveraged & Options</div>
+  </div>
+</a>
+
+<a href="/" class="next-cta">
+  <div>
+    <div class="next-label">Série terminée</div>
+    <div class="next-title">Retour à l'accueil — Market Watch</div>
+  </div>
+  <i class="fa-solid fa-house"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/trader-etf/part1-comprendre-etf/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Comprendre les ETF</a>
+  <a href="/series/trader-etf/part2-classes-actifs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Classes d'Actifs</a>
+  <a href="/series/trader-etf/part3-thematiques-sectoriels/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Thématiques</a>
+  <a href="/series/trader-etf/part4-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Stratégies</a>
+  <a href="/series/trader-etf/part5-leveraged-options/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Leveraged & Options</a>
+  <a href="/series/trader-etf/part6-portefeuille-allocation/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#059669; color:white; border:1px solid #059669;">6. Portefeuille</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Trader les ETF</strong> — Partie 6/6 : Construire son Portefeuille ETF</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Portfolio Allocation Donuts
+(function(){
+  var dom = document.getElementById('chart-allocations');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{a}<br/>{b}: {c}%'},
+    legend:{bottom:0,data:['Actions','Obligations LT','Obligations MT','Or','Matières Premières','Cash','SCV'],textStyle:{fontSize:10}},
+    series:[
+      {
+        name:'60/40',type:'pie',radius:['25%','40%'],center:['16%','45%'],
+        label:{show:false},
+        data:[{value:60,name:'Actions',itemStyle:{color:'#2563eb'}},{value:40,name:'Obligations MT',itemStyle:{color:'#f59e0b'}}]
+      },
+      {
+        name:'All-Weather',type:'pie',radius:['25%','40%'],center:['39%','45%'],
+        label:{show:false},
+        data:[{value:30,name:'Actions',itemStyle:{color:'#2563eb'}},{value:40,name:'Obligations LT',itemStyle:{color:'#f97316'}},{value:15,name:'Obligations MT',itemStyle:{color:'#f59e0b'}},{value:7.5,name:'Or',itemStyle:{color:'#eab308'}},{value:7.5,name:'Matières Premières',itemStyle:{color:'#78716c'}}]
+      },
+      {
+        name:'Permanent',type:'pie',radius:['25%','40%'],center:['62%','45%'],
+        label:{show:false},
+        data:[{value:25,name:'Actions',itemStyle:{color:'#2563eb'}},{value:25,name:'Obligations LT',itemStyle:{color:'#f97316'}},{value:25,name:'Or',itemStyle:{color:'#eab308'}},{value:25,name:'Cash',itemStyle:{color:'#94a3b8'}}]
+      },
+      {
+        name:'Golden Butterfly',type:'pie',radius:['25%','40%'],center:['84%','45%'],
+        label:{show:false},
+        data:[{value:20,name:'Actions',itemStyle:{color:'#2563eb'}},{value:20,name:'SCV',itemStyle:{color:'#7c3aed'}},{value:20,name:'Obligations LT',itemStyle:{color:'#f97316'}},{value:20,name:'Obligations MT',itemStyle:{color:'#f59e0b'}},{value:20,name:'Or',itemStyle:{color:'#eab308'}}]
+      }
+    ],
+    title:[
+      {text:'60/40',left:'12%',top:'82%',textStyle:{fontSize:11,fontWeight:700,color:'#334155'},textAlign:'center'},
+      {text:'All-Weather',left:'35%',top:'82%',textStyle:{fontSize:11,fontWeight:700,color:'#334155'},textAlign:'center'},
+      {text:'Permanent',left:'58%',top:'82%',textStyle:{fontSize:11,fontWeight:700,color:'#334155'},textAlign:'center'},
+      {text:'Golden Butterfly',left:'80%',top:'82%',textStyle:{fontSize:11,fontWeight:700,color:'#334155'},textAlign:'center'}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Rebalancing Impact
+(function(){
+  var dom = document.getElementById('chart-rebalancing');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates = [];
+  var noRebal = [100], annual = [100], bands = [100];
+  var stockW = 0.6, bondW = 0.4;
+  var stockWnr = 0.6, bondWnr = 0.4;
+  var stockWb = 0.6, bondWb = 0.4;
+  for(var y=2005; y<=2025; y++){
+    for(var m=1; m<=12; m++){
+      if(y===2025 && m>2) break;
+      dates.push(y+'-'+(m<10?'0':'')+m);
+      // Monthly stock/bond returns
+      var sr, br;
+      if(y===2008){sr=-0.03+Math.random()*0.02; br=0.005+Math.random()*0.005;}
+      else if(y===2009 && m<=3){sr=-0.04+Math.random()*0.03; br=0.008;}
+      else if(y===2009){sr=0.04+Math.random()*0.015; br=-0.002;}
+      else if(y===2020 && m<=3){sr=-0.06+Math.random()*0.03; br=0.01;}
+      else if(y===2020){sr=0.03+Math.random()*0.015; br=0.002;}
+      else if(y===2022){sr=-0.01+Math.random()*0.015; br=-0.01+Math.random()*0.008;}
+      else {sr=0.01+Math.random()*0.012; br=0.002+Math.random()*0.003;}
+
+      // No rebalancing
+      var nrStock = noRebal[noRebal.length-1]*stockWnr*(1+sr);
+      var nrBond = noRebal[noRebal.length-1]*bondWnr*(1+br);
+      var nrTotal = nrStock + nrBond;
+      stockWnr = nrStock/nrTotal;
+      bondWnr = nrBond/nrTotal;
+      noRebal.push(parseFloat(nrTotal.toFixed(1)));
+
+      // Annual rebalancing
+      var aStock = annual[annual.length-1]*stockW*(1+sr);
+      var aBond = annual[annual.length-1]*bondW*(1+br);
+      var aTotal = aStock + aBond;
+      if(m===1) { stockW=0.6; bondW=0.4; }
+      else { stockW=aStock/aTotal; bondW=aBond/aTotal; }
+      annual.push(parseFloat(aTotal.toFixed(1)));
+
+      // Band rebalancing (5% threshold)
+      var bStock = bands[bands.length-1]*stockWb*(1+sr);
+      var bBond = bands[bands.length-1]*bondWb*(1+br);
+      var bTotal = bStock + bBond;
+      stockWb = bStock/bTotal;
+      bondWb = bBond/bTotal;
+      if(stockWb > 0.65 || stockWb < 0.55) { stockWb=0.6; bondWb=0.4; }
+      bands.push(parseFloat(bTotal.toFixed(1)));
+    }
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Sans rééquilibrage','Annuel','Bandes ±5%'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,interval:24,rotate:30}},
+    yAxis:{type:'value',name:'Valeur (base 100)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Sans rééquilibrage',type:'line',data:noRebal,smooth:true,symbol:'none',lineStyle:{color:'#94a3b8',width:2}},
+      {name:'Annuel',type:'line',data:annual,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:2.5}},
+      {name:'Bandes ±5%',type:'line',data:bands,smooth:true,symbol:'none',lineStyle:{color:'#059669',width:2.5}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Backtest Performance Comparison
+(function(){
+  var dom = document.getElementById('chart-backtest');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates = [];
+  var p6040=100, pAW=100, pPerm=100, pGB=100, p3F=100;
+  var d6040=[], dAW=[], dPerm=[], dGB=[], d3F=[];
+  for(var y=2005; y<=2025; y++){
+    for(var m=1; m<=12; m++){
+      if(y===2025 && m>2) break;
+      dates.push(y+'-'+(m<10?'0':'')+m);
+      var sr, br, gr, cr;
+      if(y===2008){sr=-0.03; br=0.005; gr=0.015; cr=-0.01;}
+      else if(y===2009&&m<=3){sr=-0.04; br=0.008; gr=0.02; cr=-0.02;}
+      else if(y===2009){sr=0.04; br=-0.002; gr=-0.005; cr=0.01;}
+      else if(y===2020&&m<=3){sr=-0.06; br=0.01; gr=0.015; cr=-0.03;}
+      else if(y===2020){sr=0.03; br=0.002; gr=0.005; cr=0.01;}
+      else if(y===2022){sr=-0.01; br=-0.01; gr=0.005; cr=-0.005;}
+      else{sr=0.01+Math.random()*0.008; br=0.002+Math.random()*0.002; gr=0.003+Math.random()*0.003; cr=0.001;}
+
+      p6040 *= (1 + 0.6*sr + 0.4*br);
+      pAW *= (1 + 0.3*sr + 0.55*br + 0.075*gr + 0.075*cr);
+      pPerm *= (1 + 0.25*sr + 0.25*br + 0.25*gr + 0.25*0.001);
+      pGB *= (1 + 0.4*sr + 0.2*br + 0.2*gr + 0.2*0.001);
+      p3F *= (1 + 0.7*sr + 0.1*br + 0.2*sr*0.9);
+
+      d6040.push(parseFloat(p6040.toFixed(1)));
+      dAW.push(parseFloat(pAW.toFixed(1)));
+      dPerm.push(parseFloat(pPerm.toFixed(1)));
+      dGB.push(parseFloat(pGB.toFixed(1)));
+      d3F.push(parseFloat(p3F.toFixed(1)));
+    }
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['60/40','All-Weather','Permanent','Golden Butterfly','3-Fund'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'18%'},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,interval:24,rotate:30}},
+    yAxis:{type:'value',name:'Valeur (base 100)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'60/40',type:'line',data:d6040,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:2}},
+      {name:'All-Weather',type:'line',data:dAW,smooth:true,symbol:'none',lineStyle:{color:'#f59e0b',width:2}},
+      {name:'Permanent',type:'line',data:dPerm,smooth:true,symbol:'none',lineStyle:{color:'#16a34a',width:2}},
+      {name:'Golden Butterfly',type:'line',data:dGB,smooth:true,symbol:'none',lineStyle:{color:'#9333ea',width:2}},
+      {name:'3-Fund',type:'line',data:d3F,smooth:true,symbol:'none',lineStyle:{color:'#059669',width:2.5}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

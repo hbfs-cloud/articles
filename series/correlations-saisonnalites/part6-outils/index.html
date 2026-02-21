@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils — Construire sa Boîte à Outils | Corrélations & Saisonnalités — Partie 6/6 | Market Watch</title>
+  <meta name="description" content="Série Corrélations & Saisonnalités — Partie 6/6 : Calculer les corrélations avec Excel et Python, Pine Script TradingView, outils gratuits, alertes, checklist pré-trade, et projet final de portfolio saisonnier.">
+  <meta property="og:title" content="Outils — Construire sa Boîte à Outils | Corrélations & Saisonnalités — Partie 6/6 | Market Watch">
+  <meta property="og:description" content="Python yfinance, Pine Script, MacroMicro, FRED, dashboard de corrélation, Z-score alerts, checklist pré-trade, et projet final de portfolio saisonnier.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/correlations-saisonnalites/part6-outils/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#0891b2; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#22d3ee; color:#22d3ee; }
+  .series-link.current { background:#0891b2; color:white; border-color:#0891b2; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfeff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#0891b2; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-teal { background:rgba(8,145,178,0.1); color:#0891b2; border:1px solid rgba(8,145,178,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0891b2; margin-right:0.75rem; }
+  details[open] summary { border-color:#0891b2; background:#ecfeff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#0891b2; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#22d3ee; }
+  .takeaway-box { background:linear-gradient(135deg, #ecfeff 0%, #a5f3fc 100%); border:1px solid #0891b2; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#0891b2; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(8,145,178,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#0891b2; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(8,145,178,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#0891b2; color:#0891b2; }
+  .disclaimer-mega { background:linear-gradient(135deg, #164e63 0%, #0e7490 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #0891b2; }
+  .disclaimer-mega h3 { color:#a5f3fc; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#cffafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#22d3ee; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #0891b2; }
+  .code-block { background:#0f172a; color:#e2e8f0; padding:1.5rem; border-radius:12px; font-family:'Courier New',monospace; font-size:0.82rem; line-height:1.7; overflow-x:auto; margin:1.5rem 0; white-space:pre; }
+  .code-block .comment { color:#64748b; }
+  .code-block .keyword { color:#22d3ee; }
+  .code-block .string { color:#a5f3fc; }
+  .code-block .function { color:#f97316; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+    .code-block { font-size:0.72rem; padding:1rem; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-link" style="margin-right:0.4rem;"></i> Corrélations & Saisonnalités</span>
+  <a href="/series/correlations-saisonnalites/part1-les-correlations/" class="series-link">1 — Corrélations</a>
+  <a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" class="series-link">2 — Or, Dollar, Taux</a>
+  <a href="/series/correlations-saisonnalites/part3-saisonnalites/" class="series-link">3 — Saisonnalités</a>
+  <a href="/series/correlations-saisonnalites/part4-crypto-cycles/" class="series-link">4 — Crypto Cycles</a>
+  <a href="/series/correlations-saisonnalites/part5-strategies/" class="series-link">5 — Stratégies</a>
+  <a href="/series/correlations-saisonnalites/part6-outils/" class="series-link current">6 — Outils</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-link" style="margin-right:0.4rem;"></i> Série Corrélations & Saisonnalités — Partie 6 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Outils — Construire sa Boîte à Outils</h1>
+  <p class="hero-subtitle">Du théorique au pratique. Python, Excel, TradingView, outils gratuits, alertes automatiques, et un projet final : construire votre propre portfolio saisonnier avec dashboard de corrélation.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-brands fa-python"></i> Python</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-table-cells"></i> Excel</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> TradingView</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-wrench"></i> Outils gratuits</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-bell"></i> Alertes</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#excel" class="nav-item"><i class="fa-solid fa-table-cells" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Excel</a>
+  <a href="#python" class="nav-item"><i class="fa-brands fa-python" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Python</a>
+  <a href="#tradingview" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> TradingView</a>
+  <a href="#outils-gratuits" class="nav-item"><i class="fa-solid fa-wrench" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Outils gratuits</a>
+  <a href="#alertes" class="nav-item"><i class="fa-solid fa-bell" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Alertes</a>
+  <a href="#checklist" class="nav-item"><i class="fa-solid fa-clipboard-check" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Checklist</a>
+  <a href="#projet-final" class="nav-item"><i class="fa-solid fa-trophy" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Projet Final</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : EXCEL                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="excel"><i class="fa-solid fa-table-cells" style="color:#16a34a;"></i> Calculer une corrélation dans Excel</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-table-cells" style="color:#16a34a;"></i> Excel : le point de départ</h2>
+
+  <p>Excel reste l'outil le plus accessible pour calculer des corrélations simples. Trois fonctions essentielles suffisent pour commencer.</p>
+
+  <h3>Les 3 fonctions essentielles</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Fonction</th><th>Syntaxe</th><th>Usage</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CORREL</strong></td>
+        <td><code>=CORREL(A2:A252, B2:B252)</code></td>
+        <td>Corrélation de Pearson entre 2 séries</td>
+        <td>Corrélation SPY/QQQ sur 1 an (252 jours)</td>
+      </tr>
+      <tr>
+        <td><strong>STDEV</strong></td>
+        <td><code>=STDEV(A2:A252)</code></td>
+        <td>Écart-type (volatilité) d'une série</td>
+        <td>Vol annuelle = STDEV(returns_daily) * SQRT(252)</td>
+      </tr>
+      <tr>
+        <td><strong>AVERAGE</strong></td>
+        <td><code>=AVERAGE(A2:A252)</code></td>
+        <td>Moyenne d'une série</td>
+        <td>Rendement moyen quotidien</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Étapes pour calculer une corrélation rolling dans Excel</h4>
+    <p style="margin:0;"><strong>1)</strong> Téléchargez les prix historiques (Yahoo Finance → "Download" CSV). <strong>2)</strong> Calculez les rendements quotidiens : <code>=(B3-B2)/B2</code> pour chaque actif. <strong>3)</strong> Appliquez CORREL sur une fenêtre glissante de 60 jours : <code>=CORREL(C2:C61, D2:D61)</code>, puis glissez la formule vers le bas. <strong>4)</strong> Créez un graphique en ligne pour visualiser l'évolution de la corrélation. <strong>Limite</strong> : Excel devient lent au-delà de 10,000 lignes et ne gère pas facilement les matrices de corrélation multi-actifs.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Piège courant : corrélation sur les prix vs les rendements</h4>
+    <p style="margin:0;">Ne <strong>jamais</strong> calculer la corrélation sur les prix bruts — toujours sur les <strong>rendements</strong> (returns). Pourquoi ? Deux actifs peuvent avoir des prix qui montent tous les deux (tendance haussière commune) avec une corrélation de prix de +0.99 tout en ayant des rendements journaliers non corrélés (+0.20). La corrélation de prix est trompeuse car elle capte la tendance commune, pas la relation réelle entre les mouvements quotidiens.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : PYTHON                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="python"><i class="fa-brands fa-python" style="color:#2563eb;"></i> Python : la puissance</div>
+
+<div class="content-card">
+  <h2><i class="fa-brands fa-python" style="color:#2563eb;"></i> Python + yfinance : corrélation rolling et matrice complète</h2>
+
+  <p>Python avec les librairies <strong>yfinance</strong>, <strong>pandas</strong> et <strong>matplotlib/seaborn</strong> est l'outil le plus puissant pour l'analyse de corrélation. Voici un script complet et réutilisable.</p>
+
+  <h3>Script 1 : Matrice de corrélation rolling</h3>
+
+  <div class="code-block"><span class="comment"># pip install yfinance pandas matplotlib seaborn</span>
+<span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+<span class="comment"># 1. Télécharger les données (2 ans)</span>
+tickers = [<span class="string">'SPY'</span>, <span class="string">'QQQ'</span>, <span class="string">'GLD'</span>, <span class="string">'TLT'</span>, <span class="string">'USO'</span>, <span class="string">'EEM'</span>]
+data = yf.download(tickers, period=<span class="string">'2y'</span>)[<span class="string">'Adj Close'</span>]
+
+<span class="comment"># 2. Calculer les rendements quotidiens</span>
+returns = data.pct_change().dropna()
+
+<span class="comment"># 3. Matrice de corrélation statique</span>
+corr_matrix = returns.corr()
+<span class="function">print</span>(corr_matrix.round(2))
+
+<span class="comment"># 4. Heatmap de la matrice</span>
+plt.figure(figsize=(10, 8))
+sns.heatmap(corr_matrix, annot=<span class="keyword">True</span>, cmap=<span class="string">'RdYlGn'</span>,
+            center=0, vmin=-1, vmax=1, fmt=<span class="string">'.2f'</span>)
+plt.title(<span class="string">'Matrice de corrélation (2 ans)'</span>)
+plt.tight_layout()
+plt.savefig(<span class="string">'correlation_matrix.png'</span>, dpi=150)
+plt.show()</div>
+
+  <h3>Script 2 : Corrélation rolling avec alertes Z-score</h3>
+
+  <div class="code-block"><span class="comment"># Corrélation rolling SPY/TLT avec détection d'anomalie</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="comment"># Corrélation rolling 60 jours</span>
+window = 60
+rolling_corr = returns[<span class="string">'SPY'</span>].rolling(window).corr(returns[<span class="string">'TLT'</span>])
+
+<span class="comment"># Calculer le Z-score de la corrélation</span>
+corr_mean = rolling_corr.rolling(252).mean()
+corr_std = rolling_corr.rolling(252).std()
+z_score = (rolling_corr - corr_mean) / corr_std
+
+<span class="comment"># Identifier les anomalies (|Z| > 2)</span>
+anomalies = z_score[z_score.abs() > 2]
+<span class="function">print</span>(<span class="string">f"Anomalies détectées: {len(anomalies)}"</span>)
+<span class="function">print</span>(anomalies.tail(10))
+
+<span class="comment"># Visualiser</span>
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
+ax1.plot(rolling_corr, color=<span class="string">'#0891b2'</span>, linewidth=1.5)
+ax1.axhline(y=0, color=<span class="string">'red'</span>, linestyle=<span class="string">'--'</span>, alpha=0.5)
+ax1.set_title(<span class="string">'Corrélation Rolling 60j SPY/TLT'</span>)
+ax1.set_ylabel(<span class="string">'Corrélation'</span>)
+
+ax2.plot(z_score, color=<span class="string">'#f97316'</span>, linewidth=1)
+ax2.axhline(y=2, color=<span class="string">'red'</span>, linestyle=<span class="string">'--'</span>)
+ax2.axhline(y=-2, color=<span class="string">'red'</span>, linestyle=<span class="string">'--'</span>)
+ax2.fill_between(z_score.index, 2, z_score.clip(lower=2),
+                 alpha=0.3, color=<span class="string">'red'</span>)
+ax2.set_title(<span class="string">'Z-Score de la corrélation'</span>)
+ax2.set_ylabel(<span class="string">'Z-Score'</span>)
+plt.tight_layout()
+plt.savefig(<span class="string">'rolling_correlation.png'</span>, dpi=150)
+plt.show()</div>
+
+  <h3>Script 3 : Analyse de saisonnalité</h3>
+
+  <div class="code-block"><span class="comment"># Rendement mensuel moyen + heatmap saisonnalité</span>
+spy = yf.download(<span class="string">'SPY'</span>, period=<span class="string">'20y'</span>)[<span class="string">'Adj Close'</span>]
+spy_monthly = spy.resample(<span class="string">'M'</span>).last().pct_change().dropna()
+spy_monthly.index = spy_monthly.index.to_period(<span class="string">'M'</span>)
+
+<span class="comment"># Rendement moyen par mois</span>
+monthly_avg = spy_monthly.groupby(spy_monthly.index.month).mean() * 100
+<span class="function">print</span>(<span class="string">"Rendement moyen par mois (%):"</span>)
+<span class="function">print</span>(monthly_avg.round(2))
+
+<span class="comment"># Créer la heatmap année × mois</span>
+pivot = spy_monthly.copy()
+pivot.index = pd.MultiIndex.from_arrays(
+    [pivot.index.year, pivot.index.month])
+pivot = pivot.unstack() * 100
+
+plt.figure(figsize=(14, 8))
+sns.heatmap(pivot, annot=<span class="keyword">True</span>, fmt=<span class="string">'.1f'</span>,
+            cmap=<span class="string">'RdYlGn'</span>, center=0, linewidths=0.5)
+plt.title(<span class="string">'Rendements mensuels SPY (%) par année'</span>)
+plt.xlabel(<span class="string">'Mois'</span>)
+plt.ylabel(<span class="string">'Année'</span>)
+plt.tight_layout()
+plt.savefig(<span class="string">'seasonality_heatmap.png'</span>, dpi=150)
+plt.show()</div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Installer l'environnement Python</h4>
+    <p style="margin:0;">Si vous n'avez pas Python, la manière la plus simple est d'installer <strong>Anaconda</strong> (anaconda.com) qui inclut Python, pandas, matplotlib et Jupyter Notebook. Puis installez yfinance et seaborn : <code>pip install yfinance seaborn</code>. Ouvrez Jupyter Notebook et collez les scripts ci-dessus. Alternativement, utilisez <strong>Google Colab</strong> (colab.research.google.com) — gratuit, rien à installer, il suffit d'un navigateur.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : TRADINGVIEW                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tradingview"><i class="fa-solid fa-chart-line" style="color:#f97316;"></i> TradingView & Pine Script</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#f97316;"></i> TradingView : visualisation et Pine Script</h2>
+
+  <p><strong>TradingView</strong> est la plateforme la plus populaire pour la visualisation de corrélations et de saisonnalité. Son langage <strong>Pine Script</strong> permet de créer des indicateurs personnalisés directement sur le graphique.</p>
+
+  <h3>Pine Script : indicateur de corrélation rolling</h3>
+
+  <div class="code-block"><span class="comment">// Pine Script v5 — Corrélation Rolling avec Z-Score</span>
+<span class="comment">// Collez ce code dans Pine Editor (TradingView)</span>
+
+//@version=5
+indicator(<span class="string">"Corrélation Rolling + Z-Score"</span>, overlay=false)
+
+<span class="comment">// Paramètres</span>
+symbol2 = input.symbol(<span class="string">"TLT"</span>, <span class="string">"Second actif"</span>)
+window = input.int(60, <span class="string">"Fenêtre corrélation"</span>, minval=10)
+z_window = input.int(252, <span class="string">"Fenêtre Z-Score"</span>, minval=60)
+
+<span class="comment">// Données</span>
+price1 = close
+price2 = request.security(symbol2, timeframe.period, close)
+ret1 = ta.change(price1) / price1[1]
+ret2 = ta.change(price2) / price2[1]
+
+<span class="comment">// Corrélation rolling</span>
+corr_val = ta.correlation(ret1, ret2, window)
+
+<span class="comment">// Z-Score de la corrélation</span>
+corr_avg = ta.sma(corr_val, z_window)
+corr_dev = ta.stdev(corr_val, z_window)
+z_score = (corr_val - corr_avg) / corr_dev
+
+<span class="comment">// Affichage</span>
+plot(corr_val, <span class="string">"Corrélation"</span>, color=color.teal, linewidth=2)
+hline(0, <span class="string">"Zéro"</span>, color=color.gray, linestyle=hline.style_dashed)
+hline(0.5, <span class="string">"+0.5"</span>, color=color.green, linestyle=hline.style_dotted)
+hline(-0.5, <span class="string">"-0.5"</span>, color=color.red, linestyle=hline.style_dotted)
+
+<span class="comment">// Alertes Z-Score</span>
+bgcolor(z_score > 2 ? color.new(color.red, 85) : na)
+bgcolor(z_score < -2 ? color.new(color.green, 85) : na)
+alertcondition(math.abs(z_score) > 2, <span class="string">"Corrélation anormale"</span>)</div>
+
+  <h3>Indicateurs TradingView utiles (gratuits)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Indicateur</th><th>Auteur</th><th>Usage</th><th>Comment y accéder</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Correlation Coefficient</strong></td>
+        <td>Built-in</td>
+        <td>Corrélation vs un autre symbole</td>
+        <td>Indicateurs → Built-in → Correlation Coefficient</td>
+      </tr>
+      <tr>
+        <td><strong>Seasonality</strong></td>
+        <td>TradingView</td>
+        <td>Rendement mensuel moyen historique</td>
+        <td>Indicateurs → rechercher "Seasonality"</td>
+      </tr>
+      <tr>
+        <td><strong>Market Correlation</strong></td>
+        <td>LuxAlgo</td>
+        <td>Matrice de corrélation multi-actifs</td>
+        <td>Community Scripts → "Market Correlation"</td>
+      </tr>
+      <tr>
+        <td><strong>VIX Term Structure</strong></td>
+        <td>Diverses</td>
+        <td>Contango/backwardation du VIX</td>
+        <td>Community Scripts → "VIX Term Structure"</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : OUTILS GRATUITS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="outils-gratuits"><i class="fa-solid fa-wrench" style="color:#9333ea;"></i> Outils gratuits</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wrench" style="color:#9333ea;"></i> Les meilleurs outils gratuits</h2>
+
+  <p>Vous n'avez pas besoin d'un terminal Bloomberg pour analyser les corrélations et la saisonnalité. Voici les <strong>meilleurs outils gratuits</strong> classés par usage.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#0891b2; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-area"></i></div>
+      <h4 style="margin:0 0 0.5rem;">MacroMicro.me</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Le meilleur outil gratuit pour les corrélations macro. Graphiques interactifs avec overlay multi-actifs, corrélation automatique, et données remontant à 50+ ans. Idéal pour Or/DXY, Taux/Actions, Yield Curve.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-database"></i></div>
+      <h4 style="margin:0 0 0.5rem;">FRED (St. Louis Fed)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">La base de données économique de la Fed de St. Louis. 800,000+ séries temporelles gratuites. Taux, inflation, emploi, spread 2Y-10Y, TIPS. Export CSV pour vos analyses Python/Excel.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem;"><i class="fa-solid fa-calendar-alt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">SeasonalCharts.de</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Graphiques de saisonnalité pour actions, indices, matières premières et devises. Pattern mensuel moyen sur 5, 10, 20 ans. Gratuit et simple d'utilisation. Parfait pour valider vos hypothèses saisonnières.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-map"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Finviz</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Screener d'actions avec heatmap sectorielle gratuite. Visualisez la rotation sectorielle en temps réel. La heatmap montre la performance relative de chaque secteur et sous-secteur.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-pie"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Portfolio Visualizer</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Backtesting gratuit de portefeuilles avec matrice de corrélation, frontière efficiente, et analyse risk parity. Entrez vos tickers et obtenez instantanément corrélations, drawdowns, et métriques.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-link"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Glassnode / CryptoQuant (free tier)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Indicateurs on-chain gratuits (version limitée) : MVRV, SOPR, NUPL, Fear & Greed Index. Suffisant pour suivre le cycle BTC. Le plan gratuit offre les données essentielles avec 24h de délai.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : ALERTES                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="alertes"><i class="fa-solid fa-bell" style="color:#dc2626;"></i> Alertes : quand une corrélation casse</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bell" style="color:#dc2626;"></i> Configurer des alertes automatiques</h2>
+
+  <p>La surveillance continue des corrélations est essentielle. Plutôt que de vérifier manuellement chaque jour, configurez des <strong>alertes automatiques</strong> qui vous préviennent quand une corrélation sort de sa zone normale.</p>
+
+  <h3>Les 3 types d'alertes à configurer</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Alerte 1 : Z-Score de corrélation > 2.0</strong>
+        <span class="badge badge-red">Critique</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand la corrélation rolling 60j entre deux actifs dévie de plus de 2 écarts-types de sa moyenne 1 an. <strong>Action</strong> : examiner le catalyseur, évaluer si c'est temporaire ou structurel. Si temporaire → opportunité de pairs trade. Configurable dans TradingView (Pine Script alertcondition) ou via script Python avec notification email/Telegram.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f59e0b;">Alerte 2 : Changement de signe de corrélation</strong>
+        <span class="badge badge-blue">Important</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand une corrélation passe de positive à négative (ou inverse). Exemple : SPY/TLT passant de -0.30 à +0.20. <strong>Action</strong> : réévaluer la couverture du portefeuille. Si la corrélation SPY/TLT est positive, les obligations ne protègent plus — envisager d'autres hedges (or, VIX, cash).</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Alerte 3 : Seuil saisonnier atteint</strong>
+        <span class="badge badge-green">Planifié</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Alertes calendaires pour les événements saisonniers : 1er mai (évaluer Sell in May), 3ème vendredi de chaque trimestre (Triple Witching), 26 décembre (début Santa Rally). <strong>Action</strong> : exécuter la checklist pré-trade saisonnière (section suivante). Utilisez Google Calendar ou un simple rappel smartphone.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Script Python d'alerte automatique (via email)</h4>
+    <p style="margin:0;">Combinez les scripts de la section précédente avec la librairie <code>smtplib</code> de Python pour envoyer un email automatique quand le Z-score dépasse 2.0. Planifiez le script avec <code>cron</code> (Linux/Mac) ou Task Scheduler (Windows) pour qu'il s'exécute chaque jour à 18h (après la clôture). Coût : $0. Temps de setup : 30 minutes. Alternativement, utilisez <strong>IFTTT</strong> ou <strong>Zapier</strong> avec TradingView Webhooks pour des notifications push sur votre téléphone.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : CHECKLIST                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="checklist"><i class="fa-solid fa-clipboard-check" style="color:#0891b2;"></i> Checklist pré-trade</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clipboard-check" style="color:#0891b2;"></i> La checklist pré-trade basée sur les corrélations</h2>
+
+  <p>Avant chaque trade, vérifiez ces points pour vous assurer que les corrélations et la saisonnalité sont en votre faveur. Cette checklist systématique réduit les décisions émotionnelles.</p>
+
+  <div style="padding:2rem; background:white; border:2px solid #0891b2; border-radius:16px; margin:2rem 0;">
+    <h3 style="color:#0891b2; margin:0 0 1.5rem;"><i class="fa-solid fa-clipboard-check"></i> Checklist en 8 points</h3>
+
+    <div style="display:grid; grid-template-columns:1fr; gap:1rem;">
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">1</div>
+        <div><strong>Corrélation du sous-jacent avec SPY</strong> — Quel est le bêta effectif ? Si corrélé à +0.80, un crash SPY emportera votre position.</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">2</div>
+        <div><strong>Position dans le calendrier saisonnier</strong> — Sommes-nous dans la "bonne" saison pour ce secteur/actif ? (cf. heatmap sectorielle, Partie 3).</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">3</div>
+        <div><strong>DXY direction</strong> — Le dollar est-il en hausse ou en baisse ? Impact sur commodities, EM, or (cf. Partie 2).</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">4</div>
+        <div><strong>VIX et volatilité implicite</strong> — Le VIX est-il dans sa zone saisonnière normale ? Une IV élevée = options chères (vendre de la vol), IV basse = acheter de la protection.</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">5</div>
+        <div><strong>Corrélation SPY/TLT actuelle</strong> — Négative = diversification fonctionne. Positive = attention, les obligations ne protègent pas.</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">6</div>
+        <div><strong>OpEx prochain</strong> — Y a-t-il une expiration d'options majeure dans les 5 jours ? Si oui, méfiez-vous du pin risk et du gamma squeeze.</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">7</div>
+        <div><strong>Phase du cycle Fed</strong> — Hausse, plateau, ou baisse de taux ? Quel impact sur votre classe d'actifs ? (cf. Partie 2).</div>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:1rem; padding:0.75rem; background:#f8fafc; border-radius:12px;">
+        <div style="width:32px; height:32px; background:#0891b2; color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">8</div>
+        <div><strong>Convergence des signaux</strong> — Combien de facteurs (corrélation, saisonnalité, macro, technique) pointent dans la même direction ? Minimum 3/4 pour un trade de conviction.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Imprimez cette checklist</h4>
+    <p style="margin:0;">La meilleure pratique est d'<strong>imprimer cette checklist et de la garder à côté de votre écran</strong>. Avant chaque trade, cochez les 8 points. Si 6+ sont favorables, le trade a un bon contexte. Si seulement 3-4 sont favorables, réduisez la taille de la position. Si moins de 3, passez votre tour. Cette discipline simple élimine 70% des trades perdants liés à un mauvais timing ou un contexte défavorable.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : PROJET FINAL                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="projet-final"><i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Projet Final</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Projet : construire votre portfolio saisonnier</h2>
+
+  <p>Pour mettre en pratique tout ce que vous avez appris dans cette série, voici un projet complet : construire un <strong>portfolio saisonnier avec dashboard de corrélation</strong>.</p>
+
+  <h3>Architecture du portfolio</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Composante</th><th>Pondération</th><th>Ajustement saisonnier</th><th>ETF</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Actions US Large Caps</strong></td>
+        <td>40%</td>
+        <td>-10% en Mai-Oct si momentum faible</td>
+        <td>SPY ou VOO</td>
+      </tr>
+      <tr>
+        <td><strong>Obligations US Long</strong></td>
+        <td>20%</td>
+        <td>+5% si corrélation SPY/TLT < -0.20</td>
+        <td>TLT ou IEF</td>
+      </tr>
+      <tr>
+        <td><strong>Or</strong></td>
+        <td>10%</td>
+        <td>+5% si taux réels en baisse</td>
+        <td>GLD ou IAU</td>
+      </tr>
+      <tr>
+        <td><strong>Rotation Sectorielle</strong></td>
+        <td>15%</td>
+        <td>Selon la saison (cf. Partie 3 & 5)</td>
+        <td>XLE, XLK, XLY, XLU</td>
+      </tr>
+      <tr>
+        <td><strong>Small Caps</strong></td>
+        <td>10%</td>
+        <td>+5% en Jan, -5% en Mai-Oct</td>
+        <td>IWM</td>
+      </tr>
+      <tr>
+        <td><strong>Cash / T-Bills</strong></td>
+        <td>5%</td>
+        <td>+10% quand VIX < 12 (complacency)</td>
+        <td>BIL ou SHV</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHART: Dashboard mockup -->
+  <h3>Dashboard de suivi : les 4 métriques à surveiller</h3>
+  <div id="chart-dashboard" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <h3>Rééquilibrage mensuel en 5 étapes</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:0.75rem; margin:1.5rem 0;">
+    <div style="display:flex; align-items:flex-start; gap:1rem; padding:1rem; background:#ecfeff; border:1px solid #0891b2; border-radius:12px;">
+      <div style="width:36px; height:36px; background:#0891b2; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; font-size:0.9rem;">1</div>
+      <div><strong>Calculer la matrice de corrélation rolling 60j</strong> (Python ou TradingView). Noter les changements significatifs depuis le mois dernier.</div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:1rem; padding:1rem; background:#ecfeff; border:1px solid #0891b2; border-radius:12px;">
+      <div style="width:36px; height:36px; background:#0891b2; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; font-size:0.9rem;">2</div>
+      <div><strong>Vérifier la saisonnalité du mois prochain</strong> (SeasonalCharts). Identifier les secteurs en saison haute et les risques saisonniers (OpEx, septembre, etc.).</div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:1rem; padding:1rem; background:#ecfeff; border:1px solid #0891b2; border-radius:12px;">
+      <div style="width:36px; height:36px; background:#0891b2; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; font-size:0.9rem;">3</div>
+      <div><strong>Vérifier les alertes Z-score</strong>. Des corrélations anormales ? Des opportunités de pairs trade ? Des changements de signe à surveiller ?</div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:1rem; padding:1rem; background:#ecfeff; border:1px solid #0891b2; border-radius:12px;">
+      <div style="width:36px; height:36px; background:#0891b2; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; font-size:0.9rem;">4</div>
+      <div><strong>Appliquer les ajustements saisonniers</strong>. Modifier les pondérations selon le mois (rotation sectorielle, Sell in May si applicable, January Effect).</div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:1rem; padding:1rem; background:#ecfeff; border:1px solid #0891b2; border-radius:12px;">
+      <div style="width:36px; height:36px; background:#0891b2; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; font-size:0.9rem;">5</div>
+      <div><strong>Exécuter et documenter</strong>. Passer les ordres de rééquilibrage. Tenir un journal avec les raisons de chaque ajustement. Revoir la performance chaque trimestre.</div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Commencez petit, itérez</h4>
+    <p style="margin:0;">Ne construisez pas le portfolio complet dès le premier jour. <strong>Mois 1</strong> : créez le dashboard Python (matrice de corrélation + saisonnalité). <strong>Mois 2</strong> : configurez les alertes Z-score. <strong>Mois 3</strong> : commencez avec un paper trading du portfolio saisonnier. <strong>Mois 4-6</strong> : investissez avec de petites positions et observez. <strong>Après 6 mois</strong> : ajustez les paramètres selon vos observations et montez en taille progressivement. La patience et la discipline sont plus importantes que la stratégie elle-même.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz Final — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Pourquoi faut-il calculer la corrélation sur les rendements et non sur les prix bruts ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Les prix bruts captent la tendance commune, pas la relation réelle entre les mouvements quotidiens.</strong><br>
+      Deux actifs en tendance haussière auront une corrélation de prix proche de +1.0 même si leurs mouvements journaliers sont indépendants. Les rendements (returns = variation en %) éliminent cette tendance commune et mesurent la véritable co-mouvement. En finance quantitative, toutes les corrélations sont calculées sur les rendements logarithmiques ou arithmétiques, jamais sur les prix bruts.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est la meilleure plateforme gratuite pour visualiser la corrélation entre l'or et le dollar sur 20 ans ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : MacroMicro.me (macromicro.me).</strong><br>
+      MacroMicro offre des graphiques interactifs avec overlay multi-actifs et calcul de corrélation automatique. Les données remontent à 50+ ans pour les actifs majeurs. C'est l'outil gratuit le plus complet pour l'analyse macro. FRED (Federal Reserve Economic Data) est la meilleure alternative pour les données brutes (taux, inflation, yield curve) mais est moins visuel.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Dans la checklist pré-trade, combien de facteurs favorables sont nécessaires minimum pour un trade de conviction ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Au moins 3 sur 4 facteurs principaux (corrélation, saisonnalité, macro, technique) doivent pointer dans la même direction.</strong><br>
+      Si 6+ des 8 points de la checklist sont favorables, le trade a un excellent contexte. Si seulement 3-4 sont favorables, réduisez la taille de la position. Si moins de 3, passez votre tour. La convergence des signaux est le principe fondamental : un signal isolé est faible, mais 3-4 signaux convergents créent une probabilité élevée de succès.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Comment configurer une alerte automatique quand la corrélation SPY/TLT change de signe ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Trois méthodes possibles, de la plus simple à la plus avancée.</strong><br>
+      <strong>1) TradingView</strong> : utilisez le Pine Script avec alertcondition() qui se déclenche quand la corrélation rolling 60j passe de négatif à positif (ou inversement). <strong>2) Python + cron</strong> : un script qui calcule la corrélation rolling chaque soir et envoie un email via smtplib si le signe a changé. <strong>3) Webhook</strong> : TradingView peut envoyer un webhook vers IFTTT/Zapier pour une notification push sur votre téléphone. La méthode TradingView est la plus rapide à mettre en place (5 minutes avec le Pine Script fourni dans cette partie).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quelle est l'erreur la plus courante des débutants qui utilisent les corrélations pour investir ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Traiter la corrélation comme une constante alors qu'elle change de régime.</strong><br>
+      L'erreur la plus fréquente est de prendre une corrélation historique moyenne (ex: SPY/TLT = -0.30) et de supposer qu'elle sera toujours valide. En 2022, cette corrélation est passée à +0.50. Un investisseur qui comptait sur TLT pour protéger son portefeuille d'actions a été doublement pénalisé. La corrélation est un animal vivant : elle varie dans le temps, change selon le régime de marché, et peut s'inverser brusquement. Il faut la surveiller en continu (rolling 60j) et adapter sa stratégie en conséquence.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#0891b2;"></i> À retenir — Conclusion de la série</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie (et de la série)</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-table-cells"></i> <strong>Toujours corrélation sur les rendements, jamais les prix</strong> — piège numéro 1 des débutants. Les prix captent la tendance, les rendements captent le co-mouvement réel.</li>
+      <li><i class="fa-brands fa-python"></i> <strong>Python + yfinance = la boîte à outils idéale</strong> — matrice de corrélation, rolling, Z-score, et saisonnalité en quelques lignes de code. Gratuit et puissant.</li>
+      <li><i class="fa-solid fa-chart-line"></i> <strong>TradingView + Pine Script pour le suivi temps réel</strong> — corrélation rolling avec alertes directement sur le graphique. Le Pine Script fourni est prêt à l'emploi.</li>
+      <li><i class="fa-solid fa-wrench"></i> <strong>MacroMicro, FRED et SeasonalCharts sont gratuits et suffisants</strong> — pas besoin d'un terminal Bloomberg pour suivre les corrélations macro et la saisonnalité.</li>
+      <li><i class="fa-solid fa-bell"></i> <strong>Automatisez vos alertes</strong> — Z-score > 2, changement de signe, dates saisonnières. Ne surveillez pas manuellement, laissez la technologie faire le travail.</li>
+      <li><i class="fa-solid fa-clipboard-check"></i> <strong>La checklist pré-trade en 8 points élimine 70% des erreurs</strong> — corrélation, saisonnalité, DXY, VIX, SPY/TLT, OpEx, cycle Fed, convergence.</li>
+      <li><i class="fa-solid fa-trophy"></i> <strong>Commencez petit, documentez tout, itérez</strong> — dashboard en mois 1, alertes en mois 2, paper trading en mois 3-4, positions réelles à partir du mois 5-6.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les scripts et outils présentés sont fournis à titre indicatif. Testez-les en paper trading avant tout usage réel.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/correlations-saisonnalites/part5-strategies/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">5. Stratégies</div>
+  </div>
+</a>
+
+<a href="/" class="next-cta">
+  <div>
+    <div class="next-label">Série terminée</div>
+    <div class="next-title"><i class="fa-solid fa-house" style="margin-right:0.5rem;"></i> Retour à l'accueil — Market Watch</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/correlations-saisonnalites/part1-les-correlations/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Corrélations</a>
+  <a href="/series/correlations-saisonnalites/part2-or-dollar-taux/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Or, Dollar, Taux</a>
+  <a href="/series/correlations-saisonnalites/part3-saisonnalites/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Saisonnalités</a>
+  <a href="/series/correlations-saisonnalites/part4-crypto-cycles/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Crypto Cycles</a>
+  <a href="/series/correlations-saisonnalites/part5-strategies/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Stratégies</a>
+  <a href="/series/correlations-saisonnalites/part6-outils/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#0891b2; color:white; border:1px solid #0891b2;">6. Outils</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Corrélations & Saisonnalités</strong> — Partie 6/6 : Outils</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART: Dashboard mockup - 4 gauges
+(function(){
+  var dom = document.getElementById('chart-dashboard');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    series: [
+      {
+        type: 'gauge',
+        center: ['25%', '50%'],
+        radius: '70%',
+        startAngle: 200,
+        endAngle: -20,
+        min: -1,
+        max: 1,
+        title: { show: true, offsetCenter: [0, '80%'], fontSize: 12, fontWeight: 700, color: '#334155' },
+        detail: { show: true, offsetCenter: [0, '55%'], fontSize: 18, fontWeight: 800, color: '#0891b2',
+          formatter: function(v){ return v.toFixed(2); }
+        },
+        data: [{ value: -0.28, name: 'Corr SPY/TLT' }],
+        axisLine: { lineStyle: { width: 12, color: [[0.3, '#dc2626'], [0.5, '#f59e0b'], [0.7, '#94a3b8'], [1, '#16a34a']] }},
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { show: false },
+        pointer: { width: 4, length: '60%', itemStyle: { color: '#0f172a' }},
+        progress: { show: false }
+      },
+      {
+        type: 'gauge',
+        center: ['75%', '50%'],
+        radius: '70%',
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 50,
+        title: { show: true, offsetCenter: [0, '80%'], fontSize: 12, fontWeight: 700, color: '#334155' },
+        detail: { show: true, offsetCenter: [0, '55%'], fontSize: 18, fontWeight: 800, color: '#0891b2',
+          formatter: function(v){ return v.toFixed(1); }
+        },
+        data: [{ value: 17.5, name: 'VIX' }],
+        axisLine: { lineStyle: { width: 12, color: [[0.3, '#16a34a'], [0.5, '#f59e0b'], [0.7, '#f97316'], [1, '#dc2626']] }},
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { show: false },
+        pointer: { width: 4, length: '60%', itemStyle: { color: '#0f172a' }},
+        progress: { show: false }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manipulations & Pièges — Protéger son Capital | Chasser en Meute — Partie 5/6 | Market Watch</title>
+  <meta name="description" content="Série Chasser en Meute — Partie 5/6 : Pump & dump, short & distort, spoofing, wash trading, rug pulls, influenceurs payés, DYOR et psychologie de la manipulation.">
+  <meta property="og:title" content="Manipulations & Pièges — Protéger son Capital | Chasser en Meute — Partie 5/6 | Market Watch">
+  <meta property="og:description" content="Pump & dump, short & distort, spoofing, wash trading, rug pulls, front-running, MEV — toutes les manipulations de marché et comment s'en protéger.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/chasser-en-meute/part5-manipulation-pieges/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#7c3aed; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#a78bfa; color:#a78bfa; }
+  .series-link.current { background:#7c3aed; color:white; border-color:#7c3aed; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-purple { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+  details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#7c3aed; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#a78bfa; }
+  .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ddd6fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#7c3aed; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta, .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover, .prev-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+  .next-cta .next-label, .prev-cta .prev-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title, .prev-cta .prev-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i, .prev-cta i { font-size:1.5rem; }
+  .prev-cta { background:linear-gradient(135deg, #475569 0%, #334155 100%); }
+  .prev-cta:hover { box-shadow:0 12px 30px rgba(71,85,105,0.3); }
+  .disclaimer-mega { background:linear-gradient(135deg, #2e1065 0%, #4c1d95 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #7c3aed; }
+  .disclaimer-mega h3 { color:#c4b5fd; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#ddd6fe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#a78bfa; margin-top:0.2rem; flex-shrink:0; }
+  .timeline { position:relative; padding-left:2rem; }
+  .timeline::before { content:''; position:absolute; left:0.75rem; top:0; bottom:0; width:2px; background:linear-gradient(180deg, #dc2626, #f97316, #f59e0b); }
+  .timeline-item { position:relative; margin-bottom:2rem; padding-left:1.5rem; }
+  .timeline-item::before { content:''; position:absolute; left:-1.55rem; top:0.5rem; width:12px; height:12px; border-radius:50%; background:#dc2626; border:3px solid #fef2f2; }
+  .timeline-date { font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; }
+  .timeline-title { font-size:1rem; font-weight:700; color:#0f172a; margin:0.25rem 0; }
+  .timeline-desc { font-size:0.88rem; color:#475569; line-height:1.6; }
+
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .brand-logo { font-size:0.9rem; }
+    .series-title { font-size:0.65rem; margin-right:0.5rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+    .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+    .next-cta, .prev-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .brand-logo { font-size:0.85rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+    .hero-badges { gap:0.4rem; margin-top:1rem; }
+    .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-users" style="margin-right:0.4rem;"></i> Chasser en Meute</span>
+  <a href="/series/chasser-en-meute/part1-pouvoir-foule/" class="series-link">1 — La Foule</a>
+  <a href="/series/chasser-en-meute/part2-reseaux-sociaux/" class="series-link">2 — Réseaux</a>
+  <a href="/series/chasser-en-meute/part3-telegram-discord/" class="series-link">3 — Telegram</a>
+  <a href="/series/chasser-en-meute/part4-analystes-institutions/" class="series-link">4 — Smart Money</a>
+  <a href="/series/chasser-en-meute/part5-manipulation-pieges/" class="series-link current">5 — Pièges</a>
+  <a href="/series/chasser-en-meute/part6-construire-reseau/" class="series-link">6 — Réseau</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-users" style="margin-right:0.4rem;"></i> Série Chasser en Meute — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Manipulations & Pièges — Protéger son Capital</h1>
+  <p class="hero-subtitle">Pump & dump, short & distort, spoofing, wash trading, rug pulls, influenceurs payés, front-running, MEV — toutes les manipulations et comment s'en protéger.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-skull-crossbones"></i> Pump & Dump</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-ghost"></i> Spoofing</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-bug"></i> Rug Pulls</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-shield-halved"></i> Protection</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-magnifying-glass"></i> DYOR</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#pumpdump" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pump & Dump</a>
+  <a href="#shortdistort" class="nav-item"><i class="fa-solid fa-newspaper" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Short & Distort</a>
+  <a href="#spoofing" class="nav-item"><i class="fa-solid fa-ghost" style="color:#7c3aed; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Spoofing</a>
+  <a href="#rugpull" class="nav-item"><i class="fa-solid fa-bug" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rug Pulls</a>
+  <a href="#influenceurs" class="nav-item"><i class="fa-solid fa-star" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Influenceurs</a>
+  <a href="#dyor" class="nav-item"><i class="fa-solid fa-magnifying-glass" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> DYOR</a>
+  <a href="#psycho" class="nav-item"><i class="fa-solid fa-brain" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Psychologie</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<div class="section-divider" id="disclaimer"><i class="fa-solid fa-triangle-exclamation" style="color:#7c3aed;"></i> Avertissement Important</div>
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT — CETTE SÉRIE EST STRICTEMENT ÉDUCATIVE</h3>
+  <ul>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Les manipulations de marché sont ILLÉGALES.</strong> Ce contenu est purement éducatif pour vous aider à les IDENTIFIER et les ÉVITER, jamais à y participer.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Pump & dump, spoofing, wash trading sont des délits pénaux</strong> pouvant entraîner des amendes et des peines de prison.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Si vous soupçonnez une manipulation, signalez-la</strong> à la SEC (sec.gov/tcr), l'AMF (amf-france.org), ou le régulateur de votre juridiction.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Ne jamais investir de l'argent que vous ne pouvez pas perdre.</strong></li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Consultez un conseiller financier agréé avant toute décision d'investissement.</strong></li>
+  </ul>
+</div>
+
+
+<!-- SECTION 1: PUMP & DUMP -->
+<div class="section-divider" id="pumpdump"><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Pump & Dump — L'Arnaque Classique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Anatomie complète d'un pump & dump</h2>
+
+  <p>Le pump & dump est la plus ancienne manipulation de marché. Du "bucket shop" des années 1920 aux groupes Telegram crypto de 2024, le mécanisme est identique : <strong>accumuler à bas prix, créer un battage médiatique artificiel, vendre dans la hausse provoquée par les pigeons</strong>. Seule la technologie change.</p>
+
+  <div class="timeline" style="margin:2rem 0;">
+    <div class="timeline-item">
+      <div class="timeline-date">Phase 1 : Sélection & Accumulation (semaines)</div>
+      <div class="timeline-title">Les manipulateurs choisissent leur cible</div>
+      <div class="timeline-desc">Critères : faible capitalisation (<$50M), faible liquidité (volume quotidien <$500K), float réduit (<10M actions). Ils accumulent discrètement sur plusieurs semaines via des achats fractionnés pour ne pas alerter. Coût moyen d'accumulation : souvent 30-50% en dessous du prix de marché.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">Phase 2 : Création du narratif (jours)</div>
+      <div class="timeline-title">Construction de la "thèse" d'investissement</div>
+      <div class="timeline-desc">Création de faux DD posts Reddit, tweets de comptes bots, messages Telegram "insider info", vidéos YouTube sponsorisées. Le narratif est toujours séduisant : "contrat gouvernemental imminent", "FDA approval", "partenariat avec Tesla". Tout est faux ou massivement exagéré.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">Phase 3 : Le Pump (heures à jours)</div>
+      <div class="timeline-title">L'excitation artificielle atteint son paroxysme</div>
+      <div class="timeline-desc">Coordination massive : bots Twitter, shills Reddit, messages Telegram urgents. Le volume explose, le prix monte de +100% à +1000%. Les médias reprennent la hausse ("la prochaine GameStop ?"). Le FOMO du retail fait le reste. Les manipulateurs vendent progressivement dans la hausse.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">Phase 4 : Le Dump (heures)</div>
+      <div class="timeline-title">L'effondrement brutal</div>
+      <div class="timeline-desc">Les manipulateurs ont vendu. Le volume s'effondre. Le prix chute de 70-95% en quelques heures. Les "diamond hands" de Reddit sont piégés. Le titre retourne à son niveau pré-pump, souvent plus bas. Les pertes des victimes sont permanentes — il n'y a pas de "rebond".</div>
+    </div>
+  </div>
+
+  <!-- Chart: Pump & Dump réel -->
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem; margin:2rem 0;">
+    <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;"><i class="fa-solid fa-chart-area"></i> Anatomie d'un pump & dump — Phases de prix et de volume</div>
+    <div id="chart-pnd" style="width:100%; height:400px;"></div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Comment identifier un pump & dump en 5 secondes</h4>
+    <p style="margin:0;">Si une action inconnue monte de <strong>+100% en une journée</strong> sans news fondamentale vérifiable (SEC filing, communiqué de presse officiel), avec un <strong>spike de mentions sur les réseaux sociaux</strong>, et une <strong>capitalisation <$100M</strong> — c'est presque certainement un pump & dump. La question n'est pas SI ça va redescendre, mais QUAND. Ne touchez pas. Jamais. Même si vous pensez pouvoir "sortir à temps".</p>
+  </div>
+</div>
+
+
+<!-- SECTION 2: SHORT & DISTORT -->
+<div class="section-divider" id="shortdistort"><i class="fa-solid fa-newspaper" style="color:#f97316;"></i> Short & Distort — L'Arme des Short-Sellers</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-newspaper" style="color:#f97316;"></i> Hindenburg, Muddy Waters, Citron : les rapports assassins</h2>
+
+  <p>Le "Short & Distort" est le miroir inversé du pump & dump : un short-seller prend une position short, puis publie un rapport dévastateur pour faire baisser le prix et profiter de la chute. C'est légal (tant que les informations sont véridiques) mais éthiquement ambigu — et parfois, les rapports contiennent des exagérations ou des erreurs.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Short-Seller</th>
+        <th>Cas célèbre</th>
+        <th>Impact prix</th>
+        <th>Avaient-ils raison ?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Hindenburg Research</strong></td>
+        <td>Adani Group (2023)</td>
+        <td style="color:#dc2626;">-65% en 2 semaines</td>
+        <td>Partiellement — fraude comptable confirmée</td>
+      </tr>
+      <tr>
+        <td><strong>Muddy Waters</strong></td>
+        <td>Luckin Coffee (2020)</td>
+        <td style="color:#dc2626;">-95% puis delisting</td>
+        <td>Oui — fraude massive confirmée</td>
+      </tr>
+      <tr>
+        <td><strong>Citron Research</strong></td>
+        <td>GameStop (2021)</td>
+        <td style="color:#10b981;">+1,600% (short squeeze)</td>
+        <td>Tort — le retail a retourné le trade</td>
+      </tr>
+      <tr>
+        <td><strong>Hindenburg Research</strong></td>
+        <td>Nikola (2020)</td>
+        <td style="color:#dc2626;">-90%+</td>
+        <td>Oui — le CEO condamné pour fraude</td>
+      </tr>
+      <tr>
+        <td><strong>Muddy Waters</strong></td>
+        <td>Sino-Forest (2011)</td>
+        <td style="color:#dc2626;">-100% (faillite)</td>
+        <td>Oui — fraude totale, $3Mds évaporés</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment réagir à un rapport de short-seller</h4>
+    <p style="margin:0;">Règle numéro 1 : <strong>ne paniquez PAS</strong> et ne vendez pas dans les premières heures. Les short-sellers publient leurs rapports APRÈS avoir pris leur position short — la première chute est leur profit, pas votre signal. Attendez 48-72h, lisez le rapport complet, vérifiez les allégations avec les SEC filings, et évaluez : l'allégation est-elle fondée ? L'entreprise a-t-elle répondu de manière crédible ? Historiquement, ~60% des rapports de short-sellers de qualité (Hindenburg, Muddy Waters) s'avèrent au moins partiellement corrects. Mais ~40% sont exagérés ou faux — ce qui signifie que la chute est une opportunité d'achat.</p>
+  </div>
+</div>
+
+
+<!-- SECTION 3: SPOOFING & WASH TRADING -->
+<div class="section-divider" id="spoofing"><i class="fa-solid fa-ghost" style="color:#7c3aed;"></i> Spoofing, Layering & Wash Trading</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-ghost" style="color:#7c3aed;"></i> La manipulation invisible du carnet d'ordres</h2>
+
+  <p>Ces manipulations sont plus sophistiquées car elles exploitent la microstructure du marché — le carnet d'ordres (order book) et le matching engine. Elles sont très difficiles à détecter pour un retail trader, mais comprendre leur existence change votre vision du marché.</p>
+
+  <h3>Spoofing & Layering</h3>
+  <p>Le <strong>spoofing</strong> consiste à placer un gros ordre (ex: 100 000 actions à l'achat) pour créer l'illusion de demande, puis à l'annuler une fraction de seconde avant exécution. Le but : tromper les algorithmes et les traders qui lisent le carnet d'ordres. Le <strong>layering</strong> est la version avancée : empiler plusieurs ordres à différents niveaux de prix pour créer un "mur" d'ordres fictif.</p>
+
+  <h3>Wash Trading</h3>
+  <p>Le <strong>wash trading</strong> consiste à se vendre à soi-même pour créer un volume artificiel. L'acteur A vend à l'acteur B, qui est en réalité la même personne (ou une entité liée). Le volume gonfle, donnant l'illusion de liquidité et d'intérêt. C'est endémique en <strong>crypto</strong> : certaines études estiment que 70-95% du volume de certains exchanges est du wash trading.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Manipulation</th>
+        <th>Mécanisme</th>
+        <th>Détection</th>
+        <th>Légalité</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Spoofing</strong></td>
+        <td>Faux ordres annulés avant exécution</td>
+        <td>Ratio ordres annulés/exécutés anormal (>95%)</td>
+        <td style="color:#dc2626;">Illégal (Dodd-Frank Act)</td>
+      </tr>
+      <tr>
+        <td><strong>Layering</strong></td>
+        <td>Empiler des ordres fictifs multi-niveaux</td>
+        <td>"Murs" d'ordres qui disparaissent</td>
+        <td style="color:#dc2626;">Illégal</td>
+      </tr>
+      <tr>
+        <td><strong>Wash trading</strong></td>
+        <td>Se vendre à soi-même</td>
+        <td>Volume sans changement de prix significatif</td>
+        <td style="color:#dc2626;">Illégal (mais fréquent en crypto)</td>
+      </tr>
+      <tr>
+        <td><strong>Front-running</strong></td>
+        <td>Exécuter avant un gros ordre client</td>
+        <td>Pattern de micro-achats avant gros blocks</td>
+        <td style="color:#dc2626;">Illégal (en TradFi)</td>
+      </tr>
+      <tr>
+        <td><strong>MEV (crypto)</strong></td>
+        <td>Bots qui front-runnent les transactions DeFi</td>
+        <td>Sandwich attacks visibles on-chain</td>
+        <td style="color:#f59e0b;">Zone grise (pas encore régulé)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">La réalité du marché</div>
+    <span class="formula-highlight">Vous tradez contre des algorithmes</span> qui voient vos ordres <span class="formula-highlight">avant vous</span>.
+  </div>
+</div>
+
+
+<!-- SECTION 4: RUG PULLS -->
+<div class="section-divider" id="rugpull"><i class="fa-solid fa-bug" style="color:#f59e0b;"></i> Rug Pulls & Arnaques Crypto</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bug" style="color:#f59e0b;"></i> Rug pulls : quand le tapis est tiré sous vos pieds</h2>
+
+  <p>En crypto/DeFi, un <strong>rug pull</strong> se produit quand les développeurs d'un projet retirent toute la liquidité du pool, rendant le token impossible à vendre. C'est l'équivalent numérique d'un braquage de banque — sauf que c'est votre argent et que les voleurs sont anonymes.</p>
+
+  <h3>Les 8 signaux d'alerte d'un potentiel rug pull</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Équipe anonyme</strong> — Aucune identité vérifiable des fondateurs. Pas de LinkedIn, pas de GitHub historique, juste des pseudos.</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Liquidité non verrouillée</strong> — Si la liquidité LP n'est pas verrouillée (locked) via un contrat vérifiable, les devs peuvent la retirer à tout moment.</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Pas d'audit du smart contract</strong> — Un contrat non audité peut contenir une backdoor (fonction mint infinie, blocage des ventes).</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Tokenomics concentrés</strong> — Si les top 10 wallets détiennent >50% du supply, un dump massif est possible à tout moment.</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Marketing > Produit</strong> — Budget marketing massif mais aucun produit fonctionnel. Roadmap vague avec des dates repoussées.</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Rendements irréalistes</strong> — APY de 10,000%+ sur le staking. Si ça semble trop beau pour être vrai, ça l'est.</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Taxe de vente élevée</strong> — Un token avec 20%+ de taxe à la vente est conçu pour piéger les acheteurs.</li>
+    <li><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <strong>Code copié</strong> — Le smart contract est un fork 1:1 d'un autre projet sans modification. Zéro innovation, 100% cash grab.</li>
+  </ul>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Les chiffres sont terrifiants</h4>
+    <p style="margin:0;">Selon Chainalysis, les rug pulls ont représenté <strong>$2.8 milliards</strong> de pertes rien qu'en 2021. En 2022, le crash de <strong>Terra/LUNA</strong> (qui, bien que débattu, partageait des caractéristiques de Ponzi) a détruit <strong>$40 milliards</strong> de valeur. Sur les milliers de tokens lancés chaque semaine sur des DEX comme Uniswap ou PancakeSwap, on estime que <strong>plus de 90% sont des arnaques</strong>. L'innovation DeFi est réelle, mais le ratio signal/arnaque est catastrophique.</p>
+  </div>
+</div>
+
+
+<!-- SECTION 5: INFLUENCEURS PAYÉS -->
+<div class="section-divider" id="influenceurs"><i class="fa-solid fa-star" style="color:#2563eb;"></i> Les Influenceurs Payés — Détecter la Promo</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#2563eb;"></i> Quand un "avis" est en réalité une publicité</h2>
+
+  <p>L'un des pièges les plus insidieux des réseaux sociaux financiers est la promotion déguisée. Un influenceur parle d'un token/action avec enthousiasme, mais il est <strong>payé pour le faire</strong> — sans le divulguer. C'est illégal dans la plupart des juridictions, mais extrêmement fréquent, surtout en crypto.</p>
+
+  <h3>Les 6 indices d'une promotion déguisée</h3>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark-circle"></i> Red flags de promo déguisée</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.8;">
+        <li>L'influenceur ne parle JAMAIS de ce secteur habituellement</li>
+        <li>Enthousiasme soudain et disproportionné</li>
+        <li>Langage marketing ("révolutionnaire", "game changer")</li>
+        <li>Pas de mention #ad, #sponsored, #paid</li>
+        <li>Lien d'affiliation / code promo dans la description</li>
+        <li>Plusieurs influenceurs parlent du même token en même temps</li>
+      </ul>
+    </div>
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+      <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle"></i> Recommandation organique</div>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.8;">
+        <li>Historique de posts sur ce secteur/thème</li>
+        <li>Discussion nuancée (bull ET bear case)</li>
+        <li>Mention explicite des risques</li>
+        <li>Divulgation claire des positions personnelles</li>
+        <li>Pas de pression temporelle ("achetez MAINTENANT")</li>
+        <li>L'auteur a un track record de recommandations variées</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- SECTION 6: DYOR CHECKLIST -->
+<div class="section-divider" id="dyor"><i class="fa-solid fa-magnifying-glass" style="color:#10b981;"></i> DYOR — La Checklist Anti-Arnaque</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass" style="color:#10b981;"></i> Do Your Own Research : les étapes essentielles</h2>
+
+  <p>DYOR (Do Your Own Research) est le mantra du trading social. Mais "faire ses propres recherches" ne signifie PAS lire 3 tweets et un post Reddit. C'est un processus structuré qui prend 30-60 minutes par ticker et qui peut vous sauver de milliers d'euros de pertes.</p>
+
+  <h3>La checklist DYOR en 10 points</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Vérification</th>
+        <th>Source</th>
+        <th>Red flag</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1</strong></td>
+        <td>Vérifier l'existence légale de l'entreprise</td>
+        <td>SEC EDGAR, registre du commerce</td>
+        <td>Pas de filing SEC, adresse bidon</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td>Lire le dernier 10-K ou rapport annuel</td>
+        <td>sec.gov/cgi-bin/browse-edgar</td>
+        <td>Pas de 10-K, opinion "going concern" de l'auditeur</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td>Vérifier les revenus et le cash flow</td>
+        <td>10-Q trimestriel, Yahoo Finance</td>
+        <td>Revenue $0, cash burn >24 mois</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td>
+        <td>Vérifier le management (LinkedIn, historique)</td>
+        <td>LinkedIn, SEC filings, Google</td>
+        <td>CEO avec historique de faillites/fraudes</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td>
+        <td>Vérifier le float et le short interest</td>
+        <td>Finviz, Yahoo Finance, FINRA</td>
+        <td>Float <5M actions = très manipulable</td>
+      </tr>
+      <tr>
+        <td><strong>6</strong></td>
+        <td>Vérifier les insider transactions</td>
+        <td>SEC Form 4, OpenInsider</td>
+        <td>Insiders qui vendent massivement</td>
+      </tr>
+      <tr>
+        <td><strong>7</strong></td>
+        <td>Vérifier le volume vs moyenne</td>
+        <td>TradingView, Yahoo Finance</td>
+        <td>Volume 10x la moyenne = pump probable</td>
+      </tr>
+      <tr>
+        <td><strong>8</strong></td>
+        <td>Chercher le ticker sur les sites anti-fraude</td>
+        <td>SEC Investor Alerts, Investopedia</td>
+        <td>Alertes existantes, class action en cours</td>
+      </tr>
+      <tr>
+        <td><strong>9</strong></td>
+        <td>Vérifier la source de l'information initiale</td>
+        <td>Google, Twitter Advanced Search</td>
+        <td>Source = compte anonyme créé récemment</td>
+      </tr>
+      <tr>
+        <td><strong>10</strong></td>
+        <td>Demander un avis contradictoire</td>
+        <td>Chercher le bear case activement</td>
+        <td>Aucun bear case trouvable = suspect</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4 style="color:#16a34a !important;"><i class="fa-solid fa-graduation-cap"></i> La règle des 30 minutes</h4>
+    <p style="margin:0;">Si vous ne pouvez pas investir <strong>30 minutes de recherche</strong> avant de mettre votre argent dans un trade, vous ne devriez pas faire ce trade. C'est aussi simple que ça. Les 30 minutes de DYOR sont l'investissement le plus rentable que vous ferez jamais — elles vous sauveront de la majorité des arnaques et des mauvais trades. Le temps que vous ne passez PAS à rechercher est le risque que vous PRENEZ aveuglément.</p>
+  </div>
+</div>
+
+
+<!-- SECTION 7: PSYCHOLOGIE -->
+<div class="section-divider" id="psycho"><i class="fa-solid fa-brain" style="color:#9333ea;"></i> Psychologie de la Manipulation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#9333ea;"></i> Pourquoi on se fait avoir — la neuroscience du piège</h2>
+
+  <p>Les manipulateurs ne sont pas des génies — ils exploitent des <strong>failles cognitives universelles</strong> que nous avons tous. Comprendre ces failles est le meilleur bouclier contre la manipulation.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Biais exploité</th>
+        <th>Comment le manipulateur l'utilise</th>
+        <th>Antidote</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>FOMO</strong></td>
+        <td>"Le prix monte MAINTENANT, dernière chance !"</td>
+        <td>Règle : si vous ressentez l'urgence d'acheter, attendez 24h</td>
+      </tr>
+      <tr>
+        <td><strong>Preuve sociale</strong></td>
+        <td>"50 000 membres ne peuvent pas se tromper"</td>
+        <td>La taille du groupe n'a aucun rapport avec la qualité</td>
+      </tr>
+      <tr>
+        <td><strong>Autorité</strong></td>
+        <td>"Ce trader a fait +500% le mois dernier"</td>
+        <td>Exiger des preuves vérifiables, pas des screenshots</td>
+      </tr>
+      <tr>
+        <td><strong>Rareté</strong></td>
+        <td>"Plus que 10 places dans le groupe VIP"</td>
+        <td>L'urgence artificielle est toujours un red flag</td>
+      </tr>
+      <tr>
+        <td><strong>Réciprocité</strong></td>
+        <td>"Je vous donne 3 signaux gratuits, le 4e est payant"</td>
+        <td>Les signaux gratuits sont l'appât, pas le produit</td>
+      </tr>
+      <tr>
+        <td><strong>Engagement</strong></td>
+        <td>"Vous avez déjà payé 2 mois, continuez !"</td>
+        <td>Sunk cost fallacy — chaque jour est une nouvelle décision</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">La loi fondamentale de la manipulation financière</div>
+    Plus l'offre semble <span class="formula-highlight">urgente, exclusive et garantie</span>, plus elle est <span class="formula-highlight">probablement une arnaque</span>.
+  </div>
+</div>
+
+
+<!-- QUIZ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : Quels sont les 3 critères qui rendent une action vulnérable à un pump & dump ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Faible capitalisation (<$50M), faible liquidité (volume quotidien <$500K), et float réduit (<10M actions).</strong><br>
+      Ces critères permettent aux manipulateurs de contrôler le prix avec un capital relativement modeste. Une action Apple à $3 trillions de market cap est impossible à "pumper" — il faudrait des milliards. Une micro-cap à $20M peut être bougée avec quelques centaines de milliers de dollars. C'est pourquoi les pump & dump ciblent presque exclusivement les micro et nano caps.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Quelle est la bonne réaction face à un rapport de short-seller (Hindenburg, Muddy Waters) ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Ne PAS paniquer, attendre 48-72h, lire le rapport complet, vérifier les allégations avec les SEC filings, évaluer la réponse de l'entreprise.</strong><br>
+      La première chute post-rapport est le profit du short-seller. Les études montrent que ~60% des rapports de short-sellers réputés sont au moins partiellement corrects, mais ~40% sont exagérés ou faux. Si les allégations sont fausses, la chute est une opportunité d'achat. Mais ne présumez jamais que le rapport est faux juste parce que vous détenez l'action.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce que le "wash trading" et pourquoi est-il si fréquent en crypto ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le wash trading consiste à se vendre à soi-même pour créer un volume artificiel. Il est fréquent en crypto car les DEX sont non régulés et les wallets sont pseudonymes.</strong><br>
+      Sur un exchange centralisé régulé (NYSE, NASDAQ), le wash trading est détecté et puni. Sur un DEX (Uniswap, PancakeSwap), n'importe qui peut créer 100 wallets et trader entre eux pour gonfler le volume d'un token. Certaines études estiment que 70-95% du volume de certains exchanges crypto est du wash trading. Toujours vérifier le volume avec des sources indépendantes.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quels sont les 3 signaux d'alerte les plus importants d'un rug pull crypto ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : (1) Équipe anonyme sans identité vérifiable, (2) Liquidité non verrouillée, (3) Smart contract non audité.</strong><br>
+      Si les fondateurs sont anonymes, ils peuvent disparaître sans conséquences. Si la liquidité n'est pas verrouillée (via un contrat comme Team Finance ou Unicrypt), les devs peuvent la retirer à tout moment. Si le smart contract n'a pas été audité par une firme réputée (CertiK, OpenZeppelin), il peut contenir une backdoor. Ces 3 vérifications prennent 5 minutes et vous sauvent de 90% des rug pulls.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Quel biais psychologique les manipulateurs exploitent-ils le plus et comment s'en protéger ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le FOMO (Fear Of Missing Out) — la peur de rater une opportunité. Antidote : la règle des 24h.</strong><br>
+      Le FOMO est le biais le plus exploité car il désactive le cerveau analytique et active le cerveau émotionnel. Les manipulateurs créent une urgence artificielle ("ça monte MAINTENANT", "dernière chance") pour vous empêcher de réfléchir. L'antidote est simple : si vous ressentez l'urgence d'acheter, attendez 24h. Si l'opportunité est réelle, elle sera encore là demain. Si elle ne l'est plus, c'était probablement un piège.
+    </div>
+  </details>
+</div>
+
+
+<!-- TAKEAWAYS -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#7c3aed;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-chart-line"></i> <strong>Le pump & dump cible les micro-caps illiquides</strong> — <$50M market cap, <$500K volume quotidien, <10M float. Si un titre inconnu fait +100% sans news vérifiable, ne touchez pas.</li>
+      <li><i class="fa-solid fa-newspaper"></i> <strong>Les rapports de short-sellers sont corrects ~60% du temps</strong> — Ne paniquez pas, attendez 48-72h, vérifiez les allégations. La chute initiale est le profit du short-seller.</li>
+      <li><i class="fa-solid fa-ghost"></i> <strong>Le spoofing et le wash trading sont omniprésents</strong> — Vous tradez contre des algorithmes qui manipulent le carnet d'ordres. En crypto, 70-95% du volume peut être fictif.</li>
+      <li><i class="fa-solid fa-bug"></i> <strong>90%+ des tokens lancés sur les DEX sont des arnaques</strong> — Vérifiez : équipe connue, liquidité verrouillée, smart contract audité. Ces 3 checks prennent 5 minutes.</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Quand plusieurs influenceurs parlent du même actif simultanément = promo payée</strong> — Cherchez toujours le #ad, et méfiez-vous de l'enthousiasme soudain et disproportionné.</li>
+      <li><i class="fa-solid fa-magnifying-glass"></i> <strong>30 minutes de DYOR sauvent des milliers d'euros</strong> — La checklist en 10 points est l'investissement le plus rentable que vous ferez jamais.</li>
+      <li><i class="fa-solid fa-brain"></i> <strong>La règle des 24h contre le FOMO</strong> — Si vous ressentez l'urgence d'acheter, attendez 24h. Si l'opportunité est réelle, elle sera encore là demain.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> RAPPEL FINAL — AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-xmark-circle"></i> Cette série est <strong>strictement éducative</strong>. Les manipulations de marché sont <strong>illégales</strong>.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Si vous soupçonnez une manipulation, <strong>signalez-la aux autorités</strong> (SEC, AMF).</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> <strong>Ne jamais investir de l'argent que vous ne pouvez pas perdre.</strong></li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Les performances passées ne garantissent pas les performances futures.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+<a href="/series/chasser-en-meute/part4-analystes-institutions/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="prev-label">Partie 4 sur 6</div>
+    <div class="prev-title">Smart Money & Analystes Institutionnels</div>
+  </div>
+</a>
+
+<a href="/series/chasser-en-meute/part6-construire-reseau/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 6 sur 6</div>
+    <div class="next-title">Construire son Réseau d'Intelligence</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/chasser-en-meute/part1-pouvoir-foule/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. La Foule</a>
+  <a href="/series/chasser-en-meute/part2-reseaux-sociaux/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Réseaux</a>
+  <a href="/series/chasser-en-meute/part3-telegram-discord/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Telegram</a>
+  <a href="/series/chasser-en-meute/part4-analystes-institutions/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Smart Money</a>
+  <a href="/series/chasser-en-meute/part5-manipulation-pieges/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#7c3aed; color:white; border:1px solid #7c3aed;">5. Pièges</a>
+  <a href="/series/chasser-en-meute/part6-construire-reseau/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Réseau</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Chasser en Meute</strong> — Partie 5/6 : Manipulations & Pièges — Protéger son Capital</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement. Le trading comporte un risque de perte en capital. Les performances passées ne garantissent pas les performances futures. Consultez un conseiller financier agréé avant toute décision.</p>
+</div>
+
+<script>
+// CHART 1: Pump & Dump anatomy
+(function(){
+  var dom = document.getElementById('chart-pnd');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var phases = ['S-4','S-3','S-2','S-1','J-3','J-2','J-1','J0','J0+2h','J0+6h','J+1','J+2','J+3','J+7','J+14'];
+  var price = [0.5,0.55,0.6,0.7,0.85,1.1,1.8,4.5,6.2,3.8,1.5,0.9,0.65,0.5,0.45];
+  var volume = [50,60,80,120,200,450,1200,5000,3500,2000,800,300,100,50,30];
+  var option = {
+    tooltip: { trigger:'axis' },
+    legend: { data:['Prix ($)','Volume (K)'], top:5, textStyle:{fontSize:11} },
+    grid: { left:'3%', right:'6%', bottom:'15%', top:'15%', containLabel:true },
+    xAxis: { type:'category', data:phases, axisLabel:{fontSize:10, rotate:30} },
+    yAxis: [
+      { type:'value', name:'Prix ($)', axisLabel:{fontSize:10, formatter:'${value}'}, position:'left' },
+      { type:'value', name:'Volume (K)', axisLabel:{fontSize:10}, position:'right', splitLine:{show:false} }
+    ],
+    series: [
+      {
+        name:'Prix ($)',
+        type:'line',
+        data:price,
+        smooth:true,
+        lineStyle:{ width:3, color:'#dc2626' },
+        areaStyle:{ color:{ type:'linear', x:0, y:0, x2:0, y2:1, colorStops:[{offset:0,color:'rgba(220,38,38,0.3)'},{offset:1,color:'rgba(220,38,38,0.02)'}] } },
+        markPoint:{
+          data:[
+            { coord:['J0+2h',6.2], value:'TOP', symbol:'pin', symbolSize:50, itemStyle:{color:'#dc2626'}, label:{color:'white',fontSize:10} }
+          ]
+        },
+        markArea:{
+          silent:true,
+          data:[
+            [{ xAxis:'S-4', itemStyle:{color:'rgba(37,99,235,0.05)'} },{ xAxis:'S-1' }],
+            [{ xAxis:'J-3', itemStyle:{color:'rgba(249,115,22,0.05)'} },{ xAxis:'J-1' }],
+            [{ xAxis:'J0', itemStyle:{color:'rgba(220,38,38,0.05)'} },{ xAxis:'J0+6h' }],
+            [{ xAxis:'J+1', itemStyle:{color:'rgba(100,116,139,0.05)'} },{ xAxis:'J+14' }]
+          ]
+        }
+      },
+      {
+        name:'Volume (K)',
+        type:'bar',
+        yAxisIndex:1,
+        data:volume,
+        barWidth:'40%',
+        itemStyle:{ color:'rgba(124,58,237,0.25)', borderRadius:[3,3,0,0] }
+      }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News, Sentiment & Social Media : Quantifier le Bruit | Lire le Marché — Partie 4/6 | Market Watch</title>
+  <meta name="description" content="Série Lire le Marché — Partie 4/6 : Cycle de l'information financière, sources de news par qualité, sentiment analysis (Fear & Greed, AAII, Put/Call), social media comme indicateur, NLP et signaux contrarian.">
+  <meta property="og:title" content="News, Sentiment & Social Media : Quantifier le Bruit | Lire le Marché — Partie 4/6 | Market Watch">
+  <meta property="og:description" content="Comment filtrer le bruit médiatique, quantifier le sentiment avec Fear & Greed, AAII, Put/Call ratio, et utiliser les réseaux sociaux comme indicateur contrarian.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/lire-le-marche/part4-news-sentiment/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#4f46e5; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#818cf8; color:#818cf8; }
+  .series-link.current { background:#4f46e5; color:white; border-color:#4f46e5; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; margin-right:0.75rem; }
+  details[open] summary { border-color:#4f46e5; background:#eef2ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#4f46e5; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#818cf8; }
+  .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#4f46e5; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#4f46e5; color:#4f46e5; }
+  .disclaimer-mega { background:linear-gradient(135deg, #312e81 0%, #4338ca 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #4f46e5; }
+  .disclaimer-mega h3 { color:#c7d2fe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#e0e7ff; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#818cf8; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #4f46e5; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Lire le Marché — Données Publiques & Intelligence</span>
+  <a href="/series/lire-le-marche/part1-sec-filings/" class="series-link">1 — SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" class="series-link">2 — Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" class="series-link">3 — Short Interest</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" class="series-link current">4 — News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" class="series-link">5 — Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" class="series-link">6 — Dashboard Synthèse</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Série Lire le Marché — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">News, Sentiment & Social Media : Quantifier le Bruit</h1>
+  <p class="hero-subtitle">Chaque jour, des milliers de headlines bombardent les marchés. Le Fear & Greed Index, le Put/Call ratio, Reddit et StockTwits racontent une histoire. Apprenez à filtrer le signal du bruit — et à utiliser l'excès d'optimisme comme un signal contrarian.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-newspaper"></i> News Flow</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-face-grimace"></i> Fear & Greed</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-hashtag"></i> Social Media</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-robot"></i> NLP & IA</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#cycle-info" class="nav-item"><i class="fa-solid fa-clock" style="color:#4f46e5; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Cycle Info</a>
+  <a href="#sources" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Sources</a>
+  <a href="#sentiment" class="nav-item"><i class="fa-solid fa-gauge-high" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Sentiment</a>
+  <a href="#social-media" class="nav-item"><i class="fa-solid fa-hashtag" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Social Media</a>
+  <a href="#nlp" class="nav-item"><i class="fa-solid fa-robot" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> NLP & IA</a>
+  <a href="#contrarian" class="nav-item"><i class="fa-solid fa-arrows-rotate" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Contrarian</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : LE CYCLE DE L'INFORMATION                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cycle-info"><i class="fa-solid fa-clock" style="color:#4f46e5;"></i> Le cycle de l'information financière</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clock" style="color:#4f46e5;"></i> 24 heures dans la vie d'un marché</h2>
+
+  <p>L'information financière ne dort jamais. Elle suit un cycle précis, rythmé par les fuseaux horaires, les horaires de marché et les obligations réglementaires de publication. Comprendre ce cycle, c'est savoir <strong>quand</strong> chercher l'information — et ne pas se faire surprendre.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#eef2ff; border:2px solid #4f46e5; border-radius:16px;">
+      <h4 style="color:#4f46e5; margin:0 0 0.5rem;"><i class="fa-solid fa-sun"></i> Pre-Market (5h00 — 9h30 ET)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">La fenêtre la plus dense en information. Les professionnels sont déjà actifs.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Futures :</strong> ES, NQ, YM — premier indicateur de la tonalité du jour<br>
+        <strong>News overnight :</strong> marchés asiatiques et européens, géopolitique nocturne<br>
+        <strong>Upgrades / Downgrades :</strong> publiés entre 6h et 8h par les brokers sell-side<br>
+        <strong>Earnings pre-market :</strong> résultats avant l'ouverture (ex : banques, industriels)<br>
+        <strong>Données macro :</strong> CPI, PPI, jobless claims publiés à 8h30 ET
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#f0fdf4; border:2px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.5rem;"><i class="fa-solid fa-chart-line"></i> Market Hours (9h30 — 16h00 ET)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">Le flux est continu. Les algorithmes réagissent en millisecondes aux headlines.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Flash headlines :</strong> Reuters, Bloomberg — les algos parsent les mots-clés instantanément<br>
+        <strong>Breaking news :</strong> M&A, guidance warnings, FDA approvals, sanctions<br>
+        <strong>Scheduled events :</strong> FOMC à 14h, discours Fed, ISM, JOLTS, Consumer Confidence<br>
+        <strong>Options flow :</strong> unusual activity, sweeps, block trades détectés en temps réel
+      </div>
+    </div>
+    <div style="padding:1.5rem; background:#fff7ed; border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.5rem;"><i class="fa-solid fa-moon"></i> After-Hours (16h00 — 20h00 ET)</h4>
+      <p style="font-size:0.85rem; color:#334155; margin:0 0 0.5rem;">La deuxième vague d'information critique, dominée par les earnings.</p>
+      <div style="font-size:0.8rem; color:#475569; line-height:1.6;">
+        <strong>Earnings releases :</strong> la majorité des mega-caps publient after-hours (AAPL, MSFT, META, AMZN, GOOGL)<br>
+        <strong>Conference calls :</strong> 30-60 min après les résultats — le ton du management compte plus que les chiffres<br>
+        <strong>SEC filings tardifs :</strong> 8-K, Form 4 insiders soumis en fin de journée<br>
+        <strong>Guidance updates :</strong> ajustements de prévisions, parfois glissés discrètement
+      </div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le piège du "news trading"</h4>
+    <p style="margin:0;">Les traders débutants pensent qu'il faut réagir vite aux news. En réalité, <strong>les algos de news trading réagissent en 50 millisecondes</strong> — vous n'avez aucune chance de les battre. Le vrai edge n'est pas la vitesse, mais la <strong>capacité à interpréter</strong> ce que la news signifie pour les 3-6 prochains mois. Une mauvaise news sur un bon stock est souvent une opportunité d'achat. Une bonne news sur un stock surévalué est souvent une occasion de vendre.</p>
+  </div>
+
+  <!-- CHART 1: Timeline du jour de trading -->
+  <h3>Anatomie d'une journée de trading — Volume et impact des news</h3>
+  <div id="chart-timeline" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : SOURCES PAR QUALITÉ                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sources"><i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> Sources de news par qualité</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> Toutes les sources ne se valent pas</h2>
+
+  <p>La qualité de l'information détermine la qualité de vos décisions. Les marchés financiers sont un écosystème d'information où coexistent des sources institutionnelles rigoureuses et des canaux de désinformation organisée. Savoir classer les sources est la première compétence du trader informé.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Tier</th><th>Sources</th><th>Fiabilité</th><th>Rapidité</th><th>Coût</th><th>Bruit</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span style="background:#16a34a; color:white; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:700;">TIER 1</span></td>
+        <td><strong>Bloomberg, Reuters, WSJ, FT</strong></td>
+        <td style="color:#16a34a;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></td>
+        <td style="color:#16a34a;">Ultra-rapide</td>
+        <td>$$$</td>
+        <td style="color:#16a34a;">Très faible</td>
+      </tr>
+      <tr>
+        <td><span style="background:#2563eb; color:white; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:700;">TIER 2</span></td>
+        <td><strong>CNBC, MarketWatch, Seeking Alpha, Yahoo Finance</strong></td>
+        <td style="color:#2563eb;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></td>
+        <td style="color:#f59e0b;">Rapide</td>
+        <td>Gratuit/$</td>
+        <td style="color:#f59e0b;">Modéré</td>
+      </tr>
+      <tr>
+        <td><span style="background:#f59e0b; color:white; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:700;">TIER 3</span></td>
+        <td><strong>Twitter/X, Reddit, StockTwits</strong></td>
+        <td style="color:#f59e0b;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></td>
+        <td style="color:#16a34a;">Temps réel</td>
+        <td>Gratuit</td>
+        <td style="color:#dc2626;">Élevé</td>
+      </tr>
+      <tr>
+        <td><span style="background:#dc2626; color:white; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.75rem; font-weight:700;">TIER 4</span></td>
+        <td><strong>Telegram, Discord privés, "guru" channels</strong></td>
+        <td style="color:#dc2626;"><i class="fa-solid fa-star"></i></td>
+        <td style="color:#64748b;">Variable</td>
+        <td>Gratuit/$$</td>
+        <td style="color:#dc2626;">Extrême</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-check-circle"></i> Signes d'une source fiable</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Cite ses sources et données brutes</li>
+        <li>Distingue clairement fait et opinion</li>
+        <li>Publie des corrections quand elle se trompe</li>
+        <li>Pas de clickbait ("CRASH IMMINENT", "TO THE MOON")</li>
+        <li>Les journalistes sont identifiés et ont un track record</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-xmark-circle"></i> Red flags — Pump & Dump territory</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Urgence artificielle ("achetez MAINTENANT avant qu'il soit trop tard")</li>
+        <li>Promesses de gains garantis ("100x confirmé")</li>
+        <li>Canaux Telegram/Discord avec "alpha calls" payants</li>
+        <li>Influenceurs avec positions non déclarées (conflit d'intérêts)</li>
+        <li>Screenshots de P&L sans preuve vérifiable</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Seeking Alpha : l'exemple parfait du Tier 2</h4>
+    <p style="margin:0;">Seeking Alpha publie des analyses écrites par des <strong>contributeurs non-professionnels</strong> qui sont rémunérés au clic. Résultat : des titres sensationnalistes pour maximiser les vues, mais un contenu parfois de qualité variable. <strong>Règle d'or :</strong> vérifiez toujours le track record de l'auteur (SA Quant rating, historique des recommandations) et croisez avec au moins une source Tier 1 avant d'agir.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : SENTIMENT ANALYSIS                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sentiment"><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Sentiment Analysis</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#dc2626;"></i> Mesurer la peur et l'avidité du marché</h2>
+
+  <p>Le sentiment de marché est un indicateur puissant — non pas parce qu'il prédit la direction, mais parce que les <strong>extrêmes de sentiment sont des signaux contrarian fiables</strong>. Quand tout le monde a peur, c'est souvent le moment d'acheter. Quand tout le monde est euphorique, c'est le moment d'être prudent.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:2rem 0;">
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-face-grimace"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Fear & Greed Index (CNN)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Composite de 7 indicateurs : momentum S&P 500, demand for safe havens, junk bond demand, stock price breadth, market volatility (VIX), put/call ratio, stock price strength. <strong>Échelle 0-100</strong> : 0-25 = Extreme Fear, 75-100 = Extreme Greed.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-users"></i></div>
+      <h4 style="margin:0 0 0.5rem;">AAII Sentiment Survey</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Sondage hebdomadaire des investisseurs individuels : % bullish, bearish, neutral. Moyenne historique : 37.5% bullish. <strong>Au-dessus de 50% bullish = signal de prudence.</strong> En dessous de 20% = opportunité contrarian.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#f59e0b; margin-bottom:0.5rem;"><i class="fa-solid fa-scale-balanced"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Put/Call Ratio (CBOE)</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Ratio du volume de puts / volume de calls sur les options. <strong>&gt; 1.0 = sentiment bearish</strong> (plus de puts que de calls). <strong>&lt; 0.7 = sentiment bullish</strong> excessif. Moyenne historique autour de 0.85.</p>
+    </div>
+    <div class="triangle-card">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i></div>
+      <h4 style="margin:0 0 0.5rem;">VIX — Le "Fear Gauge"</h4>
+      <p style="font-size:0.88rem; color:#475569; margin:0;">Volatilité implicite des options sur le S&P 500. <strong>&lt; 15 = complaisance</strong> (attention aux corrections). <strong>15-25 = normal.</strong> <strong>&gt; 30 = panique</strong> (souvent un point d'achat). <strong>&gt; 40 = crise</strong> (2008, 2020).</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: Fear & Greed Gauge -->
+  <h3>Fear & Greed Index — Lecture du sentiment actuel</h3>
+  <div id="chart-fear-greed" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <h3>Zones d'action du sentiment</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Indicateur</th><th>Extreme Fear</th><th>Fear</th><th>Neutral</th><th>Greed</th><th>Extreme Greed</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Fear & Greed</strong></td>
+        <td style="color:#16a34a;"><strong>0-25</strong> — Acheter</td>
+        <td style="color:#16a34a;">25-40</td>
+        <td>40-60</td>
+        <td style="color:#f59e0b;">60-75</td>
+        <td style="color:#dc2626;"><strong>75-100</strong> — Prudence</td>
+      </tr>
+      <tr>
+        <td><strong>AAII Bullish</strong></td>
+        <td style="color:#16a34a;"><strong>&lt;20%</strong> — Acheter</td>
+        <td style="color:#16a34a;">20-30%</td>
+        <td>30-45%</td>
+        <td style="color:#f59e0b;">45-55%</td>
+        <td style="color:#dc2626;"><strong>&gt;55%</strong> — Prudence</td>
+      </tr>
+      <tr>
+        <td><strong>Put/Call Ratio</strong></td>
+        <td style="color:#dc2626;"><strong>&gt;1.2</strong> — Prudence</td>
+        <td style="color:#f59e0b;">1.0-1.2</td>
+        <td>0.8-1.0</td>
+        <td style="color:#16a34a;">0.7-0.8</td>
+        <td style="color:#16a34a;"><strong>&lt;0.7</strong> — Euphorie</td>
+      </tr>
+      <tr>
+        <td><strong>VIX</strong></td>
+        <td style="color:#16a34a;"><strong>&gt;35</strong> — Acheter</td>
+        <td style="color:#16a34a;">25-35</td>
+        <td>15-25</td>
+        <td style="color:#f59e0b;">12-15</td>
+        <td style="color:#dc2626;"><strong>&lt;12</strong> — Complaisance</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le paradoxe du sentiment</h4>
+    <p style="margin:0;">Le sentiment est un <strong>indicateur contrarian, pas directionnel</strong>. Un Fear & Greed à 10 ne signifie pas que le marché va monter demain — il peut encore baisser. Mais historiquement, acheter quand le F&G est sous 20 et tenir 12 mois produit un rendement moyen de <strong>+22%</strong> sur le S&P 500 (données 2004-2024). Le timing exact est impossible, mais les extrêmes offrent un edge statistique.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : SOCIAL MEDIA                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="social-media"><i class="fa-solid fa-hashtag" style="color:#2563eb;"></i> Social Media comme indicateur</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hashtag" style="color:#2563eb;"></i> Reddit, StockTwits, Twitter : le pouls du retail</h2>
+
+  <p>Les réseaux sociaux sont devenus un <strong>indicateur avancé du sentiment retail</strong>. Depuis le phénomène GameStop en janvier 2021, les hedge funds et les quants surveillent Reddit et Twitter aussi attentivement que Bloomberg. Mais le signal est noyé dans le bruit — il faut savoir filtrer.</p>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">Reddit — r/WallStreetBets & r/stocks</strong>
+        <span class="badge badge-blue">Momentum Retail</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">14M+ membres sur WSB. Le volume de mentions d'un ticker est corrélé au volume de trading du lendemain (~0.65). <strong>Signal utile :</strong> explosion soudaine de mentions (10x la moyenne) + short interest élevé = potentiel short squeeze. <strong>Piège :</strong> les "DD" (Due Diligence) posts sont souvent biaisés — l'auteur a déjà une position et cherche à recruter des acheteurs.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">StockTwits — Sentiment par ticker</strong>
+        <span class="badge badge-green">Ratio Bull/Bear</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Chaque message est taggé bullish ou bearish par l'auteur. Le <strong>ratio bull/bear</strong> par ticker est un indicateur simple mais efficace. Signal contrarian : quand le ratio dépasse 90% bullish sur un ticker, le mouvement haussier est souvent proche de son épuisement. Fonctionne surtout sur les small/mid caps.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Twitter/X — FinTwit & KOLs</strong>
+        <span class="badge badge-blue">Breaking + Analyse</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le "FinTwit" (Financial Twitter) est un écosystème unique : des traders pro, des analystes sell-side, des économistes et des trolls coexistent. <strong>KOLs fiables :</strong> @zaborsky, @unusual_whales, @DeItaone (breaking headlines). <strong>Piège :</strong> les KOLs crypto avec des communautés payantes — souvent du front-running pur.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">YouTube Finance — Influenceurs</strong>
+        <span class="badge badge-red">Attention Conflits</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Les YouTubeurs finance ont un biais structurel : les vidéos bullish génèrent plus de vues que les vidéos bearish. Beaucoup ont des positions non déclarées, des sponsors cachés (courtiers, crypto projects), et un historique de recommandations désastreux. <strong>Règle d'or :</strong> ne JAMAIS acheter un ticker uniquement parce qu'un YouTubeur le recommande.</p>
+    </div>
+  </div>
+
+  <!-- CHART 3: Social media volume vs price -->
+  <h3>Volume de mentions sociales vs Prix — L'exemple GameStop (2021)</h3>
+  <div id="chart-social-volume" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Comment utiliser le social media intelligemment</h4>
+    <p style="margin:0;"><strong>Règle 1 :</strong> Utilisez-le comme indicateur de sentiment, jamais comme source d'analyse fondamentale. <strong>Règle 2 :</strong> Les pics de volume de mentions sont souvent des indicateurs <em>retardés</em> — quand "tout le monde" parle d'un ticker, le gros du mouvement est déjà fait. <strong>Règle 3 :</strong> Croisez toujours avec les données dures (options flow, insider activity, short interest) avant d'agir.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : NLP ET SENTIMENT AUTOMATISÉ                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="nlp"><i class="fa-solid fa-robot" style="color:#9333ea;"></i> NLP et sentiment automatisé</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-robot" style="color:#9333ea;"></i> Comment les hedge funds lisent les news avec l'IA</h2>
+
+  <p>Les quant funds comme Renaissance Technologies, Two Sigma et Citadel investissent des dizaines de millions dans le <strong>Natural Language Processing (NLP)</strong>. Leur objectif : extraire un signal tradeable à partir du flux de news avant que les humains ne puissent le digérer.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Pipeline NLP des hedge funds</div>
+    <span class="formula-highlight">News Feed</span> → Parsing → <span class="formula-highlight">Sentiment Score</span> → Signal → <span class="formula-highlight">Exécution</span> (50ms)
+  </div>
+
+  <h3>Ce que les algos analysent</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Source</th><th>Données extraites</th><th>Latence</th><th>Edge</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Reuters / Bloomberg headlines</strong></td>
+        <td>Sentiment positif/négatif, entités, montants</td>
+        <td>50ms</td>
+        <td>Réaction avant les humains</td>
+      </tr>
+      <tr>
+        <td><strong>SEC filings (EDGAR)</strong></td>
+        <td>Changements de langage vs filing précédent, risk factors</td>
+        <td>1-5 min</td>
+        <td>Détection de changements subtils</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings transcripts</strong></td>
+        <td>Ton du CEO (confiant/hésitant), fréquence de mots-clés</td>
+        <td>Minutes</td>
+        <td>Analyse du langage corporel vocal</td>
+      </tr>
+      <tr>
+        <td><strong>Twitter/Reddit</strong></td>
+        <td>Volume de mentions, ratio sentiment, propagation virale</td>
+        <td>Temps réel</td>
+        <td>Anticipation du flow retail</td>
+      </tr>
+      <tr>
+        <td><strong>Satellite imagery</strong></td>
+        <td>Parkings Walmart, tankers pétroliers, construction</td>
+        <td>Jours</td>
+        <td>Données alternative pre-earnings</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f5f3ff; border:1px solid #9333ea; border-radius:16px;">
+      <h4 style="color:#9333ea; margin:0 0 0.75rem;"><i class="fa-solid fa-wand-magic-sparkles"></i> Mots-clés bullish détectés par NLP</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>"acceleration", "exceeded expectations"</li>
+        <li>"record revenue", "strong demand"</li>
+        <li>"raised guidance", "beat consensus"</li>
+        <li>"confident", "optimistic outlook"</li>
+        <li>"market share gains", "pricing power"</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-triangle-exclamation"></i> Mots-clés bearish détectés par NLP</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>"challenging environment", "headwinds"</li>
+        <li>"restructuring", "strategic review"</li>
+        <li>"lowered guidance", "below expectations"</li>
+        <li>"uncertainty", "cautious outlook"</li>
+        <li>"margin pressure", "delayed shipments"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Outils NLP accessibles aux particuliers</h4>
+    <p style="margin:0;">Vous n'avez pas besoin d'un budget de hedge fund. <strong>Quiver Quantitative</strong> offre des données de sentiment Twitter/Reddit gratuitement. <strong>Sentdex</strong> fournit des scores de sentiment par ticker. <strong>Finviz</strong> intègre un flux de news filtré par ticker. Et avec l'API gratuite de ChatGPT ou Claude, vous pouvez construire votre propre analyseur de sentiment en quelques lignes de Python sur les transcripts d'earnings (disponibles gratuitement sur Seeking Alpha).</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : SIGNAUX CONTRARIAN                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="contrarian"><i class="fa-solid fa-arrows-rotate" style="color:#16a34a;"></i> Signaux contrarian</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-rotate" style="color:#16a34a;"></i> Quand tout le monde est bullish, sois prudent</h2>
+
+  <p>L'investissement contrarian repose sur un principe simple : <strong>les marchés sont à leur plus dangereux quand tout le monde est confiant, et à leur plus prometteur quand tout le monde a peur</strong>. Warren Buffett l'a résumé : "Be fearful when others are greedy, and greedy when others are fearful."</p>
+
+  <h3>Les 5 signaux contrarian classiques</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #4f46e5; border-radius:0 12px 12px 0;">
+      <strong style="color:#4f46e5;">1. Magazine Cover Indicator</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand un actif fait la couverture de Time, Newsweek ou The Economist, le mouvement est souvent terminé. En juin 2005, Time titrait "Home Sweet Home" vantant l'immobilier — 18 mois avant le krach. En décembre 2017, Bloomberg titrait "Bitcoin $100,000?" — exactement au sommet. Quand le grand public célèbre, les insiders vendent.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <strong style="color:#dc2626;">2. Le chauffeur de taxi parle de bourse</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand des personnes qui ne s'intéressent normalement pas à la finance commencent à donner des "tips" boursiers, c'est un signal de sommet. Joseph Kennedy a vendu toutes ses actions en 1929 après que son cireur de chaussures lui ait donné un conseil boursier. Le même phénomène s'est produit avec les crypto en novembre 2021.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <strong style="color:#16a34a;">3. AAII Bearish &gt; 50%</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand plus de 50% des investisseurs individuels sont bearish, le S&P 500 gagne en moyenne <strong>+18%</strong> sur les 12 mois suivants (données AAII 1987-2024). Ça s'est vérifié en mars 2009, mars 2020, et octobre 2022 — chaque fois, c'étaient des points d'achat exceptionnels.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f59e0b; border-radius:0 12px 12px 0;">
+      <strong style="color:#f59e0b;">4. VIX Spike + Put/Call &gt; 1.2</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">La combinaison VIX > 30 et Put/Call ratio > 1.2 est un signal de capitulation. Les investisseurs achètent massivement des puts pour se protéger — c'est souvent le signe que la peur a atteint son paroxysme et qu'un rebond technique est imminent dans les 5-10 séances.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0;">
+      <strong style="color:#9333ea;">5. Record d'inflows dans les money market funds</strong>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Quand les investisseurs fuient les actions vers le cash (money market funds), c'est un signal de capitulation institutionnelle. En 2023, les money market funds ont atteint <strong>$6 trillion</strong> — un record historique. Ce "mur de cash" représente un fuel potentiel pour le prochain rallye quand la confiance reviendra.</p>
+    </div>
+  </div>
+
+  <!-- CHART 4: Sentiment vs SPX Correlation -->
+  <h3>Fear & Greed vs S&P 500 — Les extrêmes sont des opportunités</h3>
+  <div id="chart-contrarian" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège contrarian : "catching a falling knife"</h4>
+    <p style="margin:0;">Être contrarian ne signifie pas acheter aveuglément chaque baisse. Les signaux contrarian sont des <strong>indicateurs probabilistes</strong>, pas des garanties. Un marché bearish peut rester bearish bien plus longtemps que vous ne pouvez rester solvable. <strong>Règle absolue :</strong> combinez toujours le sentiment avec l'analyse technique (support, RSI oversold) et fondamentale (valorisations attractives). Le sentiment seul est un outil incomplet.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 5 questions</h2>
+
+  <details>
+    <summary>Question 1 : À quelle heure (ET) sont publiées la plupart des données macroéconomiques US ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 8h30 ET (heure de l'Est).</strong><br>
+      Les données clés comme le CPI, PPI, NFP (Non-Farm Payrolls), jobless claims et GDP sont publiées à 8h30 ET, soit une heure avant l'ouverture du marché. C'est la fenêtre la plus volatile du pre-market. Les futures réagissent immédiatement, et la direction initiale donne souvent le ton de la séance.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Qu'indique un Fear & Greed Index à 12 ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Extreme Fear — historiquement un signal d'achat contrarian.</strong><br>
+      Un F&G à 12 signifie que le marché est dans un état de peur extrême. Les investisseurs fuient les actifs risqués. Historiquement, acheter le S&P 500 quand le F&G est sous 20 et tenir 12 mois a produit un rendement moyen de +22%. Ce n'est pas un timing signal exact (le marché peut encore baisser), mais c'est un signal probabiliste fort que les prix sont déprimés.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Pourquoi un Put/Call ratio inférieur à 0.7 est-il un signal de prudence ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Parce qu'il indique une euphorie excessive — trop d'investisseurs achètent des calls (paris haussiers).</strong><br>
+      Un Put/Call ratio bas signifie que les investisseurs sont massivement positionnés à la hausse via les options. Ce déséquilibre crée une situation fragile : si le marché commence à baisser, le dénouement des positions calls amplifie la vente. De plus, les market makers qui ont vendu ces calls doivent couvrir leur delta en vendant des actions si le marché baisse, créant un effet cascade.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quel est le principal piège des analyses partagées sur Reddit (r/WallStreetBets) ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le biais de position — l'auteur a déjà acheté et cherche à recruter des acheteurs pour faire monter le prix.</strong><br>
+      Les "DD" (Due Diligence) posts sur WSB sont souvent écrits par quelqu'un qui détient déjà une position significative. Son intérêt est de convaincre d'autres personnes d'acheter pour créer de la demande et faire monter le prix. C'est un conflit d'intérêts structurel. De plus, le biais de survivabilité fait que seuls les DD qui ont fonctionné deviennent viraux — on ne voit jamais les centaines de DD perdants.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Qu'est-ce que le "Magazine Cover Indicator" ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : L'idée que quand un actif fait la couverture d'un magazine grand public, le mouvement est souvent terminé.</strong><br>
+      Ce phénomène s'explique par le cycle d'adoption : quand un actif attire l'attention des médias grand public, c'est que le mouvement a déjà eu lieu (early adopters → institutions → grand public). Le grand public arrive toujours en dernier. Exemples célèbres : couverture Time sur l'immobilier en 2005 (avant le krach), Bitcoin en couverture de Bloomberg fin 2017 (exactement au sommet), et les articles "fin du dollar" en 2023 (avant un rebond du DXY).
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#4f46e5;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-clock"></i> <strong>Le cycle de l'info a 3 phases critiques</strong> — Pre-market (5h-9h30), Market hours, After-hours. Les earnings et les données macro sont les catalyseurs les plus puissants.</li>
+      <li><i class="fa-solid fa-layer-group"></i> <strong>Hiérarchisez vos sources</strong> — Tier 1 (Bloomberg, Reuters) pour la fiabilité, Tier 3 (Reddit, Twitter) pour le sentiment. Ne tradez jamais sur du Tier 4 (Telegram, Discord "alpha").</li>
+      <li><i class="fa-solid fa-gauge-high"></i> <strong>Le sentiment est contrarian aux extrêmes</strong> — Fear & Greed &lt; 20 = signal d'achat (rendement moyen +22% à 12 mois). F&G &gt; 80 = prudence.</li>
+      <li><i class="fa-solid fa-scale-balanced"></i> <strong>Put/Call ratio et VIX sont des baromètres de peur</strong> — Put/Call &gt; 1.2 + VIX &gt; 30 = signal de capitulation. Put/Call &lt; 0.7 = euphorie dangereuse.</li>
+      <li><i class="fa-solid fa-hashtag"></i> <strong>Les réseaux sociaux sont des indicateurs retardés</strong> — quand "tout le monde" parle d'un ticker, le gros du mouvement est fait. Utilisez le volume de mentions comme confirmation, pas comme signal primaire.</li>
+      <li><i class="fa-solid fa-robot"></i> <strong>Les hedge funds utilisent le NLP pour lire les news en 50ms</strong> — vous ne pouvez pas les battre en vitesse. Votre edge est dans l'interprétation à moyen terme.</li>
+      <li><i class="fa-solid fa-arrows-rotate"></i> <strong>Être contrarian n'est pas être téméraire</strong> — combinez toujours le sentiment avec les supports techniques et les valorisations fondamentales. Le sentiment seul ne suffit jamais.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les indicateurs de sentiment sont des outils probabilistes, pas des prédictions certaines.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/lire-le-marche/part3-short-interest/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">3. Short Interest & FTD</div>
+  </div>
+</a>
+
+<a href="/series/lire-le-marche/part5-earnings-analystes/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">Earnings, Analystes & Guidance — Décoder les Signaux</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/lire-le-marche/part1-sec-filings/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. SEC Filings</a>
+  <a href="/series/lire-le-marche/part2-options-darkpool/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Options & Dark Pool</a>
+  <a href="/series/lire-le-marche/part3-short-interest/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">3. Short Interest</a>
+  <a href="/series/lire-le-marche/part4-news-sentiment/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#4f46e5; color:white; border:1px solid #4f46e5;">4. News & Sentiment</a>
+  <a href="/series/lire-le-marche/part5-earnings-analystes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Earnings & Analystes</a>
+  <a href="/series/lire-le-marche/part6-dashboard-synthese/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Dashboard Synthèse</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Lire le Marché — Données Publiques & Intelligence</strong> — Partie 4/6 : News, Sentiment & Social Media</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Timeline du jour de trading
+(function(){
+  var dom = document.getElementById('chart-timeline');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var hours = ['5h','6h','7h','8h','8h30','9h','9h30','10h','11h','12h','13h','14h','15h','15h45','16h','17h','18h','19h','20h'];
+  var volume = [5,8,12,25,65,40,100,85,55,35,30,70,45,60,90,40,30,20,10];
+  var impact = [10,15,20,45,90,50,80,60,35,20,15,75,30,45,70,35,25,15,8];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Volume relatif','Impact news'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:hours,axisLabel:{fontSize:10,fontWeight:600}},
+    yAxis:{type:'value',name:'Intensité (%)',axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Volume relatif',type:'bar',data:volume,itemStyle:{color:'#4f46e5',borderRadius:[4,4,0,0]},barWidth:'35%'},
+      {name:'Impact news',type:'line',data:impact,smooth:true,symbol:'circle',symbolSize:6,lineStyle:{color:'#f97316',width:2.5},itemStyle:{color:'#f97316'}}
+    ],
+    markArea:{silent:true,data:[
+      [{xAxis:'5h',itemStyle:{color:'rgba(79,70,229,0.05)'},label:{show:true,position:'top',formatter:'Pre-Market',fontSize:9,color:'#4f46e5'}},{xAxis:'9h30'}],
+      [{xAxis:'9h30',itemStyle:{color:'rgba(16,163,74,0.05)'},label:{show:true,position:'top',formatter:'Market Hours',fontSize:9,color:'#16a34a'}},{xAxis:'16h'}],
+      [{xAxis:'16h',itemStyle:{color:'rgba(249,115,22,0.05)'},label:{show:true,position:'top',formatter:'After-Hours',fontSize:9,color:'#f97316'}},{xAxis:'20h'}]
+    ]}
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Fear & Greed Gauge
+(function(){
+  var dom = document.getElementById('chart-fear-greed');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    series:[{
+      type:'gauge',
+      startAngle:180,
+      endAngle:0,
+      min:0,
+      max:100,
+      splitNumber:10,
+      radius:'90%',
+      center:['50%','70%'],
+      axisLine:{lineStyle:{width:25,color:[[0.25,'#dc2626'],[0.40,'#f97316'],[0.60,'#f59e0b'],[0.75,'#16a34a'],[1,'#059669']]}},
+      pointer:{itemStyle:{color:'#0f172a'},width:6,length:'70%'},
+      axisTick:{distance:-25,length:6,lineStyle:{color:'#fff',width:2}},
+      splitLine:{distance:-30,length:14,lineStyle:{color:'#fff',width:3}},
+      axisLabel:{color:'#475569',distance:12,fontSize:11,fontWeight:600,formatter:function(v){if(v===0)return'Extreme\nFear';if(v===25)return'Fear';if(v===50)return'Neutral';if(v===75)return'Greed';if(v===100)return'Extreme\nGreed';return'';}},
+      detail:{valueAnimation:true,formatter:'{value}',color:'#0f172a',fontSize:36,fontWeight:800,offsetCenter:[0,'-10%']},
+      title:{show:true,offsetCenter:[0,'20%'],fontSize:14,color:'#64748b',fontWeight:600},
+      data:[{value:38,name:'Fear & Greed Index'}]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Social media volume vs price (GameStop)
+(function(){
+  var dom = document.getElementById('chart-social-volume');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var dates=['Jan 4','Jan 11','Jan 18','Jan 22','Jan 25','Jan 26','Jan 27','Jan 28','Jan 29','Feb 1','Feb 2','Feb 5','Feb 10','Feb 15','Feb 22'];
+  var mentions=[500,800,2500,15000,85000,120000,250000,350000,180000,90000,60000,30000,15000,8000,5000];
+  var price=[18,20,39,43,76,148,347,193,325,225,90,63,52,46,44];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Mentions Reddit (WSB)','Prix GME ($)'],bottom:0},
+    grid:{left:'10%',right:'10%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:10,rotate:30}},
+    yAxis:[
+      {type:'value',name:'Mentions',axisLabel:{fontSize:10,formatter:function(v){return v>=1000?(v/1000)+'k':v;}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      {type:'value',name:'Prix ($)',axisLabel:{fontSize:10},splitLine:{show:false}}
+    ],
+    series:[
+      {name:'Mentions Reddit (WSB)',type:'bar',data:mentions,itemStyle:{color:'#f97316',borderRadius:[4,4,0,0]},barWidth:'45%'},
+      {name:'Prix GME ($)',type:'line',data:price,smooth:true,symbol:'circle',symbolSize:6,lineStyle:{color:'#4f46e5',width:3},itemStyle:{color:'#4f46e5'},yAxisIndex:1}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 4: Sentiment vs SPX correlation (contrarian)
+(function(){
+  var dom = document.getElementById('chart-contrarian');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var months=['Jan 23','Mar 23','Jun 23','Sep 23','Dec 23','Mar 24','Jun 24','Sep 24','Dec 24','Mar 25','Jun 25','Sep 25','Dec 25','Feb 26'];
+  var fg=[30,22,65,35,72,68,78,42,75,55,70,38,82,38];
+  var spx=[3900,3950,4400,4300,4750,5100,5500,5200,5900,5600,5800,5400,6100,5850];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Fear & Greed Index','S&P 500'],bottom:0},
+    grid:{left:'8%',right:'8%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:10,rotate:30}},
+    yAxis:[
+      {type:'value',name:'F&G Index',min:0,max:100,axisLabel:{fontSize:10},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      {type:'value',name:'S&P 500',axisLabel:{fontSize:10},splitLine:{show:false}}
+    ],
+    series:[
+      {name:'Fear & Greed Index',type:'line',data:fg,smooth:true,symbol:'circle',symbolSize:6,lineStyle:{color:'#dc2626',width:2.5},itemStyle:{color:'#dc2626'},
+        markArea:{silent:true,data:[[{yAxis:0,itemStyle:{color:'rgba(22,163,74,0.06)'}},{yAxis:25}],[{yAxis:75,itemStyle:{color:'rgba(220,38,38,0.06)'}},{yAxis:100}]]}
+      },
+      {name:'S&P 500',type:'line',data:spx,smooth:true,symbol:'none',lineStyle:{color:'#4f46e5',width:2.5},yAxisIndex:1,areaStyle:{color:'rgba(79,70,229,0.05)'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>

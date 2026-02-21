@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Se Protéger — Hedging & Position Sizing | Gérer le Risque de Gap — Partie 3/5 | Market Watch</title>
+  <meta name="description" content="Série Gérer le Risque de Gap — Partie 3/5 : Position sizing, Kelly Criterion, protective puts, collar strategy, stop loss garanti, diversification et hedging de portefeuille contre les gaps.">
+  <meta property="og:title" content="Se Protéger — Hedging & Position Sizing | Gérer le Risque de Gap — Partie 3/5 | Market Watch">
+  <meta property="og:description" content="La règle des 1-2%, Kelly Criterion, options comme assurance, stop loss garanti, diversification anti-gap. Le guide complet pour protéger votre portefeuille.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/risque-de-gap/part3-protection/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#dc2626; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#f87171; color:#f87171; }
+  .series-link.current { background:#dc2626; color:white; border-color:#dc2626; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#dc2626; margin-right:0.75rem; }
+  details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#dc2626; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#f87171; }
+  .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#dc2626; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:#f8fafc; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#dc2626; color:#dc2626; }
+  .prev-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.7; }
+  .prev-cta .next-title { font-size:1.1rem; font-weight:700; }
+  .disclaimer-mega { background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #dc2626; }
+  .disclaimer-mega h3 { color:#fca5a5; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fecaca; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#f87171; margin-top:0.2rem; flex-shrink:0; }
+  .asset-section { background:white; border:1px solid #e2e8f0; border-radius:20px; padding:2rem; margin:1.5rem 0; border-top:4px solid; }
+  .case-study { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin:1rem 0; border-left:4px solid #dc2626; }
+  .case-study h5 { margin:0 0 0.5rem; font-size:0.95rem; font-weight:700; color:#0f172a; }
+  .case-study p { margin:0; font-size:0.88rem; color:#475569; line-height:1.6; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+    .asset-section { padding:1.25rem; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Gérer le Risque de Gap</span>
+  <a href="/series/risque-de-gap/part1-anatomie-gap/" class="series-link">1 — Anatomie</a>
+  <a href="/series/risque-de-gap/part2-gap-par-actif/" class="series-link">2 — Par Actif</a>
+  <a href="/series/risque-de-gap/part3-protection/" class="series-link current">3 — Protection</a>
+  <a href="/series/risque-de-gap/part4-trader-les-gaps/" class="series-link">4 — Trader</a>
+  <a href="/series/risque-de-gap/part5-survivre/" class="series-link">5 — Survivre</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Gérer le Risque de Gap — Partie 3 sur 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Se Protéger — Hedging & Position Sizing</h1>
+  <p class="hero-subtitle">La règle des 1-2%, Kelly Criterion, options comme assurance gap, stop loss garanti, diversification et couverture de portefeuille. Le guide complet pour transformer le risque de gap d'une menace existentielle en un risque gérable.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-shield-halved"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-umbrella"></i> Hedging</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-pie"></i> Diversification</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-calculator"></i> Kelly Criterion</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#sizing" class="nav-item"><i class="fa-solid fa-ruler" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Position Sizing</a>
+  <a href="#kelly" class="nav-item"><i class="fa-solid fa-calculator" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Kelly Criterion</a>
+  <a href="#options" class="nav-item"><i class="fa-solid fa-umbrella" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Hedging Options</a>
+  <a href="#stoploss" class="nav-item"><i class="fa-solid fa-hand" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Stop Loss & GSLO</a>
+  <a href="#diversification" class="nav-item"><i class="fa-solid fa-chart-pie" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Diversification</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : POSITION SIZING                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-ruler" style="color:#dc2626;"></i> Position Sizing — La Première Ligne de Défense</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-ruler" style="color:#dc2626;"></i> La Règle des 1-2% par Trade</h2>
+
+  <p>Le position sizing est la compétence la plus importante en trading — et la plus sous-estimée. Elle ne vous dit pas <strong>quoi</strong> acheter, mais <strong>combien</strong> acheter. Un bon position sizing transforme un gap dévastateur en une perte gérable. Un mauvais position sizing transforme un gap mineur en catastrophe.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le principe fondamental</h4>
+    <p style="margin:0;">Ne jamais risquer plus de <strong>1% à 2% de votre capital total</strong> sur un seul trade. Si votre portefeuille est de 100 000 euros, votre perte maximale acceptable sur un trade est de 1 000 à 2 000 euros. Pas la taille de la position — la <strong>perte maximale</strong>. Cette règle survit à n'importe quel gap.</p>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Calcul de la Taille de Position</div>
+    Taille = (Capital &times; <span class="formula-highlight">% Risque</span>) &divide; (Prix d'Entrée - <span class="formula-highlight">Stop Loss</span>)
+  </div>
+
+  <div class="asset-section" style="border-top-color:#dc2626;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-crosshairs" style="color:#dc2626;"></i> Exemple Concret</h3>
+    <p>Vous avez un portefeuille de <strong>50 000 euros</strong>. Vous voulez acheter une action à 100 euros avec un stop loss à 90 euros (risque de 10 euros par action). Avec la règle des 2% :</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div style="background:#eff6ff; border:1px solid #3b82f6; border-radius:12px; padding:1.25rem; text-align:center;">
+        <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase;">Capital &times; 2%</div>
+        <div style="font-size:1.8rem; font-weight:900; color:#2563eb;">1 000 &euro;</div>
+        <div style="font-size:0.75rem; color:#475569;">Risque max par trade</div>
+      </div>
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; text-align:center;">
+        <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase;">1 000 &euro; &divide; 10 &euro;</div>
+        <div style="font-size:1.8rem; font-weight:900; color:#16a34a;">100 actions</div>
+        <div style="font-size:0.75rem; color:#475569;">Taille de position</div>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem; text-align:center;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase;">100 &times; 100 &euro;</div>
+        <div style="font-size:1.8rem; font-weight:900; color:#dc2626;">10 000 &euro;</div>
+        <div style="font-size:0.75rem; color:#475569;">20% du portefeuille</div>
+      </div>
+    </div>
+
+    <p>Mais que se passe-t-il si l'action ouvre en <strong>gap à 70 euros</strong> au lieu de votre stop à 90 ? Votre perte n'est plus de 1 000 euros mais de <strong>3 000 euros</strong> (6% du portefeuille). C'est gérable. Maintenant imaginez sans position sizing : 100% du portefeuille dans cette action = perte de 15 000 euros (30%). La différence entre survivre et être détruit.</p>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#f97316;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-layer-group" style="color:#f97316;"></i> Position Sizing Ajusté au Gap</h3>
+    <p>La règle des 1-2% suppose que le stop loss fonctionne. Mais on sait que les gaps traversent les stop loss. Il faut donc ajuster le sizing en fonction du <strong>gap potentiel</strong> de l'actif, pas seulement du stop loss.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Position Sizing Ajusté au Gap</div>
+      Taille = (Capital &times; % Risque) &divide; <span class="formula-highlight">Gap Max Historique (%)</span> &times; Prix
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Classe d'Actif</th><th>Gap Max Typique</th><th>Sizing Recommandé</th><th>Logique</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Large Caps (S&P 500)</strong></td><td>-8% à -15%</td><td style="color:#16a34a; font-weight:700;">5-10% du portefeuille</td><td>Gap limité, diversifié</td></tr>
+        <tr><td><strong>Mid/Small Caps</strong></td><td>-15% à -30%</td><td style="color:#f97316; font-weight:700;">3-5% du portefeuille</td><td>Earnings gap plus violent</td></tr>
+        <tr><td><strong>Biotech / Pharma</strong></td><td>-40% à -80%</td><td style="color:#dc2626; font-weight:700;">1-2% du portefeuille</td><td>FDA = événement binaire</td></tr>
+        <tr><td><strong>Crypto (BTC/ETH)</strong></td><td>-20% à -40%</td><td style="color:#f97316; font-weight:700;">2-5% du portefeuille</td><td>Flash crash, cascade liquidation</td></tr>
+        <tr><td><strong>Altcoins / Meme coins</strong></td><td>-50% à -99%</td><td style="color:#dc2626; font-weight:700;">0,5-1% du portefeuille</td><td>Risque existentiel</td></tr>
+        <tr><td><strong>Forex (avec levier)</strong></td><td>-2% à -10% (spot)</td><td style="color:#dc2626; font-weight:700;">Micro lots, levier &le;10:1</td><td>Levier amplifie le gap</td></tr>
+        <tr><td><strong>ETFs à levier (3x)</strong></td><td>-20% à -35%</td><td style="color:#dc2626; font-weight:700;">2-3% du portefeuille</td><td>Gap &times; 3</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chart: Monte Carlo Simulation -->
+  <div id="chart-montecarlo" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : KELLY CRITERION                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="kelly"><i class="fa-solid fa-calculator" style="color:#9333ea;"></i> Kelly Criterion — Le Sizing Optimal</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#9333ea;"></i> Kelly Criterion Simplifié</h2>
+
+  <p>Le <strong>Kelly Criterion</strong> est la formule mathématique qui maximise la croissance du capital à long terme. Développée par John Kelly chez Bell Labs en 1956 et adoptée par les plus grands investisseurs (Ed Thorp, Warren Buffett indirectement), elle calcule la <strong>fraction optimale</strong> du capital à risquer sur chaque trade.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule de Kelly</div>
+    f* = (p &times; b - q) &divide; <span class="formula-highlight">b</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="background:#faf5ff; border:1px solid #9333ea; border-radius:12px; padding:1.25rem; text-align:center;">
+      <div style="font-size:0.7rem; font-weight:700; color:#9333ea; text-transform:uppercase;">f*</div>
+      <div style="font-size:1.2rem; font-weight:700; color:#9333ea;">Fraction optimale</div>
+      <div style="font-size:0.75rem; color:#475569;">% du capital à risquer</div>
+    </div>
+    <div style="background:#eff6ff; border:1px solid #2563eb; border-radius:12px; padding:1.25rem; text-align:center;">
+      <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase;">p &amp; q</div>
+      <div style="font-size:1.2rem; font-weight:700; color:#2563eb;">Probabilités</div>
+      <div style="font-size:0.75rem; color:#475569;">p = win rate, q = 1 - p</div>
+    </div>
+    <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem; text-align:center;">
+      <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase;">b</div>
+      <div style="font-size:1.2rem; font-weight:700; color:#16a34a;">Ratio Gain/Perte</div>
+      <div style="font-size:0.75rem; color:#475569;">Gain moyen &divide; Perte moyenne</div>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#9333ea;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-flask" style="color:#9333ea;"></i> Exemple : Un Swing Trader</h3>
+    <p>Votre stratégie a un <strong>win rate de 55%</strong> (p = 0,55) et un <strong>ratio gain/perte de 2:1</strong> (b = 2). Le Kelly Criterion donne :</p>
+    <div class="formula-box">
+      <div class="formula-label">Calcul</div>
+      f* = (0,55 &times; 2 - 0,45) &divide; 2 = <span class="formula-highlight">32,5%</span>
+    </div>
+    <p>Kelly dit de risquer 32,5% du capital. C'est <strong>beaucoup trop agressif</strong> en pratique. La volatilité réelle, les incertitudes sur vos estimations de p et b, et surtout le <strong>risque de gap</strong> rendent le Kelly plein dangereux.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> TOUJOURS utiliser le "Half Kelly" ou "Quarter Kelly"</h4>
+    <p style="margin:0;">En pratique, les professionnels utilisent <strong>25% à 50% du Kelly</strong> (appelé "fractional Kelly"). Dans l'exemple ci-dessus : Half Kelly = 16,25%, Quarter Kelly = 8,1%. Le Quarter Kelly est recommandé quand le risque de gap est élevé (biotech, earnings, crypto). Cela sacrifie un peu de rendement optimal mais réduit drastiquement le risque de ruine.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi Kelly est dangereux avec les gaps</h4>
+    <p style="margin:0;">Kelly suppose que vous pouvez contrôler exactement votre perte (via un stop loss). Mais un gap ignore votre stop loss. Si Kelly dit de risquer 30% et qu'un gap double votre perte attendue, vous perdez 60% du capital en une nuit. C'est pourquoi le <strong>gap potentiel doit être intégré dans le calcul de "b"</strong> (ratio gain/perte). Votre perte potentielle réelle n'est pas votre stop — c'est le pire gap historique de l'actif.</p>
+  </div>
+
+  <!-- Chart: Kelly Fraction vs Growth -->
+  <div id="chart-kelly" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : HEDGING AVEC OPTIONS                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="options"><i class="fa-solid fa-umbrella" style="color:#2563eb;"></i> Hedging avec des Options</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-umbrella" style="color:#2563eb;"></i> Les Options comme Assurance Gap</h2>
+
+  <p>Les options sont le <strong>seul outil qui protège véritablement contre les gaps</strong>. Un stop loss ne peut pas s'exécuter dans un gap. Un protective put, si. C'est la différence entre une "promesse" de protection et une <strong>garantie contractuelle</strong>.</p>
+
+  <div class="asset-section" style="border-top-color:#2563eb;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-shield-halved" style="color:#2563eb;"></i> Protective Put — L'Assurance de Base</h3>
+    <p>Vous détenez 100 actions à 150 euros. Vous achetez un put avec un strike à 140 euros pour 3 euros. Votre perte maximale est plafonnée à <strong>13 euros par action</strong> (10 de baisse + 3 de prime), quel que soit le gap.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-check-circle"></i> Avantages</div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+          <li>Protection absolue contre les gaps down</li>
+          <li>Perte maximale connue et plafonnée</li>
+          <li>Gain illimité à la hausse (moins la prime)</li>
+          <li>Pas de margin call possible</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark-circle"></i> Inconvénients</div>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; color:#475569; line-height:1.7;">
+          <li>Coût récurrent (prime = "loyer" de protection)</li>
+          <li>Érosion temporelle (theta decay)</li>
+          <li>Prime plus chère avant les earnings</li>
+          <li>Réduit le rendement de 2-5% par an</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="case-study">
+      <h5><i class="fa-solid fa-calculator" style="color:#2563eb;"></i> Coût annuel de la protection</h5>
+      <p>Pour une action à 150 euros, un put ATM (strike 150) coûte environ 5-8% du prix par trimestre. Acheter 4 puts par an = 20-32% de protection annuelle. C'est cher. C'est pourquoi on utilise des puts <strong>OTM (out-of-the-money)</strong> à strike 130-135 (10-15% sous le prix), qui coûtent 1-3% par trimestre. Cela vous protège contre les gaps de plus de 10%, pas contre les baisses ordinaires.</p>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#16a34a;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-ring" style="color:#16a34a;"></i> Collar Strategy — Protection Gratuite (ou Presque)</h3>
+    <p>Le <strong>collar</strong> combine un protective put (acheté) avec un covered call (vendu). La prime du call vendu finance tout ou partie du put acheté. Résultat : protection gratuite, mais votre gain à la hausse est plafonné.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Structure du Collar</div>
+      Action longue + <span class="formula-highlight">Put acheté (OTM)</span> + Call vendu (OTM) = Protection financée
+    </div>
+
+    <div class="case-study">
+      <h5><i class="fa-solid fa-coins" style="color:#16a34a;"></i> Exemple : Collar sur AAPL à 180 $</h5>
+      <p>Vous possédez 100 AAPL à 180 $. Vous achetez un put strike 165 (coût : 4 $) et vendez un call strike 195 (prime reçue : 4 $). Coût net : <strong>0 $</strong>. Votre perte maximale est plafonnée à 15 $ (180-165), même si AAPL gap à 100 $. Votre gain est plafonné à 15 $ (195-180). Parfait avant les earnings si vous voulez garder votre position.</p>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#f97316;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-scale-balanced" style="color:#f97316;"></i> Coût vs Protection — Le Vrai Calcul</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Stratégie</th><th>Coût Annuel</th><th>Protection Gap</th><th>Gain Max</th><th>Idéal Pour</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Stop Loss simple</strong></td><td style="color:#16a34a;">Gratuit</td><td style="color:#dc2626;">Aucune (gap through)</td><td>Illimité</td><td>Marchés liquides, intraday</td></tr>
+        <tr><td><strong>Put OTM (-10%)</strong></td><td style="color:#f97316;">4-12% / an</td><td style="color:#16a34a;">Totale sous le strike</td><td>Illimité</td><td>Positions long terme</td></tr>
+        <tr><td><strong>Put ATM</strong></td><td style="color:#dc2626;">20-32% / an</td><td style="color:#16a34a;">Totale</td><td>Illimité</td><td>Pré-earnings, événements</td></tr>
+        <tr><td><strong>Collar</strong></td><td style="color:#16a34a;">0-2% / an</td><td style="color:#16a34a;">Totale sous le put</td><td>Plafonné</td><td>Revenus, pré-earnings</td></tr>
+        <tr><td><strong>Married Put</strong></td><td style="color:#f97316;">3-8% / an</td><td style="color:#16a34a;">Totale</td><td>Illimité</td><td>Nouvelles positions</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chart: Protection Comparison -->
+  <div id="chart-protection" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : STOP LOSS & GSLO                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stoploss"><i class="fa-solid fa-hand" style="color:#f97316;"></i> Stop Loss — Les Limites en Cas de Gap</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hand" style="color:#f97316;"></i> Stop Loss : Pourquoi Ça Ne Suffit Pas</h2>
+
+  <p>Le stop loss est l'outil de gestion de risque le plus utilisé — et le plus <strong>mal compris</strong>. Un stop loss n'est pas une garantie. C'est un <em>ordre conditionnel</em> : "si le prix atteint X, vendre au marché". Mais si le prix <strong>ne passe jamais par X</strong> (gap), l'ordre s'exécute au premier prix disponible — qui peut être bien en dessous.</p>
+
+  <div class="asset-section" style="border-top-color:#dc2626;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-arrow-down" style="color:#dc2626;"></i> Slippage & Gap Through</h3>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-bolt"></i> Slippage Normal</div>
+        <div style="font-size:1.5rem; font-weight:900; color:#dc2626;">0,1% - 0,5%</div>
+        <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">Différence entre le prix du stop et le prix d'exécution en conditions normales. Gérable et prévisible.</p>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-explosion"></i> Gap Through</div>
+        <div style="font-size:1.5rem; font-weight:900; color:#dc2626;">5% - 50%+</div>
+        <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">Le prix ouvre directement sous votre stop. Votre ordre s'exécute au prix d'ouverture, pas au prix du stop. Perte bien supérieure au plan.</p>
+      </div>
+    </div>
+
+    <div class="case-study">
+      <h5><i class="fa-solid fa-skull-crossbones" style="color:#dc2626;"></i> Scénario réel : Stop à 95 $, gap down à 72 $</h5>
+      <p>Vous détenez une action à 100 $ avec un stop loss à 95 $. La société annonce un profit warning après la clôture. L'action ouvre le lendemain à 72 $. Votre stop s'exécute à 72 $ — pas à 95 $. Votre perte planifiée de 5% devient une perte réelle de <strong>28%</strong>. C'est le "gap through" : votre stop loss a été <strong>traversé</strong> comme s'il n'existait pas.</p>
+    </div>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#16a34a;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-shield-halved" style="color:#16a34a;"></i> Stop Loss Garanti (GSLO)</h3>
+    <p>Certains brokers proposent des <strong>Guaranteed Stop Loss Orders (GSLO)</strong>. Contrairement au stop loss classique, le GSLO garantit l'exécution exactement au prix spécifié, même en cas de gap. Le broker absorbe le risque de gap — et vous facture une prime pour ce service.</p>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#16a34a;">100%</div>
+        <div class="metric-label">Exécution garantie</div>
+        <div class="metric-change neutral">Même en gap</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#f97316;">0,3-1%</div>
+        <div class="metric-label">Prime typique</div>
+        <div class="metric-change neutral">Du nominal</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#2563eb;">CFDs</div>
+        <div class="metric-label">Disponibilité</div>
+        <div class="metric-change neutral">IG, CMC, Plus500</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#dc2626;">Non</div>
+        <div class="metric-label">Actions spot US</div>
+        <div class="metric-change neutral">Non disponible</div>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb"></i> Quand utiliser un GSLO ?</h4>
+      <p style="margin:0;">Utilisez un GSLO quand : (1) vous tradez des CFDs avec levier, (2) vous détenez une position overnight avant un événement à risque (earnings, FDA, FOMC), (3) la prime du GSLO est inférieure au coût d'un protective put équivalent. Attention : les GSLO ne sont disponibles que sur les CFDs/spread betting chez les brokers qui les proposent. Sur les actions réelles, seules les options offrent une protection garantie.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : DIVERSIFICATION                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="diversification"><i class="fa-solid fa-chart-pie" style="color:#16a34a;"></i> Diversification & Hedging de Portefeuille</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-pie" style="color:#16a34a;"></i> Diversification — La Protection Structurelle</h2>
+
+  <p>La diversification est la seule stratégie de protection qui est <strong>gratuite et permanente</strong>. Pas de prime à payer, pas d'expiration, pas de renouvellement. Mais elle a une limite fatale : elle ne protège pas contre les <strong>gaps systémiques</strong> (quand tout baisse ensemble).</p>
+
+  <div class="asset-section" style="border-top-color:#16a34a;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-link-slash" style="color:#16a34a;"></i> Corrélation et Risque de Gap Systémique</h3>
+    <p>En temps normal, les corrélations entre actifs sont modérées (0,3-0,6). Mais pendant les crises, les corrélations convergent vers 1,0 — <strong>tout baisse ensemble</strong>. C'est le phénomène de "corrélation en crise" qui détruit la diversification exactement quand vous en avez le plus besoin.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Paire d'Actifs</th><th>Corrélation Normale</th><th>Corrélation en Crise</th><th>Conséquence</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>SPY / QQQ</strong></td><td>0,92</td><td style="color:#dc2626; font-weight:700;">0,98</td><td>Quasi identiques en crise</td></tr>
+        <tr><td><strong>SPY / EFA</strong> (Europe)</td><td>0,78</td><td style="color:#dc2626; font-weight:700;">0,95</td><td>Pas de diversification géo en crise</td></tr>
+        <tr><td><strong>SPY / GLD</strong> (Or)</td><td>0,05</td><td style="color:#f97316; font-weight:700;">-0,30</td><td>L'or protège partiellement</td></tr>
+        <tr><td><strong>SPY / TLT</strong> (Bonds)</td><td>-0,35</td><td style="color:#16a34a; font-weight:700;">-0,60</td><td>Meilleur hedge en crise</td></tr>
+        <tr><td><strong>BTC / SPY</strong></td><td>0,40</td><td style="color:#dc2626; font-weight:700;">0,85</td><td>Crypto non décorrélé en crise</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="asset-section" style="border-top-color:#2563eb;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-shield-halved" style="color:#2563eb;"></i> Hedging de Portefeuille — Les Outils Macro</h3>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div style="background:#faf5ff; border:1px solid #9333ea; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#9333ea; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-fire"></i> VIX Calls</div>
+        <p style="font-size:0.85rem; color:#475569; margin:0; line-height:1.6;">Le VIX (indice de volatilité) explose pendant les crises. Acheter des calls VIX OTM coûte 0,5-2% du portefeuille et peut rapporter 200-500% en cas de crash. C'est une <strong>assurance catastrophe</strong>. Le problème : le VIX decay est brutal — les calls VIX perdent de la valeur chaque jour en l'absence de peur.</p>
+      </div>
+      <div style="background:#eff6ff; border:1px solid #2563eb; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#2563eb; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-down"></i> Inverse ETFs</div>
+        <p style="font-size:0.85rem; color:#475569; margin:0; line-height:1.6;">Les ETFs inversés (SH, SDS, SQQQ) gagnent quand le marché baisse. Allouer 5-10% du portefeuille en inverse ETF réduit la sensibilité aux gaps. Mais le <strong>volatility drag</strong> les rend coûteux à détenir long terme. Utilisez-les comme couverture <strong>temporaire</strong> avant les événements à risque.</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#16a34a; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-coins"></i> Or (GLD/IAU)</div>
+        <p style="font-size:0.85rem; color:#475569; margin:0; line-height:1.6;">L'or est le hedge anti-gap le plus ancien. Corrélation négative avec les actions en crise. Allocation recommandée : 5-15% du portefeuille. Pas d'érosion temporelle, pas de prime — juste un coût d'opportunité si les actions montent.</p>
+      </div>
+      <div style="background:#fffbeb; border:1px solid #d97706; border-radius:12px; padding:1.25rem;">
+        <div style="font-size:0.7rem; font-weight:700; color:#d97706; text-transform:uppercase; margin-bottom:0.5rem;"><i class="fa-solid fa-money-bill"></i> Cash / T-Bills</div>
+        <p style="font-size:0.85rem; color:#475569; margin:0; line-height:1.6;">Le cash est le hedge ultime. 0% de corrélation, 0% de drawdown. Conserver 10-20% du portefeuille en cash/T-Bills vous donne la <strong>capacité d'acheter</strong> après un gap massif — quand les autres sont en panique. Le cash est une option gratuite sur les opportunités futures.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège de la fausse diversification</h4>
+    <p style="margin:0;">Détenir 20 actions tech n'est PAS de la diversification. Détenir AAPL, MSFT, GOOGL, AMZN et META, c'est détenir 5 fois la même exposition au secteur tech. En mars 2020, le Nasdaq a gappé de -9,3% — toutes vos 20 actions tech ont gappé ensemble. La vraie diversification traverse les <strong>classes d'actifs</strong> (actions, obligations, or, cash), les <strong>secteurs</strong> (tech, santé, énergie, utilities), les <strong>géographies</strong> (US, Europe, Asie) et les <strong>stratégies</strong> (long, short, neutre).</p>
+  </div>
+
+  <!-- Chart: Correlation Heatmap -->
+  <div id="chart-correlation" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Testez vos Connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz — 5 Questions</h2>
+
+  <details>
+    <summary>Question 1 : Votre portefeuille est de 80 000 euros. Vous appliquez la règle des 2%. Quelle est votre perte maximale acceptable par trade ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : 1 600 euros.</strong><br>
+      80 000 &times; 2% = 1 600 euros. C'est le montant maximum que vous pouvez perdre sur un seul trade. Cela ne signifie pas que votre position est de 1 600 euros — cela signifie que la différence entre votre prix d'entrée et votre stop loss, multipliée par le nombre d'actions, ne doit pas dépasser 1 600 euros. Par exemple : achat à 50 euros, stop à 46 euros (risque 4 euros/action) = max 400 actions (position de 20 000 euros, soit 25% du portefeuille).
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi utilise-t-on le "Half Kelly" ou "Quarter Kelly" au lieu du Kelly plein ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le Kelly plein est trop agressif et ne tient pas compte des gaps.</strong><br>
+      Le Kelly Criterion maximise la croissance long terme mais suppose : (1) des estimations parfaites de votre win rate et ratio gain/perte, (2) un contrôle total de la perte maximale via stop loss. En réalité, vos estimations sont imprécises et les gaps peuvent doubler ou tripler votre perte attendue. Le fractional Kelly (25-50% du Kelly plein) sacrifie un peu de rendement optimal mais réduit drastiquement le risque de ruine. Ed Thorp, qui a popularisé Kelly, utilisait lui-même le Half Kelly.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Quelle est la différence fondamentale entre un stop loss et un protective put en cas de gap ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le put garantit un prix d'exécution minimum, le stop loss non.</strong><br>
+      Un stop loss est un ordre conditionnel : "si le prix touche X, vendre au marché". Si le prix gap sous X, vous vendez au premier prix disponible (gap through). Un protective put est un contrat : "j'ai le droit de vendre au strike, quoi qu'il arrive". Si l'action gap de 150 $ à 80 $ et que votre put a un strike de 140 $, vous vendez à 140 $. Le stop loss vous aurait vendu à 80 $. La différence : 60 $ par action, soit 40% de protection en plus.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Qu'est-ce qu'un collar et pourquoi est-il presque gratuit ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Un collar = put acheté + call vendu. La prime du call finance le put.</strong><br>
+      Vous possédez l'action à 180 $. Vous achetez un put strike 165 (coût : 4 $) pour vous protéger en dessous de 165 $. Vous vendez un call strike 195 (prime reçue : 4 $) qui plafonne votre gain à 195 $. Coût net : 0 $. Vous avez "échangé" du potentiel de hausse au-dessus de 195 $ contre une protection gratuite en dessous de 165 $. Le collar est idéal avant les earnings : protection anti-gap gratuite, mais vous renoncez au bénéfice d'un gap haussier au-delà du strike du call.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 5 : Pourquoi la diversification échoue-t-elle pendant les crises systémiques ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Les corrélations convergent vers 1,0 en crise — tout baisse ensemble.</strong><br>
+      En temps normal, les actions US, européennes et émergentes ont des corrélations de 0,5-0,8. Mais pendant les paniques (COVID mars 2020, Lehman 2008), la corrélation monte à 0,95+ : tous les actifs risqués chutent simultanément. C'est le "flight to safety" — les investisseurs vendent tout pour se réfugier dans le cash, les T-Bills et l'or. Seuls les actifs décorrélés <strong>structurellement</strong> (obligations d'État, or, VIX) offrent une protection réelle pendant ces épisodes. C'est pourquoi un portefeuille "all equity" (100% actions) est vulnérable même s'il est diversifié géographiquement.
+    </div>
+  </details>
+</div>
+
+
+<!-- Takeaways -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> À Retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 Enseignements Clés</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-ruler"></i> <strong>La règle des 1-2% est non négociable</strong> — ne jamais risquer plus de 2% du capital total par trade. En cas de gap, la perte peut doubler ou tripler, mais elle reste survivable.</li>
+      <li><i class="fa-solid fa-calculator"></i> <strong>Utilisez le Quarter Kelly, jamais le Kelly plein</strong> — le Kelly Criterion est un plafond théorique. En pratique, utilisez 25-50% du Kelly, surtout quand le risque de gap est élevé.</li>
+      <li><i class="fa-solid fa-umbrella"></i> <strong>Les options sont la seule vraie protection anti-gap</strong> — un protective put garantit un prix de vente minimum. Un stop loss ne garantit rien en cas de gap.</li>
+      <li><i class="fa-solid fa-ring"></i> <strong>Le collar offre une protection (presque) gratuite</strong> — put acheté + call vendu = coût net proche de zéro. Idéal avant les earnings.</li>
+      <li><i class="fa-solid fa-hand"></i> <strong>Le GSLO est l'alternative aux options sur CFDs</strong> — un stop loss garanti coûte 0,3-1% mais assure l'exécution au prix exact, même en gap. Disponible uniquement sur CFDs.</li>
+      <li><i class="fa-solid fa-chart-pie"></i> <strong>La diversification a une limite fatale</strong> — en crise systémique, les corrélations convergent vers 1,0. Seuls l'or, les obligations et le cash protègent réellement.</li>
+      <li><i class="fa-solid fa-shield-halved"></i> <strong>Le sizing par classe d'actifs est obligatoire</strong> — biotech : 1-2% max, crypto : 2-5%, large caps : 5-10%. Adaptez le sizing au gap potentiel de l'actif, pas seulement au stop loss.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Disclaimer Final -->
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> RAPPEL — AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-xmark-circle"></i> Ce guide est <strong>strictement éducatif</strong>. Il ne constitue pas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Les stratégies de hedging avec options comportent des risques spécifiques (érosion temporelle, coût de la prime).</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Les exemples cités sont historiques et ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-xmark-circle"></i> Consultez un conseiller financier agréé avant toute décision.</li>
+  </ul>
+</div>
+
+<!-- Navigation -->
+<a href="/series/risque-de-gap/part2-gap-par-actif/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie précédente</div>
+    <div class="next-title">Gaps par Classe d'Actifs — Stocks, ETFs, Crypto, Forex</div>
+  </div>
+</a>
+
+<a href="/series/risque-de-gap/part4-trader-les-gaps/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 4 sur 5</div>
+    <div class="next-title">Trader les Gaps — De la Menace à l'Opportunité</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/risque-de-gap/part1-anatomie-gap/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Anatomie</a>
+  <a href="/series/risque-de-gap/part2-gap-par-actif/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Par Actif</a>
+  <a href="/series/risque-de-gap/part3-protection/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#dc2626; color:white; border:1px solid #dc2626;">3. Protection</a>
+  <a href="/series/risque-de-gap/part4-trader-les-gaps/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Trader</a>
+  <a href="/series/risque-de-gap/part5-survivre/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Survivre</a>
+</div>
+
+</div><!-- end container -->
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Gérer le Risque de Gap</strong> — Partie 3/5 : Se Protéger — Hedging & Position Sizing</p>
+  <p style="margin:0 0 0.5rem;">Publication : Février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif. Les performances passées ne garantissent pas les performances futures. Consultez un conseiller financier agréé.</p>
+</div>
+
+<script>
+// ============================
+// CHART 1: Monte Carlo Simulation — Impact du Position Sizing
+// ============================
+(function(){
+  var dom = document.getElementById('chart-montecarlo');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  // Simulate 50 trades with random gaps
+  function simulate(riskPct) {
+    var capital = 100000;
+    var results = [capital];
+    var seed = 42;
+    function rand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+    for (var i = 0; i < 50; i++) {
+      var r = rand();
+      var pnl;
+      if (r < 0.1) { // 10% chance of gap event
+        pnl = -(capital * riskPct * (2 + rand() * 3)); // Gap = 2-5x normal loss
+      } else if (r < 0.45) { // 35% normal loss
+        pnl = -(capital * riskPct * (0.5 + rand() * 0.5));
+      } else { // 55% win
+        pnl = capital * riskPct * (0.8 + rand() * 1.5);
+      }
+      capital = Math.max(capital + pnl, 0);
+      results.push(Math.round(capital));
+    }
+    return results;
+  }
+
+  var trades = [];
+  for (var i = 0; i <= 50; i++) trades.push('T' + i);
+
+  var option = {
+    title: { text: 'Simulation Monte Carlo — Impact du Position Sizing sur 50 Trades', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', valueFormatter: function(v) { return v ? v.toLocaleString() + ' \u20ac' : '0 \u20ac'; } },
+    legend: { data: ['Risque 1%', 'Risque 2%', 'Risque 5%', 'Risque 10%'], bottom: 0 },
+    grid: { left: '12%', right: '5%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: trades, axisLabel: { fontSize: 9, color: '#64748b', interval: 9 } },
+    yAxis: { type: 'value', name: 'Capital (\u20ac)', axisLabel: { fontSize: 10, color: '#64748b', formatter: function(v) { return (v/1000) + 'K'; } }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      { name: 'Risque 1%', type: 'line', data: simulate(0.01), smooth: true, lineStyle: { color: '#16a34a', width: 2 }, itemStyle: { color: '#16a34a' }, symbol: 'none' },
+      { name: 'Risque 2%', type: 'line', data: simulate(0.02), smooth: true, lineStyle: { color: '#2563eb', width: 2 }, itemStyle: { color: '#2563eb' }, symbol: 'none' },
+      { name: 'Risque 5%', type: 'line', data: simulate(0.05), smooth: true, lineStyle: { color: '#f97316', width: 2 }, itemStyle: { color: '#f97316' }, symbol: 'none' },
+      { name: 'Risque 10%', type: 'line', data: simulate(0.10), smooth: true, lineStyle: { color: '#dc2626', width: 2 }, itemStyle: { color: '#dc2626' }, symbol: 'none' }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 2: Kelly Fraction vs Portfolio Growth
+// ============================
+(function(){
+  var dom = document.getElementById('chart-kelly');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var fractions = [];
+  var growth = [];
+  var ruin = [];
+  for (var f = 0; f <= 100; f += 2) {
+    fractions.push(f + '%');
+    // Simplified Kelly growth: G = p*ln(1+f*b) + q*ln(1-f)
+    var frac = f / 100;
+    var p = 0.55, q = 0.45, b = 2;
+    if (frac >= 1) { growth.push(-100); ruin.push(100); continue; }
+    var g = p * Math.log(1 + frac * b) + q * Math.log(1 - frac);
+    growth.push(Math.round(g * 10000) / 100);
+    // Ruin probability approximation
+    var ruinP = Math.min(100, Math.round(Math.pow(q/p, 1/(frac*10)) * 100));
+    ruin.push(frac > 0.5 ? Math.min(100, ruinP + (frac - 0.5) * 200) : ruinP);
+  }
+
+  var option = {
+    title: { text: 'Kelly Criterion — Fraction de Capital vs Croissance & Risque de Ruine', left: 'center', textStyle: { fontSize: 12, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Taux de Croissance (%)', 'Risque de Ruine (%)'], bottom: 0 },
+    grid: { left: '10%', right: '10%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: fractions, name: 'Fraction du Capital Risquée', axisLabel: { fontSize: 9, color: '#64748b', interval: 4 } },
+    yAxis: [
+      { type: 'value', name: 'Croissance (%)', axisLabel: { fontSize: 10, color: '#16a34a' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      { type: 'value', name: 'Ruine (%)', position: 'right', axisLabel: { fontSize: 10, color: '#dc2626' }, splitLine: { show: false } }
+    ],
+    series: [
+      { name: 'Taux de Croissance (%)', type: 'line', data: growth, smooth: true, lineStyle: { color: '#16a34a', width: 3 }, itemStyle: { color: '#16a34a' }, areaStyle: { color: 'rgba(22,163,74,0.08)' }, symbol: 'none',
+        markLine: { silent: true, data: [{ xAxis: 16, label: { formatter: 'Kelly Optimal\n(32,5%)', fontSize: 10, color: '#9333ea' }, lineStyle: { color: '#9333ea', type: 'dashed', width: 2 } },
+          { xAxis: 8, label: { formatter: 'Half Kelly\n(16%)', fontSize: 10, color: '#2563eb' }, lineStyle: { color: '#2563eb', type: 'dashed', width: 2 } }] }
+      },
+      { name: 'Risque de Ruine (%)', type: 'line', data: ruin, smooth: true, yAxisIndex: 1, lineStyle: { color: '#dc2626', width: 3, type: 'dashed' }, itemStyle: { color: '#dc2626' }, areaStyle: { color: 'rgba(220,38,38,0.05)' }, symbol: 'none' }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 3: Protection Comparison — P&L Profile
+// ============================
+(function(){
+  var dom = document.getElementById('chart-protection');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var prices = [];
+  var noProtection = [];
+  var stopLoss = [];
+  var protPut = [];
+  var collar = [];
+
+  for (var p = 80; p <= 220; p += 2) {
+    prices.push(p);
+    // Long at 150
+    noProtection.push(p - 150);
+    // Stop loss at 135 (but gap through to 100 simulated)
+    if (p >= 135) stopLoss.push(p - 150);
+    else stopLoss.push(p - 150); // Gap through — no protection
+    // Protective put at 135, premium 5
+    if (p >= 135) protPut.push(p - 150 - 5);
+    else protPut.push(135 - 150 - 5); // -20 max
+    // Collar: put 135, call 170, net cost 0
+    if (p <= 135) collar.push(135 - 150);
+    else if (p >= 170) collar.push(170 - 150);
+    else collar.push(p - 150);
+  }
+
+  var option = {
+    title: { text: 'Profil P&L : Sans Protection vs Put vs Collar', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', valueFormatter: function(v) { return v + ' \u20ac'; } },
+    legend: { data: ['Sans Protection', 'Protective Put (135)', 'Collar (135/170)'], bottom: 0 },
+    grid: { left: '10%', right: '5%', bottom: '15%', top: '15%' },
+    xAxis: { type: 'category', data: prices, name: 'Prix de l\'Action (\u20ac)', axisLabel: { fontSize: 9, color: '#64748b', interval: 9 } },
+    yAxis: { type: 'value', name: 'P&L par Action (\u20ac)', axisLabel: { fontSize: 10, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [
+      { name: 'Sans Protection', type: 'line', data: noProtection, smooth: false, lineStyle: { color: '#94a3b8', width: 2, type: 'dashed' }, itemStyle: { color: '#94a3b8' }, symbol: 'none' },
+      { name: 'Protective Put (135)', type: 'line', data: protPut, smooth: false, lineStyle: { color: '#2563eb', width: 3 }, itemStyle: { color: '#2563eb' }, symbol: 'none' },
+      { name: 'Collar (135/170)', type: 'line', data: collar, smooth: false, lineStyle: { color: '#16a34a', width: 3 }, itemStyle: { color: '#16a34a' }, symbol: 'none' }
+    ],
+    visualMap: { show: false }
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ============================
+// CHART 4: Correlation Heatmap
+// ============================
+(function(){
+  var dom = document.getElementById('chart-correlation');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+
+  var assets = ['SPY', 'QQQ', 'IWM', 'EFA', 'GLD', 'TLT', 'BTC', 'Cash'];
+  var data = [];
+  var corrMatrix = [
+    [1.00, 0.92, 0.88, 0.78, 0.05, -0.35, 0.40, 0.00],
+    [0.92, 1.00, 0.82, 0.72, 0.02, -0.40, 0.45, 0.00],
+    [0.88, 0.82, 1.00, 0.75, 0.08, -0.30, 0.38, 0.00],
+    [0.78, 0.72, 0.75, 1.00, 0.10, -0.25, 0.35, 0.00],
+    [0.05, 0.02, 0.08, 0.10, 1.00, 0.30, 0.15, 0.00],
+    [-0.35, -0.40, -0.30, -0.25, 0.30, 1.00, -0.10, 0.00],
+    [0.40, 0.45, 0.38, 0.35, 0.15, -0.10, 1.00, 0.00],
+    [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00]
+  ];
+
+  for (var i = 0; i < assets.length; i++) {
+    for (var j = 0; j < assets.length; j++) {
+      data.push([i, j, corrMatrix[i][j]]);
+    }
+  }
+
+  var option = {
+    title: { text: 'Matrice de Corrélation — Conditions Normales', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { position: 'top', formatter: function(p) { return assets[p.value[0]] + ' / ' + assets[p.value[1]] + ' : ' + p.value[2].toFixed(2); } },
+    grid: { left: '12%', right: '12%', bottom: '12%', top: '15%' },
+    xAxis: { type: 'category', data: assets, splitArea: { show: true }, axisLabel: { fontSize: 10, fontWeight: 600, color: '#334155' } },
+    yAxis: { type: 'category', data: assets, splitArea: { show: true }, axisLabel: { fontSize: 10, fontWeight: 600, color: '#334155' } },
+    visualMap: { min: -1, max: 1, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#dc2626', '#fecaca', '#ffffff', '#bbf7d0', '#16a34a'] }, textStyle: { fontSize: 10 } },
+    series: [{
+      type: 'heatmap',
+      data: data,
+      label: { show: true, fontSize: 10, fontWeight: 700, formatter: function(p) { return p.value[2].toFixed(2); } },
+      emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

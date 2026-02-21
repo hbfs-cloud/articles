@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détecter & Suivre les Tendances Intraday | Le Scalping & Trading Intraday — Partie 3/6 | Market Watch</title>
+  <meta name="description" content="Série Le Scalping & Trading Intraday — Partie 3/6 : Identifier les tendances intraday avec VWAP, EMA 9/21, RSI, volume. Pullback entries, tape reading, trailing stops et gestion d'une position toute la journée.">
+  <meta property="og:title" content="Détecter & Suivre les Tendances Intraday | Le Scalping & Trading Intraday — Partie 3/6 | Market Watch">
+  <meta property="og:description" content="VWAP, EMA crossovers, RSI intraday, volume confirmation. Apprenez à détecter un trend day, entrer sur pullback, et rider une tendance de A à Z.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/scalping-intraday/part3-detecter-tendances/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="../assets/report.css">
+
+  <style>
+  .brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+  .brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+  .brand-logo:hover { color:#2563eb; }
+  .series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+  .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+  .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+  .series-link:hover { border-color:#60a5fa; color:#60a5fa; }
+  .series-link.current { background:#2563eb; color:white; border-color:#2563eb; }
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+  .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  details { margin:0.75rem 0; }
+  details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#2563eb; margin-right:0.75rem; }
+  details[open] summary { border-color:#2563eb; background:#eff6ff; border-radius:12px 12px 0 0; }
+  details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+  .footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+  .footer-bar a { color:#64748b; text-decoration:none; }
+  .footer-bar a:hover { color:#2563eb; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#60a5fa; }
+  .takeaway-box { background:linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%); border:1px solid #2563eb; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#2563eb; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(37,99,235,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#2563eb; margin-top:0.2rem; flex-shrink:0; }
+  .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(37,99,235,0.3); }
+  .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+  .next-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#2563eb; color:#2563eb; }
+  .disclaimer-mega { background:linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #2563eb; }
+  .disclaimer-mega h3 { color:#bfdbfe; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#dbeafe; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#60a5fa; margin-top:0.2rem; flex-shrink:0; }
+  .triangle-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; text-align:center; border-top:4px solid #2563eb; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .brand-bar { padding:0.75rem 1rem; }
+    .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+    .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+    .next-cta { flex-direction:column; text-align:center; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .hero-section { padding:2rem 1rem 4rem; }
+    .series-title { display:none; }
+    .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .disclaimer-mega { padding:1.25rem; }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="padding:0.35rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#64748b; border:1px solid #e2e8f0;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Le Scalping & Trading Intraday</span>
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" class="series-link">1 — Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" class="series-link">2 — Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" class="series-link current">3 — Détecter les Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" class="series-link">4 — Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" class="series-link">5 — Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" class="series-link">6 — Discipline & Sortie</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt" style="margin-right:0.4rem;"></i> Série Le Scalping & Trading Intraday — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Détecter & Suivre les Tendances Intraday</h1>
+  <p class="hero-subtitle">Un trend day peut rapporter plus qu'une semaine entière de scalping. Mais encore faut-il le détecter tôt, entrer au bon moment, et savoir rester en position. VWAP, EMA, RSI et tape reading — votre arsenal pour surfer la tendance.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-wave-square"></i> VWAP</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> EMA 9/21</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-gauge-high"></i> RSI Intraday</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-chart-column"></i> Volume</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#trend-vs-range" class="nav-item"><i class="fa-solid fa-arrows-left-right" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Trend vs Range</a>
+  <a href="#indicateurs" class="nav-item"><i class="fa-solid fa-gauge-high" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Indicateurs Clés</a>
+  <a href="#trend-day" class="nav-item"><i class="fa-solid fa-rocket" style="color:#16a34a; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Le Trend Day</a>
+  <a href="#pullback" class="nav-item"><i class="fa-solid fa-rotate-left" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Entrées Pullback</a>
+  <a href="#tape-reading" class="nav-item"><i class="fa-solid fa-scroll" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Tape Reading</a>
+  <a href="#riding" class="nav-item"><i class="fa-solid fa-person-snowboarding" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Rider la Tendance</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : TREND VS RANGE                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="trend-vs-range"><i class="fa-solid fa-arrows-left-right" style="color:#2563eb;"></i> Tendance vs Range</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-left-right" style="color:#2563eb;"></i> La question la plus importante du matin : tendance ou range ?</h2>
+
+  <p>Avant même d'ouvrir un trade, le trader intraday doit répondre à une seule question : <strong>"Est-ce un jour de tendance ou un jour de range ?"</strong>. Cette distinction détermine tout : la stratégie, les indicateurs, la gestion de position, et même le nombre de trades.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border:2px solid #2563eb; border-radius:16px;">
+      <h4 style="color:#2563eb; margin:0 0 0.75rem; font-size:1.1rem;"><i class="fa-solid fa-arrow-trend-up"></i> Jour de tendance (~22% des jours)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le prix <strong>reste d'un côté du VWAP</strong> toute la journée</li>
+        <li>Volume <strong>croissant</strong> au fur et à mesure</li>
+        <li>EMA 9 reste au-dessus (ou en-dessous) de EMA 21</li>
+        <li>Les pullbacks sont <strong>faibles et brefs</strong> (2-3 bougies max)</li>
+        <li>Le close est <strong>proche du high/low</strong> du jour</li>
+        <li><strong>Stratégie</strong> : suivre la tendance, pas de fade</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); border:2px solid #f97316; border-radius:16px;">
+      <h4 style="color:#f97316; margin:0 0 0.75rem; font-size:1.1rem;"><i class="fa-solid fa-arrows-left-right"></i> Jour de range (~55% des jours)</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Le prix <strong>croise le VWAP</strong> plusieurs fois</li>
+        <li>Volume <strong>décroissant</strong> ou stable</li>
+        <li>EMA 9 et 21 s'entrelacent sans direction</li>
+        <li>Les breakouts <strong>échouent</strong> systématiquement</li>
+        <li>Le close est <strong>proche du VWAP</strong> (milieu du range)</li>
+        <li><strong>Stratégie</strong> : mean reversion, fade les extrêmes</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">La règle du diagnostic rapide (30 premières minutes)</div>
+    Prix <span class="formula-highlight">reste au-dessus du VWAP</span> + Volume <span class="formula-highlight">croissant</span> + EMA 9 > EMA 21 = <span class="formula-highlight">TREND DAY</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi ce diagnostic est crucial ?</h4>
+    <p style="margin:0;">Appliquer une stratégie de tendance dans un range = série de stops. Appliquer une stratégie de mean reversion dans une tendance = profits limités et un gros drawdown quand la tendance accélère. <strong>80% des pertes des traders intraday</strong> viennent d'une mauvaise lecture du contexte, pas d'un mauvais timing d'entrée. Diagnostiquer le type de journée est la compétence la plus rentable du trading intraday.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : INDICATEURS CLÉS                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="indicateurs"><i class="fa-solid fa-gauge-high" style="color:#f97316;"></i> Les indicateurs clés</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#f97316;"></i> Les 4 indicateurs du détecteur de tendance</h2>
+
+  <p>En intraday, moins c'est plus. Vous n'avez pas besoin de 15 indicateurs — vous avez besoin de <strong>4 indicateurs bien utilisés</strong>. Voici le toolkit du trend detector.</p>
+
+  <h3>1. VWAP — La boussole directionnelle</h3>
+
+  <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0; margin:1.5rem 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong style="color:#2563eb;">VWAP (Volume Weighted Average Price)</strong>
+      <span class="badge badge-blue">Indicateur #1</span>
+    </div>
+    <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;"><strong>Règle simple :</strong> Prix au-dessus du VWAP = biais haussier, chercher des longs. Prix en-dessous = biais baissier, chercher des shorts. Si le prix croise le VWAP plus de 3 fois en 1 heure = jour de range, passer en mode mean reversion. La <strong>pente du VWAP</strong> est aussi importante : un VWAP qui monte = tendance haussière confirmée.</p>
+  </div>
+
+  <h3>2. EMA 9/21 sur 5 minutes — Le signal de momentum</h3>
+
+  <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0; margin:1.5rem 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong style="color:#16a34a;">EMA 9 / EMA 21 Crossover</strong>
+      <span class="badge badge-green">Indicateur #2</span>
+    </div>
+    <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;"><strong>EMA 9 au-dessus d'EMA 21</strong> = momentum haussier. <strong>EMA 9 en-dessous d'EMA 21</strong> = momentum baissier. Le <strong>croisement</strong> (crossover) est le signal : quand EMA 9 croise EMA 21 vers le haut après être resté en-dessous, c'est un signal d'achat. L'écart entre les deux EMA mesure la <strong>force</strong> du momentum — plus l'écart se creuse, plus la tendance est forte.</p>
+  </div>
+
+  <h3>3. RSI 14 sur 5 minutes — L'usage intraday différent</h3>
+
+  <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0; margin:1.5rem 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong style="color:#f97316;">RSI 14 (Relative Strength Index)</strong>
+      <span class="badge badge-red">Indicateur #3</span>
+    </div>
+    <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;"><strong>Attention :</strong> en intraday, les zones classiques (30/70) ne fonctionnent pas de la même manière qu'en daily. Sur un trend day haussier, le RSI peut rester <strong>au-dessus de 60</strong> toute la journée. Les pullbacks vers 50 (pas 30 !) sont les points d'entrée. En range, le RSI oscille entre 40 et 60. <strong>Règle intraday :</strong> RSI &gt; 60 en tendance haussière = chercher des longs sur pullback vers 50. RSI &lt; 40 en tendance baissière = chercher des shorts sur pullback vers 50.</p>
+  </div>
+
+  <h3>4. Volume — Le juge de vérité</h3>
+
+  <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #9333ea; border-radius:0 12px 12px 0; margin:1.5rem 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong style="color:#9333ea;">Volume (barres de volume + OBV)</strong>
+      <span class="badge badge-purple">Indicateur #4</span>
+    </div>
+    <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le volume est le <strong>seul indicateur qui ne ment pas</strong>. Il ne dérive pas du prix — il est indépendant. <strong>Règle clé :</strong> une tendance saine s'accompagne de volume <strong>croissant dans la direction de la tendance</strong> et de volume <strong>décroissant sur les pullbacks</strong>. Si le prix monte mais que le volume baisse = divergence baissière, la tendance s'essouffle. L'<strong>OBV</strong> (On-Balance Volume) cumule le volume et montre si les "gros" achètent ou vendent.</p>
+  </div>
+
+  <!-- CHART 1: 5-min chart with VWAP + EMA overlay -->
+  <h3>Exemple : tendance haussière avec VWAP + EMA 9/21</h3>
+  <div id="chart-trend-indicators" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La confirmation multi-indicateurs</h4>
+    <p style="margin:0;">Ne tradez <strong>jamais</strong> sur un seul indicateur. La force d'un signal vient de la <strong>convergence</strong> : si le VWAP dit haussier, que EMA 9 est au-dessus de EMA 21, que le RSI est au-dessus de 55, et que le volume augmente — vous avez 4 confirmations. C'est un trade de haute probabilité. Si un seul indicateur dit le contraire — attendez. La patience est la compétence la plus sous-estimée du trading intraday.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : LE TREND DAY                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="trend-day"><i class="fa-solid fa-rocket" style="color:#16a34a;"></i> Le Trend Day</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rocket" style="color:#16a34a;"></i> Reconnaître un trend day dans les 30 premières minutes</h2>
+
+  <p>Les <strong>trend days</strong> ne représentent que ~22% des journées, mais ils génèrent <strong>80% des profits annuels</strong> d'un trader de tendance. Les reconnaître tôt — idéalement dans les 30 premières minutes — est ce qui sépare les pros des amateurs.</p>
+
+  <h3>Les 6 signes d'un trend day (checklist)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>#</th><th>Signal</th><th>Détail</th><th>Timing</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1</strong></td>
+        <td style="color:#2563eb;"><strong>Gap + continuation</strong></td>
+        <td>Le marché ouvre en gap ET continue dans la direction du gap (pas de fill)</td>
+        <td>0-15 min</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td style="color:#16a34a;"><strong>Prix reste d'un côté du VWAP</strong></td>
+        <td>Après 30 min, le prix n'a pas recroisé le VWAP — signe de conviction</td>
+        <td>0-30 min</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td style="color:#f97316;"><strong>Volume supérieur à la moyenne</strong></td>
+        <td>Le volume des 30 premières minutes est 30%+ au-dessus de la moyenne des 20 derniers jours</td>
+        <td>30 min</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td>
+        <td style="color:#9333ea;"><strong>EMA 9 s'éloigne d'EMA 21</strong></td>
+        <td>L'écart entre EMA 9 et EMA 21 se creuse — le momentum accélère</td>
+        <td>30-45 min</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td>
+        <td style="color:#dc2626;"><strong>Catalyst identifié</strong></td>
+        <td>Un événement majeur justifie le mouvement (earnings, FOMC, CPI surprise)</td>
+        <td>Pré-marché</td>
+      </tr>
+      <tr>
+        <td><strong>6</strong></td>
+        <td style="color:#0891b2;"><strong>Breadth conforme</strong></td>
+        <td>70%+ des actions du S&P 500 montent (jour haussier) ou baissent (jour baissier)</td>
+        <td>30-60 min</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du "faux trend day"</h4>
+    <p style="margin:0;">Parfois, les 30 premières minutes ressemblent à un trend day, mais c'est un <strong>faux départ</strong>. Le prix monte fort, puis reverse violemment. Comment distinguer ? Le <strong>volume</strong> est la clé. Un vrai trend day a un volume qui <strong>augmente</strong> sur les nouvelles jambes. Un faux trend day a un volume qui <strong>diminue</strong> après le spike initial. Si le volume de la 2ème demi-heure est inférieur à celui de la 1ère — prudence, c'est peut-être un piège.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card" style="border-top-color:#2563eb;">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-trend-up"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Trend Day Haussier</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Open near low, close near high. VWAP monte toute la journée. Chaque pullback est une opportunité d'achat. ~12% des jours.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#dc2626;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-trend-down"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Trend Day Baissier</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Open near high, close near low. VWAP descend toute la journée. Chaque rebond est une opportunité de vente. ~10% des jours.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#f97316;">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Reversal Day</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Faux départ dans une direction, puis trend dans l'autre. Le reversal est confirmé quand le VWAP est franchi avec du volume. ~23% des jours.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : ENTRÉES PULLBACK                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pullback"><i class="fa-solid fa-rotate-left" style="color:#9333ea;"></i> Les entrées pullback</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rotate-left" style="color:#9333ea;"></i> Pullback entries — Entrer au meilleur prix dans une tendance</h2>
+
+  <p>Une fois la tendance identifiée, la question est : <strong>où entrer ?</strong> Acheter au sommet d'un mouvement est risqué. La méthode la plus efficace est d'attendre un <strong>pullback</strong> — un repli temporaire — et d'entrer quand la tendance reprend.</p>
+
+  <h3>Les 4 niveaux de pullback (du plus agressif au plus conservateur)</h3>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:1rem; margin:1.5rem 0;">
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #dc2626; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#dc2626;">Niveau 1 — Pullback vers EMA 9 (agressif)</strong>
+        <span class="badge badge-red">R/R élevé, win rate ~50%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le repli le plus faible. Dans une tendance forte, le prix ne descend même pas jusqu'à l'EMA 21 — il rebondit sur l'EMA 9. Signal d'une tendance très puissante. Stop serré juste sous l'EMA 9. Idéal pour les <strong>scalpers</strong> qui veulent accumuler rapidement.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #f97316; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#f97316;">Niveau 2 — Pullback vers EMA 21 (standard)</strong>
+        <span class="badge badge-blue">R/R bon, win rate ~55%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le pullback classique. L'EMA 21 agit comme support dynamique. Attendre un <strong>rebond confirmé</strong> (bougie de retournement + volume en hausse) sur l'EMA 21. Stop sous l'EMA 21 de 2-3 ticks. <strong>Le meilleur compromis</strong> entre agressivité et fiabilité.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #2563eb; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#2563eb;">Niveau 3 — Pullback vers VWAP (conservateur)</strong>
+        <span class="badge badge-green">R/R modéré, win rate ~62%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Le pullback profond. Le prix revient tester le VWAP — le "prix juste" de la journée. Si la tendance est intacte, le VWAP agit comme support puissant. Attendre un rebond avec <strong>volume croissant</strong>. Stop sous le VWAP. Win rate le plus élevé, mais le prix ne revient pas toujours au VWAP dans une tendance forte.</p>
+    </div>
+    <div style="padding:1.25rem; background:#f8fafc; border-left:4px solid #16a34a; border-radius:0 12px 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:#16a34a;">Niveau 4 — Pullback vers support (très conservateur)</strong>
+        <span class="badge badge-green">R/R limité, win rate ~65%</span>
+      </div>
+      <p style="font-size:0.88rem; color:#475569; margin:0.5rem 0 0;">Utiliser un niveau horizontal (high de la veille, niveau de breakout, zone de volume profile) comme point d'entrée. Stop sous le support. Win rate élevé mais l'entrée est souvent tardive — le gros du mouvement est déjà passé.</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: Pullback entry visualization -->
+  <h3>Visualisation des niveaux de pullback</h3>
+  <div id="chart-pullback-levels" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La technique du "1-2-3 pullback"</h4>
+    <p style="margin:0;">La méthode la plus simple pour entrer sur pullback : <strong>(1)</strong> Le prix fait un nouveau high. <strong>(2)</strong> Le prix recule (pullback) pendant 2-4 bougies sur le 5 min, avec un volume décroissant. <strong>(3)</strong> Le prix fait un nouveau high sur la bougie suivante, avec un volume croissant. Entrée à la cassure du high de la bougie précédente. Stop sous le low du pullback. C'est mécanique, reproductible, et ça fonctionne sur tous les timeframes.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : TAPE READING                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tape-reading"><i class="fa-solid fa-scroll" style="color:#dc2626;"></i> Tape Reading & Order Flow</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scroll" style="color:#dc2626;"></i> Lire la bande — L'art du tape reading</h2>
+
+  <p>Le <strong>tape reading</strong> (lecture de la bande) est l'analyse du flux d'ordres en temps réel : qui achète, qui vend, à quel prix, et en quelle quantité. C'est la compétence la plus avancée du trading intraday, celle qui donne un avantage que les indicateurs seuls ne peuvent pas fournir.</p>
+
+  <h3>Les signaux du Level 2 / Order Book</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Signal</th><th>Ce que ça signifie</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Gros bid (mur d'achat)</strong></td>
+        <td>Un acheteur institutionnel défend un niveau. Support potentiel.</td>
+        <td style="color:#16a34a;">Acheter au-dessus du mur si le prix rebondit</td>
+      </tr>
+      <tr>
+        <td><strong>Gros ask (mur de vente)</strong></td>
+        <td>Un vendeur institutionnel bloque la montée. Résistance potentielle.</td>
+        <td style="color:#dc2626;">Vendre sous le mur ou attendre la cassure avec volume</td>
+      </tr>
+      <tr>
+        <td><strong>Iceberg orders</strong></td>
+        <td>Gros ordres cachés qui se reconstituent. Le Level 2 montre 100 lots mais 1 000 sont exécutés.</td>
+        <td style="color:#f59e0b;">Signal fort — un institutionnel accumule discrètement</td>
+      </tr>
+      <tr>
+        <td><strong>Spoofing (bid/ask qui disparaît)</strong></td>
+        <td>Des ordres sont placés puis annulés pour tromper. Le mur n'est pas réel.</td>
+        <td style="color:#dc2626;">Ne pas se fier aux murs — regarder les exécutions réelles</td>
+      </tr>
+      <tr>
+        <td><strong>Large prints sur le Time & Sales</strong></td>
+        <td>Des blocs de 10 000+ actions exécutés d'un coup. Un institutionnel prend position.</td>
+        <td style="color:#2563eb;">Suivre la direction des gros prints — ils connaissent des choses</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>La pression bid/ask — Qui gagne le bras de fer ?</h3>
+
+  <p>À tout moment, il y a un <strong>bras de fer</strong> entre acheteurs (bid) et vendeurs (ask). Le tape reader observe qui est le plus agressif : si les ordres au marché frappent le ask (achats agressifs) de manière répétée, la pression est haussière. Si les ordres frappent le bid (ventes agressives), la pression est baissière.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0;">
+    <div style="padding:1.5rem; background:#f0fdf4; border:1px solid #16a34a; border-radius:16px;">
+      <h4 style="color:#16a34a; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-up"></i> Pression acheteuse</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Les transactions se font au <strong>ask</strong> (prix vendeur)</li>
+        <li>Le bid se remplit rapidement après chaque exécution</li>
+        <li>Le spread se resserre — les acheteurs sont confiants</li>
+        <li>Le prix monte en "escalier" — pas de gaps</li>
+      </ul>
+    </div>
+    <div style="padding:1.5rem; background:#fef2f2; border:1px solid #dc2626; border-radius:16px;">
+      <h4 style="color:#dc2626; margin:0 0 0.75rem;"><i class="fa-solid fa-arrow-down"></i> Pression vendeuse</h4>
+      <ul style="margin:0; padding-left:1.25rem; font-size:0.88rem; color:#334155; line-height:1.7;">
+        <li>Les transactions se font au <strong>bid</strong> (prix acheteur)</li>
+        <li>Le ask s'empile — personne ne veut acheter</li>
+        <li>Le spread s'élargit — les market makers reculent</li>
+        <li>Le prix tombe en "cascade" — drops rapides</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le tape reading n'est pas pour les débutants</h4>
+    <p style="margin:0;">Le tape reading requiert des mois de pratique pour être utile. Au début, vous verrez des chiffres défiler sans comprendre. C'est normal. Commencez par <strong>observer un seul instrument</strong> (SPY ou ES futures) pendant 2-3 semaines sans trader, juste pour apprendre à "lire" le flux. Progressivement, les patterns deviennent visibles : les icebergs, les stop hunts, la pression directionnelle. <strong>Ne tradez pas sur le tape seul</strong> — utilisez-le comme confirmation de vos signaux techniques.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : RIDER LA TENDANCE                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="riding"><i class="fa-solid fa-person-snowboarding" style="color:#0891b2;"></i> Rider la tendance toute la journée</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-person-snowboarding" style="color:#0891b2;"></i> Comment rester en position quand la tendance accélère</h2>
+
+  <p>Le plus dur en trading de tendance n'est pas d'entrer — c'est de <strong>rester</strong>. La plupart des traders sortent trop tôt, empochent 50% du mouvement, puis regardent le prix continuer sans eux. Voici les techniques pour maximiser le profit sur un trend day.</p>
+
+  <h3>La méthode des 3 trailing stops</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Méthode</th><th>Comment</th><th>Avantage</th><th>Inconvénient</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Trailing EMA 9</strong></td>
+        <td>Stop juste sous l'EMA 9 (5 min). Remonter à chaque bougie.</td>
+        <td>Capture la majorité du trend. Simple à appliquer.</td>
+        <td>Sorti tôt sur les pullbacks normaux.</td>
+      </tr>
+      <tr>
+        <td><strong>Trailing EMA 21</strong></td>
+        <td>Stop sous l'EMA 21 (5 min). Plus large, plus patient.</td>
+        <td>Résiste aux pullbacks classiques. Reste en position plus longtemps.</td>
+        <td>Rend plus de profits sur le retournement final.</td>
+      </tr>
+      <tr>
+        <td><strong>Trailing VWAP</strong></td>
+        <td>Stop sous le VWAP. Le plus large des trois.</td>
+        <td>Reste en position tout le trend day. Ne sort que sur un reversal majeur.</td>
+        <td>Rend une grande partie des profits (5-10%) à la fin.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> La technique du "scale out" en 3 parties</h4>
+    <p style="margin:0;">Divisez votre position en 3 tranches : <strong>Tranche 1 (33%)</strong> : sortir au TP1 (1x l'opening range). Sécuriser les profits. <strong>Tranche 2 (33%)</strong> : trailing stop EMA 9. Sortir quand l'EMA 9 est cassée. <strong>Tranche 3 (34%)</strong> : trailing stop EMA 21 ou VWAP. Laisser courir jusqu'à la fin de la tendance. Ce système vous permet de sécuriser des profits tôt tout en profitant des grands mouvements. Le meilleur des deux mondes.</p>
+  </div>
+
+  <!-- CHART 3: EMA crossover with volume -->
+  <h3>Trend day complet avec EMA crossover et volume</h3>
+  <div id="chart-trend-day" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+
+  <h3>Quand la tendance se termine — Les signaux de sortie</h3>
+
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;">
+    <div class="triangle-card" style="border-top-color:#dc2626;">
+      <div style="font-size:2rem; color:#dc2626; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-column"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Divergence volume</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le prix fait un nouveau high mais le volume <strong>baisse</strong>. Les gros sortent — la hausse n'est plus soutenue. C'est le signal d'alerte #1.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#f97316;">
+      <div style="font-size:2rem; color:#f97316; margin-bottom:0.5rem;"><i class="fa-solid fa-xmark"></i></div>
+      <h4 style="margin:0 0 0.5rem;">EMA 9 casse EMA 21</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Le croisement baissier d'EMA 9 sous EMA 21 signale la <strong>fin du momentum</strong>. Ce n'est pas toujours un reversal, mais la tendance est terminée.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#9333ea;">
+      <div style="font-size:2rem; color:#9333ea; margin-bottom:0.5rem;"><i class="fa-solid fa-wave-square"></i></div>
+      <h4 style="margin:0 0 0.5rem;">VWAP franchi</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Si le prix franchit le VWAP dans la direction opposée de la tendance avec du volume, le <strong>biais de la journée a changé</strong>. Sortir et réévaluer.</p>
+    </div>
+    <div class="triangle-card" style="border-top-color:#2563eb;">
+      <div style="font-size:2rem; color:#2563eb; margin-bottom:0.5rem;"><i class="fa-solid fa-clock"></i></div>
+      <h4 style="margin:0 0 0.5rem;">Horaire de fin</h4>
+      <p style="font-size:0.85rem; color:#475569; margin:0;">Après 20h00 (Paris), la liquidité chute. Les tendances perdent leur élan. <strong>Alléger ou sortir</strong> avant la dernière heure, sauf sur un trend day exceptionnel.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Testez vos connaissances</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#10b981;"></i> Quiz — 4 questions</h2>
+
+  <details>
+    <summary>Question 1 : Comment distinguer un jour de tendance d'un jour de range dans les 30 premières minutes ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Le prix reste d'un côté du VWAP, le volume est croissant, et EMA 9 s'éloigne d'EMA 21.</strong><br>
+      Les trois signaux clés sont : (1) le prix ne recroise pas le VWAP pendant les 30 premières minutes — signe de conviction directionnelle, (2) le volume est 30%+ au-dessus de la moyenne des 20 derniers jours — les institutionnels participent, et (3) l'écart entre EMA 9 et EMA 21 se creuse — le momentum accélère. En revanche, si le prix croise le VWAP plusieurs fois et que les EMA s'entrelacent, c'est un jour de range.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 2 : Pourquoi le RSI s'utilise différemment en intraday qu'en daily ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : En intraday, les zones de survendu/suracheté classiques (30/70) ne fonctionnent pas — le RSI reste dans une plage plus étroite.</strong><br>
+      Sur un trend day haussier, le RSI peut rester au-dessus de 60 pendant des heures sans jamais descendre à 30. Les pullbacks vers RSI 50 (pas 30) sont les points d'entrée en tendance haussière intraday. Utiliser les zones 30/70 sur un graphique 5 minutes mènerait à shorter un marché en pleine tendance haussière (RSI "suracheté" à 70) — une erreur classique des débutants qui transposent les règles daily à l'intraday.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 3 : Qu'est-ce que la technique du "1-2-3 pullback" et comment l'appliquer ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : (1) Le prix fait un nouveau high, (2) il recule 2-4 bougies avec volume décroissant, (3) il casse le high précédent avec volume croissant.</strong><br>
+      L'entrée se fait à la cassure du high de la bougie de retournement (étape 3), avec un stop sous le low du pullback (étape 2). Le volume est le filtre clé : le pullback doit se faire sur un volume DÉCROISSANT (les vendeurs ne sont pas convaincus), et la reprise doit se faire sur un volume CROISSANT (les acheteurs reviennent). Cette technique est mécanique, reproductible, et fonctionne sur le 1-min, 5-min, ou 15-min.
+    </div>
+  </details>
+
+  <details>
+    <summary>Question 4 : Quels sont les signaux que la tendance est en train de se terminer ?</summary>
+    <div class="quiz-answer">
+      <strong>Réponse : Divergence volume (prix monte, volume baisse), croisement baissier EMA 9/21, et franchissement du VWAP.</strong><br>
+      Le signal le plus précoce est la divergence de volume : le prix continue de monter mais le volume sur les nouvelles jambes est de plus en plus faible. Ensuite, l'EMA 9 croise sous l'EMA 21, signalant la fin du momentum. Enfin, si le prix franchit le VWAP dans la direction opposée avec un volume significatif, le biais de la journée a officiellement changé. La technique du "scale out" (sortir en 3 tranches) permet de ne pas attendre tous les signaux pour commencer à sécuriser les profits.
+    </div>
+  </details>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RÉSUMÉ / TAKEAWAYS                                            -->
+<!-- ============================================================ -->
+<div class="section-divider"><i class="fa-solid fa-bookmark" style="color:#2563eb;"></i> À retenir</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Les 7 enseignements clés de cette partie</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrows-left-right"></i> <strong>Diagnostiquer le type de journée est la compétence #1</strong> — 80% des pertes viennent d'une mauvaise lecture du contexte (stratégie de tendance en range ou inversement).</li>
+      <li><i class="fa-solid fa-wave-square"></i> <strong>4 indicateurs suffisent</strong> — VWAP (direction), EMA 9/21 (momentum), RSI 14 (force), Volume (conviction). Pas besoin de plus.</li>
+      <li><i class="fa-solid fa-rocket"></i> <strong>Les trend days = 22% des jours mais 80% des profits</strong> — Les reconnaître tôt (30 min) via les 6 signaux est la compétence la plus rentable.</li>
+      <li><i class="fa-solid fa-rotate-left"></i> <strong>Pullback EMA 21 = le meilleur compromis</strong> — Le point d'entrée optimal dans une tendance. Attendre le rebond confirmé avec volume croissant.</li>
+      <li><i class="fa-solid fa-gauge-high"></i> <strong>RSI intraday : zones 50/60, pas 30/70</strong> — Sur un trend day haussier, les pullbacks vers RSI 50 sont les points d'entrée. RSI 70 n'est PAS suracheté en tendance.</li>
+      <li><i class="fa-solid fa-scroll"></i> <strong>Le tape reading confirme, pas dicte</strong> — Utilisez le flux d'ordres pour confirmer vos signaux techniques, pas comme signal unique. Requiert des mois de pratique.</li>
+      <li><i class="fa-solid fa-person-snowboarding"></i> <strong>Scale out en 3 tranches pour maximiser</strong> — 33% au TP1, 33% trailing EMA 9, 34% trailing EMA 21/VWAP. Sécuriser tôt et laisser courir.</li>
+    </ul>
+  </div>
+</div>
+
+
+<div class="disclaimer-mega">
+  <h3><i class="fa-solid fa-exclamation-triangle"></i> AVERTISSEMENT</h3>
+  <ul>
+    <li><i class="fa-solid fa-info-circle"></i> Ce contenu est <strong>strictement éducatif</strong>. Il ne constitue en aucun cas un conseil en investissement.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Le trading intraday comporte un risque élevé de perte en capital. La majorité des traders particuliers perdent de l'argent.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Les statistiques et pourcentages cités sont des approximations historiques et ne garantissent pas les résultats futurs.</li>
+    <li><i class="fa-solid fa-info-circle"></i> Consultez un conseiller financier agréé avant toute décision d'investissement.</li>
+  </ul>
+</div>
+
+
+<a href="/series/scalping-intraday/part2-sessions-mondiales/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65;">Partie précédente</div>
+    <div style="font-weight:800;">2. Sessions Mondiales — Asie, Europe, US depuis Paris</div>
+  </div>
+</a>
+
+<a href="/series/scalping-intraday/part4-outils-alertes/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 4 sur 6</div>
+    <div class="next-title">Outils, Alertes & Setup de Trading</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.75rem; margin:2rem 0;">
+  <a href="/series/scalping-intraday/part1-ouvrir-la-journee/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">1. Ouvrir la Journée</a>
+  <a href="/series/scalping-intraday/part2-sessions-mondiales/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">2. Sessions Mondiales</a>
+  <a href="/series/scalping-intraday/part3-detecter-tendances/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:#2563eb; color:white; border:1px solid #2563eb;">3. Détecter les Tendances</a>
+  <a href="/series/scalping-intraday/part4-outils-alertes/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">4. Outils & Alertes</a>
+  <a href="/series/scalping-intraday/part5-annonces-catalyseurs/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">5. Annonces & Catalyseurs</a>
+  <a href="/series/scalping-intraday/part6-discipline-sortie/" style="padding:1rem; border-radius:12px; text-decoration:none; text-align:center; font-size:0.8rem; font-weight:700; background:white; color:#334155; border:1px solid #e2e8f0;">6. Discipline & Sortie</a>
+</div>
+
+</div>
+
+<div class="footer-bar">
+  <p style="margin:0 0 0.5rem;"><strong>Le Scalping & Trading Intraday</strong> — Partie 3/6 : Détecter & Suivre les Tendances Intraday</p>
+  <p style="margin:0 0 0.5rem;">Publication : 21 février 2026 | <a href="/">market-watch.xyz</a></p>
+  <p style="margin:0; font-size:0.7rem; color:#94a3b8;">Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement.</p>
+</div>
+
+<script>
+// CHART 1: Trend indicators - 5min chart with VWAP + EMA
+(function(){
+  var dom = document.getElementById('chart-trend-indicators');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var times = [];
+  for(var h=15;h<=20;h++){for(var m=0;m<60;m+=5){if(h===20&&m>0)break;times.push(h+':'+(m<10?'0':'')+m);}}
+  // Simulate an uptrend day
+  var base=502, close=[], vwap=[], ema9=[], ema21=[], volumes=[];
+  var vwapAcc=0, volAcc=0;
+  for(var i=0;i<times.length;i++){
+    var trend=0.12*i+Math.random()*1.5-0.5;
+    var c=base+trend;
+    close.push(parseFloat(c.toFixed(2)));
+    volAcc+=(i<6?85:i<18?50:i>55?70:30)+Math.random()*20;
+    vwapAcc+=c*(i<6?85:i<18?50:i>55?70:30);
+    vwap.push(parseFloat((vwapAcc/volAcc).toFixed(2)));
+    // EMA 9
+    if(i<9){ema9.push(parseFloat(c.toFixed(2)));}
+    else{var prev=ema9[i-1]; ema9.push(parseFloat((c*2/10+prev*8/10).toFixed(2)));}
+    // EMA 21
+    if(i<21){ema21.push(parseFloat((base+0.08*i).toFixed(2)));}
+    else{var prev21=ema21[i-1]; ema21.push(parseFloat((c*2/22+prev21*20/22).toFixed(2)));}
+    volumes.push(Math.round((i<6?85:i<18?50:i>55?70:30)+Math.random()*20));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','VWAP','EMA 9','EMA 21'],bottom:0},
+    grid:[{left:'8%',right:'4%',top:'4%',bottom:'30%'},{left:'8%',right:'4%',top:'76%',bottom:'8%'}],
+    xAxis:[{type:'category',data:times,axisLabel:{fontSize:8,interval:5},gridIndex:0},{type:'category',data:times,axisLabel:{show:false},gridIndex:1}],
+    yAxis:[
+      {type:'value',min:500,max:516,scale:true,axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:0},
+      {type:'value',axisLabel:{fontSize:8},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:1}
+    ],
+    series:[
+      {name:'Prix',type:'line',data:close,smooth:false,symbol:'none',lineStyle:{color:'#0f172a',width:1.5},xAxisIndex:0,yAxisIndex:0},
+      {name:'VWAP',type:'line',data:vwap,smooth:true,symbol:'none',lineStyle:{color:'#9333ea',width:2,type:'dashed'},xAxisIndex:0,yAxisIndex:0},
+      {name:'EMA 9',type:'line',data:ema9,smooth:true,symbol:'none',lineStyle:{color:'#2563eb',width:1.5},xAxisIndex:0,yAxisIndex:0},
+      {name:'EMA 21',type:'line',data:ema21,smooth:true,symbol:'none',lineStyle:{color:'#f97316',width:1.5},xAxisIndex:0,yAxisIndex:0},
+      {name:'Volume',type:'bar',data:volumes,itemStyle:{color:function(p){return close[p.dataIndex]>(p.dataIndex>0?close[p.dataIndex-1]:close[0])?'#16a34a':'#dc2626';},borderRadius:[2,2,0,0]},xAxisIndex:1,yAxisIndex:1}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 2: Pullback levels
+(function(){
+  var dom = document.getElementById('chart-pullback-levels');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  // Simulate uptrend with pullbacks
+  var times=[];
+  for(var i=0;i<60;i++){var h=15+Math.floor((30+i*5)/60);var m=(30+i*5)%60;times.push(h+':'+(m<10?'0':'')+m);}
+  var price=[],ema9=[],ema21=[],vwapLine=[];
+  var p=502,e9=502,e21=502,vw=502,vwVol=0,vwPV=0;
+  for(var i=0;i<60;i++){
+    var trend;
+    if(i<8) trend=0.25; // initial rise
+    else if(i>=8&&i<12) trend=-0.15; // pullback 1
+    else if(i>=12&&i<25) trend=0.20; // rise
+    else if(i>=25&&i<30) trend=-0.18; // pullback 2 (deeper)
+    else if(i>=30&&i<45) trend=0.22; // strong rise
+    else if(i>=45&&i<50) trend=-0.12; // pullback 3 (shallow)
+    else trend=0.15; // final rise
+    p+=trend+Math.random()*0.3-0.15;
+    price.push(parseFloat(p.toFixed(2)));
+    e9=e9*0.8+p*0.2; ema9.push(parseFloat(e9.toFixed(2)));
+    e21=e21*0.9+p*0.1; ema21.push(parseFloat(e21.toFixed(2)));
+    var vol=50+Math.random()*30;
+    vwVol+=vol; vwPV+=p*vol;
+    vwapLine.push(parseFloat((vwPV/vwVol).toFixed(2)));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','EMA 9','EMA 21','VWAP'],bottom:0},
+    grid:{left:'8%',right:'4%',top:'8%',bottom:'15%'},
+    xAxis:{type:'category',data:times,axisLabel:{fontSize:8,interval:9}},
+    yAxis:{type:'value',scale:true,axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    series:[
+      {name:'Prix',type:'line',data:price,symbol:'none',lineStyle:{color:'#0f172a',width:1.5}},
+      {name:'EMA 9',type:'line',data:ema9,symbol:'none',lineStyle:{color:'#dc2626',width:1.5},smooth:true},
+      {name:'EMA 21',type:'line',data:ema21,symbol:'none',lineStyle:{color:'#f97316',width:2},smooth:true},
+      {name:'VWAP',type:'line',data:vwapLine,symbol:'none',lineStyle:{color:'#9333ea',width:2,type:'dashed'},smooth:true,
+        markPoint:{data:[
+          {coord:[10,ema9[10]],value:'PB1\nEMA9',symbol:'pin',symbolSize:40,itemStyle:{color:'#dc2626'},label:{color:'white',fontSize:8,fontWeight:700}},
+          {coord:[28,ema21[28]],value:'PB2\nEMA21',symbol:'pin',symbolSize:40,itemStyle:{color:'#f97316'},label:{color:'white',fontSize:8,fontWeight:700}},
+          {coord:[47,ema9[47]],value:'PB3\nEMA9',symbol:'pin',symbolSize:40,itemStyle:{color:'#dc2626'},label:{color:'white',fontSize:8,fontWeight:700}}
+        ]}
+      }
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+// CHART 3: Trend day complete with volume
+(function(){
+  var dom = document.getElementById('chart-trend-day');
+  if(!dom) return;
+  var chart = echarts.init(dom);
+  var times=[];
+  for(var h=15;h<=21;h++){for(var m=0;m<60;m+=5){if(h===21&&m>0)break;times.push(h+':'+(m<10?'0':'')+m);}}
+  var close=[],ema9=[],ema21=[],vol=[];
+  var p=503,e9=503,e21=503;
+  for(var i=0;i<times.length;i++){
+    var trend;
+    if(i<6) trend=0.35+Math.random()*0.3;      // strong open
+    else if(i<12) trend=0.15+Math.random()*0.2;  // continuation
+    else if(i>=12&&i<16) trend=-0.1+Math.random()*0.15; // small pullback
+    else if(i<30) trend=0.2+Math.random()*0.25;  // midday rally
+    else if(i>=30&&i<35) trend=-0.05+Math.random()*0.1; // consolidation
+    else if(i<55) trend=0.18+Math.random()*0.2;  // afternoon push
+    else if(i>=55&&i<60) trend=0.1+Math.random()*0.15;  // MOC buying
+    else trend=0.05+Math.random()*0.1;
+    p+=trend; p=Math.max(502,p);
+    close.push(parseFloat(p.toFixed(2)));
+    e9=e9*0.78+p*0.22; ema9.push(parseFloat(e9.toFixed(2)));
+    e21=e21*0.91+p*0.09; ema21.push(parseFloat(e21.toFixed(2)));
+    var v;
+    if(i<6) v=90+Math.random()*30;
+    else if(i<18) v=55+Math.random()*20;
+    else if(i<30) v=35+Math.random()*15;
+    else if(i<45) v=40+Math.random()*15;
+    else if(i>55) v=75+Math.random()*25;
+    else v=30+Math.random()*15;
+    vol.push(Math.round(v));
+  }
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','EMA 9','EMA 21','Volume'],bottom:0},
+    grid:[{left:'8%',right:'4%',top:'4%',bottom:'28%'},{left:'8%',right:'4%',top:'78%',bottom:'6%'}],
+    xAxis:[
+      {type:'category',data:times,axisLabel:{fontSize:8,interval:5},gridIndex:0},
+      {type:'category',data:times,axisLabel:{show:false},gridIndex:1}
+    ],
+    yAxis:[
+      {type:'value',scale:true,axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:0},
+      {type:'value',axisLabel:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},gridIndex:1}
+    ],
+    series:[
+      {name:'Prix',type:'line',data:close,symbol:'none',lineStyle:{color:'#0f172a',width:1.5},xAxisIndex:0,yAxisIndex:0,
+        markArea:{silent:true,data:[
+          [{xAxis:'15:30',itemStyle:{color:'rgba(37,99,235,0.05)'},label:{show:true,position:'top',formatter:'Opening Drive',fontSize:8,color:'#2563eb',fontWeight:700}},{xAxis:'16:00'}],
+          [{xAxis:'17:30',itemStyle:{color:'rgba(37,99,235,0.05)'},label:{show:true,position:'top',formatter:'Afternoon Push',fontSize:8,color:'#2563eb',fontWeight:700}},{xAxis:'19:00'}]
+        ]}
+      },
+      {name:'EMA 9',type:'line',data:ema9,symbol:'none',lineStyle:{color:'#2563eb',width:1.5},smooth:true,xAxisIndex:0,yAxisIndex:0},
+      {name:'EMA 21',type:'line',data:ema21,symbol:'none',lineStyle:{color:'#f97316',width:1.5},smooth:true,xAxisIndex:0,yAxisIndex:0},
+      {name:'Volume',type:'bar',data:vol,itemStyle:{color:function(p){return close[p.dataIndex]>(p.dataIndex>0?close[p.dataIndex-1]:close[0])?'rgba(37,99,235,0.6)':'rgba(220,38,38,0.6)';},borderRadius:[2,2,0,0]},xAxisIndex:1,yAxisIndex:1}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+
+</body>
+</html>
