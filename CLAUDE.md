@@ -180,11 +180,22 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
 4. **Copier le report.css** du scanner comme base CSS
 5. **Mettre à jour le tab Daily** dans index.html (ajouter la carte du jour)
 
-#### Spécificités Weekend (Sam-Dim)
+#### Spécificités Samedi (post-séance vendredi)
+Le briefing du samedi est un **briefing complet** qui couvre la séance de vendredi :
+- **Toutes les sections standard** : US, Europe, Asie-Pacifique (récap de la séance de vendredi)
+- **Bilan hebdomadaire** : récap de la semaine complète (performances 5 jours)
+- Crypto (marchés 24/7) : analyse technique BTC, ETH, alts
+- Géopolitique : impacts attendus sur l'ouverture lundi
+- **Preview semaine prochaine** : earnings, macro, événements clés
+- Formation : sujet standard
+
+#### Spécificités Dimanche (marchés fermés)
+Le dimanche est le seul jour **crypto-only + géopolitique** :
 - Focus crypto (marchés 24/7) : analyse technique détaillée BTC, ETH, alts
 - Focus géopolitique : impacts attendus sur l'ouverture lundi
-- Pas de sections US/EU/AP marchés fermés
+- Pas de sections US/EU/AP (marchés fermés, déjà couverts samedi)
 - Formation : sujet plus long/approfondi (ex: "Introduction au Volume Profile")
+- Preview lundi : catalyseurs, niveaux à surveiller
 
 #### Plan de Formation Progressive
 Les "Formation du Jour" suivent un cursus progressif :
