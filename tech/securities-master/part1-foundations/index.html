@@ -190,6 +190,8 @@
    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-bar"></i> Evidence.dev</span>
    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-water"></i> Meltano</span>
    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-clock-rotate-left"></i> Point-in-Time</span>
+   <span class="hero-badge" style="background:#f0fdf4; color:#059669; border:1px solid #bbf7d0;"><i class="fa-solid fa-robot"></i> MCP</span>
+   <span class="hero-badge" style="background:#faf5ff; color:#7c3aed; border:1px solid #ddd6fe;"><i class="fa-solid fa-star"></i> Star Schema</span>
  </div>
 </div>
 
@@ -202,6 +204,9 @@
  <a href="#architecture" class="nav-item"><i class="fa-solid fa-diagram-project" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Architecture</a>
  <a href="#stack" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Stack</a>
  <a href="#datamodel" class="nav-item"><i class="fa-solid fa-table-columns" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Data Model</a>
+ <a href="#star-schema" class="nav-item"><i class="fa-solid fa-star" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Star Schema</a>
+ <a href="#journal" class="nav-item"><i class="fa-solid fa-book" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Journal</a>
+ <a href="#mcp" class="nav-item"><i class="fa-solid fa-robot" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> MCP & AI</a>
  <a href="#infrastructure" class="nav-item"><i class="fa-solid fa-gears" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Infra</a>
  <a href="#pipeline" class="nav-item"><i class="fa-solid fa-water" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pipeline</a>
  <a href="#verification" class="nav-item"><i class="fa-solid fa-check-double" style="color:#0d9488; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Verify</a>
@@ -480,7 +485,7 @@
  <p>The data model has six core tables. Each one serves a specific purpose and has specific design decisions behind it.</p>
 
  <!-- EChart: ER Diagram -->
- <div id="chartERDiagram" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+ <div id="chartERDiagram" style="width:100%; height:600px; margin:1.5rem 0;"></div>
 
  <h3>1. <code>exchanges</code> &mdash; Reference Data</h3>
  <p>The anchor table. Every instrument belongs to an exchange. This is the simplest table because exchange metadata rarely changes.</p>
@@ -733,7 +738,751 @@
  <!-- EChart: Data Volume -->
  <h3>Expected Data Volume</h3>
  <p>Here's the estimated row count for a multi-region universe of ~10,000 instruments with 25 years of history.</p>
- <div id="chartDataVolume" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+ <div id="chartDataVolume" style="width:100%; height:550px; margin:1.5rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5b: STAR SCHEMA (BI & DATA-DRIVEN STRATEGY)           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="star-schema"><i class="fa-solid fa-star" style="color:#0d9488;"></i> Star Schema &mdash; BI &amp; Data-Driven Strategy</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-cubes" style="color:#0d9488;"></i> From OLTP to Analytical Star Model</h2>
+
+ <p>The core tables we designed above are <strong>OLTP-optimized</strong>&mdash;normalized, SCD Type 2, partitioned for fast writes. But analysts and portfolio managers don't want to join 5 tables to answer &ldquo;what was my sector exposure last Tuesday?&rdquo; That&rsquo;s where the <strong>star schema</strong> comes in: a denormalized <code>mart</code> layer built by dbt, designed for fast reads and composable BI queries.</p>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Star vs. Snowflake</h4>
+   <p><strong>Star wins for BI.</strong> Snowflake schema (normalized dimensions) saves disk at the cost of query complexity. In a securities master, dimensions are small (~10K instruments, 250 exchanges, ~9K trading days). The denormalization overhead is negligible, but the query simplicity is massive. Every BI query becomes a single JOIN from fact to dimension&mdash;exactly the pattern that Evidence.dev, Metabase, and LLM-generated SQL work best with.</p>
+ </div>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Materialized Views vs. Physical Tables</h4>
+   <p><strong>We use dbt-managed materialized tables.</strong> The dimensions and facts are dbt models materialized as <code>materialized='table'</code> in the <code>mart</code> schema. dbt handles refresh orchestration, lineage tracking, and test contracts. This means the star schema is always derivable from the OLTP layer&mdash;no separate ETL pipeline to maintain. If a dbt model breaks, fix the SQL and <code>dbt run</code>. The raw data is untouched.</p>
+ </div>
+
+ <h3>Dimension Tables</h3>
+ <p>Dimensions are denormalized snapshots extracted from the SCD2 tables. They represent the <strong>current</strong> state by default, but we also maintain a <code>dim_instrument_history</code> SCD view for as-of BI queries.</p>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; mart.dim_date (calendar dimension)</span>
+<span class="code-comment">-- The backbone of any star schema: a calendar dimension</span>
+<span class="code-comment">-- Pre-computed columns eliminate date math in every query</span>
+
+<span class="code-keyword">CREATE TABLE</span> mart.dim_date (
+    date_key          <span class="code-type">DATE</span> <span class="code-keyword">PRIMARY KEY</span>,
+    year              <span class="code-type">INT</span>,
+    quarter           <span class="code-type">INT</span>,
+    month             <span class="code-type">INT</span>,
+    week_of_year      <span class="code-type">INT</span>,
+    day_of_week       <span class="code-type">INT</span>,          <span class="code-comment">-- 1=Monday, 7=Sunday</span>
+    day_name          <span class="code-type">TEXT</span>,         <span class="code-comment">-- 'Monday', 'Tuesday', ...</span>
+    is_trading_day    <span class="code-type">BOOLEAN</span>,      <span class="code-comment">-- FALSE for weekends + market holidays</span>
+    is_month_end      <span class="code-type">BOOLEAN</span>,
+    is_quarter_end    <span class="code-type">BOOLEAN</span>,
+    is_opex           <span class="code-type">BOOLEAN</span>,      <span class="code-comment">-- 3rd Friday (options expiration)</span>
+    is_fomc           <span class="code-type">BOOLEAN</span>,      <span class="code-comment">-- Fed announcement days</span>
+    trading_days_ytd  <span class="code-type">INT</span>           <span class="code-comment">-- cumulative trading days in year</span>
+);
+
+<span class="code-comment">-- Populate: generate_series + join to market holidays table</span>
+<span class="code-comment">-- Covers 2000-01-01 to 2030-12-31 = ~11,000 rows</span>
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; mart.dim_instrument (denormalized instrument dimension)</span>
+<span class="code-comment">-- Flattened view of current instrument state</span>
+<span class="code-comment">-- Joins instruments + exchanges in one row per active security</span>
+
+<span class="code-keyword">CREATE TABLE</span> mart.dim_instrument <span class="code-keyword">AS</span>
+<span class="code-keyword">SELECT</span>
+    i.instrument_key,
+    i.symbol,
+    i.name,
+    i.asset_type,
+    i.sector,
+    i.industry,
+    i.country,
+    i.currency,
+    i.is_active,
+    i.listed_date,
+    i.delisted_date,
+    e.exchange_code,
+    e.exchange_name,
+    e.timezone        <span class="code-keyword">AS</span> exchange_timezone,
+    e.region          <span class="code-keyword">AS</span> exchange_region
+<span class="code-keyword">FROM</span> instruments i
+<span class="code-keyword">JOIN</span> exchanges e <span class="code-keyword">ON</span> e.exchange_id = i.exchange_id
+<span class="code-keyword">WHERE</span> i.valid_to <span class="code-keyword">IS NULL</span>;  <span class="code-comment">-- current SCD2 row only</span>
+
+<span class="code-comment">-- ~10,000 rows (one per instrument)</span>
+<span class="code-comment">-- Refreshed daily by dbt: dbt run --select mart.dim_instrument</span>
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; mart.dim_sector (sector/industry hierarchy)</span>
+<span class="code-keyword">CREATE TABLE</span> mart.dim_sector <span class="code-keyword">AS</span>
+<span class="code-keyword">SELECT DISTINCT</span>
+    sector,
+    industry,
+    <span class="code-keyword">COUNT</span>(*) <span class="code-keyword">OVER</span> (<span class="code-keyword">PARTITION BY</span> sector)   <span class="code-keyword">AS</span> instruments_in_sector,
+    <span class="code-keyword">COUNT</span>(*) <span class="code-keyword">OVER</span> (<span class="code-keyword">PARTITION BY</span> industry) <span class="code-keyword">AS</span> instruments_in_industry
+<span class="code-keyword">FROM</span> mart.dim_instrument
+<span class="code-keyword">WHERE</span> is_active = <span class="code-keyword">TRUE</span>;
+ </div>
+
+ <h3>Fact Tables</h3>
+ <p>Fact tables store <strong>measures at the grain of one event per row</strong>. Each fact row links to dimension keys via foreign keys. We build two core facts from the OLTP layer.</p>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; mart.fact_daily_returns (the core analytical fact)</span>
+<span class="code-comment">-- One row per instrument per trading day</span>
+<span class="code-comment">-- Pre-computes daily returns, cumulative returns, drawdown</span>
+<span class="code-comment">-- This is the table 90% of BI queries will hit</span>
+
+<span class="code-keyword">CREATE TABLE</span> mart.fact_daily_returns (
+    date_key          <span class="code-type">DATE</span>         <span class="code-keyword">NOT NULL REFERENCES</span> mart.dim_date(date_key),
+    instrument_key    <span class="code-type">UUID</span>         <span class="code-keyword">NOT NULL</span>,
+    open              <span class="code-type">NUMERIC(14,4)</span>,
+    high              <span class="code-type">NUMERIC(14,4)</span>,
+    low               <span class="code-type">NUMERIC(14,4)</span>,
+    close             <span class="code-type">NUMERIC(14,4)</span>,
+    volume            <span class="code-type">BIGINT</span>,
+    adj_close         <span class="code-type">NUMERIC(14,4)</span>,
+
+    <span class="code-comment">-- Pre-computed analytics</span>
+    daily_return      <span class="code-type">NUMERIC(10,6)</span>, <span class="code-comment">-- (close - prev_close) / prev_close</span>
+    log_return        <span class="code-type">NUMERIC(10,6)</span>, <span class="code-comment">-- ln(close / prev_close)</span>
+    cum_return_ytd    <span class="code-type">NUMERIC(10,6)</span>, <span class="code-comment">-- cumulative return since Jan 1</span>
+    drawdown          <span class="code-type">NUMERIC(10,6)</span>, <span class="code-comment">-- current drawdown from peak</span>
+    rolling_vol_20d   <span class="code-type">NUMERIC(10,6)</span>, <span class="code-comment">-- 20-day rolling annualized vol</span>
+    sma_50            <span class="code-type">NUMERIC(14,4)</span>,
+    sma_200           <span class="code-type">NUMERIC(14,4)</span>,
+    rsi_14            <span class="code-type">NUMERIC(6,2)</span>,
+
+    <span class="code-keyword">PRIMARY KEY</span> (date_key, instrument_key)
+) <span class="code-keyword">PARTITION BY RANGE</span> (date_key);
+
+<span class="code-comment">-- Grain: 1 row per instrument per trading day</span>
+<span class="code-comment">-- Estimated: ~60M rows (same as bars_daily)</span>
+<span class="code-comment">-- Partitioned monthly, same scheme as bars_daily</span>
+ </div>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Pre-compute Returns in the Fact Table</h4>
+   <p><strong>Pre-compute, don&rsquo;t calculate on-the-fly.</strong> Window functions like <code>LAG(close) OVER (PARTITION BY instrument_key ORDER BY date_key)</code> on 60M rows take 15+ seconds. By pre-computing <code>daily_return</code>, <code>drawdown</code>, and <code>rolling_vol</code> during the dbt build, every BI query becomes a simple filter+aggregate. The dbt build pays the cost once; analysts get sub-second response.</p>
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; mart.fact_portfolio_snapshot (daily portfolio mark-to-market)</span>
+<span class="code-comment">-- One row per position per day</span>
+<span class="code-comment">-- Built from trades table (see Trading Journal section)</span>
+<span class="code-comment">-- Enables P&amp;L attribution, sector exposure, risk decomposition</span>
+
+<span class="code-keyword">CREATE TABLE</span> mart.fact_portfolio_snapshot (
+    date_key          <span class="code-type">DATE</span>         <span class="code-keyword">NOT NULL REFERENCES</span> mart.dim_date(date_key),
+    instrument_key    <span class="code-type">UUID</span>         <span class="code-keyword">NOT NULL</span>,
+    portfolio_id      <span class="code-type">UUID</span>         <span class="code-keyword">NOT NULL</span>,
+    quantity          <span class="code-type">NUMERIC(16,6)</span>,
+    avg_cost          <span class="code-type">NUMERIC(14,4)</span>,
+    market_price      <span class="code-type">NUMERIC(14,4)</span>, <span class="code-comment">-- close from bars_daily</span>
+    market_value      <span class="code-type">NUMERIC(16,4)</span>, <span class="code-comment">-- quantity * market_price</span>
+    unrealized_pnl    <span class="code-type">NUMERIC(16,4)</span>, <span class="code-comment">-- market_value - (quantity * avg_cost)</span>
+    weight_pct        <span class="code-type">NUMERIC(8,4)</span>,  <span class="code-comment">-- position weight in portfolio</span>
+    daily_pnl         <span class="code-type">NUMERIC(16,4)</span>, <span class="code-comment">-- change from previous day</span>
+
+    <span class="code-keyword">PRIMARY KEY</span> (date_key, portfolio_id, instrument_key)
+) <span class="code-keyword">PARTITION BY RANGE</span> (date_key);
+
+<span class="code-comment">-- Built nightly by dbt from trades + bars_daily</span>
+<span class="code-comment">-- Enables: "What was my sector exposure on March 15?"</span>
+ </div>
+
+ <!-- EChart: Star Schema Diagram -->
+ <h3>Star Schema Diagram</h3>
+ <p>The complete mart layer forms a clean star: fact tables at the center, dimension tables radiating outward. Every BI query is a fact-to-dimension join.</p>
+ <div id="chartStarSchema" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+ <h3>Example BI Queries</h3>
+ <p>With the star schema in place, complex analytical questions become simple SQL.</p>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; Sector rotation heatmap (monthly returns by sector)</span>
+<span class="code-keyword">SELECT</span>
+    d.year,
+    d.month,
+    di.sector,
+    <span class="code-keyword">AVG</span>(f.daily_return) * 21 <span class="code-keyword">AS</span> monthly_return,
+    <span class="code-keyword">AVG</span>(f.rolling_vol_20d)   <span class="code-keyword">AS</span> avg_volatility
+<span class="code-keyword">FROM</span> mart.fact_daily_returns f
+<span class="code-keyword">JOIN</span> mart.dim_date d        <span class="code-keyword">ON</span> d.date_key = f.date_key
+<span class="code-keyword">JOIN</span> mart.dim_instrument di <span class="code-keyword">ON</span> di.instrument_key = f.instrument_key
+<span class="code-keyword">WHERE</span> d.year = 2025
+  <span class="code-keyword">AND</span> di.is_active = <span class="code-keyword">TRUE</span>
+  <span class="code-keyword">AND</span> di.asset_type = <span class="code-string">'equity'</span>
+<span class="code-keyword">GROUP BY</span> d.year, d.month, di.sector
+<span class="code-keyword">ORDER BY</span> d.year, d.month, monthly_return <span class="code-keyword">DESC</span>;
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; Maximum drawdown by region, current year</span>
+<span class="code-keyword">SELECT</span>
+    di.exchange_region,
+    di.symbol,
+    di.name,
+    <span class="code-keyword">MIN</span>(f.drawdown) <span class="code-keyword">AS</span> max_drawdown,
+    <span class="code-keyword">MAX</span>(f.rolling_vol_20d) <span class="code-keyword">AS</span> peak_volatility
+<span class="code-keyword">FROM</span> mart.fact_daily_returns f
+<span class="code-keyword">JOIN</span> mart.dim_date d        <span class="code-keyword">ON</span> d.date_key = f.date_key
+<span class="code-keyword">JOIN</span> mart.dim_instrument di <span class="code-keyword">ON</span> di.instrument_key = f.instrument_key
+<span class="code-keyword">WHERE</span> d.year = 2025
+<span class="code-keyword">GROUP BY</span> di.exchange_region, di.symbol, di.name
+<span class="code-keyword">HAVING MIN</span>(f.drawdown) &lt; -0.20  <span class="code-comment">-- only stocks with &gt;20% drawdown</span>
+<span class="code-keyword">ORDER BY</span> max_drawdown <span class="code-keyword">ASC LIMIT</span> 20;
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; Portfolio exposure as-of any date</span>
+<span class="code-keyword">SELECT</span>
+    di.sector,
+    <span class="code-keyword">SUM</span>(ps.market_value) <span class="code-keyword">AS</span> sector_value,
+    <span class="code-keyword">SUM</span>(ps.weight_pct)   <span class="code-keyword">AS</span> sector_weight,
+    <span class="code-keyword">SUM</span>(ps.unrealized_pnl) <span class="code-keyword">AS</span> sector_pnl
+<span class="code-keyword">FROM</span> mart.fact_portfolio_snapshot ps
+<span class="code-keyword">JOIN</span> mart.dim_instrument di <span class="code-keyword">ON</span> di.instrument_key = ps.instrument_key
+<span class="code-keyword">WHERE</span> ps.date_key = <span class="code-string">'2025-06-15'</span>
+  <span class="code-keyword">AND</span> ps.portfolio_id = <span class="code-string">'...'</span>
+<span class="code-keyword">GROUP BY</span> di.sector
+<span class="code-keyword">ORDER BY</span> sector_weight <span class="code-keyword">DESC</span>;
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> The Star Schema Advantage</h4>
+   <p>Notice how every query above follows the same pattern: <code>SELECT from fact JOIN dim WHERE dim.attribute = filter GROUP BY dim.attribute</code>. This is intentional. The star schema transforms ad-hoc analytical questions into a predictable, composable SQL pattern. Evidence.dev dashboards, BI tools like Metabase, and even LLM-generated SQL all work best with this consistent structure.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5c: TRADING JOURNAL                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="journal"><i class="fa-solid fa-book" style="color:#0d9488;"></i> Trading Journal</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-pen-to-square" style="color:#0d9488;"></i> Structured Trading Journal</h2>
+
+ <p>A securities master isn&rsquo;t just for backtesting&mdash;it&rsquo;s the backbone of your live trading infrastructure. By embedding the trading journal directly in the database, every trade automatically inherits the instrument metadata, price history, and fundamentals context. No more disconnected spreadsheets.</p>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Journal in the Securities Master vs. Separate System</h4>
+   <p><strong>Same database, different schema.</strong> The trading journal lives in a <code>journal</code> schema alongside the <code>raw</code> and <code>mart</code> schemas. This gives it direct foreign-key access to <code>instruments</code> and enables JOIN-based analytics (e.g., &ldquo;what was the RSI when I entered this trade?&rdquo;) without any ETL. The journal tables are lightweight (&lt;100K rows for most traders) and don&rsquo;t impact the time-series workload.</p>
+ </div>
+
+ <h3>Core Tables</h3>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; journal.portfolios</span>
+<span class="code-comment">-- A trader may have multiple portfolios (swing, long-term, options)</span>
+
+<span class="code-keyword">CREATE TABLE</span> journal.portfolios (
+    portfolio_id      <span class="code-type">UUID</span> <span class="code-keyword">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    name              <span class="code-type">TEXT</span> <span class="code-keyword">NOT NULL</span>,
+    description       <span class="code-type">TEXT</span>,
+    strategy          <span class="code-type">TEXT</span>,           <span class="code-comment">-- 'momentum', 'value', 'mean-reversion'</span>
+    base_currency     <span class="code-type">TEXT</span> <span class="code-keyword">DEFAULT</span> <span class="code-string">'USD'</span>,
+    initial_capital   <span class="code-type">NUMERIC(16,4)</span>,
+    created_at        <span class="code-type">TIMESTAMPTZ</span> <span class="code-keyword">DEFAULT</span> now()
+);
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; journal.trades (every execution)</span>
+<span class="code-comment">-- Immutable log of every trade execution</span>
+<span class="code-comment">-- One row per fill (a single order may have multiple fills)</span>
+
+<span class="code-keyword">CREATE TABLE</span> journal.trades (
+    trade_id          <span class="code-type">UUID</span> <span class="code-keyword">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    portfolio_id      <span class="code-type">UUID</span> <span class="code-keyword">NOT NULL REFERENCES</span> journal.portfolios(portfolio_id),
+    instrument_key    <span class="code-type">UUID</span> <span class="code-keyword">NOT NULL</span>,   <span class="code-comment">-- FK to instruments.instrument_key</span>
+    trade_date        <span class="code-type">DATE</span> <span class="code-keyword">NOT NULL</span>,
+    trade_time        <span class="code-type">TIMESTAMPTZ</span>,
+    side              <span class="code-type">TEXT</span> <span class="code-keyword">NOT NULL</span>,   <span class="code-comment">-- 'buy', 'sell', 'short', 'cover'</span>
+    quantity          <span class="code-type">NUMERIC(16,6)</span> <span class="code-keyword">NOT NULL</span>,
+    price             <span class="code-type">NUMERIC(14,4)</span> <span class="code-keyword">NOT NULL</span>,
+    commission        <span class="code-type">NUMERIC(10,4)</span> <span class="code-keyword">DEFAULT</span> 0,
+    slippage          <span class="code-type">NUMERIC(10,4)</span> <span class="code-keyword">DEFAULT</span> 0,
+
+    <span class="code-comment">-- Trade context (captured at entry time)</span>
+    setup_type        <span class="code-type">TEXT</span>,           <span class="code-comment">-- 'breakout', 'pullback', 'reversal', 'earnings'</span>
+    entry_reason      <span class="code-type">TEXT</span>,           <span class="code-comment">-- free-text thesis</span>
+    stop_loss         <span class="code-type">NUMERIC(14,4)</span>,  <span class="code-comment">-- planned stop</span>
+    target_1          <span class="code-type">NUMERIC(14,4)</span>,  <span class="code-comment">-- first target</span>
+    target_2          <span class="code-type">NUMERIC(14,4)</span>,  <span class="code-comment">-- second target</span>
+    risk_reward       <span class="code-type">NUMERIC(6,2)</span>,   <span class="code-comment">-- planned R:R at entry</span>
+
+    <span class="code-comment">-- Metadata</span>
+    broker            <span class="code-type">TEXT</span>,
+    order_type        <span class="code-type">TEXT</span>,           <span class="code-comment">-- 'market', 'limit', 'stop_limit'</span>
+    tags              <span class="code-type">TEXT[]</span>,          <span class="code-comment">-- ['momentum', 'FOMC', 'earnings-play']</span>
+    created_at        <span class="code-type">TIMESTAMPTZ</span> <span class="code-keyword">DEFAULT</span> now()
+);
+
+<span class="code-keyword">CREATE INDEX</span> idx_trades_portfolio_date <span class="code-keyword">ON</span> journal.trades(portfolio_id, trade_date);
+<span class="code-keyword">CREATE INDEX</span> idx_trades_instrument <span class="code-keyword">ON</span> journal.trades(instrument_key, trade_date);
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; journal.trade_notes (post-trade review)</span>
+<span class="code-comment">-- Separate from trades for a reason: notes are written after the fact</span>
+<span class="code-comment">-- A trade may have multiple notes (entry review, exit review, weekly review)</span>
+
+<span class="code-keyword">CREATE TABLE</span> journal.trade_notes (
+    note_id           <span class="code-type">UUID</span> <span class="code-keyword">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    trade_id          <span class="code-type">UUID</span> <span class="code-keyword">NOT NULL REFERENCES</span> journal.trades(trade_id),
+    note_type         <span class="code-type">TEXT</span> <span class="code-keyword">NOT NULL</span>,   <span class="code-comment">-- 'entry', 'exit', 'review', 'lesson'</span>
+    content           <span class="code-type">TEXT</span> <span class="code-keyword">NOT NULL</span>,
+    emotion           <span class="code-type">TEXT</span>,           <span class="code-comment">-- 'confident', 'fearful', 'greedy', 'neutral'</span>
+    rating            <span class="code-type">INT</span>,            <span class="code-comment">-- self-score 1-5 for trade execution quality</span>
+    screenshot_url    <span class="code-type">TEXT</span>,           <span class="code-comment">-- link to chart screenshot at entry/exit</span>
+    created_at        <span class="code-type">TIMESTAMPTZ</span> <span class="code-keyword">DEFAULT</span> now()
+);
+ </div>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Immutable Trades + Separate Notes</h4>
+   <p><strong>Trades are immutable; notes are append-only.</strong> Once a fill is recorded, it never changes&mdash;this mirrors how brokerages work and prevents retroactive data manipulation. Notes are separated because they&rsquo;re written at different times (thesis at entry, review days later, lessons during weekly review). The <code>emotion</code> and <code>rating</code> fields enable systematic analysis of psychological patterns&mdash;the kind of self-awareness that separates profitable traders from the rest.</p>
+ </div>
+
+ <h3>Position Tracking</h3>
+ <p>Current positions are derived from the trades table&mdash;no separate position table to keep in sync. A view computes the running state.</p>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; journal.v_current_positions (live positions view)</span>
+<span class="code-keyword">CREATE VIEW</span> journal.v_current_positions <span class="code-keyword">AS</span>
+<span class="code-keyword">WITH</span> signed_trades <span class="code-keyword">AS</span> (
+    <span class="code-keyword">SELECT</span>
+        portfolio_id,
+        instrument_key,
+        trade_date,
+        <span class="code-keyword">CASE</span>
+            <span class="code-keyword">WHEN</span> side <span class="code-keyword">IN</span> (<span class="code-string">'buy'</span>, <span class="code-string">'cover'</span>) <span class="code-keyword">THEN</span>  quantity
+            <span class="code-keyword">WHEN</span> side <span class="code-keyword">IN</span> (<span class="code-string">'sell'</span>, <span class="code-string">'short'</span>) <span class="code-keyword">THEN</span> -quantity
+        <span class="code-keyword">END</span> <span class="code-keyword">AS</span> signed_qty,
+        price,
+        commission
+    <span class="code-keyword">FROM</span> journal.trades
+),
+positions <span class="code-keyword">AS</span> (
+    <span class="code-keyword">SELECT</span>
+        portfolio_id,
+        instrument_key,
+        <span class="code-keyword">SUM</span>(signed_qty) <span class="code-keyword">AS</span> net_quantity,
+        <span class="code-comment">-- Weighted average cost (buys only)</span>
+        <span class="code-keyword">SUM</span>(<span class="code-keyword">CASE WHEN</span> signed_qty &gt; 0
+            <span class="code-keyword">THEN</span> signed_qty * price <span class="code-keyword">ELSE</span> 0 <span class="code-keyword">END</span>)
+        / <span class="code-keyword">NULLIF</span>(<span class="code-keyword">SUM</span>(<span class="code-keyword">CASE WHEN</span> signed_qty &gt; 0
+            <span class="code-keyword">THEN</span> signed_qty <span class="code-keyword">ELSE</span> 0 <span class="code-keyword">END</span>), 0) <span class="code-keyword">AS</span> avg_cost,
+        <span class="code-keyword">SUM</span>(commission)  <span class="code-keyword">AS</span> total_commissions,
+        <span class="code-keyword">MIN</span>(trade_date)  <span class="code-keyword">AS</span> first_trade,
+        <span class="code-keyword">MAX</span>(trade_date)  <span class="code-keyword">AS</span> last_trade
+    <span class="code-keyword">FROM</span> signed_trades
+    <span class="code-keyword">GROUP BY</span> portfolio_id, instrument_key
+)
+<span class="code-keyword">SELECT</span>
+    p.*,
+    i.symbol,
+    i.name,
+    i.sector
+<span class="code-keyword">FROM</span> positions p
+<span class="code-keyword">JOIN</span> instruments i <span class="code-keyword">ON</span> i.instrument_key = p.instrument_key
+    <span class="code-keyword">AND</span> i.valid_to <span class="code-keyword">IS NULL</span>
+<span class="code-keyword">WHERE</span> p.net_quantity &lt;&gt; 0;  <span class="code-comment">-- exclude closed positions</span>
+ </div>
+
+ <h3>P&amp;L Calculation</h3>
+ <p>Realized P&amp;L is computed at the trade level using FIFO matching. Unrealized P&amp;L uses the latest bar close from <code>bars_daily</code>&mdash;all in a single query, no external dependency.</p>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; Portfolio P&amp;L as-of any date</span>
+<span class="code-comment">-- "What was my P&amp;L on 2025-06-15?"</span>
+<span class="code-comment">-- Combines realized (closed trades) + unrealized (open positions &times; market price)</span>
+
+<span class="code-keyword">WITH</span> trades_asof <span class="code-keyword">AS</span> (
+    <span class="code-keyword">SELECT</span>
+        portfolio_id,
+        instrument_key,
+        <span class="code-keyword">SUM</span>(<span class="code-keyword">CASE WHEN</span> side <span class="code-keyword">IN</span> (<span class="code-string">'buy'</span>,<span class="code-string">'cover'</span>)
+            <span class="code-keyword">THEN</span> quantity <span class="code-keyword">ELSE</span> -quantity <span class="code-keyword">END</span>) <span class="code-keyword">AS</span> net_qty,
+        <span class="code-keyword">SUM</span>(<span class="code-keyword">CASE WHEN</span> side <span class="code-keyword">IN</span> (<span class="code-string">'sell'</span>,<span class="code-string">'short'</span>)
+            <span class="code-keyword">THEN</span> quantity * price <span class="code-keyword">ELSE</span> 0 <span class="code-keyword">END</span>)
+        - <span class="code-keyword">SUM</span>(<span class="code-keyword">CASE WHEN</span> side <span class="code-keyword">IN</span> (<span class="code-string">'buy'</span>,<span class="code-string">'cover'</span>)
+            <span class="code-keyword">THEN</span> quantity * price <span class="code-keyword">ELSE</span> 0 <span class="code-keyword">END</span>) <span class="code-keyword">AS</span> realized_pnl,
+        <span class="code-keyword">SUM</span>(commission) <span class="code-keyword">AS</span> total_fees
+    <span class="code-keyword">FROM</span> journal.trades
+    <span class="code-keyword">WHERE</span> trade_date &lt;= <span class="code-string">'2025-06-15'</span>
+    <span class="code-keyword">GROUP BY</span> portfolio_id, instrument_key
+),
+market_prices <span class="code-keyword">AS</span> (
+    <span class="code-keyword">SELECT DISTINCT ON</span> (instrument_key)
+        instrument_key, close <span class="code-keyword">AS</span> market_price
+    <span class="code-keyword">FROM</span> bars_daily
+    <span class="code-keyword">WHERE</span> trade_date &lt;= <span class="code-string">'2025-06-15'</span>
+    <span class="code-keyword">ORDER BY</span> instrument_key, trade_date <span class="code-keyword">DESC</span>
+)
+<span class="code-keyword">SELECT</span>
+    t.portfolio_id,
+    i.symbol,
+    t.net_qty,
+    t.realized_pnl,
+    t.net_qty * m.market_price <span class="code-keyword">AS</span> market_value,
+    t.net_qty * m.market_price - t.net_qty *
+        <span class="code-keyword">ABS</span>(t.realized_pnl / <span class="code-keyword">NULLIF</span>(t.net_qty,0)) <span class="code-keyword">AS</span> unrealized_pnl,
+    t.total_fees,
+    t.realized_pnl - t.total_fees <span class="code-keyword">AS</span> net_realized
+<span class="code-keyword">FROM</span> trades_asof t
+<span class="code-keyword">JOIN</span> instruments i <span class="code-keyword">ON</span> i.instrument_key = t.instrument_key
+    <span class="code-keyword">AND</span> i.valid_to <span class="code-keyword">IS NULL</span>
+<span class="code-keyword">LEFT JOIN</span> market_prices m <span class="code-keyword">ON</span> m.instrument_key = t.instrument_key
+<span class="code-keyword">ORDER BY ABS</span>(t.net_qty * m.market_price) <span class="code-keyword">DESC</span>;
+ </div>
+
+ <h3>Analytical Queries</h3>
+ <p>With the journal embedded in the securities master, you can answer questions that are impossible with a standalone spreadsheet.</p>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; Win rate by setup type with market context</span>
+<span class="code-comment">-- "What's my win rate on breakout trades when RSI was below 40?"</span>
+
+<span class="code-keyword">WITH</span> closed_trades <span class="code-keyword">AS</span> (
+    <span class="code-keyword">SELECT</span>
+        t.trade_id, t.instrument_key, t.trade_date,
+        t.setup_type, t.side, t.price, t.quantity,
+        <span class="code-keyword">LEAD</span>(t.price) <span class="code-keyword">OVER</span> (
+            <span class="code-keyword">PARTITION BY</span> t.instrument_key
+            <span class="code-keyword">ORDER BY</span> t.trade_date
+        ) <span class="code-keyword">AS</span> exit_price
+    <span class="code-keyword">FROM</span> journal.trades t
+    <span class="code-keyword">WHERE</span> t.side = <span class="code-string">'buy'</span>
+),
+with_context <span class="code-keyword">AS</span> (
+    <span class="code-keyword">SELECT</span>
+        ct.*,
+        f.rsi_14 <span class="code-keyword">AS</span> entry_rsi,
+        (ct.exit_price - ct.price) / ct.price <span class="code-keyword">AS</span> return_pct
+    <span class="code-keyword">FROM</span> closed_trades ct
+    <span class="code-keyword">JOIN</span> mart.fact_daily_returns f
+      <span class="code-keyword">ON</span> f.instrument_key = ct.instrument_key
+     <span class="code-keyword">AND</span> f.date_key = ct.trade_date
+    <span class="code-keyword">WHERE</span> ct.exit_price <span class="code-keyword">IS NOT NULL</span>
+)
+<span class="code-keyword">SELECT</span>
+    setup_type,
+    <span class="code-keyword">COUNT</span>(*) <span class="code-keyword">AS</span> total_trades,
+    <span class="code-keyword">ROUND</span>(100.0 * <span class="code-keyword">COUNT</span>(*) <span class="code-keyword">FILTER</span> (
+        <span class="code-keyword">WHERE</span> return_pct &gt; 0) / <span class="code-keyword">COUNT</span>(*), 1) <span class="code-keyword">AS</span> win_rate_pct,
+    <span class="code-keyword">ROUND</span>(<span class="code-keyword">AVG</span>(return_pct) * 100, 2) <span class="code-keyword">AS</span> avg_return_pct,
+    <span class="code-keyword">ROUND</span>(<span class="code-keyword">AVG</span>(entry_rsi), 1) <span class="code-keyword">AS</span> avg_entry_rsi
+<span class="code-keyword">FROM</span> with_context
+<span class="code-keyword">WHERE</span> entry_rsi &lt; 40
+<span class="code-keyword">GROUP BY</span> setup_type
+<span class="code-keyword">ORDER BY</span> win_rate_pct <span class="code-keyword">DESC</span>;
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">SQL &mdash; Emotional pattern analysis</span>
+<span class="code-comment">-- "Do I make worse trades when I'm feeling greedy?"</span>
+
+<span class="code-keyword">SELECT</span>
+    tn.emotion,
+    <span class="code-keyword">COUNT</span>(*) <span class="code-keyword">AS</span> trades,
+    <span class="code-keyword">ROUND</span>(<span class="code-keyword">AVG</span>(tn.rating), 1) <span class="code-keyword">AS</span> avg_self_rating,
+    <span class="code-keyword">ROUND</span>(100.0 * <span class="code-keyword">COUNT</span>(*) <span class="code-keyword">FILTER</span> (<span class="code-keyword">WHERE</span>
+        <span class="code-keyword">EXISTS</span> (<span class="code-keyword">SELECT</span> 1 <span class="code-keyword">FROM</span> journal.trades t2
+                <span class="code-keyword">WHERE</span> t2.instrument_key = t.instrument_key
+                  <span class="code-keyword">AND</span> t2.side = <span class="code-string">'sell'</span>
+                  <span class="code-keyword">AND</span> t2.price &gt; t.price
+                  <span class="code-keyword">AND</span> t2.trade_date &gt; t.trade_date)
+    ) / <span class="code-keyword">COUNT</span>(*), 1) <span class="code-keyword">AS</span> win_rate_pct
+<span class="code-keyword">FROM</span> journal.trade_notes tn
+<span class="code-keyword">JOIN</span> journal.trades t <span class="code-keyword">ON</span> t.trade_id = tn.trade_id
+<span class="code-keyword">WHERE</span> tn.note_type = <span class="code-string">'entry'</span>
+  <span class="code-keyword">AND</span> tn.emotion <span class="code-keyword">IS NOT NULL</span>
+<span class="code-keyword">GROUP BY</span> tn.emotion
+<span class="code-keyword">ORDER BY</span> trades <span class="code-keyword">DESC</span>;
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-link" style="margin-right:0.5rem;"></i> The Integration Advantage</h4>
+   <p>These queries are only possible because the journal shares a database with the securities master. When you buy AAPL, the journal records the trade with <code>instrument_key</code>&mdash;the same key used by <code>bars_daily</code>, <code>fundamentals</code>, and <code>fact_daily_returns</code>. No CSV imports, no manual ticker matching, no reconciliation. The foreign key IS the integration.</p>
+ </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5d: MCP & SEMANTIC LAYER                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="mcp"><i class="fa-solid fa-robot" style="color:#0d9488;"></i> MCP &amp; Semantic Layer &mdash; AI-Native Access</div>
+
+<div class="content-card">
+ <h2><i class="fa-solid fa-brain" style="color:#0d9488;"></i> From SQL to Natural Language</h2>
+
+ <p>A modern securities master doesn&rsquo;t stop at SQL dashboards. Our stack is <strong>AI-native by design</strong>: any LLM&mdash;Claude, Gemini, Grok, DeepSeek&mdash;can query the database directly through <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>. The key is a <strong>semantic layer</strong> that translates natural language into safe, governed SQL.</p>
+
+ <div class="step-grid">
+   <div class="step-card">
+     <div class="step-number"><i class="fa-solid fa-comments"></i></div>
+     <h4>Natural Language</h4>
+     <p>&ldquo;What&rsquo;s my portfolio drawdown since earnings?&rdquo; &rarr; The LLM interprets intent, maps to semantic metrics</p>
+   </div>
+   <div class="step-card">
+     <div class="step-number"><i class="fa-solid fa-layer-group"></i></div>
+     <h4>Semantic Layer</h4>
+     <p>Ibis expressions define metrics, dimensions, and relationships. No raw SQL exposed to the LLM</p>
+   </div>
+   <div class="step-card">
+     <div class="step-number"><i class="fa-solid fa-shield-halved"></i></div>
+     <h4>Governed Execution</h4>
+     <p>Queries are compiled to SQL by Ibis, validated against the schema, and executed with read-only permissions</p>
+   </div>
+   <div class="step-card">
+     <div class="step-number"><i class="fa-solid fa-chart-line"></i></div>
+     <h4>Structured Response</h4>
+     <p>Results return as typed DataFrames. The LLM formats them as tables, charts, or narrative text</p>
+   </div>
+ </div>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Why &ldquo;The Boring MCP&rdquo; (Ibis-based)</h4>
+   <p><strong><a href="https://github.com/definite-app/the-boring-mcp" target="_blank" rel="noopener">The Boring MCP</a></strong> is a Python MCP server built on <a href="https://ibis-project.org" target="_blank" rel="noopener">Ibis</a>, the universal dataframe API. Why Ibis? Because it compiles to native SQL for 20+ backends (PostgreSQL, DuckDB, BigQuery, Snowflake) without code changes. This means our semantic layer works identically whether the data lives in our production Postgres or in a DuckDB export for local development. Ibis expressions are also <strong>type-safe and composable</strong>&mdash;far safer than letting an LLM generate raw SQL strings.</p>
+ </div>
+
+ <h3>Architecture</h3>
+
+ <div class="code-block">
+   <span class="code-label">Text &mdash; MCP Data Flow</span>
+<span class="code-comment">                                    ┌─────────────────────────┐</span>
+<span class="code-comment">    User                            │   LLM (via OpenRouter)  │</span>
+<span class="code-comment">    "Show my sector exposure"       │  Claude / Gemini / Grok │</span>
+<span class="code-comment">         │                          └───────────┬─────────────┘</span>
+<span class="code-comment">         │                                      │</span>
+<span class="code-comment">         ▼                                      ▼</span>
+<span class="code-comment">  ┌─────────────┐  MCP Protocol    ┌────────────────────────┐</span>
+<span class="code-comment">  │  Claude Code │ ──────────────▶ │  The Boring MCP Server │</span>
+<span class="code-comment">  │  / Chatbot   │  (stdio/SSE)    │  (Python + Ibis)       │</span>
+<span class="code-comment">  └─────────────┘                  └───────────┬────────────┘</span>
+<span class="code-comment">                                               │</span>
+<span class="code-comment">                              Ibis Expression → SQL</span>
+<span class="code-comment">                                               │</span>
+<span class="code-comment">                                               ▼</span>
+<span class="code-comment">                                   ┌────────────────────┐</span>
+<span class="code-comment">                                   │  PostgreSQL        │</span>
+<span class="code-comment">                                   │  (secmaster DB)    │</span>
+<span class="code-comment">                                   │  mart.* / journal.*│</span>
+<span class="code-comment">                                   └────────────────────┘</span>
+ </div>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; OpenRouter as LLM Gateway</h4>
+   <p><strong>One API, all models.</strong> <a href="https://openrouter.ai" target="_blank" rel="noopener">OpenRouter</a> provides a unified API for Claude, Gemini, Grok, DeepSeek, Llama, and 200+ models. This means the chatbot/MCP client isn&rsquo;t locked to a single provider. Swap models via a config change&mdash;use Claude for complex analysis, Gemini Flash for quick lookups, and Grok for real-time market sentiment. The semantic layer is model-agnostic; only the MCP client changes.</p>
+ </div>
+
+ <h3>Semantic Layer Definition</h3>
+ <p>The semantic layer is defined in Python using Ibis expressions. Each metric is a composable, type-safe function&mdash;not a SQL string.</p>
+
+ <div class="code-block">
+   <span class="code-label">Python &mdash; semantic_layer.py (Ibis-based metric definitions)</span>
+<span class="code-keyword">import</span> ibis
+<span class="code-keyword">from</span> ibis <span class="code-keyword">import</span> _
+
+<span class="code-comment"># Connect to the securities master</span>
+con = ibis.postgres.connect(
+    host=<span class="code-string">"localhost"</span>,
+    database=<span class="code-string">"secmaster"</span>,
+    user=<span class="code-string">"secmaster"</span>,
+    schema=<span class="code-string">"mart"</span>,
+)
+
+<span class="code-comment"># ── Tables ──</span>
+fact_returns = con.table(<span class="code-string">"fact_daily_returns"</span>)
+dim_instrument = con.table(<span class="code-string">"dim_instrument"</span>)
+dim_date = con.table(<span class="code-string">"dim_date"</span>)
+dim_sector = con.table(<span class="code-string">"dim_sector"</span>)
+fact_portfolio = con.table(<span class="code-string">"fact_portfolio_snapshot"</span>)
+
+<span class="code-comment"># ── Semantic Metrics ──</span>
+
+<span class="code-keyword">def</span> <span class="code-function">sector_performance</span>(sector: <span class="code-type">str</span>, year: <span class="code-type">int</span>) -> ibis.Table:
+    <span class="code-string">"""Monthly returns for a sector in a given year."""</span>
+    <span class="code-keyword">return</span> (
+        fact_returns
+        .join(dim_instrument, <span class="code-string">"instrument_key"</span>)
+        .join(dim_date, <span class="code-string">"date_key"</span>)
+        .filter([
+            _.sector == sector,
+            _.year == year,
+            _.is_active == <span class="code-keyword">True</span>,
+        ])
+        .group_by([<span class="code-string">"month"</span>])
+        .aggregate(
+            monthly_return=_.daily_return.mean() * 21,
+            avg_vol=_.rolling_vol_20d.mean(),
+            instruments=_.instrument_key.nunique(),
+        )
+        .order_by(<span class="code-string">"month"</span>)
+    )
+
+<span class="code-keyword">def</span> <span class="code-function">portfolio_exposure</span>(portfolio_id: <span class="code-type">str</span>, as_of: <span class="code-type">str</span>) -> ibis.Table:
+    <span class="code-string">"""Sector exposure for a portfolio as of a date."""</span>
+    <span class="code-keyword">return</span> (
+        fact_portfolio
+        .filter([
+            _.portfolio_id == portfolio_id,
+            _.date_key == as_of,
+        ])
+        .join(dim_instrument, <span class="code-string">"instrument_key"</span>)
+        .group_by([<span class="code-string">"sector"</span>])
+        .aggregate(
+            market_value=_.market_value.sum(),
+            weight=_.weight_pct.sum(),
+            pnl=_.unrealized_pnl.sum(),
+        )
+        .order_by(ibis.desc(<span class="code-string">"weight"</span>))
+    )
+
+<span class="code-keyword">def</span> <span class="code-function">drawdown_leaders</span>(region: <span class="code-type">str</span>, threshold: <span class="code-type">float</span> = -0.20) -> ibis.Table:
+    <span class="code-string">"""Stocks with deepest drawdowns in a region."""</span>
+    <span class="code-keyword">return</span> (
+        fact_returns
+        .join(dim_instrument, <span class="code-string">"instrument_key"</span>)
+        .join(dim_date, <span class="code-string">"date_key"</span>)
+        .filter([
+            _.exchange_region == region,
+            _.year == 2025,
+        ])
+        .group_by([<span class="code-string">"symbol"</span>, <span class="code-string">"name"</span>])
+        .aggregate(max_dd=_.drawdown.min())
+        .filter(_.max_dd &lt; threshold)
+        .order_by(<span class="code-string">"max_dd"</span>)
+        .limit(20)
+    )
+ </div>
+
+ <h3>MCP Server Configuration</h3>
+ <p>The Boring MCP exposes the semantic layer as MCP tools. Each function becomes a callable tool that LLMs can invoke.</p>
+
+ <div class="code-block">
+   <span class="code-label">Python &mdash; mcp_server.py (The Boring MCP integration)</span>
+<span class="code-keyword">from</span> boring_mcp <span class="code-keyword">import</span> BoringMCP
+<span class="code-keyword">from</span> semantic_layer <span class="code-keyword">import</span> (
+    sector_performance,
+    portfolio_exposure,
+    drawdown_leaders,
+    con,
+)
+
+<span class="code-comment"># Initialize the MCP server with our Ibis connection</span>
+mcp = BoringMCP(
+    name=<span class="code-string">"secmaster"</span>,
+    connection=con,
+    description=<span class="code-string">"Securities Master — multi-asset, multi-region financial database"</span>,
+)
+
+<span class="code-comment"># Register semantic metrics as MCP tools</span>
+<span class="code-comment"># Each function becomes a tool the LLM can call</span>
+mcp.add_metric(<span class="code-string">"sector_performance"</span>, sector_performance,
+    description=<span class="code-string">"Monthly returns and volatility for a sector in a given year"</span>)
+mcp.add_metric(<span class="code-string">"portfolio_exposure"</span>, portfolio_exposure,
+    description=<span class="code-string">"Sector exposure breakdown for a portfolio as of a date"</span>)
+mcp.add_metric(<span class="code-string">"drawdown_leaders"</span>, drawdown_leaders,
+    description=<span class="code-string">"Stocks with the deepest drawdowns in a region"</span>)
+
+<span class="code-comment"># Also expose raw table exploration (read-only, with row limits)</span>
+mcp.add_explore(
+    tables=[<span class="code-string">"dim_instrument"</span>, <span class="code-string">"dim_date"</span>, <span class="code-string">"dim_sector"</span>,
+            <span class="code-string">"fact_daily_returns"</span>, <span class="code-string">"fact_portfolio_snapshot"</span>],
+    max_rows=1000,
+    allow_filters=<span class="code-keyword">True</span>,
+    allow_aggregations=<span class="code-keyword">True</span>,
+)
+
+<span class="code-keyword">if</span> __name__ == <span class="code-string">"__main__"</span>:
+    mcp.run()  <span class="code-comment"># stdio transport by default</span>
+ </div>
+
+ <h3>Client Configuration</h3>
+ <p>Any MCP-compatible client can connect: Claude Code, Claude Desktop, custom chatbots, or CI pipelines.</p>
+
+ <div class="code-block">
+   <span class="code-label">JSON &mdash; claude_desktop_config.json (Claude Desktop / Claude Code)</span>
+{
+  <span class="code-string">"mcpServers"</span>: {
+    <span class="code-string">"secmaster"</span>: {
+      <span class="code-string">"command"</span>: <span class="code-string">"python"</span>,
+      <span class="code-string">"args"</span>: [<span class="code-string">"mcp_server.py"</span>],
+      <span class="code-string">"env"</span>: {
+        <span class="code-string">"DATABASE_URL"</span>: <span class="code-string">"postgresql://secmaster:***@localhost:5432/secmaster"</span>
+      }
+    }
+  }
+}
+ </div>
+
+ <div class="code-block">
+   <span class="code-label">Python &mdash; chatbot.py (OpenRouter multi-model chatbot)</span>
+<span class="code-keyword">import</span> openai
+<span class="code-keyword">from</span> mcp_client <span class="code-keyword">import</span> MCPClient
+
+<span class="code-comment"># OpenRouter: one API key, all models</span>
+llm = openai.OpenAI(
+    base_url=<span class="code-string">"https://openrouter.ai/api/v1"</span>,
+    api_key=<span class="code-string">"sk-or-..."</span>,
+)
+
+<span class="code-comment"># Connect to our MCP server</span>
+mcp = MCPClient(command=<span class="code-string">"python mcp_server.py"</span>)
+tools = mcp.list_tools()  <span class="code-comment"># auto-discovered from semantic layer</span>
+
+<span class="code-comment"># Multi-model routing</span>
+MODELS = {
+    <span class="code-string">"analysis"</span>:  <span class="code-string">"anthropic/claude-sonnet-4"</span>,    <span class="code-comment"># deep reasoning</span>
+    <span class="code-string">"quick"</span>:     <span class="code-string">"google/gemini-2.0-flash"</span>,      <span class="code-comment"># fast lookups</span>
+    <span class="code-string">"sentiment"</span>: <span class="code-string">"x-ai/grok-3"</span>,                 <span class="code-comment"># real-time Twitter/X</span>
+}
+
+<span class="code-keyword">def</span> <span class="code-function">query</span>(question: <span class="code-type">str</span>, mode: <span class="code-type">str</span> = <span class="code-string">"analysis"</span>) -> <span class="code-type">str</span>:
+    <span class="code-string">"""Ask the securities master a question in natural language."""</span>
+    response = llm.chat.completions.create(
+        model=MODELS[mode],
+        messages=[
+            {<span class="code-string">"role"</span>: <span class="code-string">"system"</span>, <span class="code-string">"content"</span>: <span class="code-string">"You are a financial analyst. "</span>
+             <span class="code-string">"Use the secmaster tools to answer questions with data."</span>},
+            {<span class="code-string">"role"</span>: <span class="code-string">"user"</span>, <span class="code-string">"content"</span>: question},
+        ],
+        tools=tools,
+    )
+    <span class="code-comment"># Handle tool calls, execute via MCP, return formatted answer</span>
+    <span class="code-keyword">return</span> handle_tool_loop(response, mcp, llm)
+
+<span class="code-comment"># Example usage:</span>
+<span class="code-comment"># query("What's my tech sector exposure today?")</span>
+<span class="code-comment"># query("Quick: AAPL's RSI?", mode="quick")</span>
+<span class="code-comment"># query("What's the Twitter sentiment on NVDA?", mode="sentiment")</span>
+ </div>
+
+ <div class="decision-card">
+   <h4><i class="fa-solid fa-code-branch" style="color:#0d9488; margin-right:0.5rem;"></i> Design Decision &mdash; Semantic Layer vs. Raw SQL Access</h4>
+   <p><strong>Never give an LLM raw SQL access to production.</strong> Even with read-only permissions, an LLM can generate <code>SELECT * FROM bars_daily</code> (60M rows) and crash your dashboard. The semantic layer constrains what the LLM can query: pre-defined metrics with row limits, typed parameters, and governed aggregations. The Ibis abstraction also prevents SQL injection&mdash;parameters are bound, never interpolated. Think of it as an <strong>API for your database</strong>: the LLM calls functions, not raw SQL.</p>
+ </div>
+
+ <div class="didactic-box">
+   <h4 style="color:#16a34a !important;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:0.5rem;"></i> What This Enables</h4>
+   <p>With MCP + the semantic layer, you can ask your securities master questions in plain English:</p>
+   <ul class="checklist" style="margin-top:0.5rem;">
+     <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>&ldquo;Show my portfolio exposure by sector as of last Friday&rdquo;</strong> &rarr; calls <code>portfolio_exposure()</code></li>
+     <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>&ldquo;Which tech stocks have the worst drawdown this year?&rdquo;</strong> &rarr; calls <code>drawdown_leaders("US", -0.15)</code></li>
+     <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>&ldquo;Compare healthcare vs energy sector performance monthly&rdquo;</strong> &rarr; calls <code>sector_performance()</code> twice</li>
+     <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> <strong>&ldquo;What was my win rate on earnings plays?&rdquo;</strong> &rarr; queries the journal via a journal metric</li>
+   </ul>
+   <p style="margin-top:0.5rem;">Claude Code users get this natively: configure the MCP server in <code>.claude/settings.json</code> and the tools appear automatically. No UI to build, no API to deploy&mdash;the database speaks LLM.</p>
+ </div>
 </div>
 
 <!-- ============================================================ -->
@@ -1103,6 +1852,9 @@ $ npm run dev
      <li><i class="fa-solid fa-check-circle"></i> <strong>PostgreSQL beats ClickHouse for SCD workloads.</strong> You need UPDATE operations and ACID transactions for closing old SCD rows. ClickHouse's immutable storage makes this painful.</li>
      <li><i class="fa-solid fa-check-circle"></i> <strong>Monthly partitioning is the sweet spot.</strong> ~200K rows per partition fits in memory, and ~300 partitions for 25 years keeps the catalog manageable.</li>
      <li><i class="fa-solid fa-check-circle"></i> <strong>ELT over ETL.</strong> Load raw data first, transform later. When a dbt model has a bug, fix the SQL and re-run. The raw data is always there.</li>
+     <li><i class="fa-solid fa-check-circle"></i> <strong>Star schema turns ad-hoc questions into composable SQL.</strong> Fact tables (returns, portfolio snapshots) join to dimensions (date, instrument, sector) in a predictable pattern. Pre-compute returns and drawdowns in the dbt build; analysts get sub-second queries.</li>
+     <li><i class="fa-solid fa-check-circle"></i> <strong>Embed the trading journal in the securities master.</strong> Same database, different schema. Every trade inherits instrument metadata and price context via foreign keys&mdash;no CSV imports or reconciliation needed.</li>
+     <li><i class="fa-solid fa-check-circle"></i> <strong>MCP + semantic layer makes the database AI-native.</strong> Ibis-based metrics give LLMs governed, type-safe access to the data. Never expose raw SQL to an LLM&mdash;use a semantic layer with row limits and typed parameters.</li>
    </ul>
  </div>
 
@@ -1136,6 +1888,21 @@ $ npm run dev
  <details>
    <summary>What is the universal as-of query pattern?</summary>
    <div class="quiz-answer"><code>WHERE valid_from &lt;= @as_of_date AND (valid_to &gt; @as_of_date OR valid_to IS NULL)</code>. This pattern works identically for instruments, index_constituents, and any SCD Type 2 table. For fundamentals, the equivalent is <code>WHERE reported_at &lt;= @as_of_date AND (superseded_at &gt; @as_of_date OR superseded_at IS NULL)</code>. The <code>IS NULL</code> clause handles currently-valid records.</div>
+ </details>
+
+ <details>
+   <summary>Why use a star schema instead of querying the OLTP tables directly for BI?</summary>
+   <div class="quiz-answer">The OLTP tables are normalized and optimized for writes (SCD Type 2 updates, partitioned inserts). BI queries require joins across 3&ndash;5 tables and window functions on millions of rows, which is slow. The star schema pre-computes denormalized dimensions and pre-aggregated facts (returns, drawdown, rolling vol) so every analytical query is a simple <code>fact JOIN dim WHERE ... GROUP BY</code>. The dbt build pays the computation cost once; analysts get sub-second responses.</div>
+ </details>
+
+ <details>
+   <summary>Why are trades immutable and notes stored in a separate table?</summary>
+   <div class="quiz-answer">Trades mirror brokerage fills&mdash;once recorded, they never change. This prevents retroactive manipulation and ensures P&amp;L calculations are auditable. Notes are separate because they&rsquo;re written at different times: entry thesis at the moment of trading, exit review days later, weekly lessons even later. The <code>emotion</code> and <code>rating</code> columns enable systematic analysis of psychological patterns (e.g., &ldquo;Do I lose money when I feel greedy?&rdquo;).</div>
+ </details>
+
+ <details>
+   <summary>What is the role of the semantic layer (Ibis) in the MCP architecture?</summary>
+   <div class="quiz-answer">The semantic layer sits between LLMs and the database. Instead of letting an LLM generate raw SQL (which can produce dangerous queries like <code>SELECT * FROM bars_daily</code> on 60M rows), the semantic layer defines type-safe, composable Ibis functions with built-in row limits and parameter validation. Ibis compiles these to native SQL for any backend (PostgreSQL, DuckDB, BigQuery), making the layer backend-agnostic. The LLM calls functions via MCP; it never writes SQL directly.</div>
  </details>
 
 </div>
@@ -1298,20 +2065,90 @@ $ npm run dev
   var chart = echarts.init(dom);
 
   var nodes = [
-    {name:'exchanges\n(250 rows)', category:0, symbolSize:50, x:100, y:100},
-    {name:'instruments\n(SCD2, ~30K versions)', category:1, symbolSize:65, x:350, y:100},
-    {name:'bars_daily\n(~60M rows, partitioned)', category:2, symbolSize:70, x:350, y:300},
-    {name:'fundamentals\n(PIT, ~5M rows)', category:3, symbolSize:55, x:600, y:100},
-    {name:'corporate_actions\n(~500K events)', category:4, symbolSize:50, x:600, y:300},
-    {name:'index_constituents\n(~200K records)', category:5, symbolSize:50, x:100, y:300}
+    {name:'exchanges\n(250 rows)', category:0, symbolSize:45, x:50, y:50},
+    {name:'instruments\n(SCD2, ~30K)', category:1, symbolSize:60, x:300, y:50},
+    {name:'bars_daily\n(~60M, partitioned)', category:2, symbolSize:65, x:300, y:220},
+    {name:'fundamentals\n(PIT, ~5M)', category:3, symbolSize:50, x:550, y:50},
+    {name:'corporate_actions\n(~500K)', category:4, symbolSize:45, x:550, y:220},
+    {name:'index_constituents\n(~200K)', category:5, symbolSize:45, x:50, y:220},
+    {name:'journal.trades\n(immutable log)', category:6, symbolSize:45, x:50, y:380},
+    {name:'journal.trade_notes\n(reviews)', category:6, symbolSize:35, x:200, y:440},
+    {name:'journal.portfolios', category:6, symbolSize:35, x:50, y:480},
+    {name:'mart.dim_date\n(~11K)', category:7, symbolSize:40, x:550, y:380},
+    {name:'mart.dim_instrument\n(~10K)', category:7, symbolSize:40, x:700, y:280},
+    {name:'mart.fact_daily_returns\n(~60M)', category:8, symbolSize:55, x:700, y:120},
+    {name:'mart.fact_portfolio\n(snapshot)', category:8, symbolSize:45, x:350, y:380}
   ];
 
   var links = [
-    {source:'exchanges\n(250 rows)', target:'instruments\n(SCD2, ~30K versions)', label:{show:true, formatter:'1:N'}},
-    {source:'instruments\n(SCD2, ~30K versions)', target:'bars_daily\n(~60M rows, partitioned)', label:{show:true, formatter:'1:N'}},
-    {source:'instruments\n(SCD2, ~30K versions)', target:'fundamentals\n(PIT, ~5M rows)', label:{show:true, formatter:'1:N'}},
-    {source:'instruments\n(SCD2, ~30K versions)', target:'corporate_actions\n(~500K events)', label:{show:true, formatter:'1:N'}},
-    {source:'instruments\n(SCD2, ~30K versions)', target:'index_constituents\n(~200K records)', label:{show:true, formatter:'1:N'}}
+    {source:'exchanges\n(250 rows)', target:'instruments\n(SCD2, ~30K)', label:{show:true, formatter:'1:N'}},
+    {source:'instruments\n(SCD2, ~30K)', target:'bars_daily\n(~60M, partitioned)', label:{show:true, formatter:'1:N'}},
+    {source:'instruments\n(SCD2, ~30K)', target:'fundamentals\n(PIT, ~5M)', label:{show:true, formatter:'1:N'}},
+    {source:'instruments\n(SCD2, ~30K)', target:'corporate_actions\n(~500K)', label:{show:true, formatter:'1:N'}},
+    {source:'instruments\n(SCD2, ~30K)', target:'index_constituents\n(~200K)', label:{show:true, formatter:'1:N'}},
+    {source:'instruments\n(SCD2, ~30K)', target:'journal.trades\n(immutable log)', label:{show:true, formatter:'1:N'}},
+    {source:'journal.trades\n(immutable log)', target:'journal.trade_notes\n(reviews)', label:{show:true, formatter:'1:N'}},
+    {source:'journal.portfolios', target:'journal.trades\n(immutable log)', label:{show:true, formatter:'1:N'}},
+    {source:'bars_daily\n(~60M, partitioned)', target:'mart.fact_daily_returns\n(~60M)', lineStyle:{type:'dashed'}, label:{show:true, formatter:'dbt'}},
+    {source:'instruments\n(SCD2, ~30K)', target:'mart.dim_instrument\n(~10K)', lineStyle:{type:'dashed'}, label:{show:true, formatter:'dbt'}},
+    {source:'mart.dim_date\n(~11K)', target:'mart.fact_daily_returns\n(~60M)'},
+    {source:'mart.dim_instrument\n(~10K)', target:'mart.fact_daily_returns\n(~60M)'},
+    {source:'journal.trades\n(immutable log)', target:'mart.fact_portfolio\n(snapshot)', lineStyle:{type:'dashed'}, label:{show:true, formatter:'dbt'}}
+  ];
+
+  chart.setOption({
+    tooltip:{},
+    series:[{
+      type:'graph',
+      layout:'none',
+      roam:true,
+      label:{show:true, fontSize:10, fontWeight:600},
+      edgeSymbol:['none','arrow'],
+      edgeSymbolSize:8,
+      edgeLabel:{fontSize:9, color:'#64748b'},
+      categories:[
+        {name:'Reference', itemStyle:{color:'#64748b'}},
+        {name:'Master', itemStyle:{color:'#0d9488'}},
+        {name:'Time Series', itemStyle:{color:'#2563eb'}},
+        {name:'Fundamentals', itemStyle:{color:'#f97316'}},
+        {name:'Events', itemStyle:{color:'#dc2626'}},
+        {name:'Composition', itemStyle:{color:'#9333ea'}},
+        {name:'Journal', itemStyle:{color:'#be185d'}},
+        {name:'Dimensions', itemStyle:{color:'#059669'}},
+        {name:'Facts', itemStyle:{color:'#7c3aed'}}
+      ],
+      data:nodes,
+      links:links,
+      lineStyle:{color:'#94a3b8', width:2, curveness:0.2}
+    }]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ---- 5. Star Schema Diagram ----
+(function() {
+  var dom = document.getElementById('chartStarSchema');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var nodes = [
+    {name:'fact_daily_returns\n(60M rows)', category:0, symbolSize:70, x:400, y:250},
+    {name:'fact_portfolio_snapshot\n(20M rows)', category:0, symbolSize:55, x:400, y:420},
+    {name:'dim_date\n(11K rows)', category:1, symbolSize:45, x:150, y:100},
+    {name:'dim_instrument\n(10K rows)', category:1, symbolSize:50, x:650, y:100},
+    {name:'dim_sector\n(200 rows)', category:1, symbolSize:35, x:650, y:350},
+    {name:'journal.trades\n(source)', category:2, symbolSize:40, x:150, y:420},
+    {name:'bars_daily\n(source)', category:2, symbolSize:40, x:150, y:250}
+  ];
+
+  var links = [
+    {source:'dim_date\n(11K rows)', target:'fact_daily_returns\n(60M rows)', label:{show:true, formatter:'date_key'}},
+    {source:'dim_instrument\n(10K rows)', target:'fact_daily_returns\n(60M rows)', label:{show:true, formatter:'instrument_key'}},
+    {source:'dim_date\n(11K rows)', target:'fact_portfolio_snapshot\n(20M rows)', label:{show:true, formatter:'date_key'}},
+    {source:'dim_instrument\n(10K rows)', target:'fact_portfolio_snapshot\n(20M rows)', label:{show:true, formatter:'instrument_key'}},
+    {source:'dim_sector\n(200 rows)', target:'dim_instrument\n(10K rows)', label:{show:true, formatter:'sector'}},
+    {source:'bars_daily\n(source)', target:'fact_daily_returns\n(60M rows)', lineStyle:{type:'dashed'}, label:{show:true, formatter:'dbt build'}},
+    {source:'journal.trades\n(source)', target:'fact_portfolio_snapshot\n(20M rows)', lineStyle:{type:'dashed'}, label:{show:true, formatter:'dbt build'}}
   ];
 
   chart.setOption({
@@ -1323,24 +2160,21 @@ $ npm run dev
       label:{show:true, fontSize:11, fontWeight:600},
       edgeSymbol:['none','arrow'],
       edgeSymbolSize:8,
-      edgeLabel:{fontSize:10, color:'#64748b'},
+      edgeLabel:{fontSize:9, color:'#64748b'},
       categories:[
-        {name:'Reference', itemStyle:{color:'#64748b'}},
-        {name:'Master', itemStyle:{color:'#0d9488'}},
-        {name:'Time Series', itemStyle:{color:'#2563eb'}},
-        {name:'Fundamentals', itemStyle:{color:'#f97316'}},
-        {name:'Events', itemStyle:{color:'#dc2626'}},
-        {name:'Composition', itemStyle:{color:'#9333ea'}}
+        {name:'Fact Tables', itemStyle:{color:'#7c3aed'}},
+        {name:'Dimensions', itemStyle:{color:'#059669'}},
+        {name:'Source (OLTP)', itemStyle:{color:'#94a3b8'}}
       ],
       data:nodes,
       links:links,
-      lineStyle:{color:'#94a3b8', width:2, curveness:0.2}
+      lineStyle:{color:'#94a3b8', width:2, curveness:0.15}
     }]
   });
   window.addEventListener('resize', function(){ chart.resize(); });
 })();
 
-// ---- 5. Data Volume ----
+// ---- 6. Data Volume ----
 (function() {
   var dom = document.getElementById('chartDataVolume');
   if (!dom) return;
@@ -1350,18 +2184,26 @@ $ npm run dev
     tooltip: { trigger:'axis', axisPointer:{type:'shadow'} },
     grid: { left:'22%', right:'8%', top:'5%', bottom:'5%' },
     xAxis: { type:'value', name:'Rows', axisLabel:{formatter:function(v){return v>=1e6?(v/1e6)+'M':v>=1e3?(v/1e3)+'K':v}} },
-    yAxis: { type:'category', data:['index_constituents','corporate_actions','exchanges','fundamentals','instruments\n(all versions)','bars_daily'], axisLabel:{fontSize:11, fontWeight:600} },
+    yAxis: { type:'category', data:['journal.trade_notes','journal.trades','journal.portfolios','mart.dim_date','mart.dim_instrument','mart.dim_sector','index_constituents','corporate_actions','exchanges','fundamentals','instruments\n(all versions)','mart.fact_portfolio','mart.fact_daily_returns','bars_daily'], axisLabel:{fontSize:10, fontWeight:600} },
     series: [{
       type:'bar',
       data:[
+        {value:5000, itemStyle:{color:'#be185d'}},
+        {value:50000, itemStyle:{color:'#be185d'}},
+        {value:10, itemStyle:{color:'#be185d'}},
+        {value:11000, itemStyle:{color:'#059669'}},
+        {value:10000, itemStyle:{color:'#059669'}},
+        {value:200, itemStyle:{color:'#059669'}},
         {value:200000, itemStyle:{color:'#9333ea'}},
         {value:500000, itemStyle:{color:'#dc2626'}},
         {value:250, itemStyle:{color:'#64748b'}},
         {value:5000000, itemStyle:{color:'#f97316'}},
         {value:30000, itemStyle:{color:'#0d9488'}},
+        {value:20000000, itemStyle:{color:'#7c3aed'}},
+        {value:60000000, itemStyle:{color:'#7c3aed'}},
         {value:60000000, itemStyle:{color:'#2563eb'}}
       ],
-      label:{show:true, position:'right', formatter:function(p){var v=p.value;return v>=1e6?(v/1e6).toFixed(0)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}, fontSize:12, fontWeight:700}
+      label:{show:true, position:'right', formatter:function(p){var v=p.value;return v>=1e6?(v/1e6).toFixed(0)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}, fontSize:11, fontWeight:700}
     }]
   });
   window.addEventListener('resize', function(){ chart.resize(); });
