@@ -708,7 +708,7 @@ Quand on **régénère** une analyse qui existe déjà :
    - Créer le dossier `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
    - Déplacer `analyses/{TICKER}/index.html` → `analyses/{TICKER}/archive/{YYYYMMDD}/index.html`
    - Copier `analyses/{TICKER}/assets/report.css` → `analyses/{TICKER}/archive/{YYYYMMDD}/report.css`
-   - Le CSS de l'archive peut être copié tel quel ou être un lien relatif `../../assets/report.css`
+   - Le CSS de l'archive utilisera également `/assets/report.css`
 
 2. **Mettre à jour la modale Historique** dans le **nouveau** `index.html` :
    - Ajouter une entrée dans `#historyList` pour chaque version archivée
@@ -1000,7 +1000,7 @@ Le dimanche est le **seul jour** avec format réduit crypto-only :
 - Chaque chiffre doit être sourcé et daté
 - Ton : professionnel mais accessible, pas de jargon non expliqué
 - Mobile-first : tableaux responsive, grilles adaptatives
-- Le CSS de base est copié depuis `scanner/YYYYMMDD/assets/report.css`
+- Le CSS de base utilisé est `/assets/report-dark.css`
 - Toujours inclure GTM (GTM-T5Z595CW), Inter font, Font Awesome 6.4.0
 - ECharts et ApexCharts disponibles
 
@@ -1314,7 +1314,7 @@ analyses/AAPL/
 
 - **URL propres** : `articles.market-watch.xyz/analyses/AAPL/expert/en` (pas de trailing slash ni index.html)
 - **Default** : `analyses/AAPL/` → beginner/en (nouvelle norme). Les anciens articles expert/fr restent accessibles via le switcher.
-- **CSS partagé** : toutes les variantes linkent vers `../../assets/report.css` (ou `../../../assets/report.css` selon le niveau)
+- **CSS partagé** : TOUTES les variantes incluent `<link rel="stylesheet" href="/assets/report.css">`
 
 ### variants.json (Manifest)
 

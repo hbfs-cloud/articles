@@ -5180,19 +5180,69 @@
     buildSearchIndex();
 
     // ===================================================================
+    // LAZY LOADING
+    // ===================================================================
+    function initLazyLoading() {
+        document.querySelectorAll('.tab-panel').forEach(tab => {
+            const cards = tab.querySelectorAll('.grid-cards > .report-card');
+            if (cards.length > 20) {
+                for (let i = 20; i < cards.length; i++) {
+                    cards[i].style.display = 'none';
+                    cards[i].classList.add('lazy-hidden');
+                }
+                const btn = document.createElement('button');
+                btn.className = 'btn-action';
+                btn.style.cssText = 'display:block; margin:2rem auto;';
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> Afficher plus';
+                btn.onclick = function() {
+                    const hidden = tab.querySelectorAll('.lazy-hidden');
+                    for (let i = 0; i < 20 && i < hidden.length; i++) {
+                        hidden[i].style.display = 'flex';
+                        hidden[i].classList.remove('lazy-hidden');
+                    }
+                    if (hidden.length <= 20) btn.style.display = 'none';
+                };
+                const grid = tab.querySelector('.grid-cards');
+                if (grid) grid.after(btn);
+            }
+        });
+    }
+    initLazyLoading();
+
+    // ===================================================================
+    // FULL-TEXT SEARCH FETCH
+    // ===================================================================
+    var fullTextIndex = [];
+    fetch('/assets/search-index.json').then(r => r.json()).then(data => {
+        fullTextIndex = data;
+    }).catch(e => console.log("Search index not ready yet"));
+
+    // ===================================================================
     // SEARCH SCORING
     // ===================================================================
     function scoreItem(item, terms) {
         var score = 0;
         var weights = { ticker: 10, tags: 6, name: 5, title: 4, exchange: 3, type: 3, desc: 2 };
+        
+        var hrefNorm = (item.href || '').replace(/^\/+/, '').replace(/\/$/, '');
+        var ftItem = fullTextIndex.find(f => {
+            return f.url && f.url.replace(/^\/+/, '').replace(/\/$/, '') === hrefNorm;
+        });
+        var fullText = ftItem ? ftItem.content.toLowerCase() : '';
+
         terms.forEach(function(term) {
+            var termMatched = false;
             Object.keys(weights).forEach(function(field) {
                 var val = (item[field] || '').toLowerCase();
                 if (val.indexOf(term) !== -1) {
                     score += weights[field];
+                    termMatched = true;
                     if (val.indexOf(term) === 0) score += 2; // bonus for starts-with
                 }
             });
+            if (!termMatched && fullText && fullText.indexOf(term) !== -1) {
+                score += 1;
+            }
         });
         return score;
     }

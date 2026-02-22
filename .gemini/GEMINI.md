@@ -1,0 +1,1 @@
+- The user explicitly forbids the use of Python scripts for any task within this project. All file generation, especially HTML, must be done by me, the LLM, crafting the content manually and directly using the `write_file` tool.

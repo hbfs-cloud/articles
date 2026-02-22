@@ -10,13 +10,11 @@ articles/
 ├── assets/style.css              # CSS global (landing page)
 ├── weekly/                       # Rapports hebdomadaires
 │   ├── YYYYMMDD/                 # Format de nommage: date du lundi
-│   │   ├── index.html            # Article HTML complet
-│   │   └── assets/report.css     # CSS spécifique au rapport
+│   │   │   ├── index.html            # Article HTML complet
 │   └── assets/                   # Assets partagés weekly
 ├── analyses/                     # Analyses individuelles par ticker
 │   ├── {TICKER}/                 # Dossier par ticker (ex: AAPL/)
 │   │   ├── index.html            # Default = beginner/en
-│   │   ├── assets/report.css     # CSS partagé toutes variantes
 │   │   ├── variants.json         # Manifest des variantes disponibles
 │   │   ├── expert/               # Niveau expert
 │   │   │   ├── fr/index.html     # Français expert
@@ -32,18 +30,15 @@ articles/
 ├── daily/                        # Briefings quotidiens
 │   └── YYYYMMDD/                 # Format de nommage: date du briefing
 │       ├── index.html            # Default = beginner/en
-│       ├── assets/report.css     # CSS spécifique
 │       └── variants.json         # Manifest des variantes (optionnel)
 ├── scanner/                      # Scans quotidiens algorithmiques
 │   └── YYYYMMDD/                 # Format de nommage: date du scan
 │       ├── index.html            # Default = beginner/en
-│       ├── assets/report.css     # CSS spécifique (thème dark)
 │       ├── variants.json         # Manifest des variantes
 │       ├── expert/{en,ar}/       # Variantes expert
 │       └── beginner/{fr,en,ar}/  # Variantes débutant
 │   └── retrospective/            # Rétrospective hebdomadaire du scanner
 │       ├── index.html            # Latest = dernière rétrospective
-│       ├── assets/report.css     # CSS
 │       ├── variants.json         # Manifest avec archives
 │       └── archive/YYYYMMDD/     # Versions précédentes
 ├── lab/                          # Output Evidence.dev (fichiers statiques commités)
@@ -85,7 +80,7 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
    - `QueryData` types: quote pour les cryptos (SOL-USD, XRP-USD, DOGE-USD)
    - WebSearch pour: CPI/inflation, earnings calendar semaine prochaine, géopolitique (Ukraine, Venezuela, Chine), sector rotation, Fed/FOMC
 3. Créer le dossier `weekly/YYYYMMDD/` (date du lundi de la semaine couverte)
-4. Copier le CSS du dernier article comme base
+4. Utiliser impérativement le CSS global: `<link rel="stylesheet" href="/assets/report.css">`
 5. Créer index.html avec toutes les sections (voir PROMPT.md)
 6. Mettre à jour index.html principal (ajouter la nouvelle carte en premier, passer l'ancienne en "Archive")
 7. Langue: Français, ton institutionnel mais accessible
@@ -101,7 +96,6 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
 2. **Si l'analyse existe déjà** : archiver l'ancienne version
    - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
    - Déplacer l'ancien `index.html` dans l'archive
-   - Copier le CSS dans l'archive
 3. **Collecter via MCP** :
    - `GetInstruments` symbols=[TICKER]
    - `QueryData` types: quote,bars_daily,bars_intraday,financials,earnings_quarterly,holders,stats,support_resistance,volume_profile,sentiment_overall,trading_signals,analyst_actions,insider_transactions,ctb,news
@@ -177,7 +171,7 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
    - **Idées de Trading** — 2-3 trades swing argumentés avec entrée/stop/target/R:R
    - Ce qu'il faut surveiller aujourd'hui
    - Sources & Disclaimer
-4. **Copier le report.css** du scanner comme base CSS
+4. **Utiliser le css dark**: `<link rel="stylesheet" href="/assets/report-dark.css">`
 5. **Mettre à jour le tab Daily** dans index.html (ajouter la carte du jour)
 
 #### Spécificités Samedi (post-séance vendredi)
@@ -242,7 +236,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 
 ## Conventions
 - **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
-- **CSS**: Réutiliser report.css existant, customiser dans `<style>` inline
+- **CSS**: Utiliser EXCLUSIVEMENT le CSS global via racine: `<link rel="stylesheet" href="/assets/report.css">` ou `report-dark.css` pour le scanner. Ne plus jamais recréer le dossier `assets/` localement.
 - **GTM**: Toujours inclure Google Tag Manager (GTM-T5Z595CW)
 - **Fonts**: Inter (Google Fonts) + Font Awesome 6.4.0
 - **Charts**: ApexCharts + ECharts
