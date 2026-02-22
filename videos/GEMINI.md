@@ -1,0 +1,383 @@
+# Pipeline Vidéo YouTube — Market Watch
+
+## Contexte
+
+Tu reprends un pipeline de génération automatisée de vidéos YouTube (~5 min) pour **Market Watch** (`market-watch.xyz`). Les vidéos transforment des articles éducatifs en narrations animées avec slides infographiques.
+
+**Vidéo pilote** : "Se Remettre d'une Perte en Bourse" (Partie 6 de la série "Bien Débuter en Bourse").
+
+Le pipeline est conçu pour être **réutilisable** sur les 23 séries (~110 articles) du site.
+
+---
+
+## IMPORTANT — Consignes prioritaires
+
+### 1. Référence visuelle obligatoire
+**Avant de coder quoi que ce soit**, va sur le site et fais des screenshots :
+- `https://articles.market-watch.xyz/series/se-remettre-dune-perte/` — L'article source (version experte)
+- `https://articles.market-watch.xyz/series/se-remettre-dune-perte/beginner/fr/` — Version simplifiée
+- `https://articles.market-watch.xyz/` — Landing page Market Watch
+
+**Crop les screenshots** pour isoler :
+- La palette de couleurs exacte (teal, navy, cartes blanches)
+- Le style des tableaux, badges, cartes avec accent coloré
+- La typographie (Inter font, tailles, hiérarchie)
+- Le header/hero avec le logo
+- Les infographies (bar charts, phases, roadmaps)
+
+Les slides vidéo doivent **visuellement ressembler** à ces pages web. C'est la référence absolue.
+
+### 2. Voix masculine naturelle
+La voix doit être **masculine** et la **plus naturelle possible** en français.
+- Voix actuelle : `fr-FR-RemyMultilingualNeural` via `edge-tts` (acceptable mais synthétique)
+- **Priorité** : Explorer des alternatives plus naturelles :
+  - **Google Cloud TTS** : voix WaveNet ou Neural2 (ex: `fr-FR-Neural2-B` — masculine)
+  - **ElevenLabs** : voix clonée ou voix masculine FR
+  - **Gemini TTS** / Google Gemini audio generation
+  - **OpenAI TTS** : voix `onyx` ou `echo` (si disponible en FR)
+- Le rate doit être légèrement ralenti (-5% à -8%) pour la clarté
+- Ton : professionnel, posé, comme un journaliste financier (pas un robot, pas un enfant)
+- Si tu ne peux pas configurer une meilleure TTS, garde edge-tts Remy en fallback
+
+---
+
+## Architecture du Pipeline
+
+```
+Article HTML → script.json (12 scènes)
+                 ↓
+         ┌───────┴───────┐
+    edge-tts          create_slides.py
+   (audio FR)        (Pillow infographics)
+         └───────┬───────┘
+              FFmpeg
+         (Ken Burns + xfade)
+                 ↓
+           video.mp4 (~5 min)
+```
+
+---
+
+## État actuel — Ce qui est FAIT
+
+### 1. Audio (✅ Terminé)
+- 12 fichiers MP3 dans `se-remettre-dune-perte/audio/`
+- Voix : `fr-FR-RemyMultilingualNeural` via `edge-tts` (rate: -8%)
+- `full_narration.mp3` = concaténation des 12 scènes
+- Durée totale : ~4-5 minutes
+
+### 2. Slides / Images (✅ Terminé)
+- 12 fichiers PNG 1920×1080 dans `se-remettre-dune-perte/images/`
+- Générés par `create_slides.py` (SlideRenderer class)
+- Design premium flat infographic avec font Inter
+- Texte en français avec accents corrects (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç)
+- Logo Market Watch en watermark
+
+### 3. Pipeline orchestrateur (✅ Terminé)
+- `generate_video.py` — orchestre les 4 étapes (audio, images, clips, assembly)
+- Supporte `--skip-audio`, `--skip-images`, `--skip-assembly`
+
+---
+
+## Ce qui reste à faire
+
+### Tâche immédiate : Générer la vidéo finale
+
+Exécuter le pipeline pour produire le `.mp4` final :
+
+```bash
+cd /Users/marketwatchxyz/GolandProjects/articles/videos
+source .venv/bin/activate
+python3 generate_video.py --article se-remettre-dune-perte --skip-audio
+```
+
+Cela va :
+1. **Skip audio** (déjà généré)
+2. **Régénérer les slides** (si images effacées) via `create_slides.py`
+3. **Créer 12 clips Ken Burns** : `zoompan` FFmpeg (zoom lent in/out, 12% amplitude)
+4. **Assembler avec crossfade** : `xfade=transition=fade:duration=0.5`
+5. **Muxer avec l'audio** : `full_narration.mp3` + vidéo assemblée → MP4 final
+
+**Note** : Les images existantes dans `images/` sont skippées automatiquement. Pour régénérer, supprimer le dossier `images/` d'abord.
+
+### Tâche suivante : Améliorer la qualité
+
+1. **Voix** : Explorer Google Cloud TTS ou Gemini TTS pour une voix plus naturelle
+2. **Musique de fond** : Ajouter une piste audio douce (lo-fi / corporate) sous la narration
+3. **Transitions** : Tester d'autres transitions xfade (wipeleft, circleopen, slidedown)
+4. **Thumbnail** : Générer une miniature YouTube optimisée (existe déjà dans `output/thumbnail.png` mais peut être améliorée)
+5. **Sous-titres** : Générer des `.srt` à partir du script.json pour les sous-titres YouTube
+
+### Tâche à long terme : Pipeline réutilisable
+
+Pour chaque nouvel article, il faut :
+1. Créer un dossier `videos/{slug}/script.json` avec les 10-12 scènes
+2. Créer les fonctions `scene_XX()` correspondantes dans un `create_slides.py` dédié OU généraliser le système avec un moteur de templates
+3. Exécuter `python3 generate_video.py --article {slug}`
+
+---
+
+## Structure des fichiers
+
+```
+videos/
+├── GEMINI.md                              # CE FICHIER
+├── generate_video.py                      # Orchestrateur principal (850 lignes)
+├── create_slides.py                       # SlideRenderer — 12 scènes Pillow (1000 lignes)
+├── .venv/                                 # Virtual env Python 3.14
+├── assets/
+│   ├── logo.png                           # Logo Market Watch (48×48 à 80×80)
+│   ├── logo.svg                           # Logo SVG source
+│   ├── favicon.ico
+│   └── fonts/
+│       ├── Inter-Bold.ttf                 # Titres
+│       ├── Inter-Medium.ttf               # Sous-titres, accents
+│       ├── Inter-Regular.ttf              # Corps de texte
+│       ├── Inter-Light.ttf
+│       ├── Inter-SemiBoldItalic.ttf
+│       └── inter.zip                      # Archive source (34 MB)
+├── prompts/
+│   └── infographic_style.txt              # Template de style (référence)
+└── se-remettre-dune-perte/                # VIDÉO PILOTE
+    ├── script.json                        # 12 scènes (narration + config)
+    ├── audio/                             # ✅ 12 MP3 + full_narration.mp3
+    │   ├── scene_01.mp3 → scene_12.mp3    # (scene_01/12 = silence 6s)
+    │   ├── full_narration.mp3             # Concaténation complète
+    │   └── concat_list.txt
+    ├── images/                            # ✅ 12 PNG 1920×1080
+    │   ├── scene_01.png → scene_12.png
+    ├── clips/                             # ⏳ À générer (Ken Burns MP4)
+    └── output/                            # ⏳ À générer
+        ├── video_no_audio.mp4             # Intermédiaire
+        ├── se-remettre-dune-perte.mp4     # FINAL
+        ├── youtube_metadata.md            # (à créer/regénérer)
+        └── thumbnail.png                  # (à créer/regénérer)
+```
+
+---
+
+## Détails techniques
+
+### script.json — Format
+
+```json
+{
+  "article": "se-remettre-dune-perte",
+  "title": "Se Remettre d'une Perte en Bourse",
+  "language": "fr",
+  "voice": "fr-FR-RemyMultilingualNeural",
+  "voice_rate": "-8%",
+  "resolution": [1920, 1080],
+  "fps": 30,
+  "crossfade_duration": 0.5,
+  "scenes": [
+    {
+      "id": "scene_01",
+      "type": "title_card",           // title_card | narration | end_card
+      "narration": "",                 // Vide = silence (uses duration_override)
+      "duration_override": 6.0,        // Durée fixe pour title/end cards
+      "ken_burns": "zoom_in",          // zoom_in | zoom_out (alternance)
+      "gemini_prompt": "..."           // IGNORÉ — on utilise create_slides.py
+    },
+    // ... 10 narration scenes + 1 end_card
+  ]
+}
+```
+
+### create_slides.py — SlideRenderer
+
+Le fichier `create_slides.py` contient une classe `SlideRenderer` avec :
+
+- **Design System** cohérent avec le site web :
+  - NAVY `#0f172a` — titres, texte principal
+  - TEAL `#0891b2` — accent principal, liens, CTA
+  - RED `#ef4444` — danger, pertes, erreurs
+  - GREEN `#10b981` — positif, gains, solutions
+  - AMBER `#f59e0b` — warning, attention
+  - BLUE `#3b82f6` — info, neutre
+  - PURPLE `#9333ea` — psychologie
+  - BG `#f8fafc` — fond clair
+  - WHITE `#ffffff` — cartes
+
+- **Helpers** :
+  - `_new(bg)` → crée image + draw
+  - `_center(draw, text, font, y, fill)` → texte centré horizontalement
+  - `_decos(draw)` → cercles décoratifs haut-droite + bas-gauche
+  - `_card(draw, x, y, w, h, accent)` → carte blanche avec ombre et accent top
+  - `_panel(draw, x, y, w, h, accent, bg)` → panneau avec accent latéral
+  - `_watermark(img)` → barre bottom avec logo + "market-watch.xyz"
+  - `_arrow_r(draw, x, y, length, color)` → flèche droite
+  - `_badge(draw, cx, cy, r, text, bg_color)` → cercle numéroté
+  - `_hbar(draw, x, y, w, h, fill_color, pct, radius)` → barre horizontale
+
+- **12 scènes hand-crafted** (`scene_01()` à `scene_12()`) :
+
+| # | Méthode | Contenu | Style |
+|---|---------|---------|-------|
+| 1 | `scene_01()` | Title card — logo + titre + série | Fond NAVY, texte blanc, séparateur teal |
+| 2 | `scene_02()` | Pertes célèbres — Buffett, Soros, Ackman, Druckenmiller | Tableau avec pills rouges + flèches → comebacks verts |
+| 3 | `scene_03()` | 3 phases émotionnelles — Choc → Colère → Acceptation | 3 panneaux colorés (rouge/ambre/vert) + flèches |
+| 4 | `scene_04()` | Asymétrie des pertes — -50% → +100% | Bar chart double (rouge perte / teal gain nécessaire) |
+| 5 | `scene_05()` | 3 erreurs mortelles — Revenge, Martingale, Panique | 3 panneaux avec warning triangles + danger bullets |
+| 6 | `scene_06()` | Plan de retour — PAUSE → ANALYSE → RETOUR | 3 panneaux (bleu/teal/vert) + checklist avec ✓ |
+| 7 | `scene_07()` | Règle du 1% — table capital/risque + progress bars | Gauche: tableau / Droite: bars comparatives |
+| 8 | `scene_08()` | Bear markets S&P 500 — drawdowns + recovery | Tableau horizontal avec bars rouges + pills recovery |
+| 9 | `scene_09()` | 3 outils émotionnels — Journal, Règle 3 trades, Self-care | 3 panneaux : mini-table, X→STOP, checklist |
+| 10 | `scene_10()` | Signaux d'alarme — 7 signes + actions | Gauche: 7 items numérotés / Droite: action + spectrum |
+| 11 | `scene_11()` | 5 règles d'or — résumé série | Fond NAVY, 5 cartes sombres + cercles dorés |
+| 12 | `scene_12()` | End card — logo + CTA + disclaimer | Fond NAVY, logo centré, bouton teal |
+
+### generate_video.py — Orchestrateur
+
+**Stage 1** : Audio via TTS
+- Génère 12 MP3 (narration ou silence pour title/end cards)
+- Concatène en `full_narration.mp3`
+- Rate: `-8%` pour meilleure clarté
+- **Voix actuelle** : `fr-FR-RemyMultilingualNeural` via `edge-tts` (fallback)
+- **Objectif** : Voix masculine française la plus naturelle possible
+- Explorer Google Cloud TTS Neural2, ElevenLabs, ou Gemini TTS
+- Ton : journaliste financier professionnel, posé, pas robotique
+
+**Stage 2** : Images via `create_slides.SlideRenderer`
+- Appelle `renderer.generate_all(images_dir)`
+- Skip auto si le fichier existe déjà
+
+**Stage 3** : Ken Burns clips via FFmpeg
+```
+ffmpeg -y -loop 1 -framerate 30 -i scene_XX.png \
+  -vf "scale=4320:-1,zoompan=z='min(1.0+0.12*on/FRAMES,1.12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=FRAMES:s=1920x1080:fps=30" \
+  -t DURATION -c:v libx264 -pix_fmt yuv420p -preset slow -crf 18 \
+  scene_XX.mp4
+```
+- Zoom in : `min(1.0+0.12*on/frames, 1.12)` — zoom de 1.0→1.12
+- Zoom out : `max(1.12-0.12*on/frames, 1.0)` — zoom de 1.12→1.0
+- Alternance zoom_in / zoom_out par scène
+
+**Stage 4** : Assembly avec crossfade
+```
+ffmpeg -y -i clip1.mp4 -i clip2.mp4 ... \
+  -filter_complex "[0][1]xfade=transition=fade:duration=0.5:offset=X[f1];[f1][2]xfade=..." \
+  -map "[vout]" -c:v libx264 -pix_fmt yuv420p -preset slow -crf 18 \
+  video_no_audio.mp4
+```
+Puis mux :
+```
+ffmpeg -y -i video_no_audio.mp4 -i full_narration.mp3 \
+  -c:v copy -c:a aac -b:a 192k -shortest \
+  se-remettre-dune-perte.mp4
+```
+
+### Dépendances Python
+
+```bash
+pip3 install edge-tts Pillow
+# google-genai n'est plus nécessaire (on utilise Pillow directement)
+```
+
+### FFmpeg requis
+```bash
+brew install ffmpeg  # si pas installé
+```
+
+---
+
+## Design System — Règles visuelles OBLIGATOIRES
+
+**AVANT TOUT** : Va sur `https://articles.market-watch.xyz/series/se-remettre-dune-perte/` et fais des screenshots. Crop les éléments clés (tableaux, cartes, badges, header, footer). Le design des slides doit **visuellement ressembler** à ces captures.
+
+1. **Font** : Inter (Bold pour titres, Medium pour sous-titres, Regular pour corps)
+2. **Fond** : `#f8fafc` (clair) ou `#0f172a` (navy pour title/end/rules)
+3. **Cartes** : fond blanc, coins arrondis 20px, ombre subtile (rectangle décalé en `#e2e8f0`)
+4. **Accent** : barre colorée en haut de chaque carte (5px, couleur thématique)
+5. **Watermark** : barre blanche en bas (48px) avec ligne teal + logo + "market-watch.xyz"
+6. **Décos** : cercle mint en haut-droite + cercle bleu ciel en bas-gauche (subtils)
+7. **Pas de texte baveux** : utiliser des pillules, badges, tableaux structurés
+8. **Pas de photo/visage** : que de l'infographie géométrique
+9. **Alternance Ken Burns** : zoom_in sur scènes impaires, zoom_out sur paires
+
+---
+
+## Les 12 scènes — Narration complète
+
+### Scène 1 — Title Card (6s, silence)
+*Pas de narration. Logo Market Watch + "Se Remettre d'une Perte" + "Bien Débuter en Bourse — Partie 6"*
+
+### Scène 2 — Introduction (~7s)
+"Perdre de l'argent en bourse, ça arrive à tout le monde. Warren Buffett a perdu vingt-cinq milliards de dollars en 2008. Même les meilleurs traders professionnels perdent sur quarante à cinquante pour cent de leurs trades. Ce n'est pas la perte qui définit un investisseur. C'est comment il réagit après."
+
+### Scène 3 — Les 3 phases émotionnelles (~7s)
+"Quand on perd de l'argent, notre cerveau traverse trois phases. D'abord le choc : on refuse d'y croire. Ensuite la colère : on cherche un coupable. Et enfin l'acceptation : on peut enfin réfléchir calmement. Connaître ces phases, c'est déjà les maîtriser."
+
+### Scène 4 — L'asymétrie mathématique (~9s)
+"Voici le calcul qui fait mal. Si vous perdez cinquante pour cent de votre capital, il vous reste la moitié. Pour revenir au point de départ, cette moitié doit doubler. Soit un gain de cent pour cent. Et si vous perdez quatre-vingts pour cent, il faut gagner quatre cents pour cent pour récupérer. C'est pour ça que la règle numéro un en bourse, c'est de limiter ses pertes."
+
+### Scène 5 — 3 erreurs mortelles (~8s)
+"Après une perte, il y a trois erreurs mortelles à éviter. Le revenge trading : prendre un trade plus gros pour se venger du marché. La martingale : doubler sa mise à chaque perte, en croyant que ça va finir par marcher. Et tout vendre en panique quand le marché baisse. Ces trois erreurs transforment une petite perte en catastrophe."
+
+### Scène 6 — Plan de retour (~11s)
+"Le plan de retour en trois étapes. Premièrement : pause. Arrêtez tout pendant quarante-huit heures minimum. Fermez vos applications. Deuxièmement : analyse. Comprenez ce qui s'est passé. Écrivez-le noir sur blanc. Troisièmement : retour progressif. Votre prochain trade doit être plus petit que d'habitude. Comme un sportif qui reprend l'entraînement avant de jouer un match."
+
+### Scène 7 — La règle du 1% (~7s)
+"La règle d'or du un pour cent. Ne jamais risquer plus de un pour cent de son capital sur un seul trade. Si vous avez cinq mille euros, votre perte maximale par trade est de cinquante euros. Avec cette règle, même dix pertes d'affilée ne vous coûtent que dix pour cent. Douloureux, mais survivable."
+
+### Scène 8 — Bear markets (~9s)
+"Les plus grands investisseurs ont tous connu des pertes catastrophiques. Warren Buffett a perdu cinquante pour cent en 2008 et a racheté au plus bas. Peter Lynch a subi le krach de 87 et a terminé l'année en positif. Jesse Livermore a fait et perdu fortune quatre fois. Ce qui les rend spéciaux, ce n'est pas qu'ils ne perdent jamais. C'est qu'ils reviennent toujours."
+
+### Scène 9 — Gestion émotionnelle (~10s)
+"Pour gérer vos émotions, trois outils essentiels. Le journal de trading : écrivez chaque trade, pourquoi vous l'avez pris, et ce que vous avez appris. La règle des trois trades perdants : après trois pertes d'affilée, vous arrêtez. Point final. Et prenez soin de vous. Dormez bien. Faites du sport. Déconnectez le soir. Votre corps est votre premier outil d'investissement."
+
+### Scène 10 — Signaux d'alarme (~9s)
+"Attention. Il y a une ligne fine entre investir et jouer. Si vous vérifiez votre portefeuille vingt fois par jour. Si vous investissez l'argent de votre loyer. Si vous mentez à vos proches sur vos pertes. Ou si le trading vous donne le même rush qu'un casino. C'est un signal d'alarme. Demander de l'aide n'est pas un signe de faiblesse. C'est un signe d'intelligence."
+
+### Scène 11 — 5 règles d'or (~9s)
+"Si vous ne devez retenir que cinq choses de toute cette série, les voici. Un : n'investissez jamais l'argent dont vous avez besoin pour vivre. Deux : ne risquez jamais plus de un pour cent par trade. Trois : diversifiez toujours. Quatre : tenez un journal. Cinq : n'agissez jamais sous le coup de l'émotion. Attendez toujours vingt-quatre heures."
+
+### Scène 12 — End Card (6s, silence)
+*Pas de narration. Logo Market Watch + "market-watch.xyz" + CTA abonnement + disclaimer.*
+
+---
+
+## Commande pour générer la vidéo complète
+
+```bash
+cd /Users/marketwatchxyz/GolandProjects/articles/videos
+source .venv/bin/activate
+
+# Vidéo complète (audio + images + assembly)
+python3 generate_video.py --article se-remettre-dune-perte
+
+# Skip audio (déjà généré)
+python3 generate_video.py --article se-remettre-dune-perte --skip-audio
+
+# Skip audio + images (seulement assembly FFmpeg)
+python3 generate_video.py --article se-remettre-dune-perte --skip-audio --skip-images
+```
+
+**Note** : Pour forcer la regénération des images, supprimer le dossier `images/` :
+```bash
+rm -rf se-remettre-dune-perte/images/
+```
+
+---
+
+## Améliorations possibles (backlog)
+
+1. **Musique de fond** — Ajouter une piste lo-fi/corporate à -20dB sous la narration via FFmpeg `amix`
+2. **Sous-titres SRT** — Générer un `.srt` à partir du script.json avec timestamps calculés
+3. **Thumbnail YouTube** — Miniature 1280×720 optimisée (visage ? titre bold ? flèche rouge ?)
+4. **Voix Gemini** — Tester Google Cloud TTS / Gemini TTS pour une voix plus naturelle que edge-tts
+5. **Transitions variées** — Tester `wipeleft`, `circleopen`, `slidedown` au lieu de `fade` partout
+6. **Template engine** — Créer un système de templates pour générer les slides à partir du script.json sans coder de scène manuelle
+7. **Batch processing** — Script pour générer les 23 séries d'un coup
+8. **YouTube upload** — Intégrer `google-api-python-client` pour upload automatique avec titre/description/tags
+
+---
+
+## Référence article source
+
+L'article original est disponible sur :
+- Version simplifiée : `series/se-remettre-dune-perte/beginner/fr/index.html`
+- Version experte : `series/se-remettre-dune-perte/index.html`
+- URL live : `https://articles.market-watch.xyz/series/se-remettre-dune-perte/`
+
+Le design des slides DOIT ressembler visuellement à ce site (palette, typographie, cartes blanches, accents colorés).
