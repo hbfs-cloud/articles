@@ -1,7 +1,7 @@
 import requests
 import json
 
-API_KEY = "AIzaSyC5MnPE8i8iStXih2775YQMspW8SPujIJc"
+API_KEY = "<YOUR_API_KEY_HERE>"
 URL = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={API_KEY}"
 
 payload = {
