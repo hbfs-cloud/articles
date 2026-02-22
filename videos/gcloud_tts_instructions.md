@@ -1,6 +1,6 @@
 Thank you for providing your API key. Please be aware that this key is sensitive information and I will not store it or embed it directly into any files.
 
-For **Google Cloud Text-to-Speech (TTS)**, the authentication method is typically different. It usually requires a **service account key file (JSON format)**, which is then referenced by the `GOOGLE_APPLICATION_CREDENTIALS` environment variable. The key you provided (`AIzaSyC5MnPE8i8iStXih2775YQMspW8SPujIJc`) appears to be an API key for the Google Gemini API (aistudio.google.com), not the standard authentication for Google Cloud TTS.
+For **Google Cloud Text-to-Speech (TTS)**, the authentication method is typically different. It usually requires a **service account key file (JSON format)**, which is then referenced by the `GOOGLE_APPLICATION_CREDENTIALS` environment variable. The key you provided (`<API_KEY_REMOVED>`) appears to be an API key for the Google Gemini API (aistudio.google.com), not the standard authentication for Google Cloud TTS.
 
 To use Google Cloud TTS with the `generate_video.py` script, please follow these steps to set up the correct credentials:
 
