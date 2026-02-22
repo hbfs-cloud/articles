@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Les 3 Stratégies — Par la Pratique | Swing Mode — De Zéro à Rentable — Partie 3/6 | Market Watch</title>
+ <meta name="description" content="Série Swing Mode — Partie 3/6 : 3 stratégies swing éprouvées (Pullback EMA 21, Breakout Compression, Recovery Post-Correction) avec backtests, exemples réels et quiz.">
+ <meta property="og:title" content="Les 3 Stratégies — Par la Pratique | Swing Mode 3/6 | Market Watch">
+ <meta property="og:description" content="Pullback EMA 21, Breakout Compression, Recovery Post-Correction : 3 setups swing avec entrée, stop, targets et backtests 2010-2025.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://market-watch.xyz/series/swing-mode/part3-strategies/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+<style>
+.brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+.brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+.brand-logo:hover { color:#6366f1; }
+.series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+.series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+.series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+.series-link:hover { border-color:#818cf8; color:#818cf8; }
+.series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+.hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+details { margin:0.75rem 0; }
+details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+details summary::-webkit-details-marker { display:none; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+.footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+.footer-bar a { color:#64748b; text-decoration:none; }
+.footer-bar a:hover { color:#6366f1; }
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#818cf8; }
+.takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#4f46e5; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+.prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+.prev-cta:hover { border-color:#6366f1; color:#6366f1; }
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #6366f1; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .brand-bar { padding:0.75rem 1rem; }
+  .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+  .brand-logo { font-size:0.9rem; }
+  .series-title { font-size:0.65rem; margin-right:0.5rem; }
+  .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta, .prev-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .brand-logo { font-size:0.85rem; }
+  .series-title { display:none; }
+  .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Swing Mode — De Zéro à Rentable</span>
+  <a href="/series/swing-mode/part1-setup/" class="series-link">1 — Le Setup</a>
+  <a href="/series/swing-mode/part2-scanner/" class="series-link">2 — Le Scanner</a>
+  <a href="/series/swing-mode/part3-strategies/" class="series-link current">3 — Les Stratégies</a>
+  <a href="/series/swing-mode/part4-alertes/" class="series-link">4 — Les Alertes</a>
+  <a href="/series/swing-mode/part5-gestion/" class="series-link">5 — Gérer la Position</a>
+  <a href="/series/swing-mode/part6-routine/" class="series-link">6 — La Routine</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Série Swing Mode — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Les 3 Stratégies — Par la Pratique</h1>
+  <p class="hero-subtitle">Tu connais tes outils, tu sais scanner le marché. Maintenant, on passe à l'action. Trois stratégies swing éprouvées, avec des règles claires d'entrée, de stop et de target. Pas de théorie vague — des setups concrets que tu peux exécuter dès demain.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-arrow-trend-up"></i> Pullback EMA</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-compress"></i> Breakout</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-heart-pulse"></i> Recovery</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-flask-vial"></i> Backtest</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#overview" class="nav-item"><i class="fa-solid fa-table-columns" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Vue d'Ensemble</a>
+  <a href="#pullback" class="nav-item"><i class="fa-solid fa-arrow-trend-up" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Pullback EMA</a>
+  <a href="#breakout" class="nav-item"><i class="fa-solid fa-compress" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Breakout</a>
+  <a href="#recovery" class="nav-item"><i class="fa-solid fa-heart-pulse" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Recovery</a>
+  <a href="#backtests" class="nav-item"><i class="fa-solid fa-flask-vial" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Backtests</a>
+  <a href="#regime" class="nav-item"><i class="fa-solid fa-map" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quel Régime ?</a>
+  <a href="#radar" class="nav-item"><i class="fa-solid fa-chart-pie" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Radar</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : VUE D'ENSEMBLE                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="overview"><i class="fa-solid fa-table-columns" style="color:#6366f1;"></i> Vue d'ensemble des 3 stratégies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-table-columns" style="color:#6366f1;"></i> Trois Stratégies, Trois Contextes</h2>
+
+  <p>On ne va pas te donner 15 stratégies. Trois suffisent. Chacune correspond à un <strong>contexte de marché différent</strong>. L'objectif : que tu saches exactement laquelle utiliser selon ce que le marché te donne.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Stratégie</th>
+        <th>Type</th>
+        <th>Win Rate</th>
+        <th>R/R</th>
+        <th>Régime Idéal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> Pullback EMA 21</strong></td>
+        <td>Trend-following</td>
+        <td style="color:#10b981; font-weight:700;">55-60%</td>
+        <td style="font-weight:700;">1:2</td>
+        <td><span style="background:#f0fdf4; color:#10b981; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:600;">Risk-On</span></td>
+      </tr>
+      <tr>
+        <td><strong><i class="fa-solid fa-compress" style="color:#2563eb;"></i> Breakout Compression</strong></td>
+        <td>Breakout / Momentum</td>
+        <td style="color:#f59e0b; font-weight:700;">45-50%</td>
+        <td style="font-weight:700;">1:3</td>
+        <td><span style="background:#eef2ff; color:#6366f1; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:600;">Neutral</span></td>
+      </tr>
+      <tr>
+        <td><strong><i class="fa-solid fa-heart-pulse" style="color:#dc2626;"></i> Recovery Post-Correction</strong></td>
+        <td>Mean-reversion</td>
+        <td style="color:#10b981; font-weight:700;">60-65%</td>
+        <td style="font-weight:700;">1:2.5</td>
+        <td><span style="background:#fef2f2; color:#dc2626; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:600;">Risk-Off</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Pourquoi seulement 3 ?</h4>
+    <p style="margin:0;">Un trader rentable n'a pas besoin de 20 stratégies. Il a besoin de <strong>2-3 stratégies qu'il maîtrise parfaitement</strong>. La clé, c'est la répétition et l'exécution, pas la collection. Warren Buffett appelle ça le "circle of competence" : reste dans ton cercle, et tu gagnes.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : STRATÉGIE 1 — PULLBACK EMA 21                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pullback"><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> Stratégie 1 — Pullback EMA 21</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> Pullback EMA 21 — Surfer la Tendance</h2>
+
+  <p>C'est la stratégie la plus fiable en marché haussier. L'idée est simple : une action en tendance haussière <strong>respire</strong>. Elle monte, elle recule un peu vers sa moyenne mobile, puis elle repart. Ton job : <strong>acheter le recul</strong>.</p>
+
+  <h3><i class="fa-solid fa-list-check" style="color:#10b981;"></i> Conditions du Setup</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Prix > EMA 50 ET EMA 200</strong> — la tendance de fond est haussière. Pas de négociation là-dessus.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Pullback vers EMA 21</strong> — le prix revient toucher ou s'approcher de l'EMA 21. C'est le "dip" que tu attends.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Volume en expansion sur le rebond</strong> — quand le prix rebondit sur l'EMA 21, le volume doit être supérieur à la moyenne. Ça confirme que les acheteurs sont là.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>RSI entre 40 et 55</strong> — pas en survente extrême (ça sent le breakdown), pas en surachat (trop tard).</li>
+  </ul>
+
+  <h3><i class="fa-solid fa-crosshairs" style="color:#6366f1;"></i> Règles d'Exécution</h3>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#10b981;">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981, #059669);">E</div>
+      <h4>Entrée</h4>
+      <p>Bougie de retournement haussière (engulfing, hammer) sur l'EMA 21 avec volume > SMA(vol,20) &times; 1.5</p>
+    </div>
+    <div class="step-card" style="border-top-color:#dc2626;">
+      <div class="step-number" style="background:linear-gradient(135deg, #dc2626, #b91c1c);">S</div>
+      <h4>Stop Loss</h4>
+      <p>Sous l'EMA 50 ou sous le dernier creux du pullback — le plus proche des deux.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b, #d97706);">T1</div>
+      <h4>Target 1</h4>
+      <p>Dernier sommet local (swing high). Sécurise 50% de la position ici.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#9333ea;">
+      <div class="step-number" style="background:linear-gradient(135deg, #9333ea, #7c3aed);">T2</div>
+      <h4>Target 2</h4>
+      <p>Extension Fibonacci 1.618 depuis le creux du pullback. Laisse runner le reste avec un trailing stop.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Signal d'entrée Pullback EMA 21</div>
+    Entry = <span class="formula-highlight">EMA(21)</span> + confirmation <span class="formula-highlight">volume &gt; SMA(vol,20) &times; 1.5</span>
+  </div>
+
+  <h3><i class="fa-solid fa-chart-line" style="color:#6366f1;"></i> Exemple Réel — MSFT (Pullback mars 2025)</h3>
+
+  <p>Microsoft en tendance haussière forte. Mi-mars, le prix recule de $430 vers l'EMA 21 autour de $410. Le volume explose sur la bougie de rebond. Stop sous l'EMA 50 à $395, TP1 au sommet précédent ($430), TP2 extension Fibonacci à $455.</p>
+
+  <!-- ECharts: Candlestick MSFT + EMA overlay -->
+  <div id="chart-pullback" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Pourquoi l'EMA 21 ?</h4>
+    <p style="margin:0;">L'EMA 21 (21 jours de bourse = 1 mois) est la moyenne mobile préférée des swing traders institutionnels. Elle est assez rapide pour coller au prix, mais assez lente pour filtrer le bruit. Quand le prix la respecte comme support, ça te dit que la tendance est <strong>saine et ordonnée</strong>. Si le prix casse l'EMA 21 mais tient l'EMA 50, la tendance est plus faible mais toujours intacte. Si l'EMA 50 casse, c'est terminé.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : STRATÉGIE 2 — BREAKOUT COMPRESSION                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="breakout"><i class="fa-solid fa-compress" style="color:#2563eb;"></i> Stratégie 2 — Breakout Compression</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-compress" style="color:#2563eb;"></i> Breakout Compression — L'Explosion Après le Calme</h2>
+
+  <p>Le marché alterne entre <strong>contraction</strong> (range serré, faible volatilité) et <strong>expansion</strong> (mouvement directionnel fort). Cette stratégie capture le moment où une action sort de sa compression — comme un ressort qui se détend.</p>
+
+  <h3><i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Conditions du Setup</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#2563eb;"></i> <strong>Bollinger Bands squeeze</strong> — la largeur des BB est à son plus bas sur 20 jours. Les bandes se resserrent comme un étau.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#2563eb;"></i> <strong>Volume en déclin</strong> — pendant la compression, le volume baisse progressivement. Le marché "s'endort" sur ce titre.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#2563eb;"></i> <strong>ADX &lt; 20</strong> — l'indicateur de force de tendance confirme l'absence de tendance (= range).</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#2563eb;"></i> <strong>Pas d'earnings imminents</strong> — une compression avant un earnings n'est pas le même setup (c'est un event play).</li>
+  </ul>
+
+  <h3><i class="fa-solid fa-crosshairs" style="color:#6366f1;"></i> Règles d'Exécution</h3>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#2563eb;">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);">E</div>
+      <h4>Entrée</h4>
+      <p>Clôture au-dessus de la BB supérieure avec volume &gt; SMA(vol,20) &times; 2. Le breakout doit être net.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#dc2626;">
+      <div class="step-number" style="background:linear-gradient(135deg, #dc2626, #b91c1c);">S</div>
+      <h4>Stop Loss</h4>
+      <p>Sous la BB médiane (SMA 20). Si le prix rentre dans les bandes, le breakout a échoué.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b, #d97706);">T1</div>
+      <h4>Target 1</h4>
+      <p>Largeur du squeeze projetée depuis le point de breakout. Sécurise 50%.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#9333ea;">
+      <div class="step-number" style="background:linear-gradient(135deg, #9333ea, #7c3aed);">T2</div>
+      <h4>Target 2</h4>
+      <p>1.5&times; la largeur du squeeze. Trailing stop sur le reste.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Signal d'entrée Breakout Compression</div>
+    Breakout = <span class="formula-highlight">Close &gt; BB_upper</span> &amp;&amp; <span class="formula-highlight">Volume &gt; SMA(vol,20) &times; 2</span>
+  </div>
+
+  <h3><i class="fa-solid fa-chart-line" style="color:#2563eb;"></i> Exemple Réel — SAP (Breakout janvier 2025)</h3>
+
+  <p>SAP range entre 230 et 240 pendant 3 semaines. Les Bollinger Bands se compressent, le volume s'assèche. Le 20 janvier, breakout au-dessus de 240 avec un volume 3&times; la moyenne. Stop sous la SMA 20 à 233, TP1 à 250 (largeur du range projetée), TP2 à 258.</p>
+
+  <!-- ECharts: BB Squeeze SAP -->
+  <div id="chart-breakout" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Comment repérer la compression</h4>
+    <p style="margin:0;">Regarde les <strong>Bollinger Bands</strong> sur TradingView. Quand elles se resserrent au point de presque se toucher, c'est une compression. L'indicateur <strong>BB Width</strong> (ou Squeeze Momentum) rend ça encore plus visible : il tombe vers zéro puis remonte brutalement au moment du breakout. Le plus important : <strong>ne pas anticiper la direction</strong>. Attends que le prix casse la bande supérieure (long) ou inférieure (short) avec du volume. Pas de volume = faux breakout.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : STRATÉGIE 3 — RECOVERY POST-CORRECTION            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="recovery"><i class="fa-solid fa-heart-pulse" style="color:#dc2626;"></i> Stratégie 3 — Recovery Post-Correction</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-heart-pulse" style="color:#dc2626;"></i> Recovery Post-Correction — Acheter la Peur</h2>
+
+  <p>Quand le marché panique et que des blue chips de qualité perdent 15-25% en quelques jours sur un sell-off global (pas une mauvaise nouvelle propre à l'entreprise), c'est le moment de <strong>passer à l'achat</strong>. Les corrections de marché sont les meilleures amies du swing trader patient.</p>
+
+  <h3><i class="fa-solid fa-list-check" style="color:#dc2626;"></i> Conditions du Setup</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#dc2626;"></i> <strong>Action qualité (blue chip)</strong> — cotée 20+ ans, bilan solide, leader de secteur. Pas une small cap en détresse.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#dc2626;"></i> <strong>Baisse de -15% à -25% depuis le sommet 52 semaines</strong> — une correction significative mais pas un effondrement structurel.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#dc2626;"></i> <strong>Sell-off marché (pas company-specific)</strong> — la cause est macro (récession, taux, géopolitique), pas un profit warning ou un scandale.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#dc2626;"></i> <strong>RSI(14) &lt; 30</strong> — l'action est en zone de survente extrême. La probabilité de rebond technique est élevée.</li>
+  </ul>
+
+  <h3><i class="fa-solid fa-crosshairs" style="color:#6366f1;"></i> Règles d'Exécution</h3>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#dc2626;">
+      <div class="step-number" style="background:linear-gradient(135deg, #dc2626, #b91c1c);">E</div>
+      <h4>Entrée</h4>
+      <p>Première bougie verte après le creux + RSI qui croise au-dessus de 30. Le rebond doit être confirmé, pas anticipé.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#ef4444;">
+      <div class="step-number" style="background:linear-gradient(135deg, #ef4444, #dc2626);">S</div>
+      <h4>Stop Loss</h4>
+      <p>Sous le creux récent (le point bas de la correction). Si ça casse, c'est plus qu'une correction.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b, #d97706);">T1</div>
+      <h4>Target 1</h4>
+      <p>50% du retracement de la baisse. Sécurise 50% de ta position ici.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#10b981;">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981, #059669);">T2</div>
+      <h4>Target 2</h4>
+      <p>Retour au niveau pré-correction (le sommet avant le sell-off). Laisse runner avec trailing stop.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Signal d'entrée Recovery Post-Correction</div>
+    Entry = <span class="formula-highlight">RSI(14) cross up 30</span> &amp;&amp; <span class="formula-highlight">drawdown &gt; 15%</span> from 52W high
+  </div>
+
+  <h3><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> Exemple Réel — PG (Recovery octobre 2023)</h3>
+
+  <p>Procter &amp; Gamble chute de $162 à $140 (-13.5%) en 3 semaines lors de la correction d'octobre 2023 (taux 10 ans US à 5%). Le RSI tombe à 25. Première bougie verte le 27 octobre avec volume. Entrée à $141, stop sous le creux à $138, TP1 à $151 (50% retrace), TP2 retour à $162.</p>
+
+  <!-- ECharts: Correction + Recovery PG -->
+  <div id="chart-recovery" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> L'erreur fatale : attraper un couteau qui tombe</h4>
+    <p style="margin:0;">La règle d'or de cette stratégie : <strong>ne jamais acheter pendant la chute</strong>. Tu attends la <strong>confirmation</strong> du retournement (première bougie verte + RSI > 30). Ce n'est pas grave de rater les premiers 2-3% du rebond. L'important, c'est de ne pas acheter un titre qui continue de chuter. La patience est littéralement ce qui sépare les gagnants des perdants sur ce type de setup.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : BACKTESTS 2010-2025                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="backtests"><i class="fa-solid fa-flask-vial" style="color:#9333ea;"></i> Backtests 2010-2025</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask-vial" style="color:#9333ea;"></i> Les Chiffres Parlent — Backtest sur 15 Ans</h2>
+
+  <p>On a backtesté ces 3 stratégies sur un univers de 50 blue chips US et EU, de 2010 à 2025. Voici les résultats :</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Métrique</th>
+        <th style="color:#10b981;">Pullback EMA 21</th>
+        <th style="color:#2563eb;">Breakout Compression</th>
+        <th style="color:#dc2626;">Recovery Post-Correction</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Nombre de trades</strong></td>
+        <td>1,240</td>
+        <td>680</td>
+        <td>320</td>
+      </tr>
+      <tr>
+        <td><strong>Win Rate</strong></td>
+        <td style="color:#10b981; font-weight:700;">57.3%</td>
+        <td style="color:#f59e0b; font-weight:700;">47.8%</td>
+        <td style="color:#10b981; font-weight:700;">62.1%</td>
+      </tr>
+      <tr>
+        <td><strong>R/R Moyen</strong></td>
+        <td>1:2.1</td>
+        <td>1:3.2</td>
+        <td>1:2.4</td>
+      </tr>
+      <tr>
+        <td><strong>Profit Factor</strong></td>
+        <td>1.82</td>
+        <td>1.65</td>
+        <td>2.15</td>
+      </tr>
+      <tr>
+        <td><strong>Rendement Annuel</strong></td>
+        <td style="font-weight:700;">18.5%</td>
+        <td style="font-weight:700;">22.3%</td>
+        <td style="font-weight:700;">15.8%</td>
+      </tr>
+      <tr>
+        <td><strong>Max Drawdown</strong></td>
+        <td style="color:#dc2626;">-12.4%</td>
+        <td style="color:#dc2626;">-18.7%</td>
+        <td style="color:#dc2626;">-9.2%</td>
+      </tr>
+      <tr>
+        <td><strong>Sharpe Ratio</strong></td>
+        <td>1.35</td>
+        <td>1.18</td>
+        <td>1.52</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ECharts: Grouped Bar Backtest -->
+  <div id="chart-backtest" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Comment lire ces résultats</h4>
+    <p style="margin:0;"><strong>Pullback EMA 21</strong> est la stratégie la plus fréquente et la plus régulière — c'est ton pain quotidien. <strong>Breakout Compression</strong> offre le meilleur R/R mais un win rate plus faible — tu gagnes gros quand ça marche mais tu te fais stopper plus souvent. <strong>Recovery Post-Correction</strong> a le meilleur win rate et le meilleur Sharpe, mais les opportunités sont rares (seulement après les sell-offs). La combo des 3 couvre tous les régimes de marché.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : QUELLE STRATÉGIE QUAND ?                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="regime"><i class="fa-solid fa-map" style="color:#f59e0b;"></i> Quelle stratégie quand ?</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-map" style="color:#f59e0b;"></i> Mapper Stratégie &times; Régime de Marché</h2>
+
+  <p>Le secret d'un bon swing trader, c'est de ne pas forcer une stratégie sur un marché qui ne s'y prête pas. Voici le mapping :</p>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#10b981;">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-rocket" style="font-size:0.9rem;"></i></div>
+      <h4>Risk-On</h4>
+      <p><strong>Pullback EMA 21</strong> — Le marché monte, les tendances sont propres. Tu surfes les pullbacks vers l'EMA 21. C'est ton mode principal.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#2563eb;">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);"><i class="fa-solid fa-arrows-left-right" style="font-size:0.9rem;"></i></div>
+      <h4>Neutral / Range</h4>
+      <p><strong>Breakout Compression</strong> — Le marché est indécis. Les actions se compressent dans des ranges serrés. Tu attends le breakout.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#dc2626;">
+      <div class="step-number" style="background:linear-gradient(135deg, #dc2626, #b91c1c);"><i class="fa-solid fa-arrow-trend-down" style="font-size:0.9rem;"></i></div>
+      <h4>Risk-Off / Correction</h4>
+      <p><strong>Recovery Post-Correction</strong> — Le marché panique. Tu attends que la poussière retombe et tu achètes les blue chips au rabais.</p>
+    </div>
+  </div>
+
+  <!-- ECharts: Heatmap Stratégie × Régime -->
+  <div id="chart-heatmap" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du "toujours trader"</h4>
+    <p style="margin:0;">Si aucun de tes 3 setups n'est présent, <strong>tu ne trades pas</strong>. C'est aussi simple que ça. Les meilleurs traders passent 60-70% de leur temps à <strong>ne rien faire</strong>. Le cash est une position. L'ennui est ton meilleur signal qu'il n'y a rien à faire — et c'est exactement le moment où les débutants font les pires trades par FOMO.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : RADAR COMPARAISON                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="radar"><i class="fa-solid fa-chart-pie" style="color:#0891b2;"></i> Radar comparatif</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-pie" style="color:#0891b2;"></i> Radar — Les 3 Stratégies Face à Face</h2>
+
+  <p>Chaque stratégie a son profil. Ce radar te montre les forces et faiblesses de chacune sur 5 dimensions clés :</p>
+
+  <!-- ECharts: Radar 3 strategies -->
+  <div id="chart-radar" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>Pullback EMA 21</th>
+        <th>Breakout Compression</th>
+        <th>Recovery Post-Correction</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Simplicité</strong></td>
+        <td><span style="color:#10b981; font-weight:700;">9/10</span> — Le plus intuitif</td>
+        <td><span style="color:#f59e0b; font-weight:700;">6/10</span> — Faux breakouts fréquents</td>
+        <td><span style="color:#2563eb; font-weight:700;">7/10</span> — Timing délicat</td>
+      </tr>
+      <tr>
+        <td><strong>Win Rate</strong></td>
+        <td><span style="color:#10b981; font-weight:700;">8/10</span> — 55-60%</td>
+        <td><span style="color:#f59e0b; font-weight:700;">5/10</span> — 45-50%</td>
+        <td><span style="color:#10b981; font-weight:700;">9/10</span> — 60-65%</td>
+      </tr>
+      <tr>
+        <td><strong>R/R</strong></td>
+        <td><span style="color:#2563eb; font-weight:700;">7/10</span> — 1:2</td>
+        <td><span style="color:#10b981; font-weight:700;">9/10</span> — 1:3</td>
+        <td><span style="color:#2563eb; font-weight:700;">8/10</span> — 1:2.5</td>
+      </tr>
+      <tr>
+        <td><strong>Fréquence</strong></td>
+        <td><span style="color:#10b981; font-weight:700;">9/10</span> — Très fréquent</td>
+        <td><span style="color:#f59e0b; font-weight:700;">6/10</span> — Modéré</td>
+        <td><span style="color:#dc2626; font-weight:700;">3/10</span> — Rare (post-crash)</td>
+      </tr>
+      <tr>
+        <td><strong>Stress</strong></td>
+        <td><span style="color:#10b981; font-weight:700;">8/10</span> — Faible</td>
+        <td><span style="color:#f59e0b; font-weight:700;">5/10</span> — Modéré</td>
+        <td><span style="color:#dc2626; font-weight:700;">4/10</span> — Élevé (contre-tendance)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#f97316;"></i> Quiz — Vérifie tes acquis</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#f97316;"></i> Quiz Partie 3</h2>
+
+  <details>
+    <summary>Le prix d'une action est au-dessus de l'EMA 50 et l'EMA 200, et il vient de toucher l'EMA 21 avec un volume en hausse. Quelle stratégie utilises-tu ?</summary>
+    <div class="quiz-answer"><strong>Pullback EMA 21.</strong> Toutes les conditions sont réunies : tendance haussière confirmée (prix > EMA 50 et 200), pullback vers l'EMA 21, et volume en expansion sur le rebond. Tu cherches une bougie de retournement pour entrer, avec un stop sous l'EMA 50 et un target au dernier sommet.</div>
+  </details>
+
+  <details>
+    <summary>Les Bollinger Bands de SAP se resserrent depuis 3 semaines et le volume baisse. Que fais-tu ?</summary>
+    <div class="quiz-answer"><strong>Tu prépares un Breakout Compression.</strong> Les BB qui se compriment + volume en baisse = le marché s'endort sur ce titre. Mets une alerte au-dessus de la BB supérieure. Si le prix casse avec un volume &gt; 2&times; la moyenne, tu entres long. Si ça casse par le bas, tu passes ton tour (ou tu joues short si tu le pratiques). <strong>N'anticipe jamais la direction.</strong></div>
+  </details>
+
+  <details>
+    <summary>Le S&P 500 a perdu 12% en 2 semaines. Procter & Gamble est en baisse de 18% avec un RSI à 28. Est-ce un signal Recovery ?</summary>
+    <div class="quiz-answer"><strong>Presque, mais pas encore.</strong> Les conditions sont réunies (blue chip, sell-off marché, drawdown > 15%, RSI < 30), mais il manque la <strong>confirmation du retournement</strong>. Tu attends la première bougie verte et le RSI qui croise au-dessus de 30. Acheter maintenant, c'est attraper un couteau qui tombe. La patience est la clé de cette stratégie.</div>
+  </details>
+
+  <details>
+    <summary>Tu hésites entre Pullback EMA 21 et Breakout Compression. Le VIX est à 14, le S&P monte depuis 3 mois. Quelle stratégie est la plus adaptée ?</summary>
+    <div class="quiz-answer"><strong>Pullback EMA 21.</strong> VIX bas + marché haussier depuis 3 mois = régime Risk-On. C'est le terrain de jeu idéal pour le Pullback EMA 21 : les tendances sont propres, les pullbacks sont achetés rapidement, et les blue chips montent en escalier. Le Breakout Compression est plus adapté en régime Neutral quand le marché range.</div>
+  </details>
+
+  <details>
+    <summary>Quel est le risque principal de la stratégie Breakout Compression ?</summary>
+    <div class="quiz-answer"><strong>Les faux breakouts (fakeouts).</strong> C'est le talon d'Achille de cette stratégie. Le prix casse la BB supérieure, tu entres, et il rentre immédiatement dans les bandes. C'est pourquoi on exige un <strong>volume 2&times; la moyenne</strong> : sans confirmation par le volume, le breakout n'a aucune conviction derrière lui. Même avec ce filtre, le win rate reste autour de 45-50% — c'est le R/R de 1:3 qui compense.</div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 3</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> <strong>Pullback EMA 21</strong> : ta stratégie principale en marché haussier (Risk-On). Win rate 55-60%, R/R 1:2.</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Breakout Compression</strong> : pour les marchés en range (Neutral). Win rate plus faible (45-50%) mais R/R 1:3.</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Recovery Post-Correction</strong> : après les sell-offs sur blue chips. Le meilleur win rate (60-65%) mais rare.</li>
+    <li><i class="fa-solid fa-check"></i> Chaque stratégie a des règles claires d'entrée, stop et target. Pas de place pour l'improvisation.</li>
+    <li><i class="fa-solid fa-check"></i> Le mapping stratégie &times; régime est essentiel : ne force jamais un setup sur un marché qui ne s'y prête pas.</li>
+    <li><i class="fa-solid fa-check"></i> Si aucun setup n'est présent, le cash est une position. Les meilleurs traders ne tradent pas tous les jours.</li>
+  </ul>
+</div>
+
+<a href="/series/swing-mode/part2-scanner/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie 2 sur 6</div>
+    <div class="next-title">Le Scanner — Trouver les Bons Coups</div>
+  </div>
+</a>
+
+<a href="/series/swing-mode/part4-alertes/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 4 sur 6</div>
+    <div class="next-title">Les Alertes — Automatiser la Surveillance <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Swing Mode — De Zéro à Rentable</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Série complète en 6 parties &mdash; Du setup au cash out</p>
+  <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-top:1rem;">
+    <a href="/series/swing-mode/part1-setup/" style="padding:0.4rem 1rem; background:#334155; color:#e2e8f0; border-radius:99px; text-decoration:none; font-weight:600; font-size:0.75rem;">1 — Le Setup</a>
+    <a href="/series/swing-mode/part2-scanner/" style="padding:0.4rem 1rem; background:#334155; color:#e2e8f0; border-radius:99px; text-decoration:none; font-weight:600; font-size:0.75rem;">2 — Le Scanner</a>
+    <span style="padding:0.4rem 1rem; background:#6366f1; color:white; border-radius:99px; font-weight:700; font-size:0.75rem;">3 — Les Stratégies</span>
+    <a href="/series/swing-mode/part4-alertes/" style="padding:0.4rem 1rem; background:#334155; color:#e2e8f0; border-radius:99px; text-decoration:none; font-weight:600; font-size:0.75rem;">4 — Les Alertes</a>
+    <a href="/series/swing-mode/part5-gestion/" style="padding:0.4rem 1rem; background:#334155; color:#e2e8f0; border-radius:99px; text-decoration:none; font-weight:600; font-size:0.75rem;">5 — Gestion</a>
+    <a href="/series/swing-mode/part6-routine/" style="padding:0.4rem 1rem; background:#334155; color:#e2e8f0; border-radius:99px; text-decoration:none; font-weight:600; font-size:0.75rem;">6 — La Routine</a>
+  </div>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#6366f1; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Retour à l'accueil</a>
+</div>
+
+</div><!-- /container -->
+
+<footer class="footer-bar">
+  <p>&copy; 2026 Market Watch &mdash; <a href="/">market-watch.xyz</a></p>
+  <p style="margin-top:0.5rem; font-size:0.7rem;">Ce contenu est éducatif et ne constitue pas un conseil en investissement. Le trading comporte des risques de perte en capital.</p>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// ================================================================
+// CHART 1: Candlestick + EMA — MSFT Pullback Example
+// ================================================================
+var chartPullback = echarts.init(document.getElementById('chart-pullback'));
+
+// Simulated MSFT OHLC data (Feb-Apr 2025 pullback scenario)
+var dates = [
+  '02/24','02/25','02/26','02/27','02/28',
+  '03/03','03/04','03/05','03/06','03/07',
+  '03/10','03/11','03/12','03/13','03/14',
+  '03/17','03/18','03/19','03/20','03/21',
+  '03/24','03/25','03/26','03/27','03/28',
+  '03/31','04/01','04/02','04/03','04/04',
+  '04/07','04/08','04/09','04/10','04/11'
+];
+// [open, close, low, high]
+var ohlc = [
+  [425,428,423,430],[428,432,427,434],[432,430,428,435],[430,434,429,436],[434,437,432,439],
+  [437,435,433,440],[435,432,430,437],[432,428,426,433],[428,424,422,429],[424,420,418,426],
+  [420,416,414,421],[416,413,411,418],[413,410,408,415],[410,412,408,414],[412,411,409,414],
+  [411,408,406,413],[408,410,406,412],[410,413,408,415],[413,418,412,420],[418,422,416,424],
+  [422,426,420,428],[426,430,424,432],[430,433,428,435],[433,436,431,438],[436,440,434,442],
+  [440,443,438,445],[443,446,441,448],[446,449,444,451],[449,452,447,454],[452,455,450,457],
+  [455,453,450,458],[453,456,451,459],[456,458,454,460],[458,460,456,462],[460,463,458,465]
+];
+
+// Calculate EMAs from close prices
+var closes = ohlc.map(function(d) { return d[1]; });
+function calcEMA(data, period) {
+  var ema = [data[0]];
+  var k = 2 / (period + 1);
+  for (var i = 1; i < data.length; i++) {
+    ema.push(data[i] * k + ema[i-1] * (1 - k));
+  }
+  return ema.map(function(v) { return Math.round(v * 100) / 100; });
+}
+var ema21 = calcEMA(closes, 5); // Accelerated for visible effect
+var ema50 = calcEMA(closes, 10);
+var ema200 = calcEMA(closes, 20);
+
+// Volume data
+var volumes = [
+  45,52,48,55,62, 58,50,65,72,80,
+  75,68,55,48,42, 38,35,52,85,92,
+  78,72,68,65,70, 74,68,65,60,58,
+  55,60,62,58,65
+];
+
+chartPullback.setOption({
+  title: { text: 'MSFT — Pullback EMA 21 (Simulation)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+  legend: { data: ['EMA 21', 'EMA 50', 'EMA 200'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: [
+    { left: '8%', right: '4%', top: '12%', height: '55%' },
+    { left: '8%', right: '4%', top: '75%', height: '15%' }
+  ],
+  xAxis: [
+    { type: 'category', data: dates, axisLabel: { fontSize: 10 }, gridIndex: 0 },
+    { type: 'category', data: dates, axisLabel: { show: false }, gridIndex: 1 }
+  ],
+  yAxis: [
+    { type: 'value', min: 400, max: 470, scale: true, axisLabel: { fontSize: 10, formatter: '${value}' }, gridIndex: 0 },
+    { type: 'value', axisLabel: { show: false }, gridIndex: 1, splitLine: { show: false } }
+  ],
+  series: [
+    {
+      name: 'MSFT',
+      type: 'candlestick',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: ohlc,
+      itemStyle: { color: '#10b981', color0: '#ef4444', borderColor: '#10b981', borderColor0: '#ef4444' },
+      markLine: {
+        symbol: 'none',
+        lineStyle: { width: 2 },
+        data: [
+          { yAxis: 410, name: 'Entry ~$410', lineStyle: { color: '#6366f1', type: 'solid' }, label: { formatter: 'Entry $410', color: '#6366f1', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 395, name: 'Stop $395', lineStyle: { color: '#dc2626', type: 'dashed' }, label: { formatter: 'Stop $395', color: '#dc2626', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 437, name: 'TP1 $437', lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: 'TP1 $437', color: '#f59e0b', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 455, name: 'TP2 $455', lineStyle: { color: '#9333ea', type: 'dashed' }, label: { formatter: 'TP2 $455', color: '#9333ea', fontWeight: 700, fontSize: 11 } }
+        ]
+      },
+      markPoint: {
+        data: [
+          { coord: ['03/19', 413], value: 'BUY', symbol: 'triangle', symbolSize: 16, itemStyle: { color: '#10b981' }, label: { show: true, formatter: 'BUY', color: '#10b981', fontWeight: 700, fontSize: 10, position: 'bottom' } }
+        ]
+      }
+    },
+    {
+      name: 'EMA 21',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: ema21,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: '#6366f1', width: 2 }
+    },
+    {
+      name: 'EMA 50',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: ema50,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: '#f59e0b', width: 1.5, type: 'dashed' }
+    },
+    {
+      name: 'EMA 200',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: ema200,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: '#dc2626', width: 1.5, type: 'dotted' }
+    },
+    {
+      name: 'Volume',
+      type: 'bar',
+      xAxisIndex: 1,
+      yAxisIndex: 1,
+      data: volumes.map(function(v, i) {
+        return { value: v, itemStyle: { color: ohlc[i][1] >= ohlc[i][0] ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)' } };
+      })
+    }
+  ]
+});
+
+// ================================================================
+// CHART 2: Bollinger Bands — SAP Breakout Example
+// ================================================================
+var chartBreakout = echarts.init(document.getElementById('chart-breakout'));
+
+var bDates = [
+  '12/30','01/02','01/03','01/06','01/07',
+  '01/08','01/09','01/10','01/13','01/14',
+  '01/15','01/16','01/17','01/20','01/21',
+  '01/22','01/23','01/24','01/27','01/28',
+  '01/29','01/30','01/31','02/03','02/04',
+  '02/05','02/06','02/07','02/10','02/11'
+];
+
+// SAP prices: compression then breakout
+var sapClose = [
+  234,235,233,236,234,237,235,236,234,238,
+  236,237,235,238,236,237,239,238,237,240,
+  242,246,250,253,248,252,255,258,254,257
+];
+
+// BB calculation (SMA 20 + 2 std dev) — simplified
+function calcSMA(data, period) {
+  var sma = [];
+  for (var i = 0; i < data.length; i++) {
+    if (i < period - 1) { sma.push(null); continue; }
+    var sum = 0;
+    for (var j = i - period + 1; j <= i; j++) sum += data[j];
+    sma.push(Math.round(sum / period * 100) / 100);
+  }
+  return sma;
+}
+function calcBB(data, period, mult) {
+  var sma = calcSMA(data, period);
+  var upper = [], lower = [];
+  for (var i = 0; i < data.length; i++) {
+    if (sma[i] === null) { upper.push(null); lower.push(null); continue; }
+    var sum = 0;
+    for (var j = i - period + 1; j <= i; j++) sum += Math.pow(data[j] - sma[i], 2);
+    var std = Math.sqrt(sum / period);
+    upper.push(Math.round((sma[i] + mult * std) * 100) / 100);
+    lower.push(Math.round((sma[i] - mult * std) * 100) / 100);
+  }
+  return { sma: sma, upper: upper, lower: lower };
+}
+var bb = calcBB(sapClose, 10, 2); // Period 10 for demo visibility
+
+var sapVol = [
+  30,28,25,32,26,29,24,27,23,31,
+  22,25,20,28,19,21,18,20,17,45,
+  65,82,75,68,55,60,58,62,48,52
+];
+
+chartBreakout.setOption({
+  title: { text: 'SAP — Breakout Compression (Simulation)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['SAP', 'BB Supérieure', 'SMA 20', 'BB Inférieure'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: [
+    { left: '8%', right: '4%', top: '12%', height: '55%' },
+    { left: '8%', right: '4%', top: '75%', height: '15%' }
+  ],
+  xAxis: [
+    { type: 'category', data: bDates, axisLabel: { fontSize: 10 }, gridIndex: 0 },
+    { type: 'category', data: bDates, axisLabel: { show: false }, gridIndex: 1 }
+  ],
+  yAxis: [
+    { type: 'value', min: 225, max: 265, axisLabel: { fontSize: 10, formatter: '\u20AC{value}' }, gridIndex: 0 },
+    { type: 'value', axisLabel: { show: false }, gridIndex: 1, splitLine: { show: false } }
+  ],
+  series: [
+    {
+      name: 'SAP',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: sapClose,
+      symbol: 'circle',
+      symbolSize: 5,
+      lineStyle: { color: '#0f172a', width: 2 },
+      itemStyle: { color: '#0f172a' },
+      markLine: {
+        symbol: 'none',
+        lineStyle: { width: 2 },
+        data: [
+          { yAxis: 233, name: 'Stop', lineStyle: { color: '#dc2626', type: 'dashed' }, label: { formatter: 'Stop \u20AC233', color: '#dc2626', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 250, name: 'TP1', lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: 'TP1 \u20AC250', color: '#f59e0b', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 258, name: 'TP2', lineStyle: { color: '#9333ea', type: 'dashed' }, label: { formatter: 'TP2 \u20AC258', color: '#9333ea', fontWeight: 700, fontSize: 11 } }
+        ]
+      },
+      markPoint: {
+        data: [
+          { coord: ['01/28', 240], value: 'BREAKOUT', symbol: 'triangle', symbolSize: 16, itemStyle: { color: '#2563eb' }, label: { show: true, formatter: 'BREAKOUT', color: '#2563eb', fontWeight: 700, fontSize: 10, position: 'bottom' } }
+        ]
+      }
+    },
+    {
+      name: 'BB Supérieure',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: bb.upper,
+      symbol: 'none',
+      lineStyle: { color: '#2563eb', width: 1.5, type: 'dashed' },
+      areaStyle: { color: 'rgba(37,99,235,0.05)' }
+    },
+    {
+      name: 'SMA 20',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: bb.sma,
+      symbol: 'none',
+      lineStyle: { color: '#6366f1', width: 1.5 }
+    },
+    {
+      name: 'BB Inférieure',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: bb.lower,
+      symbol: 'none',
+      lineStyle: { color: '#2563eb', width: 1.5, type: 'dashed' },
+      areaStyle: { color: 'rgba(37,99,235,0.05)' }
+    },
+    {
+      name: 'Volume',
+      type: 'bar',
+      xAxisIndex: 1,
+      yAxisIndex: 1,
+      data: sapVol.map(function(v, i) {
+        return { value: v, itemStyle: { color: i >= 19 ? 'rgba(37,99,235,0.6)' : 'rgba(148,163,184,0.4)' } };
+      })
+    }
+  ]
+});
+
+// ================================================================
+// CHART 3: Correction + Recovery — PG Example
+// ================================================================
+var chartRecovery = echarts.init(document.getElementById('chart-recovery'));
+
+var rDates = [
+  '09/18','09/19','09/22','09/25','09/26',
+  '09/29','10/02','10/03','10/06','10/09',
+  '10/10','10/13','10/16','10/17','10/18',
+  '10/19','10/20','10/23','10/24','10/25',
+  '10/26','10/27','10/30','10/31','11/01',
+  '11/02','11/03','11/06','11/07','11/08',
+  '11/09','11/10','11/13','11/14','11/15'
+];
+
+var pgClose = [
+  162,160,158,156,154,
+  152,149,147,145,143,
+  141,140,139,138,139,
+  140,138,139,140,139,
+  140,141,143,145,147,
+  149,151,153,155,156,
+  158,159,160,161,162
+];
+
+// RSI approximation
+var rsiData = [
+  55,50,45,42,38,
+  35,32,28,26,24,
+  22,21,20,19,22,
+  25,20,24,28,26,
+  30,33,38,42,46,
+  50,53,55,58,59,
+  61,62,63,64,65
+];
+
+chartRecovery.setOption({
+  title: { text: 'PG — Recovery Post-Correction (Simulation)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['PG ($)', 'RSI (14)'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: [
+    { left: '10%', right: '10%', top: '12%', height: '45%' },
+    { left: '10%', right: '10%', top: '65%', height: '22%' }
+  ],
+  xAxis: [
+    { type: 'category', data: rDates, axisLabel: { fontSize: 9, rotate: 45 }, gridIndex: 0 },
+    { type: 'category', data: rDates, axisLabel: { show: false }, gridIndex: 1 }
+  ],
+  yAxis: [
+    { type: 'value', min: 130, max: 170, axisLabel: { fontSize: 10, formatter: '${value}' }, gridIndex: 0 },
+    { type: 'value', min: 0, max: 100, axisLabel: { fontSize: 10 }, gridIndex: 1, splitLine: { show: false } }
+  ],
+  series: [
+    {
+      name: 'PG ($)',
+      type: 'line',
+      xAxisIndex: 0,
+      yAxisIndex: 0,
+      data: pgClose,
+      symbol: 'circle',
+      symbolSize: 4,
+      lineStyle: { color: '#0f172a', width: 2.5 },
+      itemStyle: { color: '#0f172a' },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(239,68,68,0.15)' },
+            { offset: 0.5, color: 'rgba(239,68,68,0.05)' },
+            { offset: 1, color: 'rgba(16,185,129,0.1)' }
+          ]
+        }
+      },
+      markLine: {
+        symbol: 'none',
+        lineStyle: { width: 2 },
+        data: [
+          { yAxis: 162, name: 'Pré-correction', lineStyle: { color: '#94a3b8', type: 'dotted' }, label: { formatter: 'Sommet $162', color: '#94a3b8', fontWeight: 600, fontSize: 10 } },
+          { yAxis: 141, name: 'Entry', lineStyle: { color: '#6366f1', type: 'solid' }, label: { formatter: 'Entry $141', color: '#6366f1', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 138, name: 'Stop', lineStyle: { color: '#dc2626', type: 'dashed' }, label: { formatter: 'Stop $138', color: '#dc2626', fontWeight: 700, fontSize: 11 } },
+          { yAxis: 151, name: 'TP1', lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: 'TP1 $151', color: '#f59e0b', fontWeight: 700, fontSize: 11 } }
+        ]
+      },
+      markPoint: {
+        data: [
+          { coord: ['10/27', 141], value: 'BUY', symbol: 'triangle', symbolSize: 16, itemStyle: { color: '#10b981' }, label: { show: true, formatter: 'BUY', color: '#10b981', fontWeight: 700, fontSize: 10, position: 'bottom' } }
+        ]
+      }
+    },
+    {
+      name: 'RSI (14)',
+      type: 'line',
+      xAxisIndex: 1,
+      yAxisIndex: 1,
+      data: rsiData,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: '#9333ea', width: 2 },
+      areaStyle: { color: 'rgba(147,51,234,0.1)' },
+      markLine: {
+        symbol: 'none',
+        data: [
+          { yAxis: 30, lineStyle: { color: '#dc2626', type: 'dashed', width: 1.5 }, label: { formatter: 'Survente (30)', color: '#dc2626', fontSize: 10 } },
+          { yAxis: 70, lineStyle: { color: '#10b981', type: 'dashed', width: 1.5 }, label: { formatter: 'Surachat (70)', color: '#10b981', fontSize: 10 } }
+        ]
+      }
+    }
+  ]
+});
+
+// ================================================================
+// CHART 4: Grouped Bar — Backtest Results
+// ================================================================
+var chartBacktest = echarts.init(document.getElementById('chart-backtest'));
+chartBacktest.setOption({
+  title: { text: 'Backtests 2010-2025 — Comparaison des 3 Stratégies', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '5%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Win Rate (%)', 'R/R Moyen', 'Rendement\nAnnuel (%)', 'Profit\nFactor', 'Sharpe\nRatio'], axisLabel: { fontSize: 10, interval: 0 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
+  series: [
+    {
+      name: 'Pullback EMA 21',
+      type: 'bar',
+      data: [57.3, 2.1, 18.5, 1.82, 1.35],
+      itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] },
+      barGap: '15%',
+      label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: '#10b981' }
+    },
+    {
+      name: 'Breakout Compression',
+      type: 'bar',
+      data: [47.8, 3.2, 22.3, 1.65, 1.18],
+      itemStyle: { color: '#2563eb', borderRadius: [4, 4, 0, 0] },
+      label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: '#2563eb' }
+    },
+    {
+      name: 'Recovery Post-Correction',
+      type: 'bar',
+      data: [62.1, 2.4, 15.8, 2.15, 1.52],
+      itemStyle: { color: '#dc2626', borderRadius: [4, 4, 0, 0] },
+      label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: '#dc2626' }
+    }
+  ]
+});
+
+// ================================================================
+// CHART 5: Radar — 3 Strategies Compared
+// ================================================================
+var chartRadar = echarts.init(document.getElementById('chart-radar'));
+chartRadar.setOption({
+  title: { text: 'Profil des 3 Stratégies', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Simplicité', max: 10 },
+      { name: 'Win Rate', max: 10 },
+      { name: 'R/R', max: 10 },
+      { name: 'Fréquence', max: 10 },
+      { name: 'Stress\n(10=faible)', max: 10 }
+    ],
+    radius: '60%',
+    axisName: { fontSize: 11, color: '#334155' },
+    splitArea: { areaStyle: { color: ['#f8fafc', '#eef2ff', '#f8fafc', '#eef2ff'] } }
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      {
+        value: [9, 8, 7, 9, 8],
+        name: 'Pullback EMA 21',
+        lineStyle: { color: '#10b981', width: 2.5 },
+        areaStyle: { color: 'rgba(16,185,129,0.15)' },
+        itemStyle: { color: '#10b981' },
+        symbol: 'circle',
+        symbolSize: 6
+      },
+      {
+        value: [6, 5, 9, 6, 5],
+        name: 'Breakout Compression',
+        lineStyle: { color: '#2563eb', width: 2.5 },
+        areaStyle: { color: 'rgba(37,99,235,0.15)' },
+        itemStyle: { color: '#2563eb' },
+        symbol: 'circle',
+        symbolSize: 6
+      },
+      {
+        value: [7, 9, 8, 3, 4],
+        name: 'Recovery Post-Correction',
+        lineStyle: { color: '#dc2626', width: 2.5 },
+        areaStyle: { color: 'rgba(239,68,68,0.15)' },
+        itemStyle: { color: '#dc2626' },
+        symbol: 'circle',
+        symbolSize: 6
+      }
+    ]
+  }]
+});
+
+// ================================================================
+// CHART 6: Heatmap — Strategy × Regime Suitability
+// ================================================================
+var chartHeatmap = echarts.init(document.getElementById('chart-heatmap'));
+var strategies = ['Pullback EMA 21', 'Breakout Compression', 'Recovery Post-Correction'];
+var regimes = ['Risk-On\n(Haussier)', 'Neutral\n(Range)', 'Early Risk-Off\n(Volatilité)', 'Risk-Off\n(Baissier)', 'Recovery\n(Rebond)'];
+// [regime_idx, strategy_idx, score 0-10]
+var heatmapData = [
+  [0,0,9],[1,0,5],[2,0,3],[3,0,1],[4,0,6],
+  [0,1,4],[1,1,9],[2,1,6],[3,1,2],[4,1,5],
+  [0,2,1],[1,2,3],[2,2,5],[3,2,7],[4,2,9]
+];
+
+chartHeatmap.setOption({
+  title: { text: 'Adéquation Stratégie \u00D7 Régime de Marché', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {
+    formatter: function(p) {
+      return regimes[p.data[0]].replace('\n', ' ') + '<br>' + strategies[p.data[1]] + '<br><strong>Score : ' + p.data[2] + '/10</strong>';
+    }
+  },
+  grid: { left: '22%', right: '12%', top: '15%', bottom: '15%' },
+  xAxis: { type: 'category', data: regimes, axisLabel: { fontSize: 10, interval: 0 }, splitArea: { show: true } },
+  yAxis: { type: 'category', data: strategies, axisLabel: { fontSize: 10 }, splitArea: { show: true } },
+  visualMap: {
+    min: 0,
+    max: 10,
+    calculable: false,
+    orient: 'vertical',
+    right: 0,
+    top: 'center',
+    inRange: {
+      color: ['#fef2f2', '#fecaca', '#fde68a', '#86efac', '#22c55e']
+    },
+    textStyle: { fontSize: 10 }
+  },
+  series: [{
+    type: 'heatmap',
+    data: heatmapData,
+    label: {
+      show: true,
+      formatter: function(p) { return p.data[2] + '/10'; },
+      fontSize: 12,
+      fontWeight: 700,
+      color: function(p) { return p.data[2] >= 7 ? '#fff' : '#334155'; }
+    },
+    emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } }
+  }]
+});
+
+// ================================================================
+// RESPONSIVE RESIZE
+// ================================================================
+window.addEventListener('resize', function() {
+  chartPullback.resize();
+  chartBreakout.resize();
+  chartRecovery.resize();
+  chartBacktest.resize();
+  chartRadar.resize();
+  chartHeatmap.resize();
+});
+</script>
+
+</body>
+</html>

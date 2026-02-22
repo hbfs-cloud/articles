@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>L'Alerte — Timing, Confirmation & Invalidation | Swing Mode — De Zéro à Rentable — Partie 4/6 | Market Watch</title>
+ <meta name="description" content="Série Swing Mode — Partie 4/6 : Alertes TradingView, confirmation multi-timeframe, signaux d'entrée, invalidation, types d'ordres, entrée échelonnée, checklist pré-trade 8 points.">
+ <meta property="og:title" content="L'Alerte — Timing, Confirmation & Invalidation | Swing Mode 4/6 | Market Watch">
+ <meta property="og:description" content="Maîtrise le timing d'entrée : alertes automatiques, confirmation multi-timeframe, signaux de qualité, types d'ordres et checklist pré-trade complète.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://market-watch.xyz/series/swing-mode/part4-alertes/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+<style>
+.brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+.brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+.brand-logo:hover { color:#6366f1; }
+.series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+.series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+.series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+.series-link:hover { border-color:#818cf8; color:#818cf8; }
+.series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+.hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+details { margin:0.75rem 0; }
+details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+details summary::-webkit-details-marker { display:none; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+.footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+.footer-bar a { color:#64748b; text-decoration:none; }
+.footer-bar a:hover { color:#6366f1; }
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#818cf8; }
+.takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#4f46e5; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+.prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+.prev-cta:hover { border-color:#6366f1; color:#6366f1; }
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #6366f1; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .brand-bar { padding:0.75rem 1rem; }
+  .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+  .brand-logo { font-size:0.9rem; }
+  .series-title { font-size:0.65rem; margin-right:0.5rem; }
+  .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta, .prev-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .brand-logo { font-size:0.85rem; }
+  .series-title { display:none; }
+  .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Swing Mode — De Zéro à Rentable</span>
+  <a href="/series/swing-mode/part1-setup/" class="series-link">1 — Le Setup</a>
+  <a href="/series/swing-mode/part2-scanner/" class="series-link">2 — Le Scanner</a>
+  <a href="/series/swing-mode/part3-strategies/" class="series-link">3 — Les Stratégies</a>
+  <a href="/series/swing-mode/part4-alertes/" class="series-link current">4 — Les Alertes</a>
+  <a href="/series/swing-mode/part5-gestion/" class="series-link">5 — Gérer la Position</a>
+  <a href="/series/swing-mode/part6-routine/" class="series-link">6 — La Routine</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Série Swing Mode — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">L'Alerte — Timing, Confirmation & Invalidation</h1>
+  <p class="hero-subtitle">Tu as trouvé un setup, tu as défini ta stratégie. Maintenant il faut attendre le bon moment pour entrer. Pas de FOMO, pas de clic impulsif — un processus rigoureux : alerte, confirmation multi-timeframe, checklist, et seulement alors tu places ton ordre.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-layer-group"></i> Multi-Timeframe</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-check-double"></i> Confirmation</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-file-invoice"></i> Ordres</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-list-check"></i> Checklist</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#alertes-tv" class="nav-item"><i class="fa-solid fa-bell" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Alertes TV</a>
+  <a href="#mtf" class="nav-item"><i class="fa-solid fa-layer-group" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Multi-Timeframe</a>
+  <a href="#signaux" class="nav-item"><i class="fa-solid fa-signal" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Signaux</a>
+  <a href="#invalidation" class="nav-item"><i class="fa-solid fa-ban" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Invalidation</a>
+  <a href="#ordres" class="nav-item"><i class="fa-solid fa-file-invoice" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Ordres</a>
+  <a href="#echelonnee" class="nav-item"><i class="fa-solid fa-stairs" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Entrée Échelonnée</a>
+  <a href="#checklist" class="nav-item"><i class="fa-solid fa-list-check" style="color:#0891b2; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Checklist</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : ALERTES TRADINGVIEW                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="alertes-tv"><i class="fa-solid fa-bell" style="color:#6366f1;"></i> Alertes TradingView</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bell" style="color:#6366f1;"></i> Configurer tes Alertes Automatiques</h2>
+
+  <p>Tu ne vas pas rester devant ton écran à attendre que le prix touche un niveau. Tu poses tes alertes, et tu vis ta vie. TradingView te prévient quand quelque chose se passe. Voici les 4 types d'alertes que tu dois maîtriser :</p>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Pourquoi les alertes sont indispensables</h4>
+    <p style="margin:0;">Sans alertes, tu fais du <strong>screen watching</strong> — tu fixes ton écran en espérant voir un signal. C'est inefficace, stressant, et tu finiras par entrer trop tôt par impatience. Les alertes font le travail de surveillance <strong>à ta place</strong>. Tu ne regardes le graphique que quand le prix arrive dans ta zone d'intérêt.</p>
+  </div>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Alerte sur Prix</h4>
+      <p>Le plus basique. Tu définis un niveau de prix (support, résistance, zone d'entrée). Quand le prix le touche, tu reçois une notification. <strong>Usage :</strong> "Préviens-moi si AAPL descend à $180."</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Alerte sur Indicateur</h4>
+      <p>Tu déclenches l'alerte quand un indicateur atteint une valeur. Exemple : RSI qui croise 30 à la hausse (survente → rebond). <strong>Usage :</strong> "RSI 14 croise au-dessus de 30."</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Alerte sur Dessin</h4>
+      <p>Tu traces une trendline, un canal ou une zone — et l'alerte se déclenche quand le prix casse ton dessin. <strong>Usage :</strong> "Break de la trendline baissière sur MSFT."</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Notifications Mobile</h4>
+      <p>Active les notifications push sur l'app TradingView. Tu reçois l'alerte sur ton téléphone, tu ouvres le graphique et tu analyses en 2 minutes. <strong>Pas besoin</strong> d'être devant ton PC.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Setup d'alertes recommandé par trade</h4>
+    <p style="margin:0;">Pour chaque setup dans ta watchlist, pose <strong>3 alertes minimum</strong> : (1) Alerte prix sur ta <strong>zone d'entrée</strong> — pour ne pas rater le niveau, (2) Alerte RSI qui <strong>croise 30 ou 70</strong> — pour confirmer la survente/surachat, (3) Alerte sur ta <strong>trendline</strong> ou canal — pour le signal de breakout. TradingView gratuit permet 5 alertes actives, le plan Essential en permet 20.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Piège classique</h4>
+    <p style="margin:0;">Ne mets pas des alertes sur <strong>tout</strong>. Si tu reçois 30 notifications par jour, tu vas les ignorer. Limite-toi aux setups de ta watchlist active (5-8 tickers max). <strong>Qualité > quantité.</strong></p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : CONFIRMATION MULTI-TIMEFRAME                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="mtf"><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> Confirmation Multi-Timeframe</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> L'Alignement Monthly → Weekly → Daily</h2>
+
+  <p>Le multi-timeframe (MTF), c'est la <strong>compétence #1</strong> qui sépare les débutants des traders rentables. L'idée est simple : tu ne trades jamais contre la tendance du timeframe supérieur. Si le monthly est baissier, ton setup haussier sur le daily a beaucoup moins de chances de fonctionner.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle Multi-Timeframe</div>
+    <span class="formula-highlight">Monthly</span> = Direction &nbsp;&nbsp;|&nbsp;&nbsp; <span class="formula-highlight">Weekly</span> = Setup &nbsp;&nbsp;|&nbsp;&nbsp; <span class="formula-highlight">Daily</span> = Timing
+  </div>
+
+  <h3><i class="fa-solid fa-binoculars" style="color:#6366f1;"></i> Les 3 Niveaux d'Analyse</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Timeframe</th>
+        <th>Rôle</th>
+        <th>Ce que tu cherches</th>
+        <th>Temps passé</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Monthly</strong></td>
+        <td>Direction de fond</td>
+        <td>Tendance haussière/baissière, supports majeurs, EMA 12/24</td>
+        <td>30 sec</td>
+      </tr>
+      <tr>
+        <td><strong>Weekly</strong></td>
+        <td>Identification du setup</td>
+        <td>Pullback sur EMA 21, cassure de range, pattern de retournement</td>
+        <td>2-3 min</td>
+      </tr>
+      <tr>
+        <td><strong>Daily</strong></td>
+        <td>Timing de l'entrée</td>
+        <td>Confirmation de la bougie, volume, RSI, divergence, niveau précis d'entrée</td>
+        <td>5 min</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ECharts: Multi-Timeframe Panel -->
+  <div id="chart-mtf" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Pourquoi le MTF est crucial</h4>
+    <p style="margin:0;">Imagine que tu vois un beau pullback haussier sur le daily. Tu es excité, tu veux acheter. Mais si tu zoomes sur le weekly, tu vois que le prix vient de casser un support majeur et que la tendance est baissière. Ton "pullback" n'est en fait qu'un <strong>rebond technique</strong> dans une tendance baissière — un piège à acheteurs. Le MTF t'empêche de tomber dedans. <strong>Règle absolue :</strong> ne prends un long que si les 3 timeframes sont alignés haussiers (ou au minimum le monthly neutre + weekly haussier).</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : SIGNAUX DE CONFIRMATION                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="signaux"><i class="fa-solid fa-signal" style="color:#10b981;"></i> Signaux de Confirmation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-signal" style="color:#10b981;"></i> Les 4 Signaux Clés</h2>
+
+  <p>Un setup sans confirmation, c'est un pari. Un setup avec 3-4 signaux de confirmation, c'est un <strong>trade à haute probabilité</strong>. Voici les 4 signaux que tu dois chercher avant chaque entrée :</p>
+
+  <!-- Signal 1: Volume Spike -->
+  <h3 style="margin-top:2rem;"><i class="fa-solid fa-volume-high" style="color:#6366f1;"></i> 1. Volume Spike</h3>
+  <p>Le volume, c'est la <strong>conviction du marché</strong>. Un mouvement de prix sans volume, c'est un bruit. Un mouvement avec un volume 1.5× supérieur à la moyenne, c'est un signal que les institutionnels participent.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle du Volume Spike</div>
+    Volume du jour > <span class="formula-highlight">1.5 × SMA(Volume, 20)</span> = Confirmation
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Pourquoi le volume compte</h4>
+    <p style="margin:0;">Quand le prix casse une résistance avec un volume de 2× la moyenne, ça signifie que beaucoup de participants valident ce mouvement. C'est comme un vote : plus il y a de votants, plus le résultat est légitime. Un breakout sur volume faible est souvent un <strong>faux signal</strong> (fakeout).</p>
+  </div>
+
+  <!-- Signal 2: RSI Divergence -->
+  <h3 style="margin-top:2rem;"><i class="fa-solid fa-arrows-split-up-and-left" style="color:#10b981;"></i> 2. Divergence RSI</h3>
+  <p>La divergence, c'est quand le prix et le RSI ne vont pas dans le même sens. C'est un signal puissant de retournement :</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Prix</th>
+        <th>RSI</th>
+        <th>Signal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Divergence haussière</strong></td><td>Lower Low (nouveau plus bas)</td><td>Higher Low (plus bas plus haut)</td><td style="color:#10b981; font-weight:700;">Achat potentiel</td></tr>
+      <tr><td><strong>Divergence baissière</strong></td><td>Higher High (nouveau plus haut)</td><td>Lower High (plus haut plus bas)</td><td style="color:#dc2626; font-weight:700;">Vente potentielle</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ECharts: RSI Divergence -->
+  <div id="chart-divergence" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Lire la divergence</h4>
+    <p style="margin:0;">La divergence haussière signifie que même si le prix fait de nouveaux plus bas, la <strong>pression vendeuse s'essouffle</strong> (le RSI monte). Les vendeurs perdent de la conviction. C'est souvent le prélude à un retournement. Attention : la divergence ne te donne pas le <strong>timing exact</strong> — elle te dit "prépare-toi, le vent tourne". L'entrée se fait quand tu as une confirmation supplémentaire (bougie, volume).</p>
+  </div>
+
+  <!-- Signal 3: MACD Cross -->
+  <h3 style="margin-top:2rem;"><i class="fa-solid fa-right-left" style="color:#f59e0b;"></i> 3. Croisement MACD</h3>
+  <p>Le MACD (Moving Average Convergence Divergence) croise sa ligne de signal — c'est un des signaux de momentum les plus utilisés.</p>
+
+  <div class="metric-grid">
+    <div class="metric-card" style="border-top:3px solid #10b981;">
+      <div class="metric-value" style="font-size:1.1rem; color:#10b981;">Signal haussier</div>
+      <div class="metric-label">MACD croise la ligne de signal <strong>par le bas</strong></div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #dc2626;">
+      <div class="metric-value" style="font-size:1.1rem; color:#dc2626;">Signal baissier</div>
+      <div class="metric-label">MACD croise la ligne de signal <strong>par le haut</strong></div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> MACD en pratique</h4>
+    <p style="margin:0;">Le MACD est un <strong>indicateur retardé</strong> — il confirme un mouvement déjà en cours, il ne le prédit pas. C'est justement ce qu'on veut en swing : on ne cherche pas à attraper le bottom exact, on veut confirmer que le <strong>momentum a tourné</strong>. Utilise-le en complément du RSI, jamais seul.</p>
+  </div>
+
+  <!-- Signal 4: Pattern de retournement -->
+  <h3 style="margin-top:2rem;"><i class="fa-solid fa-rotate" style="color:#9333ea;"></i> 4. Pattern de Retournement</h3>
+  <p>Les bougies japonaises te donnent un signal visuel de ce qui se passe entre acheteurs et vendeurs. Trois patterns clés pour le swing :</p>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#10b981;">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">H</div>
+      <h4>Hammer (Marteau)</h4>
+      <p>Longue mèche basse, petit corps en haut. Les vendeurs ont poussé, mais les acheteurs ont repris le contrôle. Signal haussier <strong>après une baisse</strong>.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#2563eb;">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">E</div>
+      <h4>Engulfing (Avalement)</h4>
+      <p>Une grosse bougie verte qui "avale" complètement la bougie rouge précédente. Le rapport de force s'est inversé violemment. Signal fort.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">M</div>
+      <h4>Morning Star (Étoile du matin)</h4>
+      <p>Pattern en 3 bougies : grande rouge, petit corps (hésitation), grande verte. Transition claire de la vente vers l'achat. Signal très fiable.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Les patterns seuls ne suffisent pas</h4>
+    <p style="margin:0;">Un marteau au milieu de nulle part ne vaut rien. Un marteau sur un <strong>support majeur</strong>, avec un <strong>volume élevé</strong> et une <strong>divergence RSI</strong> — là tu as un setup de qualité. Les patterns confirment, ils n'initient pas. Toujours chercher le <strong>contexte</strong>.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : QUAND NE PAS ENTRER                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="invalidation"><i class="fa-solid fa-ban" style="color:#dc2626;"></i> Quand NE PAS entrer</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-ban" style="color:#dc2626;"></i> Les 6 Scénarios d'Invalidation</h2>
+
+  <p>Savoir quand <strong>ne pas</strong> entrer est plus important que savoir quand entrer. Un trade évité, c'est un stop loss économisé. Voici les 6 situations où tu <strong>fermes TradingView</strong> et tu passes à autre chose :</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-hand" style="color:#dc2626;"></i> STOP — Ne trade PAS si...</h4>
+    <ul class="checklist" style="margin-bottom:0;">
+      <li><i class="fa-solid fa-calendar-xmark" style="color:#dc2626;"></i> <strong>Earnings dans moins de 5 jours</strong> — Les résultats trimestriels créent un gap imprévisible. Ton analyse technique ne vaut rien face à un earnings surprise. Attends que les résultats soient passés.</li>
+      <li><i class="fa-solid fa-landmark" style="color:#dc2626;"></i> <strong>FOMC / CPI / NFP cette semaine</strong> — Les annonces macro majeures créent de la volatilité extrême. Le marché peut inverser en 5 minutes. Attends que l'événement soit digéré (24-48h après).</li>
+      <li><i class="fa-solid fa-volume-xmark" style="color:#dc2626;"></i> <strong>Volume en baisse sur le breakout</strong> — Si le prix casse une résistance mais que le volume diminue, c'est un fakeout. Les institutionnels ne participent pas. Laisse passer.</li>
+      <li><i class="fa-solid fa-temperature-arrow-up" style="color:#dc2626;"></i> <strong>RSI > 70 (déjà surchauffé)</strong> — Un titre avec un RSI à 75+ a déjà fait l'essentiel de son mouvement. Tu arrives en retard. Le risk/reward est mauvais à ce niveau.</li>
+      <li><i class="fa-solid fa-arrows-left-right" style="color:#dc2626;"></i> <strong>Spread bid/ask > 0.5%</strong> — Un spread large signifie illiquidité. Tu paieras plus cher à l'entrée et tu vendras moins cher à la sortie. Ça grignote ton R/R.</li>
+      <li><i class="fa-solid fa-link" style="color:#dc2626;"></i> <strong>Corrélation > 0.7 avec une position existante</strong> — Si tu as déjà MSFT et que tu veux acheter AAPL (corrélation ~0.85), tu doubles ta exposition tech US. Tu n'as pas 2 positions, tu en as 1 en double.</li>
+    </ul>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Le trade que tu ne prends pas</h4>
+    <p style="margin:0;">Les meilleurs traders passent <strong>80% de leur temps à ne rien faire</strong>. Sur 10 setups identifiés, ils en tradent peut-être 2-3. Pas par paresse, mais par discipline. Chaque trade évité grâce à un critère d'invalidation, c'est potentiellement 2-5% de capital préservé. Sur une année, ça fait la différence entre être rentable et être perdant.</p>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Astuce : Le calendrier économique, c'est AVANT</h4>
+    <p style="margin:0;">Avant même d'ouvrir TradingView, ouvre le <strong>calendrier économique</strong> (Investing.com ou ForexFactory). Si tu vois un événement majeur cette semaine (FOMC, CPI, NFP, earnings d'un FAANG), ajuste ta stratégie : soit tu n'entres pas, soit tu réduis ta taille de position, soit tu élargis ton stop. Ne découvre jamais un événement macro <strong>après</strong> avoir placé ton trade.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : TYPES D'ORDRES                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="ordres"><i class="fa-solid fa-file-invoice" style="color:#f59e0b;"></i> Types d'ordres</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-file-invoice" style="color:#f59e0b;"></i> Les 4 Types d'Ordres pour le Swing</h2>
+
+  <p>Le type d'ordre que tu utilises peut faire la différence entre un bon et un mauvais trade. Voici les 4 types que tu dois connaître :</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Usage</th>
+        <th>Avantage</th>
+        <th>Risque</th>
+        <th>Quand l'utiliser en swing</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Market</strong></td>
+        <td>Exécution immédiate au meilleur prix disponible</td>
+        <td>Rapidité, certitude d'exécution</td>
+        <td>Slippage possible, surtout pré/post-market</td>
+        <td>Urgence rare — breakout violent avec volume massif. <strong>À éviter la plupart du temps.</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Limit</strong></td>
+        <td>Exécution uniquement au prix spécifié (ou mieux)</td>
+        <td>Contrôle total du prix d'entrée, pas de slippage</td>
+        <td>Peut ne jamais être exécuté si le prix ne touche pas ton niveau</td>
+        <td><strong>Ton ordre principal.</strong> Pose un limit sur ta zone d'entrée. Si le prix ne vient pas, tant pis — next setup.</td>
+      </tr>
+      <tr>
+        <td><strong>Stop-Limit</strong></td>
+        <td>Se déclenche quand le prix atteint un seuil, puis exécute un limit</td>
+        <td>Protection + contrôle du prix. Idéal pour les stop loss et les breakout entries.</td>
+        <td>Peut ne pas s'exécuter en cas de gap (le prix saute par-dessus ton limit)</td>
+        <td><strong>Pour les breakout trades.</strong> "Si AAPL casse $195, achète à $195.50 max." Aussi pour tes stop loss.</td>
+      </tr>
+      <tr>
+        <td><strong>OCO</strong></td>
+        <td>One-Cancels-Other : 2 ordres liés, l'exécution d'un annule l'autre</td>
+        <td>Automatise complètement ton exit (take profit + stop loss ensemble)</td>
+        <td>Pas tous les brokers le proposent. Complexité de setup.</td>
+        <td><strong>Pour tes exits.</strong> Tu places TP1 + Stop Loss en OCO. Celui qui se déclenche en premier annule l'autre. Zéro gestion manuelle.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">L'ordre parfait en swing</div>
+    Entrée = <span class="formula-highlight">Limit</span> &nbsp;&nbsp;|&nbsp;&nbsp; Protection = <span class="formula-highlight">Stop-Limit</span> &nbsp;&nbsp;|&nbsp;&nbsp; Exit = <span class="formula-highlight">OCO (TP + SL)</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Pourquoi JAMAIS de market order en swing</h4>
+    <p style="margin:0;">En swing, tu n'es pas pressé. Tu as le temps de placer un limit order et d'attendre que le prix vienne à toi. Un market order, c'est dire au marché "je prends à n'importe quel prix" — c'est exactement le contraire de la discipline qu'on cultive. Le seul cas acceptable : un breakout explosif avec un volume 3× la moyenne où tu risques de louper le train. Et même là, utilise un limit légèrement au-dessus du prix actuel.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : ENTRÉE ÉCHELONNÉE                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="echelonnee"><i class="fa-solid fa-stairs" style="color:#9333ea;"></i> Entrée échelonnée</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-stairs" style="color:#9333ea;"></i> Le Système 50 / 25 / 25</h2>
+
+  <p>Entrer en une seule fois avec 100% de ta position, c'est comme parier tout sur un seul numéro. L'entrée échelonnée te permet de réduire ton risque et d'améliorer ton prix moyen :</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Entrée échelonnée — 3 tranches</div>
+    <span class="formula-highlight">50%</span> à la confirmation &nbsp;&nbsp;→&nbsp;&nbsp; <span class="formula-highlight">25%</span> sur pullback &nbsp;&nbsp;→&nbsp;&nbsp; <span class="formula-highlight">25%</span> si le setup se confirme
+  </div>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#10b981;">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">50%</div>
+      <h4>Tranche 1 — Confirmation</h4>
+      <p>Tu entres avec la moitié de ta position quand tu as au moins 3/4 signaux de confirmation. C'est ta base.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#2563eb;">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">25%</div>
+      <h4>Tranche 2 — Pullback</h4>
+      <p>Si le prix revient tester ta zone d'entrée (pullback sain), tu ajoutes 25%. Ton prix moyen s'améliore.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">25%</div>
+      <h4>Tranche 3 — Confirmation forte</h4>
+      <p>Si le setup se valide (cassure de résistance, volume en hausse), tu complètes avec les 25% restants. Full position.</p>
+    </div>
+  </div>
+
+  <h3><i class="fa-solid fa-scale-balanced" style="color:#6366f1;"></i> Échelonné vs Entrée Pleine</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Critère</th>
+        <th style="background:#4f46e5;">Entrée Échelonnée (50/25/25)</th>
+        <th>Entrée Pleine (100%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Risque initial</strong></td><td>50% du risque max</td><td>100% du risque dès le départ</td></tr>
+      <tr><td><strong>Prix moyen</strong></td><td>Souvent meilleur (pullback capté)</td><td>Dépend du timing exact</td></tr>
+      <tr><td><strong>Stress</strong></td><td>Faible — tu peux encore ajuster</td><td>Élevé — tout ou rien</td></tr>
+      <tr><td><strong>Setup raté</strong></td><td>Perte sur 50% seulement (les 2 autres tranches jamais exécutées)</td><td>Perte sur 100% de la position</td></tr>
+      <tr><td><strong>Gain maximum</strong></td><td>Légèrement réduit (prix moyen un peu plus haut sur les ajouts)</td><td>Maximum si timing parfait</td></tr>
+      <tr><td><strong>Idéal pour</strong></td><td>Débutants et intermédiaires</td><td>Traders expérimentés avec conviction forte</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Pourquoi commencer par l'échelonné</h4>
+    <p style="margin:0;">Quand tu débutes, le timing ne sera pas parfait — c'est normal. L'entrée échelonnée te donne une <strong>marge d'erreur</strong>. Si ta première tranche est mal timée, le pullback te permet de rattraper. Et si le setup échoue, tu n'as exposé que 50% au lieu de 100%. Avec l'expérience, tu pourras passer à des entrées plus agressives sur tes meilleurs setups.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : CHECKLIST PRÉ-TRADE                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="checklist"><i class="fa-solid fa-list-check" style="color:#0891b2;"></i> Checklist pré-trade</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-list-check" style="color:#0891b2;"></i> Les 8 Points Avant Chaque Trade</h2>
+
+  <p>Un pilote ne décolle jamais sans sa checklist. Un chirurgien ne commence jamais sans vérifier son protocole. Un swing trader ne devrait jamais cliquer sur "Buy" sans passer par ces <strong>8 points</strong> :</p>
+
+  <ul class="checklist">
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>1. Tendance haussière confirmée</strong><br><span style="color:#64748b; font-size:0.85rem;">EMA 50 au-dessus de l'EMA 200 sur le daily. Le prix est au-dessus de l'EMA 21. Le monthly est haussier ou neutre. Si une de ces conditions manque, le setup est dégradé.</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>2. Setup identifié clairement</strong><br><span style="color:#64748b; font-size:0.85rem;">Pullback sur support ? Breakout de résistance ? Recovery après survente ? Tu dois pouvoir nommer ton setup en un mot. Si tu ne sais pas quel type de trade tu fais, tu ne fais pas de trade.</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>3. Volume suffisant</strong><br><span style="color:#64748b; font-size:0.85rem;">Volume moyen 20 jours > 500K actions (pour les US). Le jour de ton signal, volume idéalement > 1.5× la moyenne. Un breakout sans volume est un fakeout.</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>4. Pas d'earnings imminent</strong><br><span style="color:#64748b; font-size:0.85rem;">Vérifie le calendrier : aucun earnings dans les 5 prochains jours ouvrés. Après un earnings, attends 24-48h que le marché digère l'information.</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>5. Pas d'événement macro majeur</strong><br><span style="color:#64748b; font-size:0.85rem;">FOMC, CPI, NFP, GDP cette semaine ? Réduis ta taille ou attends. Ces événements peuvent invalider n'importe quelle analyse technique en 5 minutes.</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>6. R/R minimum 1:2</strong><br><span style="color:#64748b; font-size:0.85rem;">Distance entrée → TP1 doit être au moins 2× la distance entrée → stop loss. Si tu risques $100, tu dois pouvoir gagner au moins $200. En dessous, le trade ne vaut pas le risque.</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>7. Stop loss défini sur niveau technique</strong><br><span style="color:#64748b; font-size:0.85rem;">Ton stop est sous un support, sous l'EMA 200, sous le dernier swing low — un niveau qui a un sens technique. Jamais un stop "au feeling" ou "à -5%".</span></div>
+    </li>
+    <li>
+      <i class="fa-solid fa-square-check" style="color:#10b981; font-size:1.2rem;"></i>
+      <div><strong>8. Décorrélation OK</strong><br><span style="color:#64748b; font-size:0.85rem;">Pas de doublon secteur/géo avec tes positions existantes. Corrélation < 0.7 avec le reste du portefeuille. Si tu as déjà 4 positions, il faut en fermer une avant d'en ouvrir une nouvelle.</span></div>
+    </li>
+  </ul>
+
+  <div class="formula-box">
+    <div class="formula-label">Score minimum pour entrer</div>
+    <span class="formula-highlight">6/8</span> points validés = OK &nbsp;&nbsp;|&nbsp;&nbsp; <span class="formula-highlight">7-8/8</span> = Setup de qualité &nbsp;&nbsp;|&nbsp;&nbsp; <span class="formula-highlight">&lt;6/8</span> = Passe ton tour
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Imprime cette checklist</h4>
+    <p style="margin:0;">Sérieusement. Imprime-la et colle-la à côté de ton écran. Pendant les 50 premiers trades, <strong>parcours-la à voix haute</strong> avant chaque entrée. Ça paraît excessif, mais c'est exactement ce qui va t'empêcher de faire des trades impulsifs. La discipline s'installe par la répétition.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8 : IA ALERTES                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="ia-alertes"><i class="fa-solid fa-robot" style="color:#9333ea;"></i> IA Alertes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-robot" style="color:#9333ea;"></i> Le Bot Discord — Ton Scanner Automatique</h2>
+
+  <p>Chaque soir à 23h, un bot Claude scanne le marché et t'envoie sur Discord les setups qui passent tous les filtres. C'est l'IA comme copilote, pas comme pilote.</p>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Comment fonctionne le scan automatique</h4>
+    <p style="margin:0 0 1rem 0;">Le bot utilise le MCP Gateway Market Watch pour exécuter chaque soir :</p>
+    <ul style="margin:0; padding-left:1.5rem; color:#334155; line-height:1.8;">
+      <li><strong>RunAutoScreener</strong> — Détecte le régime de marché (RiskOn, Neutral, RiskOff) et adapte automatiquement les critères de filtrage.</li>
+      <li><strong>RunScreener</strong> avec 3 DSL complémentaires — Oversold (RSI < 30), momentum (breakout + volume), et squeeze (Bollinger Band squeeze).</li>
+      <li><strong>GetInstruments</strong> — Analyse complète des 10 meilleurs candidats (technique, fondamental, sentiment).</li>
+      <li><strong>Filtrage final</strong> — Applique la checklist 8 points automatiquement : pas d'earnings imminent, volume suffisant, R/R > 1:2, décorrélation.</li>
+    </ul>
+    <p style="margin:1rem 0 0 0;">Le résultat : tu reçois 2-5 setups triés, argumentés, avec entry/stop/target pré-calculés. <strong>Toi, tu décides si tu entres ou pas.</strong></p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> L'IA ne remplace pas ton jugement</h4>
+    <p style="margin:0;">Le bot te fait gagner 30 minutes de scan quotidien. Mais il ne connaît pas ta tolérance au risque, ton capital, tes positions existantes, ni ton état émotionnel. <strong>Tu valides chaque setup manuellement</strong> en passant la checklist 8 points. Si un setup ne te "parle" pas visuellement sur le graphique, passe au suivant.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9 : ECHARTS SIGNAL QUALITY                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="signal-quality"><i class="fa-solid fa-chart-bar" style="color:#f59e0b;"></i> Qualité des signaux</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#f59e0b;"></i> Évaluer la Qualité d'un Setup</h2>
+
+  <p>Tous les signaux ne se valent pas. Un setup avec 4 confirmations sur 4 a un taux de réussite bien supérieur à un setup avec 1 seul signal. Voici comment évaluer la qualité :</p>
+
+  <!-- ECharts: Signal Quality Bar -->
+  <div id="chart-quality" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Score</th>
+        <th>Signaux</th>
+        <th>Action</th>
+        <th>Taille de position</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:#10b981; font-weight:700;">4/4 — Fort</td>
+        <td>Volume + RSI + MACD + Pattern</td>
+        <td>Entrée avec conviction, position complète</td>
+        <td>100% de la taille max</td>
+      </tr>
+      <tr>
+        <td style="color:#2563eb; font-weight:700;">3/4 — Bon</td>
+        <td>3 signaux sur 4 validés</td>
+        <td>Entrée échelonnée (50% puis 25+25)</td>
+        <td>50-75% de la taille max</td>
+      </tr>
+      <tr>
+        <td style="color:#f59e0b; font-weight:700;">2/4 — Faible</td>
+        <td>Seulement 2 signaux présents</td>
+        <td>Watchlist uniquement, attendre plus de confirmations</td>
+        <td>0% — ne pas entrer</td>
+      </tr>
+      <tr>
+        <td style="color:#dc2626; font-weight:700;">1/4 — Éviter</td>
+        <td>1 seul signal (souvent le prix seul)</td>
+        <td>Ignorer complètement</td>
+        <td>0% — c'est un piège</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 10 : GAUGE CONFIANCE                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="confiance"><i class="fa-solid fa-gauge-high" style="color:#6366f1;"></i> Score de Confiance</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#6366f1;"></i> Le Gauge de Confiance — Exemple Pratique</h2>
+
+  <p>Voici comment agréger tous les critères en un score de confiance unique. Cet exemple montre un trade sur AAPL avec un score de 78/100 — un <strong>bon setup</strong> (pas parfait, mais tradable) :</p>
+
+  <!-- ECharts: Gauge -->
+  <div id="chart-gauge" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="metric-grid">
+    <div class="metric-card" style="border-top:3px solid #10b981;">
+      <div class="metric-value" style="color:#10b981;">+15</div>
+      <div class="metric-label">MTF Aligné</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #10b981;">
+      <div class="metric-value" style="color:#10b981;">+15</div>
+      <div class="metric-label">Volume Spike</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #10b981;">
+      <div class="metric-value" style="color:#10b981;">+12</div>
+      <div class="metric-label">RSI Divergence</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #2563eb;">
+      <div class="metric-value" style="color:#2563eb;">+10</div>
+      <div class="metric-label">MACD Cross</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #2563eb;">
+      <div class="metric-value" style="color:#2563eb;">+10</div>
+      <div class="metric-label">Pattern (Hammer)</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #f59e0b;">
+      <div class="metric-value" style="color:#f59e0b;">+8</div>
+      <div class="metric-label">R/R = 1:2.5</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #f59e0b;">
+      <div class="metric-value" style="color:#f59e0b;">+8</div>
+      <div class="metric-label">Checklist 7/8</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #dc2626;">
+      <div class="metric-value" style="color:#dc2626;">0</div>
+      <div class="metric-label">Earnings dans 12j (OK)</div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Comment utiliser le score</h4>
+    <p style="margin:0;"><strong>80-100 :</strong> Setup premium, entrée avec conviction (position complète). <strong>60-79 :</strong> Bon setup, entrée échelonnée recommandée. <strong>40-59 :</strong> Setup moyen, watchlist seulement. <strong>&lt;40 :</strong> Pas de trade. Ce scoring est personnel — adapte les pondérations à ta stratégie avec le temps.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#f97316;"></i> Quiz — Vérifie tes acquis</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#f97316;"></i> Quiz Partie 4</h2>
+
+  <details>
+    <summary>Quel est le rôle de chaque timeframe dans l'analyse MTF ?</summary>
+    <div class="quiz-answer"><strong>Monthly = direction de fond, Weekly = identification du setup, Daily = timing de l'entrée.</strong> Tu ne trades jamais contre la tendance du timeframe supérieur. Si le monthly est baissier, ton long sur le daily a peu de chances de fonctionner. L'alignement des 3 timeframes est la condition #1 d'un bon trade.</div>
+  </details>
+
+  <details>
+    <summary>Qu'est-ce qu'une divergence haussière RSI ?</summary>
+    <div class="quiz-answer"><strong>Le prix fait un nouveau plus bas (lower low), mais le RSI fait un plus bas plus haut (higher low).</strong> Ça signifie que la pression vendeuse s'affaiblit même si le prix continue de baisser. C'est souvent le prélude à un retournement haussier. Attention : la divergence ne donne pas le timing exact, elle indique que le vent tourne.</div>
+  </details>
+
+  <details>
+    <summary>Pourquoi ne pas entrer quand un earnings est prévu dans les 5 prochains jours ?</summary>
+    <div class="quiz-answer"><strong>Parce qu'un earnings crée un gap imprévisible.</strong> Même la meilleure analyse technique ne peut pas prédire la réaction du marché aux résultats trimestriels. Le prix peut ouvrir +10% ou -15% le lendemain. Ton stop loss ne peut pas te protéger contre un gap. Attends que l'earnings soit passé et que le marché ait digéré l'info (24-48h).</div>
+  </details>
+
+  <details>
+    <summary>Quel type d'ordre est recommandé pour l'entrée en swing trading ?</summary>
+    <div class="quiz-answer"><strong>L'ordre Limit.</strong> Il te permet de contrôler précisément ton prix d'entrée, sans slippage. Tu places un limit sur ta zone d'entrée et tu attends que le prix vienne à toi. Si le prix ne touche jamais ton niveau, tant pis — tu passes au prochain setup. En swing, tu as le temps. L'ordre market est réservé aux situations exceptionnelles.</div>
+  </details>
+
+  <details>
+    <summary>Pourquoi l'entrée échelonnée 50/25/25 est-elle recommandée pour les débutants ?</summary>
+    <div class="quiz-answer"><strong>Elle réduit le risque initial et améliore le prix moyen.</strong> Tu ne risques que 50% de ta position au départ. Si le setup échoue immédiatement, ta perte est limitée. Si le prix pullback dans ta zone, tu ajoutes 25% à un meilleur prix. Et si le setup se confirme, tu complètes à 100%. C'est une marge d'erreur précieuse quand ton timing n'est pas encore au point.</div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 4</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Pose des alertes TradingView (prix, indicateur, dessin) pour ne jamais rater un niveau clé.</li>
+    <li><i class="fa-solid fa-check"></i> Multi-timeframe : Monthly = direction, Weekly = setup, Daily = timing. Ne trade jamais contre le timeframe supérieur.</li>
+    <li><i class="fa-solid fa-check"></i> 4 signaux de confirmation : volume spike, divergence RSI, croisement MACD, pattern de retournement.</li>
+    <li><i class="fa-solid fa-check"></i> 6 scénarios d'invalidation : earnings imminent, macro, volume faible, RSI surchauffé, spread large, corrélation.</li>
+    <li><i class="fa-solid fa-check"></i> Ordres : Limit pour entrer, Stop-Limit pour protéger, OCO pour les exits automatiques.</li>
+    <li><i class="fa-solid fa-check"></i> Entrée échelonnée 50/25/25 pour réduire le risque et améliorer le prix moyen.</li>
+    <li><i class="fa-solid fa-check"></i> Checklist 8 points obligatoire avant chaque trade — score minimum 6/8.</li>
+  </ul>
+</div>
+
+<a href="/series/swing-mode/part3-strategies/" class="prev-cta">
+  <i class="fa-solid fa-arrow-left"></i>
+  <div>
+    <div class="next-label">Partie 3 sur 6</div>
+    <div class="next-title">Les Stratégies — Pullback, Breakout & Recovery</div>
+  </div>
+</a>
+
+<a href="/series/swing-mode/part5-gestion/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 5 sur 6</div>
+    <div class="next-title">Gérer la Position — Stop, TP & Trailing <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Swing Mode — De Zéro à Rentable</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Série complète en 6 parties &mdash; Du setup au cash out</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#6366f1; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Retour à l'accueil</a>
+</div>
+
+</div><!-- /container -->
+
+<footer class="footer-bar">
+  <p>&copy; 2026 Market Watch &mdash; <a href="/">market-watch.xyz</a></p>
+  <p style="margin-top:0.5rem; font-size:0.7rem;">Ce contenu est éducatif et ne constitue pas un conseil en investissement. Le trading comporte des risques de perte en capital.</p>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// ============================================================
+// Chart 1: Multi-Timeframe Panel (3 mini charts)
+// ============================================================
+var chartMtf = echarts.init(document.getElementById('chart-mtf'));
+chartMtf.setOption({
+  title: { text: 'Alignement Multi-Timeframe — Monthly / Weekly / Daily', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  grid: [
+    { left: '8%', right: '68%', top: '18%', bottom: '15%' },
+    { left: '38%', right: '38%', top: '18%', bottom: '15%' },
+    { left: '68%', right: '8%', top: '18%', bottom: '15%' }
+  ],
+  xAxis: [
+    { gridIndex: 0, type: 'category', data: ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'], axisLabel: { fontSize: 9, interval: 2 }, name: 'Monthly', nameLocation: 'center', nameGap: 30, nameTextStyle: { fontSize: 11, fontWeight: 700, color: '#6366f1' } },
+    { gridIndex: 1, type: 'category', data: ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12'], axisLabel: { fontSize: 9, interval: 2 }, name: 'Weekly', nameLocation: 'center', nameGap: 30, nameTextStyle: { fontSize: 11, fontWeight: 700, color: '#2563eb' } },
+    { gridIndex: 2, type: 'category', data: ['L','M','Me','J','V','L','M','Me','J','V','L','M'], axisLabel: { fontSize: 9, interval: 1 }, name: 'Daily', nameLocation: 'center', nameGap: 30, nameTextStyle: { fontSize: 11, fontWeight: 700, color: '#10b981' } }
+  ],
+  yAxis: [
+    { gridIndex: 0, show: false },
+    { gridIndex: 1, show: false },
+    { gridIndex: 2, show: false }
+  ],
+  series: [
+    {
+      name: 'Monthly Trend',
+      type: 'line',
+      xAxisIndex: 0, yAxisIndex: 0,
+      data: [100,103,107,105,110,114,112,118,122,119,125,130],
+      smooth: true,
+      lineStyle: { color: '#6366f1', width: 3 },
+      areaStyle: { color: 'rgba(99,102,241,0.1)' },
+      itemStyle: { color: '#6366f1' },
+      symbol: 'none',
+      markLine: {
+        silent: true,
+        data: [{ type: 'average', name: 'EMA 12' }],
+        lineStyle: { color: '#818cf8', type: 'dashed', width: 1 },
+        label: { show: true, formatter: 'EMA 12', fontSize: 9 }
+      }
+    },
+    {
+      name: 'Weekly Setup',
+      type: 'line',
+      xAxisIndex: 1, yAxisIndex: 1,
+      data: [125,127,124,122,120,118,119,121,124,127,126,129],
+      smooth: true,
+      lineStyle: { color: '#2563eb', width: 3 },
+      areaStyle: { color: 'rgba(37,99,235,0.08)' },
+      itemStyle: { color: '#2563eb' },
+      symbol: 'none',
+      markPoint: {
+        data: [
+          { coord: [4, 120], value: 'Pullback', symbol: 'pin', symbolSize: 40, itemStyle: { color: '#f59e0b' }, label: { fontSize: 9, color: '#fff' } },
+          { coord: [9, 127], value: 'Setup', symbol: 'pin', symbolSize: 40, itemStyle: { color: '#10b981' }, label: { fontSize: 9, color: '#fff' } }
+        ]
+      }
+    },
+    {
+      name: 'Daily Entry',
+      type: 'line',
+      xAxisIndex: 2, yAxisIndex: 2,
+      data: [126,125.5,124.8,125.2,126.1,126.8,126.3,125.9,126.5,127.2,128.1,129],
+      smooth: true,
+      lineStyle: { color: '#10b981', width: 3 },
+      areaStyle: { color: 'rgba(16,185,129,0.08)' },
+      itemStyle: { color: '#10b981' },
+      symbol: 'none',
+      markPoint: {
+        data: [
+          { coord: [7, 125.9], value: 'Entry', symbol: 'pin', symbolSize: 45, itemStyle: { color: '#6366f1' }, label: { fontSize: 9, color: '#fff' } }
+        ]
+      }
+    }
+  ],
+  graphic: [
+    { type: 'text', left: '15%', top: '10%', style: { text: 'Haussier', fontSize: 11, fontWeight: 700, fill: '#10b981' } },
+    { type: 'text', left: '46%', top: '10%', style: { text: 'Pullback → Setup', fontSize: 11, fontWeight: 700, fill: '#2563eb' } },
+    { type: 'text', left: '76%', top: '10%', style: { text: 'Timing Entrée', fontSize: 11, fontWeight: 700, fill: '#10b981' } }
+  ]
+});
+
+// ============================================================
+// Chart 2: Candlestick with RSI Divergence
+// ============================================================
+var chartDiv = echarts.init(document.getElementById('chart-divergence'));
+
+var dates = ['1 Jan','3 Jan','5 Jan','8 Jan','10 Jan','12 Jan','15 Jan','17 Jan','19 Jan','22 Jan','24 Jan','26 Jan','29 Jan','31 Jan','2 Fév','5 Fév','7 Fév','9 Fév','12 Fév','14 Fév'];
+var closePrices = [185,183,180,178,175,173,170,168,165,163,160,158,155,153,150,148,147,149,152,156];
+var rsiValues =   [45, 42, 38, 35, 32, 29, 27, 25, 24, 26, 28, 30, 27, 29, 32, 35, 38, 42, 48, 55];
+
+chartDiv.setOption({
+  title: { text: 'Divergence Haussière — Prix vs RSI', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: [
+    { left: '10%', right: '10%', top: '15%', bottom: '42%' },
+    { left: '10%', right: '10%', top: '65%', bottom: '10%' }
+  ],
+  xAxis: [
+    { gridIndex: 0, type: 'category', data: dates, axisLabel: { fontSize: 9, interval: 3 }, show: false },
+    { gridIndex: 1, type: 'category', data: dates, axisLabel: { fontSize: 9, interval: 3 } }
+  ],
+  yAxis: [
+    { gridIndex: 0, type: 'value', name: 'Prix ($)', axisLabel: { fontSize: 10 }, nameTextStyle: { fontSize: 10 }, min: 140, max: 190 },
+    { gridIndex: 1, type: 'value', name: 'RSI 14', axisLabel: { fontSize: 10 }, nameTextStyle: { fontSize: 10 }, min: 15, max: 65 }
+  ],
+  series: [
+    {
+      name: 'Prix',
+      type: 'line',
+      xAxisIndex: 0, yAxisIndex: 0,
+      data: closePrices,
+      smooth: true,
+      lineStyle: { color: '#ef4444', width: 2.5 },
+      itemStyle: { color: '#ef4444' },
+      symbol: 'circle',
+      symbolSize: 4,
+      markLine: {
+        silent: true,
+        symbol: 'none',
+        data: [
+          [
+            { coord: [8, 165], lineStyle: { color: '#dc2626', type: 'dashed', width: 2 } },
+            { coord: [14, 150] }
+          ]
+        ],
+        label: { show: true, formatter: 'Lower Lows', position: 'end', fontSize: 10, color: '#dc2626', fontWeight: 700 }
+      }
+    },
+    {
+      name: 'RSI 14',
+      type: 'line',
+      xAxisIndex: 1, yAxisIndex: 1,
+      data: rsiValues,
+      smooth: true,
+      lineStyle: { color: '#6366f1', width: 2.5 },
+      itemStyle: { color: '#6366f1' },
+      symbol: 'circle',
+      symbolSize: 4,
+      markLine: {
+        silent: true,
+        symbol: 'none',
+        data: [
+          { yAxis: 30, lineStyle: { color: '#10b981', type: 'dashed', width: 1 }, label: { show: true, formatter: 'Oversold 30', fontSize: 9, color: '#10b981' } },
+          { yAxis: 70, lineStyle: { color: '#dc2626', type: 'dashed', width: 1 }, label: { show: false } },
+          [
+            { coord: [8, 24], lineStyle: { color: '#10b981', type: 'dashed', width: 2 } },
+            { coord: [14, 32] }
+          ]
+        ],
+        label: { show: true, formatter: 'Higher Lows', position: 'end', fontSize: 10, color: '#10b981', fontWeight: 700 }
+      },
+      markPoint: {
+        data: [
+          { coord: [16, 38], value: 'Divergence\nconfirmée', symbol: 'pin', symbolSize: 50, itemStyle: { color: '#6366f1' }, label: { fontSize: 8, color: '#fff' } }
+        ]
+      }
+    }
+  ],
+  graphic: [
+    {
+      type: 'text',
+      left: '12%', top: '45%',
+      style: {
+        text: '↑ DIVERGENCE HAUSSIÈRE ↑',
+        fontSize: 13, fontWeight: 900,
+        fill: '#6366f1'
+      }
+    }
+  ]
+});
+
+// ============================================================
+// Chart 3: Signal Quality Bar Chart
+// ============================================================
+var chartQuality = echarts.init(document.getElementById('chart-quality'));
+chartQuality.setOption({
+  title: { text: 'Qualité des Signaux — Win Rate par Nombre de Confirmations', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return p[0].name + '<br/>' + p[0].seriesName + ': ' + p[0].value + '%'; } },
+  grid: { left: '10%', right: '10%', bottom: '12%', top: '20%', containLabel: true },
+  xAxis: {
+    type: 'category',
+    data: ['1/4 Signaux\n(Éviter)', '2/4 Signaux\n(Faible)', '3/4 Signaux\n(Bon)', '4/4 Signaux\n(Fort)'],
+    axisLabel: { fontSize: 11, interval: 0, fontWeight: 600 }
+  },
+  yAxis: {
+    type: 'value',
+    max: 80,
+    axisLabel: { formatter: '{value}%', fontSize: 11 },
+    name: 'Win Rate Historique',
+    nameTextStyle: { fontSize: 11 }
+  },
+  series: [{
+    name: 'Win Rate',
+    type: 'bar',
+    barWidth: '50%',
+    data: [
+      { value: 25, itemStyle: { color: '#ef4444', borderRadius: [8,8,0,0] } },
+      { value: 38, itemStyle: { color: '#f59e0b', borderRadius: [8,8,0,0] } },
+      { value: 55, itemStyle: { color: '#2563eb', borderRadius: [8,8,0,0] } },
+      { value: 72, itemStyle: { color: '#10b981', borderRadius: [8,8,0,0] } }
+    ],
+    label: {
+      show: true,
+      position: 'top',
+      formatter: '{c}%',
+      fontWeight: 800,
+      fontSize: 14,
+      color: '#0f172a'
+    }
+  }]
+});
+
+// ============================================================
+// Chart 4: Gauge — Trade Confidence Score
+// ============================================================
+var chartGauge = echarts.init(document.getElementById('chart-gauge'));
+chartGauge.setOption({
+  title: { text: 'Score de Confiance — Exemple AAPL', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  series: [{
+    type: 'gauge',
+    center: ['50%', '60%'],
+    radius: '80%',
+    startAngle: 200,
+    endAngle: -20,
+    min: 0,
+    max: 100,
+    splitNumber: 10,
+    axisLine: {
+      lineStyle: {
+        width: 20,
+        color: [
+          [0.3, '#ef4444'],
+          [0.5, '#f59e0b'],
+          [0.7, '#2563eb'],
+          [1, '#10b981']
+        ]
+      }
+    },
+    pointer: {
+      icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+      length: '55%',
+      width: 12,
+      offsetCenter: [0, '-10%'],
+      itemStyle: { color: '#0f172a' }
+    },
+    axisTick: {
+      length: 8,
+      lineStyle: { color: 'auto', width: 2 }
+    },
+    splitLine: {
+      length: 15,
+      lineStyle: { color: 'auto', width: 3 }
+    },
+    axisLabel: {
+      color: '#64748b',
+      fontSize: 11,
+      distance: -50,
+      formatter: function(v) {
+        if (v === 0) return 'Éviter';
+        if (v === 30) return 'Faible';
+        if (v === 60) return 'Bon';
+        if (v === 80) return 'Fort';
+        if (v === 100) return 'Premium';
+        return '';
+      }
+    },
+    detail: {
+      valueAnimation: true,
+      formatter: '{value}/100',
+      color: '#0f172a',
+      fontSize: 28,
+      fontWeight: 900,
+      offsetCenter: [0, '30%']
+    },
+    title: {
+      offsetCenter: [0, '50%'],
+      fontSize: 13,
+      color: '#64748b',
+      fontWeight: 600
+    },
+    data: [{ value: 78, name: 'Confiance du Trade' }]
+  }]
+});
+
+// ============================================================
+// Responsive Resize
+// ============================================================
+window.addEventListener('resize', function() {
+  chartMtf.resize();
+  chartDiv.resize();
+  chartQuality.resize();
+  chartGauge.resize();
+});
+</script>
+
+</body>
+</html>

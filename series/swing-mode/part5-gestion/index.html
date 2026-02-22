@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Gérer la Position — Du Stop au Cash Out | Swing Mode — De Zéro à Rentable — Partie 5/6 | Market Watch</title>
+ <meta name="description" content="Série Swing Mode — Partie 5/6 : Stop loss, take profit partiel, position sizing, journal de trading, gestion du drawdown, scénarios P&L réalistes.">
+ <meta property="og:title" content="Gérer la Position — Du Stop au Cash Out | Swing Mode 5/6 | Market Watch">
+ <meta property="og:description" content="5 types de stop loss, take profit partiel, position sizing (règle du 1%), journal de trading, gestion du drawdown.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://market-watch.xyz/series/swing-mode/part5-gestion/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="../assets/report.css">
+
+<style>
+.brand-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:100; }
+.brand-logo { font-size:1.1rem; font-weight:800; color:#0f172a; text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; display:inline-flex; align-items:center; }
+.brand-logo:hover { color:#6366f1; }
+.series-nav { background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+.series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+.series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+.series-link:hover { border-color:#818cf8; color:#818cf8; }
+.series-link.current { background:#6366f1; color:white; border-color:#6366f1; }
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-indigo { background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+.hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+details { margin:0.75rem 0; }
+details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+details summary::-webkit-details-marker { display:none; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#6366f1; margin-right:0.75rem; }
+details[open] summary { border-color:#6366f1; background:#eef2ff; border-radius:12px 12px 0 0; }
+details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+.footer-bar { text-align:center; padding:2rem; background:#f8fafc; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:0.8rem; }
+.footer-bar a { color:#64748b; text-decoration:none; }
+.footer-bar a:hover { color:#6366f1; }
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#818cf8; }
+.takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #6366f1; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#4f46e5; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(99,102,241,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#6366f1; margin-top:0.2rem; flex-shrink:0; }
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(99,102,241,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+.prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:white; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+.prev-cta:hover { border-color:#6366f1; color:#6366f1; }
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #6366f1; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .brand-bar { padding:0.75rem 1rem; }
+  .series-nav { padding:0.75rem 1rem; gap:0.4rem; }
+  .brand-logo { font-size:0.9rem; }
+  .series-title { font-size:0.65rem; margin-right:0.5rem; }
+  .series-link { font-size:0.65rem; padding:0.3rem 0.6rem; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta, .prev-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .brand-logo { font-size:0.85rem; }
+  .series-title { display:none; }
+  .series-link { font-size:0.6rem; padding:0.25rem 0.5rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+  <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fa-solid fa-house"></i> Accueil</a>
+</nav>
+
+<div class="series-nav">
+  <span class="series-title"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Swing Mode — De Zéro à Rentable</span>
+  <a href="/series/swing-mode/part1-setup/" class="series-link">1 — Le Setup</a>
+  <a href="/series/swing-mode/part2-scanner/" class="series-link">2 — Le Scanner</a>
+  <a href="/series/swing-mode/part3-strategies/" class="series-link">3 — Les Stratégies</a>
+  <a href="/series/swing-mode/part4-alertes/" class="series-link">4 — Les Alertes</a>
+  <a href="/series/swing-mode/part5-gestion/" class="series-link current">5 — Gérer la Position</a>
+  <a href="/series/swing-mode/part6-routine/" class="series-link">6 — La Routine</a>
+</div>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Série Swing Mode — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Gérer la Position — Du Stop au Cash Out</h1>
+  <p class="hero-subtitle">Tu as trouvé le setup, tu as entré le trade. Maintenant, le vrai travail commence : protéger ton capital, sécuriser tes gains et survivre aux mauvaises passes. Ici, on parle money management — la compétence qui sépare les 10% rentables des 90% qui crament leur compte.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-shield-halved"></i> Stop Loss</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-bullseye"></i> Take Profit</span>
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-calculator"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-book"></i> Journal</span>
+  </div>
+</section>
+
+<div class="container">
+
+<div class="nav-grid" style="margin-top:-3rem;">
+  <a href="#stops" class="nav-item"><i class="fa-solid fa-shield-halved" style="color:#ef4444; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> 5 Stops</a>
+  <a href="#takeprofit" class="nav-item"><i class="fa-solid fa-bullseye" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Take Profit</a>
+  <a href="#sizing" class="nav-item"><i class="fa-solid fa-calculator" style="color:#6366f1; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Sizing</a>
+  <a href="#monitoring" class="nav-item"><i class="fa-solid fa-eye" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Monitoring</a>
+  <a href="#journal" class="nav-item"><i class="fa-solid fa-book" style="color:#9333ea; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Journal</a>
+  <a href="#scenarios" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#f59e0b; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Scénarios P&L</a>
+  <a href="#drawdown" class="nav-item"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Drawdown</a>
+  <a href="#quiz" class="nav-item"><i class="fa-solid fa-circle-question" style="color:#f97316; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Quiz</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : 5 TYPES DE STOP LOSS                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stops"><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Les 5 types de stop loss</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> 5 Types de Stop Loss</h2>
+
+  <p>Le stop loss, c'est ta <strong>ceinture de sécurité</strong>. Tu ne conduis pas sans ceinture, tu ne trades pas sans stop. Mais tous les stops ne se valent pas. Voici les 5 types que tu dois connaître :</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"><i class="fa-solid fa-percent" style="font-size:0.9rem;"></i></div>
+      <h4>Stop Fixe</h4>
+      <p>Pourcentage fixe sous ton entrée. Simple, prévisible, idéal pour débuter. Typiquement <strong>-2% à -3%</strong>.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"><i class="fa-solid fa-wave-square" style="font-size:0.9rem;"></i></div>
+      <h4>Stop ATR</h4>
+      <p>S'adapte à la volatilité du titre. Plus le titre bouge, plus le stop est large. <strong>Le plus intelligent.</strong></p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);"><i class="fa-solid fa-arrow-up-right-dots" style="font-size:0.9rem;"></i></div>
+      <h4>Trailing Stop</h4>
+      <p>Suit le prix à la hausse, protège tes gains. Ne recule jamais. <strong>Idéal après TP1.</strong></p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);"><i class="fa-solid fa-clock" style="font-size:0.9rem;"></i></div>
+      <h4>Stop Temps</h4>
+      <p>Sortie si rien ne se passe après X jours. Libère ton capital pour de meilleures opportunités. <strong>5-10 jours typique.</strong></p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);"><i class="fa-solid fa-ban" style="font-size:0.9rem;"></i></div>
+      <h4>Stop Invalidation</h4>
+      <p>Cassure d'un niveau technique clé : support, EMA 50/200, trendline. <strong>La thèse est morte.</strong></p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Stop ATR — Formule</div>
+    Stop = <span class="formula-highlight">Entrée</span> − 2 × <span class="formula-highlight">ATR(14)</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Quel stop choisir ?</h4>
+    <p style="margin:0;">En pratique, tu combines souvent 2-3 types. Par exemple : <strong>Stop ATR</strong> comme stop initial (adaptatif), puis <strong>Trailing Stop</strong> une fois que le trade est en profit. Et tu ajoutes toujours un <strong>Stop Temps</strong> mental : si rien ne bouge en 7-10 jours, tu sors et tu passes à autre chose.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Quand l'utiliser</th>
+        <th>Avantage</th>
+        <th>Piège</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Fixe (-2%/-3%)</strong></td>
+        <td>Débutant, capital limité</td>
+        <td>Simple, prévisible</td>
+        <td>Ignore la volatilité du titre</td>
+      </tr>
+      <tr>
+        <td><strong>ATR × 2</strong></td>
+        <td>Toujours (standard pro)</td>
+        <td>Adapté au titre</td>
+        <td>Peut être large sur titres volatils</td>
+      </tr>
+      <tr>
+        <td><strong>Trailing</strong></td>
+        <td>Après TP1, en tendance</td>
+        <td>Protège les gains</td>
+        <td>Coupé trop tôt en range</td>
+      </tr>
+      <tr>
+        <td><strong>Temps (5-10j)</strong></td>
+        <td>Trade qui stagne</td>
+        <td>Libère le capital</td>
+        <td>Peut sortir avant le mouvement</td>
+      </tr>
+      <tr>
+        <td><strong>Invalidation</strong></td>
+        <td>Setup technique clair</td>
+        <td>Logique de marché</td>
+        <td>Stop parfois loin de l'entrée</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ECharts: Candlestick with 5 stop types -->
+  <div id="chart-stops" style="width:100%; height:450px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : TAKE PROFIT PARTIEL                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeprofit"><i class="fa-solid fa-bullseye" style="color:#10b981;"></i> Take profit partiel</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bullseye" style="color:#10b981;"></i> Take Profit Partiel — 50% à TP1 + Trailing</h2>
+
+  <p>La plus grosse erreur du débutant : <strong>soit il prend ses profits trop tôt</strong> (peur de perdre les gains), <strong>soit il laisse tout courir</strong> (et le trade revient à zéro). La solution ? Le <strong>take profit partiel</strong>.</p>
+
+  <div class="metric-grid">
+    <div class="metric-card" style="border-top:3px solid #10b981;">
+      <div class="metric-value" style="color:#10b981; font-size:1.4rem;">TP1</div>
+      <div class="metric-label">50% de la position</div>
+      <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Dernier sommet ou résistance technique</div>
+    </div>
+    <div class="metric-card" style="border-top:3px solid #6366f1;">
+      <div class="metric-value" style="color:#6366f1; font-size:1.4rem;">TP2</div>
+      <div class="metric-label">50% restant en trailing</div>
+      <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Trailing stop ATR ou % fixe</div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Take Profit — Formule</div>
+    TP1 = <span class="formula-highlight">Entrée</span> + 2 × (<span class="formula-highlight">Entrée</span> − Stop) &nbsp;|&nbsp; TP2 = <span class="formula-highlight">Trailing ATR</span>
+  </div>
+
+  <p><strong>Pourquoi cette approche ?</strong> Tu sécurises 50% de tes gains à TP1 (ton R/R de 1:2 est garanti). Les 50% restants courent avec un trailing stop — si le trade continue de monter, tu captures le mouvement bonus. Si ça retourne, tu as déjà verrouillé du profit.</p>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Le calcul de TP1 en pratique</h4>
+    <p style="margin:0;">Tu achètes MSFT à <strong>$420</strong>, ton stop est à <strong>$410</strong> (risque = $10). TP1 = $420 + 2 × $10 = <strong>$440</strong>. À $440, tu vends 50% de ta position. Le reste court avec un trailing stop à 1.5 × ATR sous le plus haut.</p>
+  </div>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>TP1 = dernier sommet</strong> — Utilise la résistance technique la plus proche comme premier objectif.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>R/R minimum 1:2</strong> — Si TP1 ne donne pas au moins 1:2, le trade ne vaut pas la peine.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Trailing après TP1</strong> — Passe au trailing stop (ATR ou % fixe) pour le solde.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Stop à breakeven</strong> — Après TP1, remonte ton stop au prix d'entrée sur le solde. Trade gratuit.</li>
+  </ul>
+
+  <!-- ECharts: Candlestick with TP1 / TP2 / trailing -->
+  <div id="chart-tp" style="width:100%; height:450px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : POSITION SIZING                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-calculator" style="color:#6366f1;"></i> Position sizing</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#6366f1;"></i> Position Sizing — La Règle du 1-2%</h2>
+
+  <p>Le position sizing, c'est <strong>la compétence #1</strong> du trader rentable. Ce n'est pas sexy, ce n'est pas glamour, mais c'est ce qui te garde en vie. La règle : <strong>ne jamais risquer plus de 1-2% de ton capital par trade</strong>.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Taille de position — Formule</div>
+    Taille = (<span class="formula-highlight">Capital</span> × 1%) / (<span class="formula-highlight">Entrée</span> − Stop)
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Exemple concret</h4>
+    <p style="margin:0 0 0.75rem 0;">Capital = <strong>$10,000</strong> | Risque max = 1% = <strong>$100</strong></p>
+    <p style="margin:0 0 0.75rem 0;">Tu veux acheter une action à <strong>$50</strong>, stop à <strong>$47</strong> (risque par action = $3)</p>
+    <p style="margin:0;"><strong>Taille = $100 / $3 = 33 actions</strong> soit $1,650 investis (16.5% du capital)</p>
+  </div>
+
+  <p>Remarque que le <strong>pourcentage du capital investi</strong> (16.5%) n'est PAS la même chose que le <strong>risque</strong> (1%). Tu investis $1,650 mais tu ne risques que $100 grâce au stop loss. C'est toute la magie du sizing.</p>
+
+  <h3><i class="fa-solid fa-flask" style="color:#9333ea;"></i> Kelly Criterion — Version Simplifiée</h3>
+
+  <p>Le critère de Kelly est une formule mathématique qui te donne la fraction optimale de ton capital à risquer par trade :</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Kelly Simplifié</div>
+    f* = (<span class="formula-highlight">p</span> × b − <span class="formula-highlight">q</span>) / b
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Décryptage Kelly</h4>
+    <p style="margin:0 0 0.5rem 0;"><strong>p</strong> = probabilité de gain (ton win rate, ex: 0.50)</p>
+    <p style="margin:0 0 0.5rem 0;"><strong>q</strong> = probabilité de perte (1 - p = 0.50)</p>
+    <p style="margin:0 0 0.5rem 0;"><strong>b</strong> = ratio gain/perte moyen (ton R/R, ex: 2.0)</p>
+    <p style="margin:0 0 0.75rem 0;"><strong>f*</strong> = (0.50 × 2 − 0.50) / 2 = <strong>0.25 = 25%</strong></p>
+    <p style="margin:0;">Kelly dit de risquer 25% du capital ? C'est trop agressif. En pratique, on utilise le <strong>Half Kelly</strong> (÷ 2 = 12.5%) voire le <strong>Quarter Kelly</strong> (÷ 4 = 6.25%). La règle du 1-2% est un approximation conservatrice et sûre du Kelly.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-shield-halved"></i> Pourquoi ne jamais dépasser 2% par trade</h4>
+    <p style="margin:0;">Avec un risque de 2% par trade, il te faut <strong>35 pertes consécutives</strong> pour perdre 50% de ton capital (quasiment impossible avec une stratégie correcte). Avec 5% par trade, il n'en faut que 13. Avec 10%, seulement 7. Le sizing conservateur est une <strong>assurance survie</strong>. Les traders qui crament leur compte risquent 5-10% par trade — mathématiquement, c'est un suicide.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Risque/trade</th>
+        <th>Pertes avant -50%</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1%</td><td>69 pertes consécutives</td><td style="color:#10b981; font-weight:700;"><i class="fa-solid fa-shield-halved"></i> Ultra sûr</td></tr>
+      <tr><td>2%</td><td>35 pertes consécutives</td><td style="color:#10b981; font-weight:700;"><i class="fa-solid fa-check"></i> Recommandé</td></tr>
+      <tr><td>5%</td><td>13 pertes consécutives</td><td style="color:#f59e0b; font-weight:700;"><i class="fa-solid fa-exclamation-triangle"></i> Risqué</td></tr>
+      <tr><td>10%</td><td>7 pertes consécutives</td><td style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-skull"></i> Suicide</td></tr>
+      <tr><td>20%</td><td>3 pertes consécutives</td><td style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-skull-crossbones"></i> Compte cramé</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : 4 POSITIONS DÉCORRÉLÉES — MONITORING               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="monitoring"><i class="fa-solid fa-eye" style="color:#2563eb;"></i> Monitoring des positions</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-eye" style="color:#2563eb;"></i> 4 Positions Décorrélées — Monitoring</h2>
+
+  <p>Tu as vu dans la Partie 1 qu'on limite à <strong>max 4 positions décorrélées</strong>. Maintenant, on va voir comment les <strong>surveiller</strong> et <strong>quand réduire</strong>.</p>
+
+  <!-- ECharts: Pie chart portfolio allocation -->
+  <div id="chart-portfolio" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3><i class="fa-solid fa-table-cells" style="color:#6366f1;"></i> Matrice de Corrélation</h3>
+
+  <p>Avant d'ouvrir une nouvelle position, vérifie la corrélation avec tes positions existantes. L'objectif : <strong>r &lt; 0.5</strong> entre chaque paire.</p>
+
+  <!-- ECharts: Correlation heatmap placeholder -->
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:2rem; margin:1.5rem 0;">
+    <table class="compare-table" style="margin:0;">
+      <thead>
+        <tr>
+          <th></th>
+          <th>MSFT</th>
+          <th>TotalEnergies</th>
+          <th>JNJ</th>
+          <th>SAP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="font-weight:700; background:#1e293b; color:white;">MSFT</td><td style="background:#6366f1; color:white; font-weight:700;">1.00</td><td style="background:#f0fdf4;">0.15</td><td style="background:#f0fdf4;">0.22</td><td style="background:#fef3c7;">0.48</td></tr>
+        <tr><td style="font-weight:700; background:#1e293b; color:white;">TotalEnergies</td><td style="background:#f0fdf4;">0.15</td><td style="background:#6366f1; color:white; font-weight:700;">1.00</td><td style="background:#f0fdf4;">0.18</td><td style="background:#f0fdf4;">0.12</td></tr>
+        <tr><td style="font-weight:700; background:#1e293b; color:white;">JNJ</td><td style="background:#f0fdf4;">0.22</td><td style="background:#f0fdf4;">0.18</td><td style="background:#6366f1; color:white; font-weight:700;">1.00</td><td style="background:#f0fdf4;">0.20</td></tr>
+        <tr><td style="font-weight:700; background:#1e293b; color:white;">SAP</td><td style="background:#fef3c7;">0.48</td><td style="background:#f0fdf4;">0.12</td><td style="background:#f0fdf4;">0.20</td><td style="background:#6366f1; color:white; font-weight:700;">1.00</td></tr>
+      </tbody>
+    </table>
+    <p style="text-align:center; font-size:0.8rem; color:#94a3b8; margin:0.75rem 0 0;"><i class="fa-solid fa-circle-info"></i> Vert = faible corrélation (&lt; 0.3) | Jaune = attention (0.3-0.5) | Rouge = trop corrélé (&gt; 0.5)</p>
+  </div>
+
+  <h3><i class="fa-solid fa-list-check" style="color:#10b981;"></i> Règles de Monitoring</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Jamais 2 positions même secteur</strong> — MSFT + AAPL = 1 seul trade tech US.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Mixe US / EU</strong> — Au moins 1 position européenne pour la diversification géographique.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Mixe beta</strong> — Combine défensif (beta &lt; 1, type JNJ) et offensif (beta &gt; 1, type MSFT).</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#10b981;"></i> <strong>Check hebdomadaire</strong> — Chaque dimanche, revois tes 4 positions : stop OK ? thèse intacte ?</li>
+  </ul>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> Quand réduire à 2-3 positions</h4>
+    <p style="margin:0;">En période de <strong>drawdown</strong> (-10% sur le compte) ou de marché <strong>Risk-Off</strong> (VIX &gt; 25, indices sous EMA 50), réduis à 2-3 positions max. Moins de positions = moins de risque global. Tu remonteras à 4 quand les conditions s'améliorent. C'est de la <strong>gestion défensive</strong>, pas de la lâcheté — c'est ce que font les pros.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : JOURNAL DE TRADING                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="journal"><i class="fa-solid fa-book" style="color:#9333ea;"></i> Journal de trading</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-book" style="color:#9333ea;"></i> Le Journal de Trading</h2>
+
+  <p>Le journal de trading, c'est ton <strong>meilleur professeur</strong>. Pas de journal = pas de progression. Chaque trade, gagnant ou perdant, doit être documenté. Voici le template :</p>
+
+  <div style="overflow-x:auto;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Ticker</th>
+          <th>Stratégie</th>
+          <th>Entry</th>
+          <th>Stop</th>
+          <th>TP1</th>
+          <th>Taille</th>
+          <th>Résultat</th>
+          <th>R/R</th>
+          <th>Notes</th>
+          <th>Erreur</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>10/02</td>
+          <td><strong>MSFT</strong></td>
+          <td>Pullback EMA 21</td>
+          <td>$418</td>
+          <td>$410</td>
+          <td>$434</td>
+          <td>12 actions</td>
+          <td style="color:#10b981; font-weight:700;">+$192</td>
+          <td style="color:#10b981;">1:2.0</td>
+          <td>TP1 touché jour 5</td>
+          <td style="color:#94a3b8;">Aucune</td>
+        </tr>
+        <tr>
+          <td>12/02</td>
+          <td><strong>TTE.PA</strong></td>
+          <td>Breakout résistance</td>
+          <td>54.20</td>
+          <td>52.50</td>
+          <td>57.60</td>
+          <td>58 actions</td>
+          <td style="color:#ef4444; font-weight:700;">-$98</td>
+          <td style="color:#ef4444;">-1R</td>
+          <td>Stop touché jour 3</td>
+          <td style="color:#f59e0b;">Entré trop tôt</td>
+        </tr>
+        <tr>
+          <td>14/02</td>
+          <td><strong>JNJ</strong></td>
+          <td>Rebond support</td>
+          <td>$155</td>
+          <td>$151</td>
+          <td>$163</td>
+          <td>25 actions</td>
+          <td style="color:#10b981; font-weight:700;">+$200</td>
+          <td style="color:#10b981;">1:2.0</td>
+          <td>TP1 + trailing TP2</td>
+          <td style="color:#94a3b8;">Aucune</td>
+        </tr>
+        <tr>
+          <td>17/02</td>
+          <td><strong>SAP</strong></td>
+          <td>Momentum EMA 50</td>
+          <td>$242</td>
+          <td>$235</td>
+          <td>$256</td>
+          <td>14 actions</td>
+          <td style="color:#ef4444; font-weight:700;">-$98</td>
+          <td style="color:#ef4444;">-1R</td>
+          <td>Stop temps jour 8</td>
+          <td style="color:#f59e0b;">Volume faible</td>
+        </tr>
+        <tr>
+          <td>19/02</td>
+          <td><strong>ASML</strong></td>
+          <td>Pullback EMA 21</td>
+          <td>$715</td>
+          <td>$698</td>
+          <td>$749</td>
+          <td>5 actions</td>
+          <td style="color:#10b981; font-weight:700;">+$170</td>
+          <td style="color:#10b981;">1:2.0</td>
+          <td>Exécution parfaite</td>
+          <td style="color:#94a3b8;">Aucune</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> L'importance du journal</h4>
+    <p style="margin:0 0 0.75rem 0;">Le journal te permet de :</p>
+    <ul style="margin:0; padding-left:1.25rem;">
+      <li><strong>Identifier tes erreurs récurrentes</strong> — "Je rentre toujours trop tôt", "Je coupe mes winners trop vite"</li>
+      <li><strong>Calculer tes vraies stats</strong> — Win rate réel, R/R moyen, meilleur setup, pire jour</li>
+      <li><strong>Améliorer ta stratégie</strong> — Les données ne mentent pas. Si le pullback EMA 21 a 65% de win rate et le breakout 35%, tu sais quoi faire.</li>
+      <li><strong>Review hebdomadaire</strong> — Chaque dimanche, relis tes trades de la semaine. 15 minutes qui valent de l'or.</li>
+    </ul>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> La colonne "Erreur" est obligatoire</h4>
+    <p style="margin:0;">Même sur un trade gagnant, note si tu as fait une erreur (entrée imprécise, sizing trop gros, stop bougé). Un trade gagnant avec une erreur est <strong>pire</strong> qu'un trade perdant bien exécuté — parce que l'erreur va se répéter.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : SCÉNARIOS P&L                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scenarios"><i class="fa-solid fa-chart-line" style="color:#f59e0b;"></i> Scénarios P&L</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#f59e0b;"></i> Scénarios P&L — Compte $10K, 4 Positions</h2>
+
+  <p>Voyons ce que donnent des <strong>scénarios réalistes</strong> sur un compte de $10,000 avec un risque de 1% par trade ($100) et un R/R moyen de 1:2 :</p>
+
+  <div class="step-grid" style="grid-template-columns:repeat(3, 1fr);">
+    <div class="step-card" style="border-top-color:#10b981;">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <i class="fa-solid fa-face-smile" style="font-size:0.9rem;"></i>
+      </div>
+      <h4>Bon mois</h4>
+      <p>3 Wins / 1 Loss</p>
+      <div style="font-size:1.5rem; font-weight:900; color:#10b981; margin-top:0.5rem;">+$400</div>
+      <div style="font-size:0.8rem; color:#64748b;">3 × $200 − 1 × $100 − $100 frais</div>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+        <i class="fa-solid fa-face-meh" style="font-size:0.9rem;"></i>
+      </div>
+      <h4>Mois plat</h4>
+      <p>2 Wins / 2 Losses</p>
+      <div style="font-size:1.5rem; font-weight:900; color:#f59e0b; margin-top:0.5rem;">+$100</div>
+      <div style="font-size:0.8rem; color:#64748b;">2 × $200 − 2 × $100 − $100 frais</div>
+    </div>
+    <div class="step-card" style="border-top-color:#ef4444;">
+      <div class="step-number" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+        <i class="fa-solid fa-face-frown" style="font-size:0.9rem;"></i>
+      </div>
+      <h4>Mauvais mois</h4>
+      <p>1 Win / 3 Losses</p>
+      <div style="font-size:1.5rem; font-weight:900; color:#ef4444; margin-top:0.5rem;">-$200</div>
+      <div style="font-size:0.8rem; color:#64748b;">1 × $200 − 3 × $100 − $100 frais</div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#2563eb;"><i class="fa-solid fa-lightbulb"></i> La magie du R/R positif</h4>
+    <p style="margin:0;">Même avec seulement <strong>2 trades gagnants sur 4</strong> (50% win rate), tu es en profit de $100 grâce au R/R de 1:2. C'est pour ça que le money management est plus important que le win rate. Un trader avec 40% de win rate et un R/R de 1:3 gagne plus qu'un trader avec 60% de win rate et un R/R de 1:1.</p>
+  </div>
+
+  <h3><i class="fa-solid fa-chart-area" style="color:#6366f1;"></i> Courbe de Capital — 12 Mois</h3>
+  <p>Voici une simulation réaliste de l'évolution d'un compte $10K sur 12 mois, avec des mois bons et des mois difficiles :</p>
+
+  <!-- ECharts: Equity curve 12 months -->
+  <div id="chart-equity" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <h3><i class="fa-solid fa-chart-bar" style="color:#f59e0b;"></i> P&L Mensuel</h3>
+
+  <!-- ECharts: Monthly P&L bar chart -->
+  <div id="chart-monthly-pnl" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : GESTION DU DRAWDOWN                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="drawdown"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Gestion du drawdown</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Gestion du Drawdown</h2>
+
+  <p>Le drawdown, c'est la <strong>baisse maximale</strong> de ton capital depuis son plus haut. C'est inévitable — même les meilleurs traders ont des périodes de perte. La question n'est pas <strong>si</strong> tu vas subir un drawdown, mais <strong>comment tu vas réagir</strong>.</p>
+
+  <div class="alert-box" style="background:#fef2f2; border-color:#ef4444;">
+    <h4 style="color:#dc2626;"><i class="fa-solid fa-traffic-light"></i> Protocole Drawdown — Les 3 paliers</h4>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;">
+      <div style="background:white; border-radius:12px; padding:1rem; border-left:4px solid #f59e0b;">
+        <div style="font-size:1.5rem; font-weight:900; color:#f59e0b;">-10%</div>
+        <div style="font-size:0.85rem; font-weight:700; color:#0f172a;">Pause 1 semaine</div>
+        <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Review ton journal, identifie l'erreur systémique. Pas de nouveaux trades.</div>
+      </div>
+      <div style="background:white; border-radius:12px; padding:1rem; border-left:4px solid #ef4444;">
+        <div style="font-size:1.5rem; font-weight:900; color:#ef4444;">-15%</div>
+        <div style="font-size:0.85rem; font-weight:700; color:#0f172a;">Réduire à 2 positions</div>
+        <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Taille de position ÷ 2. Pas de trades agressifs. Mode survie.</div>
+      </div>
+      <div style="background:white; border-radius:12px; padding:1rem; border-left:4px solid #7f1d1d;">
+        <div style="font-size:1.5rem; font-weight:900; color:#7f1d1d;">-20%</div>
+        <div style="font-size:0.85rem; font-weight:700; color:#0f172a;">Stop trading 1 mois</div>
+        <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Ferme tout. Paper trading uniquement. Analyse complète de tes 3 derniers mois.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Le piège du drawdown</div>
+    Pour récupérer <span class="formula-highlight">-50%</span>, il faut faire <span class="formula-highlight">+100%</span>
+  </div>
+
+  <p>C'est la mathématique cruelle du drawdown : les pertes sont <strong>asymétriques</strong>. Plus tu perds, plus il est difficile de revenir. C'est pour ça qu'on coupe court.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Perte</th>
+        <th>Gain nécessaire pour revenir</th>
+        <th>Difficulté</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>-5%</td><td>+5.3%</td><td style="color:#10b981; font-weight:700;">Facile</td></tr>
+      <tr><td>-10%</td><td>+11.1%</td><td style="color:#10b981; font-weight:700;">Gérable</td></tr>
+      <tr><td>-20%</td><td>+25%</td><td style="color:#f59e0b; font-weight:700;">Difficile</td></tr>
+      <tr><td>-30%</td><td>+42.9%</td><td style="color:#f59e0b; font-weight:700;">Très difficile</td></tr>
+      <tr><td>-50%</td><td>+100%</td><td style="color:#ef4444; font-weight:700;">Quasi impossible</td></tr>
+      <tr><td>-75%</td><td>+300%</td><td style="color:#ef4444; font-weight:700;">Game over</td></tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-brain" style="color:#9333ea;"></i> Règles de Cool-Off</h3>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-ban" style="color:#ef4444;"></i> <strong>Pas de revenge trading</strong> — Après une perte, attends 24h minimum avant le prochain trade. Le revenge trading est le tueur #1 de comptes.</li>
+    <li><i class="fa-solid fa-bed" style="color:#2563eb;"></i> <strong>Dors dessus</strong> — Si tu as envie d'ouvrir un trade après 22h, ferme l'ordi. Le trade sera encore là demain.</li>
+    <li><i class="fa-solid fa-dumbbell" style="color:#10b981;"></i> <strong>Activité physique</strong> — Après un mauvais trade, va marcher, courir, faire du sport. Le cortisol doit redescendre.</li>
+    <li><i class="fa-solid fa-chart-simple" style="color:#f59e0b;"></i> <strong>Réduire la taille</strong> — En période de doute, réduis tes positions de moitié. Reconstruis la confiance petit à petit.</li>
+    <li><i class="fa-solid fa-people-arrows" style="color:#9333ea;"></i> <strong>Parle à quelqu'un</strong> — Un mentor, un ami trader, une communauté. Le trading en isolation pendant un drawdown, c'est dangereux.</li>
+  </ul>
+
+  <h3><i class="fa-solid fa-table-cells" style="color:#6366f1;"></i> Espérance de Gain — Win Rate × R/R</h3>
+
+  <p>Ce heatmap montre ton <strong>espérance de gain par trade ($)</strong> en fonction de ton win rate et de ton R/R, sur un risque de $100 par trade :</p>
+
+  <!-- ECharts: Heatmap Win Rate x R/R -->
+  <div id="chart-heatmap" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="didactic-box">
+    <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Lire le heatmap</h4>
+    <p style="margin:0;">La zone <strong>verte</strong> (espérance positive) est ta cible. Remarque qu'avec un R/R de 1:2, tu es rentable dès 40% de win rate. Avec un R/R de 1:1, tu as besoin de 55%+ pour être rentable (après frais). C'est pourquoi on insiste sur un R/R minimum de 1:2.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#f97316;"></i> Quiz — Vérifie tes acquis</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#f97316;"></i> Quiz Partie 5</h2>
+
+  <details>
+    <summary>Capital $10K, entry $80, stop $76. Combien d'actions maximum (risque 1%) ?</summary>
+    <div class="quiz-answer"><strong>25 actions.</strong> Risque max = $10,000 × 1% = $100. Risque par action = $80 - $76 = $4. Taille = $100 / $4 = 25 actions, soit $2,000 investis. Tu investis 20% de ton capital mais tu ne risques que 1%. C'est toute la puissance du position sizing.</div>
+  </details>
+
+  <details>
+    <summary>Pourquoi vendre 50% à TP1 plutôt que tout garder ?</summary>
+    <div class="quiz-answer"><strong>Pour sécuriser une partie des gains tout en laissant courir le reste.</strong> En vendant 50% à TP1 (R/R 1:2), tu verrouilles un profit concret. Le reste court avec un trailing stop — si ça continue de monter, tu captures le bonus. Si ça retourne, tu as déjà encaissé. C'est le meilleur compromis entre sécurité et potentiel.</div>
+  </details>
+
+  <details>
+    <summary>Quel est le stop le plus adaptatif à la volatilité d'un titre ?</summary>
+    <div class="quiz-answer"><strong>Le stop ATR (Average True Range).</strong> Formule : Stop = Entrée - 2 × ATR(14). L'ATR mesure la volatilité moyenne du titre sur 14 jours. Un titre volatil aura un stop plus large (pour ne pas se faire sortir par le bruit), un titre calme aura un stop plus serré. C'est le standard professionnel.</div>
+  </details>
+
+  <details>
+    <summary>Ton compte est à -12%. Que fais-tu ?</summary>
+    <div class="quiz-answer"><strong>Pause d'une semaine + review du journal.</strong> Le protocole drawdown : -10% = pause 1 semaine (pas de nouveaux trades, review complète du journal pour identifier l'erreur systémique). Tu n'es pas encore à -15% (réduction à 2 positions), mais tu es dans la zone d'alerte. Le pire serait de forcer des trades pour "se refaire" — c'est le revenge trading, le tueur #1 de comptes.</div>
+  </details>
+
+  <details>
+    <summary>Pour récupérer une perte de -30%, quel gain est nécessaire ?</summary>
+    <div class="quiz-answer"><strong>+42.9%.</strong> Si ton compte passe de $10,000 à $7,000 (-30%), il te faut +$3,000 pour revenir à $10,000. Soit $3,000 / $7,000 = +42.9%. C'est l'asymétrie des pertes : plus tu perds, exponentiellement plus il est dur de revenir. C'est pour ça qu'on coupe à -10% maximum et qu'on ne risque jamais plus de 1-2% par trade.</div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 5</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> 5 types de stop : fixe, ATR (le standard), trailing, temps, invalidation. Combine-les.</li>
+    <li><i class="fa-solid fa-check"></i> Take profit partiel : 50% à TP1 (R/R 1:2), trailing sur le reste. Stop à breakeven après TP1.</li>
+    <li><i class="fa-solid fa-check"></i> Position sizing : risque 1-2% max par trade. Taille = (Capital × 1%) / (Entrée - Stop).</li>
+    <li><i class="fa-solid fa-check"></i> 4 positions max, décorrélées (secteur × géo × beta). Réduis en drawdown.</li>
+    <li><i class="fa-solid fa-check"></i> Journal obligatoire : date, ticker, setup, entry, stop, TP, taille, résultat, erreur. Review hebdo.</li>
+    <li><i class="fa-solid fa-check"></i> Drawdown : -10% = pause, -15% = mode survie, -20% = stop total. Pas de revenge trading.</li>
+  </ul>
+</div>
+
+<a href="/series/swing-mode/part6-routine/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 6 sur 6 — Conclusion</div>
+    <div class="next-title">La Routine — 15 Minutes par Jour <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<a href="/series/swing-mode/part4-alertes/" class="prev-cta">
+  <div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.6;">Partie précédente</div>
+    <div style="font-size:1rem; font-weight:700;"><i class="fa-solid fa-arrow-left"></i> Les Alertes — Quand Entrer</div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Swing Mode — De Zéro à Rentable</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Série complète en 6 parties &mdash; Du setup au cash out</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#6366f1; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Retour à l'accueil</a>
+</div>
+
+</div><!-- /container -->
+
+<footer class="footer-bar">
+  <p>&copy; 2026 Market Watch &mdash; <a href="/">market-watch.xyz</a></p>
+  <p style="margin-top:0.5rem; font-size:0.7rem;">Ce contenu est éducatif et ne constitue pas un conseil en investissement. Le trading comporte des risques de perte en capital.</p>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// ---------------------------------------------------------------
+// Chart 1: Candlestick with 5 Stop Types
+// ---------------------------------------------------------------
+var chartStops = echarts.init(document.getElementById('chart-stops'));
+(function() {
+  // Simulated OHLC data for a swing trade
+  var dates = ['J1','J2','J3','J4','J5','J6','J7','J8','J9','J10','J11','J12','J13','J14','J15'];
+  // [open, close, low, high]
+  var ohlc = [
+    [48.0, 49.2, 47.5, 49.5],
+    [49.2, 50.1, 48.8, 50.5],
+    [50.0, 50.8, 49.5, 51.2],  // Entry day
+    [50.8, 51.5, 50.2, 51.8],
+    [51.5, 51.0, 50.5, 52.0],
+    [51.0, 52.2, 50.8, 52.5],
+    [52.2, 51.8, 51.2, 52.8],
+    [51.8, 52.5, 51.5, 53.0],
+    [52.5, 53.2, 52.0, 53.5],
+    [53.2, 52.8, 52.2, 53.8],
+    [52.8, 53.5, 52.5, 54.0],
+    [53.5, 54.2, 53.0, 54.5],
+    [54.2, 53.8, 53.2, 54.8],
+    [53.8, 54.5, 53.5, 55.0],
+    [54.5, 55.2, 54.0, 55.5]
+  ];
+
+  var entryPrice = 50.8;
+  var stopFixe = entryPrice * 0.97;       // -3%
+  var stopATR = entryPrice - 2 * 1.2;     // ATR ~1.2
+  var trailingStopData = [];
+  var highestSinceEntry = entryPrice;
+
+  for (var i = 0; i < ohlc.length; i++) {
+    if (i >= 2) {
+      if (ohlc[i][3] > highestSinceEntry) highestSinceEntry = ohlc[i][3];
+      trailingStopData.push(highestSinceEntry - 2.0);
+    } else {
+      trailingStopData.push(null);
+    }
+  }
+
+  chartStops.setOption({
+    title: { text: '5 Types de Stop Loss — Visualisation', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    legend: { bottom: 0, textStyle: { fontSize: 10 }, itemWidth: 15 },
+    grid: { left: '8%', right: '4%', bottom: '18%', top: '15%', containLabel: false },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', min: 46, max: 56, axisLabel: { fontSize: 11, formatter: '${value}' }, splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } } },
+    series: [
+      {
+        name: 'Prix',
+        type: 'candlestick',
+        data: ohlc,
+        itemStyle: { color: '#10b981', color0: '#ef4444', borderColor: '#10b981', borderColor0: '#ef4444' }
+      },
+      {
+        name: 'Entrée ($50.80)',
+        type: 'line',
+        data: new Array(15).fill(entryPrice),
+        lineStyle: { color: '#6366f1', width: 2, type: 'dashed' },
+        symbol: 'none',
+        tooltip: { show: false }
+      },
+      {
+        name: 'Stop Fixe -3% ($49.28)',
+        type: 'line',
+        data: new Array(15).fill(stopFixe),
+        lineStyle: { color: '#ef4444', width: 2, type: 'solid' },
+        symbol: 'none'
+      },
+      {
+        name: 'Stop ATR ($48.40)',
+        type: 'line',
+        data: new Array(15).fill(stopATR),
+        lineStyle: { color: '#f59e0b', width: 2, type: 'dotted' },
+        symbol: 'none'
+      },
+      {
+        name: 'Trailing Stop',
+        type: 'line',
+        data: trailingStopData,
+        lineStyle: { color: '#10b981', width: 2, type: 'dashed' },
+        symbol: 'none'
+      },
+      {
+        name: 'Stop Temps (J10)',
+        type: 'line',
+        data: (function() { var d = new Array(15).fill(null); d[9] = 46.5; d[9] = null; return d; })(),
+        markLine: {
+          symbol: 'none',
+          data: [{ xAxis: 9, lineStyle: { color: '#2563eb', width: 2, type: 'dashed' }, label: { formatter: 'Stop Temps J10', fontSize: 10, color: '#2563eb' } }]
+        },
+        lineStyle: { opacity: 0 },
+        symbol: 'none'
+      },
+      {
+        name: 'Support (Invalidation)',
+        type: 'line',
+        data: new Array(15).fill(47.5),
+        lineStyle: { color: '#9333ea', width: 2, type: 'dashed' },
+        symbol: 'none'
+      }
+    ]
+  });
+})();
+
+// ---------------------------------------------------------------
+// Chart 2: Candlestick with TP1 / TP2 / Trailing
+// ---------------------------------------------------------------
+var chartTP = echarts.init(document.getElementById('chart-tp'));
+(function() {
+  var dates = ['J1','J2','J3','J4','J5','J6','J7','J8','J9','J10','J11','J12','J13','J14','J15','J16','J17','J18','J19','J20'];
+  var ohlc = [
+    [418, 420, 416, 421],
+    [420, 422, 419, 423],
+    [422, 420, 418, 423],  // Entry at 420
+    [420, 423, 419, 424],
+    [423, 426, 422, 427],
+    [426, 428, 425, 429],
+    [428, 431, 427, 432],
+    [431, 434, 430, 435],
+    [434, 437, 433, 438],
+    [437, 440, 436, 441],  // TP1 at 440
+    [439, 441, 438, 443],
+    [441, 444, 440, 445],
+    [444, 447, 443, 448],
+    [447, 445, 443, 449],
+    [445, 448, 444, 449],
+    [448, 451, 447, 452],
+    [451, 449, 447, 453],
+    [449, 452, 448, 453],
+    [452, 450, 447, 454],  // Trailing stop hit ~448
+    [450, 448, 446, 451]
+  ];
+
+  var entry = 420;
+  var stop = 410;
+  var tp1 = entry + 2 * (entry - stop); // 440
+
+  // Trailing stop after TP1 (from J10 onward)
+  var trailingData = [];
+  var peak = 0;
+  for (var i = 0; i < ohlc.length; i++) {
+    if (i < 9) {
+      trailingData.push(null);
+    } else {
+      if (ohlc[i][3] > peak) peak = ohlc[i][3];
+      trailingData.push(peak - 5); // trailing $5 below highest
+    }
+  }
+
+  chartTP.setOption({
+    title: { text: 'Take Profit Partiel — TP1 + Trailing TP2', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    legend: { bottom: 0, textStyle: { fontSize: 10 }, itemWidth: 15 },
+    grid: { left: '8%', right: '4%', bottom: '18%', top: '15%', containLabel: false },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', min: 405, max: 460, axisLabel: { fontSize: 11, formatter: '${value}' }, splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } } },
+    series: [
+      {
+        name: 'Prix',
+        type: 'candlestick',
+        data: ohlc,
+        itemStyle: { color: '#10b981', color0: '#ef4444', borderColor: '#10b981', borderColor0: '#ef4444' }
+      },
+      {
+        name: 'Entrée ($420)',
+        type: 'line',
+        data: new Array(20).fill(entry),
+        lineStyle: { color: '#6366f1', width: 2, type: 'dashed' },
+        symbol: 'none'
+      },
+      {
+        name: 'Stop ($410)',
+        type: 'line',
+        data: new Array(20).fill(stop),
+        lineStyle: { color: '#ef4444', width: 2, type: 'solid' },
+        symbol: 'none'
+      },
+      {
+        name: 'TP1 ($440) — Vente 50%',
+        type: 'line',
+        data: new Array(20).fill(tp1),
+        lineStyle: { color: '#10b981', width: 2, type: 'dashed' },
+        symbol: 'none',
+        markPoint: {
+          data: [{ coord: [9, tp1], symbol: 'triangle', symbolSize: 14, itemStyle: { color: '#10b981' }, label: { show: true, formatter: 'TP1\n50%', fontSize: 9, fontWeight: 700, position: 'top' } }]
+        }
+      },
+      {
+        name: 'Trailing Stop (TP2)',
+        type: 'line',
+        data: trailingData,
+        lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
+        symbol: 'none'
+      },
+      {
+        name: 'Breakeven ($420)',
+        type: 'line',
+        data: (function() { var d = new Array(20).fill(null); for (var i = 9; i < 20; i++) d[i] = entry; return d; })(),
+        lineStyle: { color: '#94a3b8', width: 1, type: 'dotted' },
+        symbol: 'none'
+      }
+    ]
+  });
+})();
+
+// ---------------------------------------------------------------
+// Chart 3: Pie Chart — Portfolio Allocation
+// ---------------------------------------------------------------
+var chartPortfolio = echarts.init(document.getElementById('chart-portfolio'));
+chartPortfolio.setOption({
+  title: { text: 'Portefeuille Swing — 4 Positions Décorrélées', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+  series: [{
+    type: 'pie',
+    radius: ['40%', '70%'],
+    center: ['50%', '55%'],
+    avoidLabelOverlap: true,
+    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+    label: { formatter: '{b}\n{d}%', fontSize: 11, fontWeight: 600 },
+    emphasis: { label: { fontSize: 14, fontWeight: 800 } },
+    data: [
+      { value: 2500, name: 'MSFT\nTech US', itemStyle: { color: '#6366f1' } },
+      { value: 2500, name: 'TotalEnergies\nÉnergie EU', itemStyle: { color: '#10b981' } },
+      { value: 2500, name: 'JNJ\nSanté US', itemStyle: { color: '#f59e0b' } },
+      { value: 2500, name: 'SAP\nTech EU', itemStyle: { color: '#dc2626' } }
+    ]
+  }]
+});
+
+// ---------------------------------------------------------------
+// Chart 4: Equity Curve — 12 Months
+// ---------------------------------------------------------------
+var chartEquity = echarts.init(document.getElementById('chart-equity'));
+(function() {
+  var months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+  // Realistic equity curve: starts at 10000, ends around 12400
+  // Monthly changes: +400, +100, -200, +300, +400, -100, +200, -300, +500, +100, +400, +300
+  var equity = [10000];
+  var changes = [400, 100, -200, 300, 400, -100, 200, -300, 500, 100, 400, 300];
+  for (var i = 0; i < changes.length; i++) {
+    equity.push(equity[i] + changes[i]);
+  }
+  // equity now has 13 values, we want 12 end-of-month values
+  var eom = equity.slice(1);
+
+  chartEquity.setOption({
+    title: { text: 'Courbe de Capital — $10K sur 12 Mois', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', formatter: function(p) { return p[0].name + ': <b>$' + p[0].value.toLocaleString() + '</b>'; } },
+    grid: { left: '3%', right: '4%', bottom: '8%', top: '18%', containLabel: true },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 }, boundaryGap: false },
+    yAxis: { type: 'value', min: 9000, max: 13000, axisLabel: { fontSize: 11, formatter: '${value}' }, splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } } },
+    series: [{
+      type: 'line',
+      data: eom,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 8,
+      lineStyle: { color: '#6366f1', width: 3 },
+      itemStyle: { color: '#6366f1' },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(99,102,241,0.25)' },
+            { offset: 1, color: 'rgba(99,102,241,0.02)' }
+          ]
+        }
+      },
+      markLine: {
+        data: [{ yAxis: 10000, lineStyle: { color: '#94a3b8', type: 'dashed' }, label: { formatter: 'Capital initial', fontSize: 10 } }],
+        symbol: 'none'
+      },
+      markPoint: {
+        data: [
+          { type: 'max', name: 'Max', symbolSize: 50, itemStyle: { color: '#10b981' }, label: { fontSize: 10 } },
+          { type: 'min', name: 'Min', symbolSize: 50, itemStyle: { color: '#ef4444' }, label: { fontSize: 10 } }
+        ]
+      }
+    }]
+  });
+})();
+
+// ---------------------------------------------------------------
+// Chart 5: Monthly P&L Bar Chart
+// ---------------------------------------------------------------
+var chartMonthlyPnl = echarts.init(document.getElementById('chart-monthly-pnl'));
+(function() {
+  var months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+  var pnl = [400, 100, -200, 300, 400, -100, 200, -300, 500, 100, 400, 300];
+
+  chartMonthlyPnl.setOption({
+    title: { text: 'P&L Mensuel — Compte $10K', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', formatter: function(p) { var v = p[0].value; return p[0].name + ': <b>' + (v >= 0 ? '+' : '') + '$' + v + '</b>'; } },
+    grid: { left: '3%', right: '4%', bottom: '8%', top: '18%', containLabel: true },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', axisLabel: { fontSize: 11, formatter: '${value}' }, splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } } },
+    series: [{
+      type: 'bar',
+      data: pnl.map(function(v) {
+        return {
+          value: v,
+          itemStyle: { color: v >= 0 ? '#10b981' : '#ef4444', borderRadius: v >= 0 ? [6,6,0,0] : [0,0,6,6] }
+        };
+      }),
+      barWidth: '50%',
+      label: {
+        show: true,
+        position: function(params) { return params.value >= 0 ? 'top' : 'bottom'; },
+        formatter: function(p) { return (p.value >= 0 ? '+' : '') + '$' + p.value; },
+        fontWeight: 700,
+        fontSize: 11
+      }
+    }]
+  });
+})();
+
+// ---------------------------------------------------------------
+// Chart 6: Heatmap — Win Rate × R/R → Expected Return
+// ---------------------------------------------------------------
+var chartHeatmap = echarts.init(document.getElementById('chart-heatmap'));
+(function() {
+  var winRates = ['30%','35%','40%','45%','50%','55%','60%','65%','70%'];
+  var rrRatios = ['1:1','1:1.5','1:2','1:2.5','1:3'];
+
+  // Expected return per $100 risked: E = WR × (RR × $100) - (1-WR) × $100
+  var wrVals = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70];
+  var rrVals = [1.0, 1.5, 2.0, 2.5, 3.0];
+
+  var data = [];
+  var minVal = Infinity, maxVal = -Infinity;
+  for (var j = 0; j < rrVals.length; j++) {
+    for (var i = 0; i < wrVals.length; i++) {
+      var e = Math.round(wrVals[i] * rrVals[j] * 100 - (1 - wrVals[i]) * 100);
+      data.push([i, j, e]);
+      if (e < minVal) minVal = e;
+      if (e > maxVal) maxVal = e;
+    }
+  }
+
+  chartHeatmap.setOption({
+    title: { text: 'Espérance par Trade ($) — Win Rate × R/R', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: {
+      position: 'top',
+      formatter: function(p) {
+        return 'Win Rate: ' + winRates[p.data[0]] + '<br>R/R: ' + rrRatios[p.data[1]] + '<br>Espérance: <b>' + (p.data[2] >= 0 ? '+' : '') + '$' + p.data[2] + '</b>';
+      }
+    },
+    grid: { left: '10%', right: '12%', bottom: '8%', top: '15%' },
+    xAxis: { type: 'category', data: winRates, axisLabel: { fontSize: 10 }, splitArea: { show: true }, name: 'Win Rate', nameLocation: 'center', nameGap: 30, nameTextStyle: { fontSize: 11, fontWeight: 600 } },
+    yAxis: { type: 'category', data: rrRatios, axisLabel: { fontSize: 10 }, splitArea: { show: true }, name: 'R/R Ratio', nameLocation: 'center', nameGap: 50, nameTextStyle: { fontSize: 11, fontWeight: 600 } },
+    visualMap: {
+      min: minVal,
+      max: maxVal,
+      calculable: true,
+      orient: 'vertical',
+      right: 0,
+      top: 'center',
+      inRange: {
+        color: ['#ef4444', '#fca5a5', '#fde68a', '#86efac', '#10b981', '#059669']
+      },
+      textStyle: { fontSize: 10 }
+    },
+    series: [{
+      type: 'heatmap',
+      data: data,
+      label: {
+        show: true,
+        formatter: function(p) { return (p.data[2] >= 0 ? '+' : '') + '$' + p.data[2]; },
+        fontSize: 10,
+        fontWeight: 700
+      },
+      emphasis: {
+        itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' }
+      }
+    }]
+  });
+})();
+
+// ---------------------------------------------------------------
+// Responsive: resize all charts on window resize
+// ---------------------------------------------------------------
+window.addEventListener('resize', function() {
+  chartStops.resize();
+  chartTP.resize();
+  chartPortfolio.resize();
+  chartEquity.resize();
+  chartMonthlyPnl.resize();
+  chartHeatmap.resize();
+});
+</script>
+
+</body>
+</html>
