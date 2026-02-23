@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Labor Market Shock | AI Singularity — Part 12 | Market Watch</title>
-    <meta name="description" content="AI Singularity Trade Series — Part 12: The White Collar Recession. Which jobs disappear first? Reskilling and the UBI debate. Key stocks: Short RHI, Long PG.">
+    <meta name="description" content="AI Singularity Trade Series — Part 12: The White Collar Recession. 300M jobs at risk. Staffing industry destruction, UBI debate, and reskilling trades. Short RHI, Long META.">
     <meta property="og:title" content="The Labor Market Shock | Market Watch">
-    <meta property="og:description" content="Part 12 of the AI Singularity Trade series. Preparing for the great displacement.">
+    <meta property="og:description" content="Part 12 of the AI Singularity Trade series. The white collar recession is here.">
     <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
     <meta property="og:url" content="https://articles.market-watch.xyz/series/ai-singularity/expert/en/labor-market-shock/">
     <meta property="og:type" content="article">
@@ -171,6 +171,7 @@
             .series-title { font-size: 0.65rem; margin-right: 0.5rem; }
             .series-link { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
             .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+            .validation-grid { grid-template-columns: 1fr !important; }
         }
     </style>
 </head>
@@ -220,147 +221,813 @@
             We are facing a "White Collar Recession". AI will do to office work what robotics did to manufacturing: <strong>Massive productivity gains, massive displacement.</strong>
         </p>
         <div class="hero-badges">
-            <span class="hero-badge hero-badge-red"><i class="fa-solid fa-arrow-trend-down"></i> Job Loss</span>
-            <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-brain"></i> Cognition Cost 0</span>
-            <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-hand-holding-dollar"></i> UBI</span>
+            <span class="hero-badge hero-badge-red"><i class="fa-solid fa-arrow-trend-down"></i> 300M Jobs at Risk</span>
+            <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-brain"></i> Cognition Cost &rarr; 0</span>
+            <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-hand-holding-dollar"></i> UBI Debate</span>
             <span class="hero-badge hero-badge-green"><i class="fa-solid fa-hammer"></i> Physical Premium</span>
         </div>
     </div>
 
     <div class="container">
 
+        <!-- =========================================================
+             SECTION 1: THE GREAT DISPLACEMENT
+             ========================================================= -->
         <div class="content-card">
-            <h2><i class="fa-solid fa-user-xmark" style="color:#2563eb;"></i> Who is Safe?</h2>
-            <p>Jobs that are purely digital (Data Entry, Translation, Basic Coding, Paralegal) are at imminent risk of 90%+ automation. Jobs that require physical presence and dexterity (Plumber, Electrician, Nurse) are safe for at least another decade. The middle class is being squeezed.</p>
-            
-            <div id="chart-labor" style="width: 100%; height: 400px;"></div>
+            <h2><i class="fa-solid fa-people-arrows" style="color:#dc2626;"></i> Section 1: The Great Displacement</h2>
+            <p>
+                Goldman Sachs published a landmark study in March 2023 estimating that <strong>300 million jobs globally</strong> could be exposed to automation by generative AI. McKinsey Global Institute subsequently raised the estimate, projecting that up to 30% of hours worked in the US economy could be automated by 2030. These are not speculative projections from tech evangelists &mdash; they are consensus estimates from the world's most conservative institutions.
+            </p>
+            <p>
+                What makes this wave fundamentally different from every prior automation cycle is the <strong>target demographic</strong>. The Industrial Revolution displaced artisans. The assembly line displaced craftsmen. Robotics displaced factory workers. In each case, the casualties were manual, physical, blue-collar laborers. This time, the displacement vector is inverted: <strong>white collar, educated, knowledge workers are the primary targets.</strong>
+            </p>
+            <p>
+                The reason is straightforward. Large language models and generative AI excel at precisely the tasks that define white-collar work: reading, writing, summarizing, translating, coding, analyzing data, generating reports, and answering questions. A $20/month ChatGPT subscription can now perform work that previously required a junior analyst earning $85,000/year. The economics are brutal and unambiguous.
+            </p>
+
+            <div class="pedagogy-box">
+                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> Key Concept: The Task Automation Framework</h4>
+                <p style="margin:0; font-size:1rem; color:#334155; line-height:1.7;">
+                    Jobs are not automated wholesale &mdash; <strong>tasks within jobs</strong> are automated. A financial analyst spends 60% of their time on data gathering and formatting (automatable) and 40% on judgment and client relationships (not yet automatable). The question is: does the employer need 10 analysts or 4 analysts augmented by AI? In most cases, the answer is 4. The other 6 are structurally unemployed.
+                </p>
+            </div>
+
+            <p style="margin-top:1.5rem;">
+                The tasks most vulnerable to AI displacement follow a clear hierarchy based on their cognitive profile. Purely routine cognitive tasks &mdash; data entry, basic translation, template-based writing &mdash; face near-total automation. Complex cognitive tasks requiring judgment, creativity, and physical presence remain safe for now. The chart below maps the displacement risk spectrum:
+            </p>
+
+            <!-- EChart 1: Horizontal Bar — Displacement Risk by Job Category -->
+            <div id="chart-displacement-risk" style="width:100%; height:500px; margin-top:1rem;"></div>
             <script>
-                var chartDom = document.getElementById('chart-labor');
-                var myChart = echarts.init(chartDom);
-                var option = {
-                    title: { text: 'Risk of Displacement by 2030 (%)', left: 'center' },
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                    xAxis: {
-                        type: 'category',
-                        data: ['Data Entry', 'Translator', 'Web Dev', 'Accountant', 'Nurse', 'Plumber']
-                    },
-                    yAxis: { type: 'value', max: 100 },
-                    series: [
-                        {
-                            name: 'Risk',
+                (function(){
+                    var dom = document.getElementById('chart-displacement-risk');
+                    var chart = echarts.init(dom);
+                    var option = {
+                        title: { text: 'AI Displacement Risk by Task Category (% by 2030)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+                        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p){ return p[0].name + ': <b>' + p[0].value + '%</b> displacement risk'; } },
+                        grid: { left: '22%', right: '8%', bottom: '6%', top: '12%', containLabel: false },
+                        xAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
+                        yAxis: {
+                            type: 'category',
+                            data: [
+                                'Plumbing / HVAC',
+                                'Nursing / Patient Care',
+                                'Creative Direction',
+                                'Sales (Relationship)',
+                                'Bookkeeping',
+                                'Customer Support',
+                                'Junior Coding',
+                                'Translation',
+                                'Data Entry'
+                            ],
+                            axisLabel: { fontSize: 12 }
+                        },
+                        series: [{
                             type: 'bar',
-                            data: [95, 90, 80, 70, 15, 5],
-                            itemStyle: {
-                                color: function (params) {
-                                    return params.value > 50 ? '#ef4444' : '#10b981';
-                                }
-                            },
-                            label: { show: true, position: 'top', formatter: '{c}%' }
-                        }
-                    ]
-                };
-                myChart.setOption(option);
+                            data: [
+                                { value: 5,  itemStyle: { color: '#10b981' } },
+                                { value: 10, itemStyle: { color: '#10b981' } },
+                                { value: 35, itemStyle: { color: '#f59e0b' } },
+                                { value: 40, itemStyle: { color: '#f59e0b' } },
+                                { value: 75, itemStyle: { color: '#ef4444' } },
+                                { value: 80, itemStyle: { color: '#ef4444' } },
+                                { value: 85, itemStyle: { color: '#ef4444' } },
+                                { value: 90, itemStyle: { color: '#dc2626' } },
+                                { value: 95, itemStyle: { color: '#dc2626' } }
+                            ],
+                            label: { show: true, position: 'right', formatter: '{c}%', fontWeight: 700 },
+                            barWidth: '55%'
+                        }]
+                    };
+                    chart.setOption(option);
+                    window.addEventListener('resize', function(){ chart.resize(); });
+                })();
             </script>
+
+            <div class="alert-box" style="margin-top:1.5rem;">
+                <strong><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> The Inversion:</strong> For the first time in economic history, the most <em>educated</em> workers are the most <em>vulnerable</em>. A plumber earning $75,000/year is safer than a paralegal earning $95,000/year. The college premium &mdash; the wage advantage of a degree &mdash; is compressing faster than at any point since tracking began in 1979.
+            </div>
         </div>
 
+        <!-- =========================================================
+             SECTION 2: WHO GETS DISPLACED FIRST?
+             ========================================================= -->
         <div class="content-card">
-            <div class="pedagogy-box">
-                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> Concept: Jevons Paradox</h4>
+            <h2><i class="fa-solid fa-user-xmark" style="color:#d97706;"></i> Section 2: Who Gets Displaced First?</h2>
+            <p>
+                Not all white-collar jobs face equal risk. The speed of displacement depends on three factors: (1) how well-defined and repetitive the task is, (2) how easily quality can be verified, and (3) how much the task relies on human judgment vs. pattern recognition. The table below maps the major white-collar categories by their displacement timeline, current workforce size, and the companies already implementing AI replacement at scale.
+            </p>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Job Category</th>
+                            <th>Current Workers (M)</th>
+                            <th>AI Replacement Timeline</th>
+                            <th>Wage Impact</th>
+                            <th>Example Company</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Call Centers / Customer Support</strong></td>
+                            <td>17M globally</td>
+                            <td><span class="badge-red">2024-2026</span></td>
+                            <td>-60% to -80%</td>
+                            <td>Klarna: replaced 700 agents with AI (Feb 2024)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Entry / Processing</strong></td>
+                            <td>12M globally</td>
+                            <td><span class="badge-red">2024-2025</span></td>
+                            <td>-90%+ (near elimination)</td>
+                            <td>UiPath, Automation Anywhere replacing entire teams</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Translation / Localization</strong></td>
+                            <td>0.6M globally</td>
+                            <td><span class="badge-red">2024-2026</span></td>
+                            <td>-70% to -90%</td>
+                            <td>DeepL, Google Translate now near-human quality</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Paralegal / Legal Research</strong></td>
+                            <td>1.2M (US + EU)</td>
+                            <td><span class="badge-amber" style="background:rgba(217,119,6,0.15);color:#d97706;padding:0.2rem 0.6rem;border-radius:6px;font-weight:700;">2025-2027</span></td>
+                            <td>-40% to -60%</td>
+                            <td>Harvey AI, CaseText (Thomson Reuters)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Junior Software Development</strong></td>
+                            <td>8M globally</td>
+                            <td><span class="badge-amber" style="background:rgba(217,119,6,0.15);color:#d97706;padding:0.2rem 0.6rem;border-radius:6px;font-weight:700;">2025-2028</span></td>
+                            <td>-30% to -50%</td>
+                            <td>GitHub Copilot, Cursor, Devin replacing junior roles</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Financial Analysis (Junior)</strong></td>
+                            <td>2.5M globally</td>
+                            <td><span class="badge-amber" style="background:rgba(217,119,6,0.15);color:#d97706;padding:0.2rem 0.6rem;border-radius:6px;font-weight:700;">2025-2028</span></td>
+                            <td>-35% to -55%</td>
+                            <td>Bloomberg GPT, JPMorgan's IndexGPT</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Radiology Reading</strong></td>
+                            <td>0.5M globally</td>
+                            <td><span class="badge-blue">2026-2030</span></td>
+                            <td>-20% to -40%</td>
+                            <td>Viz.ai, Aidoc &mdash; FDA-cleared AI reading</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Copywriting / Content</strong></td>
+                            <td>3M globally</td>
+                            <td><span class="badge-red">2024-2026</span></td>
+                            <td>-60% to -80%</td>
+                            <td>Jasper, Copy.ai, ChatGPT &mdash; commodity content is free</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bookkeeping / Accounting (Basic)</strong></td>
+                            <td>4M (US + EU)</td>
+                            <td><span class="badge-amber" style="background:rgba(217,119,6,0.15);color:#d97706;padding:0.2rem 0.6rem;border-radius:6px;font-weight:700;">2025-2028</span></td>
+                            <td>-50% to -70%</td>
+                            <td>Xero AI, QuickBooks AI, Pilot.com</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-graduation-cap" style="margin-right:8px;"></i> The "Taste Layer" Theory</h4>
                 <p style="margin:0; font-size:1rem; color:#334155; line-height:1.7;">
-                    Economists argue AI creates jobs. They cite the Jevons Paradox: "As technology increases the efficiency of a resource (labor), consumption of that resource increases rather than decreases." This may be true in the long run (we will consume 1000x more software), but in the short run (2025-2027), the dislocation will be brutal.
+                    In every displaced profession, a thin layer of <strong>senior experts</strong> will survive and thrive &mdash; those with taste, judgment, and client relationships. A senior copywriter who can direct AI and curate output is more valuable than ever. A junior copywriter who just executes briefs is obsolete. This "taste layer" phenomenon means the top 10% of each profession will earn <em>more</em>, while the bottom 70% will be displaced. The income distribution within professions will follow a power law.
                 </p>
             </div>
         </div>
 
+        <!-- =========================================================
+             SECTION 3: THE PRODUCTIVITY PARADOX
+             ========================================================= -->
         <div class="content-card">
-            <h2><i class="fa-solid fa-table-columns" style="color:#d97706;"></i> Winners vs Losers</h2>
+            <h2><i class="fa-solid fa-chart-line" style="color:#10b981;"></i> Section 3: The Productivity Paradox</h2>
+
+            <div class="pedagogy-box">
+                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> Concept: The Jevons Paradox</h4>
+                <p style="margin:0; font-size:1rem; color:#334155; line-height:1.7;">
+                    In 1865, economist William Stanley Jevons observed that as coal-powered steam engines became more efficient, coal consumption <em>increased</em> rather than decreased &mdash; because cheaper energy made new applications economically viable. Economists regularly invoke this "Jevons Paradox" to argue that AI will create more jobs than it destroys: <strong>cheaper cognition will create new demand for cognitive work.</strong> History has largely vindicated this view. ATMs did not kill bank tellers &mdash; they made branches cheaper to operate, so banks opened more branches, hiring more tellers. Spreadsheets did not kill accountants &mdash; they made financial analysis so cheap that demand for analysis exploded.
+                </p>
+            </div>
+
+            <p style="margin-top:1.5rem;">
+                <strong>But this time may be different.</strong> The Jevons Paradox works when the technology augments a human capability, creating new demand that humans fill. AI does not merely augment cognitive work &mdash; in many categories, it <em>replaces</em> it entirely. The distinction is critical:
+            </p>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+                <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.5rem;">
+                    <h4 style="color:#166534; margin-top:0;"><i class="fa-solid fa-arrows-rotate" style="margin-right:6px;"></i> Jevons Works (Augmentation)</h4>
+                    <ul style="margin:0.5rem 0 0; padding-left:1.2rem; line-height:2;">
+                        <li>Spreadsheets augmented accountants &rarr; more demand for analysis</li>
+                        <li>CAD augmented engineers &rarr; more demand for design</li>
+                        <li>ATMs augmented branches &rarr; more demand for tellers</li>
+                        <li>Photoshop augmented designers &rarr; more demand for visual content</li>
+                    </ul>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.5rem;">
+                    <h4 style="color:#991b1b; margin-top:0;"><i class="fa-solid fa-ban" style="margin-right:6px;"></i> Jevons Fails (Replacement)</h4>
+                    <ul style="margin:0.5rem 0 0; padding-left:1.2rem; line-height:2;">
+                        <li>ChatGPT replaces customer support agents &rarr; Klarna fires 700</li>
+                        <li>Copilot replaces junior coders &rarr; teams shrink 30-50%</li>
+                        <li>DeepL replaces translators &rarr; industry revenue collapses</li>
+                        <li>AI bookkeeping replaces data entry &rarr; near-total automation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-building" style="color:#6366f1; margin-right:8px;"></i> The Case Studies</h3>
+            <p>
+                We are no longer debating hypotheticals. Major corporations are publicly disclosing AI-driven headcount reductions:
+            </p>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>AI Impact</th>
+                            <th>Headcount Change</th>
+                            <th>Timeline</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Klarna</strong></td>
+                            <td>AI customer service bot handles 2/3 of all chats</td>
+                            <td>-700 agents (-50% of CS team)</td>
+                            <td>Q1 2024</td>
+                            <td>Klarna press release</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BT Group</strong></td>
+                            <td>AI replacing back-office and customer service</td>
+                            <td>-55,000 jobs by 2030 (-42% workforce)</td>
+                            <td>2024-2030</td>
+                            <td>CEO Philip Jansen, May 2023</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IBM</strong></td>
+                            <td>Pausing hiring for roles AI can do</td>
+                            <td>-7,800 back-office roles (est.)</td>
+                            <td>2023-2028</td>
+                            <td>CEO Arvind Krishna, May 2023</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Chegg</strong></td>
+                            <td>ChatGPT killed tutoring demand</td>
+                            <td>Stock -85%, mass layoffs</td>
+                            <td>2023-2025</td>
+                            <td>Earnings calls, stock collapse</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Duolingo</strong></td>
+                            <td>Replaced 10% of contractors with AI</td>
+                            <td>-10% contractor force</td>
+                            <td>Q1 2024</td>
+                            <td>Internal memo, reported Jan 2024</td>
+                        </tr>
+                        <tr>
+                            <td><strong>UPS</strong></td>
+                            <td>AI route optimization + back-office automation</td>
+                            <td>-12,000 jobs</td>
+                            <td>2024</td>
+                            <td>Q4 2023 earnings call</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="margin-top:1rem;">
+                The pattern is consistent: companies that adopt AI aggressively see 20-40% productivity gains in targeted functions, leading to proportional headcount reductions. The savings flow directly to the bottom line, rewarding shareholders at the expense of workers. This is not a bug &mdash; it is the explicit business case for AI adoption.
+            </p>
+        </div>
+
+        <!-- =========================================================
+             SECTION 4: WINNERS OF THE LABOR SHIFT
+             ========================================================= -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-trophy" style="color:#16a34a;"></i> Section 4: Winners of the Labor Shift</h2>
+            <p>
+                Every displacement creates beneficiaries. The AI labor shift produces three categories of winners: (1) companies that benefit from drastically lower labor costs, (2) platforms enabling the reskilling of displaced workers, and (3) entirely new job categories that did not exist before 2023.
+            </p>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-building-columns" style="color:#2563eb; margin-right:8px;"></i> Companies Benefiting from Cheaper Labor</h3>
+            <p>
+                Tech platforms with massive user bases and high labor-to-revenue ratios stand to gain the most. Meta spent ~$20B on employee compensation in 2023. If AI tools can increase engineer productivity by 30%, that is $6B in annual savings &mdash; or, more likely, Meta ships 30% more features with the same headcount, accelerating growth. Google, Microsoft, and Amazon are in similar positions.
+            </p>
+            <p>
+                Beyond tech, any company with a large white-collar workforce is a beneficiary: insurance companies automating claims processing, banks automating compliance review, consulting firms automating junior analyst work. <strong>The Magnificent 7 are both the sellers and the primary consumers of AI.</strong>
+            </p>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-graduation-cap" style="color:#8b5cf6; margin-right:8px;"></i> New Job Categories Emerging</h3>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin:1rem 0;">
+                <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:12px; padding:1.25rem; text-align:center;">
+                    <div style="font-size:1.8rem; margin-bottom:0.5rem;">🛠️</div>
+                    <strong style="color:#1e40af;">Prompt Engineers</strong>
+                    <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">$120-200K avg. salary. Designing complex prompt architectures for enterprise AI systems.</p>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:1.25rem; text-align:center;">
+                    <div style="font-size:1.8rem; margin-bottom:0.5rem;">🏋️</div>
+                    <strong style="color:#166534;">AI Trainers / RLHF</strong>
+                    <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">$60-150K. Human feedback labelers, red teamers, alignment specialists.</p>
+                </div>
+                <div style="background:#faf5ff; border:1px solid #c4b5fd; border-radius:12px; padding:1.25rem; text-align:center;">
+                    <div style="font-size:1.8rem; margin-bottom:0.5rem;">🛡️</div>
+                    <strong style="color:#6b21a8;">AI Safety Researchers</strong>
+                    <p style="font-size:0.85rem; color:#475569; margin:0.5rem 0 0;">$150-400K. Alignment, interpretability, governance. The highest-demand role in AI.</p>
+                </div>
+            </div>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-book-open" style="color:#d97706; margin-right:8px;"></i> Reskilling Platforms</h3>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Ticker</th>
-                            <th>Role</th>
-                            <th>Thesis</th>
+                            <th>Company</th>
+                            <th>Focus</th>
+                            <th>AI Tailwind</th>
                             <th>Risk</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>RHI</strong></td>
-                            <td>Staffing</td>
-                            <td>Robert Half. Places admin/accounting temp staff. AI does this work for free.</td>
-                            <td><span class="badge-red">Short</span></td>
+                            <td><strong>COUR</strong></td>
+                            <td>Coursera</td>
+                            <td>University-grade online courses, AI/ML certifications</td>
+                            <td>Massive demand from displaced workers seeking reskilling</td>
+                            <td><span class="badge-blue">Med</span></td>
                         </tr>
                         <tr>
-                            <td><strong>FVRR</strong></td>
-                            <td>Freelance</td>
-                            <td>Fiverr. The marketplace for "commodity digital labor" (logos, copy).</td>
-                            <td><span class="badge-red">Short</span></td>
+                            <td><strong>DUOL</strong></td>
+                            <td>Duolingo</td>
+                            <td>Language learning via gamification + AI tutoring</td>
+                            <td>Paradox: AI makes their product better, but AI also kills the need to learn languages</td>
+                            <td><span class="badge-purple">Mixed</span></td>
                         </tr>
                         <tr>
-                            <td><strong>PG</strong></td>
-                            <td>Staples</td>
-                            <td>Procter & Gamble. Safe haven. Even unemployed people buy toothpaste. Defensive.</td>
+                            <td><strong>LNKD</strong></td>
+                            <td>LinkedIn (MSFT)</td>
+                            <td>LinkedIn Learning, professional networking</td>
+                            <td>AI-powered career coaching, skill gap analysis</td>
                             <td><span class="badge-green">Low</span></td>
                         </tr>
                         <tr>
-                            <td><strong>COUR</strong></td>
-                            <td>Reskilling</td>
-                            <td>Coursera. Workers desperate to retrain will flock to certification platforms.</td>
+                            <td><strong>UDMY</strong></td>
+                            <td>Udemy</td>
+                            <td>Marketplace for online courses (enterprise focus)</td>
+                            <td>Enterprise reskilling contracts growing &gt;30% YoY</td>
                             <td><span class="badge-blue">Med</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <div class="content-card">
-            <h2><i class="fa-solid fa-scale-balanced" style="color:#10b981;"></i> Trade Setup</h2>
-            <div class="trade-box">
-                <h3 style="color:#0f172a; margin-top:0;">Long "Physical", Short "Middlemen"</h3>
-                <div class="trade-levels">
-                    <div class="level-item">
-                        <div class="level-label">Allocation</div>
-                        <div class="level-value">10%</div>
-                    </div>
-                    <div class="level-item">
-                        <div class="level-label">Defensive</div>
-                        <div class="level-value" style="color:#16a34a;">XLP</div>
-                    </div>
-                    <div class="level-item">
-                        <div class="level-label">Short</div>
-                        <div class="level-value" style="color:#dc2626;">RHI</div>
-                    </div>
-                </div>
-                <p style="margin-top:1rem; font-size:0.95rem; color:#475569;">
-                    The "Staffing" sector is a classic short. Recruitment firms like Robert Half (RHI) and Manpower (MAN) rely on placing humans in seats for $25/hour. AI agents are $0.10/hour. We recommend shorting the staffing sector and going long <strong>Consumer Staples (XLP)</strong> as a defensive hedge against recession risk.
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> The Augmentation vs. Replacement Spectrum</h4>
+                <p style="margin:0; font-size:1rem; color:#334155; line-height:1.7;">
+                    Not every job is simply "replaced" or "safe." Most fall on a spectrum. <strong>Augmentation</strong> means AI makes the worker 2-5x more productive (senior developers, doctors, lawyers). <strong>Replacement</strong> means AI performs the entire job (data entry, translation, basic CS). The investment thesis depends on where each company's workforce sits on this spectrum. Companies whose employees are primarily <em>augmented</em> (MSFT, GOOG) become more profitable. Companies whose employees are primarily <em>replaced</em> (staffing firms, BPOs) lose their business model entirely.
                 </p>
             </div>
         </div>
 
+        <!-- =========================================================
+             SECTION 5: THE STAFFING INDUSTRY DESTRUCTION
+             ========================================================= -->
         <div class="content-card">
-            <h2><i class="fa-solid fa-list-check" style="color:#8b5cf6;"></i> Thesis Validation</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+            <h2><i class="fa-solid fa-building-circle-xmark" style="color:#dc2626;"></i> Section 5: The Staffing Industry Destruction</h2>
+            <p>
+                The staffing and recruitment industry is a <strong>$500 billion global market</strong> built on a simple premise: companies need temporary and permanent white-collar workers, and staffing firms collect a 15-30% markup on placing them. When AI can perform the work those temp workers do, the entire intermediary layer collapses.
+            </p>
+            <p>
+                Robert Half International (RHI) is the canary in the coal mine. The company specializes in placing finance, accounting, legal, and technology professionals &mdash; precisely the categories most exposed to AI automation. Revenue has declined for 8 consecutive quarters. The stock has fallen ~40% from its 2022 highs. Management acknowledges on earnings calls that "clients are doing more with fewer people" &mdash; corporate-speak for "AI is killing our placement volumes."
+            </p>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Ticker</th>
+                            <th>Specialization</th>
+                            <th>Revenue Trend (YoY)</th>
+                            <th>AI Exposure</th>
+                            <th>Stock Performance (2Y)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Robert Half</strong></td>
+                            <td>RHI</td>
+                            <td>Finance, accounting, legal, tech temps</td>
+                            <td><span style="color:#dc2626; font-weight:700;">-15%</span></td>
+                            <td><span class="badge-red">Critical</span></td>
+                            <td><span style="color:#dc2626;">-40%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Adecco Group</strong></td>
+                            <td>ADEN.SW</td>
+                            <td>Broad-based staffing (EU-focused)</td>
+                            <td><span style="color:#dc2626; font-weight:700;">-8%</span></td>
+                            <td><span class="badge-red">High</span></td>
+                            <td><span style="color:#dc2626;">-35%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ManpowerGroup</strong></td>
+                            <td>MAN</td>
+                            <td>Global staffing, workforce solutions</td>
+                            <td><span style="color:#dc2626; font-weight:700;">-6%</span></td>
+                            <td><span class="badge-red">High</span></td>
+                            <td><span style="color:#dc2626;">-30%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hays plc</strong></td>
+                            <td>HAS.L</td>
+                            <td>Professional staffing (UK/AU)</td>
+                            <td><span style="color:#dc2626; font-weight:700;">-12%</span></td>
+                            <td><span class="badge-red">High</span></td>
+                            <td><span style="color:#dc2626;">-45%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Randstad</strong></td>
+                            <td>RAND.AS</td>
+                            <td>Global staffing, digital & engineering</td>
+                            <td><span style="color:#dc2626; font-weight:700;">-5%</span></td>
+                            <td><span class="badge-amber" style="background:rgba(217,119,6,0.15);color:#d97706;padding:0.2rem 0.6rem;border-radius:6px;font-weight:700;">Med-High</span></td>
+                            <td><span style="color:#dc2626;">-20%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fiverr</strong></td>
+                            <td>FVRR</td>
+                            <td>Freelance marketplace (logos, copy, dev)</td>
+                            <td><span style="color:#dc2626; font-weight:700;">-3%</span></td>
+                            <td><span class="badge-red">Critical</span></td>
+                            <td><span style="color:#dc2626;">-60%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Upwork</strong></td>
+                            <td>UPWK</td>
+                            <td>Freelance marketplace (enterprise focus)</td>
+                            <td><span style="color:#f59e0b; font-weight:700;">Flat</span></td>
+                            <td><span class="badge-red">High</span></td>
+                            <td><span style="color:#dc2626;">-50%</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="margin-top:1.5rem;">
+                The structural impairment is threefold: (1) <strong>Volume decline</strong> &mdash; clients need fewer temporary workers because AI does the work. (2) <strong>Margin compression</strong> &mdash; remaining placements face pricing pressure as workers compete with AI alternatives. (3) <strong>Business model obsolescence</strong> &mdash; why pay a 25% staffing markup when an AI agent costs $0.10/hour?
+            </p>
+            <p>
+                The freelance platforms (Fiverr, Upwork) face an even more existential crisis. Their marketplace was built on "commodity digital labor" &mdash; logo design, copywriting, basic web development, data analysis. These are precisely the tasks generative AI does for free. Fiverr's stock has collapsed from $309 (2021 peak) to ~$25, a <strong>-92% decline</strong>. This is not a cyclical downturn. It is structural obsolescence.
+            </p>
+        </div>
+
+        <!-- =========================================================
+             SECTION 6: UBI AND POLICY RESPONSE
+             ========================================================= -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-landmark" style="color:#8b5cf6;"></i> Section 6: UBI and the Policy Response</h2>
+            <p>
+                When 300 million jobs are at risk, the policy response becomes a market-moving force. Universal Basic Income (UBI) &mdash; once a fringe academic concept &mdash; has entered mainstream political discourse as the default proposed solution to AI displacement. For investors, UBI is not just a policy debate; it is a potential <strong>massive fiscal stimulus</strong> that would reshape consumer spending, tax policy, and government debt markets.
+            </p>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-flask" style="color:#6366f1; margin-right:8px;"></i> The Experiments</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1rem 0;">
+                <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:12px; padding:1.5rem;">
+                    <h4 style="color:#1e40af; margin-top:0;">Sam Altman's Worldcoin</h4>
+                    <p style="font-size:0.9rem; color:#334155; line-height:1.6;">
+                        OpenAI's CEO launched Worldcoin (now World) &mdash; a crypto project that scans eyeballs to create a unique digital identity, enabling UBI distribution. The thesis: as AI takes jobs, everyone gets a share of AI-generated wealth via token distributions. Currently operational in 120+ countries with 10M+ verified users. Controversial (privacy concerns), but the largest UBI infrastructure project ever attempted.
+                    </p>
+                </div>
                 <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:1.5rem;">
-                    <h4 style="color:#166534; margin-top:0;"><i class="fa-solid fa-check"></i> Bullish Signals</h4>
-                    <ul class="checklist">
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>Companies reporting &gt; 20% productivity gains from AI</span></li>
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>New AI-adjacent job categories growing &gt; 40% YoY</span></li>
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>UBI pilot programs showing positive economic impact</span></li>
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>Reskilling platforms seeing record enrollment</span></li>
+                    <h4 style="color:#166534; margin-top:0;">Finland UBI Trial (2017-2018)</h4>
+                    <p style="font-size:0.9rem; color:#334155; line-height:1.6;">
+                        2,000 unemployed Finns received &euro;560/month with no conditions. Results: recipients were happier, healthier, and <em>marginally</em> more likely to find employment. Critics: too small, too short, not representative. But it proved UBI does not create "lazy freeloaders" &mdash; the #1 political objection. Follow-up studies showed improved life satisfaction persisting 2+ years after the trial ended.
+                    </p>
+                </div>
+            </div>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-person-booth" style="color:#dc2626; margin-right:8px;"></i> The Political Divide</h3>
+            <p>
+                Andrew Yang's 2020 presidential campaign popularized the "Freedom Dividend" &mdash; $1,000/month for every American adult, funded by a 10% VAT. He did not win, but the idea entered the Overton window. The political landscape has since fractured:
+            </p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1rem 0;">
+                <div style="border-left:4px solid #2563eb; padding-left:1.5rem;">
+                    <h4 style="color:#1e40af; margin-top:0;">Progressive Left</h4>
+                    <ul style="line-height:2; padding-left:1rem;">
+                        <li>UBI funded by wealth tax on AI companies</li>
+                        <li>"Robot tax" on automation (Bill Gates proposal)</li>
+                        <li>Mandatory reskilling programs funded by Big Tech</li>
+                        <li>Expanded safety nets: universal healthcare, education</li>
                     </ul>
                 </div>
-                <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:1.5rem;">
-                    <h4 style="color:#991b1b; margin-top:0;"><i class="fa-solid fa-xmark"></i> Bearish Signals</h4>
-                    <ul class="checklist">
-                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Unemployment spikes above 8% in white collar sectors</span></li>
-                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Social unrest from mass displacement</span></li>
-                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Wage deflation spreading across professional services</span></li>
-                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Political backlash leading to AI employment mandates</span></li>
+                <div style="border-left:4px solid #dc2626; padding-left:1.5rem;">
+                    <h4 style="color:#991b1b; margin-top:0;">Market-Oriented Right</h4>
+                    <ul style="line-height:2; padding-left:1rem;">
+                        <li>Let markets adjust naturally (creative destruction)</li>
+                        <li>Deregulate to encourage new business formation</li>
+                        <li>Tax credits for companies that retrain workers</li>
+                        <li>Oppose UBI as "welfare expansion"</li>
                     </ul>
                 </div>
             </div>
+
+            <div class="pedagogy-box" style="margin-top:1.5rem;">
+                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> Why UBI Is Now a Market Theme</h4>
+                <p style="margin:0; font-size:1rem; color:#334155; line-height:1.7;">
+                    For investors, UBI is not an abstract policy debate &mdash; it is a <strong>fiscal catalyst</strong>. A $1,000/month UBI for all US adults would cost ~$3.1 trillion/year (~12% of GDP). This would require either massive tax increases (bearish for equities, especially tech) or massive deficit spending (bearish for bonds, bullish for gold and Bitcoin). Either path reshapes asset allocation. The mere credible <em>discussion</em> of UBI in Congress would be a significant market event. Watch for: UBI-related legislation, automation tax proposals, and AI company lobbying disclosures.
+                </p>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             SECTION 7: TRADE SETUPS
+             ========================================================= -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#10b981;"></i> Section 7: Trade Setups</h2>
+
+            <h3 style="color:#0f172a;"><i class="fa-solid fa-arrow-trend-down" style="color:#dc2626; margin-right:8px;"></i> Short Thesis: Staffing Intermediaries</h3>
+            <div class="trade-box">
+                <h3 style="color:#0f172a; margin-top:0;">Short RHI &mdash; Robert Half International</h3>
+                <div class="trade-levels">
+                    <div class="level-item">
+                        <div class="level-label">Entry (Short)</div>
+                        <div class="level-value" style="color:#dc2626;">$58-62</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">Stop Loss</div>
+                        <div class="level-value" style="color:#dc2626;">$72</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">TP1</div>
+                        <div class="level-value" style="color:#16a34a;">$45</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">TP2</div>
+                        <div class="level-value" style="color:#16a34a;">$32</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">R/R</div>
+                        <div class="level-value">1:2.0</div>
+                    </div>
+                </div>
+                <p style="margin-top:1rem; font-size:0.95rem; color:#475569;">
+                    Robert Half's core business &mdash; placing temporary finance, accounting, and legal professionals &mdash; is being structurally impaired by AI. Revenue has declined 8 consecutive quarters. The company trades at 15x earnings on a declining earnings base. We expect continued revenue erosion as AI tools replace the temp workers RHI places. The short thesis is reinforced by Hays plc (HAS.L), which has shown even faster deterioration in the UK/Australian market.
+                </p>
+            </div>
+
+            <h3 style="color:#0f172a; margin-top:2rem;"><i class="fa-solid fa-arrow-trend-up" style="color:#16a34a; margin-right:8px;"></i> Long Thesis: Beneficiaries of Cheaper Labor Costs</h3>
+            <div class="trade-box">
+                <h3 style="color:#0f172a; margin-top:0;">Long META &mdash; Meta Platforms</h3>
+                <div class="trade-levels">
+                    <div class="level-item">
+                        <div class="level-label">Entry</div>
+                        <div class="level-value" style="color:#16a34a;">$580-620</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">Stop Loss</div>
+                        <div class="level-value" style="color:#dc2626;">$520</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">TP1</div>
+                        <div class="level-value" style="color:#16a34a;">$720</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">TP2</div>
+                        <div class="level-value" style="color:#16a34a;">$850</div>
+                    </div>
+                    <div class="level-item">
+                        <div class="level-label">R/R</div>
+                        <div class="level-value">1:2.3</div>
+                    </div>
+                </div>
+                <p style="margin-top:1rem; font-size:0.95rem; color:#475569;">
+                    Meta is the ultimate beneficiary of cheaper cognitive labor. With 70,000+ employees and $40B+ in annual compensation expense, even a 15% productivity gain from AI translates to billions in margin expansion. Meta is also one of the largest AI model builders (Llama), meaning it both <em>creates</em> the displacement tools and <em>benefits</em> from their deployment internally. Zuckerberg has explicitly stated that AI will handle the work of "mid-level engineers" &mdash; this is margin expansion in real time.
+                </p>
+            </div>
+
+            <!-- EChart 2: Labor Cost Index Projection -->
+            <div id="chart-labor-cost" style="width:100%; height:420px; margin-top:2rem;"></div>
+            <script>
+                (function(){
+                    var dom = document.getElementById('chart-labor-cost');
+                    var chart = echarts.init(dom);
+                    var option = {
+                        title: { text: 'White-Collar Labor Cost Index (Indexed: 2020 = 100)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+                        tooltip: { trigger: 'axis' },
+                        legend: { bottom: 0, data: ['Staffing Industry Revenue', 'Tech Company Margins', 'AI Tool Spend'] },
+                        grid: { left: '4%', right: '4%', bottom: '14%', top: '14%', containLabel: true },
+                        xAxis: { type: 'category', data: ['2020', '2021', '2022', '2023', '2024', '2025E', '2026E', '2027E', '2028E'] },
+                        yAxis: { type: 'value', axisLabel: { formatter: '{value}' } },
+                        series: [
+                            {
+                                name: 'Staffing Industry Revenue',
+                                type: 'line',
+                                smooth: true,
+                                data: [100, 118, 125, 115, 105, 92, 80, 68, 55],
+                                lineStyle: { width: 3, color: '#dc2626' },
+                                itemStyle: { color: '#dc2626' },
+                                areaStyle: { color: 'rgba(220,38,38,0.08)' }
+                            },
+                            {
+                                name: 'Tech Company Margins',
+                                type: 'line',
+                                smooth: true,
+                                data: [100, 108, 105, 112, 122, 135, 150, 168, 185],
+                                lineStyle: { width: 3, color: '#16a34a' },
+                                itemStyle: { color: '#16a34a' },
+                                areaStyle: { color: 'rgba(22,163,106,0.08)' }
+                            },
+                            {
+                                name: 'AI Tool Spend',
+                                type: 'line',
+                                smooth: true,
+                                data: [100, 120, 180, 350, 600, 950, 1400, 1900, 2500],
+                                lineStyle: { width: 3, color: '#8b5cf6', type: 'dashed' },
+                                itemStyle: { color: '#8b5cf6' }
+                            }
+                        ]
+                    };
+                    chart.setOption(option);
+                    window.addEventListener('resize', function(){ chart.resize(); });
+                })();
+            </script>
+            <p style="font-size:0.85rem; color:#94a3b8; text-align:center; margin-top:0.5rem;">
+                Source: Market Watch estimates, Goldman Sachs, McKinsey. Note: AI Tool Spend uses right axis scale (100 = $5B in 2020).
+            </p>
+
+            <div class="alert-box" style="margin-top:1.5rem;">
+                <strong><i class="fa-solid fa-clock" style="margin-right:6px;"></i> Timing & Sizing:</strong> These are <strong>12-24 month</strong> swing trades. The staffing short is a structural theme, not a macro call &mdash; it works in both bull and bear markets because the headwind is AI adoption, not economic cycle. Size the short at 3-5% of portfolio. The META long is a core position (5-8%). Use options for the RHI short (buy puts, sell call spreads) to cap upside risk.
+            </div>
+        </div>
+
+        <!-- =========================================================
+             SECTION 8: VALIDATION / INVALIDATION + CATALYSTS
+             ========================================================= -->
+        <div class="content-card">
+            <h2><i class="fa-solid fa-list-check" style="color:#8b5cf6;"></i> Section 8: Thesis Validation &amp; Catalysts</h2>
+
+            <div class="validation-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+                <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.5rem;">
+                    <h4 style="color:#166534; margin-top:0;"><i class="fa-solid fa-check-circle"></i> Validation Signals (Thesis Confirmed)</h4>
+                    <ul class="checklist">
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>Major employers publicly announcing AI-driven headcount reductions (&gt;10% of workforce)</span></li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>RHI and staffing peers reporting continued revenue decline for 4+ consecutive quarters</span></li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>White-collar unemployment claims rising while blue-collar remains stable</span></li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>Reskilling platform enrollment surging &gt;40% YoY (COUR, UDMY)</span></li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>UBI legislation introduced in major economy (US, EU, UK)</span></li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <span>Wage deflation in white-collar sectors confirmed by BLS data</span></li>
+                    </ul>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.5rem;">
+                    <h4 style="color:#991b1b; margin-top:0;"><i class="fa-solid fa-xmark-circle"></i> Invalidation Signals (Thesis Wrong)</h4>
+                    <ul class="checklist">
+                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>AI adoption stalls due to hallucination problems, regulatory backlash, or enterprise distrust</span></li>
+                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Staffing industry revenue stabilizes or rebounds (indicating Jevons Paradox working)</span></li>
+                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Governments impose "AI employment mandates" forcing minimum human staffing ratios</span></li>
+                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>New job categories absorbing displaced workers faster than displacement occurs</span></li>
+                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>"Robot tax" legislation passes, making AI adoption significantly more expensive</span></li>
+                        <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <span>Union-led resistance successfully blocks AI deployment in major sectors (EU likelihood)</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="color:#0f172a; margin-top:2rem;"><i class="fa-solid fa-calendar-days" style="color:#d97706; margin-right:8px;"></i> Key Catalysts Calendar</h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date / Period</th>
+                            <th>Catalyst</th>
+                            <th>Impact</th>
+                            <th>Watch For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Q1-Q2 2026</strong></td>
+                            <td>RHI, MAN, Adecco earnings</td>
+                            <td><span class="badge-red">High</span></td>
+                            <td>Revenue guidance cuts, placement volume declines, AI commentary</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Monthly</strong></td>
+                            <td>BLS Jobs Report (Non-Farm Payrolls)</td>
+                            <td><span class="badge-red">High</span></td>
+                            <td>White-collar vs. blue-collar job growth divergence</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q2 2026</strong></td>
+                            <td>EU AI Act enforcement begins (hiring provisions)</td>
+                            <td><span class="badge-blue">Med</span></td>
+                            <td>Mandatory disclosure of AI-driven job cuts by EU employers</td>
+                        </tr>
+                        <tr>
+                            <td><strong>H2 2026</strong></td>
+                            <td>US Congressional hearings on AI and employment</td>
+                            <td><span class="badge-blue">Med</span></td>
+                            <td>UBI proposals, automation tax discussions, bipartisan sentiment</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ongoing</strong></td>
+                            <td>Big Tech earnings calls (META, GOOG, MSFT, AMZN)</td>
+                            <td><span class="badge-red">High</span></td>
+                            <td>AI productivity gains quantified, hiring freezes, workforce efficiency metrics</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q3-Q4 2026</strong></td>
+                            <td>First wave of AI agent deployment at enterprise scale</td>
+                            <td><span class="badge-red">High</span></td>
+                            <td>Salesforce AgentForce, ServiceNow AI, actual displacement data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- EChart 3: Displacement Timeline Gauge -->
+            <div id="chart-displacement-timeline" style="width:100%; height:400px; margin-top:2rem;"></div>
+            <script>
+                (function(){
+                    var dom = document.getElementById('chart-displacement-timeline');
+                    var chart = echarts.init(dom);
+                    var option = {
+                        title: { text: 'White-Collar Displacement Progress (% of At-Risk Jobs)', left: 'center', top: 0, textStyle: { fontSize: 14, fontWeight: 700 } },
+                        tooltip: { trigger: 'item' },
+                        series: [
+                            {
+                                name: 'Current',
+                                type: 'gauge',
+                                center: ['25%', '60%'],
+                                radius: '65%',
+                                startAngle: 200,
+                                endAngle: -20,
+                                min: 0,
+                                max: 100,
+                                splitNumber: 10,
+                                progress: { show: true, width: 18, itemStyle: { color: '#f59e0b' } },
+                                axisLine: { lineStyle: { width: 18, color: [[0.3, '#10b981'], [0.6, '#f59e0b'], [1, '#dc2626']] } },
+                                pointer: { show: true },
+                                axisTick: { show: false },
+                                splitLine: { show: false },
+                                axisLabel: { show: false },
+                                title: { offsetCenter: [0, '80%'], fontSize: 13, fontWeight: 700, color: '#334155' },
+                                detail: { valueAnimation: true, formatter: '{value}%', fontSize: 28, fontWeight: 800, color: '#f59e0b', offsetCenter: [0, '45%'] },
+                                data: [{ value: 12, name: '2025 (Now)' }]
+                            },
+                            {
+                                name: 'Projected 2028',
+                                type: 'gauge',
+                                center: ['75%', '60%'],
+                                radius: '65%',
+                                startAngle: 200,
+                                endAngle: -20,
+                                min: 0,
+                                max: 100,
+                                splitNumber: 10,
+                                progress: { show: true, width: 18, itemStyle: { color: '#dc2626' } },
+                                axisLine: { lineStyle: { width: 18, color: [[0.3, '#10b981'], [0.6, '#f59e0b'], [1, '#dc2626']] } },
+                                pointer: { show: true },
+                                axisTick: { show: false },
+                                splitLine: { show: false },
+                                axisLabel: { show: false },
+                                title: { offsetCenter: [0, '80%'], fontSize: 13, fontWeight: 700, color: '#334155' },
+                                detail: { valueAnimation: true, formatter: '{value}%', fontSize: 28, fontWeight: 800, color: '#dc2626', offsetCenter: [0, '45%'] },
+                                data: [{ value: 38, name: '2028 (Projected)' }]
+                            }
+                        ]
+                    };
+                    chart.setOption(option);
+                    window.addEventListener('resize', function(){ chart.resize(); });
+                })();
+            </script>
+            <p style="font-size:0.85rem; color:#94a3b8; text-align:center; margin-top:0.5rem;">
+                Source: Market Watch estimates based on Goldman Sachs, McKinsey, and company disclosures. "At-risk" = jobs where &gt;50% of tasks are automatable by current AI.
+            </p>
+
+            <div class="pedagogy-box" style="margin-top:2rem;">
+                <h4 style="color:#1e40af !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> The Investor's Framework: How to Position</h4>
+                <p style="margin:0; font-size:1rem; color:#334155; line-height:1.7;">
+                    The labor displacement trade is a <strong>barbell strategy</strong>. On one end: short the intermediaries (staffing firms, freelance platforms, BPOs) whose entire business model is built on placing human workers that AI can replace. On the other end: long the beneficiaries &mdash; tech platforms that see margin expansion from AI productivity gains, and reskilling platforms that benefit from displaced workers seeking new skills. Avoid the middle &mdash; companies that are neither fully displaced nor fully augmented will be the most volatile and unpredictable.
+                </p>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="content-card" style="background:#f8fafc; border:1px solid #e2e8f0;">
+            <p style="font-size:0.8rem; color:#94a3b8; margin:0; line-height:1.7;">
+                <strong>Disclaimer:</strong> This analysis is for educational and informational purposes only. It does not constitute financial advice, investment advice, or a recommendation to buy, sell, or short any security. All investment decisions carry risk, including the risk of total loss. Short selling carries theoretically unlimited risk. Past performance is not indicative of future results. The author may hold positions in the securities discussed. Always conduct your own due diligence and consult a licensed financial advisor before making investment decisions.
+            </p>
         </div>
 
     </div><!-- /container -->
