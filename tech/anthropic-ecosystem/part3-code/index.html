@@ -1,26 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Development: Artifacts & Claude Code | Anthropic Ecosystem &mdash; Part 3 | Market Watch</title>
+    <title>L'Interface Interactive (Artifacts & Code) — Débutant — Partie 3/5 | Market Watch</title>
     <meta name="description"
-        content="Part 3 of the Anthropic Ecosystem series. How Anthropic changed software engineering forever with interactive Artifacts and the autonomous Claude Code CLI.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        content="Découvrez Artifacts et Claude Code d'Anthropic. L'IA qui génère des applications web interactives, des graphiques et code directement sur votre ordinateur.">
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fcfcfc;
-            color: #1e293b;
-            margin: 0;
-        }
-
+        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -40,8 +50,10 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
+        }
+
+        .brand-logo:hover {
+            color: #9333ea;
         }
 
         .series-nav {
@@ -52,6 +64,15 @@
             justify-content: center;
             gap: 0.5rem;
             flex-wrap: wrap;
+        }
+
+        .series-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 1rem;
         }
 
         .series-link {
@@ -66,8 +87,8 @@
         }
 
         .series-link:hover {
-            border-color: #c084fc;
-            color: #c084fc;
+            border-color: #d8b4fe;
+            color: #d8b4fe;
         }
 
         .series-link.current {
@@ -76,122 +97,434 @@
             border-color: #9333ea;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        .hero-section {
+            padding: 4rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
+            text-align: center;
         }
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f3e8ff 0%, #fcfcfc 100%);
-            text-align: center;
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #9333ea;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(147, 51, 234, 0.1);
+            color: #9333ea;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -5rem auto 0;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
         }
 
         h2 {
             font-size: 1.8rem;
+            font-weight: 800;
             color: #0f172a;
-            margin-top: 2.5rem;
+            margin: 3rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 1.5rem;
+        }
+
+        .pedagogy-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #9333ea;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .pedagogy-box h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: #7e22ce;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .decision-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 3rem 0;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .decision-card p {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         .takeaway-box {
             background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
             border: 1px solid #d8b4fe;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .footer-bar {
+            margin: 3rem 0;
             text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
         }
 
-        .pedagogy-box {
-            background: #f8fafc;
-            border-left: 4px solid #9333ea;
-            padding: 1.5rem;
-            border-radius: 0 12px 12px 0;
+        .split-ui-demo {
+            display: flex;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 300px;
             margin: 2rem 0;
+            background: #fff;
+        }
+
+        .split-ui-left {
+            width: 40%;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .split-ui-right {
+            width: 60%;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #faf5ff;
+        }
+
+        .chat-bubble {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-bubble.bot {
+            background: rgba(147, 51, 234, 0.1);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
+        .artifact-demo-box {
+            width: 100%;
+            height: 100%;
+            max-width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ad-header {
+            background: #9333ea;
+            padding: 10px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .ad-body {
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .ad-calc-row {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .decision-card {
+                grid-template-columns: 1fr;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .split-ui-demo {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .split-ui-left,
+            .split-ui-right {
+                width: 100%;
+            }
+
+            .split-ui-left {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- GTM No Script -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
     <nav class="brand-bar">
-        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
-                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;"><i
-                class="fa-solid fa-arrow-left"></i> Back to Tech</a>
+        <a href="/" class="brand-logo">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
+        </a>
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+            <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
+        </a>
     </nav>
+
     <div class="series-nav">
-        <a href="../part1-foundation/" class="series-link">1 &mdash; Foundation</a>
-        <a href="../part2-cowork/" class="series-link">2 &mdash; Cowork</a>
-        <a href="./" class="series-link current">3 &mdash; Code</a>
-        <a href="../part4-agents/" class="series-link">4 &mdash; Agents</a>
-        <a href="../part5-open-protocol/" class="series-link">5 &mdash; MCP</a>
+        <span class="series-title">Écosystème Anthropic</span>
+        <a href="../part1-foundation/" class="series-link">1 — Fondations</a>
+        <a href="../part2-cowork/" class="series-link">2 — Collaboration</a>
+        <a href="./" class="series-link current">3 — Code & Artifacts</a>
+        <a href="../part4-agents/" class="series-link">4 — Agents Autonomes</a>
+        <a href="../part5-open-protocol/" class="series-link">5 — Protocole MCP</a>
     </div>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Development: Artifacts & Claude
-            Code</h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            The interface is the product. Anthropic recognized that pasting code back and forth was archaic. They built
-            visual workspaces and direct-to-terminal agents.
+    <header class="hero-section">
+        <div class="hero-date">GÉNÉRATION VISUELLE ET CODE AUTONOME</div>
+        <h1
+            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            L'Écran Divisé : Adieu le Copier-Coller
+        </h1>
+        <p
+            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            L'ancienne intelligence artificielle (IA) recrachait de longs blocs de texte. Anthropic a cassé ce modèle en
+            créant "Artifacts" : l'IA génère en direct, sous vos yeux, des applications que vous pouvez manipuler.
         </p>
-    </div>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <p style="font-size:1.1rem; line-height:1.8;">If Claude 3.5 Sonnet provided the "brains" for world-class
-            software engineering, Anthropic's UI innovations provided the "hands." The release of
-            <strong>Artifacts</strong> fundamentally changed how humans interact with LLMs.</p>
-
-        <h2><i class="fa-solid fa-window-restore" style="color:#9333ea"></i> Artifacts: The Extensible Canvas</h2>
-        <p>Before Artifacts, requesting code from an AI resulted in a long, scrolling wall of text. If you asked for a
-            React dashboard, you got a block of code you had to copy, paste into your IDE, run `npm install`, and debug
-            locally.</p>
-        <p>With Artifacts, Anthropic created a split-pane interface. When Claude generates code, web components, Mermaid
-            diagrams, or SVG graphics, they render <strong>live and interactively</strong> in an adjacent window. You
-            don't just see the code; you interact with the running application immediately inside the browser.</p>
-
-        <div class="pedagogy-box">
-            <h4 style="color:#581c87; margin-top:0;"><i class="fa-solid fa-code"></i> Concrete Disruption: Rapid
-                Prototyping</h4>
-            <p>A Product Manager can now say: <em>"Build an interactive options payoff calculator in React using
-                    Tailwind."</em> In 10 seconds, a fully functional, styled web app appears next to the chat. The PM
-                can click buttons, move sliders, test the logic, and say: <em>"Make the 'Max Loss' text red."</em> No
-                IDE required. The friction from idea to working prototype went from days to seconds.</p>
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 8 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-window-restore"></i> Thème : Architecture Logicielle & UX
+            </div>
         </div>
+    </header>
 
-        <h2><i class="fa-solid fa-terminal" style="color:#9333ea"></i> Claude Code: The CLI Engineer</h2>
-        <p>While Artifacts democratized prototyping, hardened Software Engineers live in the terminal. Enter
-            <strong>Claude Code</strong>. Rather than using an AI chat interface, developers install a CLI tool that
-            lives directly inside their local environment.</p>
-        <p>It acts as an autonomous pairing partner. You type:
-            <code>claude "Refactor the authentication middleware to use JWT instead of sessions, and update the tests."</code>
-            The agent reads your actual live file system, edits the code, runs the test suite to verify it hasn't broken
-            anything, identifies linting errors, fixes them autonomously, and presents you with a working state.</p>
+    <main class="container">
+        <article class="content-card">
+            <p>
+                Avant l'invention des <strong>Artifacts</strong> (les Artéfacts), utiliser l'Intelligence Artificielle
+                pour créer quelque chose, comme une page web, un graphique, ou du code, était extrêmement fastidieux.
+            </p>
+            <p>
+                Imaginez : un entrepreneur demande à l'IA de lui générer le code informatique d'une petite calculatrice
+                immobilière pour son site web. L'IA rédigeait laborieusement 300 lignes de texte "technique".
+                L'entrepreneur devait copier ce texte abscons, installer des logiciels compliqués (des "éditeurs de
+                code"), coller le texte, sauvegarder, et prier pour que ça fonctionne sur son navigateur. C'était "L'Âge
+                de Pierre" de l'IA (pourtant vieux d'à peine une année).
+            </p>
 
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-flag-checkered"></i> The 10x Engineer is Now
-                the 100x Manager</h3>
-            <p>Coders no longer "type code." They orchestrate intent. Claude handles the syntax, the refactoring, and
-                the boilerplate. Human engineers have been elevated to architectural reviewers.</p>
-            <a href="../part4-agents/"
-                style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#9333ea; color:white; text-decoration:none; border-radius:8px; font-weight:600;">Next:
-                Autonomous Agents (Computer Use) &rarr;</a>
-        </div>
-    </div>
-    <div class="footer-bar">&copy; 2026 Market Watch.</div>
+            <h2><i class="fa-solid fa-window-restore" style="color:#9333ea;"></i> Les Artifacts : Le Code Devient Visuel
+            </h2>
+            <p>
+                En inaugurant l'interface <strong>Artifacts</strong>, Anthropic a simplement coupé l'écran en deux.
+            </p>
+
+            <!-- Split UI Demo Illustration -->
+            <div class="split-ui-demo">
+                <div class="split-ui-left">
+                    <div style="font-size:0.75rem; font-weight:bold; color:#64748b; margin-bottom:10px;"><i
+                            class="fa-solid fa-comment-dots"></i> CHAT (GAUCHE)</div>
+                    <div class="chat-bubble">
+                        <strong>Utilisateur :</strong> Crée-moi une "Calculatrice Épargne". Affiche-la en direct s'il te
+                        plaît.
+                    </div>
+                    <div class="chat-bubble bot">
+                        <strong>Claude :</strong> Bien sûr ! J'écris le code, et voici l'<em>Artifact</em> qui s'ouvre
+                        pour vous sur la droite ➡️.
+                    </div>
+                </div>
+                <div class="split-ui-right">
+                    <div
+                        style="font-size:0.75rem; font-weight:bold; color:#64748b; margin-bottom:10px; width:100%; text-align:left;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> ARTIFACT (DROITE)</div>
+
+                    <div class="artifact-demo-box">
+                        <div class="ad-header">Calculatrice Épargne</div>
+                        <div class="ad-body">
+                            <div class="ad-calc-row"><span>Apport initial</span> <strong>10 000 €</strong></div>
+                            <div class="ad-calc-row"><span>Taux d'intérêt</span> <strong>5 %</strong></div>
+                            <div class="ad-calc-row"><span>Durée</span> <strong>10 ans</strong></div>
+                            <div style="margin-top:auto; font-size:1.2rem; font-weight:900; color:#9333ea;">16 288 €
+                            </div>
+                            <button
+                                style="width:100%; padding:8px; background:#f4f4f5; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer;">Simuler
+                                (Cliquable)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p>
+                À gauche, vous discutez. À droite, <strong>la création apparaît instantanément, telle une application
+                    fonctionnelle</strong>. S'il s'agit de code (React, HTML, SVG), Claude héberge ce code dans votre
+                navigateur web, l'exécute, et vous présente le résultat.
+            </p>
+            <p>
+                Plus besoin d'expert en programmation pour voir si "le bouton marche" ou si "la couleur est bonne".
+                L'utilisateur lambda dit simplement à l'IA : <em>"Rends le bouton vert au lieu de gris"</em>, et
+                l'application (l'Artifact) se met à jour visuellement à droite.
+            </p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-bolt"></i> Prototypes en 30 secondes pour les managers</h4>
+                <p>Cela bouleverse le monde de la gestion de projet et de l'innovation logicielle. Avant, un manager
+                    écrivait un long cahier des charges, l'envoyait à une équipe technique, et attendait 3 semaines pour
+                    "voir de quoi ça a l'air". Aujourd'hui, un directeur financier génère en 1 minute un Artifact
+                    fonctionnel ("Tableau de bord amortissements"), le teste, et dit à l'équipe technique : <em>"Faites
+                        exactement comme ce brouillon parfait, reliez-le juste à notre base de données."</em></p>
+            </div>
+
+            <h2><i class="fa-solid fa-terminal" style="color:#9333ea;"></i> Claude Code : L'Embauche d'un Développeur
+                Junior</h2>
+            <p>
+                Les Artifacts sont merveilleux pour les commerciaux, les managers ou ceux qui veulent "voir" le logiciel
+                sans le coder. Mais qu'en est-il du Développeur (Ingénieur logiciel) qui passe ses nuits devant des
+                lignes de code noir et blanc ? Anthropic a conçu <strong>Claude Code</strong>.
+            </p>
+
+            <p>
+                Habituellement, un programmeur coincé sur un bug copiait la portion de code défaillante, se rendait sur
+                le site de Claude ou ChatGPT, demandait la solution, et collait le bout de code réparé.
+            </p>
+            <p>
+                <strong>Claude Code est un agent autonome qui vit dans l'ordinateur du développeur (le
+                    terminal).</strong> Le programmeur lui dit simplement en langage naturel :<br>
+                <code>claude "Refais toute la structure du formulaire de paiement pour ajouter une case 'Carte Cadeau'. Vérifie que tes changements n'ont rien cassé dans le reste de l'application."</code>
+            </p>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i class="fa-solid fa-cog fa-spin"></i>
+                        L'Autonomie Totale</h3>
+                    <p>Claude Code ne se contente pas de vous "donner du texte". Il a accès à vos fichiers et à vos
+                        dossiers informatiques.</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <ul style="margin:0; padding-left:1.2rem; color:#e2e8f0; line-height:1.7;">
+                        <li>Il <strong>lit</strong> les fichiers nécessaires de son propre chef.</li>
+                        <li>Il <strong>écrit</strong> directement les modifications dans les fichiers.</li>
+                        <li>Il <strong>teste</strong> l'application informatiquement. S'il trouve des erreurs, il
+                            s'auto-corrige.</li>
+                        <li>Il vous prépare le dossier, "prêt à l'emploi".</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2><i class="fa-solid fa-arrow-right" style="color:#9333ea;"></i> En Conclusion</h2>
+            <p>
+                Anthropic a compris un concept crucial : <strong>L'interface est le produit</strong>. Si vous concevez
+                le modèle d'Intelligence Artificielle (le cerveau) le plus intelligent au monde, mais que l'expérience
+                utilisateur vous condamne à faire des copier-coller de texte toute la journée, vous perdez 90% du
+                potentiel de gain de temps.
+            </p>
+
+            <div class="takeaway-box">
+                <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-forward-step"></i> Ce qui vous attend
+                </h3>
+                <p style="color:#475569; font-size:1.05rem;">
+                    Avec Claude Code, nous avons vu que l'IA pouvait lire et écrire des fichiers informatiques.
+                    <strong>Mais que se passe-t-il si l'IA possède littéralement le contrôle total d'un écran
+                        d'ordinateur, pour déplacer elle-même la souris et cliquer sur des boutons comme un être humain
+                        ?</strong> C'est exactement ce qu'Anthropic a rendu possible avec le <em>"Computer Use"</em>,
+                    l'Agent Autonome Ultime, que nous analyserons dans la Partie 4.
+                </p>
+                <a href="../part4-agents/" class="btn-action"
+                    style="background:#9333ea; border-radius:12px; padding:12px 24px; color:white; text-decoration:none; display:inline-block; font-weight:700; margin-top:1rem; box-shadow:0 4px 10px rgba(147, 51, 234, 0.3);">
+                    Passer à la Partie 4 : Agents Autonomes &rarr;
+                </a>
+            </div>
+
+        </article>
+    </main>
+
+    <footer
+        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
+        risques.
+    </footer>
 </body>
 
 </html>

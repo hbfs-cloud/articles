@@ -1,26 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Foundation: Opus, Sonnet, Haiku | Anthropic Ecosystem &mdash; Part 1 | Market Watch</title>
+    <title>Les Fondations de Claude (Anthropic) — Débutant — Partie 1/5 | Market Watch</title>
     <meta name="description"
-        content="Part 1 of the Anthropic Ecosystem series. Understanding the Claude 3 and 3.5 model family, Constitutional AI, and why Anthropic is disrupting enterprise workflows.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        content="Découvrez Anthropic et ses modèles révolutionnaires (Opus, Sonnet, Haiku). Une introduction simple pour comprendre l'IA Constitutionnelle et son impact sur les entreprises.">
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Charts & Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#9333ea', primaryTextColor: '#fff', lineColor: '#d8b4fe' } });</script>
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fcfcfc;
-            color: #1e293b;
-            margin: 0;
-        }
-
+        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -40,8 +55,10 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
+        }
+
+        .brand-logo:hover {
+            color: #9333ea;
         }
 
         .series-nav {
@@ -52,6 +69,15 @@
             justify-content: center;
             gap: 0.5rem;
             flex-wrap: wrap;
+        }
+
+        .series-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 1rem;
         }
 
         .series-link {
@@ -66,8 +92,8 @@
         }
 
         .series-link:hover {
-            border-color: #c084fc;
-            color: #c084fc;
+            border-color: #d8b4fe;
+            color: #d8b4fe;
         }
 
         .series-link.current {
@@ -76,157 +102,411 @@
             border-color: #9333ea;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        .hero-section {
+            padding: 4rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
+            text-align: center;
         }
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f3e8ff 0%, #fcfcfc 100%);
-            text-align: center;
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #9333ea;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(147, 51, 234, 0.1);
+            color: #9333ea;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -5rem auto 0;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
         }
 
         h2 {
             font-size: 1.8rem;
+            font-weight: 800;
             color: #0f172a;
-            margin-top: 2.5rem;
+            margin: 3rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
         }
 
-        .takeaway-box {
-            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-            border: 1px solid #d8b4fe;
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
         }
 
-        .footer-bar {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 1.5rem;
+        }
+
+        .pedagogy-box {
             background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-        }
-
-        .model-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .model-card {
             border: 1px solid #e2e8f0;
+            border-left: 4px solid #9333ea;
             border-radius: 12px;
-            padding: 1.5rem;
-            background: #fff;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
 
-        .model-card h3 {
-            margin-top: 0;
+        .pedagogy-box h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
             color: #7e22ce;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .pedagogy-box {
-            background: #f8fafc;
-            border-left: 4px solid #9333ea;
+        .decision-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 3rem 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .decision-card p {
+            color: #cbd5e1;
+            font-size: 1rem;
+        }
+
+        .chart-container {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             padding: 1.5rem;
-            border-radius: 0 12px 12px 0;
+            margin: 2.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .takeaway-box {
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border: 1px solid #d8b4fe;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .data-table-wrapper {
+            overflow-x: auto;
             margin: 2rem 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .decision-card {
+                grid-template-columns: 1fr;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- GTM No Script -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
     <nav class="brand-bar">
-        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
-                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;"><i
-                class="fa-solid fa-arrow-left"></i> Back to Tech</a>
+        <a href="/" class="brand-logo">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
+        </a>
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+            <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
+        </a>
     </nav>
+
     <div class="series-nav">
-        <a href="./" class="series-link current">1 &mdash; Foundation</a>
-        <a href="../part2-cowork/" class="series-link">2 &mdash; Cowork</a>
-        <a href="../part3-code/" class="series-link">3 &mdash; Code</a>
-        <a href="../part4-agents/" class="series-link">4 &mdash; Agents</a>
-        <a href="../part5-open-protocol/" class="series-link">5 &mdash; MCP</a>
+        <span class="series-title">Écosystème Anthropic</span>
+        <a href="./" class="series-link current">1 — Fondations</a>
+        <a href="../part2-cowork/" class="series-link">2 — Collaboration</a>
+        <a href="../part3-code/" class="series-link">3 — Code & Artifacts</a>
+        <a href="../part4-agents/" class="series-link">4 — Agents Autonomes</a>
+        <a href="../part5-open-protocol/" class="series-link">5 — Protocole MCP</a>
     </div>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Anthropic: The Enterprise AI
-            Standard</h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            While others chase consumer hype, Anthropic has quietly built the most rigorous, reliable, and agentic AI
-            ecosystem on the planet. This series explains the disruption.
+    <header class="hero-section">
+        <div class="hero-date">INTRODUCTION À L'INTELLIGENCE ARTIFICIELLE D'ENTREPRISE</div>
+        <h1
+            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Anthropic : L'IA Conçue<br>pour le Travail Réel
+        </h1>
+        <p
+            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Vous avez tous entendu parler de ChatGPT. Mais dans les grandes entreprises, banques et laboratoires de
+            recherche, un autre acteur domine discrètement : Anthropic. Découvrez pourquoi.
         </p>
-    </div>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <p style="font-size:1.1rem; line-height:1.8;">If OpenAI is the "Apple" of AI—focusing on consumer-friendly,
-            polished, general-purpose tools—then <strong>Anthropic is becoming the "Red Hat" or "IBM" of the AI
-                era</strong>. Founded by former OpenAI researchers deeply concerned about AI safety, Anthropic has
-            designed an ecosystem explicitly engineered for enterprise reliability, high-context reasoning, and
-            autonomous agency.</p>
-
-        <h2><i class="fa-solid fa-microchip" style="color:#9333ea"></i> The Claude Family: Opus, Sonnet, & Haiku</h2>
-        <p>Anthropic rejected the "one giant model" approach, opting instead for a family of models tailored to specific
-            latency, cost, and intelligence requirements. The Claude 3.5 generation fundamentally broke the tradeoff
-            between speed and reasoning capability.</p>
-
-        <div class="model-grid">
-            <div class="model-card" style="border-top: 4px solid #581c87;">
-                <h3><i class="fa-solid fa-brain"></i> Opus</h3>
-                <p><strong>The Heavyweight.</strong> Designed for extreme complexity, R&D, and strategic analysis. When
-                    it releases, Opus class models represent the absolute frontier of Anthropic's capabilities. It
-                    excels at multi-step logical deduction where no margin for error exists.</p>
-            </div>
-            <div class="model-card" style="border-top: 4px solid #9333ea;">
-                <h3><i class="fa-solid fa-bolt"></i> Sonnet</h3>
-                <p><strong>The Workhorse.</strong> Claude 3.5 Sonnet shocked the industry by outperforming almost all
-                    competitor's heavyweight models (including GPT-4o) at a fraction of the cost and at 2x the speed. It
-                    is arguably the best coding model in the world today.</p>
-            </div>
-            <div class="model-card" style="border-top: 4px solid #d8b4fe;">
-                <h3><i class="fa-solid fa-wind"></i> Haiku</h3>
-                <p><strong>The Speedster.</strong> Claude 3.5 Haiku is blazing fast and incredibly cheap. It is designed
-                    to be the foundational layer for high-volume, real-time agentic workflows—parsing logs, extracting
-                    JSON, and routing queries instantaneously.</p>
-            </div>
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 6 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-book-open"></i> Thème : Intelligence Artificielle</div>
         </div>
+    </header>
 
-        <h2><i class="fa-solid fa-scale-balanced" style="color:#9333ea"></i> Constitutional AI: The Hidden Moat</h2>
-        <p>Most AI models are aligned using Reinforcement Learning from Human Feedback (RLHF), which requires armies of
-            human raters. Human raters introduce bias, inconsistency, and cannot easily grade complex domain-expert
-            tasks (like quantum physics or advanced quantitative finance).</p>
-        <p>Anthropic pioneered <strong>Constitutional AI</strong>. Instead of human raters, the model relies on a set of
-            foundational principles (a "Constitution" drawing from the UN Declaration of Human Rights, Apple's Terms of
-            Service, etc.). The AI evaluates and corrects <em>its own</em> behavior against these rules. This allows
-            Anthropic to scale alignment safely without human bottlenecks, resulting in a model that "refuses" less
-            often on false positives and remains remarkably un-sycophantic (it won't just agree with a user if the user
-            is wrong).</p>
+    <main class="container">
+        <article class="content-card">
+            <p>
+                Imaginez deux entreprises automobiles. La première (pensons à <strong>OpenAI</strong> avec ChatGPT) crée
+                des voitures de sport spectaculaires, destinées au grand public. Elles font le buzz, ont des millions de
+                fonctionnalités amusantes, et sont testées par tout le monde.
+            </p>
+            <p>
+                La seconde entreprise (<strong>Anthropic</strong>) construit des poids-lourds, des tracteurs agricoles
+                et des ambulances. Ce n'est pas "sexy" pour le grand public, mais ce sont les véhicules qui font tourner
+                l'économie mondiale. Anthropic a été fondée par une équipe d'anciens cadres d'OpenAI, profondément
+                préoccupés par le fait que l'IA grand public n'était ni assez sûre, ni assez fiable pour les vraies
+                tâches d'entreprise.
+            </p>
 
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-flag-checkered"></i> The Enterprise Edge</h3>
-            <p>Enterprises cannot afford hallucinating, people-pleasing AIs. By focusing on massive context windows
-                (200K+ tokens), extreme recall accuracy, and Constitutional safety, Anthropic laid a foundation built
-                for work, not entertainment.</p>
-            <a href="../part2-cowork/"
-                style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#9333ea; color:white; text-decoration:none; border-radius:8px; font-weight:600;">Next:
-                Anthropic for Teams (Cowork) &rarr;</a>
-        </div>
-    </div>
-    <div class="footer-bar">&copy; 2026 Market Watch.</div>
+            <h2><i class="fa-solid fa-robot" style="color:#9333ea;"></i> La Famille Claude 3.5 : Trois Outils pour Trois
+                Besoins</h2>
+            <p>
+                Au lieu d'avoir un seul énorme cerveau d'IA très cher et parfois lent, Anthropic a créé une "famille" de
+                modèles d'IA baptisée <strong>Claude</strong>. Chacun a une spécialité. Voici comment les comprendre
+                simplement :
+            </p>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Le Modèle</th>
+                            <th style="width: 25%;">L'Analogie 💡</th>
+                            <th style="width: 35%;">À quoi sert-il ?</th>
+                            <th style="width: 20%;">Vitesse & Coût</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🦅 Claude Opus</strong><br><span style="font-size:0.8rem; color:#64748b;">Le
+                                    Poids Lourd</span></td>
+                            <td>Le stratège en chef / Le scientifique</td>
+                            <td>Prendre des décisions complexes, analyser des contrats juridiques de 100 pages, résoudre
+                                des problèmes de mathématiques de haut niveau.</td>
+                            <td>Lent & Cher</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🐎 Claude Sonnet</strong><br><span style="font-size:0.8rem; color:#64748b;">Le
+                                    Cheval de Trait</span></td>
+                            <td>L'ingénieur expérimenté / L'analyste</td>
+                            <td>Le meilleur compromis au monde aujourd'hui. Il code aussi bien qu'Opus, mais va très
+                                vite. Excellent pour le travail quotidien.</td>
+                            <td>Très Rapide & Abordable</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🕊️ Claude Haiku</strong><br><span
+                                    style="font-size:0.8rem; color:#64748b;">L'Éclair</span></td>
+                            <td>L'assistant ultra-réactif / Le trieur</td>
+                            <td>Trier des milliers d'emails par seconde, traduire de petits textes immédiatement, lire
+                                des tickets de caisse.</td>
+                            <td>Instantané & Presque Gratuit</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Concept Clé : La "Fenêtre de Contexte" (Context Window)</h4>
+                <p>Imaginez que l'IA a la maladie d'Alzheimer : avant chaque conversation, elle ne sait rien de vous ou
+                    de votre entreprise.</p>
+                <p>La <strong>fenêtre de contexte</strong> est sa mémoire de travail à court terme. Pendant longtemps,
+                    l'IA ne retenait que l'équivalent de quelques pages de texte. Si vous colliez un document plus long,
+                    elle "oubliait" le début.</p>
+                <p>Anthropic a révolutionné cela avec des fenêtres de contexte gargantuesques : <strong>200 000 "tokens"
+                        (jetons)</strong>. Concrètement, vous pouvez donner à Claude un livre entier (environ 500
+                    pages), ou les rapports financiers de votre entreprise pour les 10 dernières années, en une seule
+                    demande, et poser des questions dessus sans qu'il n'oublie un seul mot.</p>
+            </div>
+
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#9333ea;"></i> L'IA Constitutionnelle : Le Secret de
+                la Sécurité</h2>
+            <p>
+                Généralement, pour qu'une IA ne dise pas de choses dangereuses ou fausses, on emploie des milliers de
+                personnes qui lisent ses réponses et lui donnent des "points" quand elle se comporte bien (cela
+                s'appelle le RLHF - <em>Apprentissage par renforcement à partir d'évaluations humaines</em>). Le
+                problème ? Les humains sont lents, font des erreurs, ou n'y connaissent rien si le sujet est trop
+                technique (comme la chimie nucléaire).
+            </p>
+            <p>
+                Aujourd'hui, l'élément différenciateur majeur d'Anthropic est <strong>l'IA Constitutionnelle</strong>.
+            </p>
+
+            <div class="chart-container">
+                <div class="chart-title">Principe de l'IA Constitutionnelle</div>
+                <div class="chart-subtitle">Comment Claude se corrige lui-même sans intervention humaine permanente
+                </div>
+                <div class="mermaid" style="display:flex; justify-content:center;">
+                    graph TD
+                    A[L'Utilisateur pose une question complexe] --> B(L'IA génère une première réponse)
+                    B --> C{L'IA consulte sa "Constitution"}
+                    C -->|Exemple: Est-ce contraire aux lois ?| D[L'IA identifie un problème]
+                    D --> E(L'IA corrige sa propre réponse)
+                    E --> F[La Réponse finale sécurisée est envoyée]
+                    C -->|Aucun problème| F
+                </div>
+            </div>
+
+            <p>
+                Plutôt que d'employer des milliers d'humains, Anthropic a écrit une "Constitution" (basée entre autres
+                sur la Déclaration des Droits de l'Homme de l'ONU). L'IA génère une réponse, la compare
+                <strong>elle-même</strong> à sa constitution, et se tape sur les doigts seule si elle a dévié, avant de
+                générer une version corrigée.
+            </p>
+            <p>
+                <strong>Pourquoi c'est important pour les entreprises ?</strong> Parce que Claude ne cherche pas à être
+                "sympa" à tout prix. Si un employé demande "génère-moi une fausse facture", une IA normale bien
+                entraînée dira non. Mais si la demande est un peu subtile, Claude, grâce à sa constitution robuste, est
+                beaucoup plus fiable et refuse d'halluciner ou de tromper l'utilisateur juste pour lui faire plaisir.
+            </p>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i
+                            class="fa-solid fa-building-circle-check"></i> Pourquoi les entreprises choisissent
+                        Anthropic</h3>
+                    <p>La technologie n'est rien sans un alignement avec le monde professionnel. Voici le résumé.</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <ul style="margin:0; padding-left:1.2rem; color:#e2e8f0; line-height:1.8;">
+                        <li><strong>Zéro données entraînées :</strong> Anthropic jure de ne jamais utiliser vos données
+                            privées pour s'entraîner.</li>
+                        <li><strong>Raisonnement pur :</strong> Moins de poésie, plus de logique pure (maths, code,
+                            lois).</li>
+                        <li><strong>Le "Non" ferme :</strong> Claude dira non à vos employés s'ils font fausse route,
+                            plutôt que d'inventer de fausses infos (hallucinations).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2><i class="fa-solid fa-arrow-right" style="color:#9333ea;"></i> En Conclusion</h2>
+            <p>
+                Les modèles de base (la "matière grise" de l'IA) ne sont que le début. Avoir un "cerveau" puissant est
+                utile, mais s'il travaille tout seul dans son coin, son utilité reste bloquée au stade de gadget. Pour
+                transformer une entreprise, ce cerveau doit collaborer avec des équipes entières et partager la mémoire
+                de l'entreprise.
+            </p>
+
+            <div class="takeaway-box">
+                <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-forward-step"></i> Ce qui vous attend
+                </h3>
+                <p style="color:#475569; font-size:1.05rem;">
+                    Maintenant que nous avons compris comment "réfléchit" Claude (avec Opus, Sonnet, Haiku et sa
+                    Constitution), nous allons voir dans la prochaine partie comment il "collabore". Nous explorerons la
+                    fonction <strong>Claude Pro / Teams</strong>, et pourquoi le concept de <strong>Projects</strong>
+                    permet de numériser le cerveau de votre entreprise.
+                </p>
+                <a href="../part2-cowork/" class="btn-action"
+                    style="background:#9333ea; border-radius:12px; padding:12px 24px; color:white; text-decoration:none; display:inline-block; font-weight:700; margin-top:1rem; box-shadow:0 4px 10px rgba(147, 51, 234, 0.3);">
+                    Passer à la Partie 2 : La Collaboration &rarr;
+                </a>
+            </div>
+
+        </article>
+    </main>
+
+    <footer
+        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
+        risques.
+    </footer>
 </body>
 
 </html>

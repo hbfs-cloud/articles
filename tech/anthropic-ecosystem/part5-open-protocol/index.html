@@ -1,26 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Open Standard: Model Context Protocol (MCP) | Anthropic Ecosystem &mdash; Part 5 | Market Watch</title>
+    <title>Le Standard Ouvert (Protocole MCP) — Débutant — Partie 5/5 | Market Watch</title>
     <meta name="description"
-        content="Part 5 of the Anthropic Ecosystem series. How the Model Context Protocol (MCP) standardizes AI tool use and ends context fragmentation.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        content="Découvrez le Model Context Protocol (MCP). La norme open-source d'Anthropic qui connecte l'IA à toutes les bases de données (Notion, Slack, SQL).">
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#9333ea', primaryTextColor: '#fff', lineColor: '#d8b4fe' } });</script>
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fcfcfc;
-            color: #1e293b;
-            margin: 0;
-        }
-
+        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -40,8 +53,10 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
+        }
+
+        .brand-logo:hover {
+            color: #9333ea;
         }
 
         .series-nav {
@@ -52,6 +67,15 @@
             justify-content: center;
             gap: 0.5rem;
             flex-wrap: wrap;
+        }
+
+        .series-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 1rem;
         }
 
         .series-link {
@@ -66,8 +90,8 @@
         }
 
         .series-link:hover {
-            border-color: #c084fc;
-            color: #c084fc;
+            border-color: #d8b4fe;
+            color: #d8b4fe;
         }
 
         .series-link.current {
@@ -76,129 +100,325 @@
             border-color: #9333ea;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        .hero-section {
+            padding: 4rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
+            text-align: center;
         }
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f3e8ff 0%, #fcfcfc 100%);
-            text-align: center;
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #9333ea;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(147, 51, 234, 0.1);
+            color: #9333ea;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -5rem auto 0;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
         }
 
         h2 {
             font-size: 1.8rem;
+            font-weight: 800;
             color: #0f172a;
-            margin-top: 2.5rem;
+            margin: 3rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 1.5rem;
+        }
+
+        .pedagogy-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #9333ea;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .pedagogy-box h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: #7e22ce;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .decision-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 3rem 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .decision-card p {
+            color: #cbd5e1;
+            font-size: 1rem;
         }
 
         .takeaway-box {
             background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
             border: 1px solid #d8b4fe;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .footer-bar {
+            margin: 3rem 0;
             text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
         }
 
-        .pedagogy-box {
-            background: #f8fafc;
-            border-left: 4px solid #9333ea;
+        .chart-container {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             padding: 1.5rem;
-            border-radius: 0 12px 12px 0;
-            margin: 2rem 0;
+            margin: 2.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .decision-card {
+                grid-template-columns: 1fr;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- GTM No Script -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
     <nav class="brand-bar">
-        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
-                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;"><i
-                class="fa-solid fa-arrow-left"></i> Back to Tech</a>
+        <a href="/" class="brand-logo">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
+        </a>
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+            <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
+        </a>
     </nav>
+
     <div class="series-nav">
-        <a href="../part1-foundation/" class="series-link">1 &mdash; Foundation</a>
-        <a href="../part2-cowork/" class="series-link">2 &mdash; Cowork</a>
-        <a href="../part3-code/" class="series-link">3 &mdash; Code</a>
-        <a href="../part4-agents/" class="series-link">4 &mdash; Agents</a>
-        <a href="./" class="series-link current">5 &mdash; MCP</a>
+        <span class="series-title">Écosystème Anthropic</span>
+        <a href="../part1-foundation/" class="series-link">1 — Fondations</a>
+        <a href="../part2-cowork/" class="series-link">2 — Collaboration</a>
+        <a href="../part3-code/" class="series-link">3 — Code & Artifacts</a>
+        <a href="../part4-agents/" class="series-link">4 — Agents Autonomes</a>
+        <a href="./" class="series-link current">5 — Protocole MCP</a>
     </div>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Model Context Protocol (MCP)</h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            The internet needed HTTP to standardize web browsing. Artificial Intelligence needed MCP to standardize data
-            access. Anthropic open-sourced the definitive connectivity layer for AI.
+    <header class="hero-section">
+        <div class="hero-date">STANDARDISATION D'INTERNET</div>
+        <h1
+            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Le Protocole MCP :<br>La Prise Universelle de l'IA
+        </h1>
+        <p
+            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            L'internet moderne avait besoin du "HTTP" pour uniformiser les connexions. L'Intelligence Artificielle de
+            votre entreprise avait besoin du "MCP" pour se brancher à toutes vos applications fermées d'entreprise de
+            façon unifiée.
         </p>
-    </div>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <p style="font-size:1.1rem; line-height:1.8;">Until recently, if you wanted your AI to read data from GitHub,
-            query a local PostgreSQL database, or check Slack, you had to write custom API integrations, deal with Oauth
-            flows, and inject raw JSON directly into the prompt. It was unscalable and fragile.</p>
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 7 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-plug"></i> Thème : Interopérabilité logicielle</div>
+        </div>
+    </header>
 
-        <h2><i class="fa-solid fa-plug" style="color:#9333ea"></i> The Universal Socket for AI</h2>
-        <p>Anthropic launched the <strong>Model Context Protocol (MCP)</strong> as an open-source standard. It operates
-            on a simple Client-Server architecture:</p>
-        <ul style="line-height:1.7; font-size:1.1rem;">
-            <li><strong>MCP Host (Client):</strong> An application with an AI model (like Claude Desktop, Cursor IDE, or
-                our Market Watch Agent).</li>
-            <li><strong>MCP Server:</strong> A lightweight service providing access to specific Data (Resources),
-                capabilities (Tools), or prompt templates (Prompts).</li>
-        </ul>
-        <p>Instead of manually copying code snippets, an engineer running Claude Desktop can point it to a local GitHub
-            MCP Server. Suddenly, Claude can organically browse repositories, read files, and push commits. If they
-            point it to an SQLite MCP Server, Claude can query databases natively.</p>
-
-        <div class="pedagogy-box">
-            <h4 style="color:#581c87; margin-top:0;"><i class="fa-solid fa-globe"></i> Open Source Disruption</h4>
-            <p>Anthropic crucially chose to make MCP <strong>open source</strong>. It is not locked to Claude. The
-                community has subsequently exploded, creating hundreds of MCP servers connecting AI to everything from
-                Notion and Google Drive, to internal corporate Jira instances, to Financial Market APIs. By
-                democratizing the protocol, Anthropic ensured they became the structural hub of the new Agentic Economy.
+    <main class="container">
+        <article class="content-card">
+            <p>
+                Jusqu'à récemment, si un informaticien voulait que son IA personnelle lise directement des données
+                situées dans le "Slack", le "Gmail", ou la "Base de Données" ultra sécurisée de son entreprise, c'était
+                quasiment impossible.
             </p>
-        </div>
+            <p>
+                Les ingénieurs devaient taper des lignes de code effrayantes nommées <em>"Intégration d'API"</em>. Le
+                bouton carré devait passer dans le trou rond. C'était un casse-tête infernal qui prenait un temps
+                précieux, fragile et qui cassait au moindre changement.
+            </p>
 
-        <h2><i class="fa-solid fa-cubes-stacked" style="color:#9333ea"></i> The Final Picture: An Agentic Ecosystem</h2>
-        <p>When you combine the entire stack, the disruption becomes undeniable:</p>
-        <ol style="line-height:1.7; font-size:1.1rem;">
-            <li><strong>Foundation:</strong> An enterprise-safe, high-reasoning model aligned by Constitutional AI
-                (Sonnet).</li>
-            <li><strong>Connectivity:</strong> Standardized access to any corporate database securely via MCP.</li>
-            <li><strong>Action:</strong> The ability to write code (Claude Code), render UIs (Artifacts), or literally
-                take control of physical legacy systems (Computer Use).</li>
-            <li><strong>Collaboration:</strong> All shared seamlessly across human coworkers in a persistent memory
-                layer (Projects).</li>
-        </ol>
+            <h2><i class="fa-solid fa-plug" style="color:#9333ea;"></i> Le Standard MCP (Model Context Protocol)</h2>
+            <p>
+                Anthropic a résolu l'un des plus grands maux de tête de l'histoire logicielle, d'un coup de maître. Il a
+                inventé puis offert gratuitement la norme <strong>MCP</strong>.
+            </p>
 
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-flag-checkered"></i> Series Conclusion</h3>
-            <p>Anthropic didn't just release an LLM. They released the operating architecture for the autonomous
-                enterprise of the 2030s. The transition from human-driven software to AI-orchestrated actions is not
-                theoretical; it is already deployed.</p>
-            <a href="/?tab=tech"
-                style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#9333ea; color:white; text-decoration:none; border-radius:8px; font-weight:600;">Back
-                to Tech Dashboard</a>
-        </div>
-    </div>
-    <div class="footer-bar">&copy; 2026 Market Watch.</div>
+            <div class="chart-container" style="background: white; border-radius: 12px; padding: 2rem;">
+                <div class="chart-title">L'Architecture Client / Serveur du Protocole MCP</div>
+                <div class="chart-subtitle">Une prise universelle liant le modèle IA à toutes les sources de données
+                    imaginables.</div>
+                <div class="mermaid" style="display:flex; justify-content:center;">
+                    graph LR
+                    A((Serveur Notion\nDocument B)) -- branché dans --> C[Protocole MCP]
+                    B((Base de données\nClient A)) -- branché dans --> C
+                    E((Compte GitHub\nCode C)) -- branché dans --> C
+                    C -- Alimente --> D[Hôte IA\nEx: Application Claude Bureau]
+                    D -- Dialogue --> F((Utilisateur))
+                </div>
+            </div>
+
+            <p>
+                <strong>Qu'est-ce que ça veut dire sans jargon ?</strong> C'est exactement comme brancher votre
+                sèche-cheveux. Vous possédez un "Hôte" (le Client IA, la grosse batterie). Les "Serveurs MCP" sont la
+                prise électrique. En connectant le Serveur MCP "Notion" ou "Google Drive", l'Hôte va y "pomper" le
+                courant (l'Intelligence/Le Contexte) de vos documents personnels et d'entreprise sans avoir à recoder le
+                fonctionnement d'Internet tout seul.
+            </p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-cube"></i> Pourquoi "Open Source" a changé la donne ?</h4>
+                <p>Anthropic a publié les plans de son invention sous licence gratuite (Open Source). Ils n'ont pas fait
+                    de MCP "le produit propriétaire de Claude", ils l'ont poussé comme une norme mondiale
+                    <em>gratuite</em> pour <em>tout le monde</em>.</p>
+                <p><strong>L'effet domino :</strong> Des centaines de passionnés construisent, depuis un mois,
+                    gratuitement, chaque jour, de nouvelles prises (serveurs MCP). Il existe désormais une prise
+                    (serveur) "Spotify", "GitHub", "Jira", "Slack", "Bourse de Hong Kong". Bientôt tout sera standardisé
+                    et l'IA pourra naviguer sans faille grâce à des connecteurs propres plutôt qu'en "Lisant et cliquant
+                    sur un écran", comme on le faisait avec <em>Computer Use</em>.</p>
+            </div>
+
+            <h2><i class="fa-solid fa-chess-knight" style="color:#9333ea;"></i> La Complétion du Puzzle : La Maîtrise
+                Anthropic</h2>
+            <p>
+                Reconstituons ensemble ce que nous avons vu durant toute cette <strong>Série en 5 parties</strong> :
+            </p>
+
+            <div style="background:#f8fafc; padding:2rem; border-radius:12px; border:1px solid #e2e8f0; margin:2rem 0;">
+                <ol style="margin:0; padding-left:1.5rem; color:#475569; font-size:1.05rem; line-height:1.8;">
+                    <li style="margin-bottom:1rem;"><strong>L'IA Sécurisée :</strong> Anthropic invente et forme Sonnet
+                        3.5, un modèle aux immenses capacités cognitives en interdisant formellement l'erreur grâce à
+                        son "IA Constitutionnelle" (Partie 1).</li>
+                    <li style="margin-bottom:1rem;"><strong>La Mémoire Collectée :</strong> Anthropic connecte ce
+                        cerveau à toute votre organisation par ses "Projects", gardiens du savoir-faire (Partie 2).</li>
+                    <li style="margin-bottom:1rem;"><strong>L'Application du Savoir :</strong> L'IA devient créatrice
+                        d'applications en direct (UI interactives) avec "Artifacts" (Partie 3).</li>
+                    <li style="margin-bottom:1rem;"><strong>La Manipulation de Logiciels Fermés :</strong> L'IA a des
+                        yeux et des mains avec le "Computer Use", naviguant sur l'ordinateur à la souris (Partie 4).
+                    </li>
+                    <li><strong>L'Harmonie Ouverte :</strong> Les connexions avec vos données secrètes sont enfin ultra
+                        silencieuses, sûres et rapides grâce au standard universel "MCP".</li>
+                </ol>
+            </div>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i class="fa-solid fa-flag-checkered"></i>
+                        Épilogue</h3>
+                    <p>La Révolution Industrielle remplaçait le muscle physique par des machines physiques.<br>La Bulle
+                        IA actuelle remplace le traitement de l'information brute.<br><br>Anthropic a simplement été
+                        plus lucide sur un élément : le travail en entreprise est avant tout organisationnel.</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <p style="color:#e2e8f0; margin:0; line-height:1.7;">
+                        Il ne s'agissait pas d'écrire des beaux poèmes. Il s'agissait d'inventer le "Collaborateur
+                        Intelligent" en standardisant l'interface (Artifacts), le contexte (Projects) et le câblage aux
+                        données de l'entreprise (MCP). C'est pourquoi Anthropic est la vraie base de l'économie de la
+                        décennie qui s'annonce.
+                    </p>
+                </div>
+            </div>
+
+            <div class="takeaway-box" style="background:#0f172a; border-color:#0f172a;">
+                <a href="/?tab=tech" class="btn-action"
+                    style="background:white; border-radius:12px; padding:12px 24px; color:#0f172a; text-decoration:none; display:inline-block; font-weight:800; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                    Retour au Tableau de Bord Tech
+                </a>
+            </div>
+
+        </article>
+    </main>
+
+    <footer
+        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
+        risques.
+    </footer>
 </body>
 
 </html>
