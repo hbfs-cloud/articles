@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Agent Autonome (Computer Use) — Débutant — Partie 4/5 | Market Watch</title>
+    <title>Agents & Computer Use (L'IA au Clavier) — Débutant — Partie 4/5 | Market Watch</title>
     <meta name="description"
-        content="L'IA qui contrôle votre souris. Découvrez la fonction 'Computer Use' d'Anthropic, la fin des logiciels RPA et le début des véritables agents d'exécution.">
+        content="Comment Anthropic remplace la RPA traditionnelle. L'API Computer Use permet à l'IA de voir l'écran et de cliquer à la place des humains (Fintech, KYC, Mainframes).">
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
 
     <!-- Google Tag Manager -->
@@ -26,14 +26,15 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Charts & Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#9333ea', primaryTextColor: '#fff', lineColor: '#d8b4fe' } });</script>
+    <script>mermaid.initialize({ theme: 'light', themeVariables: { primaryColor: '#f3e8ff', primaryTextColor: '#0f172a', lineColor: '#9333ea', fontSize: '14px' } });</script>
 
     <!-- Base CSS -->
     <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -53,6 +54,8 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+            display: flex;
+            align-items: center;
         }
 
         .brand-logo:hover {
@@ -101,17 +104,17 @@
         }
 
         .hero-section {
-            padding: 4rem 2rem 8rem 2rem;
+            padding: 5rem 2rem 8rem 2rem;
             background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
             text-align: center;
         }
 
         .hero-date {
             font-size: 0.85rem;
-            font-weight: 700;
+            font-weight: 800;
             color: #9333ea;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             margin-bottom: 1rem;
         }
 
@@ -147,17 +150,17 @@
         .content-card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 4rem;
             margin-bottom: 2rem;
             border: 1px solid #e2e8f0;
         }
 
         h2 {
-            font-size: 1.8rem;
-            font-weight: 800;
+            font-size: 2rem;
+            font-weight: 900;
             color: #0f172a;
-            margin: 3rem 0 1.5rem;
+            margin: 4rem 0 1.5rem;
             letter-spacing: -0.02em;
             display: flex;
             align-items: center;
@@ -167,92 +170,196 @@
         }
 
         h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 1.4rem;
+            font-weight: 800;
             color: #1e293b;
-            margin: 2rem 0 1rem;
+            margin: 2.5rem 0 1rem;
         }
 
         p {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             line-height: 1.8;
-            color: #475569;
+            color: #334155;
             margin-bottom: 1.5rem;
         }
 
         .pedagogy-box {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-left: 4px solid #9333ea;
+            border-left: 5px solid #9333ea;
             border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin: 2rem 0;
+            padding: 2rem;
+            margin: 2.5rem 0;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
 
         .pedagogy-box h4 {
             margin: 0 0 1rem 0;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #7e22ce;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 800;
         }
 
         .decision-card {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
             border-radius: 16px;
-            padding: 2.5rem;
-            margin: 3rem 0;
+            padding: 3rem;
+            margin: 4rem 0;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 3rem;
             align-items: center;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         .decision-card p {
             color: #cbd5e1;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            line-height: 1.7;
         }
 
         .takeaway-box {
             background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
             border: 1px solid #d8b4fe;
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 3rem 0;
+            border-radius: 16px;
+            padding: 3rem;
+            margin: 4rem 0 2rem;
             text-align: center;
         }
 
-        .chart-container {
-            background: #fff;
+        .example-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .example-card {
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2.5rem 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            padding: 2rem;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
         }
 
-        .chart-title {
-            text-align: center;
-            font-weight: 700;
+        .example-card .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .example-card .badge-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .example-card .badge-warning {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .example-card .badge-success {
+            background: #dcfce3;
+            color: #15803d;
+        }
+
+        .example-card h5 {
+            margin: 0 0 1rem 0;
             font-size: 1.1rem;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
         }
 
-        .chart-subtitle {
-            text-align: center;
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-bottom: 2rem;
+        .example-card p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin: 0;
+        }
+
+        .screen-demo {
+            border: 24px solid #1e293b;
+            border-radius: 16px;
+            border-bottom-width: 48px;
+            position: relative;
+            overflow: hidden;
+            margin: 3rem 0;
+            background: #000;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .screen-demo::after {
+            content: '';
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        .screen-content {
+            padding: 40px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #10b981;
+            font-size: 1.2rem;
+            line-height: 1.5;
+            height: 280px;
+            position: relative;
+        }
+
+        .screen-cursor {
+            position: absolute;
+            width: 24px;
+            height: 32px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="%23ffffff" stroke="%23000000" stroke-width="20" d="M302.189 329.126H196.105l55.831 135.993c3.889 9.428-.555 19.999-9.444 23.999l-49.165 21.427c-9.165 4-19.443-.571-23.332-9.714l-53.053-129.136-86.664 89.138C22.229 469.715 0 460.714 0 448V14.993c0-14.856 18.056-20.856 26.666-8.571l283.315 292.545c9.999 11.429 2.222 29.999-10.792 29.999z"/></svg>') no-repeat;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            top: 120px;
+            left: 150px;
+        }
+
+        .screen-highlight {
+            position: absolute;
+            border: 2px solid #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+            top: 110px;
+            left: 140px;
+            width: 180px;
+            height: 30px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         @media (max-width: 768px) {
-            .decision-card {
+
+            .decision-card,
+            .example-grid {
                 grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 2rem;
             }
 
             .content-card {
@@ -260,7 +367,16 @@
             }
 
             h2 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
+            }
+
+            p {
+                font-size: 1.05rem;
+            }
+
+            .screen-content {
+                font-size: 0.9rem;
+                padding: 20px;
             }
         }
     </style>
@@ -275,7 +391,7 @@
         <a href="/" class="brand-logo">
             <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
         </a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:700;">
             <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
         </a>
     </nav>
@@ -290,141 +406,203 @@
     </div>
 
     <header class="hero-section">
-        <div class="hero-date">L'IA QUI PREND LES COMMANDES</div>
+        <div class="hero-date">LA FIN DE LA FRONTIÈRE PHYSIQUE (COMPUTER USE API)</div>
         <h1
-            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
-            L'API "Computer Use" :<br>Des Yeux et des Mains
+            style="font-size:3.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            L'IA qui prend le contrôle de votre Souris
         </h1>
         <p
-            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
-            Vous avez aimé discuter avec un robot intelligent. Imaginez maintenant un robot qui prend le contrôle de la
-            souris, analyse l'écran, clique sur les boutons et remplit des formulaires complexes à votre place.
+            style="font-size:1.3rem; color:#475569; max-width:850px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Le plus grand obstacle à l'automatisation en 2024 était le <strong>"Dark Matter"</strong> de l'économie
+            informatique : les vieux logiciels. Sans API pour s'y connecter, l'IA était aveugle. Anthropic a sorti
+            l'arme ultime de l'automatisation : donner des "yeux" à Claude, pour qu'il clique, lise et tape sur l'écran
+            à votre place.
         </p>
 
         <div class="hero-badges">
             <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
-            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 6 min</div>
-            <div class="hero-badge"><i class="fa-solid fa-desktop"></i> Thème : Automatisation & Robotique logicielle
-            </div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 15 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-desktop"></i> Thème : Ingénierie & Agentic RPA</div>
         </div>
     </header>
 
     <main class="container">
         <article class="content-card">
+
             <p>
-                Pour qu'une intelligence artificielle puisse vous soulager du travail pénible, il faut qu'elle puisse
-                <strong>agir</strong>. Jusqu'à très récemment, l'IA était confinée à écrire du texte dans une boîte de
-                discussion. Si elle vous créait un beau résumé de la réunion, c'était à vous de l'envoyer par mail ou de
-                le copier dans votre logiciel de gestion.
+                Avez-vous déjà observé ce qui se trouve sur l'écran d'un opérateur de back-office dans une mégabanque,
+                dans l'industrie logistique ou dans le transport aérien ?
             </p>
             <p>
-                Avec l'outil <strong>API Computer Use</strong>, Anthropic a doté Claude de "la vue" et de "l'usage de
-                ses mains".
+                Vous ne verriez pas de belles applications web en couleurs. Vous verriez souvent un terminal à l'écran
+                noir et texte vert émeraude (comme dans Matrix), souvent appelé <strong>système Mainframe
+                    (AS400)</strong>. Ce sont de très vieux logiciels, développés dans les années 80 ou 90. Ils n'ont
+                pas de "moyen d'accès moderne" (pas d'API REST). L'unique moyen d'interagir avec eux est qu'un humain
+                s'assoie devant l'écran, lise un numéro de dossier sur un Post-it, le tape dans le système, appuie dix
+                fois sur la touche "Flèche du Bas" et appuie sur "Entrée".
+            </p>
+            <p>
+                Jusqu'à il y a un mois, ce monde <em>"fermé"</em> était la plus grande barrière à la pénétration de
+                l'Intelligence Artificielle dans la Fintech. Anthropic vient de pulvériser cette barrière avec la
+                fonctionnalité <strong>Computer Use API</strong>.
             </p>
 
-            <h2><i class="fa-solid fa-desktop" style="color:#9333ea;"></i> Qu'est-ce que "Computer Use" ?</h2>
+            <h2><i class="fa-solid fa-eye" style="color:#9333ea;"></i> Le Pari Audacieux : Utiliser l'IA de Vision</h2>
+
             <p>
-                Toutes les bases de données professionnelles du monde (comme les vieux registres des banques ou les
-                anciens systèmes informatiques des hôpitaux) ne sont pas "modernes". Elles ne possèdent souvent pas de
-                ponts invisibles (API) pour se connecter à d'autres logiciels.
+                Plutôt que d'essayer de forcer techniquement la porte de ces vieux logiciels (ce qui coûte des centaines
+                de millions à IBM pour modifier du vieux code), Anthropic a pris le problème à l'envers.
+                <strong>Pourquoi ne pas simplement apprendre à Claude à regarder l'écran humain, interpréter ce qu'il
+                    voit (Computer Vision), et déplacer physiquement la souris de l'ordinateur virtuel ?</strong>
             </p>
 
-            <div class="chart-container" style="background: white; border-radius: 12px; padding: 2rem;">
-                <div class="chart-title">La Boucle d'Action de Claude</div>
-                <div class="chart-subtitle">Comment l'IA contrôle un ordinateur en boucle fermée via l'API</div>
-                <div class="mermaid" style="display:flex; justify-content:center;">
-                    graph TD
-                    A[L'Utilisateur demande: Exporte les factures en PDF] --> B(Claude effectue une capture d'écran)
-                    B --> C{L'IA analyse visuellement l'image}
-                    C -->|Cherche le bouton 'Exporter'| D[Claude calcule et envoie les coordonnées de la souris: X=450,
-                    Y=120]
-                    D --> E(Clic virtuel exécuté)
-                    E --> F[Nouvelle capture d'écran prise]
-                    F -->|Vérifie que la fenêtre 'Sauvegarder' est ouverte| G[Claude tape 'Factures_Mars.pdf']
-                    G --> H((Mission accomplie))
-                </div>
+            <p>
+                C'est exactement ce que la nouvelle API permet. Claude demande une capture d'écran, "voit" où sont les
+                champs ("Prénom:", "Numéro de Compte:"), calcule les coordonnées <code>X</code> et <code>Y</code> du
+                bouton "Soumettre", et dit à l'ordinateur où cliquer. C'est le Graal absolu de ce qu'on appelle la
+                <strong>RPA (Robotic Process Automation) de classe Agentique</strong>.
+            </p>
+
+            <div class="market-context" style="background: #fdfaf8; border-color: #f97316; margin: 3rem 0;">
+                <h4 style="color:#c2410c;"><i class="fa-solid fa-money-bill-trend-up"></i> Tsunami Financier dans
+                    l'Industrie de la RPA</h4>
+                <p style="margin:0; font-size:1.05rem; color:#431407;">
+                    L'industrie de la RPA traditionnelle est dominée par des mastodontes comme <strong>UiPath</strong>
+                    (auparavant valorisé à plus de 30 Milliards $) et <strong>Automation Anywhere</strong>. La
+                    technologie d'UiPath d'ancienne génération reposait sur des macros et des scripts lourds pour
+                    l'automatisation. Des bataillons de consultants (Accenture, Capgemini) facturaient des millions pour
+                    scripter "Clic sur la case Excel A4, ouvre Chrome, clic au pixel 400x200". Le problème ? <em>Si un
+                        développeur de Chrome déplaçait le bouton 'Télécharger' d'un demi-centimètre lors d'une mise à
+                        jour logicielle, tout le script de la banque s'effondrait.</em> C'est la fragilité structurelle
+                    de l'automatisation aveugle.
+                    <br><br>
+                    <strong>L'annonce d'Anthropic effraie le marché boursier.</strong> Avec Computer Use, l'IA "lit" le
+                    bouton. Peu importe si la fenêtre pop-up a changé de place ou si Microsoft a changé les couleurs de
+                    l'application, l'IA le <em>comprend</em> grâce à l'analyse visuelle et s'adapte en temps réel. La
+                    valorisation astronomique future d'Anthropic se nourrit directement de ce "Vampirisme" de la part de
+                    l'industrie moribonde de la RPA scriptée, au profit d'agents totalement autonomes.
+                </p>
             </div>
 
+            <h2><i class="fa-solid fa-building-columns" style="color:#9333ea;"></i> Cas d'Usage Fintech : La "KYC" sur
+                AS400</h2>
+
             <p>
-                La seule façon d'utiliser ces vieux systèmes, c'est avec une souris et un clavier en cliquant sur des
-                boutons graphiques présents à l'écran.
-            </p>
-            <p>
-                <strong>Comment ça marche ?</strong> Le système de votre entreprise installe Claude sur une machine
-                virtuelle. À chaque seconde, Claude prend secrètement une capture d'écran de l'ordinateur. L'IA
-                "regarde" cette image, comprend l'interface comme un humain, repère l'icône "Envoyer un e-mail", calcule
-                les coordonnées X et Y de la souris, envoie l'ordre de cliquer, et observe la capture d'écran suivante
-                pour constater que le menu des e-mails s'est bien ouvert.
+                Rien ne vaut un exemple pour mesurer la puissance cataclysmique d'un Agent Visuel dans une banque
+                institutionnelle. Prenons le processus de <strong>KYC (Know Your Customer)</strong> : la vérification
+                anti-blanchiment d'un profil client.
             </p>
 
-            <h2><i class="fa-solid fa-robot" style="color:#9333ea;"></i> La Fin de l'Automatisation Bas de Gamme (Le Cas
-                RPA)</h2>
-            <p>
-                Vous pourriez penser que faire cliquer des ordinateurs tout seul existe déjà. Oui, cela s'appelle
-                l'automatisation par robotique des processus ou "<strong>RPA</strong>" (Robotic Process Automation).
-                C'est une industrie pesant des milliards avec des entreprises comme UiPath.
-            </p>
-
-            <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-bomb"></i> Pourquoi l'approche RPA classique est "fragile" ?</h4>
-                <p>Les logiciels RPA standards disent à l'ordinateur : <em>"Mets ta souris à exactement 300 pixels vers
-                        la droite et 50 vers le bas, et clique."</em></p>
-                <p>Mais si un jour, l'administrateur du site ajoute un bandeau publicitaire, le bouton est décalé de 20
-                    pixels vers le bas. Le RPA va alors cliquer inlassablement dans le vide. Le système plante, et il
-                    faut appeler un ingénieur pour le réparer.</p>
-                <p><strong>La magie d'Anthropic : La compréhension sémantique.</strong></p>
-                <p>Claude ne clique pas sur des coordonnées fixes mathématiques. Il "lit" visuellement la page et
-                    comprend : <em>"Tiens, le bouton bleu 'Enregistrer' n'est plus en haut, il est en bas à côté de
-                        l'image. Je vais modifier la destination de ma souris et aller cliquer là-bas."</em> Claude
-                    s'adapte en direct à n'importe quelle interface (Excel, Word, sites de compagnies aériennes, SAP)
-                    comme le ferait un vrai employé débutant.</p>
-            </div>
-
-            <h2><i class="fa-solid fa-shield-halved" style="color:#9333ea;"></i> Alerte Sécurité : La Bête dans une Cage
-            </h2>
-            <p>
-                Donner le contrôle de votre clavier et de votre souris à une IA ultra-intelligente pose évidemment
-                d'énormes problèmes logiques. Un clic innocent sur le mauvais lien pourrait déclencher un virus ou payer
-                une facture à votre insu.
-            </p>
-            <p>
-                C'est pourquoi Anthropic empêche fortement d'installer cette fonction sur l'ordinateur personnel d'un
-                quidam. Cette technologie (l'Agent) s'exécute dans un <strong>bac à sable (Sandbox/Machine virtuelle)
-                    hautement surveillé et cloisonné</strong> contrôlé par les ingénieurs d'entreprise. Si le robot
-                panique et télécharge un virus, la machine virtuelle isolée est simplement détruite en trois secondes,
-                empêchant toute contamination de l'entreprise.
-            </p>
-
-            <div class="decision-card">
-                <div>
-                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i class="fa-solid fa-briefcase"></i> Le
-                        Passage du "Penseur" au "Faiseur"</h3>
-                    <p>Nous sommes passés d'un stade où l'IA ne faisait que parler, à un stade où l'IA agit concrètement
-                        sur l'ordinateur.</p>
+            <div class="example-grid">
+                <div class="example-card">
+                    <span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> AVANT (Processus Humain ou RPA
+                        Fragile)</span>
+                    <h5>L'Enfer du Double-Saisie</h5>
+                    <p>
+                        Un analyste ouvre le dossier PDF scanné d'un candidat à un crédit. Il doit l'imprimer ou le lire
+                        sur un écran.<br>
+                        Ensuite, il ouvre le logiciel de la banque vieux de 30 ans. Il tape le nom de famille à la main.
+                        Il appuie sur "F6" (car la souris ne marche pas dans ce vieux programme) pour passer au champ de
+                        la date de naissance. <br>
+                        Il fait ça 3 000 fois par jour. Si la RPA tente de l'automatiser et qu'un message inattendu
+                        apparaît (<em>"Avertissement Serveur"</em>), le robot RPA classique s'arrête, se met en erreur
+                        (crash), et signale qu'un humain doit déboguer.
+                    </p>
                 </div>
-                <div
-                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
-                    <p style="color:#e2e8f0; margin:0; line-height:1.7;">
-                        Néanmoins, obliger l'IA à cliquer sur un écran est coûteux, lent et parfois incertain pour
-                        l'informatique professionnelle. L'IA avait besoin d'un moyen de lire directement dans les bases
-                        de données sans l'intermédiaire fastidieux d'une interface graphique. C'est l'ultime évolution
-                        appelée <strong>MCP</strong>.
+
+                <div class="example-card">
+                    <span class="badge badge-success"><i class="fa-solid fa-robot"></i> AUJOURD'HUI (Avec l'Agent
+                        Claude)</span>
+                    <h5>La Machine Visuelle qui Réfléchit</h5>
+                    <p>
+                        Le développeur dit à Claude : <em>"Fais la routine KYC pour tous les clients du dossier PDF dans
+                            Salesforce, et vérifie la conformité dans le vieux système AS400 à l'écran."</em><br><br>
+                        <strong>Ce que fait Claude :</strong> Il ouvre le PDF et lit les noms (grâce à sa fenêtre de 200
+                        000 tokens). Il lance Firefox, va sur Salesforce. <strong>Il "regarde" son écran</strong>,
+                        déplace sa propre souris pour cliquer sur "Rechercher", tape le nom. Puis il ouvre le Terminal
+                        AS400. <br><br>
+                        S'il y a un message pop-up d'erreur, Claude s'arrête, <em>le lit, le comprend</em> ("Fausse
+                        alerte réseau de la banque"), clique sur "OK" pour le fermer, et reprend fluidement le
+                        processus.
                     </p>
                 </div>
             </div>
 
+            <div class="screen-demo">
+                <div class="screen-content">
+                    USER: marketwatch_admin<br>
+                    SYSTEM: MAINFRAME_C0RE_9<br><br>
+                    --- DOSSIER CREDIT 889231 ---<br>
+                    NOM.......: DUPONT<br>
+                    VERIFICATION ANTI-FRAUDE [ ]
+
+                    <div class="screen-highlight"></div>
+                    <div class="screen-cursor"></div>
+                </div>
+            </div>
+
+            <p style="text-align:center; font-size:0.9rem; color:#64748b; margin-top:-1.5rem; margin-bottom:3rem;">
+                <em>Illustration : Claude voit le champ "VERIFICATION ANTI-FRAUDE [ ]" via des captures d'écran et
+                    envoie des signaux aux coordonnées du système d'exploitation pour cliquer précisément dans la case,
+                    même si celle-ci a été décalée d'un millimètre ce matin-là.</em>
+            </p>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.8rem; line-height:1.2;">
+                        <i class="fa-solid fa-shield-halved"></i> Mais comment faire confiance au Robot ?
+                    </h3>
+                    <p style="margin-top:1rem;">Laisser un modèle d'IA cliquer n'importe où sur un ordinateur bancaire
+                        peut paraître complètement terrifiant pour la conformité. Que se passe-t-il s'il envoie un
+                        e-mail à tous les clients par erreur ?</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:2rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <ul style="color:#e2e8f0; margin:0; line-height:1.7; padding-left:1.2rem;">
+                        <li style="margin-bottom:0.75rem;"><strong>Sandbox Dockerisée :</strong> Anthropic fournit ses
+                            agents dans des environnements clos ("Conteneurs"). Le bot ne contrôle pas le vrai PC
+                            physique du banquier, mais un serveur éphémère.</li>
+                        <li style="margin-bottom:0.75rem;"><strong>L'IA Constitutionnelle Agit Toujours :</strong>
+                            Claude reste soumis à sa "Constitution" (vu Partie 1). Si l'humain dit "<em>Efface la base
+                                de données client illégalement</em>", Claude le lit, comprend l'action destructive sur
+                            l'écran, et refuse d'envoyer le Clic de Souris final.</li>
+                        <li><strong>Human-in-the-Loop :</strong> Vous pouvez régler Claude pour qu'il prépare toutes les
+                            actions à l'écran, mais vous demande votre permission finale pour cliquer sur des éléments
+                            irréversibles (Validation C-Level).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2><i class="fa-solid fa-arrow-right" style="color:#9333ea;"></i> En Synthèse</h2>
+            <p>
+                Le clavier et la souris étaient le privilège de l'Homo Sapiens dans les pures tâches immatérielles.
+                Avant la publication du modèle "Claude 3.5 Sonnet avec Computer Use", l'IA était un "Conseiller Paralysé
+                de ses Membres". Désormais, le conseiller est capable d'interagir avec littéralement n'importe quel
+                logiciel vieux de trois décennies sur une simple impulsion, modifiant profondément les "Ratios de Coûts
+                Opérationnels (Efficiency Ratio)" qui font et défont le cours de l'action des grandes banques
+                européennes et mondiales.
+            </p>
+
             <div class="takeaway-box">
-                <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-forward-step"></i> Ce qui vous attend
-                </h3>
-                <p style="color:#475569; font-size:1.05rem;">
-                    Tirer parti d'une intelligence d'entreprise passe par un accès sécurisé et universel aux données de
-                    l'organisation. C'est le Graal de l'IA que nous présenterons dans la 5ème et dernière partie, à
-                    travers l'une des lancements open-source les plus importants de la décennie : <strong>le Model
-                        Context Protocol (MCP)</strong>.
+                <h3 style="margin-top:0; color:#581c87; font-size:1.4rem; font-weight:800;"><i
+                        class="fa-solid fa-forward-step" style="margin-right:8px;"></i> Prochaine Étape : Le TCP/IP de
+                    l'IA (Le Protocole Ultime)</h3>
+                <p style="color:#475569; font-size:1.15rem; margin-top:1.5rem; text-align:left;">
+                    Si Claude peut coder avec l'Agent (Partie 3) et "cliquer" avec la vision (Partie 4), il ne manque
+                    plus qu'une dernière pièce au puzzle magistral d'Anthropic. Le Saint Graal du monde des entreprises
+                    : <strong>L'accès direct, silencieux et structuré à tous vos serveurs de données d'entreprise
+                        (Google Drive, Slack, Base de Données Postgres de la banque), comme par magie.</strong>
+                </p>
+                <p style="color:#475569; font-size:1.15rem; margin-top:1rem; text-align:left;">
+                    Jusqu'à cette année, connecter l'IA à ces coffres bruts coûtait des centaines de milliers d'euros en
+                    intégration sur-mesure pour chaque outil. Dans l'épisode final de cette série, nous allons étudier
+                    l'<strong>arme de distribution massive open-source</strong> qu'Anthropic a lancée, qui est en train
+                    de court-circuiter totalement le modèle fermé d'OpenAI ("Walled Garden") et dont la philosophie
+                    "Open" séduit massivement le monde B2B technologique. <strong>Le Protocole "MCP".</strong>
                 </p>
                 <a href="../part5-open-protocol/" class="btn-action"
-                    style="background:#9333ea; border-radius:12px; padding:12px 24px; color:white; text-decoration:none; display:inline-block; font-weight:700; margin-top:1rem; box-shadow:0 4px 10px rgba(147, 51, 234, 0.3);">
-                    Passer à la Partie 5 : Le Protocole MCP &rarr;
+                    style="background:#9333ea; border-radius:12px; padding:16px 32px; color:white; text-decoration:none; display:inline-block; font-weight:800; font-size:1.1rem; margin-top:2rem; box-shadow:0 10px 20px rgba(147, 51, 234, 0.25); transition:transform 0.2s;">
+                    Terminer : Partie 5 (Protocole Ouvert MCP) &rarr;
                 </a>
             </div>
 
@@ -432,9 +610,9 @@
     </main>
 
     <footer
-        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
-        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
-        risques.
+        style="text-align:center; padding:3rem 1rem 4rem; color:#64748b; font-size:0.95rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Intelligence Institutionnelle. Ceci n'est pas un conseil financier ou logiciel. Les
+        investissements technologiques sont soumis à de fortes volatilités.
     </footer>
 </body>
 
