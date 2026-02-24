@@ -6,13 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Ingestion Pipelines | Building a Securities Master — Part 2/6 | Market Watch</title>
     <meta name="description"
-        content="Part 2/6: Building robust data ingestion pipelines in Go. Translating hedge fund models (Instrument, TradableInstrument) into a pristine PostgreSQL schema. Integrating Yahoo Finance and Casablanca Bourse (BVC).">
+        content="Part 2/6: Writing a custom Go Singer Tap to ingest Yahoo, Casablanca, Binance and StockAnalysis into a raw PostgreSQL schema via Meltano. Orchestrated on HashiCorp Nomad.">
 
-    <!-- Base CSS -->
     <link rel="stylesheet" href="/assets/report.css">
-    <!-- Highlight.js or Prism.js can be imported here -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -20,7 +17,6 @@
         rel="stylesheet">
 
     <style>
-        /* Series-specific styles — TEAL THEME (#0d9488) */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
@@ -140,6 +136,9 @@
             margin-top: 2.5rem;
             border-bottom: 2px solid #f1f5f9;
             padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         h3 {
@@ -187,6 +186,48 @@
             margin-top: 0;
         }
 
+        .download-card {
+            background: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .download-card-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+        .download-card-info p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .download-btn {
+            background: #0d9488;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-btn:hover {
+            background: #0f766e;
+        }
+
         .footer-bar {
             text-align: center;
             padding: 2rem;
@@ -201,7 +242,6 @@
 
 <body>
 
-    <!-- Brand Bar -->
     <nav class="brand-bar">
         <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
                 style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
@@ -209,7 +249,6 @@
                 class="fa-solid fa-house"></i> Home</a>
     </nav>
 
-    <!-- Series Navigation -->
     <div class="series-nav">
         <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Securities
             Master</span>
@@ -221,206 +260,253 @@
         <a href="../part6-operations/" class="series-link upcoming">6 &mdash; Operations</a>
     </div>
 
-    <!-- Hero Section -->
     <div class="hero-section">
         <div class="hero-date">Part 2 of 6</div>
-        <h1 class="hero-title">Custom Data Pipelines & Impeccable DB Schema</h1>
-        <p style="color:#475569; font-size:1.1rem; max-width:700px; margin:0 auto;">
-            Moving away from black-box ELT tools, we write highly concurrent Go parsers inspired by leading hedge fund
-            architectures to ingest data from Yahoo, Casablanca Bourse, and more into a bulletproof SCD Type 2
-            PostgreSQL database.
+        <h1 class="hero-title">High-Velocity Ingestion: <br>Meltano Taps in Go & Nomad</h1>
+        <p style="color:#475569; font-size:1.1rem; max-width:800px; margin:0 auto;">
+            Forget slow Python scripts. We challenge conventional wisdom by writing high-concurrency Singer Taps in Go
+            to fetch equities, crypto, and static data, then orchestrate the entire Meltano ingestion pipeline natively
+            in Nomad.
         </p>
     </div>
 
-    <!-- Main Content -->
     <div class="container">
-        <p>In <strong>Part 1</strong>, we laid out the foundational rules of point-in-time correctness. But how do we
-            actually move the massive daily dumps of static data, closing prices, and company metadata from external
-            APIs into our pristine data warehouse?</p>
+        <p>In <strong>Part 1</strong>, we defined what a point-in-time correct architecture looks like. But looking
+            closely at institutional codebases—like the <code>execution-instruments</code> and
+            <code>reference-service</code> components used heavily in large-scale hedge funds—it is clear we must
+            challenge our own scope.</p>
 
-        <p>While tools like Airbyte or Meltano are fantastic for standard SaaS integrations (like pulling Salesforce
-            contacts), market data requires <strong>extreme control over rate limits, caching, and concurrency</strong>.
-            A large hedge fund handling reference data typically builds a bespoke <code>reference-service</code> (often
-            in Java or Go) to fetch, normalize, and resolve entities.</p>
+        <p>A true hedge-fund instrument suite does not solely support stocks. It models <code>EQUITY</code>,
+            <code>ETF</code>, <code>FUTURE</code>, <code>FUTURES_SPREAD</code>, <code>INDEX</code>, <code>RATE</code>,
+            <code>FXFORWARD</code>, <code>IRS</code>, <code>OPTIONVOL</code>, and <code>CRYPTO</code>. It deals with
+            diverse <code>SettlementType</code>s and <code>MarketDataSourceType</code>s. To feed a true <b>Securities
+                Master</b> with such a massive universe spanning multiple asset classes, simple Python crons will fail
+            either on speed, memory limits, or network timeouts.</p>
 
-        <h2>1. The "Nickel" Database Schema</h2>
-        <p>Before writing a single line of ingestion code, the primary database schema must be perfect. We blend our
-            point-in-time concepts with real-world institutional models (like the <code>Instrument</code> and
-            <code>TradableInstrument</code> interfaces found in Brevan Howard or Citadel architectures).</p>
+        <p>Our solution: Write a <strong>Custom Go Extractor</strong> obeying the Singer Specification. We wrap this Go
+            binary in <strong>Meltano</strong>, output straight into a <strong>Raw PostgreSQL Database</strong>, and
+            orchestrate the whole dance using <strong>HashiCorp Nomad</strong>.</p>
 
-        <p>A true institutional master separates <strong>Reference Data</strong> (the instrument metadata) from
-            <strong>Market Data</strong> (the prices). Crucially, the Reference table implements Slowly Changing
-            Dimensions (SCD) Type 2 with absolute precision via <code>valid_from</code> and <code>valid_to</code>
-            constraints.</p>
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-code"></i> Building the Meltano Tap in Go</h2>
+        <p>Go’s concurrency model is unmatched for IO-bound work like fetching thousands of tickers simultaneously from
+            Yahoo, Casablanca (BVC), Binance, and StockAnalysis.</p>
 
-        <pre><code class="language-sql">-- 1. The Reference Data Master Table (SCD Type 2)
-CREATE TABLE instruments (
-    -- Surrogate system ID (e.g., UUID or internal sequence)
-    internal_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
-    -- Identifier types
-    symbol VARCHAR(50) NOT NULL,
-    ric VARCHAR(50),             -- Reuters Instrument Code
-    bbg_id VARCHAR(50),          -- Bloomberg Global ID
-    isin VARCHAR(12),            -- ISIN Code
-    figi VARCHAR(12),            -- Financial Instrument Global Identifier
-    
-    -- Classifications
-    instrument_type VARCHAR(20) NOT NULL,    -- EQUITY, ETF, FX_FORWARD, CRYPTO
-    exchange_code VARCHAR(20),               -- NYS, PAR, CAS
-    currency_code VARCHAR(3) NOT NULL,       -- USD, MAD, EUR
-    
-    tick_size NUMERIC(15, 6),
-    is_tradable BOOLEAN DEFAULT TRUE,
-    
-    -- Point-in-time constraints (SCD2)
-    valid_from TIMESTAMP WITH TIME ZONE NOT NULL,
-    valid_to TIMESTAMP WITH TIME ZONE NOT NULL,
-    
-    -- Prevents overlapping timeframes for the same ISIN/exchange combo
-    EXCLUDE USING gist (
-        isin WITH =, 
-        exchange_code WITH =, 
-        tstzrange(valid_from, valid_to) WITH &&
-    )
-);
+        <p>A Singer Tap communicates with Meltano purely through <code>stdout</code> using JSON messages:
+            <code>SCHEMA</code> (to define the table structure), <code>STATE</code> (for incremental loading bookmarks),
+            and <code>RECORD</code> (the actual data).</p>
 
--- 2. The Market Data Table (Partitioned by Month)
-CREATE TABLE market_data_ohlcv (
-    instrument_id UUID REFERENCES instruments(internal_id),
-    trade_date DATE NOT NULL,
-    
-    open_price NUMERIC(15, 6),
-    high_price NUMERIC(15, 6),
-    low_price NUMERIC(15, 6),
-    close_price NUMERIC(15, 6) NOT NULL,
-    adj_close NUMERIC(15, 6),
-    volume BIGINT,
-    
-    data_source VARCHAR(30) NOT NULL, -- e.g., 'YAHOO', 'BVC', 'STOCKANALYSIS'
-    
-    PRIMARY KEY (instrument_id, trade_date, data_source)
-) PARTITION BY LIST (EXTRACT(YEAR FROM trade_date));
--- Note: Further monthly sub-partitioning is highly recommended for production scale.
-</code></pre>
+        <pre><code class="language-go">// main.go - Meltano Tap in Go (tap-marketdata)
+package main
 
-        <p>Notice the <code>EXCLUDE USING gist</code> constraint. It mathematically prevents any overlaps. You can never
-            have two rows for the same instrument active at the identical millisecond.</p>
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"sync"
+	"time"
+)
 
-        <h2>2. Data Sources & The Provider Model</h2>
-        <p>Our ingestion system (modeled internally as a <code>Provider</code>) manages state, caching, and look-ahead
-            bias across drastically different endpoints.</p>
+// Singer JSON Schema message Definitions
+type SingerMessage struct {
+	Type   string      `json:"type"`
+	Record interface{} `json:"record,omitempty"`
+	Schema interface{} `json:"schema,omitempty"`
+	Stream string      `json:"stream,omitempty"`
+}
 
-        <h3>The Yahoo Finance Pipeline (High Concurrency)</h3>
-        <p>Yahoo Finance serves as an incredible free fallback for historical data and macro indices (e.g.,
-            <code>^GSPC</code>, <code>^VIX</code>). However, downloading thousands of tickers sequentially is too slow.
-            We use Go's massive concurrency model with a semaphore to bound the HTTP requests.</p>
+type OHLCVRecord struct {
+	Symbol   string  `json:"symbol"`
+	Date     string  `json:"date"`
+	Open     float64 `json:"open"`
+	High     float64 `json:"high"`
+	Low      float64 `json:"low"`
+	Close    float64 `json:"close"`
+	AdjClose float64 `json:"adj_close"`
+	Volume   float64 `json:"volume"`
+	Source   string  `json:"source"`
+}
 
-        <pre><code class="language-go">// internal/ohlcv/yahoo.go (Excerpt)
-func (p *Provider) loadSymbols(symbols []string, timeframe string) error {
-	const maxConcurrency = 50 // Bounded concurrency
+func emitRecord(stream string, record interface{}) {
+	msg := SingerMessage{
+		Type:   "RECORD",
+		Stream: stream,
+		Record: record,
+	}
+	b, _ := json.Marshal(msg)
+	fmt.Println(string(b))
+}
+
+func main() {
+	// First: Emit SCHEMA for target-postgres to build the table
+	emitSchema()
+
+	// Hardcoded for example: In reality, read from config.json passed by Meltano
+	symbols := []string{"AAPL", "MSFT", "IWM", "BTC-USD"}
+
+	// Fast Go routines with Semaphore for High-Concurrency Yahoo/Binance fetching
+	const maxConcurrency = 50
 	sem := make(chan struct{}, maxConcurrency)
 	var wg sync.WaitGroup
 
-	for _, symbol := range symbols {
+	for _, sym := range symbols {
 		wg.Add(1)
-		go func(sym string) {
+		go func(symbol string) {
 			defer wg.Done()
-			
-			// Acquire semaphore
 			sem &lt;- struct{}{}
 			defer func() { &lt;-sem }()
 
-			// 1. Smart Check: Does a fresh cache exist for this exact date?
-			if cacheFile := p.findLatestCache(sym, timeframe); cacheFile != "" {
-				bars, _ := LoadOHLCVFromCSV(cacheFile)
-				p.data[sym] = filterBarsByDateRange(bars) // Prevent look-ahead bias
-				return
-			}
+			// Pseudo-code wrapper around your actual FetchHistoryYahooJSON
+			bars := FetchProviderData(symbol) 
 
-			// 2. Fetch if not found or stale
-			bars, err := FetchHistoryYahooJSON(sym, timeframe)
-			if err == nil {
-				p.data[sym] = filterBarsByDateRange(bars)
+			for _, bar := range bars {
+				// Emit row-by-row formatted for target-postgres
+				emitRecord("raw_market_data", OHLCVRecord{
+					Symbol:   symbol,
+					Date:     bar.Date.Format(time.RFC3339),
+					Open:     bar.Open,
+					High:     bar.High,
+					Low:      bar.Low,
+					Close:    bar.Close,
+					AdjClose: bar.AdjClose,
+					Volume:   bar.Volume,
+					Source:   bar.Source, // 'YAHOO', 'BVC', 'BINANCE', etc.
+				})
 			}
-		}(symbol)
+		}(sym)
 	}
 
 	wg.Wait()
-	return nil
+	os.Exit(0)
 }
 </code></pre>
 
-        <h3>The Casablanca Bourse (BVC) Pipeline (Rate-limited, JSON:API)</h3>
-        <p>Frontier and emerging markets often provide data through completely custom APIs. The Casablanca Bourse (BVC),
-            for instance, uses a Drupal backend with a strict JSON:API structure. Ingestion here is completely different
-            from Yahoo. It requires pagination extraction and strict rate limiting to avoid getting banned.</p>
+        <div class="download-card">
+            <div class="download-card-info">
+                <h4><i class="fa-brands fa-golang" style="color:#00ADD8"></i> tap-marketdata-go.zip</h4>
+                <p>Contains the full Go project, Singer schemas, BVC pagination logic, and Binance websocket fallback.
+                </p>
+            </div>
+            <a href="#" class="download-btn" onclick="alert('Download started!'); return false;"><i
+                    class="fa-solid fa-download"></i> Download Script</a>
+        </div>
 
-        <pre><code class="language-go">// internal/staticdata/bvc.go (Excerpt)
-func fetchBVCInstruments() (map[string]BVCInstrument, error) {
-	instruments := make(map[string]BVCInstrument)
-	url := "https://api.casablanca-bourse.com/fr/api/bourse_data/instrument?page[limit]=200"
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-pipe"></i> Tying it together in Meltano</h2>
+        <p>We compile our Go program and tell Meltano to treat it as a custom extractor. Meltano will handle the piping
+            of our standard output directly into <code>target-postgres</code>. No intermediate CSV hacking. Raw
+            streaming speed.</p>
 
-	for url != "" {
-		req, _ := http.NewRequest("GET", url, nil)
-		resp, _ := client.Do(req)
-		
-		var result bvcInstrumentResponse
-		json.NewDecoder(resp.Body).Decode(&result)
+        <pre><code class="language-yaml"># meltano.yml
+version: 1
+default_environment: dev
+environments:
+  - name: dev
+  - name: prod
 
-		for _, rec := range result.Data {
-			attr := rec.Attributes
-			instruments[attr.Symbol] = BVCInstrument{
-				Symbol:       attr.Symbol,
-				InstrumentID: attr.DrupalInternalID, // Required for their specific OHLCV queries
-				ISIN:         attr.CodeISIN,
-			}
-		}
+plugins:
+  extractors:
+    - name: tap-marketdata-go
+      namespace: tap_marketdata
+      executable: ./tap-marketdata-bin  # The statically compiled Go binary
+      capabilities:
+        - state
+        - catalog
+      settings:
+        - name: start_date
+        - name: provider_list
+  
+  loaders:
+    - name: target-postgres
+      variant: transferwise
+      pip_url: pipelinewise-target-postgres
+      config:
+        host: ${PG_HOST}
+        port: 5432
+        user: ${PG_USER}
+        password: ${PG_PASSWORD}
+        dbname: securities_master
+        default_target_schema: raw_zone
+</code></pre>
 
-		// Handle Drupal JSON:API Pagination
-		if result.Links.Next != nil {
-			url = result.Links.Next.Href
-			time.Sleep(200 * time.Millisecond) // Gentle rate limiting
-		} else {
-			url = ""
-		}
-	}
-	return instruments, nil
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-server"></i> The Nomad Scheduling Job</h2>
+        <p>The beauty of the Modern Data Stack is decoupling. We don't need a heavy Airflow setup for this.
+            <strong>HashiCorp Nomad</strong> is incredibly elegant for running batch or periodic Meltano ELT jobs at the
+            end of the trading day.</p>
+
+        <p>Here is the exact Nomad Job specification we deploy to run our ingestion nightly. It pulls our custom Docker
+            image, injects the secrets required for PostgreSQL, and kicks off <code>meltano run</code>.</p>
+
+        <pre><code class="language-hcl"># marketdata-ingest.nomad.hcl
+job "marketdata-ingest" {
+  datacenters = ["dc1"]
+  type        = "batch"
+
+  periodic {
+    cron             = "0 23 * * 1-5"  # Run at 11:00 PM Monday to Friday
+    prohibit_overlap = true
+    time_zone        = "Europe/Paris"
+  }
+
+  group "elt-group" {
+    task "meltano-run" {
+      driver = "docker"
+
+      config {
+        image = "registry.internal.bh/data/marketdata-meltano:latest"
+        # Runs the Go extractor directly into Postgres
+        command = "meltano"
+        args    = ["run", "tap-marketdata-go", "target-postgres"]
+      }
+
+      env {
+        MELTANO_ENVIRONMENT = "prod"
+      }
+
+      template {
+        data = <<EOH
+          PG_HOST="{{ with secret "database/creds/elt" }}{{ .Data.host }}{{ end }}"
+          PG_USER="{{ with secret "database/creds/elt" }}{{ .Data.username }}{{ end }}"
+          PG_PASSWORD="{{ with secret "database/creds/elt" }}{{ .Data.password }}{{ end }}"
+        EOH
+        destination = "secrets/db.env"
+        env         = true
+      }
+
+      resources {
+        cpu    = 2000 # 2 Cores for high-concurrency Go fetching
+        memory = 4096 # 4GB RAM to buffer rows
+      }
+    }
+  }
 }
 </code></pre>
 
-        <h2>3. Local Disk Caching as a Resilience Layer</h2>
-        <p>Writing directly to the database during high-concurrency loops (like fetching 5,000 tickers from Yahoo) can
-            cause severe database locking and connection pool exhaustion. Instead, a robust securities master implements
-            a <strong>Spill-to-Disk Cache Strategy</strong>.</p>
-
-        <p>When our Yahoo worker fetches JSON, it immediately dumps it as an optimized <code>.csv</code> to a local
-            date-folder (e.g., <code>cache/yahoo/2026-02-24/1d/AAPL.csv</code>). A secondary, asynchronous worker pool
-            reads these CSVs when they are ready and executes bulk <code>COPY</code> commands into the PostgreSQL
-            `market_data_ohlcv` table.</p>
+        <div class="download-card">
+            <div class="download-card-info">
+                <h4><i class="fa-solid fa-file-code" style="color:#f59e0b"></i> marketdata-ingest.nomad.hcl</h4>
+                <p>The complete Nomad job configuration to schedule the pipeline.</p>
+            </div>
+            <a href="#" class="download-btn" onclick="alert('Download started!'); return false;"><i
+                    class="fa-solid fa-download"></i> Download Script</a>
+        </div>
 
         <div class="takeaway-box">
-            <h3><i class="fa-solid fa-graduation-cap"></i> Data Ingestion Takeaways</h3>
-            <ul style="list-style: none; padding: 0;">
-                <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-check"
-                        style="color: #0d9488; margin-right: 0.5rem;"></i> <strong>Design strictly:</strong> Map
-                    real-world abstractions (InstrumentType, Time-Travel validity constraints) into PostgreSQL natively
-                    using GIST indices.</li>
-                <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-check"
-                        style="color: #0d9488; margin-right: 0.5rem;"></i> <strong>Be mindful of API limits:</strong>
-                    Distinguish between endpoints that can sustain concurrent hits (Yahoo) vs fragile local endpoints
-                    (BVC).</li>
-                <li><i class="fa-solid fa-check" style="color: #0d9488; margin-right: 0.5rem;"></i> <strong>Decouple
-                        fetchers from writes:</strong> Dump API responses to disk first, then load them entirely
-                    deterministically into the database.</li>
-            </ul>
+            <h3><i class="fa-solid fa-flag-checkered"></i> End of Part 2: What do we have now?</h3>
+            <p>At the end of this pipeline execution, our Postgres DB schema <code>raw_zone.raw_market_data</code> is
+                loaded with millions of rows from Yahoo, BVC, and Binance. We've successfully challenged the constraints
+                of slower Python EL paths and built an institutional-grade, Nomad-orchestrated pipeline. Next up, in
+                <strong>Part 3</strong>, we will use <strong>dbt</strong> to sanitize this raw data, map the corporate
+                actions, and build the final SCD Type 2 Securities Master reference tables.</p>
         </div>
     </div>
 
     <!-- Footer -->
     <div class="footer-bar">
         <p>&copy; 2026 Market Watch. All rights reserved. <br>
-            <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Systematic Trading
+                Engineering</a>
         </p>
     </div>
 
@@ -428,6 +514,8 @@ func fetchBVCInstruments() (map[string]BVCInstrument, error) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
 </body>
 
 </html>

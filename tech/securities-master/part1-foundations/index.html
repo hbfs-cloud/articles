@@ -52,11 +52,12 @@
 
   <!-- Mermaid.js -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-  <script>mermaid.initialize({theme: 'dark', themeVariables: {primaryColor: '#0d9488', primaryTextColor: '#fff', lineColor: '#5eead4'}});</script>
+  <script>mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#0d9488', primaryTextColor: '#fff', lineColor: '#5eead4' } });</script>
 
   <!-- Prism.js Custom Theme Override -->
   <style>
-    pre[class*="language-"], code[class*="language-"] {
+    pre[class*="language-"],
+    code[class*="language-"] {
       background: #042f2e !important;
       border: 1px solid #115e59;
       border-radius: 12px;
@@ -64,14 +65,17 @@
       font-size: 0.85rem;
       line-height: 1.6;
     }
+
     pre[class*="language-"] {
       padding: 1.5rem;
       margin: 0;
       overflow-x: auto;
     }
+
     code[class*="language-"] {
       border: none;
     }
+
     .code-label {
       display: block;
       font-size: 0.65rem;
@@ -82,6 +86,7 @@
       font-weight: 700;
       margin-bottom: 0.5rem;
     }
+
     .code-block-wrapper {
       margin: 1.5rem 0;
     }
@@ -787,7 +792,7 @@
     <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Securities
       Master</span>
     <a href="./" class="series-link current">1 &mdash; Foundations</a>
-    <a href="../part2-pipelines/" class="series-link upcoming">2 &mdash; Pipelines</a>
+    <a href="../part2-pipelines/" class="series-link">2 &mdash; Pipelines & Ingestion</a>
     <a href="../part3-transforms/" class="series-link upcoming">3 &mdash; Transforms</a>
     <a href="../part4-corporate-actions/" class="series-link upcoming">4 &mdash; Corp. Actions</a>
     <a href="../part5-dashboards/" class="series-link upcoming">5 &mdash; Dashboards</a>
@@ -916,7 +921,8 @@
 
       <p>SCD Type 2 is the standard approach. Instead of overwriting a row when data changes, you close the old row (set
         <code>valid_to</code>) and insert a new one. This gives you a complete audit trail. When Apple's sector changed
-        from "Consumer Electronics" to "Technology" in GICS reclassifications, both facts are preserved.</p>
+        from "Consumer Electronics" to "Technology" in GICS reclassifications, both facts are preserved.
+      </p>
 
       <div class="code-block-wrapper">
         <div class="code-label">SQL &mdash; SCD Type 2 Pattern</div>
@@ -958,7 +964,8 @@ WHERE  symbol = 'AAPL'
         <p>The current version of any record has <code>valid_to = NULL</code> instead of a far-future sentinel date like
           <code>9999-12-31</code>. This is deliberate: NULL semantics in SQL mean "unknown end" which is exactly what we
           mean for a currently-valid record. It also makes partial indexes on <code>valid_to IS NULL</code> extremely
-          efficient for "give me the latest version" queries.</p>
+          efficient for "give me the latest version" queries.
+        </p>
       </div>
 
       <h3>The Fundamentals Problem: Restatements</h3>
@@ -1012,7 +1019,8 @@ WHERE  symbol = 'ENRON'
         <p style="margin-bottom:0;">If you're running backtests on Yahoo Finance data, you have survivorship bias. Yahoo
           only shows currently-listed companies. Every Enron, Lehman, WorldCom, and Wirecard has vanished. Your
           "historical S&amp;P 500" dataset has 500 winners and zero losers. The securities master fixes this by
-          <strong>never deleting data</strong>&mdash;delistings are recorded as events, not erasures.</p>
+          <strong>never deleting data</strong>&mdash;delistings are recorded as events, not erasures.
+        </p>
       </div>
     </div>
 
@@ -1349,12 +1357,14 @@ CREATE INDEX idx_instruments_asof
 
       <div class="decision-card">
         <h4><i class="fa-solid fa-lightbulb"></i> Decision: <code>instrument_key</code> (UUID) vs
-          <code>instrument_id</code> (BIGINT)</h4>
+          <code>instrument_id</code> (BIGINT)
+        </h4>
         <p>We need two keys. The <code>instrument_key</code> (UUID) is the <strong>business key</strong>&mdash;it
           identifies the security across all versions. Apple always has the same UUID. The <code>instrument_id</code>
           (BIGINT) is the <strong>surrogate key</strong>&mdash;it identifies a specific version. When Apple's sector
           changes, a new instrument_id is created but the UUID stays the same. Bars and fundamentals reference
-          <code>instrument_key</code>, not <code>instrument_id</code>, because price data isn't version-specific.</p>
+          <code>instrument_key</code>, not <code>instrument_id</code>, because price data isn't version-specific.
+        </p>
       </div>
 
       <div class="decision-card">
@@ -1483,7 +1493,8 @@ CREATE INDEX idx_corpactions_instrument
           merger has acquirer terms. Separate tables for each type creates a sprawling schema. JSONB keeps it in one
           table with flexible querying: <code>details->>'ratio'</code> for splits,
           <code>(details->>'amount')::numeric</code> for dividends. PostgreSQL can index JSONB fields using GIN indexes
-          if needed.</p>
+          if needed.
+        </p>
       </div>
 
       <h3>6. <code>index_constituents</code> &mdash; Composition History</h3>
@@ -1592,7 +1603,8 @@ WHERE  instrument_key = @key
       <h3>Dimension Tables</h3>
       <p>Dimensions are denormalized snapshots extracted from the SCD2 tables. They represent the
         <strong>current</strong> state by default, but we also maintain a <code>dim_instrument_history</code> SCD view
-        for as-of BI queries.</p>
+        for as-of BI queries.
+      </p>
 
       <div class="code-block-wrapper">
         <div class="code-label">SQL &mdash; mart.dim_date (calendar dimension)</div>
@@ -1706,7 +1718,8 @@ CREATE TABLE mart.fact_daily_returns (
           <code>LAG(close) OVER (PARTITION BY instrument_key ORDER BY date_key)</code> on 60M rows take 15+ seconds. By
           pre-computing <code>daily_return</code>, <code>drawdown</code>, and <code>rolling_vol</code> during the dbt
           build, every BI query becomes a simple filter+aggregate. The dbt build pays the cost once; analysts get
-          sub-second response.</p>
+          sub-second response.
+        </p>
       </div>
 
       <div class="code-block-wrapper">
@@ -1800,7 +1813,8 @@ ORDER BY sector_weight DESC;</code></pre>
           <code>SELECT from fact JOIN dim WHERE dim.attribute = filter GROUP BY dim.attribute</code>. This is
           intentional. The star schema transforms ad-hoc analytical questions into a predictable, composable SQL
           pattern. Evidence.dev dashboards, BI tools like Metabase, and even LLM-generated SQL all work best with this
-          consistent structure.</p>
+          consistent structure.
+        </p>
       </div>
     </div>
 
@@ -1824,7 +1838,8 @@ ORDER BY sector_weight DESC;</code></pre>
           alongside the <code>raw</code> and <code>mart</code> schemas. This gives it direct foreign-key access to
           <code>instruments</code> and enables JOIN-based analytics (e.g., &ldquo;what was the RSI when I entered this
           trade?&rdquo;) without any ETL. The journal tables are lightweight (&lt;100K rows for most traders) and
-          don&rsquo;t impact the time-series workload.</p>
+          don&rsquo;t impact the time-series workload.
+        </p>
       </div>
 
       <h3>Core Tables</h3>
@@ -2074,7 +2089,8 @@ ORDER BY trades DESC;</code></pre>
         <p>These queries are only possible because the journal shares a database with the securities master. When you
           buy AAPL, the journal records the trade with <code>instrument_key</code>&mdash;the same key used by
           <code>bars_daily</code>, <code>fundamentals</code>, and <code>fact_daily_returns</code>. No CSV imports, no
-          manual ticker matching, no reconciliation. The foreign key IS the integration.</p>
+          manual ticker matching, no reconciliation. The foreign key IS the integration.
+        </p>
       </div>
     </div>
 
@@ -2102,12 +2118,14 @@ ORDER BY trades DESC;</code></pre>
         <div class="step-card">
           <div class="step-number"><i class="fa-solid fa-layer-group"></i></div>
           <h4>Semantic Layer</h4>
-          <p>Boring Semantic Layer defines metrics, dimensions, and relationships via Ibis. No raw SQL exposed to the LLM</p>
+          <p>Boring Semantic Layer defines metrics, dimensions, and relationships via Ibis. No raw SQL exposed to the
+            LLM</p>
         </div>
         <div class="step-card">
           <div class="step-number"><i class="fa-solid fa-shield-halved"></i></div>
           <h4>Governed Execution</h4>
-          <p>Queries are compiled to SQL by Ibis (via Boring Semantic Layer), validated against the schema, and executed with read-only permissions
+          <p>Queries are compiled to SQL by Ibis (via Boring Semantic Layer), validated against the schema, and executed
+            with read-only permissions
           </p>
         </div>
         <div class="step-card">
@@ -2130,16 +2148,18 @@ ORDER BY trades DESC;</code></pre>
           20+ backends (PostgreSQL, DuckDB, BigQuery, Snowflake) without code changes. This means our semantic layer
           works identically whether the data lives in our production Postgres or in a DuckDB export for local
           development. Ibis expressions are also <strong>type-safe and composable</strong>&mdash;far safer than letting
-          an LLM generate raw SQL strings.</p>
+          an LLM generate raw SQL strings.
+        </p>
       </div>
 
       <h3>Architecture</h3>
 
       <div class="mermaid">
-graph TD
-    A["User<br/>'Show my sector exposure'"] -->|prompt| B["LLM<br/>Claude / Gemini / Grok<br/>(via OpenRouter)"]
-    B -->|MCP Protocol<br/>stdio / SSE| C["Boring Semantic Layer<br/>+ NAO Agent Context<br/>(Python)"]
-    C -->|"list_metrics()<br/>query(dimensions, measures)"| D["PostgreSQL<br/>secmaster DB<br/>mart.* / journal.*"]
+        graph TD
+        A["User<br />'Show my sector exposure'"] -->|prompt| B["LLM<br />Claude / Gemini / Grok<br />(via OpenRouter)"]
+        B -->|MCP Protocol<br />stdio / SSE| C["Boring Semantic Layer<br />+ NAO Agent Context<br />(Python)"]
+        C -->|"list_metrics()<br />query(dimensions, measures)"| D["PostgreSQL<br />secmaster DB<br />mart.* /
+        journal.*"]
       </div>
 
       <div class="decision-card">
@@ -2153,7 +2173,9 @@ graph TD
       </div>
 
       <h3>Semantic Layer Definition</h3>
-      <p>The semantic layer is defined in Python using <a href="https://github.com/boringdata/boring-semantic-layer" target="_blank" rel="noopener">Boring Semantic Layer</a>'s declarative API. Each table gets typed dimensions and measures&mdash;the LLM discovers them via MCP and composes queries without writing SQL.</p>
+      <p>The semantic layer is defined in Python using <a href="https://github.com/boringdata/boring-semantic-layer"
+          target="_blank" rel="noopener">Boring Semantic Layer</a>'s declarative API. Each table gets typed dimensions
+        and measures&mdash;the LLM discovers them via MCP and composes queries without writing SQL.</p>
 
       <div class="code-block-wrapper">
         <div class="code-label">Python &mdash; semantic_layer.py (Boring Semantic Layer definitions)</div>
@@ -2188,7 +2210,8 @@ model.add_table(
       </div>
 
       <h3>MCP Server Configuration</h3>
-      <p>Boring Semantic Layer's <code>MCPSemanticModel</code> exposes the semantic layer as MCP tools natively. Each dimension and measure becomes discoverable by LLMs.</p>
+      <p>Boring Semantic Layer's <code>MCPSemanticModel</code> exposes the semantic layer as MCP tools natively. Each
+        dimension and measure becomes discoverable by LLMs.</p>
 
       <div class="code-block-wrapper">
         <div class="code-label">Python &mdash; mcp_server.py (Boring Semantic Layer + MCPSemanticModel)</div>
@@ -2270,7 +2293,8 @@ def query(question: str, mode: str = "analysis") -&gt; str:
         <p><strong>Never give an LLM raw SQL access to production.</strong> Even with read-only permissions, an LLM can
           generate <code>SELECT * FROM bars_daily</code> (60M rows) and crash your dashboard. The semantic layer
           constrains what the LLM can query: pre-defined metrics with row limits, typed parameters, and governed
-          aggregations. The Ibis abstraction under Boring Semantic Layer also prevents SQL injection&mdash;parameters are bound, never interpolated.
+          aggregations. The Ibis abstraction under Boring Semantic Layer also prevents SQL injection&mdash;parameters
+          are bound, never interpolated.
           Think of it as an <strong>API for your database</strong>: the LLM calls functions, not raw SQL.</p>
       </div>
 
@@ -2290,7 +2314,8 @@ def query(question: str, mode: str = "analysis") -&gt; str:
         </ul>
         <p style="margin-top:0.5rem;">Claude Code users get this natively: configure the MCP server in
           <code>.claude/settings.json</code> and the tools appear automatically. No UI to build, no API to
-          deploy&mdash;the database speaks LLM.</p>
+          deploy&mdash;the database speaks LLM.
+        </p>
       </div>
     </div>
 
@@ -2311,7 +2336,8 @@ def query(question: str, mode: str = "analysis") -&gt; str:
           vCPU and 1-2GB of RAM is perfectly <strong>sufficient to start</strong>. Nomad's orchestrator only consumes
           ~50MB RAM, and PostgreSQL is extremely efficient on low-end hardware when properly partitioned and indexed.
           You can always vertically scale the instance later as your data volume grows, but a cheap VM is the perfect
-          starting point for learning and building.</p>
+          starting point for learning and building.
+        </p>
       </div>
 
       <p>Nomad manages two services: PostgreSQL itself and a periodic job that pre-creates partitions.</p>
@@ -2606,38 +2632,44 @@ models:
 
       <div class="code-block">
         <span class="code-label">Markdown &mdash; Evidence.dev Page (data-quality.md)</span>
-<span class="code-keyword"># Data Quality Report</span>
+        <span class="code-keyword"># Data Quality Report</span>
 
-<span class="code-comment">```sql coverage```</span>
-<span class="code-keyword">SELECT</span>
-    i.asset_class,
-    <span class="code-function">COUNT</span>(<span class="code-keyword">DISTINCT</span> i.instrument_key) <span class="code-keyword">AS</span> instruments,
-    <span class="code-function">MIN</span>(b.trade_date)                <span class="code-keyword">AS</span> earliest_bar,
-    <span class="code-function">MAX</span>(b.trade_date)                <span class="code-keyword">AS</span> latest_bar,
-    <span class="code-function">COUNT</span>(b.*)                       <span class="code-keyword">AS</span> total_bars,
-    <span class="code-function">ROUND</span>(<span class="code-function">AVG</span>(
+        <span class="code-comment">```sql coverage```</span>
+        <span class="code-keyword">SELECT</span>
+        i.asset_class,
+        <span class="code-function">COUNT</span>(<span class="code-keyword">DISTINCT</span> i.instrument_key) <span
+          class="code-keyword">AS</span> instruments,
+        <span class="code-function">MIN</span>(b.trade_date) <span class="code-keyword">AS</span> earliest_bar,
+        <span class="code-function">MAX</span>(b.trade_date) <span class="code-keyword">AS</span> latest_bar,
+        <span class="code-function">COUNT</span>(b.*) <span class="code-keyword">AS</span> total_bars,
+        <span class="code-function">ROUND</span>(<span class="code-function">AVG</span>(
         (b.trade_date - <span class="code-function">LAG</span>(b.trade_date) <span class="code-keyword">OVER</span>(
-            <span class="code-keyword">PARTITION BY</span> b.instrument_key <span class="code-keyword">ORDER BY</span> b.trade_date
+        <span class="code-keyword">PARTITION BY</span> b.instrument_key <span class="code-keyword">ORDER BY</span>
+        b.trade_date
         ))::int
-    ), 1) <span class="code-keyword">AS</span> avg_gap_days
-<span class="code-keyword">FROM</span> instruments i
-<span class="code-keyword">LEFT JOIN</span> bars_daily b <span class="code-keyword">ON</span> b.instrument_key = i.instrument_key
-<span class="code-keyword">WHERE</span> i.valid_to <span class="code-keyword">IS NULL</span>
-<span class="code-keyword">GROUP BY</span> i.asset_class
-<span class="code-keyword">ORDER BY</span> instruments <span class="code-keyword">DESC</span>;
+        ), 1) <span class="code-keyword">AS</span> avg_gap_days
+        <span class="code-keyword">FROM</span> instruments i
+        <span class="code-keyword">LEFT JOIN</span> bars_daily b <span class="code-keyword">ON</span> b.instrument_key =
+        i.instrument_key
+        <span class="code-keyword">WHERE</span> i.valid_to <span class="code-keyword">IS NULL</span>
+        <span class="code-keyword">GROUP BY</span> i.asset_class
+        <span class="code-keyword">ORDER BY</span> instruments <span class="code-keyword">DESC</span>;
 
-<span class="code-variable">&lt;DataTable data={coverage} /&gt;</span>
+        <span class="code-variable">&lt;DataTable data={coverage} /&gt;</span>
 
-<span class="code-comment">```sql gaps```</span>
-<span class="code-keyword">SELECT</span> instrument_key, trade_date,
-    trade_date - <span class="code-function">LAG</span>(trade_date) <span class="code-keyword">OVER</span>(
-        <span class="code-keyword">PARTITION BY</span> instrument_key <span class="code-keyword">ORDER BY</span> trade_date
-    ) <span class="code-keyword">AS</span> gap_days
-<span class="code-keyword">FROM</span> bars_daily
-<span class="code-keyword">HAVING</span> gap_days &gt; 5  <span class="code-comment">-- flag gaps &gt; 1 trading week</span>
-<span class="code-keyword">ORDER BY</span> gap_days <span class="code-keyword">DESC</span> <span class="code-keyword">LIMIT</span> 20;
+        <span class="code-comment">```sql gaps```</span>
+        <span class="code-keyword">SELECT</span> instrument_key, trade_date,
+        trade_date - <span class="code-function">LAG</span>(trade_date) <span class="code-keyword">OVER</span>(
+        <span class="code-keyword">PARTITION BY</span> instrument_key <span class="code-keyword">ORDER BY</span>
+        trade_date
+        ) <span class="code-keyword">AS</span> gap_days
+        <span class="code-keyword">FROM</span> bars_daily
+        <span class="code-keyword">HAVING</span> gap_days &gt; 5 <span class="code-comment">-- flag gaps &gt; 1 trading
+          week</span>
+        <span class="code-keyword">ORDER BY</span> gap_days <span class="code-keyword">DESC</span> <span
+          class="code-keyword">LIMIT</span> 20;
 
-<span class="code-variable">&lt;BarChart data={gaps} x=instrument_key y=gap_days /&gt;</span>
+        <span class="code-variable">&lt;BarChart data={gaps} x=instrument_key y=gap_days /&gt;</span>
       </div>
 
       <div class="terminal-box">
@@ -2684,7 +2716,8 @@ models:
               year.</strong> Your securities master must track delistings as events, never delete data.</li>
           <li><i class="fa-solid fa-check-circle"></i> <strong>SCD Type 2 enables as-of queries.</strong> The pattern
             <code>valid_from &lt;= @date AND (valid_to &gt; @date OR valid_to IS NULL)</code> gives you a perfect
-            snapshot at any point in time.</li>
+            snapshot at any point in time.
+          </li>
           <li><i class="fa-solid fa-check-circle"></i> <strong>Point-in-time fundamentals prevent look-ahead
               bias.</strong> Use <code>reported_at</code>/<code>superseded_at</code> to track when data was actually
             known to the market.</li>
@@ -2703,7 +2736,8 @@ models:
               master.</strong> Same database, different schema. Every trade inherits instrument metadata and price
             context via foreign keys&mdash;no CSV imports or reconciliation needed.</li>
           <li><i class="fa-solid fa-check-circle"></i> <strong>MCP + semantic layer makes the database
-              AI-native.</strong> Boring Semantic Layer (built on Ibis) gives LLMs governed, type-safe access to the data via MCP. Never expose raw
+              AI-native.</strong> Boring Semantic Layer (built on Ibis) gives LLMs governed, type-safe access to the
+            data via MCP. Never expose raw
             SQL to an LLM&mdash;use a semantic layer with row limits and typed parameters.</li>
         </ul>
       </div>
@@ -2715,7 +2749,8 @@ models:
         <div class="quiz-answer">To preserve the complete history of metadata changes. Instead of overwriting a record
           when data changes (e.g., sector reclassification), SCD Type 2 closes the old version (sets
           <code>valid_to</code>) and creates a new one. This allows you to query the state of any entity at any point in
-          time.</div>
+          time.
+        </div>
       </details>
 
       <details>
@@ -2749,7 +2784,8 @@ models:
         <div class="quiz-answer">Floating-point arithmetic has rounding errors:
           <code>0.1 + 0.2 = 0.30000000000000004</code> in IEEE 754. For financial calculations, exact decimal arithmetic
           is required. NUMERIC stores values as exact decimal, so $100.25 is stored as exactly 100.2500, with no
-          representation error. The 14-digit precision supports prices up to ~$10 billion with 4 decimal places.</div>
+          representation error. The 14-digit precision supports prices up to ~$10 billion with 4 decimal places.
+        </div>
       </details>
 
       <details>
@@ -2759,7 +2795,8 @@ models:
           pattern works identically for instruments, index_constituents, and any SCD Type 2 table. For fundamentals, the
           equivalent is
           <code>WHERE reported_at &lt;= @as_of_date AND (superseded_at &gt; @as_of_date OR superseded_at IS NULL)</code>.
-          The <code>IS NULL</code> clause handles currently-valid records.</div>
+          The <code>IS NULL</code> clause handles currently-valid records.
+        </div>
       </details>
 
       <details>
@@ -2785,8 +2822,10 @@ models:
         <div class="quiz-answer">The semantic layer sits between LLMs and the database. Instead of letting an LLM
           generate raw SQL (which can produce dangerous queries like <code>SELECT * FROM bars_daily</code> on 60M rows),
           the Boring Semantic Layer defines type-safe, composable dimensions and measures with built-in row limits and
-          parameter validation. Under the hood it uses Ibis, which compiles to native SQL for any backend (PostgreSQL, DuckDB, BigQuery), making the layer
-          backend-agnostic. NAO provides the agent framework and context management. The LLM discovers metrics via MCP's <code>MCPSemanticModel</code>; it never writes SQL directly.</div>
+          parameter validation. Under the hood it uses Ibis, which compiles to native SQL for any backend (PostgreSQL,
+          DuckDB, BigQuery), making the layer
+          backend-agnostic. NAO provides the agent framework and context management. The LLM discovers metrics via MCP's
+          <code>MCPSemanticModel</code>; it never writes SQL directly.</div>
       </details>
 
     </div>
