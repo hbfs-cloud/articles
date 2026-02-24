@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Execution: OMS & Market Ops | Building a Securities Master — Part 6/6 | Market Watch</title>
+    <meta name="description"
+        content="Part 6/6: Live Order Management System (OMS). Bridging AI models to Interactive Brokers and Binance via high-performance Go architectures.">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .brand-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-decoration: none;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .series-nav {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .series-link {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+
+        .series-link.current {
+            background: #0d9488;
+            color: white;
+            border-color: #0d9488;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .hero-section {
+            padding: 4rem 2rem 6rem;
+            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin-top: 2.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        pre[class*="language-"] {
+            background: #042f2e !important;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #0d9488;
+            background: #ccfbf1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .takeaway-box {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border: 1px solid #0d9488;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .footer-bar {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="brand-bar">
+        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
+                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+    </nav>
+    <div class="series-nav">
+        <a href="../part1-foundations/" class="series-link">1 &mdash; Foundations</a>
+        <a href="../part2-pipelines/" class="series-link">2 &mdash; Pipelines</a>
+        <a href="../part3-transforms/" class="series-link">3 &mdash; Transforms</a>
+        <a href="../part4-corporate-actions/" class="series-link">4 &mdash; Corp. Actions</a>
+        <a href="../part5-dashboards/" class="series-link">5 &mdash; Dashboards</a>
+        <a href="./" class="series-link current">6 &mdash; Operations</a>
+    </div>
+
+    <div class="hero-section">
+        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Execution: The Go Prime Broker
+            OMS</h1>
+        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
+            The AI Agent provides targets. Our custom Go Order Management System (OMS) reconciles live positions and
+            fires precise Limit Orders to Interactive Brokers and Binance.
+        </p>
+    </div>
+
+    <div class="container" style="margin-top:-3rem; position:relative;">
+        <h2><i class="fa-solid fa-bolts" style="color:#0d9488"></i> The Adapter Pattern</h2>
+        <p>In Part 1, we built an immutable <code>orders</code> and <code>strategies</code> schema. Our Go Execution
+            Engine reads the theoretical Target Portfolio assigned by the AI Agent and reconciles it against the live
+            Prime Broker state using the Adapter pattern.</p>
+
+        <pre><code class="language-go">// internal/broker/ibkr.go
+type IBAdapter struct {
+    // Interactive Brokers specific state
+}
+
+func (iba *IBAdapter) GetPositions() []PortfolioPosition {
+    // API Call to TWS to verify actual live allocations
+}
+
+func ExecuteReconciliation(target []StrategySignal, adapter BrokerAdapter) {
+    live := adapter.GetPositions()
+    orders := ComputeDelta(target, live)
+    for _, order := range orders {
+        adapter.PlaceOrder(order)
+    }
+}
+</code></pre>
+        <p>This strict boundary decoupling allows the AI to remain completely ignorant of API rate limits or FIX
+            protocol complexities. The Engine manages risk buffers, stop losses, and order timeout trims safely.</p>
+
+        <div class="takeaway-box">
+            <h3 style="margin-top:0; color:#0f766e;"><i class="fa-solid fa-flag-checkered"></i> The Architecture is
+                Complete</h3>
+            <p>We designed the Master Database to store flawless, point-in-time correct data. We constructed
+                hyper-concurrency Go Pipelines and Nomad/Airflow DAGs to feed it. We deployed dbt to transform JSON
+                sludge into analytical Gold Marts. Finally, we bound this intelligence physically back to the markets
+                via the Go OMS.</p>
+            <p><strong>This is the Systematic Trading Edge.</strong></p>
+        </div>
+    </div>
+    <div class="footer-bar">&copy; 2026 Market Watch.</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+</body>
+
+</html>

@@ -357,9 +357,9 @@
         <a href="../part1-foundations/" class="series-link">1 &mdash; Foundations</a>
         <a href="../part2-pipelines/" class="series-link">2 &mdash; Pipelines & Ingestion</a>
         <a href="./" class="series-link current">3 &mdash; Transforms</a>
-        <a href="../part4-corporate-actions/" class="series-link upcoming">4 &mdash; Corp. Actions</a>
-        <a href="../part5-dashboards/" class="series-link upcoming">5 &mdash; Dashboards</a>
-        <a href="../part6-operations/" class="series-link upcoming">6 &mdash; Operations</a>
+        <a href="../part4-corporate-actions/" class="series-link">4 &mdash; Corp. Actions</a>
+        <a href="../part5-dashboards/" class="series-link">5 &mdash; Dashboards</a>
+        <a href="../part6-operations/" class="series-link">6 &mdash; Operations</a>
     </div>
 
     <!-- Hero Section -->
@@ -454,7 +454,8 @@
         <p>We never write <code>INSERT</code> statements with JSON parsing. Instead, we define dbt views over the raw
             tables. If an API provider changes their payload structure tomorrow (e.g., Yahoo changes
             <code>Adj Close</code> to <code>adjusted_close</code>), we only update the Bronze view. The entire
-            downstream pipeline remains protected.</p>
+            downstream pipeline remains protected.
+        </p>
 
         <p>Here is how we extract deeply nested instrument reference data from a notoriously undocumented exchange API,
             the Casablanca Bourse (BVC).</p>
@@ -505,7 +506,8 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY isin ORDER BY ingested_at DESC) = 1</cod
                 in the <code>raw_zone</code>. Instead of relying on <code>DISTINCT</code> (which is computationally
                 expensive and blind to timestamps), we use window functions.
                 <code>QUALIFY ROW_NUMBER() OVER (... ORDER BY ingested_at DESC) = 1</code> guarantees we strictly take
-                the absolutely most recent payload for a given instrument, cleanly discarding duplicates.</p>
+                the absolutely most recent payload for a given instrument, cleanly discarding duplicates.
+            </p>
         </div>
 
 
@@ -521,7 +523,8 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY isin ORDER BY ingested_at DESC) = 1</cod
         <p>If you have 10,000 global equities, 25 years of daily history is roughly 60+ million rows. If you query
             intraday (1-minute bars), you are swiftly dealing with <strong>tens of billions of rows</strong>.
             Materializing this as a <code>table</code> in dbt—which runs a <code>DROP TABLE</code> then
-            <code>CREATE TABLE</code> every time—will bring your database cluster to its knees.</p>
+            <code>CREATE TABLE</code> every time—will bring your database cluster to its knees.
+        </p>
 
         <p>We use dbt's <code>incremental</code> materialization. On the first run, it builds the entire table. On every
             subsequent run, dbt intelligently executes an <code>INSERT ... ON CONFLICT</code> or a <code>MERGE</code>
@@ -571,7 +574,8 @@ FROM combined_bronze_bars
                 <strong>late-arriving data and corrections</strong>. Sometimes, an exchange revises the closing volume
                 of Friday on a Monday morning. By defining <code>unique_key=['symbol', 'trade_date']</code>, dbt knows
                 how to gracefully <em>upsert</em> (update if exists, insert if not). Scanning a 3-day trailing window
-                guarantees we catch silent api corrections while processing 99.9% less data than a full refresh.</p>
+                guarantees we catch silent api corrections while processing 99.9% less data than a full refresh.
+            </p>
         </div>
 
 
@@ -586,7 +590,8 @@ FROM combined_bronze_bars
         <p>In Part 1, we defined a rigorous framework: when fundamental metadata changes (e.g., Apple changes its GICS
             sector, or a ticker symbol is renamed due to a merger), we must <strong>not</strong> overwrite the row. We
             must close the <code>valid_to</code> timestamp of the old record, and insert a new record with
-            <code>valid_from</code> set to now. Hand-coding these SQL merges is famously bug-prone.</p>
+            <code>valid_from</code> set to now. Hand-coding these SQL merges is famously bug-prone.
+        </p>
 
         <p>We outsource this entirely to <strong>dbt Snapshots</strong>.</p>
 
@@ -621,7 +626,8 @@ FROM {{ ref('stg_all_instruments') }}
 
         <p>How it works: dbt takes a hash of the <code>check_cols</code>. Tomorrow, when the Airflow DAG runs
             <code>dbt snapshot</code>, dbt compares the incoming API payload against the existing rows in
-            <code>silver_zone.dim_instruments_snapshot</code>.</p>
+            <code>silver_zone.dim_instruments_snapshot</code>.
+        </p>
         <ul style="color:#334155; line-height: 1.6; font-size: 1.05rem;">
             <li>If the hash matches, dbt does nothing.</li>
             <li>If a new <code>isin</code> appears, dbt inserts it with <code>dbt_valid_from = current_timestamp</code>
@@ -755,7 +761,8 @@ WHERE metrics.adv_20d_usd > 2000000 </code></pre>
         <p style="font-size: 1.05rem; line-height: 1.7; color: #475569;">Because this is materialized as a
             <code>table</code>, the complex window functions are computed once during the Airflow nightly batch. When
             generating an Evidence.dev dashboard or prompting an AI assistant via MCP, retrieving the top momentum
-            candidates takes under 10 milliseconds.</p>
+            candidates takes under 10 milliseconds.
+        </p>
 
 
         <!-- ============================================================ -->
