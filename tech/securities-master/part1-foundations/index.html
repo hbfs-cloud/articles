@@ -513,10 +513,19 @@
       align-items: flex-start;
       gap: 0.75rem;
       padding: 0.75rem 0;
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #334155;
       line-height: 1.6;
       border-bottom: 1px solid rgba(13, 148, 136, 0.15);
+    }
+
+    .takeaway-list li code {
+      font-size: 0.8rem;
+      background: rgba(13, 148, 136, 0.1);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      color: #0f766e;
+      word-break: break-all;
     }
 
     .takeaway-list li:last-child {
@@ -692,6 +701,15 @@
       .terminal-box {
         font-size: 0.75rem;
         padding: 1rem;
+      }
+
+      .takeaway-box {
+        padding: 1.25rem;
+      }
+
+      .takeaway-list li {
+        font-size: 0.85rem;
+        gap: 0.5rem;
       }
 
       .step-grid {
@@ -2586,42 +2604,40 @@ models:
       <p>Evidence.dev lets you write SQL + Markdown to create data dashboards. We use it to monitor the health of the
         securities master.</p>
 
-      <div class="code-block-wrapper">
-        <div class="code-label">Markdown &mdash; Evidence.dev Page (data-quality.md)</div>
-        <pre><code class="language-markdown"># Data Quality Report
+      <div class="code-block">
+        <span class="code-label">Markdown &mdash; Evidence.dev Page (data-quality.md)</span>
+<span class="code-keyword"># Data Quality Report</span>
 
-```sql coverage
-SELECT
+<span class="code-comment">```sql coverage```</span>
+<span class="code-keyword">SELECT</span>
     i.asset_class,
-    COUNT(DISTINCT i.instrument_key) AS instruments,
-    MIN(b.trade_date)                AS earliest_bar,
-    MAX(b.trade_date)                AS latest_bar,
-    COUNT(b.*)                       AS total_bars,
-    ROUND(AVG(
-        (b.trade_date - LAG(b.trade_date) OVER(
-            PARTITION BY b.instrument_key ORDER BY b.trade_date
+    <span class="code-function">COUNT</span>(<span class="code-keyword">DISTINCT</span> i.instrument_key) <span class="code-keyword">AS</span> instruments,
+    <span class="code-function">MIN</span>(b.trade_date)                <span class="code-keyword">AS</span> earliest_bar,
+    <span class="code-function">MAX</span>(b.trade_date)                <span class="code-keyword">AS</span> latest_bar,
+    <span class="code-function">COUNT</span>(b.*)                       <span class="code-keyword">AS</span> total_bars,
+    <span class="code-function">ROUND</span>(<span class="code-function">AVG</span>(
+        (b.trade_date - <span class="code-function">LAG</span>(b.trade_date) <span class="code-keyword">OVER</span>(
+            <span class="code-keyword">PARTITION BY</span> b.instrument_key <span class="code-keyword">ORDER BY</span> b.trade_date
         ))::int
-    ), 1) AS avg_gap_days
-FROM instruments i
-LEFT JOIN bars_daily b ON b.instrument_key = i.instrument_key
-WHERE i.valid_to IS NULL
-GROUP BY i.asset_class
-ORDER BY instruments DESC;
-```
+    ), 1) <span class="code-keyword">AS</span> avg_gap_days
+<span class="code-keyword">FROM</span> instruments i
+<span class="code-keyword">LEFT JOIN</span> bars_daily b <span class="code-keyword">ON</span> b.instrument_key = i.instrument_key
+<span class="code-keyword">WHERE</span> i.valid_to <span class="code-keyword">IS NULL</span>
+<span class="code-keyword">GROUP BY</span> i.asset_class
+<span class="code-keyword">ORDER BY</span> instruments <span class="code-keyword">DESC</span>;
 
-&lt;DataTable data={coverage} /&gt;
+<span class="code-variable">&lt;DataTable data={coverage} /&gt;</span>
 
-```sql gaps
-SELECT instrument_key, trade_date,
-    trade_date - LAG(trade_date) OVER(
-        PARTITION BY instrument_key ORDER BY trade_date
-    ) AS gap_days
-FROM bars_daily
-HAVING gap_days &gt; 5  -- flag gaps &gt; 1 trading week
-ORDER BY gap_days DESC LIMIT 20;
-```
+<span class="code-comment">```sql gaps```</span>
+<span class="code-keyword">SELECT</span> instrument_key, trade_date,
+    trade_date - <span class="code-function">LAG</span>(trade_date) <span class="code-keyword">OVER</span>(
+        <span class="code-keyword">PARTITION BY</span> instrument_key <span class="code-keyword">ORDER BY</span> trade_date
+    ) <span class="code-keyword">AS</span> gap_days
+<span class="code-keyword">FROM</span> bars_daily
+<span class="code-keyword">HAVING</span> gap_days &gt; 5  <span class="code-comment">-- flag gaps &gt; 1 trading week</span>
+<span class="code-keyword">ORDER BY</span> gap_days <span class="code-keyword">DESC</span> <span class="code-keyword">LIMIT</span> 20;
 
-&lt;BarChart data={gaps} x=instrument_key y=gap_days /&gt;</code></pre>
+<span class="code-variable">&lt;BarChart data={gaps} x=instrument_key y=gap_days /&gt;</span>
       </div>
 
       <div class="terminal-box">
