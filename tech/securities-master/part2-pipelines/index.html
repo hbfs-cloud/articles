@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Ingestion Pipelines | Building a Securities Master — Part 2/6 | Market Watch</title>
+    <meta name="description"
+        content="Part 2/6: Building robust data ingestion pipelines in Go. Translating hedge fund models (Instrument, TradableInstrument) into a pristine PostgreSQL schema. Integrating Yahoo Finance and Casablanca Bourse (BVC).">
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
+    <!-- Highlight.js or Prism.js can be imported here -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* Series-specific styles — TEAL THEME (#0d9488) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .brand-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-decoration: none;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .brand-logo:hover {
+            color: #0d9488;
+        }
+
+        .series-nav {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .series-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 1rem;
+        }
+
+        .series-link {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+
+        .series-link:hover {
+            border-color: #5eead4;
+            color: #5eead4;
+        }
+
+        .series-link.current {
+            background: #0d9488;
+            color: white;
+            border-color: #0d9488;
+        }
+
+        .series-link.upcoming {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .hero-section {
+            padding: 4rem 2rem 6rem;
+            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
+            text-align: center;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0d9488;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0 0 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-top: -3rem;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin-top: 2.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: #334155;
+            margin-top: 2rem;
+        }
+
+        p {
+            line-height: 1.7;
+            color: #475569;
+            font-size: 1.05rem;
+        }
+
+        pre[class*="language-"] {
+            background: #042f2e !important;
+            border: 1px solid #115e59;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #0d9488;
+            background: #ccfbf1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .takeaway-box {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border: 1px solid #0d9488;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .takeaway-box h3 {
+            color: #0f766e;
+            margin-top: 0;
+        }
+
+        .footer-bar {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Brand Bar -->
+    <nav class="brand-bar">
+        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
+                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+        <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;"><i
+                class="fa-solid fa-house"></i> Home</a>
+    </nav>
+
+    <!-- Series Navigation -->
+    <div class="series-nav">
+        <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Securities
+            Master</span>
+        <a href="../part1-foundations/" class="series-link">1 &mdash; Foundations</a>
+        <a href="./" class="series-link current">2 &mdash; Pipelines & Ingestion</a>
+        <a href="../part3-transforms/" class="series-link upcoming">3 &mdash; Transforms</a>
+        <a href="../part4-corporate-actions/" class="series-link upcoming">4 &mdash; Corp. Actions</a>
+        <a href="../part5-dashboards/" class="series-link upcoming">5 &mdash; Dashboards</a>
+        <a href="../part6-operations/" class="series-link upcoming">6 &mdash; Operations</a>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-date">Part 2 of 6</div>
+        <h1 class="hero-title">Custom Data Pipelines & Impeccable DB Schema</h1>
+        <p style="color:#475569; font-size:1.1rem; max-width:700px; margin:0 auto;">
+            Moving away from black-box ELT tools, we write highly concurrent Go parsers inspired by leading hedge fund
+            architectures to ingest data from Yahoo, Casablanca Bourse, and more into a bulletproof SCD Type 2
+            PostgreSQL database.
+        </p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <p>In <strong>Part 1</strong>, we laid out the foundational rules of point-in-time correctness. But how do we
+            actually move the massive daily dumps of static data, closing prices, and company metadata from external
+            APIs into our pristine data warehouse?</p>
+
+        <p>While tools like Airbyte or Meltano are fantastic for standard SaaS integrations (like pulling Salesforce
+            contacts), market data requires <strong>extreme control over rate limits, caching, and concurrency</strong>.
+            A large hedge fund handling reference data typically builds a bespoke <code>reference-service</code> (often
+            in Java or Go) to fetch, normalize, and resolve entities.</p>
+
+        <h2>1. The "Nickel" Database Schema</h2>
+        <p>Before writing a single line of ingestion code, the primary database schema must be perfect. We blend our
+            point-in-time concepts with real-world institutional models (like the <code>Instrument</code> and
+            <code>TradableInstrument</code> interfaces found in Brevan Howard or Citadel architectures).</p>
+
+        <p>A true institutional master separates <strong>Reference Data</strong> (the instrument metadata) from
+            <strong>Market Data</strong> (the prices). Crucially, the Reference table implements Slowly Changing
+            Dimensions (SCD) Type 2 with absolute precision via <code>valid_from</code> and <code>valid_to</code>
+            constraints.</p>
+
+        <pre><code class="language-sql">-- 1. The Reference Data Master Table (SCD Type 2)
+CREATE TABLE instruments (
+    -- Surrogate system ID (e.g., UUID or internal sequence)
+    internal_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Identifier types
+    symbol VARCHAR(50) NOT NULL,
+    ric VARCHAR(50),             -- Reuters Instrument Code
+    bbg_id VARCHAR(50),          -- Bloomberg Global ID
+    isin VARCHAR(12),            -- ISIN Code
+    figi VARCHAR(12),            -- Financial Instrument Global Identifier
+    
+    -- Classifications
+    instrument_type VARCHAR(20) NOT NULL,    -- EQUITY, ETF, FX_FORWARD, CRYPTO
+    exchange_code VARCHAR(20),               -- NYS, PAR, CAS
+    currency_code VARCHAR(3) NOT NULL,       -- USD, MAD, EUR
+    
+    tick_size NUMERIC(15, 6),
+    is_tradable BOOLEAN DEFAULT TRUE,
+    
+    -- Point-in-time constraints (SCD2)
+    valid_from TIMESTAMP WITH TIME ZONE NOT NULL,
+    valid_to TIMESTAMP WITH TIME ZONE NOT NULL,
+    
+    -- Prevents overlapping timeframes for the same ISIN/exchange combo
+    EXCLUDE USING gist (
+        isin WITH =, 
+        exchange_code WITH =, 
+        tstzrange(valid_from, valid_to) WITH &&
+    )
+);
+
+-- 2. The Market Data Table (Partitioned by Month)
+CREATE TABLE market_data_ohlcv (
+    instrument_id UUID REFERENCES instruments(internal_id),
+    trade_date DATE NOT NULL,
+    
+    open_price NUMERIC(15, 6),
+    high_price NUMERIC(15, 6),
+    low_price NUMERIC(15, 6),
+    close_price NUMERIC(15, 6) NOT NULL,
+    adj_close NUMERIC(15, 6),
+    volume BIGINT,
+    
+    data_source VARCHAR(30) NOT NULL, -- e.g., 'YAHOO', 'BVC', 'STOCKANALYSIS'
+    
+    PRIMARY KEY (instrument_id, trade_date, data_source)
+) PARTITION BY LIST (EXTRACT(YEAR FROM trade_date));
+-- Note: Further monthly sub-partitioning is highly recommended for production scale.
+</code></pre>
+
+        <p>Notice the <code>EXCLUDE USING gist</code> constraint. It mathematically prevents any overlaps. You can never
+            have two rows for the same instrument active at the identical millisecond.</p>
+
+        <h2>2. Data Sources & The Provider Model</h2>
+        <p>Our ingestion system (modeled internally as a <code>Provider</code>) manages state, caching, and look-ahead
+            bias across drastically different endpoints.</p>
+
+        <h3>The Yahoo Finance Pipeline (High Concurrency)</h3>
+        <p>Yahoo Finance serves as an incredible free fallback for historical data and macro indices (e.g.,
+            <code>^GSPC</code>, <code>^VIX</code>). However, downloading thousands of tickers sequentially is too slow.
+            We use Go's massive concurrency model with a semaphore to bound the HTTP requests.</p>
+
+        <pre><code class="language-go">// internal/ohlcv/yahoo.go (Excerpt)
+func (p *Provider) loadSymbols(symbols []string, timeframe string) error {
+	const maxConcurrency = 50 // Bounded concurrency
+	sem := make(chan struct{}, maxConcurrency)
+	var wg sync.WaitGroup
+
+	for _, symbol := range symbols {
+		wg.Add(1)
+		go func(sym string) {
+			defer wg.Done()
+			
+			// Acquire semaphore
+			sem &lt;- struct{}{}
+			defer func() { &lt;-sem }()
+
+			// 1. Smart Check: Does a fresh cache exist for this exact date?
+			if cacheFile := p.findLatestCache(sym, timeframe); cacheFile != "" {
+				bars, _ := LoadOHLCVFromCSV(cacheFile)
+				p.data[sym] = filterBarsByDateRange(bars) // Prevent look-ahead bias
+				return
+			}
+
+			// 2. Fetch if not found or stale
+			bars, err := FetchHistoryYahooJSON(sym, timeframe)
+			if err == nil {
+				p.data[sym] = filterBarsByDateRange(bars)
+			}
+		}(symbol)
+	}
+
+	wg.Wait()
+	return nil
+}
+</code></pre>
+
+        <h3>The Casablanca Bourse (BVC) Pipeline (Rate-limited, JSON:API)</h3>
+        <p>Frontier and emerging markets often provide data through completely custom APIs. The Casablanca Bourse (BVC),
+            for instance, uses a Drupal backend with a strict JSON:API structure. Ingestion here is completely different
+            from Yahoo. It requires pagination extraction and strict rate limiting to avoid getting banned.</p>
+
+        <pre><code class="language-go">// internal/staticdata/bvc.go (Excerpt)
+func fetchBVCInstruments() (map[string]BVCInstrument, error) {
+	instruments := make(map[string]BVCInstrument)
+	url := "https://api.casablanca-bourse.com/fr/api/bourse_data/instrument?page[limit]=200"
+
+	for url != "" {
+		req, _ := http.NewRequest("GET", url, nil)
+		resp, _ := client.Do(req)
+		
+		var result bvcInstrumentResponse
+		json.NewDecoder(resp.Body).Decode(&result)
+
+		for _, rec := range result.Data {
+			attr := rec.Attributes
+			instruments[attr.Symbol] = BVCInstrument{
+				Symbol:       attr.Symbol,
+				InstrumentID: attr.DrupalInternalID, // Required for their specific OHLCV queries
+				ISIN:         attr.CodeISIN,
+			}
+		}
+
+		// Handle Drupal JSON:API Pagination
+		if result.Links.Next != nil {
+			url = result.Links.Next.Href
+			time.Sleep(200 * time.Millisecond) // Gentle rate limiting
+		} else {
+			url = ""
+		}
+	}
+	return instruments, nil
+}
+</code></pre>
+
+        <h2>3. Local Disk Caching as a Resilience Layer</h2>
+        <p>Writing directly to the database during high-concurrency loops (like fetching 5,000 tickers from Yahoo) can
+            cause severe database locking and connection pool exhaustion. Instead, a robust securities master implements
+            a <strong>Spill-to-Disk Cache Strategy</strong>.</p>
+
+        <p>When our Yahoo worker fetches JSON, it immediately dumps it as an optimized <code>.csv</code> to a local
+            date-folder (e.g., <code>cache/yahoo/2026-02-24/1d/AAPL.csv</code>). A secondary, asynchronous worker pool
+            reads these CSVs when they are ready and executes bulk <code>COPY</code> commands into the PostgreSQL
+            `market_data_ohlcv` table.</p>
+
+        <div class="takeaway-box">
+            <h3><i class="fa-solid fa-graduation-cap"></i> Data Ingestion Takeaways</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-check"
+                        style="color: #0d9488; margin-right: 0.5rem;"></i> <strong>Design strictly:</strong> Map
+                    real-world abstractions (InstrumentType, Time-Travel validity constraints) into PostgreSQL natively
+                    using GIST indices.</li>
+                <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-check"
+                        style="color: #0d9488; margin-right: 0.5rem;"></i> <strong>Be mindful of API limits:</strong>
+                    Distinguish between endpoints that can sustain concurrent hits (Yahoo) vs fragile local endpoints
+                    (BVC).</li>
+                <li><i class="fa-solid fa-check" style="color: #0d9488; margin-right: 0.5rem;"></i> <strong>Decouple
+                        fetchers from writes:</strong> Dump API responses to disk first, then load them entirely
+                    deterministically into the database.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-bar">
+        <p>&copy; 2026 Market Watch. All rights reserved. <br>
+            <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a>
+        </p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+</body>
+
+</html>
