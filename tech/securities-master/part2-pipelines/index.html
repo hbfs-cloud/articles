@@ -281,7 +281,8 @@
             <code>execution-instruments</code> repositories—reveals massive complexity. We must model
             <code>EQUITY</code>, <code>ETF</code>, <code>FUTURE</code>, <code>FUTURES_SPREAD</code>, <code>INDEX</code>,
             <code>RATE</code>, <code>FXFORWARD</code>, <code>IRS</code>, <code>OPTIONVOL</code>, and
-            <code>CRYPTO</code>.</p>
+            <code>CRYPTO</code>.
+        </p>
 
         <p>When ingesting data for this massive universe across multiple disparate providers (Yahoo Finance,
             StockAnalysis, Casablanca Bourse, Binance, FRED), standard Python ELT loops (like Airbyte or basic Python
@@ -302,7 +303,8 @@
         <h2><i class="fa-solid fa-code"></i> The Raw PostgreSQL Schema</h2>
         <p>In the Modern Data Stack paradigm (ELT), we extract and load purely raw data first. Complex joins and SCD
             Type 2 logic are handled by dbt subsequently. Our raw ingestion tables are optimized for ultra-fast
-            <code>COPY</code> commands.</p>
+            <code>COPY</code> commands.
+        </p>
 
         <pre><code class="language-sql">-- raw_zone.instruments
 CREATE TABLE raw_zone.instruments (
@@ -552,7 +554,8 @@ ENTRYPOINT ["meltano"]
 
         <p>We host Apache Airflow, and configure its Directed Acyclic Graphs (DAGs) to trigger executions
             <strong>remotely on HashiCorp Nomad</strong> using the <code>NomadOperator</code> (or Nomad HTTP API). This
-            maintains Nomad as the sole compute allocator while giving Airflow control over the workflow logic.</p>
+            maintains Nomad as the sole compute allocator while giving Airflow control over the workflow logic.
+        </p>
 
         <pre><code class="language-python"># airflow_dags/securities_master_dag.py
 from datetime import datetime
@@ -571,7 +574,7 @@ with DAG('securities_master_daily_ingest', default_args=default_args, schedule_i
     # Injects PostgreSQL Vault secrets securely at runtime.
     meltano_extract_load = NomadOperator(
         task_id='meltano_extract_high_concurrency',
-        nomad_url='http://nomad.internal.bh:4646',
+        nomad_url='http://nomad.internal.org:4646',
         job_spec="""
             job "marketdata-ingest-run" {
                 datacenters = ["dc1"]
@@ -580,7 +583,7 @@ with DAG('securities_master_daily_ingest', default_args=default_args, schedule_i
                     task "meltano" {
                         driver = "docker"
                         config {
-                            image = "registry.internal.bh/data/marketdata-meltano:latest"
+                            image = "registry.internal.org/data/marketdata-meltano:latest"
                             command = "meltano"
                             args = ["run", "tap-marketdata-go", "target-postgres"]
                         }
@@ -606,7 +609,8 @@ with DAG('securities_master_daily_ingest', default_args=default_args, schedule_i
             <p>We've successfully bypassed standard Python bottlenecks. By combining Go routines for ingestion,
                 Singer/Meltano for loading, and Airflow on Nomad for orchestration, we achieve massive scale. We can now
                 blindly ingest hundreds of thousands of instruments, and the data lands reliably in the
-                <code>raw_zone</code> Postgres tables.</p>
+                <code>raw_zone</code> Postgres tables.
+            </p>
             <p><strong>Next up, in Part 3: Transforms!</strong> We will execute dbt to sanitize this raw data, map
                 unique identifiers (ISIN, FIGI), handle the logic of the <code>InstrumentType</code> interface, and
                 build the definitive master tables.</p>
