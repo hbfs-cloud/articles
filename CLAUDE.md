@@ -55,7 +55,6 @@ articles/
 │   ├── evidence.config.yaml
 │   └── package.json
 ├── CLAUDE.md                     # Ce fichier (instructions pour Claude)
-├── PROMPT.md                     # Prompts détaillés pour chaque type d'analyse
 └── CNAME                         # DNS: market-watch.xyz
 ```
 
@@ -81,7 +80,7 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
    - WebSearch pour: CPI/inflation, earnings calendar semaine prochaine, géopolitique (Ukraine, Venezuela, Chine), sector rotation, Fed/FOMC
 3. Créer le dossier `weekly/YYYYMMDD/` (date du lundi de la semaine couverte)
 4. Utiliser impérativement le CSS global: `<link rel="stylesheet" href="/assets/report.css">`
-5. Créer index.html avec toutes les sections (voir PROMPT.md)
+5. Créer index.html avec toutes les sections (voir weekly/CLAUDE.md)
 6. Mettre à jour index.html principal (ajouter la nouvelle carte en premier, passer l'ancienne en "Archive")
 7. Langue: Français, ton institutionnel mais accessible
 
@@ -200,15 +199,34 @@ Les "Formation du Jour" suivent un cursus progressif :
 - Puis cycle recommence avec des sujets plus avancés
 
 ### "Scanner" / "Scan du jour"
-1. Collecter via MCP:
+1. **Lire la dernière rétrospective** (`scanner/retrospective/index.html`) :
+   - Extraire la note globale, hit rates par stratégie, top/flop setups
+   - Identifier les stratégies qui sous-performent → réduire leur poids
+   - Identifier les secteurs à faux signaux → les éviter ou filtrer plus strict
+   - Lister les tickers récemment floppés → les exclure
+   - Ajuster les stops si la rétro signale des stops trop serrés/larges
+2. **Lire le scan précédent** (`scanner/YYYYMMDD/` le plus récent) :
+   - Extraire les 10 tickers pour le filtre anti-doublon (min 70% nouveaux tickers)
+3. **Collecter via MCP** :
    - `RunAutoScreener` pour détection du régime + candidats
    - `RunScreener` avec 3 DSL complémentaires (oversold, momentum, breakout)
-   - `QueryData` types: quote pour les 10 tickers retenus
-2. WebSearch pour catalyseurs récents
-3. Créer `scanner/YYYYMMDD/index.html` (thème dark)
-4. Créer les variantes multilangue/multiniveau
-5. Mettre à jour le tab Scanner dans index.html
-6. Voir PROMPT.md Section 5 pour le template complet
+   - `RunScreener` avec symboles EU : VGK, EWG, EWQ, EWU, SAP, ASML, BBVA, TTE, SIE, LVMHF
+   - `RunScreener` avec symboles APAC : EWJ, EWY, EWH, FXI, MCHI
+   - `RunScreener` avec ETFs sectoriels/thématiques : XLF, XLE, XLK, XLV, XLI, GLD, SLV, TLT, ARKK, ICLN
+   - `QueryData` types: quote pour **tous** les candidats retenus (validation prix spot obligatoire)
+   - **Contrôle P0** : Rejeter tout ticker dont le prix d'entrée calculé diffère de >10% du prix spot
+4. **Sélection finale — 10 setups A+** :
+   - Score composite ≥ 85/100, confluence technique ≥ 3 signaux
+   - **Diversification géographique obligatoire** : min 5 US + 2 EU + 1 APAC + 2 ETFs
+   - En régime Risk-Off/Early Risk-Off : min 20% de setups short ou hedges (GLD, TLT, SH, SQQQ)
+   - Pondérer les stratégies selon le hit rate de la dernière rétrospective
+5. **WebSearch** pour catalyseurs récents de chaque ticker retenu
+6. **Créer `scanner/YYYYMMDD/index.html`** (thème light) :
+   - Mentionner en intro : "Suite à la rétrospective du DD/MM (note X, hit rate Y%), nous avons ajusté [Z]"
+   - Badge géographique sur chaque setup (US 🇺🇸 / Europe 🇪🇺 / Asia 🌏 / ETF 📊)
+   - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
+7. Créer les variantes multilangue/multiniveau
+8. Mettre à jour le tab Scanner dans index.html
 
 ### "Rétrospective Scanner" / "Rétro scanner"
 Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note le scanner.
@@ -225,7 +243,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
    - Analyse par stratégie, top 3 / flop 3, leçons & améliorations
    - Bouton Historique pour naviguer les versions précédentes
 6. **Mettre à jour le tab Scanner** dans index.html (ajouter la carte rétrospective)
-7. Voir PROMPT.md Section 5bis pour le template complet
+7. Voir scanner/CLAUDE.md pour le template complet
 
 ### Landing Page (index.html) — Tabs
 5 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
@@ -233,6 +251,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 - Grade filter : `?grade=A` (tab analyses uniquement)
 - Recherche : symbole ticker uniquement
 - Mobile : les tabs s'affichent en grille d'icones (5 colonnes) au lieu de texte horizontal
+- **Ordre des cartes** (**OBLIGATOIRE**) : Dans tous les tabs, les cartes `.report-card` sont **toujours triées par date décroissante** (plus récent en haut). Exception : dans le tab Scanner, le bloc "Performance du Scanner" reste fixe en tout premier (avant les cartes). Les rétrospectives et scans sont ensuite mélangés et triés strictement par date.
 
 ## Conventions
 - **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
