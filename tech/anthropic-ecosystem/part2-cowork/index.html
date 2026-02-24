@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Collaboration avec Claude (Teams & Projects) — Débutant — Partie 2/5 | Market Watch</title>
+    <title>La Collaboration en Entreprise (Claude Teams) — Débutant — Partie 2/5 | Market Watch</title>
     <meta name="description"
-        content="Comment Anthropic transforme l'IA en véritable collègue. Découvrez Claude Team et la fonctionnalité 'Projects' pour numériser la mémoire de votre entreprise.">
+        content="Comment Anthropic transforme l'IA en véritable cœur de l'entreprise. Exemples concrets dans la Fintech avec Claude Team et Projects. Préparation à l'IPO.">
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
 
     <!-- Google Tag Manager -->
@@ -26,11 +26,15 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Charts & Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ theme: 'light', themeVariables: { primaryColor: '#f3e8ff', primaryTextColor: '#0f172a', lineColor: '#9333ea', fontSize: '14px' } });</script>
+
     <!-- Base CSS -->
     <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -50,6 +54,8 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+            display: flex;
+            align-items: center;
         }
 
         .brand-logo:hover {
@@ -98,17 +104,17 @@
         }
 
         .hero-section {
-            padding: 4rem 2rem 8rem 2rem;
+            padding: 5rem 2rem 8rem 2rem;
             background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
             text-align: center;
         }
 
         .hero-date {
             font-size: 0.85rem;
-            font-weight: 700;
+            font-weight: 800;
             color: #9333ea;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             margin-bottom: 1rem;
         }
 
@@ -144,17 +150,17 @@
         .content-card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 4rem;
             margin-bottom: 2rem;
             border: 1px solid #e2e8f0;
         }
 
         h2 {
-            font-size: 1.8rem;
-            font-weight: 800;
+            font-size: 2rem;
+            font-weight: 900;
             color: #0f172a;
-            margin: 3rem 0 1.5rem;
+            margin: 4rem 0 1.5rem;
             letter-spacing: -0.02em;
             display: flex;
             align-items: center;
@@ -164,92 +170,155 @@
         }
 
         h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 1.4rem;
+            font-weight: 800;
             color: #1e293b;
-            margin: 2rem 0 1rem;
+            margin: 2.5rem 0 1rem;
         }
 
         p {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             line-height: 1.8;
-            color: #475569;
+            color: #334155;
             margin-bottom: 1.5rem;
         }
 
         .pedagogy-box {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-left: 4px solid #9333ea;
+            border-left: 5px solid #9333ea;
             border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin: 2rem 0;
+            padding: 2rem;
+            margin: 2.5rem 0;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
 
         .pedagogy-box h4 {
             margin: 0 0 1rem 0;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #7e22ce;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 800;
         }
 
         .decision-card {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
             border-radius: 16px;
-            padding: 2.5rem;
-            margin: 3rem 0;
+            padding: 3rem;
+            margin: 4rem 0;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 3rem;
             align-items: center;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         .decision-card p {
             color: #cbd5e1;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            line-height: 1.7;
         }
 
-        .takeaway-box {
-            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-            border: 1px solid #d8b4fe;
+        .market-context {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
             border-radius: 12px;
             padding: 2rem;
-            margin: 3rem 0;
-            text-align: center;
+            margin: 2.5rem 0;
+            position: relative;
+            overflow: hidden;
         }
 
-        .grid-example {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
+        .market-context::before {
+            content: '\f201';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 8rem;
+            color: #fcd34d;
+            opacity: 0.15;
         }
 
-        .example-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 1.5rem;
-            background: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-        }
-
-        .example-card h4 {
-            color: #9333ea;
-            margin-top: 0;
-            font-size: 1.05rem;
+        .market-context h4 {
+            color: #d97706;
+            font-size: 1.2rem;
+            margin: 0 0 1rem 0;
+            font-weight: 800;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
+        .takeaway-box {
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border: 1px solid #d8b4fe;
+            border-radius: 16px;
+            padding: 3rem;
+            margin: 4rem 0 2rem;
+            text-align: center;
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .example-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .example-card .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .example-card .badge-before {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .example-card .badge-after {
+            background: #dcfce3;
+            color: #15803d;
+        }
+
+        .example-card h5 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .example-card p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin: 0;
+        }
+
         @media (max-width: 768px) {
-            .decision-card {
+
+            .decision-card,
+            .example-grid {
                 grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 2rem;
             }
 
             .content-card {
@@ -257,7 +326,11 @@
             }
 
             h2 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
+            }
+
+            p {
+                font-size: 1.05rem;
             }
         }
     </style>
@@ -272,7 +345,7 @@
         <a href="/" class="brand-logo">
             <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
         </a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:700;">
             <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
         </a>
     </nav>
@@ -287,133 +360,205 @@
     </div>
 
     <header class="hero-section">
-        <div class="hero-date">UN COLLÈGUE NUMÉRIQUE — CLAUDE TEAM</div>
+        <div class="hero-date">L'INTÉGRATION ORGANISATIONNELLE (CLAUDE TEAM & PROJECTS)</div>
         <h1
-            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
-            De l'Outil Individuel<br>au Savoir d'Entreprise
+            style="font-size:3.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            En finir avec le Gadget Individualiste
         </h1>
         <p
-            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
-            L'IA traditionnelle est un bot avec lequel on discute seul. Anthropic a transformé Claude en un
-            collaborateur qui lit l'ensemble de vos documents et travaille simultanément avec toute votre équipe.
+            style="font-size:1.3rem; color:#475569; max-width:850px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            L'IA a passé deux ans confinée dans des onglets de navigateur personnels où des employés isolés lui posaient
+            des questions. Anthropic a franchi le Rubicon : <strong>Connecter l'IA au savoir institutionnel de toute
+                l'entreprise.</strong>
         </p>
 
         <div class="hero-badges">
             <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
-            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 7 min</div>
-            <div class="hero-badge"><i class="fa-solid fa-users"></i> Thème : Collaboration en Entreprise</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 14 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-users-gear"></i> Thème : Productivité B2B & Fintech</div>
         </div>
     </header>
 
     <main class="container">
         <article class="content-card">
+
             <p>
-                Pendant deux ans, l'utilisation de l'intelligence artificielle ressemblait à cela : un employé ouvrait
-                un onglet privé sur son navigateur, collait un email ou un bout de code à l'IA, lui demandait de
-                l'améliorer, et copiait le résultat pour retourner travailler.
+                Il y a encore un mois, l'utilisation de l'intelligence artificielle dans une grande banque ou une
+                Fintech ressemblait à cela : un analyste ouvrait l'interface de ChatGPT ou Claude, tapait frénétiquement
+                le nom de son client, collait des paragraphes entiers du dernier rapport de conformité (souvent en
+                violant les règles de sécurité de base), et priait pour que l'IA sorte un brouillon d'e-mail correct.
             </p>
             <p>
-                C'était un travail solitaire, compartimenté et rempli de frictions. Le plus gros problème de cette
-                méthode (comme nous l'avons évoqué dans la Partie 1) est que "l'IA oublie". Si l'employé demande
-                d'écrire une lettre commerciale, l'IA ne connaît ni le ton de l'entreprise, ni son historique, ni ses
-                anciens clients. Il fallait tout réexpliquer, chaque matin.
+                C'était l'ère de l'<strong>IA Individualiste</strong>. Chaque employé recréait le "contexte" à chaque
+                nouvelle conversation. L'IA n'apprenait rien du collègue du bureau d'à côté. L'entreprise payait pour un
+                outil puissant qui agissait finalement comme une calculatrice très intelligente, mais sans aucune
+                "mémoire" institutionnelle.
             </p>
 
-            <h2><i class="fa-solid fa-folder-open" style="color:#9333ea;"></i> La Solution Anthropic : Les "Projects"
+            <div class="market-context">
+                <h4><i class="fa-solid fa-arrow-trend-up"></i> Le Contexte de Marché : L'Approche d'une IPO</h4>
+                <p style="margin:0; font-size:1.05rem; color:#451a03;">
+                    Pendant qu'OpenAI (valorisée à plus de 150 Milliards de dollars) concentre ses efforts de
+                    communication sur la vidéo avec <em>Sora</em> ou la voix avec des gadgets grand public, Anthropic
+                    est perçue par Wall Street comme <strong>le "Microsoft" de l'ère de l'IA</strong>. En se concentrant
+                    exclusivement sur les problèmes B2B (Business-to-Business) arides — comme la conformité, la sécurité
+                    des données (sans utiliser les données des clients pour s'entraîner) et la gestion des "espaces de
+                    travail" —, Anthropic prépare une <strong>IPO (Introduction en Bourse)</strong> massive
+                    potentiellement dans l'année à venir.
+                    <br><br>
+                    Leur valorisation privée dépasse déjà allègrement les 40 Milliards de dollars, dopée par des
+                    investissements monumentaux de Google et Amazon, qui voient en elle la seule entreprise capable de
+                    pénétrer le Fort Knox des données bancaires et gouvernementales. Ce n'est pas par hasard : c'est
+                    grâce aux lancements de <em>Claude Team</em> et de l'architecture des <em>Projects</em>.
+                </p>
+            </div>
+
+            <h2><i class="fa-solid fa-folder-tree" style="color:#9333ea;"></i> Qu'est-ce qu'un "Project" concrètement ?
             </h2>
+
             <p>
-                Pour résoudre ce problème majeur en entreprise, Anthropic a créé une fonctionnalité appelée
-                <strong>Projects</strong> (Projets). L'idée est d'une simplicité enfantine, mais d'une puissance
-                redoutable.
+                Le plus gros frein à l'adoption de l'IA en entreprise était l'<strong>amnésie répétée</strong>.
             </p>
             <p>
-                Au lieu d'ouvrir une "nouvelle discussion" vide, un manager crée un <strong>Projet</strong>. C'est un
-                espace numérique fermé dans lequel vous pouvez télécharger des dizaines, voire des centaines de
-                documents de référence.
+                Pour pallier cela, Anthropic a inventé la fonctionnalité <strong>Projects</strong> (Projets). L'idée est
+                d'institutionnaliser la connaissance. Un Projet est une "sous-boîte" (Workspace) sécurisée, créée par un
+                manager, dans laquelle il va charger (uploader) son <strong>savoir froid</strong>.
+            </p>
+
+            <p>
+                Pensez-y comme à une clé USB gigantesque (grâce à la fenêtre de contexte de 200 000 tokens expliquée en
+                Partie 1), insérée en permanence dans le cerveau de Claude.
             </p>
 
             <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-download"></i> Comment ça marche concrètement ?</h4>
-                <p>Imaginez que vous êtes une agence de marketing préparant le lancement d'un nouveau modèle de baskets.
-                    Vous créez le projet "Lancement Baskets X". Vous téléchargez dans ce projet :</p>
-                <ul style="color:#475569; line-height:1.7; margin-bottom:0;">
-                    <li>Le "Brand Book" (50 pages de document PDF sur la charte éditoriale de la marque).</li>
-                    <li>Les spécifications techniques complètes de la chaussure (fichiers Word).</li>
-                    <li>L'historique des emails de la campagne précédente (fichier texte).</li>
-                    <li>Les rapports d'études de marché (fichiers Excel ou CSV).</li>
+                <h4><i class="fa-solid fa-cogs"></i> Ce que vous mettez dans un "Project"</h4>
+                <ul style="color:#334155; line-height: 1.8; margin-bottom: 0;">
+                    <li><strong>Documents de référence :</strong> 50 PDF de la "Charte Graphique", les 20 derniers
+                        "Pitch Decks" réussis.</li>
+                    <li><strong>Règles Métier (Custom Instructions) :</strong> "Dans ce projet, tu dois toujours écrire
+                        de manière formelle, au vouvoiement, ne jamais promettre de retours financiers garantis (règle
+                        SEC), et toujours sourcer tes chiffres."</li>
+                    <li><strong>Historique :</strong> La base de données en format CSV des anciens tickets clients
+                        résolus.</li>
                 </ul>
-                <p style="margin-top:1rem; margin-bottom:0;"><strong>Le résultat :</strong> Tous les employés qui
-                    ouvrent ensuite ce "Project" pour discuter avec Claude n'ont plus <em>jamais</em> à lui expliquer le
-                    contexte. Claude connaît déjà parfaitement la marque. Quand un employé demande <em>"Rédige-moi 3
-                        posts Instagram pour demain"</em>, les posts seront immédiatement écrits dans le ton exact de la
-                    marque, en citant les bons matériaux, sans aucune hallucination.</p>
+                <p style="margin-top:1rem; font-weight:600; color:#0f172a;">Résultat : Claude "devient" virtuellement un
+                    expert de ce sujet très précis de votre entreprise, avant même que l'employé n'entame la discussion.
+                </p>
             </div>
 
-            <h2><i class="fa-solid fa-network-wired" style="color:#9333ea;"></i> Claude Team : L'Effet Multiplicateur
-            </h2>
+            <h2><i class="fa-solid fa-building-columns" style="color:#9333ea;"></i> Fin de la Théorie : Le Cas Concret
+                d'une Fintech</h2>
+
             <p>
-                Les "Projects" prennent toute leur dimension lorsqu'ils sont partagés. C'est ici qu'intervient
-                <strong>Claude pour les Équipes (Team)</strong>. L'intelligence artificielle n'est plus un secret gardé
-                jalousement par un collègue qui "sait s'en servir". Elle devient le pivot de l'équipe entière.
+                Prenons un exemple extrêmement concret pour comprendre ce qui a changé <em>au cours des 30 derniers
+                    jours</em> avec l'adoption massive de ces outils dans les institutions financières (Gestion de
+                Fortune / Retail Finance).
             </p>
 
-            <div class="grid-example">
+            <div class="example-grid">
                 <div class="example-card">
-                    <h4><i class="fa-solid fa-gavel"></i> Cas d'usage : Cabinet d'Avocats</h4>
-                    <p style="font-size:0.95rem; margin-bottom:0;">Un avocat associé crée un Project "Litiges
-                        Immobiliers 2026" et y dépose toute la jurisprudence récente. Désormais, chaque avocat junior du
-                        cabinet accède à ce Project partagé. S'ils rédigent un contrat, l'IA vérifiera automatiquement
-                        le texte contre toute la jurisprudence déposée par l'associé senior. La qualité du travail des
-                        débutants monte instantanément.</p>
+                    <span class="badge badge-before"><i class="fa-solid fa-xmark"></i> AVANT (Il y a 6 mois)</span>
+                    <h5>La Préparation d'une Revue Trimestrielle</h5>
+                    <p>
+                        Une analyste junior (Sophie) doit préparer un mail de revue trimestrielle pour un client
+                        fortuné.
+                        Elle va sur ChatGPT. Elle doit copier-coller les rendements du trimestre, lui résumer la
+                        politique d'investissement de la banque (pour que l'IA connaisse le ton à adopter), et demander
+                        un texte.
+                        <br><br>
+                        Le résultat est "robotique". L'IA utilise des tournures exagérées. Sophie met 45 minutes à
+                        nettoyer le texte, s'assurer qu'aucune règle de la compliance (AMF / SEC) n'est enfreinte, puis
+                        l'envoie.
+                    </p>
                 </div>
-                <div class="example-card">
-                    <h4><i class="fa-solid fa-code-compare"></i> Cas d'usage : Équipe Informatique</h4>
-                    <p style="font-size:0.95rem; margin-bottom:0;">Le développeur en chef télécharge le "Guide
-                        Architectural de l'Entreprise" et des portions clés du code source. Tous les développeurs de
-                        l'équipe discutent avec l'IA dans ce projet. Quand un développeur demande "Code-moi ce bouton",
-                        l'IA utilisera automatiquement les bonnes couleurs, les bonnes balises et les bonnes pratiques
-                        de sécurité dictées par le chef d'équipe.</p>
-                </div>
-            </div>
 
-            <div class="decision-card">
-                <div>
-                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i class="fa-solid fa-brain"></i>
-                        L'institutionnalisation de la Mémoire</h3>
-                    <p>Le plus grand risque pour une entreprise aujourd'hui n'est pas technologique, il est humain.
-                        Quand votre meilleur employé part, son "savoir-faire" tacite part avec lui.</p>
-                </div>
-                <div
-                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
-                    <p style="color:#e2e8f0; margin:0; line-height:1.7;">
-                        Avec Claude Projects, l'entreprise <strong>numérise son expertise</strong>. Le cerveau de vos
-                        meilleurs éléments, une fois documenté (leurs processus, leurs règles orales, leurs manuels),
-                        réside de manière permanente dans l'IA.<br><br>Un nouvel employé arrivant dans l'équipe est
-                        confronté à un "Project" qui connaît 10 ans d'histoire de son poste. Son intégration est
-                        infiniment plus rapide.
+                <div class="example-card">
+                    <span class="badge badge-after"><i class="fa-solid fa-check"></i> AUJOURD'HUI (Avec Anthropic
+                        Projects)</span>
+                    <h5>L'Action Automatisée, Sûre et Contextualisée</h5>
+                    <p>
+                        Le directeur a créé le "Project : Revues Clients Q1". À l'intérieur, il y a le "Règlement
+                        Compliance de la Banque (120 pages PDF)", le "Livre Blanc Macroéconomique de la Banque" et les
+                        "50 emails parfaits de l'année dernière".
+                        <br><br>
+                        Sophie ouvre le Projet et dit : <em>"Rédige la revue pour les Dupont. Performance: +4%,
+                            l'immobilier a baissé, on recommande d'acheter du monétaire."</em>
+                        <br><br>
+                        Instantanément, Claude rédige un document <strong>parfait</strong>, calquant le ton précis du
+                        directeur, respectant les règles juridiques enfouies à la page 92 du manuel de compliance. Temps
+                        investi : <strong>3 minutes</strong>.
                     </p>
                 </div>
             </div>
 
-            <h2><i class="fa-solid fa-arrow-right" style="color:#9333ea;"></i> En Conclusion</h2>
+            <h2><i class="fa-solid fa-users" style="color:#9333ea;"></i> Claude Team : L'Effet de Réseau Interne</h2>
             <p>
-                Bien que l'usage des "Projects" rende la collaboration d'équipe immensément plus puissante, une barrière
-                gigantesque demeurait : le format texte. L'IA générait du texte (lettres, code informatique, idées),
-                qu'il fallait ensuite copier et coller ailleurs.
+                L'étape finale qu'Anthropic a maîtrisée est le partage avec l'abonnement <strong>Claude Team</strong>.
+                Si un partenaire dans un grand cabinet d'avocats ou de conseil crée un "Project" brillant contenant
+                toute la jurisprudence sur un sujet fiscal obscur, ce projet n'est pas enfermé sur son ordinateur.
+            </p>
+            <p>
+                Il le partage avec les 30 avocats juniors de son pôle.
+                Soudainement, le "savoir-faire", l'expérience et la rigueur du partenaire le plus cher de la firme sont
+                <strong>dupliqués et rendus accessibles à la demande</strong> par toute la chaîne en-dessous de lui.
+            </p>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.8rem; line-height:1.2;"><i
+                            class="fa-solid fa-network-wired"></i> Le Véritable "Enterprise Moat"</h3>
+                    <p style="margin-top:1rem;">Pourquoi les fonds d'investissements de Wall Street s'arrachent-ils les
+                        actions Anthropic pré-IPO ?</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:2rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <p style="color:#e2e8f0; margin:0; line-height:1.7;">
+                        Ce que font les <em>Projects</em>, c'est ce que l'on appelle la <strong>rétention de la
+                            connaissance (Knowledge Retention)</strong>.
+                        <br><br>
+                        Aujourd'hui, si le meilleur ingénieur logiciel d'une banque démissionne, 80% de son savoir
+                        implicite part avec lui. Mais si au lieu de cela, toutes ses directives architecturales, son
+                        code, ses commentaires sont compilés dans un "Project Anthropic", l'entreprise <strong>ne perd
+                            jamais l'intelligence de ses collaborateurs</strong>.
+                        <br><br>
+                        La banque qui intègre Anthropic ne voit pas Claude comme un outil de génération de texte, mais
+                        comme le "<strong>Disque Dur Cognitif</strong>" de toute l'institution.
+                    </p>
+                </div>
+            </div>
+
+            <h2><i class="fa-solid fa-arrow-right" style="color:#9333ea;"></i> La Limite du Format "Texte"</h2>
+            <p>
+                Nous venons de voir comment Anthropic résout le problème du Contexte et de la Mémoire Froid (la
+                collaboration par le savoir). Cependant, durant toute l'année 2023, une frustration gigantesque
+                demeurait.
+            </p>
+            <p>
+                Si une grande banque demandait l'automatisation d'un processus dans un "Project" à Claude, Claude
+                répondait poliment en générant une longue réponse textuelle, très intelligente certes. Mais l'employé
+                devait encore "copier" le texte ou le bout de code, pour le "coller" ailleurs dans un autre logiciel, le
+                tester, le valider.
             </p>
 
             <div class="takeaway-box">
-                <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-forward-step"></i> Ce qui vous attend
-                </h3>
-                <p style="color:#475569; font-size:1.05rem;">
-                    Comment Anthropic a tué le fameux "Copier-Coller" ? Dans la Partie 3, nous allons explorer l'une des
-                    inventions les plus importantes d'Anthropic de l'année dernière : <strong>Les Artifacts</strong>.
-                    L'interface de discussion se coupe en deux, et l'IA fabrique des applications visuelles interactives
-                    en direct, sous vos yeux, tout en gérant nativement le code pour l'ingénieur.
+                <h3 style="margin-top:0; color:#581c87; font-size:1.4rem; font-weight:800;"><i
+                        class="fa-solid fa-forward-step" style="margin-right:8px;"></i> Prochaine Étape : Quitter l'ère
+                    du Chatbot</h3>
+                <p style="color:#475569; font-size:1.15rem; margin-top:1.5rem; text-align:left;">
+                    Comment franchit-on le gouffre entre <em>"L'IA me donne du texte"</em> et <em>"L'IA me fabrique
+                        carrément l'application logicielle sous mes yeux"</em> ?
+                </p>
+                <p style="color:#475569; font-size:1.15rem; margin-top:1rem; text-align:left;">
+                    Dans la Partie 3, nous allons découvrir ce qui est considéré comme la plus grande révolution
+                    ergonomique depuis l'invention du moteur de recherche : <strong>Les Artifacts et Claude
+                        Code</strong>. Fini les copiés-collés. L'IA crée des tableaux de bord, des sites webs, des
+                    calculatrices financières interactives en 10 secondes et les affiche directement à l'écran.
+                    <strong>Préparez-vous à dire adieu aux mois d'attente pour des développements informatiques
+                        mineurs.</strong>
                 </p>
                 <a href="../part3-code/" class="btn-action"
-                    style="background:#9333ea; border-radius:12px; padding:12px 24px; color:white; text-decoration:none; display:inline-block; font-weight:700; margin-top:1rem; box-shadow:0 4px 10px rgba(147, 51, 234, 0.3);">
-                    Passer à la Partie 3 : Code & Artifacts &rarr;
+                    style="background:#9333ea; border-radius:12px; padding:16px 32px; color:white; text-decoration:none; display:inline-block; font-weight:800; font-size:1.1rem; margin-top:2rem; box-shadow:0 10px 20px rgba(147, 51, 234, 0.25); transition:transform 0.2s;">
+                    Continuer : Partie 3 (Code & Artifacts) &rarr;
                 </a>
             </div>
 
@@ -421,9 +566,9 @@
     </main>
 
     <footer
-        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
-        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
-        risques.
+        style="text-align:center; padding:3rem 1rem 4rem; color:#64748b; font-size:0.95rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Intelligence Institutionnelle. Ceci n'est pas un conseil financier ou logiciel. Les
+        investissements technologiques sont soumis à de fortes volatilités.
     </footer>
 </body>
 

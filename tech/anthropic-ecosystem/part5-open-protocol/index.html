@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Standard Ouvert (Protocole MCP) — Débutant — Partie 5/5 | Market Watch</title>
+    <title>Model Context Protocol (Le Standard Universel) — Débutant — Partie 5/5 | Market Watch</title>
     <meta name="description"
-        content="Découvrez le Model Context Protocol (MCP). La norme open-source d'Anthropic qui connecte l'IA à toutes les bases de données (Notion, Slack, SQL).">
+        content="Comprendre le MCP d'Anthropic. Le nouveau standard open-source (le 'TCP/IP' ou 'USB-C' de l'IA) permettant de connecter instantanément Claude aux bases de données Fintech (Postgres, Notion, Slack).">
     <link rel="icon" href="https://market-watch.xyz/favicon.ico">
 
     <!-- Google Tag Manager -->
@@ -26,14 +26,15 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Charts & Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#9333ea', primaryTextColor: '#fff', lineColor: '#d8b4fe' } });</script>
+    <script>mermaid.initialize({ theme: 'light', themeVariables: { primaryColor: '#f3e8ff', primaryTextColor: '#0f172a', lineColor: '#9333ea', fontSize: '14px' } });</script>
 
     <!-- Base CSS -->
     <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -53,6 +54,8 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+            display: flex;
+            align-items: center;
         }
 
         .brand-logo:hover {
@@ -101,17 +104,17 @@
         }
 
         .hero-section {
-            padding: 4rem 2rem 8rem 2rem;
+            padding: 5rem 2rem 8rem 2rem;
             background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
             text-align: center;
         }
 
         .hero-date {
             font-size: 0.85rem;
-            font-weight: 700;
+            font-weight: 800;
             color: #9333ea;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             margin-bottom: 1rem;
         }
 
@@ -147,17 +150,17 @@
         .content-card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 4rem;
             margin-bottom: 2rem;
             border: 1px solid #e2e8f0;
         }
 
         h2 {
-            font-size: 1.8rem;
-            font-weight: 800;
+            font-size: 2rem;
+            font-weight: 900;
             color: #0f172a;
-            margin: 3rem 0 1.5rem;
+            margin: 4rem 0 1.5rem;
             letter-spacing: -0.02em;
             display: flex;
             align-items: center;
@@ -167,92 +170,155 @@
         }
 
         h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 1.4rem;
+            font-weight: 800;
             color: #1e293b;
-            margin: 2rem 0 1rem;
+            margin: 2.5rem 0 1rem;
         }
 
         p {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             line-height: 1.8;
-            color: #475569;
+            color: #334155;
             margin-bottom: 1.5rem;
         }
 
         .pedagogy-box {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-left: 4px solid #9333ea;
+            border-left: 5px solid #9333ea;
             border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin: 2rem 0;
+            padding: 2rem;
+            margin: 2.5rem 0;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
 
         .pedagogy-box h4 {
             margin: 0 0 1rem 0;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #7e22ce;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 800;
         }
 
         .decision-card {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
             border-radius: 16px;
-            padding: 2.5rem;
-            margin: 3rem 0;
+            padding: 3rem;
+            margin: 4rem 0;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 3rem;
             align-items: center;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         .decision-card p {
             color: #cbd5e1;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            line-height: 1.7;
         }
 
         .takeaway-box {
             background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
             border: 1px solid #d8b4fe;
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 3rem 0;
+            border-radius: 16px;
+            padding: 3rem;
+            margin: 4rem 0 2rem;
             text-align: center;
         }
 
-        .chart-container {
-            background: #fff;
+        .example-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .example-card {
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2.5rem 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            padding: 2rem;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
         }
 
-        .chart-title {
-            text-align: center;
-            font-weight: 700;
+        .example-card .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .example-card .badge-before {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .example-card .badge-after {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .example-card h5 {
+            margin: 0 0 1rem 0;
             font-size: 1.1rem;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
         }
 
-        .chart-subtitle {
-            text-align: center;
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-bottom: 2rem;
+        .example-card p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin: 0;
+        }
+
+        .market-context {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .market-context::before {
+            content: '\f0c2';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 8rem;
+            color: #86efac;
+            opacity: 0.15;
+        }
+
+        .market-context h4 {
+            color: #166534;
+            font-size: 1.2rem;
+            margin: 0 0 1rem 0;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         @media (max-width: 768px) {
-            .decision-card {
+
+            .decision-card,
+            .example-grid {
                 grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 2rem;
             }
 
             .content-card {
@@ -260,7 +326,11 @@
             }
 
             h2 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
+            }
+
+            p {
+                font-size: 1.05rem;
             }
         }
     </style>
@@ -275,7 +345,7 @@
         <a href="/" class="brand-logo">
             <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
         </a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:700;">
             <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
         </a>
     </nav>
@@ -290,124 +360,208 @@
     </div>
 
     <header class="hero-section">
-        <div class="hero-date">STANDARDISATION D'INTERNET</div>
+        <div class="hero-date">LA CONNECTIVITÉ UNIVERSELLE B2B</div>
         <h1
-            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
-            Le Protocole MCP :<br>La Prise Universelle de l'IA
+            style="font-size:3.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Le "USB-C" de l'Intelligence Artificielle
         </h1>
         <p
-            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
-            L'internet moderne avait besoin du "HTTP" pour uniformiser les connexions. L'Intelligence Artificielle de
-            votre entreprise avait besoin du "MCP" pour se brancher à toutes vos applications fermées d'entreprise de
-            façon unifiée.
+            style="font-size:1.3rem; color:#475569; max-width:850px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Si votre IA est enfermée en "Silo" en dehors de vos vraies données (Bases PostgreSQL, Github, Slack), elle
+            ne sert à rien. OpenAI a tenté de monopoliser la connectivité avec ses "Plugins". Anthropic a contourné le
+            géant en inventant le "Model Context Protocol", imposant silencieusement le standard open-source mondial.
         </p>
 
         <div class="hero-badges">
             <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
-            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 7 min</div>
-            <div class="hero-badge"><i class="fa-solid fa-plug"></i> Thème : Interopérabilité logicielle</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 13 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-plug"></i> Thème : Architecture & Data</div>
         </div>
     </header>
 
     <main class="container">
         <article class="content-card">
+
             <p>
-                Jusqu'à récemment, si un informaticien voulait que son IA personnelle lise directement des données
-                situées dans le "Slack", le "Gmail", ou la "Base de Données" ultra sécurisée de son entreprise, c'était
-                quasiment impossible.
+                C'est le dernier acte de la symphonie d'Anthropic. Le dernier mur gigantesque qui séparait l'anecdote de
+                la révolution en entreprise était un problème trivial mais insolvable sans budget colossal : <strong>La
+                    Plomberie des Données</strong>.
             </p>
             <p>
-                Les ingénieurs devaient taper des lignes de code effrayantes nommées <em>"Intégration d'API"</em>. Le
-                bouton carré devait passer dans le trou rond. C'était un casse-tête infernal qui prenait un temps
-                précieux, fragile et qui cassait au moindre changement.
+                Prenons un gérant de portefeuille Hedge Fund (Fonds Alternatif) fin 2023. Il voit la puissance
+                incroyable de ChatGPT ou Claude. Génial.
+                Sauf que les données dont il a besoin pour que l'IA lui réponde pertinemment <em>ne sont pas dans le
+                    cerveau de l'IA</em>. Elles sont éparpillées :
+            </p>
+            <ul style="font-size:1.15rem; color:#334155; line-height: 1.8; margin-bottom: 2rem;">
+                <li>Les expositions brutes au risque (Pertes/Profits) sont dans une énorme <strong>base de données
+                        PostgreSQL</strong> privée tournant sur des serveurs sécurisés.</li>
+                <li>Le mémo sur les risques juridiques spécifiques à la firme est sur une page <strong>Notion /
+                        Confluence</strong>.</li>
+                <li>Les rumeurs de marché entendues ce matin par l'équipe de trading sont dans des messages textes épars
+                    sur <strong>Slack</strong>.</li>
+            </ul>
+
+            <div class="market-context">
+                <h4><i class="fa-solid fa-building-circle-exclamation"></i> L'Approche "OpenAI Walled Garden" (Fermée)
+                </h4>
+                <p style="margin:0; font-size:1.05rem; color:#064e3b;">
+                    La méthode classique pour résoudre ce problème était la méthode "App Store" de Google ou Apple.
+                    OpenAI proposait la création de <em>"Custom GPTs"</em> et de <em>"Plugins"</em> hébergés chez
+                    OpenAI. Pour connecter sa base de données interne de banque, la banque devait payer des ingénieurs
+                    pendant un an pour construire une API (un pont) ultra-sécurisée parlant le langage spécifique
+                    d'OpenAI, créant <strong>une dépendance folle, un Vendor Lock-in (Menottage aux fournisseurs) au
+                        profit exclusif de la firme de Sam Altman.</strong>
+                </p>
+            </div>
+
+            <h2><i class="fa-solid fa-plug" style="color:#9333ea;"></i> Le Cheval de Troie d'Anthropic : MCP</h2>
+
+            <p>
+                Dès que vous comprenez un tant soit peu la psychologie d'Anthropic (Safety-First, orientée Entreprise,
+                focusé sur la fiabilité), vous devinez qu'ils méprisent cette approche "enfermée" destinée aux
+                consommateurs.
+            </p>
+            <p>
+                S'ils veulent que 80% des banques, des hôpitaux et des cabinets d'assurance utilisent <em>Claude</em>
+                plutôt que <em>ChatGPT</em> d'ici la clôture de leur future gigantesque IPO, ils doivent rendre
+                <strong>la connectivité gratuite, standardisée et de niveau militaire (sécurisée en local).</strong>
             </p>
 
-            <h2><i class="fa-solid fa-plug" style="color:#9333ea;"></i> Le Standard MCP (Model Context Protocol)</h2>
             <p>
-                Anthropic a résolu l'un des plus grands maux de tête de l'histoire logicielle, d'un coup de maître. Il a
-                inventé puis offert gratuitement la norme <strong>MCP</strong>.
+                Ils ont donc sorti le <strong>MCP (Model Context Protocol)</strong>, totalement open-source.
+                <br>
+                C'est littéralement le port "USB-C" ou le "TCP/IP" pour l'intelligence artificielle. MCP standardise
+                définitivement comment n'importe quelle source de donnée au monde déclare "<em>Hé, voici mes colonnes et
+                    mes fichiers</em>" à un cerveau IA, quel qu'il soit.
             </p>
 
-            <div class="chart-container" style="background: white; border-radius: 12px; padding: 2rem;">
-                <div class="chart-title">L'Architecture Client / Serveur du Protocole MCP</div>
-                <div class="chart-subtitle">Une prise universelle liant le modèle IA à toutes les sources de données
-                    imaginables.</div>
+            <div class="chart-container"
+                style="background:#f8fafc; border:none; box-shadow:inset 0 2px 4px rgba(0,0,0,0.05); padding: 2rem; border-radius: 12px; margin: 3rem 0;">
+                <div style="text-align:center; font-weight:800; font-size:1.2rem; color:#1e293b; margin-bottom:0.5rem;">
+                    Câblage Local "Zéro-Configuration"</div>
+                <div style="text-align:center; font-size:0.95rem; color:#64748b; margin-bottom:2rem;">L'IA (Client MCP)
+                    questionne les différents Serveurs (Boutiques de Spécialités)</div>
                 <div class="mermaid" style="display:flex; justify-content:center;">
                     graph LR
-                    A((Serveur Notion\nDocument B)) -- branché dans --> C[Protocole MCP]
-                    B((Base de données\nClient A)) -- branché dans --> C
-                    E((Compte GitHub\nCode C)) -- branché dans --> C
-                    C -- Alimente --> D[Hôte IA\nEx: Application Claude Bureau]
-                    D -- Dialogue --> F((Utilisateur))
+                    A((Le "Cerveau"<br>Claude / Autre IA)) <-->|Requête MCP| B(Serveur MCP:<br>Base de Données Postgres)
+                        A <-->|Requête MCP| C(Serveur MCP:<br>Github Enterprise)
+                            A <-->|Requête MCP| D(Serveur MCP:<br>Espace Notion Privé)
+
+                                classDef brain fill:#9333ea,color:white,stroke:#581c87,stroke-width:2px
+                                classDef server fill:#e2e8f0,stroke:#64748b,stroke-width:1px,color:#0f172a
+
+                                class A brain;
+                                class B,C,D server;
                 </div>
             </div>
 
+            <h2><i class="fa-solid fa-chart-line" style="color:#9333ea;"></i> L'Exemple Concret : L'Analyste Triomphant
+            </h2>
+
             <p>
-                <strong>Qu'est-ce que ça veut dire sans jargon ?</strong> C'est exactement comme brancher votre
-                sèche-cheveux. Vous possédez un "Hôte" (le Client IA, la grosse batterie). Les "Serveurs MCP" sont la
-                prise électrique. En connectant le Serveur MCP "Notion" ou "Google Drive", l'Hôte va y "pomper" le
-                courant (l'Intelligence/Le Contexte) de vos documents personnels et d'entreprise sans avoir à recoder le
-                fonctionnement d'Internet tout seul.
+                Prouvons en quoi c'est une révolution pour la Finance Retail (Banque de détail) ou Haute Fréquence
+                (Hedge Funds).
             </p>
 
-            <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-cube"></i> Pourquoi "Open Source" a changé la donne ?</h4>
-                <p>Anthropic a publié les plans de son invention sous licence gratuite (Open Source). Ils n'ont pas fait
-                    de MCP "le produit propriétaire de Claude", ils l'ont poussé comme une norme mondiale
-                    <em>gratuite</em> pour <em>tout le monde</em>.</p>
-                <p><strong>L'effet domino :</strong> Des centaines de passionnés construisent, depuis un mois,
-                    gratuitement, chaque jour, de nouvelles prises (serveurs MCP). Il existe désormais une prise
-                    (serveur) "Spotify", "GitHub", "Jira", "Slack", "Bourse de Hong Kong". Bientôt tout sera standardisé
-                    et l'IA pourra naviguer sans faille grâce à des connecteurs propres plutôt qu'en "Lisant et cliquant
-                    sur un écran", comme on le faisait avec <em>Computer Use</em>.</p>
-            </div>
-
-            <h2><i class="fa-solid fa-chess-knight" style="color:#9333ea;"></i> La Complétion du Puzzle : La Maîtrise
-                Anthropic</h2>
-            <p>
-                Reconstituons ensemble ce que nous avons vu durant toute cette <strong>Série en 5 parties</strong> :
-            </p>
-
-            <div style="background:#f8fafc; padding:2rem; border-radius:12px; border:1px solid #e2e8f0; margin:2rem 0;">
-                <ol style="margin:0; padding-left:1.5rem; color:#475569; font-size:1.05rem; line-height:1.8;">
-                    <li style="margin-bottom:1rem;"><strong>L'IA Sécurisée :</strong> Anthropic invente et forme Sonnet
-                        3.5, un modèle aux immenses capacités cognitives en interdisant formellement l'erreur grâce à
-                        son "IA Constitutionnelle" (Partie 1).</li>
-                    <li style="margin-bottom:1rem;"><strong>La Mémoire Collectée :</strong> Anthropic connecte ce
-                        cerveau à toute votre organisation par ses "Projects", gardiens du savoir-faire (Partie 2).</li>
-                    <li style="margin-bottom:1rem;"><strong>L'Application du Savoir :</strong> L'IA devient créatrice
-                        d'applications en direct (UI interactives) avec "Artifacts" (Partie 3).</li>
-                    <li style="margin-bottom:1rem;"><strong>La Manipulation de Logiciels Fermés :</strong> L'IA a des
-                        yeux et des mains avec le "Computer Use", naviguant sur l'ordinateur à la souris (Partie 4).
-                    </li>
-                    <li><strong>L'Harmonie Ouverte :</strong> Les connexions avec vos données secrètes sont enfin ultra
-                        silencieuses, sûres et rapides grâce au standard universel "MCP".</li>
-                </ol>
-            </div>
-
-            <div class="decision-card">
-                <div>
-                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i class="fa-solid fa-flag-checkered"></i>
-                        Épilogue</h3>
-                    <p>La Révolution Industrielle remplaçait le muscle physique par des machines physiques.<br>La Bulle
-                        IA actuelle remplace le traitement de l'information brute.<br><br>Anthropic a simplement été
-                        plus lucide sur un élément : le travail en entreprise est avant tout organisationnel.</p>
+            <div class="example-grid">
+                <div class="example-card">
+                    <span class="badge badge-before"><i class="fa-solid fa-code"></i> AVANT (Il y a 6 Mois)</span>
+                    <h5>Des ponts coûteux et éphémères</h5>
+                    <p>
+                        L'analyste veut demander à son chatbot IA privé : <em>"Fais un bilan de notre exposition sur
+                            l'action Tesla en croisant les vrais chiffres dans la Base PostgreSQL X, et dis-moi si cela
+                            viole la charte interne écrite dans Notion ce matin."</em>.
+                        <br><br>
+                        <strong>La réalité technique :</strong> C'était impossible sans claquer le budget IT de l'année.
+                        Les développeurs devaient inventer un protocole bancal pour transformer les requêtes SQL en
+                        texte (RAG), une autre API pour se connecter à Notion, etc. La complexité décourageait tout le
+                        monde.
+                    </p>
                 </div>
-                <div
-                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
-                    <p style="color:#e2e8f0; margin:0; line-height:1.7;">
-                        Il ne s'agissait pas d'écrire des beaux poèmes. Il s'agissait d'inventer le "Collaborateur
-                        Intelligent" en standardisant l'interface (Artifacts), le contexte (Projects) et le câblage aux
-                        données de l'entreprise (MCP). C'est pourquoi Anthropic est la vraie base de l'économie de la
-                        décennie qui s'annonce.
+
+                <div class="example-card">
+                    <span class="badge badge-after"><i class="fa-solid fa-rocket"></i> AUJOURD'HUI (Magie du MCP)</span>
+                    <h5>Branchez les câbles et discutez</h5>
+                    <p>
+                        La banque installe sur son propre serveur hautement sécurisé deux minuscules "logiciels"
+                        gratuits : un "MCP Server Postgres" et un "MCP Server Notion".
+                        <br><br>
+                        Le gérant (sur son ordinateur personnel) se connecte. Le client Claude (par exemple <em>Claude
+                            Desktop App</em>) détecte localement les câbles invisibles. Claude peut, le plus
+                        naturellement du monde, lire les cellules des millions de lignes de la Base de Données, et les
+                        fiches privées Notion sans qu'<strong>aucun code spécifique au milieu n'ait été écrit par votre
+                            banque</strong>.
                     </p>
                 </div>
             </div>
 
-            <div class="takeaway-box" style="background:#0f172a; border-color:#0f172a;">
+            <p>
+                Le Gérant envoie sa requête. En 5 secondes, Claude comprend qu'il doit tirer les chiffres avec le "Câble
+                Postgres" (Outil 1), qu'il doit tirer la charte avec le "Câble Notion" (Outil 2), et produit un rapport
+                d'une précision diabolique croisant les deux, garantissant la conformité légale et financière en toute
+                sécurité.
+            </p>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.8rem; line-height:1.2;">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> L'Analyse Marché (Le Génie de l'IPO)
+                    </h3>
+                    <p style="margin-top:1rem;">Pourquoi l'industrie entière se plie-t-elle au standard proposé par
+                        Anthropic au lieu de celui de Google ou de Meta (Facebook) ?</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:2rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <ul style="color:#e2e8f0; margin:0; line-height:1.7; padding-left:1.2rem;">
+                        <li style="margin-bottom:0.75rem;"><strong>Open-Source Radicalise l'Adoption :</strong> Parce
+                            que le standard est public (Open-Source), d'arrache-pied, des milliers de développeurs se
+                            mettent à créer des serveurs MCP pour Spotify, Snowflake, Oracle, Bloomberg Terminal... Pour
+                            le plaisir, sans attendre la permission d'une entreprise centrale.</li>
+                        <li style="margin-bottom:0.75rem;"><strong>Effet de Réseau :</strong> Au moment où l'IPO
+                            d'Anthropic arrivera, toutes les méga-infrastructures du monde financier "parleront déjà
+                            couramment le langage Anthropic MCP". Un "Moat" (barrière à l'entrée) technologique
+                            infranchissable.</li>
+                        <li><strong>Google abdique déjà :</strong> Fait rare, Google a récemment annoncé que son AI
+                            Studio serait également compatible avec le "Model Context Protocol". L'industrie fait front
+                            commun autour de cette "Prise Électrique Commune".</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#9333ea;"></i> Conclusion de la Série (La Vue
+                d'Ensemble)</h2>
+            <p>
+                Si vous vouliez automatiser une banque il y a trois ans, vous deviez payer cher. Très cher. En
+                consulting ou en solutions propriétaires alambiquées (UiPath / Talend / Salesforce custom).
+            </p>
+            <p>
+                En 2026, l'équation s'est métamorphosée.
+            </p>
+            <ol style="font-size:1.15rem; color:#334155; line-height:1.8; margin-bottom:2rem;">
+                <li><strong>Sonnet 3.5</strong> garantit la puissance et la pureté juridique sans hallucinations pour le
+                    cœur "cognitif" de la banque (Partie 1).</li>
+                <li><strong>La mémoire à 200K tokens avec Claude Projects</strong> remplace les bibliothèques et le
+                    savoir-faire individuel (Partie 2).</li>
+                <li><strong>Les Artifacts et l'Agent Terminal Claude Code</strong> génèrent eux-mêmes l'interface de
+                    l'application et maintiennent l'infrastructure IT de l'entreprise (Partie 3).</li>
+                <li><strong>Computer Use API</strong> élimine l'angoisse des vieux logiciels fermés en agissant comme
+                    les yeux (RPA Agentique Ultime) d'un commis de bureau (Partie 4).</li>
+                <li><strong>MCP (Model Context Protocol)</strong> relie tout le reste (Bases de données SQL, Chat
+                    interne, serveurs Documentaires) avec une connectivité "Plug and Play" sans couture (Partie 5).</li>
+            </ol>
+
+            <p
+                style="font-size: 1.25rem; font-weight:800; color:#0f172a; text-align: center; margin: 3rem 0; padding: 2rem; background: #f3e8ff; border-radius: 12px; border: 1px dotted #9333ea;">
+                En l'espace de deux ans, les anciens dirigeants dissidents de la sécurité d'OpenAI n'ont pas simplement
+                construit un "meilleur ChatGPT". Ils ont livré le socle du système nerveux ("Operating System") de toute
+                institution financière ou économique moderne. L'introduction en Bourse naissante promet d'être sismique.
+            </p>
+
+            <div style="text-align: center; margin-top: 4rem;">
                 <a href="/?tab=tech" class="btn-action"
-                    style="background:white; border-radius:12px; padding:12px 24px; color:#0f172a; text-decoration:none; display:inline-block; font-weight:800; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-                    Retour au Tableau de Bord Tech
+                    style="background:white; border:2px solid #94a3b8; border-radius:12px; padding:16px 32px; color:#475569; text-decoration:none; display:inline-block; font-weight:800; font-size:1.1rem; box-shadow:0 4px 6px rgba(0,0,0,0.05); transition:transform 0.2s;">
+                    <i class="fa-solid fa-arrow-left" style="margin-right:8px;"></i> Retour à la Liste des Articles
                 </a>
             </div>
 
@@ -415,9 +569,9 @@
     </main>
 
     <footer
-        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
-        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
-        risques.
+        style="text-align:center; padding:3rem 1rem 4rem; color:#64748b; font-size:0.95rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Intelligence Institutionnelle. Ceci n'est pas un conseil financier ou logiciel. Les
+        investissements technologiques sont soumis à de fortes volatilités.
     </footer>
 </body>
 
