@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Sentiment Mastery: Trading Against the Crowd | Timing the Market &mdash; Part 4 | Market Watch</title>
+ <meta name="description" content="Timing the Market Series &mdash; Part 4: Deep dive into every major sentiment indicator. AAII, Fear & Greed, VIX, Put/Call, Smart/Dumb Money. How to build a composite sentiment dashboard and trade against the crowd.">
+ <meta property="og:title" content="Sentiment Mastery: Trading Against the Crowd | Market Watch">
+ <meta property="og:description" content="Part 4 of the Timing the Market series. Every sentiment indicator dissected with historical data.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/timing-the-market/expert/en/sentiment-mastery/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* Series Specific Styles */
+ .brand-bar {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 1rem 2rem;
+ background: #ffffff;
+ border-bottom: 1px solid #e2e8f0;
+ position: sticky;
+ top: 0;
+ z-index: 100;
+ }
+ .brand-logo {
+ font-size: 1.1rem;
+ font-weight: 800;
+ color: #0f172a;
+ text-decoration: none;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ }
+ .brand-logo:hover { color: #2563eb; }
+
+ .switcher-bar {
+ display: flex;
+ gap: 0.5rem;
+ align-items: center;
+ flex-wrap: wrap;
+ }
+ .switcher-btn {
+ padding: 0.35rem 0.75rem;
+ border-radius: 8px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ text-decoration: none;
+ color: #64748b;
+ border: 1px solid #e2e8f0;
+ transition: all 0.2s;
+ }
+ .switcher-btn:hover { border-color: #2563eb; color: #2563eb; }
+ .switcher-btn.active {
+ background: #2563eb;
+ color: white;
+ border-color: #2563eb;
+ }
+
+ /* Series Navigation */
+ .series-nav {
+ background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+ padding: 1rem 2rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 0.5rem;
+ flex-wrap: wrap;
+ }
+ .series-title {
+ color: #94a3b8;
+ font-size: 0.75rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.1em;
+ margin-right: 1rem;
+ }
+ .series-link {
+ padding: 0.4rem 1rem;
+ border-radius: 8px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ text-decoration: none;
+ color: #94a3b8;
+ border: 1px solid #334155;
+ transition: all 0.2s;
+ }
+ .series-link:hover { border-color: #60a5fa; color: #60a5fa; }
+ .series-link.current {
+ background: #2563eb;
+ color: white;
+ border-color: #2563eb;
+ }
+
+ .hero-section {
+ padding: 4rem 2rem 8rem 2rem;
+ background: linear-gradient(180deg, #fef3c7 0%, #f8fafc 100%);
+ }
+ .hero-date {
+ font-size: 0.85rem;
+ font-weight: 700;
+ color: #d97706;
+ text-transform: uppercase;
+ letter-spacing: 0.1em;
+ margin-bottom: 1rem;
+ }
+ .hero-badges {
+ display: flex;
+ gap: 0.75rem;
+ justify-content: center;
+ flex-wrap: wrap;
+ margin-top: 2rem;
+ }
+ .hero-badge {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.4rem;
+ padding: 0.5rem 1rem;
+ border-radius: 99px;
+ font-size: 0.8rem;
+ font-weight: 700;
+ }
+ .hero-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+ .hero-badge-green { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+ .hero-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
+ .hero-badge-amber { background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.2); }
+ .hero-badge-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+ /* Score cards row */
+ .score-row {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 1rem;
+ margin: 1.5rem 0;
+ }
+ .score-item {
+ text-align: center;
+ padding: 1.25rem;
+ border-radius: 12px;
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ }
+ .score-item .big { font-size: 2rem; font-weight: 800; }
+ .score-item .label { font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; }
+
+ /* Footer */
+ .footer-bar {
+ text-align: center;
+ padding: 2rem;
+ background: #f8fafc;
+ border-top: 1px solid #e2e8f0;
+ color: #94a3b8;
+ font-size: 0.8rem;
+ }
+ .footer-bar a { color: #64748b; text-decoration: none; }
+ .footer-bar a:hover { color: #2563eb; }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+ .hero-section { padding: 2.5rem 1rem 5rem; }
+ .hero-section h1 { font-size: 1.8rem !important; }
+ .brand-bar { padding: 0.75rem 1rem; }
+ .series-nav { padding: 0.75rem 1rem; }
+ .brand-logo { font-size: 0.9rem; }
+ .switcher-bar { gap: 0.25rem; }
+ .switcher-btn { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+ .series-nav { gap: 0.4rem; }
+ .series-title { font-size: 0.65rem; margin-right: 0.5rem; }
+ .series-link { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
+ .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+ .score-row { grid-template-columns: repeat(2, 1fr); }
+ }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+ <!-- Brand Bar -->
+ <nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <div class="switcher-bar">
+<a href="/series/timing-the-market/expert/en/sentiment-mastery/" class="switcher-btn active" title="English">&#x1F1EC;&#x1F1E7;</a>
+<span style="color:#e2e8f0;margin:0 0.25rem">|</span>
+<a href="/series/timing-the-market/expert/en/sentiment-mastery/" class="switcher-btn active">Expert</a>
+<span style="color:#e2e8f0;margin:0 0.25rem">|</span>
+<a href="/" class="switcher-btn" title="Home"><i class="fa-solid fa-house"></i></a>
+</div>
+ </nav>
+
+ <!-- Series Navigation -->
+ <div class="series-nav">
+    <span class="series-title"><i class="fa-solid fa-crosshairs" style="margin-right:0.4rem;"></i> Timing the Market</span>
+    <a href="/series/timing-the-market/expert/en/introduction/" class="series-link">1</a>
+    <a href="/series/timing-the-market/expert/en/valuation-models/" class="series-link">2</a>
+    <a href="/series/timing-the-market/expert/en/market-breadth/" class="series-link">3</a>
+    <a href="/series/timing-the-market/expert/en/sentiment-mastery/" class="series-link current">4</a>
+    <a href="/series/timing-the-market/expert/en/finding-bottoms/" class="series-link">5</a>
+    <a href="/series/timing-the-market/expert/en/detecting-tops/" class="series-link">6</a>
+    <a href="/series/timing-the-market/expert/en/trend-following/" class="series-link">7</a>
+    <a href="/series/timing-the-market/expert/en/macro-timing/" class="series-link">8</a>
+    <a href="/series/timing-the-market/expert/en/quantitative-systems/" class="series-link">9</a>
+    <a href="/series/timing-the-market/expert/en/master-framework/" class="series-link">10</a>
+</div>
+
+ <!-- Hero -->
+ <div class="hero-section" style="text-align:center;">
+ <div class="hero-date">Series: Timing the Market &mdash; Part 4 &mdash; February 2026</div>
+ <h1 style="font-size:2.8rem; font-weight:900; margin:0 0 1rem; background:linear-gradient(135deg,#92400e,#d97706); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2;">
+ Sentiment Mastery: Trading Against the Crowd
+ </h1>
+ <p style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto 1rem; line-height:1.7;">
+ Every major sentiment indicator dissected, quantified, and stress-tested. When the crowd panics, the data whispers <strong style="color:#0f172a;">&ldquo;buy.&rdquo;</strong> When the crowd celebrates, the data murmurs <strong style="color:#0f172a;">&ldquo;reduce.&rdquo;</strong>
+ </p>
+ <div class="hero-badges">
+ <span class="hero-badge hero-badge-red"><i class="fa-solid fa-face-grimace"></i> Fear &amp; Greed</span>
+ <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> VIX Deep Dive</span>
+ <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-brain"></i> Behavioral Finance</span>
+ <span class="hero-badge hero-badge-green"><i class="fa-solid fa-gauge-high"></i> Composite Dashboard</span>
+ </div>
+ </div>
+
+ <div class="container">
+
+ <!-- ============================================================ -->
+ <!-- SECTION 1: THE PSYCHOLOGY OF CROWDS -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-people-group" style="color:#d97706;"></i> 1. The Psychology of Crowds &mdash; Why Sentiment Works</h2>
+
+ <p>In 1895, Gustave Le Bon published <em>The Crowd: A Study of the Popular Mind</em>, arguing that individuals, once submerged in a group, lose their capacity for rational thought and become subject to contagion, suggestibility, and emotional extremism. A century later, his observations remain the single best explanation for why markets overshoot in both directions.</p>
+
+ <p>Charles Mackay&rsquo;s <em>Extraordinary Popular Delusions and the Madness of Crowds</em> (1841) documented the same phenomenon across centuries: the Dutch tulip mania of 1637, the South Sea Bubble of 1720, the Mississippi Company. The pattern is always identical &mdash; a plausible narrative, growing participation, parabolic price action, and catastrophic collapse. What changes are the names, not the structure.</p>
+
+ <div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> Behavioral Finance: The Theoretical Foundation</h4>
+ <p><strong>Kahneman &amp; Tversky (1979)</strong> formalized what Le Bon observed intuitively. Their Prospect Theory demonstrated that humans feel the pain of losses roughly <strong>2.5x more intensely</strong> than the pleasure of equivalent gains. This asymmetry drives the entire sentiment cycle: investors hold losers too long (loss aversion), sell winners too early (disposition effect), and panic-sell at bottoms (capitulation).</p>
+ <p>Key biases that drive sentiment extremes:</p>
+ <ul>
+ <li><strong>Herding:</strong> Humans evolved to follow the group. In markets, this creates crowded trades that inevitably unwind violently.</li>
+ <li><strong>Anchoring:</strong> Investors anchor to recent prices. After a 30% decline, a stock &ldquo;feels&rdquo; cheap even if it remains overvalued. After a 100% rally, it &ldquo;feels&rdquo; expensive even if fundamentals justify the price.</li>
+ <li><strong>Recency bias:</strong> The most recent experience dominates expectations. After a crash, investors expect another crash. After a bull run, they expect eternal gains.</li>
+ <li><strong>Confirmation bias:</strong> At extremes, investors seek information that confirms the prevailing narrative. At bottoms, bearish news is amplified. At tops, skeptics are dismissed.</li>
+ </ul>
+ </div>
+
+ <p>This is why sentiment indicators <em>work</em>. When the crowd reaches an extreme &mdash; when everyone who was going to sell has sold, when every bearish argument has been priced in, when the last margin call has been met &mdash; there are simply no sellers left. The market reverses not because of good news, but because of <strong>seller exhaustion</strong>.</p>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-lightbulb"></i> The &ldquo;Smart Money&rdquo; Concept</h4>
+ <p>Commercial hedgers (companies that use futures to hedge their actual business), corporate insiders (executives buying their own stock), and institutional positioning data consistently show that informed participants do the <strong>opposite</strong> of the crowd at extremes. When retail is panic-selling, insiders are buying. When retail is euphoric, insiders are distributing. This asymmetry is measurable, repeatable, and tradeable.</p>
+ </div>
+
+ <div class="score-row">
+ <div class="score-item">
+ <div class="big" style="color:#ef4444;">2.5x</div>
+ <div class="label">Loss aversion multiplier (Kahneman &amp; Tversky)</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#2563eb;">87%</div>
+ <div class="label">of retail investors underperform S&amp;P 500 over 15 years (DALBAR)</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#d97706;">70%</div>
+ <div class="label">of market&rsquo;s best days occur within 2 weeks of worst days</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#10b981;">+15%</div>
+ <div class="label">Avg 6-month return when AAII bearish &gt; 50%</div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 2: AAII SENTIMENT SURVEY -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-poll" style="color:#2563eb;"></i> 2. AAII Sentiment Survey &mdash; The Gold Standard</h2>
+
+ <p>The <strong>American Association of Individual Investors</strong> has conducted a weekly sentiment survey of its members since July 1987 &mdash; making it one of the longest-running, most-studied contrarian indicators in existence. Each week, members answer a single question: <em>&ldquo;Do you feel the direction of the stock market over the next six months will be up (bullish), no change (neutral), or down (bearish)?&rdquo;</em></p>
+
+ <div class="didactic-box">
+ <h4><i class="fa-solid fa-chart-pie"></i> Long-Term Averages (July 1987 &ndash; February 2026)</h4>
+ <p><strong>Bullish:</strong> 37.5% &nbsp;&bull;&nbsp; <strong>Bearish:</strong> 31.0% &nbsp;&bull;&nbsp; <strong>Neutral:</strong> 31.5%</p>
+ <p>Standard deviation (bearish): <strong>10.7 percentage points</strong>. A reading above 50% bearish is approximately a 2-sigma event. Above 60% is a 3-sigma event. Above 70% has happened exactly <em>once</em> in 39 years.</p>
+ </div>
+
+ <h3>Extreme Bearish Readings &amp; Forward Returns</h3>
+ <p>The following table documents every instance where AAII bearish sentiment exceeded 55% &mdash; a level reached fewer than 20 times in nearly four decades. The forward return data is unambiguous:</p>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Date</th>
+ <th>Bearish %</th>
+ <th>S&amp;P 500</th>
+ <th>Event</th>
+ <th>Fwd 1M</th>
+ <th>Fwd 3M</th>
+ <th>Fwd 6M</th>
+ <th>Fwd 12M</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>Mar 5, 2009</strong></td>
+ <td><span class="badge badge-red">70.3%</span></td>
+ <td>683</td>
+ <td>GFC exact bottom</td>
+ <td>+8.5%</td>
+ <td>+25.9%</td>
+ <td>+36.2%</td>
+ <td>+53.6%</td>
+ </tr>
+ <tr>
+ <td>Oct 9, 2008</td>
+ <td><span class="badge badge-red">64.7%</span></td>
+ <td>910</td>
+ <td>Lehman aftermath</td>
+ <td>-16.8%</td>
+ <td>-23.5%</td>
+ <td>-10.1%</td>
+ <td>+14.2%</td>
+ </tr>
+ <tr>
+ <td>Mar 19, 2020</td>
+ <td><span class="badge badge-red">52.1%</span></td>
+ <td>2,304</td>
+ <td>COVID crash &mdash; 4 days before bottom</td>
+ <td>+12.7%</td>
+ <td>+32.0%</td>
+ <td>+42.3%</td>
+ <td>+56.4%</td>
+ </tr>
+ <tr>
+ <td>Sep 22, 2022</td>
+ <td><span class="badge badge-red">60.9%</span></td>
+ <td>3,693</td>
+ <td>Rate hike panic</td>
+ <td>+8.0%</td>
+ <td>+5.6%</td>
+ <td>+9.5%</td>
+ <td>+21.6%</td>
+ </tr>
+ <tr>
+ <td>Oct 6, 2022</td>
+ <td><span class="badge badge-red">56.2%</span></td>
+ <td>3,640</td>
+ <td>Near exact Oct 2022 bottom</td>
+ <td>+7.9%</td>
+ <td>+3.2%</td>
+ <td>+10.8%</td>
+ <td>+21.2%</td>
+ </tr>
+ <tr>
+ <td>Apr 10, 2025</td>
+ <td><span class="badge badge-red">61.9%</span></td>
+ <td>5,268</td>
+ <td>Tariff shock</td>
+ <td>+9.3%</td>
+ <td>+12.8%</td>
+ <td>+14.5%</td>
+ <td>TBD</td>
+ </tr>
+ <tr>
+ <td>Dec 19, 2018</td>
+ <td><span class="badge badge-red">50.3%</span></td>
+ <td>2,507</td>
+ <td>Christmas Eve selloff</td>
+ <td>+7.9%</td>
+ <td>+11.7%</td>
+ <td>+17.3%</td>
+ <td>+28.9%</td>
+ </tr>
+ <tr>
+ <td>Feb 7, 2003</td>
+ <td><span class="badge badge-red">56.0%</span></td>
+ <td>829</td>
+ <td>Post-dot-com bear</td>
+ <td>+0.3%</td>
+ <td>+14.6%</td>
+ <td>+21.2%</td>
+ <td>+38.5%</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Key Takeaway</h4>
+ <p>When AAII bearish exceeds 50%, the average forward <strong>6-month return is +15.4%</strong> and the average forward <strong>12-month return is +33.5%</strong>. The signal has a hit rate of approximately 90% for positive 12-month returns. This is one of the most statistically robust contrarian signals in all of market data.</p>
+ </div>
+
+ <h3>When Bullish Extremes Signal Danger</h3>
+ <p>Sustained bullish readings above 55% for 3+ consecutive weeks have historically preceded short-term market peaks. Examples include January 2000 (dot-com top), October 2007 (GFC top), and late November 2024 (post-election euphoria preceding the 2025 tariff correction). However, bullish extremes are <strong>less reliable</strong> than bearish extremes &mdash; markets can stay irrationally exuberant longer than they stay irrationally fearful.</p>
+
+ <h3>Limitations</h3>
+ <p>The survey suffers from <strong>sample bias</strong>: respondents are older, wealthier, and more educated than the average investor. The sample is US-only and tends to skew male. Response rates vary, and the sample size (typically 300-500 respondents) is small. These limitations argue for using AAII as one component of a composite, not a standalone signal.</p>
+
+ <!-- EChart: AAII Bearish % at Major Bottoms -->
+ <div id="chart-aaii" style="width:100%; height:420px; margin-top:2rem;"></div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 3: CNN FEAR & GREED INDEX -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-face-grimace" style="color:#ef4444;"></i> 3. CNN Fear &amp; Greed Index &mdash; The Seven Components</h2>
+
+ <p>CNN&rsquo;s Fear &amp; Greed Index aggregates seven distinct market signals into a single 0&ndash;100 score, providing a real-time snapshot of market emotion. Unlike AAII (survey-based), this index is derived entirely from <strong>market-based data</strong>, making it immune to self-reporting bias.</p>
+
+ <div class="metric-grid">
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-chart-line"></i> Stock Price Momentum</h4>
+ <p>S&amp;P 500 vs. 125-day moving average. Above = greed. Below = fear.</p>
+ </div>
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-arrow-up-wide-short"></i> Stock Price Strength</h4>
+ <p>52-week highs vs. 52-week lows on NYSE. More highs = greed.</p>
+ </div>
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-arrows-left-right"></i> Stock Price Breadth</h4>
+ <p>McClellan Volume Summation Index. Positive breadth = greed.</p>
+ </div>
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-scale-balanced"></i> Put/Call Ratio</h4>
+ <p>5-day avg CBOE put/call. High ratio = fear. Low ratio = greed.</p>
+ </div>
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-money-bill-wave"></i> Junk Bond Demand</h4>
+ <p>HY spread vs. IG spread. Tight = greed. Wide = fear.</p>
+ </div>
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-bolt"></i> Market Volatility</h4>
+ <p>VIX vs. 50-day moving average. High VIX = fear.</p>
+ </div>
+ <div class="metric-card">
+ <h4><i class="fa-solid fa-shield-halved"></i> Safe Haven Demand</h4>
+ <p>Stocks vs. Treasuries return differential (20-day). Bonds outperforming = fear.</p>
+ </div>
+ </div>
+
+ <h3>Extreme Readings &amp; Forward Returns</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Date</th>
+ <th>F&amp;G Score</th>
+ <th>Zone</th>
+ <th>Event</th>
+ <th>S&amp;P Level</th>
+ <th>Fwd 1M</th>
+ <th>Fwd 6M</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>Apr 8, 2025</strong></td>
+ <td><span class="badge badge-red">3</span></td>
+ <td>Extreme Fear</td>
+ <td>Tariff shock &mdash; lowest since Mar 2020</td>
+ <td>5,062</td>
+ <td>+15.4%</td>
+ <td>+18.7%</td>
+ </tr>
+ <tr>
+ <td>Mar 16, 2020</td>
+ <td><span class="badge badge-red">2</span></td>
+ <td>Extreme Fear</td>
+ <td>COVID crash &mdash; near all-time low</td>
+ <td>2,386</td>
+ <td>+20.8%</td>
+ <td>+42.5%</td>
+ </tr>
+ <tr>
+ <td>Dec 24, 2018</td>
+ <td><span class="badge badge-red">5</span></td>
+ <td>Extreme Fear</td>
+ <td>Christmas Eve panic</td>
+ <td>2,351</td>
+ <td>+7.9%</td>
+ <td>+17.3%</td>
+ </tr>
+ <tr>
+ <td>Feb 9, 2018</td>
+ <td><span class="badge badge-red">8</span></td>
+ <td>Extreme Fear</td>
+ <td>Volmageddon</td>
+ <td>2,581</td>
+ <td>+5.4%</td>
+ <td>+8.3%</td>
+ </tr>
+ <tr>
+ <td>Aug 24, 2015</td>
+ <td><span class="badge badge-red">6</span></td>
+ <td>Extreme Fear</td>
+ <td>China devaluation scare</td>
+ <td>1,893</td>
+ <td>-1.4%</td>
+ <td>+7.8%</td>
+ </tr>
+ <tr>
+ <td>Nov 25, 2024</td>
+ <td><span class="badge badge-green">92</span></td>
+ <td>Extreme Greed</td>
+ <td>Post-election euphoria</td>
+ <td>5,988</td>
+ <td>-2.5%</td>
+ <td>-1.8%</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <div class="pedagogy-box">
+ <h4><i class="fa-solid fa-key"></i> The &ldquo;Recovery Above 25&rdquo; Rule</h4>
+ <p>Historically, when F&amp;G drops into single digits and then <strong>recovers above 25</strong>, the subsequent rally is sustainable. This is because the initial bounce from extreme fear is often driven by short-covering &mdash; volatile and unreliable. But once sentiment recovers above 25, it signals genuine buying interest and the all-clear for trend followers to add exposure. In March 2020, the recovery above 25 came on April 6 &mdash; confirming the bottom with the S&amp;P at 2,663 (still +40% below the eventual peak).</p>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 4: VIX — THE FEAR GAUGE -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-bolt" style="color:#9333ea;"></i> 4. VIX &mdash; The Fear Gauge Deep Dive</h2>
+
+ <p>The <strong>CBOE Volatility Index (VIX)</strong> was created by Professor Robert Whaley in 1993 and redesigned in 2003 to use S&amp;P 500 options (instead of S&amp;P 100). It measures the <strong>30-day implied volatility</strong> of SPX options, expressed as an annualized percentage. Colloquially, the &ldquo;fear gauge.&rdquo;</p>
+
+ <h3>VIX Level Interpretation Framework</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>VIX Level</th>
+ <th>Regime</th>
+ <th>Interpretation</th>
+ <th>Frequency</th>
+ <th>Signal</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>10&ndash;15</td>
+ <td>Complacent</td>
+ <td>Extreme calm, often precedes turbulence. Portfolio insurance is cheap.</td>
+ <td>~22% of trading days</td>
+ <td><span class="badge badge-purple">Caution</span></td>
+ </tr>
+ <tr>
+ <td>15&ndash;20</td>
+ <td>Normal</td>
+ <td>Healthy market with typical uncertainty. Neutral signal.</td>
+ <td>~38% of trading days</td>
+ <td><span class="badge badge-blue">Neutral</span></td>
+ </tr>
+ <tr>
+ <td>20&ndash;30</td>
+ <td>Elevated</td>
+ <td>Correction territory. Hedging activity increases. Opportunities forming.</td>
+ <td>~28% of trading days</td>
+ <td><span class="badge badge-blue">Monitor</span></td>
+ </tr>
+ <tr>
+ <td>30&ndash;40</td>
+ <td>Crisis</td>
+ <td>Genuine fear. Historically positive 6-month forward returns.</td>
+ <td>~9% of trading days</td>
+ <td><span class="badge badge-green">Opportunity</span></td>
+ </tr>
+ <tr>
+ <td>40&ndash;50</td>
+ <td>Panic</td>
+ <td>Severe dislocation. Capitulation likely occurring. Strong contrarian buy.</td>
+ <td>~2.5% of trading days</td>
+ <td><span class="badge badge-green">Strong Buy</span></td>
+ </tr>
+ <tr>
+ <td>50&ndash;80</td>
+ <td>Max Panic</td>
+ <td>Generational events. Every instance preceded massive forward returns.</td>
+ <td>~0.4% of trading days</td>
+ <td><span class="badge badge-green">Maximum Conviction</span></td>
+ </tr>
+ <tr>
+ <td>80+</td>
+ <td>Armageddon</td>
+ <td>Has occurred twice: Oct 2008 (80.86), Mar 2020 (82.69). Literal once-in-a-decade events.</td>
+ <td>~0.02% of trading days</td>
+ <td><span class="badge badge-green">Generational Buy</span></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <h3>VIX Term Structure: Contango vs. Backwardation</h3>
+
+ <p>The VIX term structure &mdash; the relationship between VIX spot and VIX futures at various expirations &mdash; provides an additional layer of intelligence beyond the spot level alone.</p>
+
+ <div class="didactic-box">
+ <h4><i class="fa-solid fa-chart-area"></i> Contango (Normal State &mdash; 84% of the time)</h4>
+ <p>VIX futures trade <strong>above</strong> the spot VIX. This is normal: investors expect more uncertainty further into the future. The term structure slopes upward (Front month &lt; 2nd month &lt; 3rd month). This is the &ldquo;risk premium&rdquo; &mdash; you pay more to hedge further out.</p>
+ </div>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-rotate"></i> Backwardation (Crisis State &mdash; 16% of the time)</h4>
+ <p>VIX futures trade <strong>below</strong> the spot VIX. This means present panic exceeds expected future volatility. The market is saying: &ldquo;Things are terrible <em>right now</em>, but will probably calm down.&rdquo; Historically, backwardation is a <strong>positive forward signal</strong> &mdash; the market is pricing in recovery. Average 3-month forward return when VIX is in backwardation: <strong>+8.4%</strong> (vs. +2.9% baseline).</p>
+ </div>
+
+ <h3>Major VIX Spikes &amp; Forward Returns</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Date</th>
+ <th>VIX Close</th>
+ <th>Event</th>
+ <th>S&amp;P Drawdown</th>
+ <th>Fwd 3M</th>
+ <th>Fwd 6M</th>
+ <th>Fwd 12M</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>Mar 16, 2020</strong></td>
+ <td><span class="badge badge-red">82.69</span></td>
+ <td>COVID pandemic crash</td>
+ <td>-33.9%</td>
+ <td>+28.0%</td>
+ <td>+42.5%</td>
+ <td>+56.4%</td>
+ </tr>
+ <tr>
+ <td>Oct 27, 2008</td>
+ <td><span class="badge badge-red">80.86</span></td>
+ <td>GFC &mdash; Lehman collapse</td>
+ <td>-48.8%</td>
+ <td>-7.4%</td>
+ <td>+1.5%</td>
+ <td>+23.5%</td>
+ </tr>
+ <tr>
+ <td>Aug 5, 2024</td>
+ <td><span class="badge badge-red">65.73</span></td>
+ <td>Yen carry trade unwind</td>
+ <td>-8.5%</td>
+ <td>+9.2%</td>
+ <td>+14.8%</td>
+ <td>+19.7%</td>
+ </tr>
+ <tr>
+ <td>Apr 8, 2025</td>
+ <td><span class="badge badge-red">52.33</span></td>
+ <td>Tariff escalation panic</td>
+ <td>-19.4%</td>
+ <td>+14.6%</td>
+ <td>+18.2%</td>
+ <td>TBD</td>
+ </tr>
+ <tr>
+ <td>Mar 12, 2020</td>
+ <td><span class="badge badge-red">75.47</span></td>
+ <td>WHO declares pandemic</td>
+ <td>-26.7%</td>
+ <td>+25.3%</td>
+ <td>+39.8%</td>
+ <td>+52.7%</td>
+ </tr>
+ <tr>
+ <td>Feb 5, 2018</td>
+ <td><span class="badge badge-red">37.32</span></td>
+ <td>Volmageddon (XIV collapse)</td>
+ <td>-10.2%</td>
+ <td>+5.4%</td>
+ <td>+8.3%</td>
+ <td>+2.1%</td>
+ </tr>
+ <tr>
+ <td>Aug 24, 2015</td>
+ <td><span class="badge badge-red">40.74</span></td>
+ <td>China devaluation fears</td>
+ <td>-12.4%</td>
+ <td>+5.2%</td>
+ <td>+7.8%</td>
+ <td>+12.5%</td>
+ </tr>
+ <tr>
+ <td>Oct 15, 2014</td>
+ <td><span class="badge badge-red">31.06</span></td>
+ <td>Ebola scare + oil crash</td>
+ <td>-7.4%</td>
+ <td>+8.7%</td>
+ <td>+4.9%</td>
+ <td>+5.3%</td>
+ </tr>
+ <tr>
+ <td>Sep 17, 2001</td>
+ <td><span class="badge badge-red">43.74</span></td>
+ <td>Market re-opens after 9/11</td>
+ <td>-11.6%</td>
+ <td>+11.4%</td>
+ <td>+5.2%</td>
+ <td>-12.3%</td>
+ </tr>
+ <tr>
+ <td>Oct 8, 1998</td>
+ <td><span class="badge badge-red">45.74</span></td>
+ <td>LTCM / Russia crisis</td>
+ <td>-19.3%</td>
+ <td>+21.3%</td>
+ <td>+28.5%</td>
+ <td>+33.0%</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <!-- EChart: VIX Term Structure -->
+ <div id="chart-vix" style="width:100%; height:400px; margin-top:2rem;"></div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 5: SMART MONEY VS. DUMB MONEY -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-user-tie" style="color:#10b981;"></i> 5. Smart Money vs. Dumb Money Confidence</h2>
+
+ <p>Jason Goepfert&rsquo;s <strong>SentimenTrader</strong> service has tracked the divergence between informed and uninformed market participants since 2001. The Smart Money / Dumb Money Confidence spread is among the most powerful timing tools ever constructed.</p>
+
+ <h3>Component Construction</h3>
+
+ <div class="didactic-box">
+ <h4><i class="fa-solid fa-brain"></i> Smart Money Indicators</h4>
+ <ul>
+ <li><strong>OEX put/call ratio:</strong> S&amp;P 100 options, used predominantly by institutional hedgers</li>
+ <li><strong>Commercial hedger positions:</strong> CFTC Commitments of Traders data &mdash; companies hedging real business exposure</li>
+ <li><strong>Equity/bond relationship:</strong> Institutional asset allocation shifts measured through relative fund flows</li>
+ <li><strong>VIX term structure trades:</strong> Sophisticated volatility positioning</li>
+ </ul>
+ </div>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-users"></i> Dumb Money Indicators</h4>
+ <ul>
+ <li><strong>CBOE equity-only put/call ratio:</strong> Dominated by small retail traders</li>
+ <li><strong>Rydex fund flows:</strong> Retail mutual fund investors (see Section 7)</li>
+ <li><strong>Small speculator positions:</strong> Non-commercial, non-reportable futures positions</li>
+ <li><strong>Retail trading activity:</strong> Small-lot option trades, fractional share buying patterns</li>
+ </ul>
+ </div>
+
+ <h3>Signal Interpretation</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Configuration</th>
+ <th>Smart Money</th>
+ <th>Dumb Money</th>
+ <th>Spread</th>
+ <th>Historical Interpretation</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><span class="badge badge-green">Maximum Opportunity</span></td>
+ <td>&gt; 65%</td>
+ <td>&lt; 35%</td>
+ <td>&gt; 30 pts</td>
+ <td>Smart money buying what dumb money is selling. Avg fwd 3M: +9.2%</td>
+ </tr>
+ <tr>
+ <td><span class="badge badge-blue">Mild Opportunity</span></td>
+ <td>&gt; 55%</td>
+ <td>&lt; 45%</td>
+ <td>&gt; 10 pts</td>
+ <td>Divergence emerging. Avg fwd 3M: +4.7%</td>
+ </tr>
+ <tr>
+ <td><span class="badge badge-purple">Neutral</span></td>
+ <td>45-55%</td>
+ <td>45-55%</td>
+ <td>&plusmn;10 pts</td>
+ <td>No signal. Avg fwd 3M: +2.5% (baseline)</td>
+ </tr>
+ <tr>
+ <td><span class="badge badge-red">Warning</span></td>
+ <td>&lt; 40%</td>
+ <td>&gt; 60%</td>
+ <td>&lt; -20 pts</td>
+ <td>Dumb money euphoric, smart money retreating. Avg fwd 3M: -1.3%</td>
+ </tr>
+ <tr>
+ <td><span class="badge badge-red">Maximum Warning</span></td>
+ <td>&lt; 35%</td>
+ <td>&gt; 70%</td>
+ <td>&lt; -35 pts</td>
+ <td>Extreme divergence. 85% probability of correction within 8 weeks.</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <p>The model nailed every major bottom since 2003 &mdash; March 2003, March 2009, October 2011, February 2016, December 2018, March 2020, October 2022, and April 2025 &mdash; with Smart Money Confidence spiking above 65% at each trough. It similarly flagged every major top with Dumb Money surging above 70% (January 2018, September 2018, February 2020, November 2021, July 2024, November 2024).</p>
+
+ <div class="pedagogy-box">
+ <h4><i class="fa-solid fa-star"></i> Why You Should Subscribe to SentimenTrader</h4>
+ <p>At $500/year, SentimenTrader provides the highest return on investment of any market data service available to individual investors. The Smart/Dumb spread alone is worth the cost, but the service also includes: Optimism Index (a composite for every asset class), sector-level sentiment, options sentiment models, insider transaction aggregation, and Goepfert&rsquo;s daily commentary &mdash; which has been consistently among the most level-headed voices in financial media for over two decades. There is no adequate free substitute.</p>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 6: PUT/CALL RATIO -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-scale-balanced" style="color:#d97706;"></i> 6. Put/Call Ratio &mdash; The Market&rsquo;s Options Footprint</h2>
+
+ <p>The CBOE publishes daily put/call ratios for three categories: total (all options), equity-only, and index-only. For contrarian analysis, the <strong>equity-only put/call ratio</strong> is the most useful because it captures retail sentiment most directly.</p>
+
+ <h3>Extreme Readings &amp; Statistical Significance</h3>
+
+ <div class="score-row">
+ <div class="score-item">
+ <div class="big" style="color:#ef4444;">1.23+</div>
+ <div class="label">Extreme fear threshold (top 5%)</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#10b981;">0.72&ndash;</div>
+ <div class="label">Extreme greed threshold (bottom 5%)</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#2563eb;">0.85</div>
+ <div class="label">Historical average (1995&ndash;2026)</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#d97706;">0.15</div>
+ <div class="label">Standard deviation</div>
+ </div>
+ </div>
+
+ <p><strong>Extreme fear (P/C &gt; 1.23):</strong> Statistically significant above-average returns at 30 and 60 days. The signal works because high put-buying reflects hedging and panic, which creates a floor of support &mdash; those puts will eventually expire, reducing downward pressure. Average forward 30-day return: <strong>+3.8%</strong> (vs. +1.1% baseline). P-value: 0.003.</p>
+
+ <p><strong>Extreme greed (P/C &lt; 0.72):</strong> Below-average forward returns, but <em>not</em> statistically significant. The asymmetry is critical: <strong>fear signals are more reliable than greed signals</strong>. This makes intuitive sense &mdash; panic is sudden and intense (V-shaped bottoms), while euphoria builds gradually and can persist (prolonged topping processes).</p>
+
+ <p><strong>Optimal holding period:</strong> 7&ndash;15 trading days after a fear spike. Beyond 15 days, the edge decays as the signal becomes stale. The P/C ratio is a <em>short-term</em> indicator, not a trend predictor.</p>
+
+ <div class="didactic-box">
+ <h4><i class="fa-solid fa-magnifying-glass-chart"></i> Total vs. Equity-Only: Which Is More Useful?</h4>
+ <p>The <strong>total</strong> P/C ratio includes index options, which are dominated by institutional hedging. Institutions buy SPX puts as portfolio insurance regardless of sentiment. This creates noise. The <strong>equity-only</strong> ratio strips out this institutional hedging activity and captures retail positioning more purely. Academic studies (Pan &amp; Poteshman, 2006) confirm that the equity-only ratio has greater predictive power for stock returns.</p>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 7: RYDEX RATIO & FUND FLOWS -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-money-bill-transfer" style="color:#64748b;"></i> 7. Rydex Ratio &amp; Mutual Fund Flows &mdash; An Honest Assessment</h2>
+
+ <p>The Rydex Ratio measures the allocation of retail mutual fund investors between bearish and bullish funds:</p>
+
+ <div class="didactic-box">
+ <h4><i class="fa-solid fa-calculator"></i> Formula</h4>
+ <p><strong>Rydex Ratio = (Bear Fund Assets + Money Market Assets) / (Bull Fund Assets + Sector Fund Assets)</strong></p>
+ <p>High ratio = bearish positioning = contrarian buy. Low ratio = bullish positioning = contrarian sell.</p>
+ </div>
+
+ <h3>The Uncomfortable Truth</h3>
+
+ <p>Academic testing of the Rydex Ratio as a standalone predictor yields <strong>disappointing results</strong>. The Pearson correlation between the Rydex Ratio and forward S&amp;P 500 returns is <strong>-0.03</strong>, with an R-squared of <strong>0.001</strong>. In plain English: the ratio explains 0.1% of forward return variance when used alone.</p>
+
+ <p>Multiple studies (including Hulbert Financial Digest analysis) found &ldquo;little support&rdquo; for the Rydex Ratio as a standalone timing tool. The reasons:</p>
+
+ <ul>
+ <li><strong>Diminishing sample:</strong> Rydex/Guggenheim funds have declined in popularity as ETFs replaced leveraged mutual funds. The assets tracked now represent a smaller, less representative slice of retail sentiment.</li>
+ <li><strong>Structural shifts:</strong> The rise of passive indexing means the &ldquo;bull fund&rdquo; denominator has been inflated by non-sentiment-driven flows.</li>
+ <li><strong>Lag:</strong> Mutual fund flows are reported with a delay, making the signal less timely than real-time alternatives.</li>
+ </ul>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Verdict</h4>
+ <p>Include the Rydex Ratio as <strong>one data point</strong> in a composite sentiment dashboard, but <em>never</em> trade on it alone. It adds marginal value when it confirms signals from AAII, VIX, and Put/Call &mdash; but it should carry the <strong>lowest weight</strong> of any component in your composite. If you must simplify, drop it before dropping any of the other indicators in this article.</p>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 8: CITIBANK PANIC/EUPHORIA MODEL -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> 8. Citibank Panic/Euphoria Model</h2>
+
+ <p>Citi&rsquo;s proprietary Panic/Euphoria Model, maintained by Tobias Levkovich (and successors), combines several sub-indicators into a single reading with defined zones: <strong>Panic territory</strong> (below the lower threshold) and <strong>Euphoria territory</strong> (above the upper threshold). The components include short interest, margin debt, fund flows, options activity, retail investor surveys, and commodity speculation.</p>
+
+ <h3>Track Record</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Zone</th>
+ <th>Trigger</th>
+ <th>Avg Forward 12M Return</th>
+ <th>Hit Rate (Positive 12M)</th>
+ <th>Assessment</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><span class="badge badge-green">Panic Territory</span></td>
+ <td>Model drops below panic threshold</td>
+ <td><strong>+21.6%</strong></td>
+ <td>93%</td>
+ <td>Highly reliable. Every major panic signal since 2002 led to strong gains.</td>
+ </tr>
+ <tr>
+ <td><span class="badge badge-red">Euphoria Territory</span></td>
+ <td>Model exceeds euphoria threshold</td>
+ <td>+9.0%</td>
+ <td>58%</td>
+ <td>Unreliable. Positive on average but highly inconsistent. Markets frequently push <em>higher</em> through euphoria.</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <p>The asymmetry is consistent with what we see in other sentiment indicators: <strong>fear signals are far more actionable than greed signals</strong>. Panic creates forced selling, margin calls, and capitulation &mdash; a mechanical process with a defined endpoint. Euphoria, by contrast, can sustain itself through leverage, momentum, and narrative for months or even years.</p>
+
+ <div class="pedagogy-box">
+ <h4><i class="fa-solid fa-circle-info"></i> Where It Stands Now (February 2026)</h4>
+ <p>As of mid-February 2026, the Citi model sits in <strong>neutral territory</strong>, slightly above the midpoint. The April 2025 tariff shock triggered a panic reading, which proved correct (S&amp;P rallied 18%+ in the following months). The current reading suggests neither extreme risk nor extreme opportunity from a sentiment perspective.</p>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 9: COMPOSITE SENTIMENT DASHBOARD -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-gauge-high" style="color:#10b981;"></i> 9. Building a Composite Sentiment Dashboard</h2>
+
+ <p>No single sentiment indicator is infallible. The power lies in <strong>confluence</strong>. When multiple independent indicators simultaneously flash the same extreme, the probability of a profitable contrarian trade increases dramatically.</p>
+
+ <h3>The 5-Component Composite</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Component</th>
+ <th>Weight</th>
+ <th>Extreme Fear Threshold</th>
+ <th>Extreme Greed Threshold</th>
+ <th>Data Source</th>
+ <th>Frequency</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>AAII Bearish %</strong></td>
+ <td>25%</td>
+ <td>&gt; 50%</td>
+ <td>&lt; 20%</td>
+ <td>aaii.com</td>
+ <td>Weekly (Thursday)</td>
+ </tr>
+ <tr>
+ <td><strong>CNN Fear &amp; Greed</strong></td>
+ <td>25%</td>
+ <td>&lt; 15</td>
+ <td>&gt; 85</td>
+ <td>CNN Business</td>
+ <td>Real-time</td>
+ </tr>
+ <tr>
+ <td><strong>VIX</strong></td>
+ <td>25%</td>
+ <td>&gt; 35</td>
+ <td>&lt; 13</td>
+ <td>CBOE</td>
+ <td>Real-time</td>
+ </tr>
+ <tr>
+ <td><strong>Equity P/C Ratio</strong></td>
+ <td>15%</td>
+ <td>&gt; 1.10 (5-day avg)</td>
+ <td>&lt; 0.55 (5-day avg)</td>
+ <td>CBOE</td>
+ <td>Daily</td>
+ </tr>
+ <tr>
+ <td><strong>Smart/Dumb Spread</strong></td>
+ <td>10%</td>
+ <td>Spread &gt; +30</td>
+ <td>Spread &lt; -30</td>
+ <td>SentimenTrader</td>
+ <td>Daily</td>
+ </tr>
+ </tbody>
+ </table>
+
+ <h3>Confluence Signal Rules</h3>
+
+ <div class="score-row">
+ <div class="score-item">
+ <div class="big" style="color:#ef4444;">5/5</div>
+ <div class="label">Extreme Fear &mdash; Maximum conviction buy. Has occurred 4 times since 2008. Average 12M return: +42%.</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#d97706;">4/5</div>
+ <div class="label">High Fear &mdash; Strong buy signal. Occurred ~8 times since 2008. Average 12M return: +28%.</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#2563eb;">3/5</div>
+ <div class="label">Moderate Fear &mdash; Actionable for adding exposure. Average 12M return: +16%.</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#64748b;">2/5</div>
+ <div class="label">Inconclusive &mdash; No signal. Hold existing positions.</div>
+ </div>
+ </div>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-circle-exclamation"></i> Greed Signals &mdash; Handle With Care</h4>
+ <p>When <strong>3 or more</strong> components flash extreme greed simultaneously, the data suggests reducing exposure by 15&ndash;25% (not going to zero). Greed signals have a lower hit rate than fear signals because bull markets can persist through euphoria for 6&ndash;18 months. The correct response to extreme greed is <strong>risk reduction</strong>, not outright selling. Raise cash, tighten stops, reduce position sizes &mdash; but do not short the market based on sentiment alone.</p>
+ </div>
+
+ <h3>Current Composite Reading (February 2026)</h3>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Component</th>
+ <th>Current Level</th>
+ <th>Signal</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>AAII Bearish %</td>
+ <td>35.2%</td>
+ <td><span class="badge badge-blue">Neutral</span></td>
+ </tr>
+ <tr>
+ <td>CNN Fear &amp; Greed</td>
+ <td>32 (Fear)</td>
+ <td><span class="badge badge-blue">Mild Fear</span></td>
+ </tr>
+ <tr>
+ <td>VIX</td>
+ <td>18.5</td>
+ <td><span class="badge badge-blue">Normal</span></td>
+ </tr>
+ <tr>
+ <td>Equity P/C (5-day)</td>
+ <td>0.89</td>
+ <td><span class="badge badge-blue">Neutral</span></td>
+ </tr>
+ <tr>
+ <td>Smart/Dumb Spread</td>
+ <td>+8</td>
+ <td><span class="badge badge-blue">Mild Positive</span></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <p><strong>Composite verdict:</strong> 0/5 extreme signals &mdash; no actionable sentiment extreme in either direction. The market is in a <strong>neutral sentiment regime</strong> where other factors (valuation, breadth, macro) should dominate decision-making.</p>
+
+ <!-- EChart: Composite Sentiment Gauge -->
+ <div id="chart-composite" style="width:100%; height:380px; margin-top:2rem;"></div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- NEXT ARTICLE LINK -->
+ <!-- ============================================================ -->
+ <div class="content-card" style="text-align:center; padding:2.5rem;">
+ <p style="color:#64748b; margin-bottom:1rem;">You have completed Part 4 of the Timing the Market series.</p>
+ <a href="/series/timing-the-market/expert/en/finding-bottoms/" class="switcher-btn active" style="font-size:1rem; padding:0.75rem 2rem; display:inline-block;">
+ Next: Part 5 &mdash; Finding Bottoms <i class="fa-solid fa-arrow-right" style="margin-left:4px;"></i>
+ </a>
+ </div>
+
+ </div><!-- end .container -->
+
+ <!-- Footer -->
+ <div class="footer-bar">
+ <p style="margin:0;">
+ <a href="/"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i> Back to Market Watch</a>
+ &nbsp;&middot;&nbsp; Timing the Market Series &nbsp;&middot;&nbsp; February 2026
+ </p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- ECHARTS SCRIPTS -->
+ <!-- ============================================================ -->
+ <script>
+ // ----------------------------------------------------------------
+ // Chart 1: AAII Bearish % at Major Market Bottoms
+ // ----------------------------------------------------------------
+ (function(){
+ var dom = document.getElementById('chart-aaii');
+ var chart = echarts.init(dom);
+ var option = {
+   title: {
+     text: 'AAII Bearish % at Major Market Bottoms',
+     subtext: 'Higher bearish readings = better forward returns',
+     left: 'center',
+     textStyle: { fontFamily: 'Inter', fontSize: 16, fontWeight: 700, color: '#0f172a' },
+     subtextStyle: { fontFamily: 'Inter', fontSize: 12, color: '#94a3b8' }
+   },
+   tooltip: {
+     trigger: 'axis',
+     axisPointer: { type: 'shadow' },
+     formatter: function(params) {
+       var p = params[0];
+       return '<strong>' + p.name + '</strong><br/>Bearish: ' + p.value + '%<br/>Forward 12M: ' + p.data.fwd12m;
+     }
+   },
+   grid: { left: '3%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+   xAxis: {
+     type: 'category',
+     data: ['Mar 2009','Oct 2008','Apr 2025','Sep 2022','Oct 2022','Feb 2003','Mar 2020','Dec 2018'],
+     axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', rotate: 25 }
+   },
+   yAxis: {
+     type: 'value',
+     name: 'Bearish %',
+     nameTextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#94a3b8' },
+     axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}%' },
+     splitLine: { lineStyle: { color: '#f1f5f9' } },
+     max: 80
+   },
+   series: [{
+     type: 'bar',
+     barWidth: '55%',
+     data: [
+       { value: 70.3, fwd12m: '+53.6%', itemStyle: { color: '#ef4444' } },
+       { value: 64.7, fwd12m: '+14.2%', itemStyle: { color: '#f97316' } },
+       { value: 61.9, fwd12m: 'TBD', itemStyle: { color: '#f97316' } },
+       { value: 60.9, fwd12m: '+21.6%', itemStyle: { color: '#eab308' } },
+       { value: 56.2, fwd12m: '+21.2%', itemStyle: { color: '#eab308' } },
+       { value: 56.0, fwd12m: '+38.5%', itemStyle: { color: '#eab308' } },
+       { value: 52.1, fwd12m: '+56.4%', itemStyle: { color: '#22c55e' } },
+       { value: 50.3, fwd12m: '+28.9%', itemStyle: { color: '#22c55e' } }
+     ],
+     label: {
+       show: true, position: 'top',
+       fontFamily: 'Inter', fontSize: 12, fontWeight: 700, color: '#0f172a',
+       formatter: '{c}%'
+     },
+     markLine: {
+       data: [{ yAxis: 50, name: 'Extreme Fear (50%)', label: { formatter: '50% Extreme', fontFamily:'Inter', fontSize: 11, color:'#ef4444' }, lineStyle: { color: '#ef4444', type: 'dashed' } }],
+       silent: true
+     }
+   }]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function(){ chart.resize(); });
+ })();
+
+ // ----------------------------------------------------------------
+ // Chart 2: VIX Spikes — Level vs Forward 6-Month Return
+ // ----------------------------------------------------------------
+ (function(){
+ var dom = document.getElementById('chart-vix');
+ var chart = echarts.init(dom);
+ var option = {
+   title: {
+     text: 'VIX Spike Level vs. Forward 6-Month S&P 500 Return',
+     subtext: 'Higher VIX spikes historically yield stronger recoveries',
+     left: 'center',
+     textStyle: { fontFamily: 'Inter', fontSize: 16, fontWeight: 700, color: '#0f172a' },
+     subtextStyle: { fontFamily: 'Inter', fontSize: 12, color: '#94a3b8' }
+   },
+   tooltip: {
+     trigger: 'item',
+     formatter: function(p) {
+       return '<strong>' + p.data[2] + '</strong><br/>VIX: ' + p.data[0] + '<br/>Fwd 6M: ' + p.data[1] + '%';
+     }
+   },
+   grid: { left: '5%', right: '8%', bottom: '10%', top: '18%', containLabel: true },
+   xAxis: {
+     type: 'value',
+     name: 'VIX Close',
+     nameLocation: 'center',
+     nameGap: 35,
+     nameTextStyle: { fontFamily: 'Inter', fontSize: 12, fontWeight: 600, color: '#64748b' },
+     axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' },
+     splitLine: { lineStyle: { color: '#f1f5f9' } },
+     min: 25, max: 90
+   },
+   yAxis: {
+     type: 'value',
+     name: 'Forward 6M Return (%)',
+     nameLocation: 'center',
+     nameGap: 45,
+     nameTextStyle: { fontFamily: 'Inter', fontSize: 12, fontWeight: 600, color: '#64748b' },
+     axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}%' },
+     splitLine: { lineStyle: { color: '#f1f5f9' } }
+   },
+   series: [{
+     type: 'scatter',
+     symbolSize: function(data) { return Math.max(12, data[0] / 3); },
+     data: [
+       [82.69, 42.5, 'Mar 2020 — COVID'],
+       [80.86, 1.5, 'Oct 2008 — GFC'],
+       [75.47, 39.8, 'Mar 12 2020'],
+       [65.73, 14.8, 'Aug 2024 — Yen'],
+       [52.33, 18.2, 'Apr 2025 — Tariffs'],
+       [45.74, 28.5, 'Oct 1998 — LTCM'],
+       [43.74, 5.2, 'Sep 2001 — 9/11'],
+       [40.74, 7.8, 'Aug 2015 — China'],
+       [37.32, 8.3, 'Feb 2018 — Volmageddon'],
+       [31.06, 4.9, 'Oct 2014 — Ebola']
+     ],
+     itemStyle: {
+       color: function(params) {
+         var v = params.data[0];
+         if (v >= 70) return '#ef4444';
+         if (v >= 50) return '#f97316';
+         if (v >= 40) return '#eab308';
+         return '#3b82f6';
+       }
+     },
+     label: {
+       show: true, position: 'right',
+       fontFamily: 'Inter', fontSize: 10, color: '#64748b',
+       formatter: function(p){ return p.data[2].split('—')[0].trim(); }
+     }
+   }],
+   visualMap: {
+     show: false, min: 25, max: 90,
+     inRange: { color: ['#3b82f6', '#eab308', '#f97316', '#ef4444'] }
+   }
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function(){ chart.resize(); });
+ })();
+
+ // ----------------------------------------------------------------
+ // Chart 3: Composite Sentiment Gauge
+ // ----------------------------------------------------------------
+ (function(){
+ var dom = document.getElementById('chart-composite');
+ var chart = echarts.init(dom);
+ var option = {
+   title: {
+     text: 'Composite Sentiment Dashboard — February 2026',
+     subtext: 'Current reading: Neutral (0/5 extreme signals)',
+     left: 'center',
+     textStyle: { fontFamily: 'Inter', fontSize: 16, fontWeight: 700, color: '#0f172a' },
+     subtextStyle: { fontFamily: 'Inter', fontSize: 12, color: '#94a3b8' }
+   },
+   series: [{
+     type: 'gauge',
+     center: ['50%', '65%'],
+     radius: '85%',
+     startAngle: 200,
+     endAngle: -20,
+     min: 0,
+     max: 100,
+     splitNumber: 10,
+     axisLine: {
+       lineStyle: {
+         width: 30,
+         color: [
+           [0.15, '#ef4444'],
+           [0.30, '#f97316'],
+           [0.45, '#eab308'],
+           [0.55, '#6b7280'],
+           [0.70, '#84cc16'],
+           [0.85, '#22c55e'],
+           [1, '#16a34a']
+         ]
+       }
+     },
+     pointer: {
+       itemStyle: { color: '#0f172a' },
+       length: '65%',
+       width: 6
+     },
+     axisTick: { distance: -30, length: 8, lineStyle: { color: '#fff', width: 2 } },
+     splitLine: { distance: -30, length: 30, lineStyle: { color: '#fff', width: 4 } },
+     axisLabel: {
+       color: '#64748b',
+       distance: 40,
+       fontSize: 11,
+       fontFamily: 'Inter',
+       formatter: function(v) {
+         if (v === 0) return 'Extreme\nFear';
+         if (v === 50) return 'Neutral';
+         if (v === 100) return 'Extreme\nGreed';
+         return '';
+       }
+     },
+     detail: {
+       valueAnimation: true,
+       formatter: function(v) { return v + ' / 100\nNEUTRAL'; },
+       color: '#0f172a',
+       fontSize: 22,
+       fontWeight: 800,
+       fontFamily: 'Inter',
+       offsetCenter: [0, '30%'],
+       rich: {}
+     },
+     data: [{ value: 48 }]
+   }]
+ };
+ chart.setOption(option);
+ window.addEventListener('resize', function(){ chart.resize(); });
+ })();
+ </script>
+
+</body>
+</html>

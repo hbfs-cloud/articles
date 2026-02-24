@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Macro Timing: The Big Picture | Timing the Market — Part 8 | Market Watch</title>
+ <meta name="description" content="Deep expert analysis of macro timing: Fed policy cycles, yield curve inversions, ISM PMI, Sahm Rule, LEI, M2 money supply, DXY, Copper/Gold ratio, oil shocks. Build a complete macro dashboard for market timing.">
+ <!-- Open Graph -->
+ <meta property="og:title" content="Macro Timing: The Big Picture | Timing the Market Part 8 | Market Watch">
+ <meta property="og:description" content="Complete macro timing framework: Fed cycles, yield curve, PMI, Sahm Rule, LEI, M2, DXY, Copper/Gold, oil. Every indicator with full historical data tables and implementation guidance.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/timing-the-market/expert/en/macro-timing/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .brand-bar {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 1rem 2rem;
+ background: #ffffff;
+ border-bottom: 1px solid #e2e8f0;
+ position: sticky;
+ top: 0;
+ z-index: 100;
+ }
+ .brand-logo {
+ font-size: 1.1rem;
+ font-weight: 800;
+ color: #0f172a;
+ text-decoration: none;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ }
+ .brand-logo:hover { color: #2563eb; }
+
+ .switcher-bar {
+ display: flex;
+ gap: 0.5rem;
+ align-items: center;
+ flex-wrap: wrap;
+ }
+ .switcher-btn {
+ padding: 0.35rem 0.75rem;
+ border-radius: 8px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ text-decoration: none;
+ color: #64748b;
+ border: 1px solid #e2e8f0;
+ transition: all 0.2s;
+ }
+ .switcher-btn:hover { border-color: #2563eb; color: #2563eb; }
+ .switcher-btn.active {
+ background: #2563eb;
+ color: white;
+ border-color: #2563eb;
+ }
+
+ .hero-section {
+ padding: 4rem 2rem 8rem 2rem;
+ background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 100%);
+ }
+ .hero-date {
+ font-size: 0.85rem;
+ font-weight: 700;
+ color: #2563eb;
+ text-transform: uppercase;
+ letter-spacing: 0.1em;
+ margin-bottom: 1rem;
+ }
+ .hero-badges {
+ display: flex;
+ gap: 0.75rem;
+ justify-content: center;
+ flex-wrap: wrap;
+ margin-top: 2rem;
+ }
+ .hero-badge {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.4rem;
+ padding: 0.5rem 1rem;
+ border-radius: 99px;
+ font-size: 0.8rem;
+ font-weight: 700;
+ }
+ .hero-badge-blue {
+ background: rgba(37, 99, 235, 0.1);
+ color: #2563eb;
+ border: 1px solid rgba(37, 99, 235, 0.2);
+ }
+ .hero-badge-green {
+ background: rgba(16, 185, 129, 0.1);
+ color: #10b981;
+ border: 1px solid rgba(16, 185, 129, 0.2);
+ }
+ .hero-badge-purple {
+ background: rgba(147, 51, 234, 0.1);
+ color: #9333ea;
+ border: 1px solid rgba(147, 51, 234, 0.2);
+ }
+ .hero-badge-amber {
+ background: rgba(217, 119, 6, 0.1);
+ color: #d97706;
+ border: 1px solid rgba(217, 119, 6, 0.2);
+ }
+
+ .score-row {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 1rem;
+ margin: 1.5rem 0;
+ }
+ .score-item {
+ text-align: center;
+ padding: 1.25rem;
+ background: #f8fafc;
+ border-radius: 14px;
+ border: 1px solid #e2e8f0;
+ }
+ .score-item .big { font-size: 2rem; font-weight: 800; }
+ .score-item .label { font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; }
+
+ .footer-bar {
+ text-align: center;
+ padding: 2rem;
+ background: #f8fafc;
+ border-top: 1px solid #e2e8f0;
+ color: #94a3b8;
+ font-size: 0.8rem;
+ }
+ .footer-bar a { color: #64748b; text-decoration: none; }
+ .footer-bar a:hover { color: #2563eb; }
+
+ @media (max-width: 768px) {
+ .hero-section { padding: 2.5rem 1rem 5rem; }
+ .hero-section h1 { font-size: 1.8rem !important; }
+ .brand-bar { padding: 0.75rem 1rem; }
+ .brand-logo { font-size: 0.9rem; }
+ .switcher-bar { gap: 0.25rem; }
+ .switcher-btn { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+ .series-nav { padding: 0.75rem 1rem; gap: 0.4rem; }
+ .series-title { font-size: 0.65rem; margin-right: 0.5rem; }
+ .series-link { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
+ .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+ .score-row { grid-template-columns: repeat(2, 1fr); }
+ }
+ @media (max-width: 480px) {
+ .hero-section h1 { font-size: 1.4rem !important; }
+ .hero-section { padding: 2rem 1rem 4rem; }
+ .brand-logo { font-size: 0.85rem; }
+ .switcher-btn { font-size: 0.6rem; padding: 0.2rem 0.4rem; }
+ .series-title { display: none; }
+ .series-link { font-size: 0.6rem; padding: 0.25rem 0.5rem; }
+ .hero-badge { font-size: 0.65rem; padding: 0.3rem 0.6rem; gap: 0.25rem; }
+ .hero-badges { gap: 0.4rem; margin-top: 1rem; }
+ }
+ .series-nav { background:linear-gradient(135deg,#1e293b,#0f172a); padding:1rem 2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
+ .series-title { color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-right:1rem; }
+ .series-link { padding:0.4rem 1rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; color:#94a3b8; border:1px solid #334155; transition:all 0.2s; }
+ .series-link:hover { border-color:#60a5fa; color:#60a5fa; }
+ .series-link.current { background:#2563eb; color:white; border-color:#2563eb; }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+ <!-- Brand Bar -->
+ <nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <div class="switcher-bar">
+<a href="/series/timing-the-market/expert/en/macro-timing/" class="switcher-btn active" title="English">EN</a>
+<span class="switcher-btn active">Expert</span>
+<a href="/" class="switcher-btn" title="Home"><i class="fa-solid fa-house"></i></a>
+</div>
+ </nav>
+
+ <div class="series-nav">
+    <span class="series-title"><i class="fa-solid fa-crosshairs" style="margin-right:0.4rem;"></i> Timing the Market</span>
+    <a href="/series/timing-the-market/expert/en/introduction/" class="series-link">1</a>
+    <a href="/series/timing-the-market/expert/en/valuation-models/" class="series-link">2</a>
+    <a href="/series/timing-the-market/expert/en/market-breadth/" class="series-link">3</a>
+    <a href="/series/timing-the-market/expert/en/sentiment-mastery/" class="series-link">4</a>
+    <a href="/series/timing-the-market/expert/en/finding-bottoms/" class="series-link">5</a>
+    <a href="/series/timing-the-market/expert/en/detecting-tops/" class="series-link">6</a>
+    <a href="/series/timing-the-market/expert/en/trend-following/" class="series-link">7</a>
+    <a href="/series/timing-the-market/expert/en/macro-timing/" class="series-link current">8</a>
+    <a href="/series/timing-the-market/expert/en/quantitative-systems/" class="series-link">9</a>
+    <a href="/series/timing-the-market/expert/en/master-framework/" class="series-link">10</a>
+ </div>
+
+ <!-- Hero -->
+ <div class="hero-section" style="text-align:center;">
+ <div class="hero-date">Part 8 of 10 &mdash; February 2026</div>
+ <h1 style="font-size:2.8rem; font-weight:900; margin:0 0 1rem; background:linear-gradient(135deg,#0f172a,#334155); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2;">
+ Macro Timing: The Big Picture
+ </h1>
+ <p style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto 1rem; line-height:1.7;">
+ The economy moves markets. Learn to read Fed policy cycles, yield curve inversions, PMI, the Sahm Rule, and 6 more macro indicators that have predicted every major turn since 1950.
+ </p>
+ <div class="hero-badges">
+ <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-landmark"></i> Fed Cycles</span>
+ <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Yield Curve</span>
+ <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-gauge-high"></i> PMI & LEI</span>
+ <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-dashboard"></i> Macro Dashboard</span>
+ </div>
+ </div>
+
+ <div class="container" style="max-width:900px; margin:-4rem auto 0; padding:0 1.5rem 3rem; position:relative; z-index:2;">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: DON'T FIGHT THE FED                               -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-landmark"></i> Section 1: "Don't Fight the Fed" &mdash; The Complete Analysis</h2>
+
+<p>The Federal Reserve is the single most powerful force in financial markets. Its decisions on interest rates ripple through every asset class, every sector, every portfolio on Earth. The mantra "Don't fight the Fed" is repeated so often it has become a cliche &mdash; but like most cliches, it contains a kernel of deep truth that most investors misunderstand.</p>
+
+<div class="pedagogy-box">
+<strong><i class="fa-solid fa-graduation-cap"></i> The Misunderstanding</strong><br>
+Most retail investors interpret "Don't fight the Fed" as: "When the Fed cuts rates, buy stocks." This is dangerously oversimplified. The Fed cuts rates <em>because</em> the economy is weakening. The first cut often arrives when the damage is already underway. The correct interpretation: follow the <strong>direction</strong> of policy, not the <strong>level</strong> of rates.
+</div>
+
+<h3>Federal Funds Rate History Since 1954</h3>
+<p>The federal funds rate has ranged from 0% (ZIRP, 2008-2015 and 2020-2022) to 20% (Volcker, June 1981). Understanding the full arc of rate cycles is essential context for any macro timing framework.</p>
+
+<div id="fedRateChart" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+<h3>Every Rate Cutting Cycle: What Happened to the S&P 500</h3>
+<p>This is the data Wall Street doesn't want you to see. The first rate cut is not a buy signal &mdash; it is, on average, the beginning of a painful drawdown.</p>
+
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Cycle Start</th><th>First Cut Date</th><th>Fed Funds Before</th><th>S&P at First Cut</th><th>S&P Trough</th><th>Drawdown</th><th>Days to Bottom</th><th>S&P 12M Later</th></tr>
+</thead>
+<tbody>
+<tr><td>1957</td><td>Nov 1957</td><td>3.50%</td><td>40.3</td><td>38.9</td><td>-3.5%</td><td>42</td><td>+31.0%</td></tr>
+<tr><td>1960</td><td>Jun 1960</td><td>4.00%</td><td>56.9</td><td>52.3</td><td>-8.1%</td><td>152</td><td>+22.4%</td></tr>
+<tr><td>1970</td><td>Nov 1970</td><td>8.00%</td><td>84.3</td><td>69.3</td><td>-17.8%</td><td>120</td><td>+10.8%</td></tr>
+<tr><td>1974</td><td>Jul 1974</td><td>13.00%</td><td>86.0</td><td>62.3</td><td>-27.6%</td><td>168</td><td>+33.7%</td></tr>
+<tr><td>1980</td><td>May 1980</td><td>17.60%</td><td>106.3</td><td>98.2</td><td>-7.6%</td><td>55</td><td>+18.9%</td></tr>
+<tr><td>1981</td><td>Nov 1981</td><td>15.00%</td><td>122.6</td><td>102.4</td><td>-16.5%</td><td>280</td><td>+15.2%</td></tr>
+<tr><td>1984</td><td>Sep 1984</td><td>11.50%</td><td>166.1</td><td>163.7</td><td>-1.4%</td><td>21</td><td>+21.6%</td></tr>
+<tr><td>1989</td><td>Jun 1989</td><td>9.81%</td><td>317.9</td><td>295.5</td><td>-7.1%</td><td>89</td><td>+16.6%</td></tr>
+<tr><td>1995</td><td>Jul 1995</td><td>6.00%</td><td>562.1</td><td>560.0</td><td>-0.4%</td><td>5</td><td>+22.9%</td></tr>
+<tr><td>1998</td><td>Sep 1998</td><td>5.50%</td><td>1,017</td><td>957</td><td>-5.9%</td><td>8</td><td>+28.5%</td></tr>
+<tr><td>2001</td><td>Jan 2001</td><td>6.50%</td><td>1,366</td><td>776</td><td>-43.2%</td><td>637</td><td>-15.4%</td></tr>
+<tr><td>2007</td><td>Sep 2007</td><td>5.25%</td><td>1,527</td><td>677</td><td>-55.7%</td><td>372</td><td>-22.6%</td></tr>
+<tr><td>2019</td><td>Jul 2019</td><td>2.50%</td><td>3,014</td><td>2,237</td><td>-25.8%</td><td>246</td><td>+12.1%</td></tr>
+<tr><td>2024</td><td>Sep 2024</td><td>5.50%</td><td>5,722</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="score-row">
+<div class="score-item">
+<div class="big" style="color:#ef4444;">-23.5%</div>
+<div class="label">Average S&P drawdown after first cut (excl. 1984, 1995, 1998)</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#d97706;">200</div>
+<div class="label">Average days from first cut to market bottom</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#10b981;">+18.2%</div>
+<div class="label">Average S&P return 12 months after trough</div>
+</div>
+</div>
+
+<h3>Rate Hiking Cycles</h3>
+<p>Hiking cycles are less uniformly dangerous. The market often rises during the early-to-middle phase of hiking (strong economy), then weakens as tightening bites. The key signal is the <strong>terminal rate overshoot</strong> &mdash; when the Fed hikes too far and breaks something.</p>
+
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Hiking Cycle</th><th>Start Rate</th><th>Terminal Rate</th><th>Duration (mo)</th><th>S&P During Cycle</th><th>What Broke</th></tr>
+</thead>
+<tbody>
+<tr><td>1972-1974</td><td>3.50%</td><td>13.00%</td><td>24</td><td>-40.1%</td><td>Oil shock + Watergate</td></tr>
+<tr><td>1977-1980</td><td>4.75%</td><td>20.00%</td><td>36</td><td>-2.3%</td><td>Second oil shock, stagflation</td></tr>
+<tr><td>1983-1984</td><td>8.50%</td><td>11.50%</td><td>18</td><td>-6.2%</td><td>Continental Illinois bank failure</td></tr>
+<tr><td>1988-1989</td><td>6.50%</td><td>9.81%</td><td>12</td><td>+15.8%</td><td>S&L crisis (delayed)</td></tr>
+<tr><td>1994-1995</td><td>3.00%</td><td>6.00%</td><td>12</td><td>+1.3%</td><td>Mexico/Orange County, bond massacre</td></tr>
+<tr><td>1999-2000</td><td>4.75%</td><td>6.50%</td><td>12</td><td>+7.5%</td><td>Dot-com bubble burst</td></tr>
+<tr><td>2004-2006</td><td>1.00%</td><td>5.25%</td><td>25</td><td>+15.6%</td><td>Housing bubble (delayed)</td></tr>
+<tr><td>2015-2018</td><td>0.25%</td><td>2.50%</td><td>36</td><td>+28.3%</td><td>Q4 2018 selloff, repo crisis</td></tr>
+<tr><td>2022-2023</td><td>0.25%</td><td>5.50%</td><td>16</td><td>-4.8%</td><td>SVB, regional banks, UK gilts</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<strong><i class="fa-solid fa-triangle-exclamation"></i> Key Insight:</strong> The S&P 500 returned an average of +3.2% during hiking cycles but -12.7% in the 12 months <em>after</em> the last hike. The lag is what kills portfolios. By the time the Fed stops hiking, the damage is already propagating through the economy.
+</div>
+
+<h3>Current Fed Cycle: Where We Stand (February 2026)</h3>
+<p>The Fed began cutting in September 2024 from 5.50%. As of February 2026, we are approximately 17 months into the easing cycle. The pattern suggests vigilance: historically, the economy and market are most vulnerable 12-24 months after the first cut, as the lagged effects of prior tightening compound with slowing momentum.</p>
+
+<div class="didactic-box">
+<strong>Practitioner's Rule:</strong> Track the Fed funds rate direction (rising, stable, falling), not the level. When the direction shifts from hiking to cutting, begin a 6-month countdown. The market is most likely to find its cycle bottom 6-18 months after the first cut. Position accordingly: reduce risk on the first cut, deploy capital at the trough.
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: YIELD CURVE                                       -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-wave-square"></i> Section 2: Yield Curve &mdash; The Recession Prophet</h2>
+
+<p>The yield curve is the single most reliable recession predictor in the macroeconomic toolkit. It has inverted before every US recession since 1955, with only two arguable false positives in 70 years. No other indicator comes close to this track record.</p>
+
+<h3>Two Curves, Two Perspectives</h3>
+<div class="metric-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+<div class="content-card" style="margin:0;">
+<h4>10Y-2Y Spread (T10Y2Y)</h4>
+<p>The market's preferred measure. Calculated as the difference between the 10-year and 2-year Treasury yields. When this goes negative (inverts), short-term rates exceed long-term rates &mdash; the bond market is pricing in future economic weakness.</p>
+<p><strong>Pros:</strong> Widely followed, real-time, liquid instruments.<br>
+<strong>Cons:</strong> More susceptible to term premium distortions and QE effects.</p>
+</div>
+<div class="content-card" style="margin:0;">
+<h4>10Y-3M Spread (T10Y3M)</h4>
+<p>The academic's preferred measure, championed by the New York Fed. Uses 3-month T-Bill rate, which closely tracks the effective Fed Funds rate. The NY Fed recession probability model is built on this spread.</p>
+<p><strong>Pros:</strong> More rigorous theoretical foundation, tighter link to monetary policy.<br>
+<strong>Cons:</strong> 3M rate can be noisy around Fed meetings.</p>
+</div>
+</div>
+
+<div id="yieldCurveChart" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+<h3>Every Yield Curve Inversion Since 1950</h3>
+
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Inversion Start</th><th>Spread (10Y-2Y)</th><th>Duration (months)</th><th>Recession Start</th><th>Lead Time</th><th>S&P Peak-to-Trough</th></tr>
+</thead>
+<tbody>
+<tr><td>Aug 1957</td><td>-0.35%</td><td>4</td><td>Aug 1957</td><td>0 months</td><td>-20.7%</td></tr>
+<tr><td>Dec 1959</td><td>-0.52%</td><td>8</td><td>Apr 1960</td><td>4 months</td><td>-13.6%</td></tr>
+<tr><td>Jan 1966</td><td>-0.07%</td><td>1</td><td>None</td><td>False positive</td><td>-22.2% (credit crunch)</td></tr>
+<tr><td>Dec 1968</td><td>-1.12%</td><td>14</td><td>Dec 1969</td><td>12 months</td><td>-36.1%</td></tr>
+<tr><td>Jun 1973</td><td>-1.68%</td><td>18</td><td>Nov 1973</td><td>5 months</td><td>-48.2%</td></tr>
+<tr><td>Sep 1978</td><td>-2.41%</td><td>21</td><td>Jan 1980</td><td>16 months</td><td>-17.1%</td></tr>
+<tr><td>Oct 1980</td><td>-2.55%</td><td>15</td><td>Jul 1981</td><td>9 months</td><td>-27.1%</td></tr>
+<tr><td>Jan 1989</td><td>-0.18%</td><td>5</td><td>Jul 1990</td><td>18 months</td><td>-19.9%</td></tr>
+<tr><td>May 1998</td><td>-0.04%</td><td>1</td><td>None</td><td>False positive</td><td>LTCM crisis only</td></tr>
+<tr><td>Feb 2000</td><td>-0.52%</td><td>9</td><td>Mar 2001</td><td>13 months</td><td>-49.1%</td></tr>
+<tr><td>Aug 2006</td><td>-0.19%</td><td>10</td><td>Dec 2007</td><td>16 months</td><td>-56.8%</td></tr>
+<tr><td>Jul 2022</td><td>-1.08%</td><td>25</td><td>TBD</td><td>Marathon inversion</td><td>No recession (yet)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="score-row">
+<div class="score-item">
+<div class="big" style="color:#2563eb;">~15 mo</div>
+<div class="label">Average lead time before recession</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#10b981;">8/10</div>
+<div class="label">True positives (80% accuracy)</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#ef4444;">-31.2%</div>
+<div class="label">Average S&P drawdown in subsequent recessions</div>
+</div>
+</div>
+
+<div class="alert-box">
+<strong><i class="fa-solid fa-triangle-exclamation"></i> The Re-Steepening Trap</strong><br>
+Many investors breathe a sigh of relief when the yield curve un-inverts (re-steepens). This is the most dangerous moment. Historically, the recession often <em>begins</em> after the curve normalizes, not while it is inverted. The inversion signals the coming stress; the re-steepening signals the stress is arriving. The 2006-2007 and 1989-1990 cycles are textbook examples: the curve re-steepened, investors relaxed, and the recession hit within months.
+</div>
+
+<h3>NY Fed Recession Probability Model</h3>
+<p>The New York Fed publishes a monthly recession probability based on the 10Y-3M spread. Readings above 30% have preceded every recession since 1960. The model peaked above 70% in late 2023 &mdash; the highest reading since the early 1980s. As of early 2026, the probability has declined but remains elevated above historical comfort levels.</p>
+
+<div class="pedagogy-box">
+<strong>How to Use:</strong> Monitor the NY Fed model monthly (published at <code>newyorkfed.org/research/capital_markets/ycfaq</code>). When it exceeds 30%, activate your macro defensive protocol. When it exceeds 50%, reduce equity exposure to 50-60% and increase duration/gold. When it falls back below 20%, begin re-risking.
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: ISM MANUFACTURING PMI                             -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-industry"></i> Section 3: ISM Manufacturing PMI &mdash; Real-Time Economic Pulse</h2>
+
+<p>The Institute for Supply Management (ISM) Manufacturing PMI is one of the oldest and most respected economic indicators, published monthly since 1948. It surveys purchasing managers at over 300 manufacturing firms on five components: new orders, production, employment, supplier deliveries, and inventories.</p>
+
+<h3>The PMI Framework</h3>
+<div class="metric-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin:1.5rem 0;">
+<div class="score-item">
+<div class="big" style="color:#10b981;">&gt;55</div>
+<div class="label">Strong expansion</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#22c55e;">50-55</div>
+<div class="label">Moderate expansion</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#d97706;">45-50</div>
+<div class="label">Mild contraction</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#ef4444;">&lt;45</div>
+<div class="label">High recession probability</div>
+</div>
+</div>
+
+<h3>PMI at Major Market Turning Points</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Date</th><th>PMI Reading</th><th>S&P 500 Level</th><th>Market Event</th><th>S&P Next 12M</th></tr>
+</thead>
+<tbody>
+<tr><td>Dec 1969</td><td>46.2</td><td>92.1</td><td>Recession begins</td><td>+3.5%</td></tr>
+<tr><td>Nov 1973</td><td>53.7</td><td>104.3</td><td>Oil crisis recession</td><td>-35.6%</td></tr>
+<tr><td>Jan 1980</td><td>46.4</td><td>114.2</td><td>Brief recession</td><td>+25.8%</td></tr>
+<tr><td>Jul 1981</td><td>43.1</td><td>130.9</td><td>Volcker recession</td><td>-16.9%</td></tr>
+<tr><td>Jun 1990</td><td>47.3</td><td>358.0</td><td>Gulf War recession</td><td>+7.1%</td></tr>
+<tr><td>Oct 2000</td><td>48.3</td><td>1,429</td><td>Dot-com bust</td><td>-25.6%</td></tr>
+<tr><td>Dec 2007</td><td>48.4</td><td>1,468</td><td>GFC begins</td><td>-38.5%</td></tr>
+<tr><td>Mar 2009</td><td>36.3</td><td>757</td><td>GFC trough</td><td>+49.7%</td></tr>
+<tr><td>Mar 2020</td><td>41.5</td><td>2,585</td><td>COVID crash</td><td>+56.4%</td></tr>
+<tr><td>Oct 2022</td><td>50.2</td><td>3,872</td><td>Bear market trough</td><td>+19.8%</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>S&P 500 Returns by PMI Regime</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>PMI Regime</th><th>Avg Monthly S&P Return</th><th>Annualized</th><th>Win Rate</th><th>% of Time</th></tr>
+</thead>
+<tbody>
+<tr><td>PMI &gt; 55 (Strong expansion)</td><td>+1.12%</td><td>+14.3%</td><td>67%</td><td>28%</td></tr>
+<tr><td>PMI 50-55 (Moderate expansion)</td><td>+0.87%</td><td>+11.0%</td><td>63%</td><td>31%</td></tr>
+<tr><td>PMI 45-50 (Mild contraction)</td><td>+0.45%</td><td>+5.5%</td><td>56%</td><td>26%</td></tr>
+<tr><td>PMI &lt; 45 (Severe contraction)</td><td>+0.92%</td><td>+11.6%</td><td>61%</td><td>15%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<strong><i class="fa-solid fa-lightbulb"></i> The Counterintuitive PMI Insight</strong><br>
+Notice that PMI &lt; 45 produces <em>higher</em> returns than 45-50. This is because extreme contraction often marks the bottom &mdash; markets are forward-looking and begin recovering before the economy does. The worst zone for equities is the 45-50 range: the economy is weakening but not yet bad enough to trigger aggressive Fed easing or deep-value opportunities.
+</div>
+
+<h3>ISM Services PMI</h3>
+<p>With services representing approximately 80% of US GDP, the ISM Services (Non-Manufacturing) PMI has grown in importance. It was only introduced in 1997 but has proven more relevant for the modern economy. A sustained divergence between Manufacturing PMI (contracting) and Services PMI (expanding) &mdash; as seen in 2022-2023 &mdash; can produce confusing signals. When they converge, the signal is powerful.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: THE SAHM RULE                                     -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-bell"></i> Section 4: The Sahm Rule &mdash; Real-Time Recession Alert</h2>
+
+<p>Developed by Claudia Sahm, a former Federal Reserve economist, the Sahm Rule is elegantly simple: a recession is signaled when the three-month moving average of the national unemployment rate rises by 0.50 percentage points or more relative to its low during the previous 12 months.</p>
+
+<div class="score-row">
+<div class="score-item">
+<div class="big" style="color:#ef4444;">0.50pp</div>
+<div class="label">Trigger threshold</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#10b981;">11/11</div>
+<div class="label">Perfect track record since 1970</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#d97706;">Concurrent</div>
+<div class="label">Confirms recession in real-time, does not predict</div>
+</div>
+</div>
+
+<h3>Sahm Rule Track Record</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Recession</th><th>Sahm Trigger Date</th><th>NBER Recession Start</th><th>Lead/Lag</th><th>Peak Sahm Reading</th></tr>
+</thead>
+<tbody>
+<tr><td>1970</td><td>Jan 1970</td><td>Dec 1969</td><td>+1 month (lag)</td><td>1.57</td></tr>
+<tr><td>1974-75</td><td>Aug 1974</td><td>Nov 1973</td><td>+9 months (lag)</td><td>2.73</td></tr>
+<tr><td>1980</td><td>Feb 1980</td><td>Jan 1980</td><td>+1 month (lag)</td><td>1.70</td></tr>
+<tr><td>1981-82</td><td>Oct 1981</td><td>Jul 1981</td><td>+3 months (lag)</td><td>3.20</td></tr>
+<tr><td>1990-91</td><td>Aug 1990</td><td>Jul 1990</td><td>+1 month (lag)</td><td>1.20</td></tr>
+<tr><td>2001</td><td>Sep 2001</td><td>Mar 2001</td><td>+6 months (lag)</td><td>1.10</td></tr>
+<tr><td>2008-09</td><td>Feb 2008</td><td>Dec 2007</td><td>+2 months (lag)</td><td>4.00</td></tr>
+<tr><td>2020</td><td>Apr 2020</td><td>Feb 2020</td><td>+2 months (lag)</td><td>10.67</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<strong><i class="fa-solid fa-triangle-exclamation"></i> Critical Limitation</strong><br>
+The Sahm Rule <em>confirms</em> a recession &mdash; it does not predict one. By the time the unemployment rate rises 0.50pp, you are already IN the recession. The S&P 500 has typically already fallen 10-20% by this point. For market timing, use the Sahm Rule as a <strong>confirmation signal</strong>, not an entry signal. Pre-position using leading indicators (yield curve, LEI, credit spreads) and use the Sahm trigger to <em>hold</em> or <em>add to</em> defensive positions.
+</div>
+
+<div class="didactic-box">
+<strong>Current Reading (Feb 2026):</strong> The Sahm Rule indicator requires monitoring the 3-month average unemployment rate vs. the 12-month low. With unemployment gradually rising from cycle lows of 3.4% (April 2023), the indicator has been creeping higher. Any sustained move above 0.50 should trigger immediate defensive positioning.
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: LEI                                               -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-bar"></i> Section 5: Leading Economic Index (LEI)</h2>
+
+<p>The Conference Board's Leading Economic Index is a composite of 10 economic indicators designed to signal turning points in the business cycle approximately 7 months in advance. It is the closest thing we have to a recession early-warning system.</p>
+
+<h3>The 10 Components</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>#</th><th>Component</th><th>Weight</th><th>Category</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Average weekly hours (manufacturing)</td><td>27.8%</td><td>Labor</td></tr>
+<tr><td>2</td><td>Average weekly initial claims (inverted)</td><td>3.3%</td><td>Labor</td></tr>
+<tr><td>3</td><td>Manufacturers' new orders (consumer goods)</td><td>8.1%</td><td>Orders</td></tr>
+<tr><td>4</td><td>ISM New Orders Index</td><td>16.7%</td><td>Orders</td></tr>
+<tr><td>5</td><td>Manufacturers' new orders (non-defense capital goods)</td><td>4.0%</td><td>Orders</td></tr>
+<tr><td>6</td><td>Building permits (new private housing)</td><td>3.0%</td><td>Housing</td></tr>
+<tr><td>7</td><td>S&P 500 stock price index</td><td>3.9%</td><td>Financial</td></tr>
+<tr><td>8</td><td>Leading Credit Index</td><td>8.1%</td><td>Credit</td></tr>
+<tr><td>9</td><td>Interest rate spread (10Y Treasury minus Fed Funds)</td><td>11.2%</td><td>Financial</td></tr>
+<tr><td>10</td><td>Consumer expectations (University of Michigan)</td><td>13.9%</td><td>Sentiment</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The "3Ds Rule" for Recession Signals</h3>
+<p>The Conference Board developed the 3Ds framework to distinguish genuine recession warnings from noise:</p>
+
+<div class="metric-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin:1.5rem 0;">
+<div class="score-item">
+<div class="big" style="color:#ef4444;">Duration</div>
+<div class="label">5+ consecutive months of decline</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#d97706;">Depth</div>
+<div class="label">Annualized decline exceeds -4.3%</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#9333ea;">Diffusion</div>
+<div class="label">Below 50 (majority of components declining)</div>
+</div>
+</div>
+
+<h3>LEI Before Every Recession</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Recession</th><th>LEI Peak</th><th>Months of Decline Before Recession</th><th>Annualized Depth</th><th>S&P Return During LEI Decline</th></tr>
+</thead>
+<tbody>
+<tr><td>1970</td><td>Apr 1969</td><td>8</td><td>-5.1%</td><td>-12.3%</td></tr>
+<tr><td>1974-75</td><td>Mar 1973</td><td>8</td><td>-7.9%</td><td>-17.8%</td></tr>
+<tr><td>1980</td><td>Jun 1979</td><td>7</td><td>-9.2%</td><td>+6.1%</td></tr>
+<tr><td>1981-82</td><td>Apr 1981</td><td>3</td><td>-11.4%</td><td>-8.7%</td></tr>
+<tr><td>1990-91</td><td>Jan 1990</td><td>6</td><td>-5.6%</td><td>-3.1%</td></tr>
+<tr><td>2001</td><td>Sep 2000</td><td>6</td><td>-6.8%</td><td>-12.9%</td></tr>
+<tr><td>2008-09</td><td>Jul 2007</td><td>5</td><td>-5.3%</td><td>-9.2%</td></tr>
+<tr><td>2020</td><td>Jan 2020</td><td>1</td><td>N/A (exogenous shock)</td><td>-33.9%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<strong><i class="fa-solid fa-lightbulb"></i> Current LEI Trajectory (Early 2026)</strong><br>
+The LEI has been declining for over 20 consecutive months &mdash; one of the longest declining streaks in history. However, the rate of decline has moderated. The 3Ds criteria remain triggered (Duration: check, Depth: borderline, Diffusion: improving). This creates a confusing signal: persistent weakness but reduced urgency. Monitor the rate of change, not just the direction. A stabilization followed by upturn would be a powerful bullish signal.
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: M2 MONEY SUPPLY                                   -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-money-bill-trend-up"></i> Section 6: Money Supply (M2)</h2>
+
+<p>M2 is the broadest commonly reported measure of the money supply: cash, checking deposits, savings deposits, money market funds, and small-denomination time deposits (CDs under $100K). As of early 2026, US M2 stands at approximately $21.5 trillion.</p>
+
+<h3>M2 Year-over-Year Growth Rate</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Period</th><th>M2 YoY Growth</th><th>S&P 500 Return</th><th>Context</th></tr>
+</thead>
+<tbody>
+<tr><td>1960-1970 avg</td><td>+7.1%</td><td>+7.8%</td><td>Post-war expansion</td></tr>
+<tr><td>1970-1980 avg</td><td>+9.8%</td><td>+5.9%</td><td>Stagflation, oil shocks</td></tr>
+<tr><td>1980-1990 avg</td><td>+8.0%</td><td>+17.5%</td><td>Disinflation boom</td></tr>
+<tr><td>1990-2000 avg</td><td>+5.2%</td><td>+18.2%</td><td>Goldilocks + dot-com</td></tr>
+<tr><td>2000-2010 avg</td><td>+6.3%</td><td>-0.9%</td><td>Two recessions</td></tr>
+<tr><td>2010-2020 avg</td><td>+6.4%</td><td>+13.6%</td><td>QE + ZIRP</td></tr>
+<tr><td>Mar 2020</td><td>+8.5%</td><td>COVID crash</td><td>Pre-stimulus</td></tr>
+<tr><td>Feb 2021</td><td>+27.1%</td><td>+47.3% (12M)</td><td>Peak stimulus</td></tr>
+<tr><td>Dec 2022</td><td>-2.4%</td><td>-19.4%</td><td>First-ever YoY contraction</td></tr>
+<tr><td>Jun 2023</td><td>-3.6%</td><td>+15.9% (12M)</td><td>Peak contraction, market rallied</td></tr>
+<tr><td>Dec 2025</td><td>+4.1%</td><td>TBD</td><td>Normalization</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<strong><i class="fa-solid fa-circle-info"></i> The 2022-2023 M2 Contraction</strong><br>
+The first year-over-year contraction in M2 since records began (1959) occurred from November 2022 through March 2024. Despite this, equities rallied powerfully in 2023-2024. Why? Because M2 had been so massively expanded during COVID ($6.3 trillion injected in 18 months) that even a $1 trillion contraction left excess liquidity in the system. The lesson: absolute M2 level matters as much as the growth rate.
+</div>
+
+<h3>M2 Velocity</h3>
+<p>Money supply velocity (GDP / M2) measures how quickly money circulates. Falling velocity is deflationary &mdash; each dollar is generating less economic activity. Velocity has been in secular decline since 1997, plunging from 2.2 to 1.1 post-COVID. This structural shift means that larger M2 injections are required to produce the same economic effect. For market timers, velocity trends help explain why M2 growth and asset prices can temporarily diverge.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: DXY                                               -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-dollar-sign"></i> Section 7: Dollar Strength (DXY)</h2>
+
+<p>The US Dollar Index (DXY) measures the dollar against a basket of six major currencies. Its composition reflects trade flows from the 1970s and is heavily weighted toward the euro.</p>
+
+<h3>DXY Composition</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Currency</th><th>Weight</th><th>Symbol</th></tr>
+</thead>
+<tbody>
+<tr><td>Euro</td><td>57.6%</td><td>EUR/USD</td></tr>
+<tr><td>Japanese Yen</td><td>13.6%</td><td>USD/JPY</td></tr>
+<tr><td>British Pound</td><td>11.9%</td><td>GBP/USD</td></tr>
+<tr><td>Canadian Dollar</td><td>9.1%</td><td>USD/CAD</td></tr>
+<tr><td>Swedish Krona</td><td>4.2%</td><td>USD/SEK</td></tr>
+<tr><td>Swiss Franc</td><td>3.6%</td><td>USD/CHF</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>DXY Impact on Asset Classes</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>DXY Regime</th><th>S&P 500</th><th>EM Equities (EEM)</th><th>Gold</th><th>Commodities</th><th>S&P Earnings Impact</th></tr>
+</thead>
+<tbody>
+<tr><td>DXY &gt; 105 (Strong dollar)</td><td>Mixed</td><td>Negative</td><td>Negative</td><td>Negative</td><td>~2-3% EPS headwind</td></tr>
+<tr><td>DXY 95-105 (Neutral)</td><td>Positive</td><td>Neutral</td><td>Neutral</td><td>Mixed</td><td>Neutral</td></tr>
+<tr><td>DXY &lt; 95 (Weak dollar)</td><td>Positive</td><td>Strong positive</td><td>Strong positive</td><td>Positive</td><td>~2-3% EPS tailwind</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Approximately 40% of S&P 500 revenue comes from international operations. When the dollar strengthens, these foreign revenues translate into fewer dollars, directly hurting earnings per share. A 10% rise in DXY corresponds to approximately a 2-3% headwind to S&P 500 EPS growth. This effect is most pronounced for large-cap multinationals (tech, consumer staples, industrials) and least impactful for domestically-focused sectors (utilities, real estate, small caps).</p>
+
+<div class="didactic-box">
+<strong>Key Historical Correlation:</strong> The DXY and S&P 500 show a rolling 1-year correlation of approximately -0.35 to -0.50 during most periods. This inverse relationship strengthens during risk-off episodes, when the dollar rallies as a safe haven while equities sell off. However, during "US exceptionalism" periods (like 2023-2024), both the dollar and equities can rise simultaneously, driven by US economic outperformance.
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: COPPER/GOLD RATIO                                 -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-scale-balanced"></i> Section 8: Copper/Gold Ratio</h2>
+
+<p>The Copper/Gold ratio is one of the most elegant macro indicators: it distills the battle between economic optimism (copper, "Dr. Copper") and fear/safety (gold) into a single number.</p>
+
+<h3>Why These Two Metals</h3>
+<div class="metric-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+<div class="content-card" style="margin:0;">
+<h4><i class="fa-solid fa-bolt"></i> Copper ("Dr. Copper")</h4>
+<p>Used in construction, electronics, EVs, and infrastructure. Copper demand rises with economic activity. A rising copper price signals industrial expansion, construction growth, and healthy manufacturing. Copper has a PhD in economics because it consistently predicts turning points.</p>
+</div>
+<div class="content-card" style="margin:0;">
+<h4><i class="fa-solid fa-shield-halved"></i> Gold (Safety & Fear)</h4>
+<p>Bought during uncertainty, inflation fears, currency debasement, and geopolitical tension. A rising gold price signals fear, hedging demand, and central bank diversification. Gold thrives when confidence in fiat currency and institutions weakens.</p>
+</div>
+</div>
+
+<h3>Interpreting the Ratio</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Ratio Direction</th><th>Signal</th><th>Bond Yields</th><th>Equities</th><th>Typical Context</th></tr>
+</thead>
+<tbody>
+<tr><td>Rising (Copper outperforming Gold)</td><td>Economic optimism</td><td>Rising</td><td>Bullish (cyclicals lead)</td><td>Early expansion, reflation, infrastructure spending</td></tr>
+<tr><td>Falling (Gold outperforming Copper)</td><td>Economic worry</td><td>Falling</td><td>Bearish (defensives lead)</td><td>Late cycle, recession risk, geopolitical stress</td></tr>
+<tr><td>Extreme low</td><td>Capitulation</td><td>Deeply inverted</td><td>Near bottom</td><td>Recession trough, maximum fear</td></tr>
+<tr><td>Extreme high</td><td>Overheating</td><td>Rising fast</td><td>Late bull cycle</td><td>Inflation spike, speculative excess</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The Copper/Gold ratio closely tracks the US 10-year Treasury yield with a correlation of approximately 0.80 over the past 20 years. When they diverge, one of them is "wrong" &mdash; and the resolution often provides a trading opportunity. If the ratio falls while yields remain elevated, it suggests bond yields will eventually follow lower.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: OIL PRICES                                        -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-oil-can"></i> Section 9: Oil Prices &mdash; The Economy's Tax</h2>
+
+<p>Oil is the lifeblood of the global economy. When prices rise sharply, it functions as a regressive tax on consumers and a margin squeeze on businesses. Every major oil price shock in history has preceded or coincided with a recession.</p>
+
+<h3>Oil Shocks and Recessions</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Oil Shock</th><th>WTI Peak</th><th>YoY Change</th><th>Recession?</th><th>S&P Impact</th><th>Cause</th></tr>
+</thead>
+<tbody>
+<tr><td>1973-74</td><td>$12 (4x)</td><td>+300%</td><td>Yes (Nov 1973)</td><td>-48.2%</td><td>OPEC embargo</td></tr>
+<tr><td>1979-80</td><td>$40 (3x)</td><td>+150%</td><td>Yes (Jan 1980)</td><td>-17.1%</td><td>Iranian Revolution</td></tr>
+<tr><td>1990</td><td>$42 (2x)</td><td>+100%</td><td>Yes (Jul 1990)</td><td>-19.9%</td><td>Iraq invades Kuwait</td></tr>
+<tr><td>2000</td><td>$37 (3x)</td><td>+135%</td><td>Yes (Mar 2001)</td><td>-49.1%</td><td>OPEC cuts + demand</td></tr>
+<tr><td>2007-08</td><td>$147</td><td>+110%</td><td>Yes (Dec 2007)</td><td>-56.8%</td><td>Speculation + demand</td></tr>
+<tr><td>2014</td><td>$107 to $26</td><td>-75%</td><td>No</td><td>Flat (energy sector crushed)</td><td>Shale revolution, OPEC war</td></tr>
+<tr><td>2022</td><td>$130</td><td>+65%</td><td>No (soft landing)</td><td>-25.4% (2022)</td><td>Russia-Ukraine war</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="score-row">
+<div class="score-item">
+<div class="big" style="color:#ef4444;">$80-100</div>
+<div class="label">Threshold where oil starts hurting consumers</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#d97706;">+100%</div>
+<div class="label">YoY spike that historically triggers recession</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#10b981;">Shale</div>
+<div class="label">US shale revolution (2010s) changed the sensitivity</div>
+</div>
+</div>
+
+<div class="pedagogy-box">
+<strong><i class="fa-solid fa-lightbulb"></i> The Shale Revolution Changed the Rules</strong><br>
+Prior to 2010, the US was a net oil importer and highly vulnerable to supply shocks. The shale revolution made the US the world's largest oil producer by 2018. This means: (1) high oil prices now benefit parts of the US economy (Permian Basin, energy sector employment); (2) the recession threshold for oil shocks has risen from ~$80 to ~$120; (3) the US is more insulated but not immune &mdash; consumers still feel pain at the pump regardless of macro production data.
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 10: MACRO DASHBOARD                                  -->
+<!-- ============================================================ -->
+<div class="content-card">
+<h2><i class="fa-solid fa-gauge"></i> Section 10: Building the Macro Dashboard</h2>
+
+<p>Individual indicators are noisy. Combined into a dashboard, they become powerful. The goal is a traffic-light system that you update monthly, producing a single macro regime assessment: <strong>Expansion</strong>, <strong>Caution</strong>, or <strong>Recession Risk</strong>.</p>
+
+<div id="macroDashboard" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+<h3>The Macro Scorecard: February 2026</h3>
+<div class="data-table">
+<table>
+<thead>
+<tr><th>Indicator</th><th>Current Reading</th><th>Signal</th><th>Status</th><th>Weight</th></tr>
+</thead>
+<tbody>
+<tr><td>Fed Direction</td><td>Cutting (since Sep 2024)</td><td>Eventually bullish, but drawdown risk first 12-18 months</td><td class="badge badge-blue">CAUTION</td><td>15%</td></tr>
+<tr><td>10Y-2Y Spread</td><td>+0.35% (re-steepened)</td><td>Curve normalized &mdash; recession may be ahead, not behind</td><td class="badge badge-blue">CAUTION</td><td>15%</td></tr>
+<tr><td>NY Fed Recession Prob</td><td>~28%</td><td>Elevated but below 30% trigger</td><td class="badge badge-blue">CAUTION</td><td>10%</td></tr>
+<tr><td>ISM Manufacturing PMI</td><td>49.3</td><td>Below 50 &mdash; mild contraction</td><td class="badge badge-blue">CAUTION</td><td>10%</td></tr>
+<tr><td>ISM Services PMI</td><td>53.8</td><td>Expansion &mdash; services holding up</td><td class="badge badge-green">GREEN</td><td>10%</td></tr>
+<tr><td>Sahm Rule</td><td>0.37</td><td>Below 0.50 threshold but rising</td><td class="badge badge-blue">CAUTION</td><td>10%</td></tr>
+<tr><td>LEI (6-month change)</td><td>-2.1% annualized</td><td>Still declining but rate improving</td><td class="badge badge-blue">CAUTION</td><td>10%</td></tr>
+<tr><td>M2 YoY Growth</td><td>+4.1%</td><td>Positive &mdash; liquidity supportive</td><td class="badge badge-green">GREEN</td><td>5%</td></tr>
+<tr><td>DXY</td><td>104.8</td><td>Strong dollar, mild headwind</td><td class="badge badge-blue">CAUTION</td><td>5%</td></tr>
+<tr><td>Copper/Gold Ratio</td><td>Falling</td><td>Gold outperforming &mdash; defensive signal</td><td class="badge badge-red">CAUTION</td><td>5%</td></tr>
+<tr><td>WTI Crude</td><td>$72</td><td>Below danger zone, supportive</td><td class="badge badge-green">GREEN</td><td>5%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="score-row">
+<div class="score-item">
+<div class="big" style="color:#d97706;">CAUTION</div>
+<div class="label">Overall Macro Regime: Late cycle, mixed signals</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#d97706;">60-70%</div>
+<div class="label">Recommended Equity Allocation</div>
+</div>
+<div class="score-item">
+<div class="big" style="color:#2563eb;">Monthly</div>
+<div class="label">Update frequency for this dashboard</div>
+</div>
+</div>
+
+<div class="pedagogy-box">
+<strong><i class="fa-solid fa-calendar-check"></i> How to Update Monthly</strong><br>
+Set a calendar reminder for the first Saturday of each month. Gather: ISM PMI (released first business day), unemployment data (first Friday), LEI (third week), M2 (fourth week), yield curve (real-time), DXY (real-time), oil (real-time). Update each cell. Count the green/yellow/red signals. <strong>3+ reds = defensive mode (40-50% equity). 6+ yellows = cautious (60-70%). 7+ greens = full exposure (80-100%).</strong> This 30-minute monthly exercise is worth more than 100 hours of stock-picking analysis.
+</div>
+
+<!-- Disclaimer -->
+<div style="border-top:1px solid #e2e8f0; margin-top:2rem; padding-top:1.5rem;">
+<p style="font-size:0.75rem; color:#94a3b8; line-height:1.6; margin:0;">
+<strong>Disclaimer:</strong> This article is provided for educational purposes only. It does not constitute personalized investment advice. Past performance and historical indicator accuracy do not guarantee future results. Macro indicators can produce false signals. The economic data presented reflects publicly available sources (Federal Reserve, ISM, Conference Board, BLS) and may be subject to revisions. Consult a licensed financial advisor before making any investment decision. Market Watch is not a registered investment advisor.
+</p>
+</div>
+</div>
+
+ </div><!-- /container -->
+
+ <!-- Footer -->
+ <div class="footer-bar">
+ <p style="margin:0;">
+ <a href="/series/timing-the-market/expert/en/quantitative-systems/"><i class="fa-solid fa-arrow-right" style="margin-right:4px;"></i> Next: Part 9 &mdash; Quantitative Systems</a>
+ &nbsp;&middot;&nbsp; February 2026 &nbsp;&middot;&nbsp; Data for educational purposes
+ </p>
+ </div>
+
+ <script>
+ // === Federal Funds Rate History Chart ===
+ (function(){
+ var c = echarts.init(document.getElementById('fedRateChart'));
+ c.setOption({
+ title: { text: 'Federal Funds Rate & S&P 500 (1954-2026)', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 700 } },
+ tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+ legend: { bottom: 0, data: ['Fed Funds Rate (%)', 'S&P 500 (log scale)'] },
+ grid: { left: 60, right: 60, top: 50, bottom: 50 },
+ xAxis: { type: 'category', data: ['1954','1958','1962','1966','1970','1974','1978','1982','1986','1990','1994','1998','2002','2006','2010','2014','2018','2022','2026'], axisLabel: { fontSize: 10 } },
+ yAxis: [
+ { type: 'value', name: 'Fed Rate %', nameTextStyle: { fontSize: 10 }, max: 22, axisLabel: { formatter: '{value}%' } },
+ { type: 'log', name: 'S&P 500', nameTextStyle: { fontSize: 10 }, position: 'right', axisLabel: { formatter: function(v){ return v >= 1000 ? (v/1000).toFixed(0)+'K' : v; } } }
+ ],
+ series: [
+ {
+ name: 'Fed Funds Rate (%)',
+ type: 'line',
+ data: [0.8, 1.8, 2.7, 5.8, 9.0, 13.0, 7.9, 20.0, 6.5, 8.2, 3.0, 5.5, 1.2, 5.2, 0.2, 0.1, 2.4, 4.5, 4.3],
+ smooth: true,
+ lineStyle: { width: 2.5, color: '#ef4444' },
+ itemStyle: { color: '#ef4444' },
+ areaStyle: { color: 'rgba(239,68,68,0.08)' }
+ },
+ {
+ name: 'S&P 500 (log scale)',
+ type: 'line',
+ yAxisIndex: 1,
+ data: [30, 45, 62, 80, 84, 68, 96, 120, 240, 340, 460, 1100, 880, 1400, 1115, 2060, 2750, 3840, 5950],
+ smooth: true,
+ lineStyle: { width: 2.5, color: '#2563eb' },
+ itemStyle: { color: '#2563eb' }
+ }
+ ]
+ });
+ window.addEventListener('resize', function(){ c.resize(); });
+ })();
+
+ // === Yield Curve History Chart ===
+ (function(){
+ var c = echarts.init(document.getElementById('yieldCurveChart'));
+ var years = [];
+ for(var y=1976; y<=2026; y++) years.push(y.toString());
+ var spread = [0.5,0.8,0.3,-0.5,-2.4,-2.5,-1.2,0.8,1.5,1.8,1.4,0.8,-0.2,0.5,1.2,0.8,0.5,0.2,-0.1,0.4,1.1,1.5,1.2,0.5,-0.04,0.8,1.5,2.0,2.5,2.8,2.3,1.8,1.2,0.5,-0.2,-0.5,0.3,1.2,1.8,2.5,1.5,0.8,0.2,-0.1,0.6,1.0,0.3,-1.1,-0.5,0.3,0.4];
+ var recessions = [0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0];
+ c.setOption({
+ title: { text: '10Y-2Y Treasury Spread with Recession Bars (1976-2026)', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 13, fontWeight: 700 } },
+ tooltip: { trigger: 'axis' },
+ legend: { bottom: 0, data: ['10Y-2Y Spread', 'Recession'] },
+ grid: { left: 50, right: 30, top: 50, bottom: 50 },
+ xAxis: { type: 'category', data: years, axisLabel: { fontSize: 9, interval: 4 } },
+ yAxis: { type: 'value', name: 'Spread (%)', axisLabel: { formatter: '{value}%' },
+ splitLine: { lineStyle: { type: 'dashed' } }
+ },
+ visualMap: { show: false, pieces: [{ lte: 0, color: '#ef4444' }, { gt: 0, color: '#2563eb' }], seriesIndex: 0 },
+ series: [
+ {
+ name: '10Y-2Y Spread',
+ type: 'line',
+ data: spread,
+ smooth: true,
+ lineStyle: { width: 2 },
+ markLine: { data: [{ yAxis: 0, lineStyle: { color: '#94a3b8', type: 'dashed', width: 1.5 }, label: { formatter: 'Inversion Line', fontSize: 10 } }], silent: true },
+ areaStyle: { color: function(params){ return params.data < 0 ? 'rgba(239,68,68,0.15)' : 'rgba(37,99,235,0.08)'; } }
+ },
+ {
+ name: 'Recession',
+ type: 'bar',
+ data: recessions.map(function(v){ return v ? 3 : null; }),
+ barWidth: '100%',
+ itemStyle: { color: 'rgba(156,163,175,0.15)' },
+ z: 0
+ }
+ ]
+ });
+ window.addEventListener('resize', function(){ c.resize(); });
+ })();
+
+ // === Macro Dashboard Gauge Cluster ===
+ (function(){
+ var c = echarts.init(document.getElementById('macroDashboard'));
+ function makeGauge(name, value, max, color, cx, cy) {
+ return {
+ type: 'gauge',
+ center: [cx, cy],
+ radius: '28%',
+ startAngle: 220,
+ endAngle: -40,
+ min: 0,
+ max: max,
+ splitNumber: 5,
+ pointer: { length: '60%', width: 4 },
+ axisLine: { lineStyle: { width: 8, color: [[0.33, '#10b981'], [0.66, '#d97706'], [1, '#ef4444']] } },
+ axisTick: { show: false },
+ splitLine: { length: 8, lineStyle: { width: 2 } },
+ axisLabel: { show: false },
+ title: { offsetCenter: [0, '80%'], fontSize: 11, fontWeight: 700, fontFamily: 'Inter', color: '#334155' },
+ detail: { offsetCenter: [0, '55%'], fontSize: 16, fontWeight: 800, fontFamily: 'Inter', color: color, formatter: '{value}' },
+ data: [{ value: value, name: name }]
+ };
+ }
+ c.setOption({
+ title: { text: 'Macro Dashboard — February 2026', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 700 } },
+ series: [
+ makeGauge('Fed Rate', 4.3, 10, '#d97706', '20%', '35%'),
+ makeGauge('10Y-2Y', 0.35, 3, '#d97706', '50%', '35%'),
+ makeGauge('PMI Mfg', 49.3, 70, '#d97706', '80%', '35%'),
+ makeGauge('Sahm Rule', 0.37, 1, '#10b981', '20%', '78%'),
+ makeGauge('LEI Chg', 2.1, 10, '#d97706', '50%', '78%'),
+ makeGauge('DXY', 104.8, 120, '#d97706', '80%', '78%')
+ ]
+ });
+ window.addEventListener('resize', function(){ c.resize(); });
+ })();
+ </script>
+
+</body>
+</html>

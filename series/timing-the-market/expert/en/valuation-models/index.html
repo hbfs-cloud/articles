@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Valuation Models: The Long-Term Compass | Timing the Market — Part 2 | Market Watch</title>
+ <meta name="description" content="Timing the Market — Part 2: Deep dive into CAPE, Buffett Indicator, Tobin's Q, Equity Risk Premium and composite valuation dashboards for expert market timers.">
+ <meta property="og:title" content="Valuation Models: The Long-Term Compass | Timing the Market Part 2 | Market Watch">
+ <meta property="og:description" content="Part 2 of the Timing the Market expert series. Shiller CAPE, Buffett Indicator, Tobin's Q, ERP, Hussman's approach, and composite dashboards.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/timing-the-market/expert/en/valuation-models/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* Timing the Market Series — Deep Blue/Indigo Theme */
+ .brand-bar {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 1rem 2rem;
+ background: #ffffff;
+ border-bottom: 1px solid #e2e8f0;
+ position: sticky;
+ top: 0;
+ z-index: 100;
+ }
+ .brand-logo {
+ font-size: 1.1rem;
+ font-weight: 800;
+ color: #0f172a;
+ text-decoration: none;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ }
+ .brand-logo:hover { color: #2563eb; }
+
+ .switcher-bar {
+ display: flex;
+ gap: 0.5rem;
+ align-items: center;
+ flex-wrap: wrap;
+ }
+ .switcher-btn {
+ padding: 0.35rem 0.75rem;
+ border-radius: 8px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ text-decoration: none;
+ color: #64748b;
+ border: 1px solid #e2e8f0;
+ transition: all 0.2s;
+ }
+ .switcher-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+ .switcher-btn.active {
+ background: #4f46e5;
+ color: white;
+ border-color: #4f46e5;
+ }
+
+ /* Series Navigation */
+ .series-nav {
+ background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+ padding: 1rem 2rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 0.5rem;
+ flex-wrap: wrap;
+ }
+ .series-title {
+ color: #94a3b8;
+ font-size: 0.75rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.1em;
+ margin-right: 1rem;
+ }
+ .series-link {
+ padding: 0.4rem 1rem;
+ border-radius: 8px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ text-decoration: none;
+ color: #94a3b8;
+ border: 1px solid #334155;
+ transition: all 0.2s;
+ }
+ .series-link:hover { border-color: #a5b4fc; color: #a5b4fc; }
+ .series-link.current {
+ background: #4f46e5;
+ color: white;
+ border-color: #4f46e5;
+ }
+
+ .hero-section {
+ padding: 4rem 2rem 8rem 2rem;
+ background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
+ }
+ .hero-date {
+ font-size: 0.85rem;
+ font-weight: 700;
+ color: #4f46e5;
+ text-transform: uppercase;
+ letter-spacing: 0.1em;
+ margin-bottom: 1rem;
+ }
+ .hero-badges {
+ display: flex;
+ gap: 0.75rem;
+ justify-content: center;
+ flex-wrap: wrap;
+ margin-top: 2rem;
+ }
+ .hero-badge {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.4rem;
+ padding: 0.5rem 1rem;
+ border-radius: 99px;
+ font-size: 0.8rem;
+ font-weight: 700;
+ }
+ .hero-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+ .hero-badge-green { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+ .hero-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
+ .hero-badge-amber { background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.2); }
+ .hero-badge-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+ /* Score cards row */
+ .score-row {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 1rem;
+ margin: 1.5rem 0;
+ }
+ .score-item {
+ text-align: center;
+ padding: 1.25rem;
+ border-radius: 12px;
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ }
+ .score-item .big { font-size: 2rem; font-weight: 800; }
+ .score-item .label { font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; }
+
+ /* Footer */
+ .footer-bar {
+ text-align: center;
+ padding: 2rem;
+ background: #f8fafc;
+ border-top: 1px solid #e2e8f0;
+ color: #94a3b8;
+ font-size: 0.8rem;
+ }
+ .footer-bar a { color: #64748b; text-decoration: none; }
+ .footer-bar a:hover { color: #4f46e5; }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+ .hero-section { padding: 2.5rem 1rem 5rem; }
+ .hero-section h1 { font-size: 1.8rem !important; }
+ .brand-bar { padding: 0.75rem 1rem; }
+ .series-nav { padding: 0.75rem 1rem; }
+ .brand-logo { font-size: 0.9rem; }
+ .switcher-bar { gap: 0.25rem; }
+ .switcher-btn { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+ .series-nav { gap: 0.4rem; }
+ .series-title { font-size: 0.65rem; margin-right: 0.5rem; }
+ .series-link { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
+ .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+ .score-row { grid-template-columns: repeat(2, 1fr); }
+ }
+ @media (max-width: 480px) {
+ .hero-section h1 { font-size: 1.4rem !important; }
+ .hero-section { padding: 2rem 1rem 4rem; }
+ .brand-logo { font-size: 0.85rem; }
+ .switcher-btn { font-size: 0.6rem; padding: 0.2rem 0.4rem; }
+ .series-title { display: none; }
+ .series-link { font-size: 0.6rem; padding: 0.25rem 0.5rem; }
+ .hero-badge { font-size: 0.65rem; padding: 0.3rem 0.6rem; gap: 0.25rem; }
+ .hero-badges { gap: 0.4rem; margin-top: 1rem; }
+ .score-row { grid-template-columns: 1fr; }
+ }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+ <!-- Brand Bar -->
+ <nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+ <div class="switcher-bar">
+<a href="/series/timing-the-market/expert/en/valuation-models/" class="switcher-btn active" title="English">EN</a>
+<span style="color:#e2e8f0;margin:0 0.25rem">|</span>
+<a href="/series/timing-the-market/expert/en/valuation-models/" class="switcher-btn active">Expert</a>
+<span style="color:#e2e8f0;margin:0 0.25rem">|</span>
+<a href="/" class="switcher-btn" title="Home"><i class="fa-solid fa-house"></i></a>
+</div>
+ </nav>
+
+ <!-- Series Navigation -->
+ <div class="series-nav">
+    <span class="series-title"><i class="fa-solid fa-crosshairs" style="margin-right:0.4rem;"></i> Timing the Market</span>
+    <a href="/series/timing-the-market/expert/en/introduction/" class="series-link">1</a>
+    <a href="/series/timing-the-market/expert/en/valuation-models/" class="series-link current">2</a>
+    <a href="/series/timing-the-market/expert/en/market-breadth/" class="series-link">3</a>
+    <a href="/series/timing-the-market/expert/en/sentiment-mastery/" class="series-link">4</a>
+    <a href="/series/timing-the-market/expert/en/finding-bottoms/" class="series-link">5</a>
+    <a href="/series/timing-the-market/expert/en/detecting-tops/" class="series-link">6</a>
+    <a href="/series/timing-the-market/expert/en/trend-following/" class="series-link">7</a>
+    <a href="/series/timing-the-market/expert/en/macro-timing/" class="series-link">8</a>
+    <a href="/series/timing-the-market/expert/en/quantitative-systems/" class="series-link">9</a>
+    <a href="/series/timing-the-market/expert/en/master-framework/" class="series-link">10</a>
+</div>
+
+ <!-- Hero -->
+ <div class="hero-section" style="text-align:center;">
+ <div class="hero-date">Series: Timing the Market &mdash; Part 2 &mdash; February 2026</div>
+ <h1 style="font-size:2.8rem; font-weight:900; margin:0 0 1rem; background:linear-gradient(135deg,#312e81,#4f46e5); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2;">
+ Valuation Models: The Long-Term Compass
+ </h1>
+ <p style="font-size:1.15rem; color:#64748b; max-width:700px; margin:0 auto 1rem; line-height:1.7;">
+ Every major valuation framework dissected with 140+ years of data. CAPE, Buffett Indicator, Tobin's Q, Equity Risk Premium, and Hussman's margin-adjusted models. <strong style="color:#0f172a;">The quantitative foundation for understanding whether the market is cheap, fair, or dangerously expensive.</strong>
+ </p>
+ <div class="hero-badges">
+ <span class="hero-badge hero-badge-red"><i class="fa-solid fa-chart-line"></i> CAPE: 39.54</span>
+ <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-scale-balanced"></i> Buffett Indicator: 217%</span>
+ <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-database"></i> 140+ Years of Data</span>
+ <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-compass"></i> 6 Models Covered</span>
+ </div>
+ </div>
+
+ <div class="container">
+
+ <!-- Navigation Grid -->
+ <div class="nav-grid">
+ <a href="#cape" class="nav-item"><i class="fa-solid fa-chart-line" style="color:#ef4444; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Shiller CAPE</a>
+ <a href="#buffett" class="nav-item"><i class="fa-solid fa-scale-balanced" style="color:#d97706; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Buffett Indicator</a>
+ <a href="#tobins-q" class="nav-item"><i class="fa-solid fa-building-columns" style="color:#8b5cf6; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Tobin's Q</a>
+ <a href="#erp" class="nav-item"><i class="fa-solid fa-percent" style="color:#2563eb; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Equity Risk Premium</a>
+ <a href="#hussman" class="nav-item"><i class="fa-solid fa-microscope" style="color:#10b981; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Hussman's Approach</a>
+ <a href="#dashboard" class="nav-item"><i class="fa-solid fa-gauge-high" style="color:#4f46e5; display:block; font-size:1.2rem; margin-bottom:0.3rem;"></i> Composite Dashboard</a>
+ </div>
+
+ <!-- Current Valuation Snapshot -->
+ <div class="score-row">
+ <div class="score-item">
+ <div class="big" style="color:#ef4444;">39.54</div>
+ <div class="label">Shiller CAPE (Feb 2026)</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#d97706;">217%</div>
+ <div class="label">Buffett Indicator</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#8b5cf6;">1.68</div>
+ <div class="label">Tobin's Q Ratio</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#2563eb;">1.2%</div>
+ <div class="label">Equity Risk Premium</div>
+ </div>
+ </div>
+
+ <!-- ============================================= -->
+ <!-- SECTION 1: SHILLER CAPE RATIO                  -->
+ <!-- ============================================= -->
+ <div class="content-card" id="cape">
+ <h2><i class="fa-solid fa-chart-line" style="color:#ef4444;"></i> Section 1: Shiller CAPE Ratio &mdash; The Complete Guide</h2>
+
+ <h3>Origins and Academic Foundation</h3>
+ <p>
+ The Cyclically Adjusted Price-to-Earnings ratio (CAPE) was formalized by Yale economist <strong>Robert Shiller</strong> in his landmark 1988 paper co-authored with John Campbell, <em>"Stock Prices, Earnings, and Expected Dividends."</em> The core insight was revolutionary in its simplicity: instead of using a single year's earnings (which fluctuate wildly with the business cycle), average earnings over a full 10-year economic cycle to get a normalized measure of valuation.
+ </p>
+ <p>
+ Shiller was awarded the <strong>Nobel Prize in Economics in 2013</strong> partly for this work, alongside Eugene Fama and Lars Peter Hansen. The irony was not lost on markets: Fama argued markets are efficient, while Shiller's entire body of work demonstrated systematic mispricing through irrational exuberance and pessimism.
+ </p>
+
+ <div class="pedagogy-box">
+ <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-calculator" style="margin-right:8px;"></i> The CAPE Formula</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ <strong>CAPE = Current S&amp;P 500 Price / Average of 10 Years of Inflation-Adjusted Earnings</strong><br>
+ Step 1: Take annual earnings per share for each of the past 10 years.<br>
+ Step 2: Adjust each year's earnings for inflation using CPI to bring them to current dollars.<br>
+ Step 3: Average the 10 inflation-adjusted earnings figures.<br>
+ Step 4: Divide the current S&amp;P 500 price by this average.<br>
+ The result smooths out business cycle peaks and troughs, giving a cleaner valuation signal.
+ </p>
+ </div>
+
+ <h3>Current Reading: 39.54 (February 2026)</h3>
+ <p>
+ As of February 2026, the Shiller CAPE stands at <strong>39.54</strong> &mdash; the second highest reading in 140+ years of data. Only the dot-com peak of December 1999 (44.19) was higher. For context, the historical median CAPE since 1881 is <strong>16.0</strong>, the mean is <strong>17.3</strong>, and the long-term geometric average return of the S&amp;P 500 is approximately 10% nominal. A CAPE of 39.54 implies the market is trading at 2.47x its historical median valuation.
+ </p>
+
+ <h3>Historical Ranges: Decade by Decade</h3>
+ <p>
+ Understanding where CAPE has been through different economic regimes is essential for calibrating expectations:
+ </p>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Decade</th>
+ <th>CAPE Range</th>
+ <th>Average</th>
+ <th>Key Context</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>1880s</td><td>12.5 &ndash; 18.0</td><td>14.8</td><td>Post-Reconstruction, railroad boom</td></tr>
+ <tr><td>1890s</td><td>15.2 &ndash; 25.2</td><td>18.1</td><td>Pre-Fed era, gold standard</td></tr>
+ <tr><td>1900s</td><td>11.7 &ndash; 25.2</td><td>15.5</td><td>Panic of 1907, trust-busting</td></tr>
+ <tr><td>1910s</td><td>7.9 &ndash; 18.4</td><td>11.3</td><td>WWI, Spanish flu, Federal Reserve created (1913)</td></tr>
+ <tr><td>1920s</td><td>6.0 &ndash; 32.6</td><td>15.6</td><td>Roaring Twenties, 1929 peak at 32.6</td></tr>
+ <tr><td>1930s</td><td>5.6 &ndash; 21.1</td><td>13.4</td><td>Great Depression, trough at 5.6 in June 1932</td></tr>
+ <tr><td>1940s</td><td>8.4 &ndash; 14.1</td><td>11.2</td><td>WWII, post-war boom begins</td></tr>
+ <tr><td>1950s</td><td>11.1 &ndash; 18.3</td><td>14.7</td><td>Baby boom, suburban expansion</td></tr>
+ <tr><td>1960s</td><td>15.5 &ndash; 24.1</td><td>19.5</td><td>Go-Go years, Nifty Fifty mania</td></tr>
+ <tr><td>1970s</td><td>8.3 &ndash; 15.5</td><td>11.0</td><td>Stagflation, oil shocks, gold standard ends</td></tr>
+ <tr><td>1980s</td><td>6.6 &ndash; 17.0</td><td>10.8</td><td>Volcker rate hikes, 1982 = generational buy. 1987 crash.</td></tr>
+ <tr><td>1990s</td><td>15.5 &ndash; 44.2</td><td>27.2</td><td>Tech bubble, irrational exuberance, peaked Dec 1999</td></tr>
+ <tr><td>2000s</td><td>13.3 &ndash; 27.5</td><td>22.8</td><td>Dot-com bust, housing bubble, GFC</td></tr>
+ <tr><td>2010s</td><td>15.2 &ndash; 33.3</td><td>24.8</td><td>QE era, ZIRP, FAANG dominance</td></tr>
+ <tr><td>2020s (to date)</td><td>24.8 &ndash; 39.5</td><td>33.1</td><td>COVID stimulus, AI boom, fiscal expansion</td></tr>
+ </tbody>
+ </table>
+
+ <h3>CAPE Ranges and 10-Year Forward Returns</h3>
+ <p>
+ This is the critical table every valuation-conscious investor should memorize. Based on 140+ years of Shiller data, sorted by CAPE quintiles:
+ </p>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>CAPE Range</th>
+ <th>Occurrences (months)</th>
+ <th>Median 10Y Real Return</th>
+ <th>Mean 10Y Real Return</th>
+ <th>Worst 10Y Real Return</th>
+ <th>Best 10Y Real Return</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>&lt; 10</td><td>215</td><td style="color:#16a34a; font-weight:700;">+10.3%/yr</td><td>+10.1%/yr</td><td>+4.8%/yr</td><td>+17.5%/yr</td></tr>
+ <tr><td>10 &ndash; 15</td><td>432</td><td style="color:#16a34a; font-weight:700;">+8.2%/yr</td><td>+7.9%/yr</td><td>+2.3%/yr</td><td>+15.1%/yr</td></tr>
+ <tr><td>15 &ndash; 20</td><td>378</td><td style="color:#d97706; font-weight:700;">+5.6%/yr</td><td>+5.4%/yr</td><td>-0.5%/yr</td><td>+11.8%/yr</td></tr>
+ <tr><td>20 &ndash; 25</td><td>271</td><td style="color:#d97706; font-weight:700;">+3.8%/yr</td><td>+3.3%/yr</td><td>-2.1%/yr</td><td>+8.7%/yr</td></tr>
+ <tr><td>25 &ndash; 30</td><td>183</td><td style="color:#ef4444; font-weight:700;">+1.5%/yr</td><td>+0.9%/yr</td><td>-4.4%/yr</td><td>+6.2%/yr</td></tr>
+ <tr><td>&gt; 30</td><td>117</td><td style="color:#ef4444; font-weight:700;">-0.4%/yr</td><td>-0.8%/yr</td><td>-6.1%/yr</td><td>+3.6%/yr</td></tr>
+ </tbody>
+ </table>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i> Current Implication</h4>
+ <p style="margin:0; font-size:0.95rem; color:#991b1b; line-height:1.7;">
+ At CAPE 39.54, we are firmly in the &gt;30 bucket. Historical median real returns from this level are <strong>negative</strong> over the next 10 years. This does not mean a crash is imminent &mdash; CAPE is a 10-year compass, not a 10-day signal. The R-squared between CAPE and 10-year forward returns is approximately <strong>0.44</strong> &mdash; significant but not deterministic.
+ </p>
+ </div>
+
+ <!-- CAPE Historical Chart -->
+ <div id="capeChart" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+ <h3>The CAPE Controversy: Siegel, Buybacks, and Sector Shifts</h3>
+ <p>
+ CAPE is not without serious critics. <strong>Jeremy Siegel</strong> (Wharton) has argued since the early 2000s that CAPE is structurally overstated due to three factors:
+ </p>
+ <ul>
+ <li><strong>Accounting changes post-1990:</strong> After FASB adopted mark-to-market and goodwill impairment rules, earnings during recessions are artificially depressed. The GFC write-downs in 2008-2009 dragged down the 10-year earnings average for an entire decade, making CAPE appear elevated even as underlying profitability recovered quickly.</li>
+ <li><strong>Share buybacks:</strong> When companies buy back stock, earnings per share increases even without revenue growth. Since the 1990s, buybacks have exploded ($800B+ in 2023 alone), systematically boosting per-share metrics relative to aggregate earnings.</li>
+ <li><strong>Sector composition shift:</strong> The S&amp;P 500 has rotated from capital-intensive industrial companies (with 4-6% net margins) toward asset-light technology companies (with 20-35% net margins). Higher structural margins justify a higher steady-state CAPE.</li>
+ </ul>
+ <p>
+ Siegel argues the "true" CAPE, adjusted for these factors, might be closer to 28-30 &mdash; still elevated but not the extreme 39+ that the raw calculation suggests. Shiller himself has acknowledged these critiques and published a "total return CAPE" variant that partially addresses the buyback issue.
+ </p>
+
+ <h3>When CAPE Works and When It Fails</h3>
+
+ <div class="didactic-box">
+ <h4 style="color:#166534 !important;"><i class="fa-solid fa-check-circle" style="margin-right:8px;"></i> CAPE Is Excellent At...</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ <strong>10-year return forecasting</strong> (R-squared ~ 0.44).<br>
+ <strong>Identifying generational buying opportunities</strong>: CAPE < 10 in 1920, 1932, 1942, 1982 preceded massive bull runs.<br>
+ <strong>Warning of secular overvaluation</strong>: CAPE > 30 in 1929 and 1999 preceded lost decades.<br>
+ <strong>Asset allocation frameworks</strong>: Adjusting equity allocation based on CAPE decile is a proven approach (GMO, Research Affiliates).
+ </p>
+ </div>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-xmark-circle" style="margin-right:8px;"></i> CAPE Fails At...</h4>
+ <p style="margin:0; font-size:0.95rem; color:#991b1b; line-height:1.7;">
+ <strong>Short-term market timing.</strong> From January 1990 to September 2015, CAPE was above its historical mean (17.3) for <strong>416 out of 422 months</strong> &mdash; 98.6% of the time. If you had waited for CAPE to revert to "fair value" before investing, you would have missed a 1,300% total return. CAPE said "overvalued" almost continuously for 25 years. It needs a <strong>catalyst</strong> to convert from "expensive" to "declining."
+ </p>
+ </div>
+ </div>
+
+ <!-- ============================================= -->
+ <!-- SECTION 2: BUFFETT INDICATOR                   -->
+ <!-- ============================================= -->
+ <div class="content-card" id="buffett">
+ <h2><i class="fa-solid fa-scale-balanced" style="color:#d97706;"></i> Section 2: The Buffett Indicator</h2>
+
+ <h3>Origin Story</h3>
+ <p>
+ In a November 2001 interview with <strong>Fortune Magazine</strong>, Warren Buffett called the ratio of total US stock market capitalization to GDP "probably the best single measure of where valuations stand at any given moment." The metric subsequently became known as the "Buffett Indicator" and remains one of the most widely followed aggregate valuation measures in institutional finance.
+ </p>
+
+ <div class="pedagogy-box">
+ <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-calculator" style="margin-right:8px;"></i> The Formula</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ <strong>Buffett Indicator = Total US Stock Market Capitalization (Wilshire 5000) / US Gross Domestic Product &times; 100</strong><br><br>
+ The Wilshire 5000 captures the full value of all publicly traded US equities (now approximately 3,400 stocks despite the name). GDP represents the total economic output. The ratio measures how much investors are paying per dollar of economic activity.
+ </p>
+ </div>
+
+ <h3>Current Reading: 217% (February 2026)</h3>
+ <p>
+ The Buffett Indicator stands at approximately <strong>217%</strong> as of February 2026 &mdash; an <strong>all-time record</strong>. For every $1 of US GDP, investors are paying $2.17 in stock market capitalization. This exceeds the dot-com peak of 159% (March 2000) and the pre-COVID peak of 158% (December 2019) by a staggering margin.
+ </p>
+
+ <h3>Historical Thresholds</h3>
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Range</th>
+ <th>Interpretation</th>
+ <th>Historical Occurrences</th>
+ <th>Forward 5Y Real Return (median)</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td style="color:#16a34a; font-weight:700;">&lt; 70%</td><td>Significantly Undervalued</td><td>1932, 1942, 1949, 1974, 1982</td><td>+14.2%/yr</td></tr>
+ <tr><td style="color:#16a34a;">70% &ndash; 90%</td><td>Fair Value</td><td>Most of 1950s-1960s, early 1990s</td><td>+9.1%/yr</td></tr>
+ <tr><td style="color:#d97706;">90% &ndash; 120%</td><td>Moderately Overvalued</td><td>Late 1960s, mid-1990s, 2003-2005</td><td>+4.8%/yr</td></tr>
+ <tr><td style="color:#ef4444;">120% &ndash; 150%</td><td>Significantly Overvalued</td><td>1997-1998, 2006-2007, 2017-2019</td><td>+1.2%/yr</td></tr>
+ <tr><td style="color:#dc2626; font-weight:700;">&gt; 150%</td><td>Extreme Overvaluation</td><td>1999-2000, 2021-2026</td><td>-1.8%/yr</td></tr>
+ </tbody>
+ </table>
+
+ <h3>The Complete History: Values at Major Tops and Bottoms</h3>
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Date</th>
+ <th>Event</th>
+ <th>Buffett Indicator</th>
+ <th>S&amp;P 500</th>
+ <th>Subsequent Drawdown / Rally</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>Sep 1929</td><td>Pre-crash peak</td><td style="color:#dc2626; font-weight:700;">~103%</td><td>31.9</td><td>-86% to 1932 low</td></tr>
+ <tr><td>Jun 1932</td><td>Depression bottom</td><td style="color:#16a34a; font-weight:700;">~28%</td><td>4.4</td><td>+324% to 1937</td></tr>
+ <tr><td>Apr 1942</td><td>WWII bottom</td><td style="color:#16a34a; font-weight:700;">~32%</td><td>7.5</td><td>+158% to 1946</td></tr>
+ <tr><td>Jan 1973</td><td>Pre-bear peak</td><td style="color:#d97706;">~96%</td><td>120.2</td><td>-48% to Oct 1974</td></tr>
+ <tr><td>Oct 1974</td><td>Stagflation bottom</td><td style="color:#16a34a; font-weight:700;">~42%</td><td>62.3</td><td>+126% to 1980</td></tr>
+ <tr><td>Aug 1982</td><td>Secular bottom</td><td style="color:#16a34a; font-weight:700;">~36%</td><td>102.4</td><td>+1,400% to 2000</td></tr>
+ <tr><td>Mar 2000</td><td>Dot-com peak</td><td style="color:#dc2626; font-weight:700;">~159%</td><td>1,527</td><td>-49% to Oct 2002</td></tr>
+ <tr><td>Oct 2002</td><td>Post-dot-com bottom</td><td style="color:#d97706;">~72%</td><td>776</td><td>+102% to Oct 2007</td></tr>
+ <tr><td>Oct 2007</td><td>Pre-GFC peak</td><td style="color:#ef4444;">~137%</td><td>1,565</td><td>-57% to Mar 2009</td></tr>
+ <tr><td>Mar 2009</td><td>GFC bottom</td><td style="color:#16a34a; font-weight:700;">~56%</td><td>676</td><td>+528% to Feb 2020</td></tr>
+ <tr><td>Feb 2020</td><td>Pre-COVID peak</td><td style="color:#ef4444;">~158%</td><td>3,386</td><td>-34% in 23 days</td></tr>
+ <tr><td>Mar 2020</td><td>COVID bottom</td><td style="color:#d97706;">~103%</td><td>2,237</td><td>+120% to Jan 2022</td></tr>
+ <tr><td>Feb 2026</td><td>Current</td><td style="color:#dc2626; font-weight:700;">~217%</td><td>6,013</td><td>???</td></tr>
+ </tbody>
+ </table>
+
+ <!-- Buffett Indicator Chart -->
+ <div id="buffettChart" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+ <h3>Limitations of the Buffett Indicator</h3>
+ <ul>
+ <li><strong>GDP does not capture multinational earnings:</strong> S&amp;P 500 companies now derive ~42% of revenue from outside the US, up from ~25% in 1990. The denominator (US GDP) understates the economic activity that generates the numerator (market cap).</li>
+ <li><strong>Interest rate blindness:</strong> The model does not adjust for the risk-free rate. When 10Y treasuries yield 1.5%, equities should logically trade at a higher multiple than when treasuries yield 6%. The 2020-2024 era of low rates partly explains the elevated ratio.</li>
+ <li><strong>Structural shift to public markets:</strong> The number of public companies has declined from ~8,000 in 1996 to ~4,200 today, while private equity has absorbed many midsize companies. Survivors tend to be larger and more profitable, skewing market cap upward.</li>
+ <li><strong>Foreign revenue distortion:</strong> The denominator is purely domestic GDP, but the numerator includes global market caps of multinational giants. This gap has widened significantly since the 1990s.</li>
+ </ul>
+
+ <h3>CAPE vs. Buffett Indicator: Correlation and Divergences</h3>
+ <p>
+ The two models have a historical correlation of approximately <strong>0.82</strong> &mdash; high but not perfect. They tend to agree at extremes (both screamed "overvalued" in 1999, both screamed "cheap" in 1982) but can diverge during periods of profit margin expansion or contraction. When the Buffett Indicator signals extreme overvaluation but CAPE is only moderately elevated, it often reflects a GDP growth slowdown rather than earnings weakness &mdash; a bearish combination. Currently, both are in the red zone, which increases conviction in the overvaluation signal.
+ </p>
+ </div>
+
+ <!-- ============================================= -->
+ <!-- SECTION 3: TOBIN'S Q RATIO                     -->
+ <!-- ============================================= -->
+ <div class="content-card" id="tobins-q">
+ <h2><i class="fa-solid fa-building-columns" style="color:#8b5cf6;"></i> Section 3: Tobin's Q Ratio</h2>
+
+ <h3>Academic Origins</h3>
+ <p>
+ Named after <strong>James Tobin</strong> (1918-2002), Nobel Prize in Economics 1981, the Q ratio measures the market value of a firm's assets divided by the replacement cost of those assets. Applied to the aggregate stock market, it compares total US equity market capitalization against the net worth of US nonfinancial corporate business as reported by the Federal Reserve's Z.1 Financial Accounts (formerly Flow of Funds).
+ </p>
+
+ <div class="pedagogy-box">
+ <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-calculator" style="margin-right:8px;"></i> Tobin's Q Formula</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ <strong>Q = Market Value of Corporate Assets / Replacement Cost of Corporate Assets</strong><br><br>
+ If Q = 1.0, the market values a company exactly at what it would cost to rebuild it from scratch. If Q > 1.0, the market is paying a premium &mdash; it believes the assembled enterprise is worth more than the sum of its parts. If Q < 1.0, you could theoretically buy the entire company for less than the cost of its physical assets. The <strong>historical median since 1900 is 0.92</strong>. The February 2026 reading is approximately <strong>1.68</strong>.
+ </p>
+ </div>
+
+ <h3>Historical Q at Major Market Extremes</h3>
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Date</th>
+ <th>Event</th>
+ <th>Q Ratio</th>
+ <th>Signal</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>Sep 1929</td><td>Pre-crash peak</td><td style="color:#dc2626; font-weight:700;">1.06</td><td>Overvalued</td></tr>
+ <tr><td>Jun 1932</td><td>Depression trough</td><td style="color:#16a34a; font-weight:700;">0.30</td><td>Generational buy</td></tr>
+ <tr><td>Aug 1982</td><td>Secular bottom</td><td style="color:#16a34a; font-weight:700;">0.31</td><td>Generational buy</td></tr>
+ <tr><td>Mar 2000</td><td>Dot-com peak</td><td style="color:#dc2626; font-weight:700;">1.76</td><td>Record high (at the time)</td></tr>
+ <tr><td>Mar 2009</td><td>GFC bottom</td><td style="color:#16a34a;">0.52</td><td>Deep value</td></tr>
+ <tr><td>Dec 2021</td><td>Post-COVID peak</td><td style="color:#dc2626; font-weight:700;">1.72</td><td>Near-record</td></tr>
+ <tr><td>Feb 2026</td><td>Current</td><td style="color:#dc2626; font-weight:700;">1.68</td><td>Approaching record</td></tr>
+ </tbody>
+ </table>
+
+ <p>
+ The key takeaway is mean-reversion: Q has always eventually reverted to or below 1.0 after extended periods above it. The 2000 peak (1.76) was followed by a 49% drawdown. The current reading of 1.68 is uncomfortably close to the dot-com extreme. However, the path from "overvalued" to "mean-reverted" can take years or even a decade.
+ </p>
+
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i> When Q > 1.5</h4>
+ <p style="margin:0; font-size:0.95rem; color:#991b1b; line-height:1.7;">
+ Historically, when Q exceeds 1.5, forward 10-year real returns have averaged just <strong>+1.8% per year</strong>, compared to +8.3% when Q is below 0.7. This is one of the most powerful long-term valuation relationships in financial history. The signal is clear: at current levels, the next decade of equity returns will likely be well below the historical average of ~7% real.
+ </p>
+ </div>
+ </div>
+
+ <!-- ============================================= -->
+ <!-- SECTION 4: EQUITY RISK PREMIUM                 -->
+ <!-- ============================================= -->
+ <div class="content-card" id="erp">
+ <h2><i class="fa-solid fa-percent" style="color:#2563eb;"></i> Section 4: Equity Risk Premium (ERP)</h2>
+
+ <h3>Definition and Significance</h3>
+ <p>
+ The Equity Risk Premium is the excess return investors expect to earn from equities above the risk-free rate (typically the 10-year Treasury yield). It answers the fundamental question: <strong>"Am I being adequately compensated for the additional risk of owning stocks instead of government bonds?"</strong>
+ </p>
+
+ <div class="pedagogy-box">
+ <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-calculator" style="margin-right:8px;"></i> ERP Calculation (Earnings Yield Method)</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ <strong>ERP = S&amp;P 500 Earnings Yield &minus; 10-Year Treasury Yield</strong><br><br>
+ Earnings Yield = 1 / P/E Ratio (forward). At a forward P/E of 22x, the earnings yield is ~4.5%. With the 10Y Treasury at ~4.3%, the ERP is approximately <strong>+0.2% to +1.2%</strong> depending on the methodology (trailing vs. forward, GAAP vs. operating). This is one of the thinnest risk premiums since the dot-com era.
+ </p>
+ </div>
+
+ <h3>Historical ERP Context</h3>
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Period</th>
+ <th>ERP Range</th>
+ <th>Interpretation</th>
+ <th>What Happened Next</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>1980-1990</td><td>+5% to +8%</td><td>Extremely attractive (stocks cheap vs. bonds)</td><td>Secular bull market: +1,400% to 2000</td></tr>
+ <tr><td>1995-2000</td><td>+1% to -2%</td><td>Thin to negative (stocks expensive vs. bonds)</td><td>Dot-com crash: -49%</td></tr>
+ <tr><td>2003-2007</td><td>+2% to +4%</td><td>Moderately attractive</td><td>Bull market, then GFC: -57%</td></tr>
+ <tr><td>2009-2012</td><td>+5% to +7%</td><td>Very attractive (fear premium)</td><td>Massive rally: +300%</td></tr>
+ <tr><td>2020-2021</td><td>+3% to +5%</td><td>Moderate (low rates boosted ERP)</td><td>Continued bull, then 2022 correction</td></tr>
+ <tr><td>Feb 2026</td><td>+0.2% to +1.2%</td><td>Razor-thin: stocks barely compensate for risk</td><td>Historically precedes poor equity returns</td></tr>
+ </tbody>
+ </table>
+
+ <h3>When ERP Goes Negative: The Danger Signal</h3>
+ <p>
+ A negative ERP means investors are accepting a <em>lower</em> expected return from stocks than from risk-free government bonds. This has occurred only twice in modern history: <strong>late 1999/early 2000</strong> and briefly in <strong>mid-2007</strong>. Both instances preceded devastating bear markets. The current ERP of approximately +0.2-1.2% is not yet negative but is approaching levels that have historically preceded significant underperformance.
+ </p>
+
+ <div class="metric-grid">
+ <div class="metric-card">
+ <div class="metric-value" style="color:#ef4444;">0.2-1.2%</div>
+ <div class="metric-label">Current ERP</div>
+ <div class="metric-change down">Near 25-year low</div>
+ </div>
+ <div class="metric-card">
+ <div class="metric-value" style="color:#d97706;">4.5%</div>
+ <div class="metric-label">S&amp;P 500 Earnings Yield</div>
+ <div class="metric-change neutral">Forward PE ~22x</div>
+ </div>
+ <div class="metric-card">
+ <div class="metric-value" style="color:#2563eb;">4.3%</div>
+ <div class="metric-label">10Y Treasury Yield</div>
+ <div class="metric-change up">Competing with stocks</div>
+ </div>
+ <div class="metric-card">
+ <div class="metric-value" style="color:#16a34a;">4.8%</div>
+ <div class="metric-label">Historical Median ERP</div>
+ <div class="metric-change neutral">1926-2025 average</div>
+ </div>
+ </div>
+
+ <p>
+ The ERP is particularly valuable because it is <strong>relative</strong> &mdash; it measures equity attractiveness versus the available alternative (bonds). A high CAPE in a zero-rate world (2020) is less alarming than a high CAPE with 4%+ treasury yields (2026), because in the latter case, investors have a genuine low-risk alternative that barely existed in the ZIRP era.
+ </p>
+ </div>
+
+ <!-- ============================================= -->
+ <!-- SECTION 5: HUSSMAN'S APPROACH                  -->
+ <!-- ============================================= -->
+ <div class="content-card" id="hussman">
+ <h2><i class="fa-solid fa-microscope" style="color:#10b981;"></i> Section 5: Hussman's Approach &mdash; Margin-Adjusted CAPE</h2>
+
+ <h3>The Margin Problem</h3>
+ <p>
+ <strong>John Hussman</strong>, former professor of economics at the University of Michigan and manager of the Hussman Strategic Funds, identified a critical flaw in standard CAPE: it does not adjust for the level of profit margins. His core insight is that profit margins are <em>mean-reverting</em> &mdash; periods of unusually high margins are typically followed by margin compression (through competition, wage growth, regulation, or economic downturns), and vice versa.
+ </p>
+ <p>
+ Standard CAPE uses actual historical earnings. But if those earnings were earned during a period of abnormally high margins, the 10-year average is inflated, and CAPE actually <em>understates</em> overvaluation. Conversely, during periods of depressed margins (like 2008-2010), CAPE overstates overvaluation.
+ </p>
+
+ <div class="pedagogy-box">
+ <h4 style="color:#1d4ed8 !important;"><i class="fa-solid fa-sliders" style="margin-right:8px;"></i> Hussman's Margin-Adjusted CAPE</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ <strong>MAPE = Price / (Revenue &times; Historical Average Profit Margin)</strong><br><br>
+ Instead of using actual reported earnings, Hussman normalizes to the long-term average profit margin (~6.3% for the S&amp;P 500 historically). This strips out the cyclical margin component. At current S&amp;P 500 margins of ~12.5% (nearly double the historical average), the margin-adjusted CAPE is significantly higher than the standard CAPE &mdash; suggesting even greater overvaluation than Shiller's raw metric implies.
+ </p>
+ </div>
+
+ <h3>Hussman's Track Record: Brilliant Analysis, Painful Execution</h3>
+ <p>
+ Hussman's framework has a <strong>mixed but instructive track record</strong>:
+ </p>
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Period</th>
+ <th>Hussman's Call</th>
+ <th>Market Outcome</th>
+ <th>Verdict</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>2000-2002</td><td>Massively bearish</td><td>S&amp;P 500 fell 49%</td><td style="color:#16a34a; font-weight:700;">Correct</td></tr>
+ <tr><td>2003-2007</td><td>Cautiously bullish, then bearish by 2007</td><td>Bull run, then GFC crash</td><td style="color:#16a34a; font-weight:700;">Correct</td></tr>
+ <tr><td>2010-2013</td><td>Bearish: margins unsustainably high</td><td>S&amp;P 500 rallied +80%</td><td style="color:#dc2626; font-weight:700;">Wrong (too early)</td></tr>
+ <tr><td>2014-2019</td><td>Persistently bearish: worst expected returns in history</td><td>S&amp;P 500 rallied another +60%</td><td style="color:#dc2626; font-weight:700;">Wrong (no catalyst)</td></tr>
+ <tr><td>2020-2026</td><td>Extreme overvaluation warnings</td><td>Market crashed 34% (COVID), then rallied 170%</td><td style="color:#d97706; font-weight:700;">Mixed</td></tr>
+ </tbody>
+ </table>
+
+ <h3>The Crucial Lesson</h3>
+ <div class="didactic-box">
+ <h4 style="color:#166534 !important;"><i class="fa-solid fa-lightbulb" style="margin-right:8px;"></i> The Hussman Paradox</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ Hussman's analysis was arguably <em>correct</em> on the valuation math &mdash; the market was indeed overvalued by historical standards from 2013 onward. But he missed the critical variable: <strong>a catalyst is required to convert overvaluation into actual decline</strong>. Markets can remain irrational longer than investors can remain solvent (Keynes). Overvaluation is a necessary but not sufficient condition for a bear market. You also need either: (a) a recession, (b) a liquidity shock, (c) a policy mistake, or (d) an exogenous crisis. Without a catalyst, overvalued markets simply become more overvalued. <strong>Valuation models set the table; other signals ring the dinner bell.</strong>
+ </p>
+ </div>
+ </div>
+
+ <!-- ============================================= -->
+ <!-- SECTION 6: COMPOSITE DASHBOARD                 -->
+ <!-- ============================================= -->
+ <div class="content-card" id="dashboard">
+ <h2><i class="fa-solid fa-gauge-high" style="color:#4f46e5;"></i> Section 6: The Composite Valuation Dashboard</h2>
+
+ <h3>Why One Model Is Never Enough</h3>
+ <p>
+ Each valuation model captures a different facet of market pricing. CAPE measures price relative to normalized earnings. The Buffett Indicator measures market cap relative to economic output. Tobin's Q measures market value relative to replacement cost. ERP measures equity attractiveness relative to bonds. No single model is comprehensive, but when multiple models converge on the same signal, conviction should increase dramatically.
+ </p>
+
+ <h3>Building the Dashboard</h3>
+ <p>
+ A robust composite valuation framework assigns equal weight to four independent measures and classifies each as: <span class="badge badge-green">CHEAP</span>, <span class="badge badge-blue">FAIR</span>, <span class="badge badge-purple">MODERATE</span>, <span class="badge badge-red">EXPENSIVE</span>, or <span class="badge badge-red">EXTREME</span>.
+ </p>
+
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Model</th>
+ <th>Current Value</th>
+ <th>Historical Median</th>
+ <th>Percentile</th>
+ <th>Signal</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Shiller CAPE</td>
+ <td style="font-weight:700;">39.54</td>
+ <td>16.0</td>
+ <td>97th</td>
+ <td><span class="badge badge-red">EXTREME</span></td>
+ </tr>
+ <tr>
+ <td>Buffett Indicator</td>
+ <td style="font-weight:700;">217%</td>
+ <td>78%</td>
+ <td>99th</td>
+ <td><span class="badge badge-red">EXTREME</span></td>
+ </tr>
+ <tr>
+ <td>Tobin's Q</td>
+ <td style="font-weight:700;">1.68</td>
+ <td>0.92</td>
+ <td>96th</td>
+ <td><span class="badge badge-red">EXTREME</span></td>
+ </tr>
+ <tr>
+ <td>Equity Risk Premium</td>
+ <td style="font-weight:700;">~1.0%</td>
+ <td>4.8%</td>
+ <td>93rd (inverted)</td>
+ <td><span class="badge badge-red">EXPENSIVE</span></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <!-- Composite Gauge Chart -->
+ <div id="compositeGauge" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+ <h3>When 3/4 or 4/4 Models Agree</h3>
+ <p>
+ In the historical record, there have been only a handful of periods when all four models simultaneously signaled "expensive" or "extreme":
+ </p>
+ <table class="data-table">
+ <thead>
+ <tr>
+ <th>Period</th>
+ <th>Models in Agreement</th>
+ <th>Subsequent 10Y Real Return</th>
+ <th>Max Drawdown (within 3Y)</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>1928-1929</td><td>3/4 (no ERP data)</td><td style="color:#dc2626; font-weight:700;">-4.1%/yr</td><td>-86%</td></tr>
+ <tr><td>1965-1966</td><td>3/4</td><td style="color:#dc2626; font-weight:700;">-2.3%/yr</td><td>-36%</td></tr>
+ <tr><td>1999-2000</td><td>4/4</td><td style="color:#dc2626; font-weight:700;">-1.0%/yr</td><td>-49%</td></tr>
+ <tr><td>2021-2022</td><td>4/4</td><td style="color:#d97706;">TBD (too recent)</td><td>-25% (2022)</td></tr>
+ <tr><td style="font-weight:700;">February 2026</td><td style="font-weight:700;">4/4</td><td style="color:#dc2626;">TBD</td><td>TBD</td></tr>
+ </tbody>
+ </table>
+
+ <h3>What This Means for Investors (February 2026)</h3>
+ <div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i> The Consensus of Models</h4>
+ <p style="margin:0; font-size:0.95rem; color:#991b1b; line-height:1.7;">
+ All four major valuation models are flashing <strong>expensive to extreme</strong>. The composite score places us in the 96th+ percentile of historical valuations. This does <strong>NOT</strong> mean "sell everything immediately." It means:
+ </p>
+ <ul style="color:#991b1b; font-size:0.9rem; line-height:1.8; margin-top:0.5rem;">
+ <li><strong>Reduce forward return expectations:</strong> Expect 0-3% real annual returns from US equities over the next 10 years, not the historical 7%.</li>
+ <li><strong>Diversify internationally:</strong> Non-US markets (Europe, EM) are trading at 12-14x earnings vs. 22x for the S&amp;P 500. The valuation gap is historically extreme.</li>
+ <li><strong>Increase portfolio resilience:</strong> Higher allocation to bonds, gold, real assets, and cash than a typical 60/40 portfolio.</li>
+ <li><strong>Wait for a catalyst:</strong> Valuation alone does not cause crashes. Monitor breadth, sentiment, and macro indicators (covered in Parts 3-8) for timing signals.</li>
+ <li><strong>Do not short based on valuation alone:</strong> Overvalued markets can become much more overvalued. Time, not price, is the enemy of the perpetual bear.</li>
+ </ul>
+ </div>
+
+ <div class="didactic-box">
+ <h4 style="color:#166534 !important;"><i class="fa-solid fa-arrow-right" style="margin-right:8px;"></i> The Valuation Paradox, Resolved</h4>
+ <p style="margin:0; font-size:0.95rem; color:#334155; line-height:1.7;">
+ Valuations are the <strong>single best predictor of long-term returns</strong> and the <strong>single worst predictor of short-term returns</strong>. This is not a contradiction &mdash; it is the central tension of market timing. Valuation models are the compass that tells you which direction you are heading. They cannot tell you how fast you will get there or what storms lie between here and the destination. For that, you need the tools in the next eight parts of this series. <strong>Part 3 introduces Market Breadth &mdash; the market's heartbeat.</strong>
+ </p>
+ </div>
+ </div>
+
+ <!-- Next Part CTA -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-arrow-right" style="color:#4f46e5;"></i> Up Next</h2>
+ <p>
+ Valuation tells you <em>where</em> you are. Breadth tells you <em>how healthy</em> the market is right now. In <a href="/series/timing-the-market/expert/en/market-breadth/" style="color:#4f46e5; font-weight:700;">Part 3 &mdash; Market Breadth: The Market's Heartbeat</a>, we dissect the Advance/Decline Line, Zweig Breadth Thrust, McClellan Oscillator, percentage of stocks above moving averages, new highs vs. lows, the Hindenburg Omen, and the Coppock Curve. These indicators have flagged every major top and bottom in market history.
+ </p>
+ <a href="/series/timing-the-market/expert/en/market-breadth/" class="btn-primary">
+ <i class="fa-solid fa-arrow-right"></i> Next: Part 3 &mdash; Market Breadth
+ </a>
+ </div>
+
+ </div><!-- /container -->
+
+ <!-- Footer -->
+ <div class="footer-bar">
+ <p style="margin:0;">
+ <a href="/"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i> Back to Market Watch</a>
+ &nbsp;&middot;&nbsp; Timing the Market Series &mdash; February 2026
+ </p>
+ </div>
+
+ <script>
+ // === 1. CAPE Historical Line Chart ===
+ (function(){
+ var c = echarts.init(document.getElementById('capeChart'));
+ // Simplified historical CAPE data points (year, CAPE)
+ var years = [1900,1905,1910,1915,1920,1925,1929,1932,1935,1940,1942,1945,1950,1955,1960,1965,1968,1970,1975,1980,1982,1985,1990,1995,1997,1999,2000,2002,2003,2005,2007,2009,2010,2012,2015,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+ var cape = [18.5,17.2,14.8,11.3,6.0,16.2,32.6,5.6,17.5,12.4,8.4,14.1,13.5,16.8,19.5,24.1,22.0,15.5,8.9,9.1,6.6,11.2,17.1,20.2,28.3,44.2,43.0,22.3,21.4,25.8,27.5,13.3,20.7,21.2,26.3,30.8,28.1,30.3,33.4,38.3,28.5,31.2,35.4,38.1,39.5];
+ c.setOption({
+ title: { text: 'Shiller CAPE Ratio (1900-2026)', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 700 } },
+ tooltip: {
+ trigger: 'axis',
+ formatter: function(p) { return p[0].name + '<br/>CAPE: <strong>' + p[0].value + '</strong>'; }
+ },
+ grid: { left: '8%', right: '5%', bottom: '12%', top: '15%' },
+ xAxis: {
+ type: 'category',
+ data: years,
+ axisLabel: { fontSize: 10, fontWeight: 600, interval: 4, rotate: 45 },
+ boundaryGap: false
+ },
+ yAxis: {
+ type: 'value',
+ min: 0,
+ max: 50,
+ splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } },
+ axisLabel: { fontSize: 10, fontWeight: 600 }
+ },
+ visualMap: {
+ show: false,
+ pieces: [
+ { lte: 15, color: '#10b981' },
+ { gt: 15, lte: 20, color: '#d97706' },
+ { gt: 20, lte: 30, color: '#f59e0b' },
+ { gt: 30, color: '#ef4444' }
+ ]
+ },
+ series: [{
+ name: 'CAPE',
+ type: 'line',
+ data: cape,
+ smooth: true,
+ lineStyle: { width: 3 },
+ areaStyle: {
+ color: {
+ type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+ colorStops: [
+ { offset: 0, color: 'rgba(79,70,229,0.25)' },
+ { offset: 1, color: 'rgba(79,70,229,0.02)' }
+ ]
+ }
+ },
+ markLine: {
+ silent: true,
+ data: [
+ { yAxis: 16, name: 'Median (16)', label: { formatter: 'Median: 16', fontSize: 10, fontWeight: 700, color: '#16a34a' }, lineStyle: { color: '#16a34a', type: 'dashed', width: 2 } },
+ { yAxis: 25, name: 'Expensive (25)', label: { formatter: 'Expensive: 25', fontSize: 10, fontWeight: 700, color: '#d97706' }, lineStyle: { color: '#d97706', type: 'dashed', width: 2 } },
+ { yAxis: 39.5, name: 'Current (39.5)', label: { formatter: 'Current: 39.5', fontSize: 10, fontWeight: 700, color: '#ef4444' }, lineStyle: { color: '#ef4444', type: 'dashed', width: 2 } }
+ ]
+ },
+ markPoint: {
+ data: [
+ { coord: ['1929', 32.6], name: '1929 Peak', value: '32.6', itemStyle: { color: '#ef4444' }, label: { show: true, formatter: '1929\n32.6', fontSize: 9, fontWeight: 700 } },
+ { coord: ['1932', 5.6], name: '1932 Bottom', value: '5.6', itemStyle: { color: '#10b981' }, label: { show: true, formatter: '1932\n5.6', fontSize: 9, fontWeight: 700 } },
+ { coord: ['1982', 6.6], name: '1982 Bottom', value: '6.6', itemStyle: { color: '#10b981' }, label: { show: true, formatter: '1982\n6.6', fontSize: 9, fontWeight: 700 } },
+ { coord: ['1999', 44.2], name: '1999 Peak', value: '44.2', itemStyle: { color: '#dc2626' }, label: { show: true, formatter: '2000\n44.2', fontSize: 9, fontWeight: 700 } },
+ { coord: ['2026', 39.5], name: 'Now', value: '39.5', itemStyle: { color: '#4f46e5' }, label: { show: true, formatter: 'NOW\n39.5', fontSize: 9, fontWeight: 700, color: '#4f46e5' } }
+ ]
+ }
+ }]
+ });
+ window.addEventListener('resize', function(){ c.resize(); });
+ })();
+
+ // === 2. Buffett Indicator Scatter Chart ===
+ (function(){
+ var c = echarts.init(document.getElementById('buffettChart'));
+ // [Buffett Indicator %, Subsequent 5Y Real Return %]
+ var data = [
+ [28, 22.1], [32, 18.5], [36, 16.8], [42, 14.2], [56, 11.3], [72, 8.5],
+ [78, 7.1], [85, 6.2], [96, 3.8], [103, 2.1], [110, 1.5], [120, 0.8],
+ [137, -0.5], [142, -1.2], [150, -2.1], [158, -1.8], [159, -3.4],
+ [170, -0.3], [190, 1.2], [205, 0.5], [217, null]
+ ];
+ c.setOption({
+ title: { text: 'Buffett Indicator vs. Forward 5Y Real Return', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 700 } },
+ tooltip: {
+ trigger: 'item',
+ formatter: function(p) {
+ var v = p.value;
+ if (v[1] === null) return 'Buffett Indicator: ' + v[0] + '%<br/>Forward Return: TBD (current)';
+ return 'Buffett Indicator: ' + v[0] + '%<br/>Forward 5Y Real Return: ' + v[1].toFixed(1) + '%/yr';
+ }
+ },
+ grid: { left: '10%', right: '8%', bottom: '12%', top: '15%' },
+ xAxis: {
+ type: 'value',
+ name: 'Buffett Indicator (%)',
+ nameLocation: 'center',
+ nameGap: 30,
+ nameTextStyle: { fontWeight: 700, fontSize: 11 },
+ min: 20,
+ max: 230,
+ axisLabel: { fontSize: 10, fontWeight: 600, formatter: '{value}%' },
+ splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } }
+ },
+ yAxis: {
+ type: 'value',
+ name: 'Fwd 5Y Real Return (%/yr)',
+ nameLocation: 'center',
+ nameGap: 40,
+ nameTextStyle: { fontWeight: 700, fontSize: 11 },
+ axisLabel: { fontSize: 10, fontWeight: 600, formatter: '{value}%' },
+ splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } }
+ },
+ series: [{
+ name: 'Historical',
+ type: 'scatter',
+ data: data.filter(function(d){ return d[1] !== null; }),
+ symbolSize: 14,
+ itemStyle: {
+ color: function(p) {
+ var v = p.value[0];
+ if (v < 70) return '#10b981';
+ if (v < 100) return '#d97706';
+ if (v < 140) return '#f59e0b';
+ return '#ef4444';
+ },
+ borderColor: '#fff',
+ borderWidth: 1
+ },
+ label: { show: false }
+ }, {
+ name: 'Current (Feb 2026)',
+ type: 'scatter',
+ data: [[217, 0]],
+ symbolSize: 22,
+ symbol: 'diamond',
+ itemStyle: { color: '#4f46e5', borderColor: '#fff', borderWidth: 2 },
+ label: { show: true, formatter: 'NOW\n217%', position: 'top', fontWeight: 800, fontSize: 10, color: '#4f46e5' },
+ z: 10
+ }]
+ });
+ window.addEventListener('resize', function(){ c.resize(); });
+ })();
+
+ // === 3. Composite Valuation Gauge ===
+ (function(){
+ var c = echarts.init(document.getElementById('compositeGauge'));
+ c.setOption({
+ title: { text: 'Composite Valuation Score (Feb 2026)', left: 'center', top: 10, textStyle: { fontFamily: 'Inter', fontSize: 14, fontWeight: 700 } },
+ series: [{
+ name: 'Valuation',
+ type: 'gauge',
+ min: 0,
+ max: 100,
+ center: ['50%', '60%'],
+ radius: '80%',
+ startAngle: 200,
+ endAngle: -20,
+ splitNumber: 10,
+ axisLine: {
+ lineStyle: {
+ width: 30,
+ color: [
+ [0.2, '#10b981'],
+ [0.4, '#22c55e'],
+ [0.6, '#d97706'],
+ [0.8, '#f59e0b'],
+ [0.9, '#ef4444'],
+ [1, '#dc2626']
+ ]
+ }
+ },
+ pointer: {
+ length: '65%',
+ width: 6,
+ itemStyle: { color: '#0f172a' }
+ },
+ axisTick: { distance: -30, length: 8, lineStyle: { color: '#fff', width: 2 } },
+ splitLine: { distance: -30, length: 30, lineStyle: { color: '#fff', width: 4 } },
+ axisLabel: {
+ color: '#475569',
+ distance: 40,
+ fontSize: 11,
+ fontWeight: 600,
+ formatter: function(v) {
+ if (v === 0) return 'CHEAP';
+ if (v === 20) return '';
+ if (v === 40) return 'FAIR';
+ if (v === 60) return '';
+ if (v === 80) return 'EXPENSIVE';
+ if (v === 100) return 'EXTREME';
+ return '';
+ }
+ },
+ detail: {
+ valueAnimation: true,
+ formatter: '{value}',
+ color: '#dc2626',
+ fontSize: 36,
+ fontWeight: 900,
+ fontFamily: 'Inter',
+ offsetCenter: [0, '30%']
+ },
+ title: {
+ offsetCenter: [0, '50%'],
+ fontSize: 14,
+ fontWeight: 700,
+ color: '#64748b'
+ },
+ data: [{
+ value: 93,
+ name: '93rd Percentile — All Models Red'
+ }]
+ }]
+ });
+ window.addEventListener('resize', function(){ c.resize(); });
+ })();
+ </script>
+
+</body>
+</html>
