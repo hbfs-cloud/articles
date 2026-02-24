@@ -1,26 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Use: The Autonomous Agent | Anthropic Ecosystem &mdash; Part 4 | Market Watch</title>
+    <title>L'Agent Autonome (Computer Use) — Débutant — Partie 4/5 | Market Watch</title>
     <meta name="description"
-        content="Part 4 of the Anthropic Ecosystem series. How the Computer Use API allows Claude to control standard user interfaces, clicking, and scrolling autonomously.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        content="L'IA qui contrôle votre souris. Découvrez la fonction 'Computer Use' d'Anthropic, la fin des logiciels RPA et le début des véritables agents d'exécution.">
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#9333ea', primaryTextColor: '#fff', lineColor: '#d8b4fe' } });</script>
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fcfcfc;
-            color: #1e293b;
-            margin: 0;
-        }
-
+        /* Theme color for Anthropic series is Purple (#9333ea) */
         .brand-bar {
             display: flex;
             align-items: center;
@@ -40,8 +53,10 @@
             text-decoration: none;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
+        }
+
+        .brand-logo:hover {
+            color: #9333ea;
         }
 
         .series-nav {
@@ -52,6 +67,15 @@
             justify-content: center;
             gap: 0.5rem;
             flex-wrap: wrap;
+        }
+
+        .series-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 1rem;
         }
 
         .series-link {
@@ -66,8 +90,8 @@
         }
 
         .series-link:hover {
-            border-color: #c084fc;
-            color: #c084fc;
+            border-color: #d8b4fe;
+            color: #d8b4fe;
         }
 
         .series-link.current {
@@ -76,125 +100,342 @@
             border-color: #9333ea;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        .hero-section {
+            padding: 4rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #faf5ff 0%, #f8fafc 100%);
+            text-align: center;
         }
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f3e8ff 0%, #fcfcfc 100%);
-            text-align: center;
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #9333ea;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(147, 51, 234, 0.1);
+            color: #9333ea;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -5rem auto 0;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
         }
 
         h2 {
             font-size: 1.8rem;
+            font-weight: 800;
             color: #0f172a;
-            margin-top: 2.5rem;
+            margin: 3rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 1.5rem;
+        }
+
+        .pedagogy-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #9333ea;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .pedagogy-box h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: #7e22ce;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .decision-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 3rem 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .decision-card p {
+            color: #cbd5e1;
+            font-size: 1rem;
         }
 
         .takeaway-box {
             background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
             border: 1px solid #d8b4fe;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .footer-bar {
+            margin: 3rem 0;
             text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
         }
 
-        .pedagogy-box {
-            background: #f8fafc;
-            border-left: 4px solid #9333ea;
+        .chart-container {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             padding: 1.5rem;
-            border-radius: 0 12px 12px 0;
-            margin: 2rem 0;
+            margin: 2.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .decision-card {
+                grid-template-columns: 1fr;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- GTM No Script -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
     <nav class="brand-bar">
-        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
-                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
-        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;"><i
-                class="fa-solid fa-arrow-left"></i> Back to Tech</a>
+        <a href="/" class="brand-logo">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW" style="height:28px; margin-right:0.5rem"> MARKET WATCH
+        </a>
+        <a href="/?tab=tech" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;">
+            <i class="fa-solid fa-arrow-left"></i> Retour aux Articles
+        </a>
     </nav>
+
     <div class="series-nav">
-        <a href="../part1-foundation/" class="series-link">1 &mdash; Foundation</a>
-        <a href="../part2-cowork/" class="series-link">2 &mdash; Cowork</a>
-        <a href="../part3-code/" class="series-link">3 &mdash; Code</a>
-        <a href="./" class="series-link current">4 &mdash; Agents</a>
-        <a href="../part5-open-protocol/" class="series-link">5 &mdash; MCP</a>
+        <span class="series-title">Écosystème Anthropic</span>
+        <a href="../part1-foundation/" class="series-link">1 — Fondations</a>
+        <a href="../part2-cowork/" class="series-link">2 — Collaboration</a>
+        <a href="../part3-code/" class="series-link">3 — Code & Artifacts</a>
+        <a href="./" class="series-link current">4 — Agents Autonomes</a>
+        <a href="../part5-open-protocol/" class="series-link">5 — Protocole MCP</a>
     </div>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Action Space: Computer Use API
+    <header class="hero-section">
+        <div class="hero-date">L'IA QUI PREND LES COMMANDES</div>
+        <h1
+            style="font-size:3.5rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            L'API "Computer Use" :<br>Des Yeux et des Mains
         </h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            Generating text is not enough. To truly scale, AI must take physical and digital actions. Anthropic's
-            Computer Use API allows the model to look at a screen, move a mouse, and click buttons.
+        <p
+            style="font-size:1.25rem; color:#475569; max-width:700px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Vous avez aimé discuter avec un robot intelligent. Imaginez maintenant un robot qui prend le contrôle de la
+            souris, analyse l'écran, clique sur les boutons et remplit des formulaires complexes à votre place.
         </p>
-    </div>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <p style="font-size:1.1rem; line-height:1.8;">APIs power the digital world, but not every legacy system has an
-            API. Countless critical enterprise systems—legacy ERPs, proprietary healthcare databases, specialized
-            financial terminals—only offer a standard graphical user interface (GUI). Historically, automating these
-            required brittle, coordinate-based Robotic Process Automation (RPA).</p>
-
-        <h2><i class="fa-solid fa-desktop" style="color:#9333ea"></i> The Computer Use Breakthrough</h2>
-        <p>Anthropic gave Claude "eyes" (vision capabilities) and "hands" (mouse and keyboard control). With the
-            <strong>Computer Use API</strong>, a developer can grant Claude access to a virtual machine.</p>
-        <p>The workflow is extraordinary:</p>
-        <ol style="line-height:1.7; font-size:1.1rem;">
-            <li>Claude looks at a screenshot of the virtual machine.</li>
-            <li>It identifies the button it needs to click (e.g., "Export to CSV").</li>
-            <li>It calculates the pixel coordinates of that button.</li>
-            <li>It outputs an instruction to move the cursor to <code>X:450, Y:1200</code> and click.</li>
-            <li>It receives a new screenshot, verifying the click was successful, and proceeds to the next step.</li>
-        </ol>
-
-        <div class="pedagogy-box">
-            <h4 style="color:#581c87; margin-top:0;"><i class="fa-solid fa-robot"></i> Concrete Disruption: The RPA
-                Extinction</h4>
-            <p>Traditional RPA breaks if an application's UI updates (e.g., the "Submit" button turns green or moves 10
-                pixels to the left). Claude's Computer Use is semantic. It visually understands that it needs to press
-                the Submit button, regardless of where it is or what color it is. It can independently navigate complex
-                spreadsheets, book flights on poorly-designed travel websites, or rip data from un-API-friendly CRMs.
-                This threatens the entire $5B+ legacy RPA industry (UiPath, Automation Anywhere).</p>
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Niveau : Débutant</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> Temps de lecture : 6 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-desktop"></i> Thème : Automatisation & Robotique logicielle
+            </div>
         </div>
+    </header>
 
-        <h2><i class="fa-solid fa-shield-halved" style="color:#9333ea"></i> Sandboxing the Agent</h2>
-        <p>Anthropic recognizes the immense security risks of an AI with keyboard control. They actively discourage
-            running it on a user's personal machine. It is designed to be executed inside tightly controlled, ephemeral
-            Docker containers. This ensures the AI can perform massive backend data scraping and processing without ever
-            touching secure local files.</p>
+    <main class="container">
+        <article class="content-card">
+            <p>
+                Pour qu'une intelligence artificielle puisse vous soulager du travail pénible, il faut qu'elle puisse
+                <strong>agir</strong>. Jusqu'à très récemment, l'IA était confinée à écrire du texte dans une boîte de
+                discussion. Si elle vous créait un beau résumé de la réunion, c'était à vous de l'envoyer par mail ou de
+                le copier dans votre logiciel de gestion.
+            </p>
+            <p>
+                Avec l'outil <strong>API Computer Use</strong>, Anthropic a doté Claude de "la vue" et de "l'usage de
+                ses mains".
+            </p>
 
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-flag-checkered"></i> AI is now a "Doer"</h3>
-            <p>We crossed the threshold from AI as a "Thinker" to AI as a "Doer." But in order to act deterministically
-                without brittle screen-scraping wherever possible, the AI needed an open standard to securely access
-                structured data. Enter MCP.</p>
-            <a href="../part5-open-protocol/"
-                style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#9333ea; color:white; text-decoration:none; border-radius:8px; font-weight:600;">Next:
-                The Model Context Protocol (MCP) &rarr;</a>
-        </div>
-    </div>
-    <div class="footer-bar">&copy; 2026 Market Watch.</div>
+            <h2><i class="fa-solid fa-desktop" style="color:#9333ea;"></i> Qu'est-ce que "Computer Use" ?</h2>
+            <p>
+                Toutes les bases de données professionnelles du monde (comme les vieux registres des banques ou les
+                anciens systèmes informatiques des hôpitaux) ne sont pas "modernes". Elles ne possèdent souvent pas de
+                ponts invisibles (API) pour se connecter à d'autres logiciels.
+            </p>
+
+            <div class="chart-container" style="background: white; border-radius: 12px; padding: 2rem;">
+                <div class="chart-title">La Boucle d'Action de Claude</div>
+                <div class="chart-subtitle">Comment l'IA contrôle un ordinateur en boucle fermée via l'API</div>
+                <div class="mermaid" style="display:flex; justify-content:center;">
+                    graph TD
+                    A[L'Utilisateur demande: Exporte les factures en PDF] --> B(Claude effectue une capture d'écran)
+                    B --> C{L'IA analyse visuellement l'image}
+                    C -->|Cherche le bouton 'Exporter'| D[Claude calcule et envoie les coordonnées de la souris: X=450,
+                    Y=120]
+                    D --> E(Clic virtuel exécuté)
+                    E --> F[Nouvelle capture d'écran prise]
+                    F -->|Vérifie que la fenêtre 'Sauvegarder' est ouverte| G[Claude tape 'Factures_Mars.pdf']
+                    G --> H((Mission accomplie))
+                </div>
+            </div>
+
+            <p>
+                La seule façon d'utiliser ces vieux systèmes, c'est avec une souris et un clavier en cliquant sur des
+                boutons graphiques présents à l'écran.
+            </p>
+            <p>
+                <strong>Comment ça marche ?</strong> Le système de votre entreprise installe Claude sur une machine
+                virtuelle. À chaque seconde, Claude prend secrètement une capture d'écran de l'ordinateur. L'IA
+                "regarde" cette image, comprend l'interface comme un humain, repère l'icône "Envoyer un e-mail", calcule
+                les coordonnées X et Y de la souris, envoie l'ordre de cliquer, et observe la capture d'écran suivante
+                pour constater que le menu des e-mails s'est bien ouvert.
+            </p>
+
+            <h2><i class="fa-solid fa-robot" style="color:#9333ea;"></i> La Fin de l'Automatisation Bas de Gamme (Le Cas
+                RPA)</h2>
+            <p>
+                Vous pourriez penser que faire cliquer des ordinateurs tout seul existe déjà. Oui, cela s'appelle
+                l'automatisation par robotique des processus ou "<strong>RPA</strong>" (Robotic Process Automation).
+                C'est une industrie pesant des milliards avec des entreprises comme UiPath.
+            </p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-bomb"></i> Pourquoi l'approche RPA classique est "fragile" ?</h4>
+                <p>Les logiciels RPA standards disent à l'ordinateur : <em>"Mets ta souris à exactement 300 pixels vers
+                        la droite et 50 vers le bas, et clique."</em></p>
+                <p>Mais si un jour, l'administrateur du site ajoute un bandeau publicitaire, le bouton est décalé de 20
+                    pixels vers le bas. Le RPA va alors cliquer inlassablement dans le vide. Le système plante, et il
+                    faut appeler un ingénieur pour le réparer.</p>
+                <p><strong>La magie d'Anthropic : La compréhension sémantique.</strong></p>
+                <p>Claude ne clique pas sur des coordonnées fixes mathématiques. Il "lit" visuellement la page et
+                    comprend : <em>"Tiens, le bouton bleu 'Enregistrer' n'est plus en haut, il est en bas à côté de
+                        l'image. Je vais modifier la destination de ma souris et aller cliquer là-bas."</em> Claude
+                    s'adapte en direct à n'importe quelle interface (Excel, Word, sites de compagnies aériennes, SAP)
+                    comme le ferait un vrai employé débutant.</p>
+            </div>
+
+            <h2><i class="fa-solid fa-shield-halved" style="color:#9333ea;"></i> Alerte Sécurité : La Bête dans une Cage
+            </h2>
+            <p>
+                Donner le contrôle de votre clavier et de votre souris à une IA ultra-intelligente pose évidemment
+                d'énormes problèmes logiques. Un clic innocent sur le mauvais lien pourrait déclencher un virus ou payer
+                une facture à votre insu.
+            </p>
+            <p>
+                C'est pourquoi Anthropic empêche fortement d'installer cette fonction sur l'ordinateur personnel d'un
+                quidam. Cette technologie (l'Agent) s'exécute dans un <strong>bac à sable (Sandbox/Machine virtuelle)
+                    hautement surveillé et cloisonné</strong> contrôlé par les ingénieurs d'entreprise. Si le robot
+                panique et télécharge un virus, la machine virtuelle isolée est simplement détruite en trois secondes,
+                empêchant toute contamination de l'entreprise.
+            </p>
+
+            <div class="decision-card">
+                <div>
+                    <h3 style="color:white; margin-top:0; font-size:1.6rem;"><i class="fa-solid fa-briefcase"></i> Le
+                        Passage du "Penseur" au "Faiseur"</h3>
+                    <p>Nous sommes passés d'un stade où l'IA ne faisait que parler, à un stade où l'IA agit concrètement
+                        sur l'ordinateur.</p>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <p style="color:#e2e8f0; margin:0; line-height:1.7;">
+                        Néanmoins, obliger l'IA à cliquer sur un écran est coûteux, lent et parfois incertain pour
+                        l'informatique professionnelle. L'IA avait besoin d'un moyen de lire directement dans les bases
+                        de données sans l'intermédiaire fastidieux d'une interface graphique. C'est l'ultime évolution
+                        appelée <strong>MCP</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="takeaway-box">
+                <h3 style="margin-top:0; color:#581c87;"><i class="fa-solid fa-forward-step"></i> Ce qui vous attend
+                </h3>
+                <p style="color:#475569; font-size:1.05rem;">
+                    Tirer parti d'une intelligence d'entreprise passe par un accès sécurisé et universel aux données de
+                    l'organisation. C'est le Graal de l'IA que nous présenterons dans la 5ème et dernière partie, à
+                    travers l'une des lancements open-source les plus importants de la décennie : <strong>le Model
+                        Context Protocol (MCP)</strong>.
+                </p>
+                <a href="../part5-open-protocol/" class="btn-action"
+                    style="background:#9333ea; border-radius:12px; padding:12px 24px; color:white; text-decoration:none; display:inline-block; font-weight:700; margin-top:1rem; box-shadow:0 4px 10px rgba(147, 51, 234, 0.3);">
+                    Passer à la Partie 5 : Le Protocole MCP &rarr;
+                </a>
+            </div>
+
+        </article>
+    </main>
+
+    <footer
+        style="text-align:center; padding:3rem 1rem; color:#64748b; font-size:0.9rem; background:#f8fafc; border-top:1px solid #e2e8f0;">
+        &copy; 2026 Market Watch. Tous droits réservés. L'investissement et l'intégration de technologies comportent des
+        risques.
+    </footer>
 </body>
 
 </html>
