@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Transforms & Medallion Architecture | Building a Securities Master — Part 3/6 | Market Watch</title>
+    <meta name="description"
+        content="Part 3/6: Transforming raw securities data into a pristine Medallion architecture (Bronze, Silver, Gold). Using dbt for views, incremental materializations, SCD2 history, and AI-ready marts.">
+
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .brand-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-decoration: none;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .brand-logo:hover {
+            color: #0d9488;
+        }
+
+        .series-nav {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .series-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 1rem;
+        }
+
+        .series-link {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+
+        .series-link:hover {
+            border-color: #5eead4;
+            color: #5eead4;
+        }
+
+        .series-link.current {
+            background: #0d9488;
+            color: white;
+            border-color: #0d9488;
+        }
+
+        .series-link.upcoming {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .hero-section {
+            padding: 4rem 2rem 6rem;
+            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
+            text-align: center;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0d9488;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0 0 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-top: -3rem;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin-top: 2.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: #334155;
+            margin-top: 2rem;
+        }
+
+        p {
+            line-height: 1.7;
+            color: #475569;
+            font-size: 1.05rem;
+        }
+
+        pre[class*="language-"] {
+            background: #042f2e !important;
+            border: 1px solid #115e59;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #0d9488;
+            background: #ccfbf1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .takeaway-box {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border: 1px solid #0d9488;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .takeaway-box h3 {
+            color: #0f766e;
+            margin-top: 0;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .arch-layer {
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .arch-layer.bronze {
+            background: #fffbeb;
+            border-color: #fcd34d;
+        }
+
+        .arch-layer.silver {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .arch-layer.gold {
+            background: #fefce8;
+            border-color: #fde047;
+        }
+
+        .arch-layer h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .arch-layer.bronze h4 {
+            color: #b45309;
+        }
+
+        .arch-layer.silver h4 {
+            color: #64748b;
+        }
+
+        .arch-layer.gold h4 {
+            color: #ca8a04;
+        }
+
+        .arch-layer p {
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.5;
+            color: #475569;
+        }
+
+        .footer-bar {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="brand-bar">
+        <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW"
+                style="height:28px; margin-right:0.5rem"> MARKET WATCH</a>
+        <a href="/" style="color:#64748b; text-decoration:none; font-size:0.85rem; font-weight:600;"><i
+                class="fa-solid fa-house"></i> Home</a>
+    </nav>
+
+    <div class="series-nav">
+        <span class="series-title"><i class="fa-solid fa-database" style="margin-right:0.4rem;"></i> Securities
+            Master</span>
+        <a href="../part1-foundations/" class="series-link">1 &mdash; Foundations</a>
+        <a href="../part2-pipelines/" class="series-link">2 &mdash; Pipelines & Ingestion</a>
+        <a href="./" class="series-link current">3 &mdash; Transforms</a>
+        <a href="../part4-corporate-actions/" class="series-link upcoming">4 &mdash; Corp. Actions</a>
+        <a href="../part5-dashboards/" class="series-link upcoming">5 &mdash; Dashboards</a>
+        <a href="../part6-operations/" class="series-link upcoming">6 &mdash; Operations</a>
+    </div>
+
+    <div class="hero-section">
+        <div class="hero-date">Part 3 of 6</div>
+        <h1 class="hero-title">Transforms: The Medallion Architecture</h1>
+        <p style="color:#475569; font-size:1.1rem; max-width:800px; margin:0 auto;">
+            Our raw PostgreSQL schemas are overflowing with raw JSON from Yahoo and BVC. Now, we use
+            <strong>dbt</strong> to orchestrate an impeccable Bronze &rarr; Silver &rarr; Gold architecture. It's time
+            to normalize identifiers, apply SCD Type 2 logic, build incremental models, and expose AI-ready strategy
+            marts.
+        </p>
+    </div>
+
+    <div class="container">
+
+        <p>In <a href="../part1-foundations/">Part 1</a>, we established the design rules for a robust Securities
+            Master, heavily relying on the concepts of point-in-time correctness, SCD Type 2 tracking, and specific
+            models for instruments types (Equities, Futures, IRS...). In <a href="../part2-pipelines/">Part 2</a>, we
+            unleashed highly concurrent Go Extractors wrapped in Meltano, filling our <code>raw_zone</code> in
+            PostgreSQL.</p>
+
+        <p>Now, we face reality: the data is brutal, unstructured, and disparate. Yahoo tickers look like
+            <code>AAPL</code> or <code>7203.T</code>, Casablanca API (BVC) returns Drupal-formatted JSON with no
+            standard ISIN verification, and Binance dumps nested arrays. We need a robust mechanism to sanitize,
+            conform, and expose this.</p>
+
+        <p>We rely on <strong>dbt (Data Build Tool)</strong>, applying the standard <strong>Medallion
+                Architecture</strong> adapted specifically for systematic quantitative systems.</p>
+
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-layer-group"></i> The Medallion Data Flow</h2>
+
+        <div class="architecture-grid">
+            <div class="arch-layer bronze">
+                <h4><i class="fa-solid fa-medal"></i> Bronze Layer</h4>
+                <p><strong>Raw & Unfiltered</strong><br>1:1 mapping with the raw ingestion tables. Casts JSON to
+                    columns. Implemented as pure dbt <code>ephemeral</code> or Light <code>view</code>s. Goal:
+                    standardize column names.</p>
+            </div>
+            <div class="arch-layer silver">
+                <h4><i class="fa-solid fa-medal"></i> Silver Layer</h4>
+                <p><strong>Cleansed & Conformed</strong><br>Resolves duplicates, handles SCD Type 2 historical
+                    continuity (valid_from/valid_to). Built using dbt <code>incremental</code> models to handle millions
+                    of bars efficiently.</p>
+            </div>
+            <div class="arch-layer gold">
+                <h4><i class="fa-solid fa-medal"></i> Gold Layer</h4>
+                <p><strong>Business-Ready Marts</strong><br>Aggregated Star Schema. Optimized for AI strategy discovery,
+                    Evidence.dev dashboards, and Point-in-Time Alpha queries. Built as <code>table</code> materialized
+                    views.</p>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-filter"></i> Bronze: Taming the JSON (Views)</h2>
+        <p>The Bronze layer's entire purpose is to prevent you from ever writing <code>JSONB</code> parsing logic
+            perfectly down the chain. By materializing as a <strong>view</strong> (or <code>ephemeral</code>), this step
+            costs no storage space in PostgreSQL but drastically sanitizes our SQL development.</p>
+
+        <p>Observe how we extract the complex nested Drupal payload from our Casablanca (BVC) extractor.</p>
+
+        <pre><code class="language-sql">-- models/bronze/stg_bvc_instruments.sql
+{{ config(materialized='view') }}
+
+WITH raw_bvc AS (
+    SELECT * FROM {{ source('raw_zone', 'raw_instruments') }}
+    WHERE provider_name = 'BVC'
+)
+
+SELECT
+    external_id AS provider_id,
+    -- Extracting specific properties from the JSONB payload
+    jsonb_extract_path_text(raw_payload, 'symbol')::VARCHAR(50) AS symbol,
+    jsonb_extract_path_text(raw_payload, 'codeISIN')::CHAR(12) AS isin,
+    jsonb_extract_path_text(raw_payload, 'instrumentName')::TEXT AS name,
+    
+    -- Normalizing the classification
+    'EQUITY'::VARCHAR(50) AS instrument_type,
+    'MAD'::CHAR(3) AS currency,
+    
+    ingested_at
+FROM raw_bvc
+-- Basic deduplication on the most recent payload
+QUALIFY ROW_NUMBER() OVER (PARTITION BY external_id ORDER BY ingested_at DESC) = 1
+</code></pre>
+
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-link"></i> Silver: Incremental Loading & SCD Type 2</h2>
+        <p>The Silver layer is the literal engine room of the Securities Master. It receives the standardized data from
+            the Bronze views and locks it into the rigorous rules defined in Part 1.</p>
+
+        <h3>Handling Millions of Bars Incrementally</h3>
+        <p>When you have 60 million daily bars, recreating the table every run is a catastrophic mistake. <strong>dbt
+                Incremental Models</strong> allow us to append or merge only the <em>new</em> or <em>updated</em>
+            records since the last successful run.</p>
+
+        <pre><code class="language-sql">-- models/silver/fct_market_data.sql
+{{ config(
+    materialized='incremental',
+    unique_key=['provider_name', 'symbol', 'trade_date'],
+    partition_by={'field': 'trade_date', 'data_type': 'timestamp', 'granularity': 'year'}
+) }}
+
+WITH stg_bars AS (
+    SELECT * FROM {{ ref('stg_yahoo_bars') }}
+    UNION ALL
+    SELECT * FROM {{ ref('stg_bvc_bars') }}
+)
+
+SELECT
+    provider_name,
+    symbol,
+    trade_date,
+    open_price,
+    high_price,
+    low_price,
+    close_price,
+    volume,
+    ingested_at
+FROM stg_bars
+
+-- The magic dbt Incremental logic
+{% if is_incremental() %}
+    WHERE trade_date >= (SELECT MAX(trade_date) FROM {{ this }})
+{% endif %}
+</code></pre>
+
+        <h3>Building SCD Type 2 Snapshots</h3>
+        <p>How do we know if Apple's <code>Sector</code> changed? We don't want to code this manually. dbt ships
+            natively with <strong>Snapshots</strong>, effectively automating the <code>valid_from</code> and
+            <code>valid_to</code> history tracking.</p>
+
+        <p>We create a snapshot configuration for our normalized Reference Data. dbt checks the <code>check_cols</code>
+            (hash of all columns) to detect if a security's taxonomy has mutated, closing the previous valid_to date and
+            opening a new row automatically.</p>
+
+        <pre><code class="language-sql">-- snapshots/dim_instruments_scd2.sql
+{% snapshot dim_instruments_scd2 %}
+
+{{
+    config(
+      target_schema='silver_zone',
+      unique_key='isin',
+      strategy='check',
+      check_cols=['name', 'sector', 'industry', 'instrument_type', 'is_tradable'],
+    )
+}}
+
+SELECT
+    symbol,
+    isin,
+    name,
+    instrument_type,
+    sector,
+    industry,
+    currency
+FROM {{ ref('stg_unified_instruments') }}
+
+{% endsnapshot %}
+</code></pre>
+        <p>This dbt macro generates the exact <code>EXCLUDE USING gist</code> logic and temporal validity chains we
+            defined theoretically in Part 1!</p>
+
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-magnifying-glass-chart"></i> Gold: AI & Strategy Marts (Tables)</h2>
+        <p>The Gold layer drops normalization completely. We construct wide, performant "Marts" specifically optimized
+            for BI tools (Evidence.dev) and downstream quantitative engines.</p>
+
+        <p>These models are materialized as <code>table</code>s. They pre-calculate technical indicators, volatility
+            regimes, and liquidity percentiles.</p>
+
+        <pre><code class="language-sql">-- models/gold/mart_strategy_discovery.sql
+{{ config(materialized='table') }}
+
+WITH latest_reference AS (
+    SELECT * FROM {{ ref('dim_instruments_scd2') }}
+    WHERE dbt_valid_to IS NULL -- Only currently active instruments!
+),
+volatility_metrics AS (
+    SELECT
+        symbol,
+        AVG(volume * close_price) OVER (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 20 PRECEDING AND CURRENT ROW) AS adv_20d,
+        STDDEV(close_price) OVER (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 20 PRECEDING AND CURRENT ROW) AS realized_vol_20d
+    FROM {{ ref('fct_market_data') }}
+)
+
+SELECT
+    ref.isin,
+    ref.symbol,
+    ref.name,
+    ref.instrument_type,
+    vol.realized_vol_20d,
+    vol.adv_20d
+FROM latest_reference ref
+JOIN volatility_metrics vol ON ref.symbol = vol.symbol
+WHERE vol.adv_20d > 1000000 -- Only highly liquid assets
+</code></pre>
+
+        <p>The resulting table, <code>mart_strategy_discovery</code>, is a perfectly clean playground. It guarantees
+            that any ticker listed is actively tradable (no look-ahead biases) and fulfills the liquidity profiles
+            required by your quant engine.</p>
+
+        <div class="takeaway-box">
+            <h3><i class="fa-solid fa-flag-checkered"></i> Wrapping Up Part 3</h3>
+            <p>dbt transforms raw API mess into a bulletproof Securities Master:
+            <ul style="list-style-type: square; margin-left:1.5rem;">
+                <li><strong>Views</strong> shield us from JSON parsing logic.</li>
+                <li><strong>Incremental Models</strong> permit updating decades of OHLCV history in seconds.</li>
+                <li><strong>dbt Snapshots</strong> automate the brutal SCD Type 2 logic for exact point-in-time
+                    correctness.</li>
+                <li><strong>Gold Tables</strong> expose data to human analysts and AI Agents without writing crazy
+                    JOINs.</li>
+            </ul>
+            </p>
+            <p><strong>Next up, in Part 4: Corporate Actions!</strong> The bane of every quant. We will tackle Splits,
+                Dividends, and the math required to dynamically calculate <code>adjusted_close</code> columns without
+                losing fidelity.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-bar">
+        <p>&copy; 2026 Market Watch. All rights reserved. <br>
+            <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Systematic Trading
+                Engineering</a>
+        </p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+</body>
+
+</html>
