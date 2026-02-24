@@ -1324,35 +1324,32 @@ WHERE  symbol = 'ENRON'
     sedol        CHAR(7),            -- UK/IE only
     figi         CHAR(12),           -- OpenFIGI
 
-    -- Metadata
-    name         TEXT     NOT NULL,
-    asset_class  TEXT     NOT NULL,   -- 'equity', 'etf', 'bond', 'crypto', 'commodity', 'fx'
-    sector       TEXT,                -- GICS sector
-    industry     TEXT,                -- GICS industry
-    exchange_id  SMALLINT REFERENCES exchanges(exchange_id),
-    currency     CHAR(3)  NOT NULL,
+    -- Hedge-Fund Metadata
+    name             TEXT     NOT NULL,
+    instrument_type  VARCHAR(50) NOT NULL, -- 'EQUITY', 'FUTURE', 'FXFORWARD', 'IRS', 'OPTIONVOL', 'CRYPTO'
+    sector           TEXT,                 -- GICS sector
+    industry         TEXT,                 -- GICS industry
+    exchange_id      SMALLINT REFERENCES exchanges(exchange_id),
+    currency         CHAR(3)  NOT NULL,
+    tick_size        NUMERIC(15, 6),
+    is_tradable      BOOLEAN  DEFAULT TRUE,
 
-    -- SCD Type 2 versioning
+    -- SCD Type 2 versioning (No overlap constraint!)
     valid_from   TIMESTAMPTZ NOT NULL DEFAULT now(),
     valid_to     TIMESTAMPTZ,         -- NULL = currently valid
-    is_active    BOOLEAN     NOT NULL DEFAULT TRUE,  -- FALSE = delisted
+    
+    EXCLUDE USING gist (
+        instrument_key WITH =, 
+        tstzrange(valid_from, COALESCE(valid_to, 'infinity')) WITH &&
+    ),
 
-    -- Metadata
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-    PRIMARY KEY (instrument_id),
-    UNIQUE (instrument_key, valid_from)
+    PRIMARY KEY (instrument_id)
 );
 
 -- Partial index: fast "current version" lookups
 CREATE INDEX idx_instruments_current
     ON instruments (symbol)
-    WHERE valid_to IS NULL;
-
--- As-of query index
-CREATE INDEX idx_instruments_asof
-    ON instruments (symbol, valid_from, valid_to);</code></pre>
+    WHERE valid_to IS NULL;</code></pre>
       </div>
 
       <div class="decision-card">
@@ -1368,10 +1365,59 @@ CREATE INDEX idx_instruments_asof
       </div>
 
       <div class="decision-card">
-        <h4><i class="fa-solid fa-lightbulb"></i> Decision: Multiple Identifier Columns</h4>
-        <p>ISIN, CUSIP, SEDOL, and FIGI are all nullable because no single identifier system covers all asset classes
-          and regions. US equities have CUSIP but not SEDOL. UK equities have SEDOL but not CUSIP. Crypto has neither.
-          Having all four columns lets you join against any external system.</p>
+        <h4><i class="fa-solid fa-lightbulb"></i> Decision: Multiple Identifier Columns &amp; Instrument Types</h4>
+        <p>We specifically model <code>instrument_type</code> to natively support hedge fund operations beyond stocks
+          (e.g. <code>FUTURE</code>, <code>FXFORWARD</code>, <code>IRS</code>). ISIN, FIGI, and CUSIP are all nullable
+          because no single identifier system covers all asset classes. Notice the <code>EXCLUDE USING gist</code>
+          constraint: this mathematically prevents any two versions of the same instrument from overlapping in time.</p>
+      </div>
+
+      <h3>2b. <code>accounts</code> &amp; <code>strategies</code> &mdash; Trading Architecture</h3>
+      <p>A true securities master doesn't just hold reference data; it maps instruments to the strategies permitted to
+        trade them, allocating risk to correct prime brokers. Here is the foundation of execution integration.</p>
+      <div class="code-block-wrapper">
+        <div class="code-label">SQL &mdash; DDL</div>
+        <pre><code class="language-sql">CREATE TABLE accounts (
+    id                 BIGINT PRIMARY KEY,
+    name               VARCHAR NOT NULL UNIQUE,
+    mifid_lei          VARCHAR NOT NULL,
+    operator_id        VARCHAR,
+    is_locates_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    skip_start_of_day_position BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE strategies (
+    id              BIGINT PRIMARY KEY,
+    name            VARCHAR NOT NULL UNIQUE,
+    account_id      BIGINT  NOT NULL REFERENCES accounts(id),
+    trading_enabled BOOLEAN NOT NULL
+);</code></pre>
+      </div>
+
+      <h3>2c. <code>ExecutionReport</code> &mdash; The OMS Journal</h3>
+      <p>Finally, the Securities Master is the backbone for the Order Management System (OMS). When Kafka messages flow
+        in about filled orders, they join against our <code>instruments</code> via <code>SecurityID</code>.</p>
+      <div class="code-block-wrapper">
+        <div class="code-label">SQL &mdash; DDL</div>
+        <pre><code class="language-sql">CREATE TABLE ExecutionReport (
+    id                  BIGINT PRIMARY KEY,
+    BhOrdID             VARCHAR(40),
+    ExecID              VARCHAR(30),
+    OrdStatus           VARCHAR(15),
+    Side                VARCHAR(15),
+    
+    SecurityID          VARCHAR(40),   -- Maps to instruments.symbol or isin
+    SecurityIDSource    VARCHAR(20),   -- e.g. 'EXCHANGE', 'BLOOMBERG'
+    
+    LeavesQty           FLOAT8,
+    CumQty              FLOAT8,
+    AvgPx               FLOAT8,
+    Account             VARCHAR(12),
+    Strategy            VARCHAR(23),
+    
+    TradeDate           VARCHAR(20),
+    BhAppTimestamp      TIMESTAMP
+);</code></pre>
       </div>
 
       <h3>3. <code>bars_daily</code> &mdash; Partitioned Time Series</h3>
@@ -2825,7 +2871,8 @@ models:
           parameter validation. Under the hood it uses Ibis, which compiles to native SQL for any backend (PostgreSQL,
           DuckDB, BigQuery), making the layer
           backend-agnostic. NAO provides the agent framework and context management. The LLM discovers metrics via MCP's
-          <code>MCPSemanticModel</code>; it never writes SQL directly.</div>
+          <code>MCPSemanticModel</code>; it never writes SQL directly.
+        </div>
       </details>
 
     </div>
