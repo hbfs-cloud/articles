@@ -120,6 +120,7 @@ Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé"
 - Toujours inclure le disclaimer en fin de rapport
 - Les Top & Bottom Performers doivent montrer la **performance de toute la semaine** (5 jours), pas juste la dernière séance
 - Les liens internes ne doivent **jamais** contenir `/index.html` — GitHub Pages résout automatiquement
+- **Switcher langue/niveau** : ne JAMAIS inclure le switcher (boutons Expert/Beginner, FR/EN/AR) si les variantes correspondantes n'existent pas. Le switcher ne doit être présent que si toutes les pages cibles sont générées.
 
 ---
 
