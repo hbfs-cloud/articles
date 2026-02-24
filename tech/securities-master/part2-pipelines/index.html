@@ -276,12 +276,13 @@
     </div>
 
     <div class="container">
-        <p>In <strong>Part 1</strong>, we defined what a point-in-time correct architecture looks like. However,
-            observing tier-1 hedge fund codebases—such as <code>reference-service</code> and
-            <code>execution-instruments</code> repositories—reveals massive complexity. We must model
-            <code>EQUITY</code>, <code>ETF</code>, <code>FUTURE</code>, <code>FUTURES_SPREAD</code>, <code>INDEX</code>,
-            <code>RATE</code>, <code>FXFORWARD</code>, <code>IRS</code>, <code>OPTIONVOL</code>, and
-            <code>CRYPTO</code>.
+        <p>In <strong>Part 1</strong>, we defined what a point-in-time correct architecture looks like, specifically
+            engineered to feed our <strong>AI Strategy Agent</strong>. The system relies on a Go-based
+            <code>opportunity-analyzer</code> finding top momentum candidates, followed by Python cluster algorithms
+            finding actionable discriminants. However, observing tier-1 hedge fund codebases reveals massive complexity.
+            We must model
+            <code>EQUITY</code>, <code>ETF</code>, <code>FUTURE</code>, <code>CRYPTO</code>, and more across completely
+            independent Multi-Allocation strategies (e.g. US Stocks, EU Stocks, Global ETFs).
         </p>
 
         <p>When ingesting data for this massive universe across multiple disparate providers (Yahoo Finance,
@@ -291,12 +292,12 @@
         <p>Our hedge-fund grade solution involves:</p>
         <ol>
             <li><strong>Raw Zone Database Schema</strong> (dump first, transform later).</li>
-            <li><strong>Custom Go Meltano Extractor (Tap)</strong> handling the specific API limits and pagination logic
-                natively.</li>
-            <li><strong>Docker Packaging</strong> of the Go binary along with the Python Meltano environment.</li>
-            <li><strong>Workflow Orchestration</strong> with Apache Airflow triggering HashiCorp Nomad tasks. Because
-                Nomad's internal <code>periodic</code> cron is not enough for complex DAGs (Extract &rarr; Load &rarr;
-                dbt Transform).</li>
+            <li><strong>Custom Go Meltano Extractor</strong> handling parallel symbol lists without GIL locks.</li>
+            <li><strong>Multi-Allocation Aware DAGs</strong>: Fetching entirely isolated data lakes per strategy (e.g.
+                <code>sync_eu_stocks</code> vs <code>sync_crypto</code>).
+            </li>
+            <li><strong>Workflow Orchestration</strong> with Apache Airflow firing highly isolated Docker containers
+                physically executed on HashiCorp Nomad compute nodes.</li>
         </ol>
 
         <!-- ========================================== -->
@@ -563,45 +564,42 @@ from airflow import DAG
 from airflow.providers.hashicorp.operators.nomad import NomadOperator
 
 default_args = {
-    'owner': 'data-engineering',
+    'owner': 'ai-strategy-agent',
     'start_date': datetime(2026, 1, 1),
     'retries': 2,
 }
 
+# The AI Agent manages 4 distinct independent multi-allocation domains
+ALLOCATIONS = ["crypto", "us_stocks", "eu_stocks", "global_etfs"]
+
 with DAG('securities_master_daily_ingest', default_args=default_args, schedule_interval='0 23 * * 1-5') as dag:
 
-    # 1. Trigger Meltano Container on Nomad Cluster
-    # Injects PostgreSQL Vault secrets securely at runtime.
-    meltano_extract_load = NomadOperator(
-        task_id='meltano_extract_high_concurrency',
-        nomad_url='http://nomad.internal.org:4646',
-        job_spec="""
-            job "marketdata-ingest-run" {
-                datacenters = ["dc1"]
-                type = "batch"
-                group "elt" {
-                    task "meltano" {
-                        driver = "docker"
-                        config {
-                            image = "registry.internal.org/data/marketdata-meltano:latest"
-                            command = "meltano"
-                            args = ["run", "tap-marketdata-go", "target-postgres"]
-                        }
-                        template {
-                            data = "PG_HOST={{ with secret "db/creds" }}{{ .Data.host }}{{ end }}"
-                            destination = "secrets/db.env"
-                            env = true
-                        }
-                    }
-                }
-            }
-        """
-    )
-
-    # 2. We will define dbt in Part 3
-    # dbt_transform = NomadOperator(task_id='dbt_normalize', ...)
-
-    # meltano_extract_load >> dbt_transform
+    for allocation in ALLOCATIONS:
+        # Trigger isolated Meltano Containers on Nomad Cluster per Allocation
+        meltano_task = NomadOperator(
+            task_id=f'meltano_extract_{allocation}',
+            nomad_url='http://nomad.internal.org:4646',
+            job_spec=f"""
+                job "marketdata-ingest-{allocation}" {{
+                    datacenters = ["dc1"]
+                    type = "batch"
+                    group "elt" {{
+                        task "meltano" {{
+                            driver = "docker"
+                            config {{
+                                image = "registry.internal.org/data/marketdata-meltano:latest"
+                                command = "meltano"
+                                args = ["run", "tap-{allocation}-go", "target-postgres"]
+                            }}
+                            env {{
+                                ALLOCATION_TARGET = "{allocation}"
+                            }}
+                        }}
+                    }}
+                }}
+            """
+        )
+        # -> feeds into dbt_transforms (Part 3)
 </code></pre>
 
         <div class="takeaway-box">
