@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RXT-v2 · Tabler Premium Model</title>
+  <meta name="description" content="RXT-v2 modèle Tabler premium: décision 60s, analyse complète, tribunal contradictoire." />
+
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/tabler-icons.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+  <style>
+    :root {
+      --rxt-bg: #f4f6fa;
+      --rxt-brand: #1e3a8a;
+      --rxt-brand-soft: #e7efff;
+      --rxt-ink: #111827;
+      --rxt-muted: #5b6678;
+      --rxt-ok: #0f766e;
+      --rxt-fail: #b91c1c;
+      --rxt-warn: #a16207;
+      --rxt-line: #dfe6f2;
+    }
+
+    body {
+      background:
+        radial-gradient(1300px 560px at 5% -10%, #eaf0ff 0%, transparent 55%),
+        radial-gradient(1100px 480px at 95% -20%, #dff2fe 0%, transparent 58%),
+        var(--rxt-bg);
+      color: var(--rxt-ink);
+    }
+
+    .page-body {
+      padding-top: 1rem;
+      padding-bottom: 2rem;
+    }
+
+    .hero {
+      border: 1px solid #d8e2f8;
+      background: linear-gradient(132deg, #0b1325 0%, #182f66 45%, #1d4ed8 100%);
+      color: #f8fbff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      right: -120px;
+      top: -140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 68%);
+      pointer-events: none;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-weight: 800;
+      font-size: clamp(1.75rem, 3.4vw, 2.8rem);
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      max-width: 18ch;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-copy {
+      margin: 0;
+      color: rgba(248, 251, 255, .9);
+      max-width: 78ch;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-kpi {
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: .65rem .75rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-kpi .k {
+      font-size: .7rem;
+      opacity: .76;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .hero-kpi .v {
+      font-size: 1.25rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-top: 2px;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .6rem;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 750;
+      letter-spacing: -.01em;
+    }
+
+    .section-sub {
+      color: var(--rxt-muted);
+      margin: 0;
+      font-size: .93rem;
+    }
+
+    .sticky-tabs {
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      background: rgba(244, 246, 250, .78);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 6px;
+      margin: -6px;
+    }
+
+    .card-shell {
+      border: 1px solid var(--rxt-line);
+      box-shadow: 0 10px 30px rgba(18, 25, 41, .05);
+    }
+
+    .read-meter {
+      border: 1px solid var(--rxt-line);
+      border-radius: 10px;
+      background: #fff;
+      padding: .65rem;
+    }
+
+    .read-meter .bar {
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: linear-gradient(90deg, #0f766e 0%, #f59e0b 60%, #b91c1c 100%);
+      position: relative;
+    }
+
+    .read-meter .bar::after {
+      content: "";
+      position: absolute;
+      left: 68%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(17,24,39,.9);
+    }
+
+    .check {
+      border: 1px solid #e6ebf4;
+      border-radius: 12px;
+      background: #fff;
+      padding: .7rem;
+      display: grid;
+      gap: .25rem;
+    }
+
+    .check h4 {
+      margin: 0;
+      font-size: .94rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .check p {
+      margin: 0;
+      color: #5a6577;
+      font-size: .84rem;
+      line-height: 1.35;
+    }
+
+    .score {
+      border: 1px solid #e6ebf4;
+      border-radius: 11px;
+      background: linear-gradient(180deg, #fff 0%, #f9fbff 100%);
+      padding: .6rem;
+    }
+
+    .score .k {
+      color: #637085;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-size: .69rem;
+      margin-bottom: 2px;
+    }
+
+    .score .v {
+      font-size: 1.7rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .insight {
+      border: 1px solid #d9e3f9;
+      background: #eef4ff;
+      border-radius: 10px;
+      padding: .7rem;
+      color: #1e3a8a;
+      font-size: .89rem;
+    }
+
+    .chart {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #e5eaf3;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .chart.tall { height: 340px; }
+
+    .court {
+      border: 1px solid #e5eaf3;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .court .head {
+      border-bottom: 1px solid #e5eaf3;
+      background: #f8faff;
+      padding: .68rem .82rem;
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .court .body {
+      display: grid;
+      gap: .55rem;
+      padding: .74rem;
+    }
+
+    .role {
+      border: 1px solid #e5eaf3;
+      border-radius: 10px;
+      padding: .6rem;
+    }
+
+    .role h5 {
+      margin: 0 0 .25rem;
+      font-size: .72rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .role p {
+      margin: 0;
+      color: #4e596b;
+      font-size: .87rem;
+      line-height: 1.4;
+    }
+
+    .role.pro h5 { color: var(--rxt-fail); }
+    .role.def h5 { color: var(--rxt-ok); }
+    .role.judge h5 { color: var(--rxt-brand); }
+
+    .final-verdict {
+      border: 1px solid #cddafe;
+      background: linear-gradient(180deg, #f3f7ff 0%, #eaf2ff 100%);
+      border-radius: 12px;
+      padding: .9rem;
+    }
+
+    @media (max-width: 767px) {
+      .sticky-tabs {
+        position: static;
+        background: transparent;
+        backdrop-filter: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+      }
+
+      .chart,
+      .chart.tall {
+        height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="navbar navbar-expand-md d-print-none">
+      <div class="container-xl">
+        <h1 class="navbar-brand navbar-brand-autodark mb-0">
+          <i class="ti ti-activity me-2"></i>Market Watch · RXT-v2
+        </h1>
+      </div>
+    </header>
+
+    <div class="page-wrapper">
+      <div class="page-body">
+        <div class="container-xl d-grid gap-3">
+          <section class="card hero card-shell">
+            <div class="card-body d-grid gap-3">
+              <div class="d-flex flex-wrap justify-content-between gap-2">
+                <span class="badge bg-white-lt text-white border-0">Template Tabler premium</span>
+                <span class="badge bg-white-lt text-white border-0">Dernière révision: 23 février 2026</span>
+              </div>
+              <h2 class="hero-title">Recursion (RXT) · modèle d'article d'analyse nouvelle génération</h2>
+              <p class="hero-copy">3 niveaux de lecture: 1 minute pour décider, 8 minutes pour comprendre, puis un tribunal contradictoire où la défense répond aux attaques de type hedge fund short-seller.</p>
+              <div class="row g-2">
+                <div class="col-6 col-lg-3"><div class="hero-kpi"><div class="k">Signal global</div><div class="v">Constructif</div></div></div>
+                <div class="col-6 col-lg-3"><div class="hero-kpi"><div class="k">Risque</div><div class="v">Élevé</div></div></div>
+                <div class="col-6 col-lg-3"><div class="hero-kpi"><div class="k">Horizon</div><div class="v">18-36 mois</div></div></div>
+                <div class="col-6 col-lg-3"><div class="hero-kpi"><div class="k">Exécution</div><div class="v">Position pilote</div></div></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card card-shell">
+            <div class="card-header pb-0 sticky-tabs">
+              <ul class="nav nav-tabs card-header-tabs" id="rxtTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="decision-tab" data-bs-toggle="tab" data-bs-target="#decision" type="button" role="tab" aria-controls="decision" aria-selected="true">
+                    <i class="ti ti-list-check me-1"></i>1. Décision 60s
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button" role="tab" aria-controls="analysis" aria-selected="false">
+                    <i class="ti ti-chart-histogram me-1"></i>2. Analyse complète
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="tribunal-tab" data-bs-toggle="tab" data-bs-target="#tribunal" type="button" role="tab" aria-controls="tribunal" aria-selected="false">
+                    <i class="ti ti-scale me-1"></i>3. Tribunal
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div class="card-body">
+              <div class="tab-content">
+                <div class="tab-pane fade show active" id="decision" role="tabpanel" aria-labelledby="decision-tab">
+                  <div class="section-head">
+                    <div>
+                      <h3 class="section-title">Checklist de contrôle exécutable en 60 secondes</h3>
+                      <p class="section-sub">Règle modèle: >3 échecs critiques = pas d'entrée. Ici: 7 OK / 3 FAILED.</p>
+                    </div>
+                    <div class="badge bg-yellow-lt text-yellow">Verdict instantané: Watchlist active</div>
+                  </div>
+
+                  <div class="row g-3">
+                    <div class="col-12 col-xl-8">
+                      <div class="row g-2">
+                        <div class="col-12 col-md-6"><article class="check"><div class="d-flex align-items-start gap-2"><span class="badge bg-teal-lt text-teal">OK</span><h4>Runway de cash &gt; 24 mois</h4></div><p>Capacité à tenir le cycle de développement sans pression immédiate de refinancement.</p></article></div>
+                        <div class="col-12 col-md-6"><article class="check"><div class="d-flex align-items-start gap-2"><span class="badge bg-teal-lt text-teal">OK</span><h4>Partenariats industriels crédibles</h4></div><p>Validation externe de la plateforme et partage du risque d'exécution.</p></article></div>
+                        <div class="col-12 col-md-6"><article class="check"><div class="d-flex align-items-start gap-2"><span class="badge bg-red-lt text-red">FAILED</span><h4>Visibilité des revenus court terme</h4></div><p>Trajectoire encore irrégulière et dépendante des jalons.</p></article></div>
+                        <div class="col-12 col-md-6"><article class="check"><div class="d-flex align-items-start gap-2"><span class="badge bg-teal-lt text-teal">OK</span><h4>Structure de dette absorbable</h4></div><p>Niveau de passif cohérent avec la liquidité disponible.</p></article></div>
+                        <div class="col-12 col-md-6"><article class="check"><div class="d-flex align-items-start gap-2"><span class="badge bg-red-lt text-red">FAILED</span><h4>Catalyseur proche réellement sous-pricé</h4></div><p>Une partie du scénario positif semble déjà intégrée dans le prix.</p></article></div>
+                        <div class="col-12 col-md-6"><article class="check"><div class="d-flex align-items-start gap-2"><span class="badge bg-yellow-lt text-yellow">FAILED</span><h4>Timing technique optimal</h4></div><p>Le prix actuel reste en zone médiane, asymétrie limitée.</p></article></div>
+                      </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4 d-grid gap-2 align-content-start">
+                      <article class="card card-sm">
+                        <div class="card-body">
+                          <h4 class="mb-2">Décision actionnable</h4>
+                          <p class="mb-2 fw-bold">Pas d'entrée agressive. Entrée fractionnée uniquement sur zone de prix efficiente.</p>
+                          <p class="section-sub mb-0">Position satellite + invalidation pré-écrite avant exécution.</p>
+                        </div>
+                      </article>
+
+                      <div class="row g-2">
+                        <div class="col-4"><div class="score"><div class="k">OK</div><div class="v text-teal">7</div></div></div>
+                        <div class="col-4"><div class="score"><div class="k">FAILED</div><div class="v text-red">3</div></div></div>
+                        <div class="col-4"><div class="score"><div class="k">Score</div><div class="v text-blue">71</div></div></div>
+                      </div>
+
+                      <div class="read-meter">
+                        <div class="d-flex justify-content-between small mb-1"><span>Risque/Reward</span><span>Asymétrie moyenne</span></div>
+                        <div class="bar"></div>
+                      </div>
+
+                      <div class="insight">
+                        <i class="ti ti-bulb me-1"></i>
+                        Le modèle recommande de privilégier la qualité d'entrée plutôt que la vitesse d'exécution.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="analysis" role="tabpanel" aria-labelledby="analysis-tab">
+                  <div class="section-head">
+                    <div>
+                      <h3 class="section-title">Analyse complète: fondamentaux, marché, exécution</h3>
+                      <p class="section-sub">Objectif: transformer un narratif en plan d'investissement testable.</p>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mb-1">
+                    <div class="col-12 col-lg-6">
+                      <div class="card card-sm h-100">
+                        <div class="card-body">
+                          <h4 class="mb-2">Thèse en 5 points</h4>
+                          <ol class="text-secondary mb-0">
+                            <li>Avantage potentiel de vitesse via plateforme computationnelle.</li>
+                            <li>Partenariats permettant d'amortir le risque de développement.</li>
+                            <li>Valorisation très sensible au cycle biotech et au coût du capital.</li>
+                            <li>Le moteur long terme dépend de la conversion clinique.</li>
+                            <li>Le timing d'entrée pèse presque autant que le dossier lui-même.</li>
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                      <div class="card card-sm h-100">
+                        <div class="card-body">
+                          <h4 class="mb-2">Protocole d'exécution</h4>
+                          <ul class="text-secondary mb-0">
+                            <li>Lot 1: exposition test.</li>
+                            <li>Lot 2: renfort sur support actif.</li>
+                            <li>Lot 3: seulement sur confirmation catalyseur.</li>
+                            <li>Réduction partielle en extension sans validation fondamentale.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                      <h5 class="mb-2">Revenus vs cash burn</h5>
+                      <div class="chart" id="chart-rb"></div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                      <h5 class="mb-2">Cash vs dette</h5>
+                      <div class="chart" id="chart-cd"></div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                      <h5 class="mb-2">Force des catalyseurs (12 mois)</h5>
+                      <div class="chart tall" id="chart-cat"></div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                      <h5 class="mb-2">Carte de prix exécutable</h5>
+                      <div class="chart tall" id="chart-level"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="tribunal" role="tabpanel" aria-labelledby="tribunal-tab">
+                  <div class="section-head">
+                    <div>
+                      <h3 class="section-title">Mode tribunal: accusation vs défense</h3>
+                      <p class="section-sub">La défense répond explicitement aux prompts agressifs (tueur de thèse, catastrophe, timing, alternatives, élargissement).</p>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mb-3">
+                    <div class="col-12 col-lg-6">
+                      <h5 class="mb-2">Score accusation / défense / juge</h5>
+                      <div class="chart tall" id="chart-court"></div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                      <h5 class="mb-2">Répartition des risques plaidés</h5>
+                      <div class="chart tall" id="chart-risk"></div>
+                    </div>
+                  </div>
+
+                  <div class="d-grid gap-2">
+                    <article class="court">
+                      <header class="head">Prompt: tueur de thèse</header>
+                      <div class="body">
+                        <section class="role pro"><h5>Accusation</h5><p>Le marché paie une promesse; sans preuve économique convergente, la prime narrative peut se dégonfler rapidement.</p></section>
+                        <section class="role def"><h5>Défense</h5><p>La thèse est probabiliste: plusieurs options de pipeline, partenaires crédibles, sizing limité pour encaisser l'incertitude.</p></section>
+                        <section class="role judge"><h5>Juge</h5><p>Dossier recevable seulement si la discipline d'exécution est non négociable.</p></section>
+                      </div>
+                    </article>
+
+                    <article class="court">
+                      <header class="head">Prompt: scénario catastrophe</header>
+                      <div class="body">
+                        <section class="role pro"><h5>Accusation</h5><p>Retard clinique + marché risk-off + pression financement = compression violente de valorisation.</p></section>
+                        <section class="role def"><h5>Défense</h5><p>Scénario crédible mais non central. Mitigation: allocation réduite et renfort uniquement en stress de prix validé.</p></section>
+                        <section class="role judge"><h5>Juge</h5><p>Risque majeur reconnu: investissable en mode asymétrique, pas en conviction pleine.</p></section>
+                      </div>
+                    </article>
+
+                    <article class="court">
+                      <header class="head">Prompt: timing / alternatives / élargissement forcé</header>
+                      <div class="body">
+                        <section class="role pro"><h5>Accusation</h5><p>Même avec une bonne thèse, le timing est moyen; des alternatives sectorielles peuvent offrir un meilleur ratio risque/rendement.</p></section>
+                        <section class="role def"><h5>Défense</h5><p>Entrée fractionnée, benchmark des alternatives, et tableau mensuel des risques hors-thèse avec règles automatiques de réduction.</p></section>
+                        <section class="role judge"><h5>Juge</h5><p>La défense gagne si le protocole est appliqué sans exception.</p></section>
+                      </div>
+                    </article>
+                  </div>
+
+                  <article class="final-verdict mt-3">
+                    <h4 class="mb-1">Verdict final: Constructif sous conditions strictes</h4>
+                    <p class="mb-0 text-secondary">Scénario favorable 62% · neutre 16% · défavorable sévère 22%. Entrée progressive uniquement.</p>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+  <script>
+    const chartInstances = [];
+    const initialized = { analysis: false, tribunal: false };
+
+    function mk(id) {
+      const el = document.getElementById(id);
+      if (!el || !window.echarts) return null;
+      const chart = echarts.init(el);
+      chartInstances.push(chart);
+      return chart;
+    }
+
+    function initAnalysisCharts() {
+      if (initialized.analysis) return;
+      initialized.analysis = true;
+
+      const rb = mk('chart-rb');
+      if (rb) {
+        rb.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { top: 6 },
+          grid: { top: 38, right: 16, bottom: 30, left: 46 },
+          xAxis: { type: 'category', data: ['2022', '2023', '2024', '2025E', '2026E'] },
+          yAxis: { type: 'value', name: 'M$' },
+          series: [
+            { name: 'Revenus', type: 'bar', barMaxWidth: 30, data: [164, 208, 232, 286, 354], itemStyle: { color: '#2563eb' } },
+            { name: 'Cash burn', type: 'line', smooth: true, data: [198, 184, 173, 160, 146], lineStyle: { width: 3, color: '#dc2626' }, itemStyle: { color: '#dc2626' } }
+          ]
+        });
+      }
+
+      const cd = mk('chart-cd');
+      if (cd) {
+        cd.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { top: 6 },
+          grid: { top: 38, right: 16, bottom: 30, left: 46 },
+          xAxis: { type: 'category', data: ['T1', 'T2', 'T3', 'T4'] },
+          yAxis: { type: 'value', name: 'M$' },
+          series: [
+            { name: 'Cash', type: 'bar', barMaxWidth: 30, data: [790, 764, 737, 710], itemStyle: { color: '#0f766e' } },
+            { name: 'Dette', type: 'bar', barMaxWidth: 30, data: [138, 139, 140, 142], itemStyle: { color: '#d97706' } }
+          ]
+        });
+      }
+
+      const cat = mk('chart-cat');
+      if (cat) {
+        cat.setOption({
+          tooltip: { trigger: 'axis' },
+          grid: { top: 26, right: 16, bottom: 30, left: 44 },
+          xAxis: { type: 'category', data: ['Q1', 'Q2', 'Q3', 'Q4', 'Q1+1'] },
+          yAxis: { type: 'value', max: 100 },
+          series: [{
+            name: 'Force catalyseur',
+            type: 'line',
+            smooth: true,
+            data: [46, 61, 74, 67, 82],
+            lineStyle: { width: 3, color: '#1e3a8a' },
+            areaStyle: { color: 'rgba(30,58,138,.16)' },
+            itemStyle: { color: '#1e3a8a' }
+          }]
+        });
+      }
+
+      const level = mk('chart-level');
+      if (level) {
+        level.setOption({
+          tooltip: { trigger: 'item' },
+          grid: { top: 24, right: 16, bottom: 36, left: 50 },
+          xAxis: {
+            type: 'category',
+            data: ['Support profond', 'Support actif', 'Prix actuel', 'Résistance 1', 'Résistance 2'],
+            axisLabel: { interval: 0, rotate: 12 }
+          },
+          yAxis: { type: 'value', name: '$' },
+          series: [{
+            type: 'bar',
+            barMaxWidth: 40,
+            data: [5.2, 6.0, 7.1, 8.4, 9.7],
+            itemStyle: {
+              color: (p) => ['#0f766e', '#14b8a6', '#f59e0b', '#fb923c', '#b91c1c'][p.dataIndex]
+            }
+          }]
+        });
+      }
+    }
+
+    function initTribunalCharts() {
+      if (initialized.tribunal) return;
+      initialized.tribunal = true;
+
+      const court = mk('chart-court');
+      if (court) {
+        court.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { top: 6 },
+          grid: { top: 38, right: 16, bottom: 30, left: 46 },
+          xAxis: { type: 'category', data: ['Tueur', 'Catastrophe', 'Timing', 'Alternatives', 'Élargissement'] },
+          yAxis: { type: 'value', max: 10 },
+          series: [
+            { name: 'Accusation', type: 'bar', barMaxWidth: 24, data: [8, 7, 8, 6, 7], itemStyle: { color: '#b91c1c' } },
+            { name: 'Défense', type: 'bar', barMaxWidth: 24, data: [7, 6, 8, 8, 8], itemStyle: { color: '#0f766e' } },
+            { name: 'Verdict', type: 'line', smooth: true, data: [7.1, 6.2, 7.8, 7.3, 7.4], lineStyle: { width: 3, color: '#1e3a8a' }, itemStyle: { color: '#1e3a8a' } }
+          ]
+        });
+      }
+
+      const risk = mk('chart-risk');
+      if (risk) {
+        risk.setOption({
+          tooltip: { trigger: 'item' },
+          legend: { top: 6 },
+          series: [{
+            type: 'pie',
+            radius: ['38%', '72%'],
+            center: ['50%', '58%'],
+            label: { formatter: '{b}\n{d}%' },
+            data: [
+              { value: 26, name: 'Clinique', itemStyle: { color: '#b91c1c' } },
+              { value: 22, name: 'Macro', itemStyle: { color: '#ea580c' } },
+              { value: 18, name: 'Réglementaire', itemStyle: { color: '#d97706' } },
+              { value: 20, name: 'Exécution', itemStyle: { color: '#1e3a8a' } },
+              { value: 14, name: 'Sentiment', itemStyle: { color: '#64748b' } }
+            ]
+          }]
+        });
+      }
+    }
+
+    document.getElementById('analysis-tab').addEventListener('shown.bs.tab', initAnalysisCharts);
+    document.getElementById('tribunal-tab').addEventListener('shown.bs.tab', initTribunalCharts);
+
+    window.addEventListener('resize', () => chartInstances.forEach((c) => c && c.resize()));
+  </script>
+</body>
+</html>
