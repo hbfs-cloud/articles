@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Ingestion Pipelines | Building a Securities Master — Part 2/6 | Market Watch</title>
+    <title>Pipelines & Ingestion | Building a Securities Master — Part 2/6 | Market Watch</title>
     <meta name="description"
-        content="Part 2/6: Writing a custom Go Singer Tap to ingest Yahoo, Casablanca, Binance and StockAnalysis into a raw PostgreSQL schema via Meltano. Orchestrated on HashiCorp Nomad.">
+        content="Part 2/6: Writing high-concurrency custom Go extractors. Packaging Go with Meltano in Docker. Orchestrating the DAG with Apache Airflow on HashiCorp Nomad.">
 
     <link rel="stylesheet" href="/assets/report.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -195,6 +195,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .download-card-info h4 {
@@ -207,6 +209,8 @@
             margin: 0;
             color: #64748b;
             font-size: 0.9rem;
+            max-width: 500px;
+            line-height: 1.5;
         }
 
         .download-btn {
@@ -222,6 +226,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            white-space: nowrap;
         }
 
         .download-btn:hover {
@@ -262,58 +267,57 @@
 
     <div class="hero-section">
         <div class="hero-date">Part 2 of 6</div>
-        <h1 class="hero-title">High-Velocity Ingestion: <br>Meltano Taps in Go & Nomad</h1>
+        <h1 class="hero-title">High-Velocity Ingestion: <br>Go, Meltano, and Airflow on Nomad</h1>
         <p style="color:#475569; font-size:1.1rem; max-width:800px; margin:0 auto;">
-            Forget slow Python scripts. We challenge conventional wisdom by modeling true institutional references
-            (Equities, Futures, IRS, Crypto) and orchestrating high-concurrency Singer extractors directly natively in
-            HashiCorp Nomad.
+            Python cannot scale to fetch 100,000 instruments concurrently. We tackle ingestion with custom Go
+            Extractors, package them into Meltano Docker images, and orchestrate complex ETL DAGs using Apache Airflow
+            on HashiCorp Nomad.
         </p>
     </div>
 
     <div class="container">
-        <p>In <strong>Part 1</strong>, we defined what a point-in-time correct architecture looks like. But looking
-            directly into tier-1 hedge fund codebases—such as a <code>reference-service</code> and
-            <code>execution-instruments</code> repository—reveals that our initial perimeter was too narrow.</p>
+        <p>In <strong>Part 1</strong>, we defined what a point-in-time correct architecture looks like. However,
+            observing tier-1 hedge fund codebases—such as <code>reference-service</code> and
+            <code>execution-instruments</code> repositories—reveals massive complexity. We must model
+            <code>EQUITY</code>, <code>ETF</code>, <code>FUTURE</code>, <code>FUTURES_SPREAD</code>, <code>INDEX</code>,
+            <code>RATE</code>, <code>FXFORWARD</code>, <code>IRS</code>, <code>OPTIONVOL</code>, and
+            <code>CRYPTO</code>.</p>
 
-        <p>A true hedge-fund instrument suite does not solely support stocks. It natively models <code>EQUITY</code>,
-            <code>ETF</code>, <code>FUTURE</code>, <code>FUTURES_SPREAD</code>, <code>INDEX</code>, <code>RATE</code>,
-            <code>FXFORWARD</code>, <code>IRS</code>, <code>OPTIONVOL</code>, and <code>CRYPTO</code>. It deals with
-            diverse <code>SettlementType</code>s, <code>MarketDataSourceType</code>s, and extremely granular OMS
-            constraints like <code>skip_start_of_day_position</code> for accounts or execution routing to specific Prime
-            Brokers.</p>
+        <p>When ingesting data for this massive universe across multiple disparate providers (Yahoo Finance,
+            StockAnalysis, Casablanca Bourse, Binance, FRED), standard Python ELT loops (like Airbyte or basic Python
+            Singer Taps) fail due to execution speed and Global Interpreter Lock (GIL) networking bottlenecks.</p>
 
-        <p>If you aim to model this massive universe across multiple providers (Yahoo, StockAnalysis, Casablanca Bourse,
-            Binance, FRED), relying on standard Python ELT loops or Airbyte connections will fail either on speed,
-            rate-limiting nuances, or memory exhaustion.</p>
-
-        <p>Our solution: Write a <strong>Custom Go Extractor</strong> obeying the Singer Specification, capable of
-            highly concurrent ingestion, and orchestrate the raw data-dump straight into PostgreSQL using
-            <strong>Meltano</strong> and <strong>HashiCorp Nomad</strong>.</p>
+        <p>Our hedge-fund grade solution involves:</p>
+        <ol>
+            <li><strong>Raw Zone Database Schema</strong> (dump first, transform later).</li>
+            <li><strong>Custom Go Meltano Extractor (Tap)</strong> handling the specific API limits and pagination logic
+                natively.</li>
+            <li><strong>Docker Packaging</strong> of the Go binary along with the Python Meltano environment.</li>
+            <li><strong>Workflow Orchestration</strong> with Apache Airflow triggering HashiCorp Nomad tasks. Because
+                Nomad's internal <code>periodic</code> cron is not enough for complex DAGs (Extract &rarr; Load &rarr;
+                dbt Transform).</li>
+        </ol>
 
         <!-- ========================================== -->
         <h2><i class="fa-solid fa-code"></i> The Raw PostgreSQL Schema</h2>
-        <p>Before launching our ingestion, we configure our PostgreSQL destination
-            (<code>securities_master.raw_zone</code>). We draw inspiration directly from robust OMS journaling and
-            reference structures. Everything is dumped globally; transformations are left for dbt in Part 3.</p>
+        <p>In the Modern Data Stack paradigm (ELT), we extract and load purely raw data first. Complex joins and SCD
+            Type 2 logic are handled by dbt subsequently. Our raw ingestion tables are optimized for ultra-fast
+            <code>COPY</code> commands.</p>
 
         <pre><code class="language-sql">-- raw_zone.instruments
-CREATE TABLE raw_instruments (
-    external_id VARCHAR(100),       -- Provider's specific ID (e.g. BVC Drupal ID or Yahoo Ticker)
+CREATE TABLE raw_zone.instruments (
+    external_id VARCHAR(100),       -- e.g. BVC Drupal ID, Yahoo ticker
     provider_name VARCHAR(50),      -- 'YAHOO', 'BVC', 'STOCKANALYSIS'
     symbol VARCHAR(50), 
-    isin VARCHAR(12),
+    isin VARCHAR(20),
+    instrument_type VARCHAR(50),    -- 'EQUITY', 'CRYPTO', 'OPTIONVOL'
     
-    -- We extract precisely as the provider defines it, e.g. 'EQUITY', 'CRYPTO', 'OPTIONVOL'
-    instrument_type VARCHAR(50), 
-    
-    -- Metadata payload
-    raw_payload JSONB,              
-    
+    raw_payload JSONB,              -- Store the exact API response for audit
     ingested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- raw_zone.market_data
-CREATE TABLE raw_market_data (
+CREATE TABLE raw_zone.market_data (
     provider_name VARCHAR(50) NOT NULL,
     symbol VARCHAR(50) NOT NULL,
     trade_date TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -326,7 +330,6 @@ CREATE TABLE raw_market_data (
     volume NUMERIC(20, 8),
     
     ingested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
     PRIMARY KEY (provider_name, symbol, trade_date)
 ) PARTITION BY LIST (EXTRACT(YEAR FROM trade_date));
 -- Note: Sub-partitioning per provider is recommended for massive datasets.
@@ -335,39 +338,44 @@ CREATE TABLE raw_market_data (
         <!-- ========================================== -->
         <h2><i class="fa-brands fa-golang"></i> Custom Meltano Tap in Go</h2>
         <p>Go’s concurrency model is unmatched for IO-bound work like fetching thousands of tickers simultaneously. To
-            integrate smoothly with the Modern Data Stack, we make Go speak the <strong>Singer Protocol</strong>. It
-            communicates with Meltano purely through <code>stdout</code> using JSON messages: <code>SCHEMA</code> (to
-            define the table structure), <code>STATE</code> (for incremental bookmarks), and <code>RECORD</code> (the
-            actual data).</p>
+            integrate smoothly with Meltano, we make our Go binary speak the <strong>Singer Protocol</strong>. It
+            communicates purely through standard output (<code>stdout</code>) using JSON messages: <code>SCHEMA</code>
+            (to define the PostgreSQL table), and <code>RECORD</code> (the actual data payload).</p>
 
-        <pre><code class="language-go">// main.go - Meltano Tap in Go (tap-marketdata)
+        <p>Below is a concrete implementation snippet showing how we handle Yahoo Finance JSON parsing and Casablanca
+            (BVC) API pagination within a concurrent semantic.</p>
+
+        <pre><code class="language-go">// tap-marketdata/main.go
 package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"sync"
 	"time"
 )
 
+// Singer JSON Schema Message
 type SingerMessage struct {
 	Type   string      `json:"type"`
 	Record interface{} `json:"record,omitempty"`
-	Schema interface{} `json:"schema,omitempty"`
 	Stream string      `json:"stream,omitempty"`
 }
 
+// Our unified Target Data format
 type OHLCVRecord struct {
-	Symbol      string  `json:"symbol"`
-	TradeDate   string  `json:"trade_date"`
-	OpenPrice   float64 `json:"open_price"`
-	HighPrice   float64 `json:"high_price"`
-	LowPrice    float64 `json:"low_price"`
-	ClosePrice  float64 `json:"close_price"`
-	AdjClose    float64 `json:"adj_close,omitempty"`
-	Volume      float64 `json:"volume"`
-	ProviderName string `json:"provider_name"`
+	ProviderName string  `json:"provider_name"`
+	Symbol       string  `json:"symbol"`
+	TradeDate    string  `json:"trade_date"`
+	OpenPrice    float64 `json:"open_price"`
+	HighPrice    float64 `json:"high_price"`
+	LowPrice     float64 `json:"low_price"`
+	ClosePrice   float64 `json:"close_price"`
+	AdjClose     float64 `json:"adj_close,omitempty"`
+	Volume       float64 `json:"volume"`
 }
 
 func emitRecord(stream string, record interface{}) {
@@ -376,133 +384,232 @@ func emitRecord(stream string, record interface{}) {
 	fmt.Println(string(b))
 }
 
-func main() {
-	// First: Emit SCHEMA for target-postgres to build the table dynamically
-	emitSchema()
-
-	providers := []string{"YAHOO", "BINANCE", "BVC", "STOCKANALYSIS"}
-
-	// High-Concurrency Fetching (adjust semaphore based on provider limits)
+// ---------------------------------------------------------
+// Example: Concurrency-bounded Yahoo Fetcher
+// ---------------------------------------------------------
+func syncYahoo(symbols []string) {
 	const maxConcurrency = 50
 	sem := make(chan struct{}, maxConcurrency)
 	var wg sync.WaitGroup
 
-	for _, provider := range providers {
-	    symbols := getUniverseForProvider(provider)
-        for _, sym := range symbols {
-            wg.Add(1)
-            go func(p string, s string) {
-                defer wg.Done()
-                sem &lt;- struct{}{}
-                defer func() { &lt;-sem }()
+	for _, sym := range symbols {
+		wg.Add(1)
+		go func(ticker string) {
+			defer wg.Done()
+			sem &lt;- struct{}{}
+			defer func() { &lt;-sem }()
 
-                bars := FetchProviderData(p, s) 
+			// Genuine HTTP request mimicking institutional Go clients
+			url := fmt.Sprintf("https://query2.finance.yahoo.com/v8/finance/chart/%s?range=5d&interval=1d", ticker)
+			req, _ := http.NewRequest("GET", url, nil)
+			req.Header.Set("User-Agent", "Mozilla/5.0")
 
-                for _, bar := range bars {
-                    // Emit raw row formatted for target-postgres
-                    emitRecord("raw_market_data", OHLCVRecord{
-                        Symbol:       s,
-                        TradeDate:    bar.Date.Format(time.RFC3339),
-                        OpenPrice:    bar.Open,
-                        HighPrice:    bar.High,
-                        LowPrice:     bar.Low,
-                        ClosePrice:   bar.Close,
-                        AdjClose:     bar.AdjClose,
-                        Volume:       bar.Volume,
-                        ProviderName: p,
-                    })
-                }
-            }(provider, sym)
-        }
-    }
+			client := &http.Client{Timeout: 10 * time.Second}
+			resp, err := client.Do(req)
+			if err != nil || resp.StatusCode != 200 { return }
+			defer resp.Body.Close()
 
+			// Parse Yahoo's specific format
+			var result struct {
+				Chart struct {
+					Result []struct {
+						Timestamp []int64 `json:"timestamp"`
+						Indicators struct {
+							Quote []struct {
+								Open   []float64 `json:"open"`
+								High   []float64 `json:"high"`
+								Low    []float64 `json:"low"`
+								Close  []float64 `json:"close"`
+								Volume []float64 `json:"volume"`
+							} `json:"quote"`
+						} `json:"indicators"`
+					} `json:"result"`
+				} `json:"chart"`
+			}
+			json.NewDecoder(resp.Body).Decode(&result)
+
+			if len(result.Chart.Result) > 0 {
+				r := result.Chart.Result[0]
+				q := r.Indicators.Quote[0]
+				for i, ts := range r.Timestamp {
+					emitRecord("raw_market_data", OHLCVRecord{
+						ProviderName: "YAHOO",
+						Symbol:       ticker,
+						TradeDate:    time.Unix(ts, 0).Format(time.RFC3339),
+						OpenPrice:    q.Open[i],
+						HighPrice:    q.High[i],
+						LowPrice:     q.Low[i],
+						ClosePrice:   q.Close[i],
+						Volume:       q.Volume[i],
+					})
+				}
+			}
+		}(sym)
+	}
 	wg.Wait()
-	os.Exit(0)
+}
+
+// ---------------------------------------------------------
+// Example: Rate-limited BVC (Casablanca) Pagination Fetcher
+// ---------------------------------------------------------
+func syncCasablancaBVC() {
+	url := "https://api.casablanca-bourse.com/fr/api/bourse_data/instrument?page[limit]=200"
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	for url != "" {
+		req, _ := http.NewRequest("GET", url, nil)
+		resp, err := client.Do(req)
+		if err != nil { break }
+
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		var result struct {
+			Data []struct {
+				Attributes struct {
+					Symbol   string `json:"symbol"`
+					CodeISIN string `json:"codeISIN"`
+				} `json:"attributes"`
+			} `json:"data"`
+			Links struct {
+				Next struct { Href string `json:"href"` } `json:"next"`
+			} `json:"links"`
+		}
+		json.Unmarshal(body, &result)
+
+		for _, rec := range result.Data {
+			// Emit JSON payload for further normalization in dbt
+			emitRecord("raw_instruments", map[string]interface{}{
+				"provider_name":   "BVC",
+				"symbol":          rec.Attributes.Symbol,
+				"isin":            rec.Attributes.CodeISIN,
+				"instrument_type": "EQUITY", // Default for BVC listings
+				"raw_payload":     rec.Attributes,
+			})
+		}
+
+		if result.Links.Next.Href != "" {
+			url = result.Links.Next.Href
+			time.Sleep(200 * time.Millisecond) // Strict rate limit for BVC API
+		} else {
+			url = ""
+		}
+	}
+}
+
+func main() {
+    // 1. Output Singer Schema (omitted for brevity)
+    // 2. Fetch all data
+	syncYahoo([]string{"AAPL", "MSFT", "IWM", "BTC-USD"}) // High concurrency
+	syncCasablancaBVC()                                   // Sequential & Rate-limited
 }
 </code></pre>
 
         <div class="download-card">
             <div class="download-card-info">
                 <h4><i class="fa-brands fa-golang" style="color:#00ADD8"></i> tap-marketdata-go.zip</h4>
-                <p>Contains the full Go project, Singer schemas, BVC pagination logic, StockAnalysis handlers, and
-                    Binance websocket fallback.</p>
+                <p>Contains the full Go project, extensive Singer JSON schema definitions, StockAnalysis parsers, and
+                    caching strategies.</p>
             </div>
-            <a href="#" class="download-btn" onclick="alert('Download started!'); return false;"><i
-                    class="fa-solid fa-download"></i> Download Script</a>
+            <a href="#" class="download-btn"><i class="fa-solid fa-download"></i> Download Zip</a>
         </div>
 
         <!-- ========================================== -->
-        <h2><i class="fa-solid fa-server"></i> The Nomad Scheduling Job</h2>
-        <p>The beauty of the Modern Data Stack is decoupling. We don't need a heavy Airflow deployment for this.
-            <strong>HashiCorp Nomad</strong> is incredibly elegant for running batch or periodic Meltano ELT jobs at the
-            end of the trading day.</p>
+        <h2><i class="fa-brands fa-docker"></i> Packaging Meltano & Go into a single Image</h2>
+        <p>A crucial integration step: Meltano expects to invoke an executable file. We must compile our Go code and
+            inject it into a Python-based Meltano Docker container.</p>
 
-        <p>Here is the exact Nomad Job specification we deploy to run our ingestion nightly. It pulls our custom Docker
-            image containing the compiled Go binary + Meltano, injects the secrets required for PostgreSQL via Vault,
-            and kicks off <code>meltano run</code>.</p>
+        <pre><code class="language-dockerfile"># 1. Build the Go Singer Extractor
+FROM golang:1.22 AS builder
+WORKDIR /app
+COPY go.mod ./
+COPY main.go ./
+# Compile statically to ensure it runs anywhere
+RUN CGO_ENABLED=0 GOOS=linux go build -o tap-marketdata-go main.go
 
-        <pre><code class="language-hcl"># marketdata-ingest.nomad.hcl
-job "securities-master-ingest" {
-  datacenters = ["dc1"]
-  type        = "batch"
+# 2. Build the Meltano Runtime
+FROM meltano/meltano:v3.1.0-python3.9
+WORKDIR /project
 
-  periodic {
-    cron             = "0 23 * * 1-5"  # Run at 11:00 PM Monday to Friday
-    prohibit_overlap = true
-    time_zone        = "Europe/Paris"
-  }
+# Install the target database loader
+RUN meltano add loader target-postgres --variant transferwise
 
-  group "elt-group" {
-    task "meltano-run" {
-      driver = "docker"
+# Copy our compiled Go binary
+COPY --from=builder /app/tap-marketdata-go /usr/local/bin/tap-marketdata-go
+RUN chmod +x /usr/local/bin/tap-marketdata-go
 
-      config {
-        image = "registry.internal.bh/data/marketdata-meltano:latest"
-        # Runs the Go extractor directly into Postgres
-        command = "meltano"
-        args    = ["run", "tap-marketdata-go", "target-postgres"]
-      }
+# Copy Meltano configurations
+COPY meltano.yml .
 
-      env {
-        MELTANO_ENVIRONMENT = "prod"
-      }
-
-      template {
-        data = <<EOH
-          PG_HOST="{{ with secret "database/creds/elt" }}{{ .Data.host }}{{ end }}"
-          PG_USER="{{ with secret "database/creds/elt" }}{{ .Data.username }}{{ end }}"
-          PG_PASSWORD="{{ with secret "database/creds/elt" }}{{ .Data.password }}{{ end }}"
-        EOH
-        destination = "secrets/db.env"
-        env         = true
-      }
-
-      resources {
-        cpu    = 2000 # 2 Cores for high-concurrency Go fetching
-        memory = 4096 # 4GB RAM to buffer rows
-      }
-    }
-  }
-}
+ENTRYPOINT ["meltano"]
 </code></pre>
 
-        <div class="download-card">
-            <div class="download-card-info">
-                <h4><i class="fa-solid fa-file-code" style="color:#f59e0b"></i> marketdata-ingest.nomad.hcl</h4>
-                <p>The complete Nomad job configuration to schedule the pipeline.</p>
-            </div>
-            <a href="#" class="download-btn" onclick="alert('Download started!'); return false;"><i
-                    class="fa-solid fa-download"></i> Download Script</a>
-        </div>
+        <!-- ========================================== -->
+        <h2><i class="fa-solid fa-server"></i> Orchestration: Airflow on HashiCorp Nomad</h2>
+        <p>A simple Nomad <code>periodic</code> cron job is completely insufficient for a robust data platform. We need
+            a proper scheduler (Apache Airflow or Dagster) to map out dependencies: <strong>Extract/Load (Meltano)
+                &rarr; Transform (dbt) &rarr; Corporate Action Merges</strong>.</p>
+
+        <p>We host Apache Airflow, and configure its Directed Acyclic Graphs (DAGs) to trigger executions
+            <strong>remotely on HashiCorp Nomad</strong> using the <code>NomadOperator</code> (or Nomad HTTP API). This
+            maintains Nomad as the sole compute allocator while giving Airflow control over the workflow logic.</p>
+
+        <pre><code class="language-python"># airflow_dags/securities_master_dag.py
+from datetime import datetime
+from airflow import DAG
+from airflow.providers.hashicorp.operators.nomad import NomadOperator
+
+default_args = {
+    'owner': 'data-engineering',
+    'start_date': datetime(2026, 1, 1),
+    'retries': 2,
+}
+
+with DAG('securities_master_daily_ingest', default_args=default_args, schedule_interval='0 23 * * 1-5') as dag:
+
+    # 1. Trigger Meltano Container on Nomad Cluster
+    # Injects PostgreSQL Vault secrets securely at runtime.
+    meltano_extract_load = NomadOperator(
+        task_id='meltano_extract_high_concurrency',
+        nomad_url='http://nomad.internal.bh:4646',
+        job_spec="""
+            job "marketdata-ingest-run" {
+                datacenters = ["dc1"]
+                type = "batch"
+                group "elt" {
+                    task "meltano" {
+                        driver = "docker"
+                        config {
+                            image = "registry.internal.bh/data/marketdata-meltano:latest"
+                            command = "meltano"
+                            args = ["run", "tap-marketdata-go", "target-postgres"]
+                        }
+                        template {
+                            data = "PG_HOST={{ with secret "db/creds" }}{{ .Data.host }}{{ end }}"
+                            destination = "secrets/db.env"
+                            env = true
+                        }
+                    }
+                }
+            }
+        """
+    )
+
+    # 2. We will define dbt in Part 3
+    # dbt_transform = NomadOperator(task_id='dbt_normalize', ...)
+
+    # meltano_extract_load >> dbt_transform
+</code></pre>
 
         <div class="takeaway-box">
-            <h3><i class="fa-solid fa-flag-checkered"></i> End of Part 2: What do we have now?</h3>
-            <p>At the end of this pipeline execution, our Postgres DB schema <code>raw_zone.raw_market_data</code> and
-                <code>raw_zone.raw_instruments</code> are loaded with millions of lines of unstructured JSON payloads
-                and OHLCV vectors from Yahoo, BVC, Binance, and StockAnalysis. We've successfully challenged the
-                constraints of slower Python EL paths and built an institutional-grade, Nomad-orchestrated pipeline.
-                Next up, in <strong>Part 3</strong>, we will unleash <strong>dbt</strong> to sanitize this raw data, map
-                the corporate actions, and build the final SCD Type 2 Securities Master reference tables.</p>
+            <h3><i class="fa-solid fa-flag-checkered"></i> Conclusion of Part 2</h3>
+            <p>We've successfully bypassed standard Python bottlenecks. By combining Go routines for ingestion,
+                Singer/Meltano for loading, and Airflow on Nomad for orchestration, we achieve massive scale. We can now
+                blindly ingest hundreds of thousands of instruments, and the data lands reliably in the
+                <code>raw_zone</code> Postgres tables.</p>
+            <p><strong>Next up, in Part 3: Transforms!</strong> We will execute dbt to sanitize this raw data, map
+                unique identifiers (ISIN, FIGI), handle the logic of the <code>InstrumentType</code> interface, and
+                build the definitive master tables.</p>
         </div>
     </div>
 
@@ -520,6 +627,7 @@ job "securities-master-ingest" {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 </body>
 
 </html>
