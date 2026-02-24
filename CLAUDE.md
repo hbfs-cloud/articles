@@ -256,6 +256,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 ## Conventions
 - **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
 - **CSS**: Utiliser EXCLUSIVEMENT le CSS global via racine: `<link rel="stylesheet" href="/assets/report.css">` ou `report-dark.css` pour le scanner. Ne plus jamais recréer le dossier `assets/` localement.
+- **Pas de CSS inline** (**OBLIGATOIRE**) : Ne JAMAIS utiliser d'attribut `style="..."` sur les éléments HTML. Toujours utiliser les classes CSS définies dans `report.css` / `report-dark.css`. Si une nouvelle classe est nécessaire, l'ajouter dans le CSS global. Les seules exceptions tolérées sont les `style` sur les conteneurs ECharts (`width`/`height` dynamiques).
 - **GTM**: Toujours inclure Google Tag Manager (GTM-T5Z595CW)
 - **Fonts**: Inter (Google Fonts) + Font Awesome 6.4.0
 - **Charts**: ApexCharts + ECharts
