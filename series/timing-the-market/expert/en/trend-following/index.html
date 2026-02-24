@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Trend Following: Ride the Wave | Timing the Market — Part 7 | Market Watch</title>
+ <meta name="description" content="Timing the Market Series — Part 7: The definitive guide to trend following. Stan Weinstein's Stage Analysis, Mark Minervini's SEPA, William O'Neil's CAN SLIM, Relative Rotation Graphs, Mansfield RS, and building a complete trend-following screening system.">
+ <meta property="og:title" content="Trend Following: Ride the Wave | Market Watch">
+ <meta property="og:description" content="Part 7 of the Timing the Market series. You don't need to predict the market — you need to react to it. Complete systems from Weinstein, Minervini, and O'Neil.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/timing-the-market/expert/en/trend-following/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .brand-bar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; }
+ .brand-logo { font-size: 1.1rem; font-weight: 800; color: #0f172a; text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; }
+ .brand-logo:hover { color: #2563eb; }
+ .switcher-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+ .switcher-btn { padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; color: #64748b; border: 1px solid #e2e8f0; transition: all 0.2s; }
+ .switcher-btn:hover { border-color: #2563eb; color: #2563eb; }
+ .switcher-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+ .series-nav { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 1rem 2rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+ .series-title { color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-right: 1rem; }
+ .series-link { padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; color: #94a3b8; border: 1px solid #334155; transition: all 0.2s; }
+ .series-link:hover { border-color: #60a5fa; color: #60a5fa; }
+ .series-link.current { background: #2563eb; color: white; border-color: #2563eb; }
+ .hero-section { padding: 4rem 2rem 8rem 2rem; background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%); text-align: center; }
+ .hero-date { font-size: 0.85rem; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+ .hero-badges { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+ .hero-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700; }
+ .hero-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+ .hero-badge-green { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+ .hero-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
+ .hero-badge-amber { background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.2); }
+ .hero-badge-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+ .score-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+ .score-item { text-align: center; padding: 1.25rem; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+ .score-item .big { font-size: 2rem; font-weight: 800; }
+ .score-item .label { font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; }
+ .footer-bar { text-align: center; padding: 2rem; background: #f8fafc; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 0.8rem; }
+ .footer-bar a { color: #64748b; text-decoration: none; }
+ .footer-bar a:hover { color: #2563eb; }
+ .stage-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin: 1.5rem 0; }
+ .stage-card { padding: 1.5rem; border-radius: 14px; border: 2px solid #e2e8f0; }
+ .stage-card h4 { margin: 0 0 0.75rem; font-size: 1.1rem; font-weight: 800; }
+ .stage-card p { margin: 0; font-size: 0.9rem; color: #475569; line-height: 1.6; }
+ .stage-1 { border-color: #94a3b8; background: #f8fafc; }
+ .stage-1 h4 { color: #475569; }
+ .stage-2 { border-color: #10b981; background: #f0fdf4; }
+ .stage-2 h4 { color: #10b981; }
+ .stage-3 { border-color: #f59e0b; background: #fffbeb; }
+ .stage-3 h4 { color: #d97706; }
+ .stage-4 { border-color: #ef4444; background: #fef2f2; }
+ .stage-4 h4 { color: #ef4444; }
+ .criteria-list { list-style: none; padding: 0; margin: 1rem 0; }
+ .criteria-list li { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.5rem 0; font-size: 0.9rem; color: #334155; line-height: 1.5; border-bottom: 1px solid #f1f5f9; }
+ .criteria-list li:last-child { border-bottom: none; }
+ .criteria-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #2563eb; color: white; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+ @media (max-width: 768px) {
+     .hero-section { padding: 2.5rem 1rem 5rem; }
+     .hero-section h1 { font-size: 1.8rem !important; }
+     .brand-bar { padding: 0.75rem 1rem; }
+     .series-nav { padding: 0.75rem 1rem; }
+     .brand-logo { font-size: 0.9rem; }
+     .switcher-bar { gap: 0.25rem; }
+     .switcher-btn { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+     .series-nav { gap: 0.4rem; }
+     .series-title { font-size: 0.65rem; margin-right: 0.5rem; }
+     .series-link { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
+     .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+     .score-row { grid-template-columns: repeat(2, 1fr); }
+     .stage-grid { grid-template-columns: 1fr; }
+ }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" class="gtm-noscript"></iframe></noscript>
+
+ <nav class="brand-bar">
+ <a href="/" class="brand-logo"><img src="https://market-watch.xyz/logo.svg" alt="MW" class="brand-logo-img"> MARKET WATCH</a>
+ <div class="switcher-bar">
+ <a href="/series/timing-the-market/expert/en/trend-following/" class="switcher-btn active" title="English">EN</a>
+ <span class="switcher-sep">|</span>
+ <a href="/series/timing-the-market/expert/en/trend-following/" class="switcher-btn active">Expert</a>
+ <span class="switcher-sep">|</span>
+ <a href="/" class="switcher-btn" title="Home"><i class="fa-solid fa-house"></i></a>
+ </div>
+ </nav>
+
+ <div class="series-nav">
+     <span class="series-title"><i class="fa-solid fa-crosshairs"></i> Timing the Market</span>
+     <a href="/series/timing-the-market/expert/en/introduction/" class="series-link">1</a>
+     <a href="/series/timing-the-market/expert/en/valuation-models/" class="series-link">2</a>
+     <a href="/series/timing-the-market/expert/en/market-breadth/" class="series-link">3</a>
+     <a href="/series/timing-the-market/expert/en/sentiment-mastery/" class="series-link">4</a>
+     <a href="/series/timing-the-market/expert/en/finding-bottoms/" class="series-link">5</a>
+     <a href="/series/timing-the-market/expert/en/detecting-tops/" class="series-link">6</a>
+     <a href="/series/timing-the-market/expert/en/trend-following/" class="series-link current">7</a>
+     <a href="/series/timing-the-market/expert/en/macro-timing/" class="series-link">8</a>
+     <a href="/series/timing-the-market/expert/en/quantitative-systems/" class="series-link">9</a>
+     <a href="/series/timing-the-market/expert/en/master-framework/" class="series-link">10</a>
+ </div>
+
+ <div class="hero-section">
+ <div class="hero-date">Timing the Market &mdash; Part 7 &mdash; February 2026</div>
+ <h1 class="hero-title">Trend Following: Ride the Wave</h1>
+ <p class="hero-subtitle">You don't need to predict where the market is going &mdash; you need to react to where it is already going. Trend following is the most empirically validated approach in all of finance: documented across every asset class, every time period, and every geography. This chapter deconstructs the complete systems of Weinstein, Minervini, and O'Neil into actionable frameworks.</p>
+ <div class="hero-badges">
+ <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrow-trend-up"></i> Trend Systems</span>
+ <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Stage Analysis</span>
+ <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-filter"></i> CAN SLIM + SEPA</span>
+ <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-ranking-star"></i> Relative Strength</span>
+ </div>
+ </div>
+
+ <div class="container">
+
+ <!-- ============================================================ -->
+ <!-- SECTION 1: The Philosophy of Trend Following                  -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-compass"></i> 1. The Philosophy of Trend Following</h2>
+
+ <p><em>"The trend is your friend until the end when it bends."</em> &mdash; Ed Seykota, one of the most successful traders in history, who turned $5,000 into $15 million over 12 years using trend-following systems on futures markets.</p>
+
+ <p>Trend following rests on a simple, empirically robust observation: <strong>assets that have been rising tend to continue rising, and assets that have been falling tend to continue falling.</strong> This observation, known in academic finance as the "momentum factor" or "time-series momentum," has been documented across equities, bonds, commodities, currencies, and crypto markets, across centuries of data, and across every country with a functioning capital market.</p>
+
+ <h3>Why Trends Exist: The Behavioral Foundation</h3>
+ <p>Trends are not market anomalies that will be arbitraged away. They are structural features of how humans process information and make decisions under uncertainty. Behavioral finance identifies several mechanisms that create and sustain trends:</p>
+ <ul>
+ <li><strong>Herding:</strong> Humans are social animals. When we see others buying, we buy. When we see others selling, we sell. This creates positive feedback loops that push prices beyond fair value in both directions.</li>
+ <li><strong>Anchoring:</strong> Investors anchor to past prices. If a stock was $50 last month and is $70 today, they feel they "missed it" and wait for a pullback. This delayed buying extends the trend as latecomers gradually overcome their anchoring bias.</li>
+ <li><strong>Slow Information Diffusion:</strong> Information does not spread instantaneously. Different investors learn about developments at different times, and their reactions are staggered. A positive earnings surprise on Monday is still being digested by portfolio committees three weeks later.</li>
+ <li><strong>Disposition Effect:</strong> Investors sell winners too early and hold losers too long. This creates artificial selling pressure on rising stocks (capping the upside) and artificial support on declining stocks (delaying the inevitable). When these behavioral barriers finally break, the resulting moves are amplified.</li>
+ <li><strong>Institutional Constraints:</strong> Pension funds, endowments, and mutual funds face quarterly performance reporting, benchmark tracking, and risk limits. These constraints force them to add to winners (performance chasing) and cut losers (risk management) in ways that extend trends.</li>
+ </ul>
+
+ <h3>The Academic Evidence</h3>
+ <p>The momentum factor is one of the most robust findings in all of empirical finance. The foundational study by Jegadeesh and Titman (1993) documented that buying stocks with the highest 3-12 month returns and shorting stocks with the lowest 3-12 month returns generates significant alpha &mdash; approximately 1% per month. This "momentum premium" has been replicated in:</p>
+
+ <div class="score-row">
+ <div class="score-item">
+ <div class="big" style="color:#2563eb;">1% /mo</div>
+ <div class="label">Jegadeesh & Titman (1993) momentum premium</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#10b981;">200+ yrs</div>
+ <div class="label">AQR: momentum documented since 1800s</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#9333ea;">40+</div>
+ <div class="label">Countries where momentum works</div>
+ </div>
+ <div class="score-item">
+ <div class="big" style="color:#d97706;">All Assets</div>
+ <div class="label">Stocks, bonds, FX, commodities, crypto</div>
+ </div>
+ </div>
+
+ <p>AQR Capital Management (Cliff Asness et al.) has published extensive research showing that momentum has been a profitable factor in U.S. equities since at least the 1800s, in international equities since the 1920s, and in every major asset class ever tested. Their 2012 paper, "Value and Momentum Everywhere," demonstrates that the momentum premium is pervasive, persistent, and robust to transaction costs. It is not a data-mining artifact &mdash; it is a fundamental feature of financial markets rooted in human behavior.</p>
+
+ <h3>Trend Following vs. Prediction</h3>
+ <p>The most important conceptual distinction in this entire series: <strong>trend followers do not predict the future.</strong> They do not forecast where the S&P 500 will be in 12 months. They do not have a view on whether earnings will beat or miss. They observe the current trend, position in the direction of that trend, and use risk management to limit losses when the trend reverses.</p>
+
+ <div class="pedagogy-box">
+ <strong><i class="fa-solid fa-graduation-cap"></i> The Core Principle:</strong> Prediction asks "where will this go?" Trend following asks "where is this going <em>right now</em>?" The first question is impossible to answer reliably. The second is observable. Your edge does not come from being right more often than wrong &mdash; trend followers are typically right only 35-45% of the time. Your edge comes from cutting losses quickly when wrong and letting profits run when right. The average winning trade must be 2-3x the average losing trade. This is the mathematical foundation of all trend-following systems.
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 2: Stan Weinstein's Stage Analysis                    -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-layer-group"></i> 2. Stan Weinstein's Stage Analysis &mdash; The Complete Guide</h2>
+
+ <p>Stan Weinstein's <em>"Secrets for Profiting in Bull and Bear Markets"</em> (1988) remains the single most important book on market timing for the individual investor. Thirty-eight years after publication, its framework &mdash; the Four-Stage Model &mdash; continues to outperform because it is grounded in the immutable structure of market cycles, not in temporary patterns.</p>
+
+ <p>Weinstein's genius was his simplification. Where others built complex multi-factor models, Weinstein reduced everything to a single question: <strong>what stage is this stock (or market) in?</strong> The answer dictates everything &mdash; whether to buy, sell, short, or sit on your hands.</p>
+
+ <h3>The Four Stages</h3>
+
+ <div class="stage-grid">
+ <div class="stage-card stage-1">
+ <h4><i class="fa-solid fa-bed"></i> Stage 1: Basing (Accumulation)</h4>
+ <p><strong>Duration:</strong> 3-12+ months. <strong>30-week SMA:</strong> Flat, no slope. <strong>Volume:</strong> Declining, drying up. <strong>Price:</strong> Oscillates in a tight range around the flattened 30w SMA. <strong>Action:</strong> Watch only. Smart money (institutions) is quietly accumulating. The stock is boring, unloved, ignored by financial media. This is where fortunes are built by patient investors who can identify the transition to Stage 2. The key watchpoint is the <em>resistance level</em> that defines the ceiling of the base.</p>
+ </div>
+ <div class="stage-card stage-2">
+ <h4><i class="fa-solid fa-rocket"></i> Stage 2: Advancing (Markup)</h4>
+ <p><strong>Duration:</strong> 6 months to several years. <strong>30-week SMA:</strong> Rising, positive slope. <strong>Volume:</strong> Expanding on up-weeks, contracting on pullbacks. <strong>Price:</strong> Above the 30w SMA; makes higher highs and higher lows. <strong>Action:</strong> BUY. This is the ONLY stage where you should be long. Buy on the breakout above Stage 1 resistance with volume confirmation. Buy pullbacks to the rising 30w SMA. Never sell a Stage 2 stock unless the SMA flattens. The best stocks spend 12-36 months in Stage 2, delivering 100-300%+ returns.</p>
+ </div>
+ <div class="stage-card stage-3">
+ <h4><i class="fa-solid fa-arrows-rotate"></i> Stage 3: Distribution (Top)</h4>
+ <p><strong>Duration:</strong> 2-8 months. <strong>30-week SMA:</strong> Flattening, losing positive slope. <strong>Volume:</strong> Heavy and erratic; high-volume selloffs followed by low-volume rallies. <strong>Price:</strong> Oscillates around the flattening 30w SMA. No new highs, but no breakdown yet. <strong>Action:</strong> SELL all positions. Take profits. The smart money that accumulated in Stage 1 is distributing to late buyers. The media narrative is still bullish. This is the stage that separates professionals from amateurs. Professionals sell into strength; amateurs buy the "dip."</p>
+ </div>
+ <div class="stage-card stage-4">
+ <h4><i class="fa-solid fa-arrow-down-long"></i> Stage 4: Declining (Markdown)</h4>
+ <p><strong>Duration:</strong> 6-24 months. <strong>30-week SMA:</strong> Falling, negative slope. <strong>Volume:</strong> Often heavy on the initial breakdown; then declines as holders capitulate slowly. <strong>Price:</strong> Below the falling 30w SMA; makes lower highs and lower lows. <strong>Action:</strong> NEVER BUY. Short for aggressive traders. For long-only investors, stay 100% in cash or bonds. The most expensive mistake in investing is catching a falling knife in Stage 4. Every "bargain" gets cheaper. Wait for Stage 1 to form.</p>
+ </div>
+ </div>
+
+ <h3>The 30-Week (150-Day) SMA: The Single Most Important Filter</h3>
+ <p>Weinstein used the 30-week SMA (equivalent to the 150-day SMA) as his primary trend filter. The reasons are structural:</p>
+ <ul>
+ <li>It is slow enough to filter out noise but fast enough to capture meaningful trend changes</li>
+ <li>It roughly corresponds to 6 months of trading &mdash; two quarterly earnings cycles</li>
+ <li>It is widely monitored by institutional investors, creating a self-fulfilling support/resistance dynamic</li>
+ <li>It is the approximate midpoint between the 200-day SMA (10 months, used by pension funds) and the 50-day SMA (10 weeks, used by active traders)</li>
+ </ul>
+
+ <p>The rule is absolute: <strong>never buy a stock below its falling 30-week SMA.</strong> It does not matter how cheap the stock looks, how much it has fallen, or how compelling the narrative. If the 30-week SMA is declining, the stock is in Stage 4, and it will almost certainly go lower before it goes higher. This single rule, applied consistently, would have kept investors out of every major decline in the past 40 years.</p>
+
+ <!-- EChart: Stage Analysis -->
+ <div id="stageChart" style="width:100%; height:420px; margin-top:1.5rem;"></div>
+
+ <h3>Identifying Stage Transitions</h3>
+ <p>The most profitable moments in Weinstein's framework are the stage transitions. Specifically:</p>
+
+ <div class="data-table">
+ <table>
+ <thead>
+ <tr>
+ <th>Transition</th>
+ <th>Signal</th>
+ <th>Action</th>
+ <th>Win Rate</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Stage 1 to Stage 2</td>
+ <td>Breakout above resistance on 2x average volume; 30w SMA starts rising</td>
+ <td>Initial buy entry</td>
+ <td>~60% (with volume confirmation)</td>
+ </tr>
+ <tr>
+ <td>Stage 2 pullback to 30w SMA</td>
+ <td>Price touches or approaches rising 30w SMA on declining volume</td>
+ <td>Add to position</td>
+ <td>~65% (during confirmed Stage 2)</td>
+ </tr>
+ <tr>
+ <td>Stage 2 to Stage 3</td>
+ <td>30w SMA flattens; price closes below it for 2+ consecutive weeks</td>
+ <td>Sell / take profits</td>
+ <td>N/A (risk management)</td>
+ </tr>
+ <tr>
+ <td>Stage 3 to Stage 4</td>
+ <td>Break below Stage 3 support on heavy volume; 30w SMA declining</td>
+ <td>Short (if applicable) / stay out</td>
+ <td>~55% for short entries</td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 3: Mark Minervini's SEPA                              -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-bullseye"></i> 3. Mark Minervini's SEPA &mdash; Specific Entry Point Analysis</h2>
+
+ <p>Mark Minervini is arguably the greatest living stock trader. His track record speaks for itself: 155% return in the 2021 US Investing Championship, 334.8% in the 1997 Championship, and 128.6% in the 2022 Championship (a year when the S&P 500 fell 18%). His methodology, SEPA (Specific Entry Point Analysis), is a refinement and evolution of Weinstein's Stage Analysis combined with O'Neil's growth stock philosophy.</p>
+
+ <h3>The 8-Point Trend Template</h3>
+ <p>Minervini's Trend Template defines the exact criteria a stock must meet before it qualifies for purchase. Every criterion must be satisfied simultaneously &mdash; there are no exceptions.</p>
+
+ <ul class="criteria-list">
+ <li><span class="criteria-num">1</span> <strong>Price above the 200-day (40-week) SMA.</strong> This ensures the stock is in a long-term uptrend. No exceptions.</li>
+ <li><span class="criteria-num">2</span> <strong>The 200-day SMA is rising.</strong> Not flat, not declining &mdash; rising. The slope must be positive for at least 1 month (20 trading days).</li>
+ <li><span class="criteria-num">3</span> <strong>The 150-day SMA is above the 200-day SMA.</strong> This confirms that the medium-term trend is stronger than the long-term trend &mdash; a necessary condition for momentum acceleration.</li>
+ <li><span class="criteria-num">4</span> <strong>Price is above the 150-day and 200-day SMA.</strong> Redundant with #1 and #3, but Minervini includes it as a double-check. Both moving averages must be below price.</li>
+ <li><span class="criteria-num">5</span> <strong>The 50-day SMA is above the 150-day SMA.</strong> The full "stacking" of moving averages: 50 > 150 > 200. This is the classic configuration of a strong Stage 2 advance.</li>
+ <li><span class="criteria-num">6</span> <strong>Price is above the 50-day SMA.</strong> The short-term trend is also bullish.</li>
+ <li><span class="criteria-num">7</span> <strong>Price is at least 25% above the 52-week low.</strong> The stock has already demonstrated meaningful upside momentum. This eliminates Stage 1 stocks that have not yet confirmed their breakout.</li>
+ <li><span class="criteria-num">8</span> <strong>Price is within 25% of the 52-week high.</strong> The stock is near its highs, not in a deep correction. This ensures you are buying strength, not weakness.</li>
+ </ul>
+
+ <div class="alert-box">
+ <strong><i class="fa-solid fa-circle-info"></i> Key Insight:</strong> The Trend Template is designed to eliminate 90%+ of stocks from consideration. At any given time, only 10-15% of stocks in the US market satisfy all 8 criteria. This is the point &mdash; you are filtering for the strongest of the strong. The best trades come from the intersection of strong trend, strong fundamentals, and a proper technical setup (VCP or pivot point).
+ </div>
+
+ <h3>Volatility Contraction Pattern (VCP)</h3>
+ <p>The VCP is Minervini's signature pattern and arguably the single most powerful setup in growth stock trading. The concept is elegant: after a stock has made a significant advance, it enters a consolidation (base-building phase) where volatility progressively contracts. Each successive pullback within the base is smaller than the last, indicating that selling pressure is exhausting and the stock is being absorbed by strong hands.</p>
+
+ <p>A classic VCP has 3-4 progressively tighter contractions:</p>
+
+ <div class="data-table">
+ <table>
+ <thead>
+ <tr>
+ <th>Contraction #</th>
+ <th>Typical Depth</th>
+ <th>Duration</th>
+ <th>Volume</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>1st (initial correction)</td><td>15-25%</td><td>2-4 weeks</td><td>Heavy (profit-taking)</td></tr>
+ <tr><td>2nd</td><td>10-15%</td><td>1-3 weeks</td><td>Declining</td></tr>
+ <tr><td>3rd</td><td>5-10%</td><td>1-2 weeks</td><td>Light (drying up)</td></tr>
+ <tr><td>4th (pivot)</td><td>3-6%</td><td>3-7 days</td><td>Very light pre-breakout</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <p>The buy signal occurs when price breaks above the resistance defined by the narrowing upper boundary of the VCP on a volume surge (at least 50% above the 50-day average volume). The stop is placed 5-8% below the entry &mdash; tighter than most systems because the VCP gives you a precisely defined risk point.</p>
+
+ <h3>Position Sizing: The R-Multiple Framework</h3>
+ <p>Minervini risks <strong>0.5-1% of total portfolio value per trade.</strong> This is not negotiable. If you have a $100,000 portfolio and you risk 1% per trade, your maximum loss per position is $1,000. If your stop is 7% below entry, you can buy $14,286 worth of stock ($1,000 / 0.07). This disciplined approach means that even a string of 10 consecutive losing trades (which happens) only costs 10% of the portfolio &mdash; painful but survivable.</p>
+
+ <p>The R-Multiple framework measures every trade in units of initial risk (R). If you risk $1,000 and make $3,000, that is a 3R trade. Minervini targets an average win of 2-3R, with occasional 5-10R outliers on the best setups. His win rate is approximately 50% &mdash; half his trades lose money. But because winners are 2-3x larger than losers, the expected value is strongly positive.</p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 4: William O'Neil's CAN SLIM                          -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-newspaper"></i> 4. William O'Neil's CAN SLIM</h2>
+
+ <p>William O'Neil founded Investor's Business Daily and developed the CAN SLIM methodology by studying every stock market winner from 1880 to 2009 &mdash; over 130 years of data. His research identified the characteristics that the best-performing stocks shared <em>before</em> their biggest advances. CAN SLIM is not a backtested theory; it is an empirical observation of what actually worked, distilled into a repeatable system.</p>
+
+ <h3>The Seven Criteria</h3>
+
+ <div class="data-table">
+ <table>
+ <thead>
+ <tr>
+ <th>Letter</th>
+ <th>Criterion</th>
+ <th>Threshold</th>
+ <th>Why It Matters</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>C</strong></td>
+ <td>Current Quarterly Earnings</td>
+ <td>EPS growth &ge; 25% YoY</td>
+ <td>Momentum in the most recent quarter signals accelerating business. The best stocks averaged 70% quarterly EPS growth before their runs.</td>
+ </tr>
+ <tr>
+ <td><strong>A</strong></td>
+ <td>Annual Earnings Growth</td>
+ <td>&ge; 25% for 3+ consecutive years</td>
+ <td>Sustained growth separates genuine leaders from one-quarter wonders. The annual growth rate confirms the earnings trajectory is structural, not cyclical.</td>
+ </tr>
+ <tr>
+ <td><strong>N</strong></td>
+ <td>New Products, Management, or Price Highs</td>
+ <td>Something genuinely new</td>
+ <td>The greatest stock advances are driven by innovation: new products (iPhone, AWS), new management (Nadella at MSFT), or new price highs (technical breakouts). Never buy a stock making new lows.</td>
+ </tr>
+ <tr>
+ <td><strong>S</strong></td>
+ <td>Supply and Demand</td>
+ <td>Volume surge on breakout (&ge; 50% above avg)</td>
+ <td>Institutional demand is the engine that drives stock prices. A breakout on heavy volume confirms that big money is entering the position. A breakout on light volume is suspicious.</td>
+ </tr>
+ <tr>
+ <td><strong>L</strong></td>
+ <td>Leader or Laggard</td>
+ <td>IBD RS Rating &ge; 80 (ideally 90+)</td>
+ <td>Only buy market leaders. The average IBD Relative Strength Rating of winning stocks just before their major advance was <strong>87</strong> (1950-2008 study). Stocks with RS < 70 are laggards &mdash; avoid them.</td>
+ </tr>
+ <tr>
+ <td><strong>I</strong></td>
+ <td>Institutional Sponsorship</td>
+ <td>Increasing number of funds owning the stock</td>
+ <td>You want to see mutual funds, hedge funds, and pension funds increasing their positions. Decreasing institutional sponsorship is a red flag, even if the chart looks good.</td>
+ </tr>
+ <tr>
+ <td><strong>M</strong></td>
+ <td>Market Direction</td>
+ <td>Only buy in confirmed uptrends</td>
+ <td>75% of stocks follow the general market direction. If the market is in a correction, even the best stocks will struggle. O'Neil's Follow-Through Day system determines market direction.</td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3>The IBD Relative Strength (RS) Rating Formula</h3>
+ <p>The IBD RS Rating is a proprietary composite that ranks each stock's price performance against all other stocks on a 1-99 scale. The approximate formula, reverse-engineered from IBD's methodology:</p>
+
+ <div class="pedagogy-box">
+ <strong><i class="fa-solid fa-calculator"></i> IBD RS Rating Formula:</strong><br>
+ <code>RS = 0.4 &times; ROC(63) + 0.2 &times; ROC(126) + 0.2 &times; ROC(189) + 0.2 &times; ROC(252)</code><br><br>
+ Where ROC(n) = Rate of Change over n trading days. The formula weights the most recent quarter (63 days) at 40% and the remaining three quarters at 20% each. This biases toward recent momentum while requiring sustained outperformance. The raw score is then ranked against all stocks and converted to a 1-99 percentile.
+ </div>
+
+ <p>The statistical significance of the RS Rating is striking: from O'Neil's study of every stock market winner from 1950-2008, the average RS Rating at the beginning of a major advance was <strong>87</strong>. This means the stock was already outperforming 87% of all other stocks before it made its biggest move. The message is clear: buy the strongest stocks, not the weakest.</p>
+
+ <h3>Follow-Through Days: Confirming the Uptrend</h3>
+ <p>O'Neil's Follow-Through Day (FTD) system is his method for determining when a new market uptrend has begun after a correction. The rules:</p>
+ <ol>
+ <li>The market must first make a swing low (the bottom of the correction)</li>
+ <li>Starting from Day 1 of the rally attempt (the first up-day from the low), count forward</li>
+ <li>Between Day 4 and Day 7, look for a session where a major index (S&P 500 or Nasdaq) advances at least 1.2% on volume higher than the previous session</li>
+ <li>That session is the "Follow-Through Day" &mdash; it confirms the uptrend and authorizes new purchases</li>
+ </ol>
+ <p>Not every FTD leads to a sustained rally &mdash; approximately 30% fail. But every sustained market rally since 1900 has included a Follow-Through Day. Missing an FTD means missing the beginning of every new bull move.</p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 5: Relative Rotation Graphs (RRG)                     -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-arrows-spin"></i> 5. Relative Rotation Graphs (RRG)</h2>
+
+ <p>Relative Rotation Graphs were developed by Julius de Kempenaer in Amsterdam between 2004 and 2005, and have since become a standard tool at institutional desks worldwide. The RRG is a visual representation of relative strength and momentum that plots securities on a four-quadrant chart, showing not just where they are relative to a benchmark, but the <em>direction</em> in which they are moving.</p>
+
+ <h3>The Four Quadrants</h3>
+ <div class="data-table">
+ <table>
+ <thead>
+ <tr>
+ <th>Quadrant</th>
+ <th>Position</th>
+ <th>RS Ratio</th>
+ <th>RS Momentum</th>
+ <th>Interpretation</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td><strong>Leading</strong></td><td>Top-Right</td><td>Above 100</td><td>Above 100</td><td>Outperforming and accelerating. Best place to be long.</td></tr>
+ <tr><td><strong>Weakening</strong></td><td>Bottom-Right</td><td>Above 100</td><td>Below 100</td><td>Still outperforming but losing momentum. Relative strength fading. Prepare to exit.</td></tr>
+ <tr><td><strong>Lagging</strong></td><td>Bottom-Left</td><td>Below 100</td><td>Below 100</td><td>Underperforming and decelerating. Avoid or short.</td></tr>
+ <tr><td><strong>Improving</strong></td><td>Top-Left</td><td>Below 100</td><td>Above 100</td><td>Underperforming but gaining momentum. Early rotation signal. Add to watchlist.</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <p>Securities rotate through these quadrants in a <strong>clockwise</strong> direction: Leading &rarr; Weakening &rarr; Lagging &rarr; Improving &rarr; Leading. The speed and amplitude of the rotation varies, but the direction is remarkably consistent. Institutions use RRGs primarily for sector rotation &mdash; shifting capital from sectors entering the Weakening quadrant to sectors entering the Improving or Leading quadrants.</p>
+
+ <!-- EChart: Momentum Factor Returns -->
+ <div id="momentumReturnsChart" style="width:100%; height:400px; margin-top:1.5rem;"></div>
+
+ <p>The practical application of RRGs for trend following is straightforward: <strong>buy sectors and stocks in the Leading quadrant, and avoid or sell those in the Lagging quadrant.</strong> The transition from Improving to Leading is the optimal entry point, as it represents the moment when both relative strength and momentum are simultaneously turning positive. Free RRG tools are available at StockCharts.com and TradingView.</p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 6: Mansfield Relative Strength                        -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-scale-balanced"></i> 6. Mansfield Relative Strength</h2>
+
+ <p>Mansfield Relative Strength (named after the newsletter that popularized it, adopted by Stan Weinstein as his preferred RS measure) provides a cleaner, more actionable measure of relative performance than the IBD RS Rating for the purpose of trend following.</p>
+
+ <h3>The Formula</h3>
+ <p>Mansfield RS is calculated in two steps:</p>
+ <ol>
+ <li><strong>Raw RS Line:</strong> Stock Price / Index Price (typically S&P 500). This creates a ratio that rises when the stock outperforms the index and falls when it underperforms.</li>
+ <li><strong>Mansfield RS:</strong> The Raw RS Line is then expressed as a percentage deviation from its own 52-week simple moving average. A positive reading means the stock's relative performance is above its 52-week average (outperforming). A negative reading means the stock is underperforming its own trend.</li>
+ </ol>
+
+ <p>The critical rule from Weinstein: <strong>only buy stocks with a rising Mansfield RS.</strong> This is more nuanced than simply requiring a positive reading. The Mansfield RS must be <em>rising</em> &mdash; meaning relative performance is improving, not just above average. A stock can have a positive Mansfield RS that is declining (relative outperformance is fading), and this is a sell signal, not a buy signal.</p>
+
+ <h3>Mansfield RS vs. IBD RS: Complementary, Not Substitutes</h3>
+ <div class="data-table">
+ <table>
+ <thead>
+ <tr>
+ <th>Feature</th>
+ <th>Mansfield RS</th>
+ <th>IBD RS Rating</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td>Type</td><td>Continuous line (positive/negative)</td><td>Percentile rank (1-99)</td></tr>
+ <tr><td>Trend visible</td><td>Yes (direction of the line)</td><td>No (single number)</td></tr>
+ <tr><td>Best for</td><td>Timing entries/exits within trends</td><td>Screening for market leaders</td></tr>
+ <tr><td>Lag</td><td>Lower (52-week MA)</td><td>Higher (up to 252-day lookback)</td></tr>
+ <tr><td>Availability</td><td>StockCharts, TradingView (custom)</td><td>IBD/MarketSmith (proprietary)</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <p>The ideal combination for expert practitioners: use IBD RS Rating &ge; 80 as a <em>screening filter</em> (to identify the universe of leaders), then use Mansfield RS direction as a <em>timing tool</em> (to determine when to enter and exit those leaders).</p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 7: Additional Trend Tools                             -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-toolbox"></i> 7. Additional Trend Tools</h2>
+
+ <p>Beyond the three major systems (Weinstein, Minervini, O'Neil), several supplementary tools can sharpen your trend-following execution. Each addresses a specific aspect of trend identification or management.</p>
+
+ <h3>ADX (Average Directional Index)</h3>
+ <p>Developed by J. Welles Wilder in 1978, the ADX measures trend <em>strength</em> without regard to direction. It does not tell you if the trend is up or down &mdash; only how strong it is.</p>
+ <ul>
+ <li><strong>ADX &gt; 25:</strong> The market is trending. Use trend-following strategies.</li>
+ <li><strong>ADX &lt; 20:</strong> The market is range-bound. Use mean-reversion strategies or sit out.</li>
+ <li><strong>ADX rising above 25 from below 20:</strong> A new trend is emerging. This is a valuable early alert.</li>
+ <li><strong>ADX &gt; 40:</strong> The trend is strong and mature. Be cautious about new entries but hold existing positions.</li>
+ </ul>
+
+ <h3>Donchian Channels (The Turtle Trading System)</h3>
+ <p>Richard Donchian is considered the father of trend following. His Donchian Channel is the simplest possible breakout system: buy when price exceeds the highest high of the last N periods; sell when price falls below the lowest low of the last N periods. The famous Turtle Traders used a 20-day breakout for entries and a 10-day breakout (opposite direction) for exits. Despite its simplicity, this system has been profitable across most markets and most time periods.</p>
+
+ <h3>13/34-Week EMA Crossover</h3>
+ <p>A medium-term trend-following system used by many hedge funds for asset allocation. When the 13-week EMA crosses above the 34-week EMA, it is a buy signal. When it crosses below, it is a sell signal. The system is designed for major trend changes and generates only 2-4 signals per year, making it ideal for portfolio-level timing rather than individual stock selection.</p>
+
+ <h3>Supertrend Indicator</h3>
+ <p>Supertrend uses Average True Range (ATR) to create a dynamic trailing stop that flips between bullish and bearish modes. It is particularly effective for trailing stops on trend-following positions because it automatically adjusts to the stock's volatility. In low-volatility environments, the stop tightens; in high-volatility environments, it widens. This prevents premature exits during normal pullbacks while still protecting against genuine reversals.</p>
+
+ <h3>Parabolic SAR</h3>
+ <p>Welles Wilder's Parabolic Stop and Reverse is designed specifically for trend-following exits. It places a trailing stop that accelerates as the trend matures, getting progressively tighter over time. This creates a "ticking clock" effect: the stop closes in on the price, and eventually the trend either stalls (triggering the stop) or accelerates (pulling the stop along). Parabolic SAR is best used in strongly trending markets (ADX &gt; 30) and should be avoided in choppy, range-bound conditions where it generates whipsaws.</p>
+
+ <h3>Ichimoku Cloud: The Complete System from Japan</h3>
+ <p>The Ichimoku Kinko Hyo ("one-glance equilibrium chart") was developed by Japanese journalist Goichi Hosoda over 30 years of research, published in 1969. It is a complete trading system that identifies trend direction, support/resistance levels, and momentum &mdash; all on a single chart. The five components are:</p>
+ <ul>
+ <li><strong>Tenkan-sen (9-period):</strong> Conversion line, similar to a fast moving average</li>
+ <li><strong>Kijun-sen (26-period):</strong> Base line, similar to a medium moving average</li>
+ <li><strong>Senkou Span A:</strong> Average of Tenkan and Kijun, projected 26 periods ahead (leading cloud boundary)</li>
+ <li><strong>Senkou Span B (52-period):</strong> Midpoint of 52-period high/low, projected 26 periods ahead (second cloud boundary)</li>
+ <li><strong>Chikou Span:</strong> Current closing price plotted 26 periods behind (lagging confirmation)</li>
+ </ul>
+ <p>The "cloud" (Kumo) between Senkou A and B represents equilibrium. Price above the cloud = bullish; below = bearish; inside = neutral. The cloud is most powerful as a support/resistance zone: prices that enter the cloud tend to stall, and breaks through the cloud in either direction are significant signals. Ichimoku is particularly popular in the Japanese and cryptocurrency markets.</p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SECTION 8: Building a Trend-Following Screening System         -->
+ <!-- ============================================================ -->
+ <div class="content-card">
+ <h2><i class="fa-solid fa-filter"></i> 8. Building a Trend-Following Screening System</h2>
+
+ <p>Everything we have covered converges into a practical, repeatable screening process. This is the exact workflow used by professional growth stock investors, adapted for the tools available to individual investors in 2026.</p>
+
+ <h3>The 5-Step Screening Funnel</h3>
+
+ <ul class="criteria-list">
+ <li>
+ <span class="criteria-num">1</span>
+ <div>
+ <strong>Stage 2 Filter (Weinstein)</strong><br>
+ Screen for stocks above both the 150-day and 200-day SMA, with both SMAs rising. This eliminates ~60% of the market immediately. Tools: Finviz (custom screener), TradingView (Pine Script), MarketSmith (automatic). The resulting universe is typically 400-600 stocks from a US-listed universe of ~4,000.
+ </div>
+ </li>
+ <li>
+ <span class="criteria-num">2</span>
+ <div>
+ <strong>Trend Template (Minervini)</strong><br>
+ Apply all 8 criteria. Require: price above 50/150/200-day SMA, all three rising, 50 > 150 > 200, price within 25% of 52-week high and at least 25% above 52-week low. This reduces the universe to ~100-200 stocks. Tools: Finviz (multiple MA filters), TradingView (custom indicator), dedicated screeners (Prismo, Barchart).
+ </div>
+ </li>
+ <li>
+ <span class="criteria-num">3</span>
+ <div>
+ <strong>Relative Strength Ranking (O'Neil/Mansfield)</strong><br>
+ Sort remaining stocks by IBD RS Rating (or custom RS calculation) and filter for RS &ge; 80. The Mansfield RS line must be rising. This narrows the list to 30-60 elite stocks. Tools: IBD/MarketSmith (official RS Rating), StockCharts (Mansfield RS indicator), custom Excel/Python calculations.
+ </div>
+ </li>
+ <li>
+ <span class="criteria-num">4</span>
+ <div>
+ <strong>Pattern Recognition (VCP, Cup-and-Handle, Flat Base)</strong><br>
+ From the remaining 30-60 stocks, identify those forming a proper base: VCP (Minervini), cup-and-handle (O'Neil), or flat base (3-6 week consolidation with &lt; 10% depth). The base must show declining volume (selling pressure exhausting) and a clear pivot point (resistance level for breakout). Typically 5-15 stocks qualify at any given time.
+ </div>
+ </li>
+ <li>
+ <span class="criteria-num">5</span>
+ <div>
+ <strong>Volume and Sector Confirmation</strong><br>
+ Final validation: the breakout must occur on volume at least 50% above the 50-day average. The sector (XLK, XLV, etc.) should be in the Leading or Improving quadrant on RRGs. Fundamentals should pass the CAN SLIM "C" and "A" criteria (quarterly EPS growth &ge; 25%, annual growth &ge; 25% for 3+ years). This produces 2-5 actionable trades per week in a healthy market.
+ </div>
+ </li>
+ </ul>
+
+ <!-- EChart: RS Distribution -->
+ <div id="rsDistributionChart" style="width:100%; height:380px; margin-top:1.5rem;"></div>
+
+ <h3>Recommended Tools</h3>
+ <div class="data-table">
+ <table>
+ <thead>
+ <tr>
+ <th>Tool</th>
+ <th>Best For</th>
+ <th>Cost</th>
+ <th>Key Feature</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td><strong>Finviz</strong></td><td>Initial screening (Steps 1-2)</td><td>Free / $29.99/mo Elite</td><td>Fastest multi-criteria screener; real-time with Elite</td></tr>
+ <tr><td><strong>TradingView</strong></td><td>Charting, pattern recognition (Step 4)</td><td>Free / $14.95-$59.95/mo</td><td>Pine Script for custom indicators; community scripts for VCP, Minervini Template</td></tr>
+ <tr><td><strong>MarketSmith (IBD)</strong></td><td>RS Ratings, CAN SLIM (Step 3)</td><td>$149.95/mo</td><td>Official IBD RS Rating, SmartSelect Ratings, pattern recognition AI</td></tr>
+ <tr><td><strong>StockCharts</strong></td><td>Mansfield RS, RRGs (Steps 3, 5)</td><td>$24.95/mo</td><td>Best RRG implementation; Mansfield RS overlay; SCTR ranking</td></tr>
+ <tr><td><strong>Market Watch Scanner</strong></td><td>Automated daily screening</td><td>Included</td><td>DSL-based screening with Minervini Template integration</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <div class="pedagogy-box">
+ <strong><i class="fa-solid fa-graduation-cap"></i> The Master Rule:</strong> All of these tools and systems share one inviolable principle: <strong>buy the strongest stocks in the strongest sectors in a strong market.</strong> If any of those three conditions is absent, reduce your exposure. If the market direction is unclear (M in CAN SLIM), go to cash. If the sector is lagging (RRG in the Lagging quadrant), avoid it regardless of the individual stock's strength. If the stock does not pass the Trend Template, do not buy it regardless of how compelling the story is. Discipline is not optional &mdash; it is the system itself.
+ </div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- SERIES NAVIGATION (FOOTER)                                    -->
+ <!-- ============================================================ -->
+ <div class="content-card" style="text-align:center; padding:2rem;">
+ <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">Continue the Timing the Market series</p>
+ <a href="/series/timing-the-market/expert/en/macro-timing/" class="hero-badge hero-badge-blue" style="text-decoration:none; font-size:0.95rem; padding:0.75rem 2rem;">
+ Next: Part 8 &mdash; Macro Timing <i class="fa-solid fa-arrow-right"></i>
+ </a>
+ </div>
+
+ </div><!-- /.container -->
+
+ <!-- Footer -->
+ <div class="footer-bar">
+ <p>
+ <a href="/"><i class="fa-solid fa-arrow-left"></i> Back to Market Watch</a>
+ &nbsp;&middot;&nbsp; Timing the Market Series &nbsp;&middot;&nbsp; February 2026
+ </p>
+ <p style="margin:0.5rem 0 0; font-size:0.75rem; color:#cbd5e1;">
+ This content is for informational purposes only and does not constitute investment advice. Past performance is not indicative of future results.
+ </p>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- ECHARTS SCRIPTS                                               -->
+ <!-- ============================================================ -->
+ <script>
+ function onResize(chart) {
+     window.addEventListener('resize', function() { chart.resize(); });
+ }
+
+ // === 1. Stage Analysis Diagram ===
+ (function(){
+ var c = echarts.init(document.getElementById('stageChart'));
+ // Simulate a stock going through all 4 Weinstein stages
+ var weeks = [];
+ var prices = [];
+ var sma30 = [];
+ var volumes = [];
+
+ // Stage 1: Basing (weeks 1-30)
+ for (var i = 1; i <= 30; i++) {
+     weeks.push('W' + i);
+     prices.push(Math.round((50 + Math.sin(i * 0.3) * 3 + (Math.random() - 0.5) * 2) * 100) / 100);
+     volumes.push(Math.round(800000 + Math.random() * 400000 - i * 10000));
+ }
+ // Stage 2: Advancing (weeks 31-70)
+ for (var i = 31; i <= 70; i++) {
+     weeks.push('W' + i);
+     var base = 50 + (i - 30) * 1.2 + Math.sin(i * 0.2) * 4;
+     prices.push(Math.round(base * 100) / 100);
+     volumes.push(Math.round(1200000 + Math.random() * 600000 + (i - 30) * 5000));
+ }
+ // Stage 3: Distribution (weeks 71-85)
+ for (var i = 71; i <= 85; i++) {
+     weeks.push('W' + i);
+     prices.push(Math.round((97 + Math.sin(i * 0.4) * 5 + (Math.random() - 0.5) * 3) * 100) / 100);
+     volumes.push(Math.round(1500000 + Math.random() * 800000));
+ }
+ // Stage 4: Declining (weeks 86-110)
+ for (var i = 86; i <= 110; i++) {
+     weeks.push('W' + i);
+     var base = 97 - (i - 85) * 1.5 + Math.sin(i * 0.3) * 3;
+     prices.push(Math.round(Math.max(base, 45) * 100) / 100);
+     volumes.push(Math.round(1000000 + Math.random() * 500000 - (i - 85) * 8000));
+ }
+
+ // Calculate 30-week SMA
+ for (var i = 0; i < prices.length; i++) {
+     if (i < 29) {
+         sma30.push(null);
+     } else {
+         var sum = 0;
+         for (var j = i - 29; j <= i; j++) sum += prices[j];
+         sma30.push(Math.round(sum / 30 * 100) / 100);
+     }
+ }
+
+ c.setOption({
+     title: { text: 'Weinstein Stage Analysis — Idealized Stock Cycle', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 13, fontWeight: 700 } },
+     tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+     legend: { data: ['Price', '30-Week SMA'], bottom: 0 },
+     grid: { left: '8%', right: '5%', bottom: '12%', top: '15%' },
+     xAxis: {
+         type: 'category',
+         data: weeks,
+         axisLabel: { interval: 9, fontSize: 10 }
+     },
+     yAxis: {
+         type: 'value',
+         name: 'Price ($)',
+         min: 40,
+         max: 110
+     },
+     visualMap: {
+         show: false,
+         dimension: 0,
+         pieces: [
+             { min: 0, max: 29, color: '#94a3b8' },
+             { min: 30, max: 69, color: '#10b981' },
+             { min: 70, max: 84, color: '#f59e0b' },
+             { min: 85, max: 109, color: '#ef4444' }
+         ]
+     },
+     series: [
+         {
+             name: 'Price',
+             type: 'line',
+             data: prices,
+             lineStyle: { width: 2 },
+             symbol: 'none',
+             markArea: {
+                 silent: true,
+                 data: [
+                     [{ xAxis: 'W1', itemStyle: { color: 'rgba(148,163,184,0.08)' }, label: { formatter: 'STAGE 1\nBasing', position: 'insideTop', fontSize: 11, fontWeight: 700, color: '#64748b' } }, { xAxis: 'W30' }],
+                     [{ xAxis: 'W31', itemStyle: { color: 'rgba(16,185,129,0.08)' }, label: { formatter: 'STAGE 2\nAdvancing', position: 'insideTop', fontSize: 11, fontWeight: 700, color: '#10b981' } }, { xAxis: 'W70' }],
+                     [{ xAxis: 'W71', itemStyle: { color: 'rgba(245,158,11,0.08)' }, label: { formatter: 'STAGE 3\nDistribution', position: 'insideTop', fontSize: 11, fontWeight: 700, color: '#d97706' } }, { xAxis: 'W85' }],
+                     [{ xAxis: 'W86', itemStyle: { color: 'rgba(239,68,68,0.08)' }, label: { formatter: 'STAGE 4\nDeclining', position: 'insideTop', fontSize: 11, fontWeight: 700, color: '#ef4444' } }, { xAxis: 'W110' }]
+                 ]
+             }
+         },
+         {
+             name: '30-Week SMA',
+             type: 'line',
+             data: sma30,
+             lineStyle: { width: 2.5, color: '#3b82f6', type: 'dashed' },
+             itemStyle: { color: '#3b82f6' },
+             symbol: 'none'
+         }
+     ]
+ });
+ onResize(c);
+ })();
+
+ // === 2. Momentum Factor Returns Over Time ===
+ (function(){
+ var c = echarts.init(document.getElementById('momentumReturnsChart'));
+ c.setOption({
+     title: { text: 'Momentum Factor Cumulative Returns (Long Top Decile, Short Bottom Decile)', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 12, fontWeight: 700 } },
+     tooltip: {
+         trigger: 'axis',
+         formatter: function(p) {
+             var s = '<strong>' + p[0].axisValue + '</strong><br/>';
+             p.forEach(function(i) { s += i.marker + ' ' + i.seriesName + ': ' + (i.value > 0 ? '+' : '') + i.value + '%<br/>'; });
+             return s;
+         }
+     },
+     legend: { data: ['US Equities', 'International Equities', 'All Asset Classes'], bottom: 0 },
+     grid: { left: '8%', right: '5%', bottom: '15%', top: '15%' },
+     xAxis: {
+         type: 'category',
+         data: ['1927-40', '1940-50', '1950-60', '1960-70', '1970-80', '1980-90', '1990-00', '2000-10', '2010-20', '2020-26'],
+         axisLabel: { fontWeight: 600, fontSize: 10, interval: 0, rotate: 30 }
+     },
+     yAxis: {
+         type: 'value',
+         name: 'Annualized Return (%)',
+         axisLabel: { formatter: '{value}%' }
+     },
+     series: [
+         {
+             name: 'US Equities',
+             type: 'bar',
+             data: [8.2, 11.5, 9.8, 7.2, 5.5, 12.8, 14.2, 2.1, 7.5, 6.8],
+             itemStyle: { color: '#2563eb', borderRadius: [4,4,0,0] },
+             barWidth: '25%',
+             barGap: '10%'
+         },
+         {
+             name: 'International Equities',
+             type: 'bar',
+             data: [null, null, 6.5, 8.1, 4.2, 10.5, 11.8, 5.2, 6.2, 5.5],
+             itemStyle: { color: '#10b981', borderRadius: [4,4,0,0] },
+             barWidth: '25%'
+         },
+         {
+             name: 'All Asset Classes',
+             type: 'line',
+             data: [7.0, 9.8, 8.5, 7.8, 6.2, 11.2, 13.5, 4.8, 7.0, 6.2],
+             lineStyle: { width: 3, color: '#9333ea' },
+             itemStyle: { color: '#9333ea' },
+             symbol: 'circle',
+             symbolSize: 8
+         }
+     ]
+ });
+ onResize(c);
+ })();
+
+ // === 3. RS Rating Distribution of Market Winners ===
+ (function(){
+ var c = echarts.init(document.getElementById('rsDistributionChart'));
+ c.setOption({
+     title: { text: 'IBD RS Rating Distribution of All Market Winners (1950-2008)', left: 'center', textStyle: { fontFamily: 'Inter', fontSize: 12, fontWeight: 700 } },
+     tooltip: {
+         trigger: 'axis',
+         formatter: function(p) {
+             return 'RS Rating: ' + p[0].axisValue + '<br/>' + p[0].marker + ' % of Winners: ' + p[0].value + '%';
+         }
+     },
+     grid: { left: '8%', right: '5%', bottom: '12%', top: '15%' },
+     xAxis: {
+         type: 'category',
+         data: ['1-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70', '71-80', '81-90', '91-99'],
+         name: 'RS Rating Range',
+         nameLocation: 'center',
+         nameGap: 35,
+         axisLabel: { fontWeight: 600, fontSize: 10 }
+     },
+     yAxis: {
+         type: 'value',
+         name: '% of Winning Stocks',
+         axisLabel: { formatter: '{value}%' }
+     },
+     series: [{
+         name: 'Distribution',
+         type: 'bar',
+         data: [
+             { value: 0.5, itemStyle: { color: '#ef4444', borderRadius: [4,4,0,0] } },
+             { value: 0.8, itemStyle: { color: '#ef4444', borderRadius: [4,4,0,0] } },
+             { value: 1.2, itemStyle: { color: '#f97316', borderRadius: [4,4,0,0] } },
+             { value: 1.5, itemStyle: { color: '#f97316', borderRadius: [4,4,0,0] } },
+             { value: 2.5, itemStyle: { color: '#f59e0b', borderRadius: [4,4,0,0] } },
+             { value: 3.8, itemStyle: { color: '#f59e0b', borderRadius: [4,4,0,0] } },
+             { value: 7.2, itemStyle: { color: '#84cc16', borderRadius: [4,4,0,0] } },
+             { value: 15.5, itemStyle: { color: '#22c55e', borderRadius: [4,4,0,0] } },
+             { value: 32.0, itemStyle: { color: '#10b981', borderRadius: [4,4,0,0] } },
+             { value: 35.0, itemStyle: { color: '#059669', borderRadius: [4,4,0,0] } }
+         ],
+         barWidth: '65%',
+         label: {
+             show: true,
+             position: 'top',
+             formatter: function(p) { return p.value + '%'; },
+             fontWeight: 700,
+             fontSize: 11,
+             color: '#0f172a'
+         },
+         markLine: {
+             silent: true,
+             data: [{
+                 xAxis: '81-90',
+                 lineStyle: { color: '#2563eb', type: 'dashed', width: 2 },
+                 label: { formatter: 'Avg Winner RS: 87', position: 'end', fontSize: 10, color: '#2563eb', fontWeight: 700 }
+             }]
+         }
+     }]
+ });
+ onResize(c);
+ })();
+ </script>
+
+</body>
+</html>
