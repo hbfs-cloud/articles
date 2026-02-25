@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt (Data Build Tool) : Le Guide Complet pour Débutants | Market Watch</title>
+    <meta name="description"
+        content="Guide complet sur dbt : transformations SQL, modélisation, tests, documentation, CI/CD data, best practices et anti-patterns pour les data engineers débutants.">
+    <meta property="og:title" content="dbt : Le Guide Complet pour Débutants">
+    <meta property="og:description"
+        content="Maîtrisez dbt : sources, staging, marts, tests, snapshots, macros, packages et déploiement en production.">
+    <meta property="og:image" content="https://market-watch.xyz/logo.svg">
+    <meta property="og:url" content="https://market-watch.xyz/tech/dbt-guide/">
+    <meta property="og:type" content="article">
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <!-- HEADER -->
+    <div class="ticker-header">
+        <a href="/" class="brand-bar">
+            <img src="https://market-watch.xyz/logo.svg" alt="MW"> MARKET WATCH
+        </a>
+        <div class="ticker-symbol">GUIDE TECH</div>
+        <div class="ticker-name">dbt (Data Build Tool) : Le Guide Complet</div>
+        <div class="ticker-meta">Transformer vos données brutes en informations fiables avec du SQL</div>
+        <div class="badge-row">
+            <span class="badge badge-blue">DATA ENGINEERING</span>
+            <span class="badge badge-green">SQL</span>
+            <span class="badge badge-purple">ANALYTICS</span>
+            <span class="badge badge-neutral">DÉBUTANT</span>
+        </div>
+        <div class="ticker-meta">25 Février 2026 &bull; Par Market Watch Tech</div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="container">
+        <div class="nav-grid">
+            <a href="#intro" class="nav-item"><i class="fa-solid fa-database"></i> Introduction</a>
+            <a href="#vision" class="nav-item"><i class="fa-solid fa-eye"></i> Vision Globale</a>
+            <a href="#concepts" class="nav-item"><i class="fa-solid fa-cubes"></i> Concepts Clés</a>
+            <a href="#architecture" class="nav-item"><i class="fa-solid fa-layer-group"></i> Architecture</a>
+            <a href="#usecases" class="nav-item"><i class="fa-solid fa-lightbulb"></i> Use Cases</a>
+            <a href="#lifecycle" class="nav-item"><i class="fa-solid fa-arrows-spin"></i> Cycle de Vie</a>
+            <a href="#features" class="nav-item"><i class="fa-solid fa-star"></i> Features Clés</a>
+            <a href="#patterns" class="nav-item"><i class="fa-solid fa-puzzle-piece"></i> Patterns</a>
+            <a href="#best" class="nav-item"><i class="fa-solid fa-check-double"></i> Best Practices</a>
+            <a href="#bad" class="nav-item"><i class="fa-solid fa-triangle-exclamation"></i> Anti-Patterns</a>
+            <a href="#design" class="nav-item"><i class="fa-solid fa-compass-drafting"></i> Questions Design</a>
+            <a href="#ecosystem" class="nav-item"><i class="fa-solid fa-plug"></i> Écosystème</a>
+        </div>
+
+        <!-- INTRODUCTION -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-database" style="color:#ff6944;"></i> Qu'est-ce que dbt ?</h2>
+            <p><strong>dbt (Data Build Tool)</strong> est un outil open-source qui permet de <strong>transformer les
+                    données</strong> directement dans votre data warehouse en écrivant du <strong>SQL</strong>. C'est le
+                « T » (Transform) du pipeline ELT. dbt ne charge pas les données (c'est le rôle d'outils comme Meltano,
+                Fivetran, ou Airbyte) — il les transforme une fois qu'elles sont dans le warehouse.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">SQL</div>
+                    <div class="metric-label">Langage principal — pas besoin de Python ou Java pour transformer vos
+                        données</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">T du ELT</div>
+                    <div class="metric-label">Ne fait QUE la transformation — pas l'extraction ni le chargement</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Git-native</div>
+                    <div class="metric-label">Tout est versionné : modèles, tests, docs, macros</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">40K+</div>
+                    <div class="metric-label">Entreprises utilisatrices, de la startup au Fortune 500</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Analogie pour débutants</h4>
+                <p>Imaginez une <strong>cuisine industrielle</strong>. Les ingrédients bruts (données sources) arrivent
+                    par camion (extraction). Ils sont stockés dans un immense frigo (data warehouse). <strong>dbt, c'est
+                        le chef cuisinier</strong> : il prend les ingrédients bruts et les transforme en plats finis
+                    (tableaux de bord, rapports, métriques) en suivant des recettes (modèles SQL). Et comme un bon chef,
+                    il <strong>documente ses recettes</strong>, <strong>teste la qualité</strong> des plats, et
+                    <strong>organise sa cuisine</strong> de manière reproductible.</p>
+            </div>
+
+            <h3>dbt Core vs dbt Cloud</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>dbt Core (Open-Source)</th>
+                            <th>dbt Cloud (SaaS)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Prix</td>
+                            <td>Gratuit</td>
+                            <td>À partir de $100/mois</td>
+                        </tr>
+                        <tr>
+                            <td>Exécution</td>
+                            <td>En local ou votre CI/CD</td>
+                            <td>Hébergé par dbt Labs</td>
+                        </tr>
+                        <tr>
+                            <td>IDE</td>
+                            <td>Votre éditeur favori</td>
+                            <td>IDE web intégré</td>
+                        </tr>
+                        <tr>
+                            <td>Scheduler</td>
+                            <td>Cron, Airflow, Dagster, Prefect</td>
+                            <td>Intégré</td>
+                        </tr>
+                        <tr>
+                            <td>Documentation</td>
+                            <td>Générée localement</td>
+                            <td>Hébergée automatiquement</td>
+                        </tr>
+                        <tr>
+                            <td>CI/CD</td>
+                            <td>À configurer vous-même</td>
+                            <td>Slim CI intégré</td>
+                        </tr>
+                        <tr>
+                            <td>Idéal pour</td>
+                            <td>Équipes techniques, open-source</td>
+                            <td>Équipes mixtes, onboarding rapide</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VISION GLOBALE -->
+        <div id="vision" class="content-card">
+            <h2><i class="fa-solid fa-eye" style="color:#8b5cf6;"></i> Vision Globale : Où se Place dbt ?</h2>
+
+            <h3>Le Modern Data Stack</h3>
+            <p>dbt s'inscrit dans le <strong>Modern Data Stack</strong>, une architecture data modulaire où chaque outil
+                a une responsabilité claire :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étape</th>
+                            <th>Rôle</th>
+                            <th>Outils</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Extract</strong></td>
+                            <td>Récupérer les données des sources</td>
+                            <td>Meltano, Fivetran, Airbyte, Stitch</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Load</strong></td>
+                            <td>Charger dans le warehouse</td>
+                            <td>Meltano, Fivetran, Airbyte</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Transform</strong></td>
+                            <td>Transformer les données brutes en modèles analytiques</td>
+                            <td><strong>dbt</strong> ⭐</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Warehouse</strong></td>
+                            <td>Stocker et requêter les données</td>
+                            <td>Snowflake, BigQuery, Redshift, DuckDB, Postgres</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Orchestrate</strong></td>
+                            <td>Planifier et orchestrer les pipelines</td>
+                            <td>Airflow, Dagster, Prefect, dbt Cloud</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Visualize</strong></td>
+                            <td>Créer des dashboards</td>
+                            <td>Looker, Metabase, Superset, Evidence</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quality</strong></td>
+                            <td>Surveiller la qualité des données</td>
+                            <td>dbt tests, Great Expectations, Soda, Elementary</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-circle-info"></i> Pourquoi ELT et pas ETL ?</h4>
+                <p>L'ancien paradigme <strong>ETL</strong> (Extract-Transform-Load) transformait les données
+                    <em>avant</em> de les charger, ce qui demandait des outils complexes (Informatica, Talend). Le
+                    nouveau paradigme <strong>ELT</strong> charge d'abord les données brutes, puis les transforme
+                    <em>dans</em> le warehouse. Avantage : le warehouse moderne est assez puissant pour faire les
+                    transformations, et vous gardez toujours les données brutes.</p>
+            </div>
+        </div>
+
+        <!-- CONCEPTS CLÉS -->
+        <div id="concepts" class="content-card">
+            <h2><i class="fa-solid fa-cubes" style="color:#10b981;"></i> Concepts Clés de dbt</h2>
+
+            <h3>1. Les Modèles (Models)</h3>
+            <p>Un modèle dbt est simplement un <strong>fichier SQL</strong> avec une requête <code>SELECT</code>. dbt
+                exécute ce SELECT et matérialise le résultat comme une table ou une vue dans le warehouse.</p>
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-code"></i> Exemple : Un modèle simple</h4>
+                <pre><code>-- models/staging/stg_orders.sql
+SELECT
+    id AS order_id,
+    user_id AS customer_id,
+    order_date,
+    status,
+    amount / 100.0 AS amount_eur  -- centimes → euros
+FROM {{ source('raw', 'orders') }}
+WHERE status != 'cancelled'</code></pre>
+                <p>Ce modèle prend les commandes brutes, renomme les colonnes, convertit les montants, et filtre les
+                    annulées.</p>
+            </div>
+
+            <h3>2. Les Sources (Sources)</h3>
+            <p>Les sources déclarent les tables <strong>brutes</strong> qui arrivent dans votre warehouse (via Meltano,
+                Fivetran, etc.). Elles sont déclarées dans un fichier YAML :</p>
+            <div class="pedagogy-box">
+                <pre><code># models/staging/_sources.yml
+version: 2
+sources:
+  - name: raw
+    database: my_warehouse
+    schema: raw_data
+    tables:
+      - name: orders
+        description: "Commandes brutes depuis Shopify"
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: { count: 12, period: hour }
+          error_after: { count: 24, period: hour }</code></pre>
+            </div>
+
+            <h3>3. Les Matérialisations</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Comportement</th>
+                            <th>Quand l'utiliser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>view</strong></td>
+                            <td>Crée une vue SQL (pas de stockage)</td>
+                            <td>Modèles légers, staging, données toujours fraîches</td>
+                        </tr>
+                        <tr>
+                            <td><strong>table</strong></td>
+                            <td>Crée une vraie table (stockage physique)</td>
+                            <td>Modèles lourds, agrégations, marts finaux</td>
+                        </tr>
+                        <tr>
+                            <td><strong>incremental</strong></td>
+                            <td>N'ajoute que les nouvelles lignes</td>
+                            <td>Tables volumineuses (logs, événements, transactions)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ephemeral</strong></td>
+                            <td>CTE inlinée (pas de table/vue)</td>
+                            <td>Sous-requêtes réutilisables, pas de matérialisation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>4. Les Tests</h3>
+            <p>dbt intègre des tests de <strong>qualité des données</strong> directement dans votre pipeline :</p>
+            <div class="pedagogy-box">
+                <pre><code># models/staging/_schema.yml
+version: 2
+models:
+  - name: stg_orders
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['pending', 'shipped', 'delivered', 'returned']
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id</code></pre>
+                <p><strong>4 tests génériques natifs :</strong> <code>unique</code>, <code>not_null</code>,
+                    <code>accepted_values</code>, <code>relationships</code>. Vous pouvez aussi écrire des tests SQL
+                    custom.</p>
+            </div>
+
+            <h3>5. Jinja & Macros</h3>
+            <p>dbt utilise <strong>Jinja2</strong> comme moteur de template, ce qui rend le SQL dynamique et
+                réutilisable :</p>
+            <div class="pedagogy-box">
+                <pre><code>-- Référencer un autre modèle
+SELECT * FROM {{ ref('stg_orders') }}
+
+-- Référencer une source
+SELECT * FROM {{ source('raw', 'orders') }}
+
+-- Condition selon l'environnement
+{% if target.name == 'prod' %}
+    WHERE created_at >= '2024-01-01'
+{% endif %}
+
+-- Boucle dynamique
+{% set payment_methods = ['credit_card', 'paypal', 'bank'] %}
+{% for method in payment_methods %}
+    SUM(CASE WHEN payment_method = '{{ method }}'
+        THEN amount ELSE 0 END) AS {{ method }}_amount
+    {% if not loop.last %},{% endif %}
+{% endfor %}</code></pre>
+            </div>
+        </div>
+
+        <!-- ARCHITECTURE DES COUCHES -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#0ea5e9;"></i> Architecture en Couches (Le Pattern
+                Fondamental)</h2>
+
+            <p>La convention la plus importante de dbt est l'<strong>architecture en 3 couches</strong> :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">1. Staging</div>
+                    <div class="metric-label"><strong>Nettoyage & Normalisation</strong><br>1:1 avec les sources.
+                        Renommage, cast, filtrage basique. Toujours des vues.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2. Intermediate</div>
+                    <div class="metric-label"><strong>Logique Métier</strong><br>Jointures, agrégations, calculs
+                        complexes. Modèles internes, pas exposés aux utilisateurs.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3. Marts</div>
+                    <div class="metric-label"><strong>Tables Finales</strong><br>Prêtes pour la BI / l'analytique.
+                        Organisées par domaine métier (finance, marketing, produit).</div>
+                </div>
+            </div>
+
+            <h3>Structure de Dossiers Recommandée</h3>
+            <div class="pedagogy-box">
+                <pre><code>models/
+├── staging/                  # Couche 1 : Nettoyage
+│   ├── shopify/
+│   │   ├── _shopify__sources.yml
+│   │   ├── _shopify__models.yml
+│   │   ├── stg_shopify__orders.sql
+│   │   └── stg_shopify__customers.sql
+│   └── stripe/
+│       ├── _stripe__sources.yml
+│       ├── stg_stripe__payments.sql
+│       └── stg_stripe__refunds.sql
+├── intermediate/             # Couche 2 : Logique métier
+│   ├── int_orders_with_payments.sql
+│   └── int_customer_lifetime.sql
+└── marts/                    # Couche 3 : Tables finales
+    ├── finance/
+    │   ├── fct_revenue.sql         # Fact table
+    │   └── dim_customers.sql       # Dimension table
+    ├── marketing/
+    │   ├── fct_campaigns.sql
+    │   └── dim_channels.sql
+    └── product/
+        └── fct_user_activity.sql</code></pre>
+            </div>
+
+            <h3>Conventions de Nommage</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Préfixe</th>
+                            <th>Couche</th>
+                            <th>Exemple</th>
+                            <th>Règle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>stg_</code></td>
+                            <td>Staging</td>
+                            <td><code>stg_shopify__orders</code></td>
+                            <td>1:1 avec la source, renommage + cast</td>
+                        </tr>
+                        <tr>
+                            <td><code>int_</code></td>
+                            <td>Intermediate</td>
+                            <td><code>int_orders_with_payments</code></td>
+                            <td>Jointures, logique métier interne</td>
+                        </tr>
+                        <tr>
+                            <td><code>fct_</code></td>
+                            <td>Marts (facts)</td>
+                            <td><code>fct_revenue</code></td>
+                            <td>Tables de faits (événements, transactions)</td>
+                        </tr>
+                        <tr>
+                            <td><code>dim_</code></td>
+                            <td>Marts (dimensions)</td>
+                            <td><code>dim_customers</code></td>
+                            <td>Tables de dimensions (entités, référentiels)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- USE CASES -->
+        <div id="usecases" class="content-card">
+            <h2><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Use Cases Activables</h2>
+
+            <h3>1. E-Commerce : Tableau de Bord des Ventes</h3>
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-shopping-cart"></i> Pipeline complet</h4>
+                <pre><code>-- models/marts/finance/fct_daily_revenue.sql
+WITH orders AS (
+    SELECT * FROM {{ ref('stg_shopify__orders') }}
+),
+payments AS (
+    SELECT * FROM {{ ref('stg_stripe__payments') }}
+)
+SELECT
+    o.order_date,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    COUNT(DISTINCT o.customer_id) AS unique_customers,
+    SUM(p.amount) AS gross_revenue,
+    SUM(p.amount) - SUM(p.fees) AS net_revenue,
+    SUM(p.amount) / COUNT(DISTINCT o.order_id) AS avg_order_value
+FROM orders o
+LEFT JOIN payments p ON o.order_id = p.order_id
+GROUP BY o.order_date</code></pre>
+                <p>Ce modèle alimente directement un dashboard Metabase/Looker avec les KPIs de vente.</p>
+            </div>
+
+            <h3>2. SaaS : Calcul du MRR et Churn</h3>
+            <div class="pedagogy-box">
+                <pre><code>-- models/marts/finance/fct_mrr.sql
+WITH subscriptions AS (
+    SELECT * FROM {{ ref('int_active_subscriptions') }}
+)
+SELECT
+    date_trunc('month', period_start) AS month,
+    SUM(CASE WHEN type = 'new' THEN mrr ELSE 0 END) AS new_mrr,
+    SUM(CASE WHEN type = 'expansion' THEN mrr ELSE 0 END) AS expansion_mrr,
+    SUM(CASE WHEN type = 'contraction' THEN mrr ELSE 0 END) AS contraction_mrr,
+    SUM(CASE WHEN type = 'churn' THEN mrr ELSE 0 END) AS churned_mrr,
+    SUM(mrr) AS total_mrr
+FROM subscriptions
+GROUP BY 1</code></pre>
+            </div>
+
+            <h3>3. Marketing : Attribution Multi-Touch</h3>
+            <div class="pedagogy-box">
+                <pre><code>-- models/marts/marketing/fct_attribution.sql
+SELECT
+    campaign_id,
+    channel,
+    SUM(first_touch_revenue) AS first_touch_attributed,
+    SUM(last_touch_revenue) AS last_touch_attributed,
+    SUM(linear_revenue) AS linear_attributed,
+    COUNT(DISTINCT customer_id) AS customers_acquired,
+    SUM(spend) AS total_spend,
+    SUM(linear_revenue) / NULLIF(SUM(spend), 0) AS roas
+FROM {{ ref('int_touchpoints_attributed') }}
+GROUP BY campaign_id, channel</code></pre>
+            </div>
+
+            <h3>4. Finance : Rapprochement Bancaire</h3>
+            <div class="pedagogy-box">
+                <pre><code>-- models/intermediate/int_bank_reconciliation.sql
+SELECT
+    b.transaction_id,
+    b.amount AS bank_amount,
+    e.amount AS erp_amount,
+    ABS(b.amount - e.amount) AS difference,
+    CASE
+        WHEN e.transaction_id IS NULL THEN 'unmatched_bank'
+        WHEN ABS(b.amount - e.amount) > 0.01 THEN 'amount_mismatch'
+        ELSE 'matched'
+    END AS reconciliation_status
+FROM {{ ref('stg_bank__transactions') }} b
+FULL OUTER JOIN {{ ref('stg_erp__transactions') }} e
+    ON b.transaction_id = e.transaction_id</code></pre>
+            </div>
+        </div>
+
+        <!-- CYCLE DE VIE -->
+        <div id="lifecycle" class="content-card">
+            <h2><i class="fa-solid fa-arrows-spin" style="color:#ec4899;"></i> Cycle de Vie d'un Projet dbt</h2>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Commande dbt</th>
+                            <th>Ce qui se passe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Init</strong></td>
+                            <td><code>dbt init mon_projet</code></td>
+                            <td>Crée la structure de projet avec les dossiers et fichiers de config</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Développement</strong></td>
+                            <td><code>dbt run --select stg_orders</code></td>
+                            <td>Compile et exécute un modèle spécifique dans le warehouse</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Test</strong></td>
+                            <td><code>dbt test</code></td>
+                            <td>Exécute tous les tests de qualité des données</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Documentation</strong></td>
+                            <td><code>dbt docs generate && dbt docs serve</code></td>
+                            <td>Génère et sert la documentation interactive (avec DAG)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5. Build complet</strong></td>
+                            <td><code>dbt build</code></td>
+                            <td>Exécute run + test + snapshot en une seule commande</td>
+                        </tr>
+                        <tr>
+                            <td><strong>6. Deploy</strong></td>
+                            <td><code>dbt run --target prod</code></td>
+                            <td>Exécute tous les modèles dans l'environnement de production</td>
+                        </tr>
+                        <tr>
+                            <td><strong>7. Freshness</strong></td>
+                            <td><code>dbt source freshness</code></td>
+                            <td>Vérifie que les sources sont à jour (pas de données stale)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Le DAG (Directed Acyclic Graph)</h3>
+            <p>dbt construit automatiquement un <strong>graphe de dépendances</strong> entre vos modèles grâce aux
+                fonctions <code>ref()</code> et <code>source()</code>. Ce DAG garantit que les modèles sont exécutés
+                dans le bon ordre et permet de ne relancer que ce qui est nécessaire.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-diagram-project"></i> Le DAG est votre meilleur ami</h4>
+                <p>Le DAG de dbt est l'un de ses plus grands avantages. Il permet de visualiser toute la chaîne de
+                    transformation, d'identifier les dépendances circulaires, et d'exécuter des sous-ensembles du
+                    pipeline avec les sélecteurs (<code>dbt run --select +fct_revenue</code> pour exécuter fct_revenue
+                    et tous ses ancêtres).</p>
+            </div>
+        </div>
+
+        <!-- FEATURES CLÉS -->
+        <div id="features" class="content-card">
+            <h2><i class="fa-solid fa-star" style="color:#f59e0b;"></i> Features Clés</h2>
+
+            <h3>1. Snapshots (Slowly Changing Dimensions)</h3>
+            <p>Les snapshots capturent l'<strong>historique des changements</strong> dans vos données sources :</p>
+            <div class="pedagogy-box">
+                <pre><code>-- snapshots/snap_customers.sql
+{% snapshot snap_customers %}
+{{
+    config(
+        target_schema='snapshots',
+        unique_key='customer_id',
+        strategy='timestamp',
+        updated_at='updated_at'
+    )
+}}
+SELECT * FROM {{ source('raw', 'customers') }}
+{% endsnapshot %}</code></pre>
+                <p>Chaque fois qu'un client change d'adresse ou de plan, dbt crée une nouvelle ligne avec des colonnes
+                    <code>dbt_valid_from</code> et <code>dbt_valid_to</code>.</p>
+            </div>
+
+            <h3>2. Modèles Incrémentaux</h3>
+            <div class="pedagogy-box">
+                <pre><code>-- models/marts/fct_events.sql
+{{
+    config(
+        materialized='incremental',
+        unique_key='event_id',
+        incremental_strategy='merge'
+    )
+}}
+SELECT
+    event_id,
+    user_id,
+    event_type,
+    created_at
+FROM {{ ref('stg_events') }}
+
+{% if is_incremental() %}
+    WHERE created_at > (SELECT MAX(created_at) FROM {{ this }})
+{% endif %}</code></pre>
+                <p>Au lieu de recréer la table entière à chaque run (qui peut prendre des heures sur des milliards de
+                    lignes), le modèle incrémental ne traite que les <strong>nouvelles données</strong>.</p>
+            </div>
+
+            <h3>3. Packages (Réutilisation)</h3>
+            <div class="pedagogy-box">
+                <pre><code># packages.yml
+packages:
+  - package: dbt-labs/dbt_utils        # Utilitaires SQL essentiels
+    version: [">=1.0.0", "<2.0.0"]
+  - package: dbt-labs/codegen          # Génération automatique de staging
+    version: [">=0.12.0", "<1.0.0"]
+  - package: calogica/dbt_expectations # Tests avancés (regex, ranges, distributions)
+    version: [">=0.10.0", "<1.0.0"]
+  - package: elementary-data/elementary # Monitoring & observabilité
+    version: [">=0.13.0", "<1.0.0"]</code></pre>
+            </div>
+
+            <h3>4. Seeds (Données de Référence)</h3>
+            <p>Les seeds sont des fichiers CSV versionnés dans git pour les données de référence statiques :</p>
+            <div class="pedagogy-box">
+                <pre><code># seeds/country_codes.csv
+code,name,region
+FR,France,Europe
+US,United States,North America
+JP,Japan,Asia Pacific
+
+# Puis dans un modèle :
+SELECT * FROM {{ ref('country_codes') }}</code></pre>
+            </div>
+
+            <h3>5. Exposures (Documentation des Usages)</h3>
+            <div class="pedagogy-box">
+                <pre><code># models/_exposures.yml
+exposures:
+  - name: weekly_revenue_dashboard
+    type: dashboard
+    maturity: high
+    url: https://metabase.company.com/dashboard/42
+    description: "Dashboard hebdomadaire des revenus"
+    depends_on:
+      - ref('fct_daily_revenue')
+      - ref('dim_customers')
+    owner:
+      name: Équipe Finance
+      email: finance@company.com</code></pre>
+            </div>
+        </div>
+
+        <!-- PATTERNS -->
+        <div id="patterns" class="content-card">
+            <h2><i class="fa-solid fa-puzzle-piece" style="color:#6366f1;"></i> Les Grands Patterns dbt</h2>
+
+            <h3>1. Star Schema (Étoile)</h3>
+            <p>Le pattern le plus classique en data warehousing : une <strong>table de faits</strong> centrale entourée
+                de <strong>tables de dimensions</strong>.</p>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Préfixe</th>
+                            <th>Contient</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Fact (Faits)</strong></td>
+                            <td><code>fct_</code></td>
+                            <td>Événements, transactions, mesures</td>
+                            <td><code>fct_orders</code>, <code>fct_payments</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dimension</strong></td>
+                            <td><code>dim_</code></td>
+                            <td>Entités, attributs descriptifs</td>
+                            <td><code>dim_customers</code>, <code>dim_products</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>2. Wide Table (Table Large)</h3>
+            <p>Alternative au Star Schema pour les cas simples : une seule table dénormalisée avec toutes les
+                informations. Plus simple pour les analystes, moins flexible pour les cas complexes.</p>
+
+            <h3>3. Activity Schema</h3>
+            <p>Pattern émergent pour les données événementielles : toutes les activités d'un utilisateur dans une seule
+                table avec un schéma flexible (<code>activity_type</code>, <code>feature_1</code>,
+                <code>feature_2</code>, etc.).</p>
+
+            <h3>4. Surrogate Keys</h3>
+            <div class="pedagogy-box">
+                <pre><code>-- Créer une clé de substitution avec dbt_utils
+SELECT
+    {{ dbt_utils.generate_surrogate_key(['order_id', 'product_id']) }}
+        AS order_line_id,
+    order_id,
+    product_id,
+    quantity,
+    unit_price
+FROM {{ ref('stg_order_lines') }}</code></pre>
+            </div>
+
+            <h3>5. Le Pattern « Union Sources »</h3>
+            <div class="pedagogy-box">
+                <pre><code>-- Combiner plusieurs sources du même type
+WITH shopify AS (
+    SELECT *, 'shopify' AS source_system
+    FROM {{ ref('stg_shopify__orders') }}
+),
+amazon AS (
+    SELECT *, 'amazon' AS source_system
+    FROM {{ ref('stg_amazon__orders') }}
+)
+SELECT * FROM shopify
+UNION ALL
+SELECT * FROM amazon</code></pre>
+            </div>
+        </div>
+
+        <!-- BEST PRACTICES -->
+        <div id="best" class="content-card">
+            <h2><i class="fa-solid fa-check-double" style="color:#16a34a;"></i> Best Practices</h2>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">1</div>
+                    <div class="metric-label"><strong>Toujours 3 couches</strong><br>Staging → Intermediate → Marts. Ne
+                        sautez jamais de couche, même si ça semble excessif pour un petit projet.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2</div>
+                    <div class="metric-label"><strong>Tests sur TOUT</strong><br>Chaque modèle doit avoir au minimum
+                        <code>unique</code> et <code>not_null</code> sur sa clé primaire. Les marts doivent avoir des
+                        tests métier.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label"><strong>Documentez chaque modèle</strong><br>Description du modèle +
+                        description de chaque colonne dans les fichiers YAML. C'est la documentation vivante de votre
+                        data warehouse.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4</div>
+                    <div class="metric-label"><strong>Un staging = un source</strong><br>Chaque table source a
+                        exactement un modèle staging. C'est le seul endroit qui référence <code>source()</code>.</div>
+                </div>
+            </div>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">5</div>
+                    <div class="metric-label"><strong>Utilisez ref() partout</strong><br>Ne référencez JAMAIS une table
+                        directement. Utilisez toujours <code>{{ ref('model_name') }}</code> pour que le DAG soit
+                        complet.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">6</div>
+                    <div class="metric-label"><strong>Source freshness checks</strong><br>Configurez
+                        <code>freshness</code> sur vos sources pour détecter quand les données ne sont plus à jour.
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">7</div>
+                    <div class="metric-label"><strong>SQL lisible > SQL intelligent</strong><br>Préférez des CTEs
+                        nommées clairement à des sous-requêtes imbriquées. Le SQL doit être lisible par un analyste
+                        junior.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">8</div>
+                    <div class="metric-label"><strong>CI/CD sur chaque PR</strong><br>Utilisez Slim CI pour ne tester
+                        que les modèles modifiés dans la PR. C'est essentiel pour la qualité.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANTI-PATTERNS -->
+        <div id="bad" class="content-card">
+            <h2><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Anti-Patterns à Éviter</h2>
+
+            <div class="risk-matrix">
+                <div class="risk-item risk-high">
+                    <h4><i class="fa-solid fa-xmark"></i> « Tout dans un seul modèle »</h4>
+                    <p>Un seul fichier SQL de 500 lignes qui fait staging + joins + agrégations. Impossible à tester,
+                        débugger, ou réutiliser. Découpez en couches !</p>
+                </div>
+                <div class="risk-item risk-high">
+                    <h4><i class="fa-solid fa-xmark"></i> « source() dans un mart »</h4>
+                    <p>Référencer directement une source depuis un mart au lieu de passer par le staging. Vous perdez la
+                        couche de nettoyage et le DAG devient incohérent.</p>
+                </div>
+                <div class="risk-item risk-high">
+                    <h4><i class="fa-solid fa-xmark"></i> « Zéro test »</h4>
+                    <p>Pas de tests = pas de confiance dans vos données. Un dashboard qui affiche des chiffres faux est
+                        pire que pas de dashboard du tout.</p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4><i class="fa-solid fa-xmark"></i> « SELECT * partout »</h4>
+                    <p>Ne jamais utiliser <code>SELECT *</code> en production. Listez explicitement les colonnes pour la
+                        lisibilité, la performance, et la détection de changements de schéma.</p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4><i class="fa-solid fa-xmark"></i> « Logique métier dans la BI »</h4>
+                    <p>Si votre calcul de MRR est dans Looker/Metabase au lieu d'être dans dbt, il n'est ni testé, ni
+                        versionné, ni réutilisable. Centralisez la logique dans dbt.</p>
+                </div>
+                <div class="risk-item risk-medium">
+                    <h4><i class="fa-solid fa-xmark"></i> « Incrémental par défaut »</h4>
+                    <p>Ne rendez un modèle incrémental que quand c'est nécessaire (performance). C'est plus complexe à
+                        maintenir et plus facile à casser qu'un simple <code>table</code>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUESTIONS DE DESIGN -->
+        <div id="design" class="content-card">
+            <h2><i class="fa-solid fa-compass-drafting" style="color:#0ea5e9;"></i> Les Grandes Questions de Design</h2>
+
+            <h3>1. Star Schema vs Wide Table ?</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>Star Schema</th>
+                            <th>Wide Table</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Complexité</td>
+                            <td>Plus élevée (plusieurs tables)</td>
+                            <td>Faible (une seule table)</td>
+                        </tr>
+                        <tr>
+                            <td>Performance BI</td>
+                            <td>Excellente (jointures optimisées)</td>
+                            <td>Bonne (pas de jointures)</td>
+                        </tr>
+                        <tr>
+                            <td>Réutilisabilité</td>
+                            <td>Élevée (dimensions partagées)</td>
+                            <td>Faible (monolithique)</td>
+                        </tr>
+                        <tr>
+                            <td>Quand choisir</td>
+                            <td>Plusieurs cas d'usage, équipe data</td>
+                            <td>Un seul dashboard, petit projet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>2. Quand passer en incrémental ?</h3>
+            <ul>
+                <li>Table de plus de <strong>10 millions de lignes</strong></li>
+                <li>Le <code>dbt run</code> prend plus de <strong>30 minutes</strong></li>
+                <li>Les données ont un <strong>timestamp fiable</strong> pour le filtrage</li>
+                <li>Le coût warehouse est un facteur (scan complet vs partiel)</li>
+            </ul>
+
+            <h3>3. dbt Core vs dbt Cloud ?</h3>
+            <div class="pedagogy-box">
+                <p><strong>Commencez avec dbt Core</strong> si vous avez des compétences techniques et un orchestrateur
+                    existant (Airflow, Dagster). Passez à <strong>dbt Cloud</strong> si votre équipe grandit et que vous
+                    voulez un IDE web, un scheduler intégré, et un Slim CI sans configuration.</p>
+            </div>
+
+            <h3>4. Comment gérer les environnements ?</h3>
+            <div class="pedagogy-box">
+                <pre><code># profiles.yml
+my_project:
+  target: dev                    # Environnement par défaut
+  outputs:
+    dev:
+      type: postgres
+      schema: dev_{{ env_var('USER') }}   # Schéma isolé par dev
+    staging:
+      type: postgres
+      schema: staging
+    prod:
+      type: postgres
+      schema: analytics          # Le schéma final</code></pre>
+                <p>Chaque développeur travaille dans son propre schéma (<code>dev_alice</code>, <code>dev_bob</code>).
+                    Le staging est partagé. La prod est protégée par CI/CD.</p>
+            </div>
+        </div>
+
+        <!-- ÉCOSYSTÈME -->
+        <div id="ecosystem" class="content-card">
+            <h2><i class="fa-solid fa-plug" style="color:#a855f7;"></i> Écosystème & Intégrations</h2>
+
+            <h3>Warehouses Supportés</h3>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-snowflake"></i></div>
+                    <div class="metric-label"><strong>Snowflake</strong><br>Le plus populaire. Excellent support,
+                        performances top.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-brands fa-google"></i></div>
+                    <div class="metric-label"><strong>BigQuery</strong><br>Serverless, pay-per-query. Idéal pour les
+                        projets Google Cloud.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-brands fa-aws"></i></div>
+                    <div class="metric-label"><strong>Redshift</strong><br>Écosystème AWS. Bon pour les entreprises déjà
+                        sur AWS.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-duck"></i></div>
+                    <div class="metric-label"><strong>DuckDB</strong><br>Embedded, zéro config. Parfait pour le dev
+                        local et les petits projets.</div>
+                </div>
+            </div>
+
+            <h3>Packages Essentiels</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Package</th>
+                            <th>Usage</th>
+                            <th>Incontournable ?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>dbt_utils</code></td>
+                            <td>Macros essentielles (surrogate keys, pivot, unpivot, date spine)</td>
+                            <td>✅ Oui</td>
+                        </tr>
+                        <tr>
+                            <td><code>dbt_expectations</code></td>
+                            <td>Tests avancés (regex, distributions, ranges)</td>
+                            <td>✅ Oui</td>
+                        </tr>
+                        <tr>
+                            <td><code>codegen</code></td>
+                            <td>Génération automatique de staging et YAML</td>
+                            <td>✅ Pour démarrer</td>
+                        </tr>
+                        <tr>
+                            <td><code>elementary</code></td>
+                            <td>Monitoring, anomaly detection, alertes Slack</td>
+                            <td>⭐ Recommandé</td>
+                        </tr>
+                        <tr>
+                            <td><code>dbt_date</code></td>
+                            <td>Dimension dates pré-construite</td>
+                            <td>⭐ Utile</td>
+                        </tr>
+                        <tr>
+                            <td><code>audit_helper</code></td>
+                            <td>Comparer deux versions d'un modèle après refactoring</td>
+                            <td>⭐ Pour les migrations</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-rocket"></i> Pour démarrer avec dbt</h4>
+                <ol>
+                    <li><code>pip install dbt-core dbt-postgres</code> (ou dbt-snowflake, dbt-bigquery)</li>
+                    <li><code>dbt init mon_projet</code></li>
+                    <li>Configurez votre <code>profiles.yml</code> avec vos credentials warehouse</li>
+                    <li>Créez votre premier modèle staging</li>
+                    <li><code>dbt run && dbt test</code></li>
+                    <li><code>dbt docs generate && dbt docs serve</code></li>
+                </ol>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- Footer -->
+    <div class="article-footer">
+        <p>&copy; 2026 Market Watch &bull; <a href="/">market-watch.xyz</a></p>
+        <p>Analyse Institutionnelle &bull; Guides Techniques &bull; Insights Basés sur les Données</p>
+    </div>
+</body>
+
+</html>
