@@ -1,6 +1,6 @@
-// assets/tag-renderer.js
+// assets/core.js
 
-// Tag metadata - MUST be kept in sync with index.html
+// Tag metadata - MUST be kept in sync with index.html taxonomy
 const tagMeta = {
     // Region (blue)
     us: { label: "US", cat: "region" },
@@ -47,27 +47,27 @@ const tagMeta = {
 
 /**
  * Renders clickable tags into a specified container element.
- * Tags are read from a comma-separated string, typically from a data-tags attribute.
- * Clicking a tag redirects to the main page with that tag filtered.
  *
- * @param {string} tagsString - A comma-separated string of tags (e.g., "us,tech,ai").
- * @param {string} targetElementId - The ID of the DOM element where tags should be rendered.
- * @param {string} [defaultTab="analyses"] - The default tab to navigate to on index.html.
+ * @param {string} tagsString - A comma-separated string of tags.
+ * @param {string} targetElementId - The ID of the container element.
+ * @param {string} [defaultTab="analyses"] - The tab to navigate to on index.html.
  */
 function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses") {
     const tagsContainer = document.getElementById(targetElementId);
-    if (!tagsContainer || !tagsString) {
-        return;
-    }
+    if (!tagsContainer || !tagsString) return;
 
-    const tags = tagsString.split(",").filter(Boolean);
+    // Clear existing content if any
+    tagsContainer.innerHTML = '';
+
+    const tags = tagsString.split(",").map(t => t.trim()).filter(Boolean);
     tags.forEach(function(t) {
         const meta = tagMeta[t];
         if (meta) {
             const chip = document.createElement("span");
-            chip.className = "card-tag";
+            chip.className = "card-tag"; // Matches the new CSS class
             chip.setAttribute("data-cat", meta.cat);
             chip.textContent = meta.label;
+            chip.style.cursor = "pointer";
             chip.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -78,11 +78,10 @@ function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses
     });
 }
 
-// Automatically render tags on DOMContentLoaded for a common ID and data attribute
+// Automatically render tags on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", function() {
-    // Assumes the <html> element has a data-tags attribute and a data-tab attribute
     const articleTagsString = document.documentElement.dataset.tags;
-    const articleDefaultTab = document.documentElement.dataset.tab || "analyses"; // Fallback to 'analyses' if not specified
+    const articleDefaultTab = document.documentElement.dataset.tab || "analyses";
 
     if (articleTagsString) {
         renderClickableTags(articleTagsString, "article-clickable-tags", articleDefaultTab);
