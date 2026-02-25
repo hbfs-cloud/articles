@@ -104,6 +104,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
    - Inclure le switcher langue/niveau dans le hero
    - Utiliser ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
    - **OBLIGATOIRE** : Inclure une section **Trade Idea** quand c'est pertinent (voir ci-dessous)
+   - **OBLIGATOIRE** : Inclure une section **Social Radar** avec analyse du sentiment (StockTwits, Reddit) et un `socialChart` ECharts, comme dans l'article TARA.
 6. **Générer les 5 autres variantes** en parallèle (via agents) :
    - `analyses/{TICKER}/expert/en/index.html` — traduction anglaise expert
    - `analyses/{TICKER}/expert/ar/index.html` — traduction arabe expert (dir="rtl")
@@ -213,7 +214,7 @@ Les "Formation du Jour" suivent un cursus progressif :
    - `RunScreener` avec symboles EU : VGK, EWG, EWQ, EWU, SAP, ASML, BBVA, TTE, SIE, LVMHF
    - `RunScreener` avec symboles APAC : EWJ, EWY, EWH, FXI, MCHI
    - `RunScreener` avec ETFs sectoriels/thématiques : XLF, XLE, XLK, XLV, XLI, GLD, SLV, TLT, ARKK, ICLN
-   - `QueryData` types: quote pour **tous** les candidats retenus (validation prix spot obligatoire)
+   - `QueryData` types: quote,insider_transactions pour **tous** les candidats retenus (validation prix spot obligatoire + détection des achats significatifs d'insiders)
    - **Contrôle P0** : Rejeter tout ticker dont le prix d'entrée calculé diffère de >10% du prix spot
 4. **Sélection finale — 10 setups A+** :
    - Score composite ≥ 85/100, confluence technique ≥ 3 signaux
