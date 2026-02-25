@@ -19,6 +19,148 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .tribunal-dialogue {
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        .tribunal-msg {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            align-items: flex-start
+        }
+
+        .tribunal-msg.prosecution {
+            flex-direction: row
+        }
+
+        .tribunal-msg.defense {
+            flex-direction: row-reverse
+        }
+
+        .tribunal-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        .prosecution .tribunal-avatar {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: #fff
+        }
+
+        .defense .tribunal-avatar {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: #fff
+        }
+
+        .judge .tribunal-avatar {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: #fff
+        }
+
+        .tribunal-bubble {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            max-width: 75%;
+            line-height: 1.65;
+            font-size: 0.92rem
+        }
+
+        .prosecution .tribunal-bubble {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-top-left-radius: 4px
+        }
+
+        .defense .tribunal-bubble {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-top-right-radius: 4px;
+            text-align: right
+        }
+
+        .judge .tribunal-bubble {
+            background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+            border: 1px solid #c4b5fd;
+            max-width: 100%;
+            text-align: center
+        }
+
+        .tribunal-msg.judge {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem
+        }
+
+        .tribunal-role {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem
+        }
+
+        .prosecution .tribunal-role {
+            color: #dc2626
+        }
+
+        .defense .tribunal-role {
+            color: #16a34a
+        }
+
+        .judge .tribunal-role {
+            color: #7c3aed
+        }
+
+        .tribunal-section-title {
+            text-align: center;
+            padding: 1rem;
+            margin: 2rem 0 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #475569;
+            border-top: 2px dashed #e2e8f0;
+            border-bottom: 2px dashed #e2e8f0
+        }
+
+        .verdict-stamp {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            border: 4px double;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            transform: rotate(-3deg);
+            margin: 1.5rem auto;
+            text-align: center
+        }
+
+        .verdict-stamp.buy {
+            color: #16a34a;
+            border-color: #16a34a;
+            background: #f0fdf4
+        }
+
+        @media(max-width:768px) {
+            .tribunal-bubble {
+                max-width: 85%
+            }
+
+            .tribunal-msg {
+                gap: 0.5rem
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -1236,109 +1378,206 @@
                             EDGAR TARA</span></a>
                 </div>
             </div>
+        </div>
 
-        </div><!-- /container -->
+        <!-- ========================================================== -->
+        <!-- PARTIE 2 : LE TRIBUNAL — FAUT-IL ACHETER TARA ?            -->
+        <!-- ========================================================== -->
 
-        <!-- CHART MODAL -->
-        <div id="imageModal"
-            style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column;"
-            onclick="if(event.target===this||event.target.id==='imageModal')closeChartModal()">
-            <button onclick="closeChartModal()"
-                style="position:absolute;top:20px;right:30px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;">&times;</button>
-            <img id="modalImg" src="" style="max-width:90%;max-height:80vh;border-radius:8px;">
-            <div style="display:flex;gap:1rem;margin-top:1.5rem;">
-                <a href="https://finviz.com/quote.ashx?t=TARA" target="_blank"
-                    style="padding:8px 16px;background:#3b82f6;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
-                        class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
-                <a href="https://www.tradingview.com/chart/?symbol=TARA" target="_blank"
-                    style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
-                        class="fa-solid fa-chart-line"></i> TradingView</a>
+        <div id="tribunal" class="content-card" style="border:2px solid #7c3aed;">
+            <div style="text-align:center;margin-bottom:2rem;">
+                <h2 style="margin:0;font-size:1.5rem;"><i class="fa-solid fa-scale-balanced" style="color:#7c3aed;"></i>
+                    Partie 2 — Le Tribunal</h2>
+                <p style="color:#64748b;font-size:0.95rem;margin:0.5rem 0 0;">Succès clinique massif mais le cours
+                    chute. L'accusation attaque Protara, la défense argumente et le juge tranche.</p>
+            </div>
+
+            <div class="tribunal-dialogue">
+                <!-- INTRO DU JUGE -->
+                <div class="tribunal-msg judge">
+                    <div class="tribunal-avatar"><i class="fa-solid fa-gavel"></i></div>
+                    <div class="tribunal-bubble">
+                        <div class="tribunal-role">Le Juge</div>
+                        <strong>L'audience est ouverte.</strong> Protara vient d'annoncer 68% de réponses complètes (CR)
+                        en Phase 2 pour le traitement d'une forme sévère de cancer de la vessie. D'ordinaire, une telle
+                        data-clinique enflamme la cote, mais l'action s'enlise autour de $5.70. Est-ce un sell-the-news
+                        justifié ou une opportunité institutionnelle d'or ?
+                    </div>
+                </div>
+
+                <!-- ROUND 1 : EFFICACITE ET CONCURRENCE -->
+                <div class="tribunal-section-title"><i class="fa-solid fa-1"></i> TARA-002: Révolution Médicale ou Feux
+                    de Paille ?</div>
+
+                <div class="tribunal-msg prosecution">
+                    <div class="tribunal-avatar">A</div>
+                    <div class="tribunal-bubble">
+                        <div class="tribunal-role">Accusation (Bear)</div>
+                        Ces 68% de CR sont sur un tout petit échantillon de 22 patients dans un essai ouvert
+                        (open-label). Dès que Protara passera en essai de Phase 3 randomisé ou tentera l'accord FDA, les
+                        pourcentages s'effondreront au contact de la réalité. De plus, Merck vend déjà Keytruda pour ces
+                        patients ! TARA-002 arrivera tard sur un marché contrôlé par des titans de la pharma.
+                    </div>
+                </div>
+
+                <div class="tribunal-msg defense">
+                    <div class="tribunal-avatar">D</div>
+                    <div class="tribunal-bubble">
+                        <div class="tribunal-role">Défense (Bull)</div>
+                        Faux ! Dans cette indication précise (NMIBC réfractaire), Keytruda affiche à peine 41% de CR.
+                        Atteindre 68% est un *home run* absolu ! TARA-002 provient de la même souche médicamenteuse
+                        (OK-432) déjà approuvée et largement utilisée au Japon. Ce n'est pas une molécule exotique, ses
+                        fondamentaux biologiques sont validés. Les urologues américains l'attendent car le traitement
+                        est intra-vésical, donc simple et adapté à cette maladie.
+                    </div>
+                </div>
+
+                <!-- ROUND 2 : LE CASH ET LES VAUTOURS -->
+                <div class="tribunal-section-title"><i class="fa-solid fa-2"></i> Cash Abondant ou Bulle Spéculative
+                    Bientôt Dilutive ?</div>
+
+                <div class="tribunal-msg prosecution">
+                    <div class="tribunal-avatar">A</div>
+                    <div class="tribunal-bubble">
+                        <div class="tribunal-role">Accusation (Bear)</div>
+                        Le marché vend la nouvelle (sell-the-news) parce qu'il anticipe inévitablement l'une des deux
+                        choses : soit une dilution par un nouvel *offering* pour financer une Phase 3 interminable, soit
+                        l'impasse d'une entreprise qui ne dégage aujourd'hui zéro dollar de revenus. Les biotechs sans
+                        ventes sont des puits sans fonds. Regardez le volume délirant et le "fade" d'hier... les initiés
+                        distribuent leur papier au *retail*.
+                    </div>
+                </div>
+
+                <div class="tribunal-msg defense">
+                    <div class="tribunal-avatar">D</div>
+                    <div class="tribunal-bubble">
+                        <div class="tribunal-role">Défense (Bull)</div>
+                        Vous criez au "sell-the-news", mais où en est le cours ? $5.71. C'est *exactement* le prix où un
+                        syndicat de grandes d'institutions privées vient d'injecter **75 Millions de dollars** en
+                        décembre dernier. Mieux ! Protara dispose aujourd'hui de 132 Millions de cash pour une
+                        capitalisation boursière à 305M. Leur "burn rate" est de 47M par an. Protara est tranquille
+                        jusqu'à la fin 2028. Le downside est fortement verrouillé par le cash !
+                    </div>
+                </div>
+
+                <!-- VERDICT FINAL -->
+                <div class="tribunal-msg judge">
+                    <div class="tribunal-avatar"><i class="fa-solid fa-gavel"></i></div>
+                    <div class="tribunal-bubble">
+                        <div class="tribunal-role">Le Juge</div>
+                        L'accusation a tort d'ignorer les données scientifiques : 68% CR rebat les cartes et fait de
+                        TARA-002 un traitement pivot de premier plan pour ces cancers. La défense emporte la mise avec
+                        son argument massif sur la trésorerie ($132M cash) et le prix d'entrée $5.75 ancré par l'argent
+                        "Smart Money" de décembre. Ce "sell-the-news" est un don du marché. L'asymétrie R:R de 1:3 est
+                        validée.
+                        <div class="verdict-stamp buy">ACHAT FORT (PULLBACK)</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <script>
-            function openChartModal() { document.getElementById('modalImg').src = 'https://charts2.finviz.com/chart.ashx?t=TARA&ty=c&ta=1&p=d&s=l'; document.getElementById('imageModal').style.display = 'flex'; }
-            function closeChartModal() { document.getElementById('imageModal').style.display = 'none'; }
 
-            // Verdict Radar
-            (function () { var c = echarts.init(document.getElementById('verdictRadar')); c.setOption({ title: { text: 'Profil Fondamental TARA', left: 'center', textStyle: { fontSize: 13 } }, tooltip: {}, radar: { indicator: [{ name: 'Pipeline Clinique', max: 100 }, { name: 'Trésorerie', max: 100 }, { name: 'Valorisation', max: 100 }, { name: 'Momentum', max: 100 }, { name: 'Rev. Comm.', max: 100 }, { name: 'Anti-Dilution', max: 100 }], shape: 'polygon' }, series: [{ type: 'radar', data: [{ value: [90, 85, 80, 72, 5, 75], name: 'TARA', itemStyle: { color: '#16a34a' }, areaStyle: { color: 'rgba(22,163,74,0.25)' } }] }] }); window.addEventListener('resize', function () { c.resize(); }); })();
+    </div><!-- /container -->
 
-            // Cash Runway
-            (function () { var c = echarts.init(document.getElementById('cashRunwayChart')); c.setOption({ title: { text: 'Projection Cash Runway ($M) — Burn ~$47M/an', left: 'center', textStyle: { fontSize: 13 } }, tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: ["Q4'25", "Q1'26", "Q2'26", "Q3'26", "Q4'26", "Q1'27", "Q2'27", "Q3'27", "Q4'27", "Q1'28"] }, yAxis: { type: 'value', name: '$M', min: 0, max: 150 }, series: [{ type: 'bar', data: [{ value: 132, itemStyle: { color: '#16a34a' } }, { value: 121, itemStyle: { color: '#16a34a' } }, { value: 109, itemStyle: { color: '#16a34a' } }, { value: 97, itemStyle: { color: '#22c55e' } }, { value: 85, itemStyle: { color: '#22c55e' } }, { value: 73, itemStyle: { color: '#f59e0b' } }, { value: 62, itemStyle: { color: '#f59e0b' } }, { value: 50, itemStyle: { color: '#f59e0b' } }, { value: 38, itemStyle: { color: '#dc2626' } }, { value: 27, itemStyle: { color: '#dc2626' } }], markLine: { data: [{ yAxis: 25, label: { formatter: 'Seuil Critique', position: 'insideEndTop' }, lineStyle: { color: '#dc2626', type: 'dashed' } }] } }] }); window.addEventListener('resize', function () { c.resize(); }); })();
+    <!-- CHART MODAL -->
+    <div id="imageModal"
+        style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column;"
+        onclick="if(event.target===this||event.target.id==='imageModal')closeChartModal()">
+        <button onclick="closeChartModal()"
+            style="position:absolute;top:20px;right:30px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;">&times;</button>
+        <img id="modalImg" src="" style="max-width:90%;max-height:80vh;border-radius:8px;">
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+            <a href="https://finviz.com/quote.ashx?t=TARA" target="_blank"
+                style="padding:8px 16px;background:#3b82f6;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
+            <a href="https://www.tradingview.com/chart/?symbol=TARA" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-line"></i> TradingView</a>
+        </div>
+    </div>
+    <script>
+        function openChartModal() { document.getElementById('modalImg').src = 'https://charts2.finviz.com/chart.ashx?t=TARA&ty=c&ta=1&p=d&s=l'; document.getElementById('imageModal').style.display = 'flex'; }
+        function closeChartModal() { document.getElementById('imageModal').style.display = 'none'; }
 
-            // Candlestick TARA — OHLCV hebdomadaire Oct 2025 → Fév 2026
-            (function () {
-                var c = echarts.init(document.getElementById('priceChart'));
-                var raw = [
-                    ['2025-10-06', 4.85, 5.12, 4.72, 5.28, 312000],
-                    ['2025-10-13', 5.10, 5.43, 4.98, 5.55, 428000],
-                    ['2025-10-20', 5.41, 5.78, 5.30, 5.95, 510000],
-                    ['2025-10-27', 5.75, 6.10, 5.60, 6.25, 620000],
-                    ['2025-11-03', 6.08, 6.42, 5.95, 6.55, 580000],
-                    ['2025-11-10', 6.40, 6.85, 6.30, 7.02, 690000],
-                    ['2025-11-17', 6.82, 7.20, 6.70, 7.45, 740000],
-                    ['2025-11-24', 7.18, 7.82, 7.05, 7.90, 890000],
-                    ['2025-12-01', 7.75, 6.80, 6.50, 7.85, 1420000],
-                    ['2025-12-08', 6.80, 5.95, 5.60, 6.90, 1680000],
-                    ['2025-12-15', 5.90, 5.75, 5.35, 6.10, 1250000],
-                    ['2025-12-22', 5.72, 5.90, 5.50, 6.05, 480000],
-                    ['2025-12-29', 5.88, 6.15, 5.75, 6.30, 320000],
-                    ['2026-01-05', 6.12, 6.38, 5.95, 6.55, 510000],
-                    ['2026-01-12', 6.35, 6.62, 6.20, 6.80, 590000],
-                    ['2026-01-19', 6.58, 6.45, 6.25, 6.75, 420000],
-                    ['2026-01-26', 6.42, 6.72, 6.30, 6.95, 550000],
-                    ['2026-02-02', 6.68, 6.89, 6.55, 7.08, 610000],
-                    ['2026-02-09', 6.85, 7.05, 6.70, 7.20, 680000],
-                    ['2026-02-16', 7.02, 7.15, 6.88, 7.35, 720000],
-                    ['2026-02-24', 7.10, 5.71, 5.59, 7.18, 2350000]
-                ];
-                var dates = raw.map(function (d) { return d[0]; });
-                var ohlc = raw.map(function (d) { return [d[1], d[2], d[3], d[4]]; });
-                var vols = raw.map(function (d) { return d[5]; });
-                var ema50 = [null, null, null, null, null, null, null, null, 5.98, 5.85, 5.78, 5.72, 5.78, 5.90, 6.05, 6.15, 6.22, 6.35, 6.45, 6.55, 5.95];
-                var ema200 = [4.15, 4.18, 4.22, 4.27, 4.32, 4.38, 4.40, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43];
-                c.setOption({
-                    backgroundColor: '#fff',
-                    legend: { data: ['TARA', 'EMA 50', 'EMA 200'], top: 4, itemGap: 20, textStyle: { fontSize: 11 } },
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, formatter: function (params) { var d = params[0]; if (!d) return ''; var v = ohlc[d.dataIndex]; return '<b>' + d.name + '</b><br>O: $' + v[0] + ' &nbsp;C: $' + v[1] + '<br>L: $' + v[2] + ' &nbsp;H: $' + v[3]; } },
-                    grid: [{ left: '9%', right: '5%', top: '14%', height: '54%' }, { left: '9%', right: '5%', top: '74%', height: '14%' }],
-                    xAxis: [
-                        { type: 'category', data: dates, boundaryGap: true, axisLine: { lineStyle: { color: '#94a3b8' } }, axisLabel: { fontSize: 9, rotate: 30 } },
-                        { type: 'category', gridIndex: 1, data: dates, boundaryGap: true, axisLabel: { show: false }, axisLine: { lineStyle: { color: '#94a3b8' } } }
-                    ],
-                    yAxis: [
-                        { scale: true, splitArea: { show: true, areaStyle: { color: ['rgba(250,250,250,0.3)', 'rgba(240,240,240,0.3)'] } }, axisLabel: { formatter: '${value}', fontSize: 10 } },
-                        { scale: true, gridIndex: 1, splitNumber: 2, axisLabel: { formatter: function (v) { return (v / 1000).toFixed(0) + 'K'; }, fontSize: 9 } }
-                    ],
-                    dataZoom: [
-                        { type: 'inside', xAxisIndex: [0, 1], start: 0, end: 100 },
-                        { type: 'slider', xAxisIndex: [0, 1], bottom: 4, height: 16, start: 0, end: 100, labelFormatter: '' }
-                    ],
-                    series: [
-                        {
-                            name: 'TARA', type: 'candlestick', data: ohlc,
-                            itemStyle: { color: '#16a34a', color0: '#dc2626', borderColor: '#16a34a', borderColor0: '#dc2626' },
-                            markLine: {
-                                silent: true, symbol: 'none', lineStyle: { width: 1.5 }, data: [
-                                    { yAxis: 5.75, label: { formatter: 'Offering $5.75', position: 'insideEndTop', color: '#f97316', fontSize: 9 }, lineStyle: { color: '#f97316', type: 'dashed' } },
-                                    { yAxis: 4.43, label: { formatter: 'EMA200 $4.43', position: 'insideEndBottom', color: '#8b5cf6', fontSize: 9 }, lineStyle: { color: '#8b5cf6', type: 'dashed' } },
-                                    { yAxis: 7.50, label: { formatter: 'Max Pain $7.50', position: 'insideEndTop', color: '#3b82f6', fontSize: 9 }, lineStyle: { color: '#3b82f6', type: 'dashed' } }
-                                ]
-                            }
-                        },
-                        { name: 'EMA 50', type: 'line', data: ema50, smooth: true, lineStyle: { color: '#f59e0b', width: 1.5 }, symbol: 'none' },
-                        { name: 'EMA 200', type: 'line', data: ema200, smooth: true, lineStyle: { color: '#8b5cf6', width: 1.5 }, symbol: 'none' },
-                        {
-                            name: 'Volume', type: 'bar', xAxisIndex: 1, yAxisIndex: 1,
-                            data: vols.map(function (v, i) { return { value: v, itemStyle: { color: ohlc[i][1] >= ohlc[i][0] ? 'rgba(22,163,74,0.7)' : 'rgba(220,38,38,0.7)' } }; })
+        // Verdict Radar
+        (function () { var c = echarts.init(document.getElementById('verdictRadar')); c.setOption({ title: { text: 'Profil Fondamental TARA', left: 'center', textStyle: { fontSize: 13 } }, tooltip: {}, radar: { indicator: [{ name: 'Pipeline Clinique', max: 100 }, { name: 'Trésorerie', max: 100 }, { name: 'Valorisation', max: 100 }, { name: 'Momentum', max: 100 }, { name: 'Rev. Comm.', max: 100 }, { name: 'Anti-Dilution', max: 100 }], shape: 'polygon' }, series: [{ type: 'radar', data: [{ value: [90, 85, 80, 72, 5, 75], name: 'TARA', itemStyle: { color: '#16a34a' }, areaStyle: { color: 'rgba(22,163,74,0.25)' } }] }] }); window.addEventListener('resize', function () { c.resize(); }); })();
+
+        // Cash Runway
+        (function () { var c = echarts.init(document.getElementById('cashRunwayChart')); c.setOption({ title: { text: 'Projection Cash Runway ($M) — Burn ~$47M/an', left: 'center', textStyle: { fontSize: 13 } }, tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: ["Q4'25", "Q1'26", "Q2'26", "Q3'26", "Q4'26", "Q1'27", "Q2'27", "Q3'27", "Q4'27", "Q1'28"] }, yAxis: { type: 'value', name: '$M', min: 0, max: 150 }, series: [{ type: 'bar', data: [{ value: 132, itemStyle: { color: '#16a34a' } }, { value: 121, itemStyle: { color: '#16a34a' } }, { value: 109, itemStyle: { color: '#16a34a' } }, { value: 97, itemStyle: { color: '#22c55e' } }, { value: 85, itemStyle: { color: '#22c55e' } }, { value: 73, itemStyle: { color: '#f59e0b' } }, { value: 62, itemStyle: { color: '#f59e0b' } }, { value: 50, itemStyle: { color: '#f59e0b' } }, { value: 38, itemStyle: { color: '#dc2626' } }, { value: 27, itemStyle: { color: '#dc2626' } }], markLine: { data: [{ yAxis: 25, label: { formatter: 'Seuil Critique', position: 'insideEndTop' }, lineStyle: { color: '#dc2626', type: 'dashed' } }] } }] }); window.addEventListener('resize', function () { c.resize(); }); })();
+
+        // Candlestick TARA — OHLCV hebdomadaire Oct 2025 → Fév 2026
+        (function () {
+            var c = echarts.init(document.getElementById('priceChart'));
+            var raw = [
+                ['2025-10-06', 4.85, 5.12, 4.72, 5.28, 312000],
+                ['2025-10-13', 5.10, 5.43, 4.98, 5.55, 428000],
+                ['2025-10-20', 5.41, 5.78, 5.30, 5.95, 510000],
+                ['2025-10-27', 5.75, 6.10, 5.60, 6.25, 620000],
+                ['2025-11-03', 6.08, 6.42, 5.95, 6.55, 580000],
+                ['2025-11-10', 6.40, 6.85, 6.30, 7.02, 690000],
+                ['2025-11-17', 6.82, 7.20, 6.70, 7.45, 740000],
+                ['2025-11-24', 7.18, 7.82, 7.05, 7.90, 890000],
+                ['2025-12-01', 7.75, 6.80, 6.50, 7.85, 1420000],
+                ['2025-12-08', 6.80, 5.95, 5.60, 6.90, 1680000],
+                ['2025-12-15', 5.90, 5.75, 5.35, 6.10, 1250000],
+                ['2025-12-22', 5.72, 5.90, 5.50, 6.05, 480000],
+                ['2025-12-29', 5.88, 6.15, 5.75, 6.30, 320000],
+                ['2026-01-05', 6.12, 6.38, 5.95, 6.55, 510000],
+                ['2026-01-12', 6.35, 6.62, 6.20, 6.80, 590000],
+                ['2026-01-19', 6.58, 6.45, 6.25, 6.75, 420000],
+                ['2026-01-26', 6.42, 6.72, 6.30, 6.95, 550000],
+                ['2026-02-02', 6.68, 6.89, 6.55, 7.08, 610000],
+                ['2026-02-09', 6.85, 7.05, 6.70, 7.20, 680000],
+                ['2026-02-16', 7.02, 7.15, 6.88, 7.35, 720000],
+                ['2026-02-24', 7.10, 5.71, 5.59, 7.18, 2350000]
+            ];
+            var dates = raw.map(function (d) { return d[0]; });
+            var ohlc = raw.map(function (d) { return [d[1], d[2], d[3], d[4]]; });
+            var vols = raw.map(function (d) { return d[5]; });
+            var ema50 = [null, null, null, null, null, null, null, null, 5.98, 5.85, 5.78, 5.72, 5.78, 5.90, 6.05, 6.15, 6.22, 6.35, 6.45, 6.55, 5.95];
+            var ema200 = [4.15, 4.18, 4.22, 4.27, 4.32, 4.38, 4.40, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43, 4.43];
+            c.setOption({
+                backgroundColor: '#fff',
+                legend: { data: ['TARA', 'EMA 50', 'EMA 200'], top: 4, itemGap: 20, textStyle: { fontSize: 11 } },
+                tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, formatter: function (params) { var d = params[0]; if (!d) return ''; var v = ohlc[d.dataIndex]; return '<b>' + d.name + '</b><br>O: $' + v[0] + ' &nbsp;C: $' + v[1] + '<br>L: $' + v[2] + ' &nbsp;H: $' + v[3]; } },
+                grid: [{ left: '9%', right: '5%', top: '14%', height: '54%' }, { left: '9%', right: '5%', top: '74%', height: '14%' }],
+                xAxis: [
+                    { type: 'category', data: dates, boundaryGap: true, axisLine: { lineStyle: { color: '#94a3b8' } }, axisLabel: { fontSize: 9, rotate: 30 } },
+                    { type: 'category', gridIndex: 1, data: dates, boundaryGap: true, axisLabel: { show: false }, axisLine: { lineStyle: { color: '#94a3b8' } } }
+                ],
+                yAxis: [
+                    { scale: true, splitArea: { show: true, areaStyle: { color: ['rgba(250,250,250,0.3)', 'rgba(240,240,240,0.3)'] } }, axisLabel: { formatter: '${value}', fontSize: 10 } },
+                    { scale: true, gridIndex: 1, splitNumber: 2, axisLabel: { formatter: function (v) { return (v / 1000).toFixed(0) + 'K'; }, fontSize: 9 } }
+                ],
+                dataZoom: [
+                    { type: 'inside', xAxisIndex: [0, 1], start: 0, end: 100 },
+                    { type: 'slider', xAxisIndex: [0, 1], bottom: 4, height: 16, start: 0, end: 100, labelFormatter: '' }
+                ],
+                series: [
+                    {
+                        name: 'TARA', type: 'candlestick', data: ohlc,
+                        itemStyle: { color: '#16a34a', color0: '#dc2626', borderColor: '#16a34a', borderColor0: '#dc2626' },
+                        markLine: {
+                            silent: true, symbol: 'none', lineStyle: { width: 1.5 }, data: [
+                                { yAxis: 5.75, label: { formatter: 'Offering $5.75', position: 'insideEndTop', color: '#f97316', fontSize: 9 }, lineStyle: { color: '#f97316', type: 'dashed' } },
+                                { yAxis: 4.43, label: { formatter: 'EMA200 $4.43', position: 'insideEndBottom', color: '#8b5cf6', fontSize: 9 }, lineStyle: { color: '#8b5cf6', type: 'dashed' } },
+                                { yAxis: 7.50, label: { formatter: 'Max Pain $7.50', position: 'insideEndTop', color: '#3b82f6', fontSize: 9 }, lineStyle: { color: '#3b82f6', type: 'dashed' } }
+                            ]
                         }
-                    ]
-                });
-                window.addEventListener('resize', function () { c.resize(); });
-            })();
+                    },
+                    { name: 'EMA 50', type: 'line', data: ema50, smooth: true, lineStyle: { color: '#f59e0b', width: 1.5 }, symbol: 'none' },
+                    { name: 'EMA 200', type: 'line', data: ema200, smooth: true, lineStyle: { color: '#8b5cf6', width: 1.5 }, symbol: 'none' },
+                    {
+                        name: 'Volume', type: 'bar', xAxisIndex: 1, yAxisIndex: 1,
+                        data: vols.map(function (v, i) { return { value: v, itemStyle: { color: ohlc[i][1] >= ohlc[i][0] ? 'rgba(22,163,74,0.7)' : 'rgba(220,38,38,0.7)' } }; })
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { c.resize(); });
+        })();
 
-            // Social Sentiment Chart
-            (function () { var c = echarts.init(document.getElementById('socialChart')); c.setOption({ title: { text: 'Sentiment TARA — StockTwits (30 jours)', left: 'center', textStyle: { fontSize: 13 } }, tooltip: { trigger: 'axis' }, legend: { data: ['Bullish %', 'Volume'], bottom: 0, textStyle: { fontSize: 11 } }, xAxis: { type: 'category', data: ['J-30', 'J-25', 'J-20', 'J-15', 'J-10', 'J-5', 'J-4', 'J-3', 'J-2', 'J-1', 'J0'], axisLabel: { fontSize: 10 } }, yAxis: [{ type: 'value', name: 'Bullish%', min: 0, max: 100, axisLabel: { formatter: '{value}%' } }, { type: 'value', name: 'Messages' }], series: [{ name: 'Bullish %', type: 'line', data: [52, 54, 55, 53, 57, 60, 61, 62, 65, 66, 72], smooth: true, itemStyle: { color: '#16a34a' }, lineStyle: { width: 2 }, areaStyle: { color: 'rgba(22,163,74,0.15)' } }, { name: 'Volume', type: 'bar', yAxisIndex: 1, data: [120, 115, 130, 118, 125, 142, 155, 160, 175, 190, 648], itemStyle: { color: function (p) { return p.dataIndex === 10 ? '#f97316' : 'rgba(59,130,246,0.6)'; } } }] }); window.addEventListener('resize', function () { c.resize(); }); })();
-        </script>
+        // Social Sentiment Chart
+        (function () { var c = echarts.init(document.getElementById('socialChart')); c.setOption({ title: { text: 'Sentiment TARA — StockTwits (30 jours)', left: 'center', textStyle: { fontSize: 13 } }, tooltip: { trigger: 'axis' }, legend: { data: ['Bullish %', 'Volume'], bottom: 0, textStyle: { fontSize: 11 } }, xAxis: { type: 'category', data: ['J-30', 'J-25', 'J-20', 'J-15', 'J-10', 'J-5', 'J-4', 'J-3', 'J-2', 'J-1', 'J0'], axisLabel: { fontSize: 10 } }, yAxis: [{ type: 'value', name: 'Bullish%', min: 0, max: 100, axisLabel: { formatter: '{value}%' } }, { type: 'value', name: 'Messages' }], series: [{ name: 'Bullish %', type: 'line', data: [52, 54, 55, 53, 57, 60, 61, 62, 65, 66, 72], smooth: true, itemStyle: { color: '#16a34a' }, lineStyle: { width: 2 }, areaStyle: { color: 'rgba(22,163,74,0.15)' } }, { name: 'Volume', type: 'bar', yAxisIndex: 1, data: [120, 115, 130, 118, 125, 142, 155, 160, 175, 190, 648], itemStyle: { color: function (p) { return p.dataIndex === 10 ? '#f97316' : 'rgba(59,130,246,0.6)'; } } }] }); window.addEventListener('resize', function () { c.resize(); }); })();
+    </script>
 </body>
 
 </html>
