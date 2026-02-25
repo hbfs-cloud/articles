@@ -27,6 +27,9 @@ articles/
 │   │   └── archive/              # Versions précédentes
 │   │       └── YYYYMMDD/
 │   │           └── index.html
+├── tutorials/                    # Articles tutoriels détaillés
+│   └── {TOPIC}/                  # Dossier par sujet (ex: openclow-trading-guide/)
+│       └── index.html            # Article HTML complet (Français, niveau débutant par défaut)
 ├── daily/                        # Briefings quotidiens
 │   └── YYYYMMDD/                 # Format de nommage: date du briefing
 │       ├── index.html            # Default = beginner/en
