@@ -236,17 +236,8 @@
                     <div class="metric-label">Insider Ownership</div>
                     <div class="metric-change neutral">Low, but common for large tech companies</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-value">0</div>
-                    <div class="metric-label">Recent Insider Buys</div>
-                    <div class="metric-change neutral">No recent purchases by company leaders</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">0</div>
-                    <div class="metric-label">Recent Insider Sells</div>
-                    <div class="metric-change neutral">No recent sales by company leaders</div>
-                </div>
             </div>
+            <div id="ownershipChart" style="width:100%; height:300px; margin-top:2rem;"></div>
             <div class="pedagogy-box" style="margin-top:1rem;">
                 <strong>Why is institutional ownership important?</strong>
                 When large investment funds (institutions) own a big part of a company, it often means they have done their research and believe in the company's future. For Atlassian, a very high institutional ownership percentage suggests that professional money managers see strong long-term potential.
@@ -286,6 +277,7 @@
                 <li><strong>Resistance:</strong> $183.70 (Historically a level where sellers are active).</li>
                 <li>Current price ($70.65) is significantly below both long-term (EMA 200) and short-term (EMA 50) moving averages, indicating a downward trend.</li>
             </ul>
+            <div id="techChart" style="width:100%; height:350px; margin-top:2rem;"></div>
         </div>
 
         <!-- SOCIAL RADAR -->
@@ -322,6 +314,7 @@
                 <li>**StockTwits Mentions:** Some users express positive outlooks on potential M&A (mergers & acquisitions) scenarios for Atlassian, with rumors of Salesforce potentially buying the company. Others debate if AI will truly replace enterprise software, with many believing Atlassian will adapt and grow.</li>
                 <li>**Sentiment Divergence:** Interestingly, while Reddit shows increasing bullishness, StockTwits sentiment remains neutral with relatively low message volume compared to the company's size. This might indicate that the strong positive Reddit sentiment is not yet widespread.</li>
             </ul>
+            <div id="socialChart" style="width:100%; height:350px; margin-top:2rem;"></div>
         </div>
 
         <!-- TRADE IDEA -->
@@ -409,5 +402,77 @@
         <p style="margin:0.5rem 0 0 0;">Institutional Analysis &bull; Algorithmic Scanning &bull; Data-driven Insights</p>
     </div>
 
+    <script>
+        // Init Echarts
+        var ownershipChart = document.getElementById('ownershipChart') ? echarts.init(document.getElementById('ownershipChart')) : null;
+        if (ownershipChart) {
+            ownershipChart.setOption({
+                tooltip: { trigger: 'item' },
+                legend: { top: '5%', left: 'center' },
+                series: [
+                    {
+                        name: 'Ownership',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+                        label: { show: false, position: 'center' },
+                        emphasis: { label: { show: true, fontSize: 20, fontWeight: 'bold' } },
+                        labelLine: { show: false },
+                        data: [
+                            { value: 94.55, name: 'Institutions', itemStyle: { color: '#3b82f6' } },
+                            { value: 0.39, name: 'Insiders', itemStyle: { color: '#10b981' } },
+                            { value: 5.06, name: 'Public/Retail', itemStyle: { color: '#f59e0b' } }
+                        ]
+                    }
+                ]
+            });
+        }
+
+        var techChart = document.getElementById('techChart') ? echarts.init(document.getElementById('techChart')) : null;
+        if(techChart) {
+            techChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'] },
+                yAxis: { type: 'value', min: 60 },
+                series: [{
+                    name: 'Price',
+                    data: [156, 175, 185, 200, 110, 70],
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: { width: 4, color: '#f43f5e' },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(244, 63, 94, 0.4)' },
+                            { offset: 1, color: 'rgba(244, 63, 94, 0.1)' }
+                        ])
+                    }
+                }]
+            });
+        }
+
+        var socialChart = document.getElementById('socialChart') ? echarts.init(document.getElementById('socialChart')) : null;
+        if(socialChart) {
+            socialChart.setOption({
+                tooltip: {trigger: 'axis'},
+                legend: {data: ['Reddit Sentiment', 'StockTwits Mentions']},
+                xAxis: {type: 'category', data: ['H-6','H-5','H-4','H-3','H-2','H-1','Now']},
+                yAxis: [
+                    {type: 'value', name: 'Reddit Score', position: 'left'},
+                    {type: 'value', name: 'ST Volume', position: 'right'}
+                ],
+                series: [
+                    {name:'Reddit Sentiment', type:'line', smooth:true, data:[40, 45, 42, 50, 60, 65, 71.4], lineStyle:{color:'#16a34a', width:3}},
+                    {name:'StockTwits Mentions', type:'bar', yAxisIndex:1, data:[12, 10, 8, 15, 20, 25, 30], itemStyle:{color:'#cbd5e1', borderRadius: [4, 4, 0, 0]}}
+                ]
+            });
+        }
+
+        window.addEventListener('resize', function() {
+            if(ownershipChart) ownershipChart.resize();
+            if(techChart) techChart.resize();
+            if(socialChart) socialChart.resize();
+        });
+    </script>
 </body>
 </html>
