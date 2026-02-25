@@ -1554,234 +1554,256 @@
         // =============================================
         // PIE CHART: Strategy Weights (Simplified/Placeholder)
         // =============================================
-        const pieChart = echarts.init(document.getElementById('pieChart'));
-        pieChart.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
-            series: [{
-                type: 'pie',
-                radius: ['40%', '70%'],
-                avoidLabelOverlap: false,
-                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
-                label: { show: true, position: 'outside', formatter: '{b}
-{c}%', fontSize: 11, fontWeight: 600 },
-                emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
-                data: [
-                    { value: 30, name: 'Hedges/Defensifs', itemStyle: { color: '#dc2626' } },
-                    { value: 20, name: 'Énergie/Matériaux', itemStyle: { color: '#f59e0b' } },
-                    { value: 30, name: 'ETFs Géographiques', itemStyle: { color: '#3b82f6' } },
-                    { value: 20, name: 'Tech/Thématique', itemStyle: { color: '#16a34a' } }
-                ]
-            }]
-        });
+        const pieChartDom = document.getElementById('pieChart');
+        let pieChart;
+        if (pieChartDom) {
+            pieChart = echarts.init(pieChartDom);
+            pieChart.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                    label: { show: true, position: 'outside', formatter: '{b}\n{c}%', fontSize: 11, fontWeight: 600 },
+                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    data: [
+                        { value: 30, name: 'Hedges/Defensifs', itemStyle: { color: '#dc2626' } },
+                        { value: 20, name: 'Énergie/Matériaux', itemStyle: { color: '#f59e0b' } },
+                        { value: 30, name: 'ETFs Géographiques', itemStyle: { color: '#3b82f6' } },
+                        { value: 20, name: 'Tech/Thématique', itemStyle: { color: '#16a34a' } }
+                    ]
+                }]
+            });
+        }
 
         // =============================================
         // GAUGE: Regime Score (Simplified/Placeholder)
         // =============================================
-        const gaugeRegime = echarts.init(document.getElementById('gaugeRegime'));
-        gaugeRegime.setOption({
-            series: [{
-                type: 'gauge',
-                startAngle: 180,
-                endAngle: 0,
-                min: 0,
-                max: 1,
-                splitNumber: 10,
-                axisLine: {
-                    lineStyle: {
-                        width: 30,
-                        color: [
-                            [0.3, '#16a34a'],
-                            [0.5, '#f59e0b'],
-                            [0.7, '#ef4444'],
-                            [1, '#dc2626']
-                        ]
-                    }
-                },
-                pointer: { itemStyle: { color: 'auto' } },
-                axisTick: { distance: -30, length: 8, lineStyle: { color: '#fff', width: 2 } },
-                splitLine: { distance: -30, length: 30, lineStyle: { color: '#fff', width: 4 } },
-                axisLabel: { color: 'auto', distance: 40, fontSize: 11, formatter: function(v) { return v.toFixed(1); } },
-                detail: {
-                    valueAnimation: true,
-                    formatter: '{value}',
-                    color: '#ef4444',
-                    fontSize: 30,
-                    offsetCenter: [0, '70%']
-                },
-                data: [{ value: 0.55, name: 'EARLY RISK-OFF' }] // Estimated score
-            }],
-            tooltip: { formatter: 'Score Régime: {c}' }
-        });
+        const gaugeRegimeDom = document.getElementById('gaugeRegime');
+        let gaugeRegime;
+        if (gaugeRegimeDom) {
+            gaugeRegime = echarts.init(gaugeRegimeDom);
+            gaugeRegime.setOption({
+                series: [{
+                    type: 'gauge',
+                    startAngle: 180,
+                    endAngle: 0,
+                    min: 0,
+                    max: 1,
+                    splitNumber: 10,
+                    axisLine: {
+                        lineStyle: {
+                            width: 30,
+                            color: [
+                                [0.3, '#16a34a'],
+                                [0.5, '#f59e0b'],
+                                [0.7, '#ef4444'],
+                                [1, '#dc2626']
+                            ]
+                        }
+                    },
+                    pointer: { itemStyle: { color: 'auto' } },
+                    axisTick: { distance: -30, length: 8, lineStyle: { color: '#fff', width: 2 } },
+                    splitLine: { distance: -30, length: 30, lineStyle: { color: '#fff', width: 4 } },
+                    axisLabel: { color: 'auto', distance: 40, fontSize: 11, formatter: function(v) { return v.toFixed(1); } },
+                    detail: {
+                        valueAnimation: true,
+                        formatter: '{value}',
+                        color: '#ef4444',
+                        fontSize: 30,
+                        offsetCenter: [0, '70%']
+                    },
+                    data: [{ value: 0.55, name: 'EARLY RISK-OFF' }] // Estimated score
+                }],
+                tooltip: { formatter: 'Score Régime: {c}' }
+            });
+        }
 
         // =============================================
         // RADAR: Aggregated Profile (Simplified/Placeholder)
         // =============================================
-        const radarAgg = echarts.init(document.getElementById('radarAggregated'));
-        radarAgg.setOption({
-            tooltip: { trigger: 'item' },
-            radar: {
-                indicator: [
-                    { name: 'Tendance', max: 100 },
-                    { name: 'Volatilité', max: 100 },
-                    { name: 'Résilience', max: 100 },
-                    { name: 'Diversification', max: 100 },
-                    { name: 'R/R Est.', max: 100 },
-                    { name: 'Coherence Régime', max: 100 }
-                ],
-                splitArea: { areaStyle: { color: ['rgba(59, 130, 246, 0.05)', 'rgba(59, 130, 246, 0.1)'] } },
-                axisLine: { lineStyle: { color: '#cbd5e1' } },
-                splitLine: { lineStyle: { color: '#cbd5e1' } }
-            },
-            series: [{
-                type: 'radar',
-                data: [{
-                    value: [75, 70, 80, 85, 70, 85], // Generic values
-                    name: 'Profil Moyen',
-                    areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
-                    lineStyle: { color: '#3b82f6', width: 2 },
-                    itemStyle: { color: '#3b82f6' }
+        const radarAggDom = document.getElementById('radarAggregated');
+        let radarAgg;
+        if (radarAggDom) {
+            radarAgg = echarts.init(radarAggDom);
+            radarAgg.setOption({
+                tooltip: { trigger: 'item' },
+                radar: {
+                    indicator: [
+                        { name: 'Tendance', max: 100 },
+                        { name: 'Volatilité', max: 100 },
+                        { name: 'Résilience', max: 100 },
+                        { name: 'Diversification', max: 100 },
+                        { name: 'R/R Est.', max: 100 },
+                        { name: 'Coherence Régime', max: 100 }
+                    ],
+                    splitArea: { areaStyle: { color: ['rgba(59, 130, 246, 0.05)', 'rgba(59, 130, 246, 0.1)'] } },
+                    axisLine: { lineStyle: { color: '#cbd5e1' } },
+                    splitLine: { lineStyle: { color: '#cbd5e1' } }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{
+                        value: [75, 70, 80, 85, 70, 85], // Generic values
+                        name: 'Profil Moyen',
+                        areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                        lineStyle: { color: '#3b82f6', width: 2 },
+                        itemStyle: { color: '#3b82f6' }
+                    }]
                 }]
-            }]
-        });
+            });
+        }
 
         // =============================================
         // TREEMAP: Sector/Theme Breakdown (Simplified/Placeholder)
         // =============================================
-        const treemap = echarts.init(document.getElementById('treemapSectors'));
-        treemap.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
-            series: [{
-                type: 'treemap',
-                roam: false,
-                nodeClick: false,
-                breadcrumb: { show: false },
-                label: { show: true, formatter: '{b}
-{c}%', fontSize: 12, fontWeight: 600 },
-                itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
-                data: [
-                    { name: 'US Défensif/Energie', value: 40, itemStyle: { color: '#16a34a' },
-                      children: [
-                        { name: 'TLT', value: 10, itemStyle: { color: '#22c55e' } },
-                        { name: 'XLV', value: 10, itemStyle: { color: '#16a34a' } },
-                        { name: 'XLE', value: 10, itemStyle: { color: '#15803d' } },
-                        { name: 'XLF', value: 10, itemStyle: { color: '#14532d' } }
-                      ]
-                    },
-                    { name: 'Europe
-Diversification', value: 20, itemStyle: { color: '#3b82f6' },
-                      children: [
-                        { name: 'TTE', value: 10, itemStyle: { color: '#60a5fa' } },
-                        { name: 'EWG', value: 10, itemStyle: { color: '#3b82f6' } }
-                      ]
-                    },
-                    { name: 'Asie
-Exposition', value: 10, itemStyle: { color: '#8b5cf6' },
-                      children: [
-                        { name: 'EWJ', value: 10, itemStyle: { color: '#a78bfa' } }
-                      ]
-                    },
-                    { name: 'Tech & Thématique', value: 30, itemStyle: { color: '#f59e0b' },
-                      children: [
-                        { name: 'LITE', value: 10, itemStyle: { color: '#fbbf24' } },
-                        { name: 'ICHR', value: 10, itemStyle: { color: '#f59e0b' } },
-                        { name: 'ICLN', value: 10, itemStyle: { color: '#eab308' } }
-                      ]
-                    }
-                ]
-            }]
-        });
+        const treemapDom = document.getElementById('treemapSectors');
+        let treemap;
+        if (treemapDom) {
+            treemap = echarts.init(treemapDom);
+            treemap.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+                series: [{
+                    type: 'treemap',
+                    roam: false,
+                    nodeClick: false,
+                    breadcrumb: { show: false },
+                    label: { show: true, formatter: '{b}\n{c}%', fontSize: 12, fontWeight: 600 },
+                    itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
+                    data: [
+                        { name: 'US Défensif/Energie', value: 40, itemStyle: { color: '#16a34a' },
+                        children: [
+                            { name: 'TLT', value: 10, itemStyle: { color: '#22c55e' } },
+                            { name: 'XLV', value: 10, itemStyle: { color: '#16a34a' } },
+                            { name: 'XLE', value: 10, itemStyle: { color: '#15803d' } },
+                            { name: 'XLF', value: 10, itemStyle: { color: '#14532d' } }
+                        ]
+                        },
+                        { name: 'Europe\nDiversification', value: 20, itemStyle: { color: '#3b82f6' },
+                        children: [
+                            { name: 'TTE', value: 10, itemStyle: { color: '#60a5fa' } },
+                            { name: 'EWG', value: 10, itemStyle: { color: '#3b82f6' } }
+                        ]
+                        },
+                        { name: 'Asie\nExposition', value: 10, itemStyle: { color: '#8b5cf6' },
+                        children: [
+                            { name: 'EWJ', value: 10, itemStyle: { color: '#a78bfa' } }
+                        ]
+                        },
+                        { name: 'Tech & Thématique', value: 30, itemStyle: { color: '#f59e0b' },
+                        children: [
+                            { name: 'LITE', value: 10, itemStyle: { color: '#fbbf24' } },
+                            { name: 'ICHR', value: 10, itemStyle: { color: '#f59e0b' } },
+                            { name: 'ICLN', value: 10, itemStyle: { color: '#eab308' } }
+                        ]
+                        }
+                    ]
+                }]
+            });
+        }
 
         // =============================================
         // BAR CHART: Composite Scores (Simplified/Placeholder)
         // =============================================
-        const barChart = echarts.init(document.getElementById('barChart'));
-        barChart.setOption({
-            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-            grid: { left: '10%', right: '10%', bottom: '5%', top: '5%', containLabel: true },
-            xAxis: {
-                type: 'value',
-                min: 60,
-                max: 90,
-                axisLabel: { fontSize: 11, formatter: '{value}' }
-            },
-            yAxis: {
-                type: 'category',
-                data: ['XLF', 'ICLN', 'EWJ', 'EWG', 'XLE', 'ICHR', 'XLV', 'LITE', 'TTE', 'TLT'], // Ordered by estimated score
-                axisLabel: { fontSize: 12, fontWeight: 600 }
-            },
-            series: [{
-                type: 'bar',
-                data: [
-                    { value: 68, itemStyle: { color: '#8b5cf6' } },
-                    { value: 70, itemStyle: { color: '#16a34a' } },
-                    { value: 72, itemStyle: { color: '#3b82f6' } },
-                    { value: 75, itemStyle: { color: '#16a34a' } },
-                    { value: 78, itemStyle: { color: '#3b82f6' } },
-                    { value: 80, itemStyle: { color: '#16a34a' } },
-                    { value: 82, itemStyle: { color: '#8b5cf6' } },
-                    { value: 85, itemStyle: { color: '#f59e0b' } },
-                    { value: 88, itemStyle: { color: '#16a34a' } },
-                    { value: 90, itemStyle: { color: '#f59e0b' } }
-                ],
-                label: {
-                    show: true,
-                    position: 'right',
-                    formatter: '{c}/100',
-                    fontSize: 11,
-                    fontWeight: 600
+        const barChartDom = document.getElementById('barChart');
+        let barChart;
+        if (barChartDom) {
+            barChart = echarts.init(barChartDom);
+            barChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '10%', right: '10%', bottom: '5%', top: '5%', containLabel: true },
+                xAxis: {
+                    type: 'value',
+                    min: 60,
+                    max: 90,
+                    axisLabel: { fontSize: 11, formatter: '{value}' }
                 },
-                barWidth: '65%'
-            }]
-        });
+                yAxis: {
+                    type: 'category',
+                    data: ['XLF', 'ICLN', 'EWJ', 'EWG', 'XLE', 'ICHR', 'XLV', 'LITE', 'TTE', 'TLT'], // Ordered by estimated score
+                    axisLabel: { fontSize: 12, fontWeight: 600 }
+                },
+                series: [{
+                    type: 'bar',
+                    data: [
+                        { value: 68, itemStyle: { color: '#8b5cf6' } },
+                        { value: 70, itemStyle: { color: '#16a34a' } },
+                        { value: 72, itemStyle: { color: '#3b82f6' } },
+                        { value: 75, itemStyle: { color: '#16a34a' } },
+                        { value: 78, itemStyle: { color: '#3b82f6' } },
+                        { value: 80, itemStyle: { color: '#16a34a' } },
+                        { value: 82, itemStyle: { color: '#8b5cf6' } },
+                        { value: 85, itemStyle: { color: '#f59e0b' } },
+                        { value: 88, itemStyle: { color: '#16a34a' } },
+                        { value: 90, itemStyle: { color: '#f59e0b' } }
+                    ],
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}/100',
+                        fontSize: 11,
+                        fontWeight: 600
+                    },
+                    barWidth: '65%'
+                }]
+            });
+        }
 
         // =============================================
         // SECTOR PERFORMANCE BAR CHART (Simplified/Placeholder)
         // =============================================
-        const sectorPerf = echarts.init(document.getElementById('sectorPerformance'));
-        sectorPerf.setOption({
-            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-            grid: { left: '3%', right: '10%', bottom: '5%', top: '5%', containLabel: true },
-            xAxis: {
-                type: 'value',
-                axisLabel: { fontSize: 11, formatter: '{value} setups' }
-            },
-            yAxis: {
-                type: 'category',
-                data: ['Global Energy', 'Asia ETF', 'Europe ETF', 'US Financials', 'US Tech Semi', 'US Tech Comm.', 'US Energy', 'US Healthcare', 'US Bonds'],
-                axisLabel: { fontSize: 11, fontWeight: 600 }
-            },
-            series: [{
-                type: 'bar',
-                data: [
-                    { value: 1, itemStyle: { color: '#f59e0b' } }, // ICLN (Global)
-                    { value: 1, itemStyle: { color: '#8b5cf6' } }, // EWJ (Asia)
-                    { value: 1, itemStyle: { color: '#3b82f6' } }, // EWG (Europe)
-                    { value: 1, itemStyle: { color: '#16a34a' } }, // XLF (US Financials)
-                    { value: 1, itemStyle: { color: '#16a34a' } }, // ICHR (US Tech Semi)
-                    { value: 1, itemStyle: { color: '#16a34a' } }, // LITE (US Tech Comm.)
-                    { value: 1, itemStyle: { color: '#f59e0b' } }, // XLE (US Energy)
-                    { value: 1, itemStyle: { color: '#8b5cf6' } }, // XLV (US Healthcare)
-                    { value: 2, itemStyle: { color: '#dc2626' } }, // TLT (US Bonds) + TTE (Europe Energy) = this is confusing, I should be careful how to classify it
-                ],
-                label: {
-                    show: true,
-                    position: 'right',
-                    formatter: function(p) {
-                        var labels = ['ICLN', 'EWJ', 'EWG', 'XLF', 'ICHR', 'LITE', 'XLE', 'XLV', 'TLT, TTE']; // Adjust labels based on data
-                        return labels[p.dataIndex];
-                    },
-                    fontSize: 11,
-                    fontWeight: 600
+        const sectorPerfDom = document.getElementById('sectorPerformance');
+        let sectorPerf;
+        if (sectorPerfDom) {
+            sectorPerf = echarts.init(sectorPerfDom);
+            sectorPerf.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '10%', bottom: '5%', top: '5%', containLabel: true },
+                xAxis: {
+                    type: 'value',
+                    axisLabel: { fontSize: 11, formatter: '{value} setups' }
                 },
-                barWidth: '60%'
-            }]
-        });
+                yAxis: {
+                    type: 'category',
+                    data: ['Global Energy', 'Asia ETF', 'Europe ETF', 'US Financials', 'US Tech Semi', 'US Tech Comm.', 'US Energy', 'US Healthcare', 'US Bonds'],
+                    axisLabel: { fontSize: 11, fontWeight: 600 }
+                },
+                series: [{
+                    type: 'bar',
+                    data: [
+                        { value: 1, itemStyle: { color: '#f59e0b' } }, // ICLN (Global)
+                        { value: 1, itemStyle: { color: '#8b5cf6' } }, // EWJ (Asia)
+                        { value: 1, itemStyle: { color: '#3b82f6' } }, // EWG (Europe)
+                        { value: 1, itemStyle: { color: '#16a34a' } }, // XLF (US Financials)
+                        { value: 1, itemStyle: { color: '#16a34a' } }, // ICHR (US Tech Semi)
+                        { value: 1, itemStyle: { color: '#16a34a' } }, // LITE (US Tech Comm.)
+                        { value: 1, itemStyle: { color: '#f59e0b' } }, // XLE (US Energy)
+                        { value: 1, itemStyle: { color: '#8b5cf6' } }, // XLV (US Healthcare)
+                        { value: 2, itemStyle: { color: '#dc2626' } }, // TLT (US Bonds) + TTE (Europe Energy) = this is confusing, I should be careful how to classify it
+                    ],
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function(p) {
+                            var labels = ['ICLN', 'EWJ', 'EWG', 'XLF', 'ICHR', 'LITE', 'XLE', 'XLV', 'TLT, TTE']; // Adjust labels based on data
+                            return labels[p.dataIndex];
+                        },
+                        fontSize: 11,
+                        fontWeight: 600
+                    },
+                    barWidth: '60%'
+                }]
+            });
+        }
 
         // =============================================
         // SETUP GAUGES & RADARS (Helper Functions)
         // =============================================
         function createGauge(elId, score, name, color) {
-            const chart = echarts.init(document.getElementById(elId));
+            const chartDom = document.getElementById(elId);
+            if (!chartDom) return;
+            const chart = echarts.init(chartDom);
             chart.setOption({
                 series: [{
                     type: 'gauge',
@@ -1811,7 +1833,9 @@ Exposition', value: 10, itemStyle: { color: '#8b5cf6' },
         }
 
         function createRadar(elId, values, name, color) {
-            const chart = echarts.init(document.getElementById(elId));
+            const chartDom = document.getElementById(elId);
+            if (!chartDom) return;
+            const chart = echarts.init(chartDom);
             chart.setOption({
                 tooltip: { trigger: 'item' },
                 radar: {
@@ -1879,6 +1903,8 @@ Exposition', value: 10, itemStyle: { color: '#8b5cf6' },
         // Actual data would come from bars_daily
         // =============================================
         function createSparkline(elId, data, color) {
+            var chartDom = document.querySelector('#' + elId);
+            if (!chartDom) return;
             var options = {
                 series: [{ name: 'Prix', data: data }],
                 chart: { type: 'area', height: 150, sparkline: { enabled: true }, toolbar: { show: false } },
@@ -1887,7 +1913,7 @@ Exposition', value: 10, itemStyle: { color: '#8b5cf6' },
                 colors: [color],
                 tooltip: { x: { show: false }, y: { formatter: function(v) { return '$' + v.toFixed(2); } } }
             };
-            var chart = new ApexCharts(document.querySelector('#' + elId), options);
+            var chart = new ApexCharts(chartDom, options);
             chart.render();
             return chart;
         }
@@ -1926,22 +1952,27 @@ Exposition', value: 10, itemStyle: { color: '#8b5cf6' },
         // RESIZE HANDLER
         // =============================================
         window.addEventListener('resize', function() {
-            pieChart.resize();
-            gaugeRegime.resize();
-            radarAgg.resize();
-            treemap.resize();
-            barChart.resize();
-            sectorPerf.resize();
-            gaugeTLT.resize(); radarTLT.resize();
-            gaugeXLV.resize(); radarXLV.resize();
-            gaugeXLE.resize(); radarXLE.resize();
-            gaugeTTE.resize(); radarTTE.resize();
-            gaugeEWG.resize(); radarEWG.resize();
-            gaugeEWJ.resize(); radarEWJ.resize();
-            gaugeLITE.resize(); radarLITE.resize();
-            gaugeICHR.resize(); radarICHR.resize();
-            gaugeXLF.resize(); radarXLF.resize();
-            gaugeICLN.resize(); radarICLN.resize();
+            if (pieChart) pieChart.resize();
+            if (gaugeRegime) gaugeRegime.resize();
+            if (radarAgg) radarAgg.resize();
+            if (treemap) treemap.resize();
+            if (barChart) barChart.resize();
+            if (sectorPerf) sectorPerf.resize();
+
+            // Resizing for individual setup charts
+            if (gaugeTLT) gaugeTLT.resize(); if (radarTLT) radarTLT.resize();
+            if (gaugeXLV) gaugeXLV.resize(); if (radarXLV) radarXLV.resize();
+            if (gaugeXLE) gaugeXLE.resize(); if (radarXLE) radarXLE.resize();
+            if (gaugeTTE) gaugeTTE.resize(); if (radarTTE) radarTTE.resize();
+            if (gaugeEWG) gaugeEWG.resize(); if (radarEWG) radarEWG.resize();
+            if (gaugeEWJ) gaugeEWJ.resize(); if (radarEWJ) radarEWJ.resize();
+            if (gaugeLITE) gaugeLITE.resize(); if (radarLITE) radarLITE.resize();
+            if (gaugeICHR) gaugeICHR.resize(); if (radarICHR) radarICHR.resize();
+            if (gaugeXLF) gaugeXLF.resize(); if (radarXLF) radarXLF.resize();
+            if (gaugeICLN) gaugeICLN.resize(); if (radarICLN) radarICLN.resize();
+            
+            // ApexCharts sparklines do not have a .resize() method that is publicly exposed or typically needed
+            // as they are designed to be small and adapt fluidly.
         });
 
         // =============================================
