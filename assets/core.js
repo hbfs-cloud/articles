@@ -1,62 +1,64 @@
 // assets/core.js
 
-// Tag metadata - MUST be kept in sync with index.html taxonomy
+// Tag metadata with multi-language support
+// Keys are used for filtering (?tags=key), labels are displayed to the user
 const tagMeta = {
-    // Region (blue)
-    us: { label: "US", cat: "region" },
-    eu: { label: "EU", cat: "region" },
-    asia: { label: "Asia", cat: "region" },
-    crypto: { label: "Crypto", cat: "region" },
-    commodity: { label: "Commodity", cat: "region" },
-    forex: { label: "Forex", cat: "region" },
-    etf: { label: "ETF", cat: "region" },
-    // Sector (green)
-    tech: { label: "Tech", cat: "sector" },
-    semis: { label: "Semis", cat: "sector" },
-    healthcare: { label: "Healthcare", cat: "sector" },
-    energy: { label: "Energy", cat: "sector" },
-    financials: { label: "Financials", cat: "sector" },
-    industrials: { label: "Industrials", cat: "sector" },
-    materials: { label: "Materials", cat: "sector" },
-    consumer: { label: "Consumer", cat: "sector" },
-    defense: { label: "Defense", cat: "sector" },
-    software: { label: "Software", cat: "sector" },
-    // Theme (purple)
-    ai: { label: "AI", cat: "theme" },
-    earnings: { label: "Earnings", cat: "theme" },
-    geopolitique: { label: "Géopolitique", cat: "theme" },
-    macro: { label: "Macro", cat: "theme" },
-    technique: { label: "Technique", cat: "theme" },
-    options: { label: "Options", cat: "theme" },
-    dividende: { label: "Dividende", cat: "theme" },
-    "small-cap": { label: "Small Cap", cat: "theme" },
-    speculative: { label: "Spéculatif", cat: "theme" },
-    education: { label: "Éducation", cat: "theme" },
-    societe: { label: "Société", cat: "theme" },
-    securite: { label: "Sécurité", cat: "theme" },
-    architecture: { label: "Architecture", cat: "theme" },
-    sql: { label: "SQL", cat: "theme" },
-    snowflake: { label: "Snowflake", cat: "theme" },
-    singer: { label: "Singer", cat: "theme" },
-    opensource: { label: "Open-Source", cat: "theme" },
-    // Content (amber)
-    "trade-idea": { label: "Trade Idea", cat: "content" },
-    formation: { label: "Formation", cat: "content" },
-    retrospective: { label: "Rétrospective", cat: "content" },
+    // Region (cat: "region")
+    us: { labels: { fr: "US", en: "US", ar: "أمريكا" }, cat: "region" },
+    eu: { labels: { fr: "Europe", en: "Europe", ar: "أوروبا" }, cat: "region" },
+    asia: { labels: { fr: "Asie", en: "Asia", ar: "آسيا" }, cat: "region" },
+    crypto: { labels: { fr: "Crypto", en: "Crypto", ar: "كريبتو" }, cat: "region" },
+    commodity: { labels: { fr: "Matières Premières", en: "Commodities", ar: "سلع" }, cat: "region" },
+    forex: { labels: { fr: "Forex", en: "Forex", ar: "فوركس" }, cat: "region" },
+    etf: { labels: { fr: "ETF", en: "ETF", ar: "صناديق" }, cat: "region" },
+    
+    // Sector (cat: "sector")
+    tech: { labels: { fr: "Technologie", en: "Tech", ar: "تكنولوجيا" }, cat: "sector" },
+    semis: { labels: { fr: "Semi-conducteurs", en: "Semis", ar: "أشباه الموصلات" }, cat: "sector" },
+    healthcare: { labels: { fr: "Santé", en: "Healthcare", ar: "الرعاية الصحية" }, cat: "sector" },
+    energy: { labels: { fr: "Énergie", en: "Energy", ar: "طاقة" }, cat: "sector" },
+    financials: { labels: { fr: "Finance", en: "Financials", ar: "مالية" }, cat: "sector" },
+    industrials: { labels: { fr: "Industrie", en: "Industrials", ar: "صناعة" }, cat: "sector" },
+    materials: { labels: { fr: "Matériaux", en: "Materials", ar: "مواد" }, cat: "sector" },
+    consumer: { labels: { fr: "Consommation", en: "Consumer", ar: "استهلاك" }, cat: "sector" },
+    defense: { labels: { fr: "Défense", en: "Defense", ar: "دفاع" }, cat: "sector" },
+    software: { labels: { fr: "Logiciel", en: "Software", ar: "برمجيات" }, cat: "sector" },
+    
+    // Theme (cat: "theme")
+    ai: { labels: { fr: "IA", en: "AI", ar: "ذكاء اصطناعي" }, cat: "theme" },
+    earnings: { labels: { fr: "Résultats", en: "Earnings", ar: "أرباح" }, cat: "theme" },
+    geopolitique: { labels: { fr: "Géopolitique", en: "Geopolitics", ar: "جيوسياسة" }, cat: "theme" },
+    macro: { labels: { fr: "Macro", en: "Macro", ar: "ماكرو" }, cat: "theme" },
+    technique: { labels: { fr: "Technique", en: "Technical", ar: "تقني" }, cat: "theme" },
+    options: { labels: { fr: "Options", en: "Options", ar: "خيارات" }, cat: "theme" },
+    dividende: { labels: { fr: "Dividende", en: "Dividend", ar: "توزيعات" }, cat: "theme" },
+    "small-cap": { labels: { fr: "Small Cap", en: "Small Cap", ar: "شركات صغيرة" }, cat: "theme" },
+    speculative: { labels: { fr: "Spéculatif", en: "Speculative", ar: "مضاربة" }, cat: "theme" },
+    education: { labels: { fr: "Éducation", en: "Education", ar: "تعليم" }, cat: "theme" },
+    societe: { labels: { fr: "Société", en: "Society", ar: "مجتمع" }, cat: "theme" },
+    securite: { labels: { fr: "Sécurité", en: "Security", ar: "أمن" }, cat: "theme" },
+    architecture: { labels: { fr: "Architecture", en: "Architecture", ar: "هندسة" }, cat: "theme" },
+    sql: { labels: { fr: "SQL", en: "SQL", ar: "SQL" }, cat: "theme" },
+    snowflake: { labels: { fr: "Snowflake", en: "Snowflake", ar: "Snowflake" }, cat: "theme" },
+    singer: { labels: { fr: "Singer", en: "Singer", ar: "Singer" }, cat: "theme" },
+    opensource: { labels: { fr: "Open-Source", en: "Open-Source", ar: "مصدر مفتوح" }, cat: "theme" },
+    
+    // Content (cat: "content")
+    "trade-idea": { labels: { fr: "Idée de Trade", en: "Trade Idea", ar: "فكرة تداول" }, cat: "content" },
+    formation: { labels: { fr: "Formation", en: "Learning", ar: "تدريب" }, cat: "content" },
+    retrospective: { labels: { fr: "Rétrospective", en: "Retrospective", ar: "مراجعة" }, cat: "content" },
 };
 
 /**
- * Renders clickable tags into a specified container element.
- *
- * @param {string} tagsString - A comma-separated string of tags.
- * @param {string} targetElementId - The ID of the container element.
- * @param {string} [defaultTab="analyses"] - The tab to navigate to on index.html.
+ * Renders clickable tags into a container with multi-language support.
  */
 function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses") {
     const tagsContainer = document.getElementById(targetElementId);
     if (!tagsContainer || !tagsString) return;
 
-    // Clear existing content if any
+    // Detect language from <html> tag, default to English
+    const lang = document.documentElement.lang || "en";
+    
     tagsContainer.innerHTML = '';
 
     const tags = tagsString.split(",").map(t => t.trim()).filter(Boolean);
@@ -64,10 +66,13 @@ function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses
         const meta = tagMeta[t];
         if (meta) {
             const chip = document.createElement("span");
-            chip.className = "card-tag"; // Matches the new CSS class
+            chip.className = "card-tag";
             chip.setAttribute("data-cat", meta.cat);
-            chip.textContent = meta.label;
-            chip.style.cursor = "pointer";
+            
+            // Get translated label, fallback to English then key
+            const label = meta.labels[lang] || meta.labels["en"] || t;
+            chip.textContent = label;
+            
             chip.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -78,7 +83,6 @@ function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses
     });
 }
 
-// Automatically render tags on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", function() {
     const articleTagsString = document.documentElement.dataset.tags;
     const articleDefaultTab = document.documentElement.dataset.tab || "analyses";
