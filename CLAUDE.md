@@ -278,6 +278,11 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
   | Contenu | `trade-idea`, `formation`, `retrospective` | Ambre (`data-cat="content"`) |
   - Les tags sont rendus automatiquement en chips colorés par le JS (`tagMeta` object)
   - Cliquer sur un tag active le filtre global (AND cumulatif)
+- **Tags Clickables sur les Pages d'Articles** : Pour activer les tags cliquables sur une page d'article individuelle (weekly, daily, analyses, etc.) qui redirigent vers la page principale (`index.html`) avec le filtre de tag appliqué, suivre ces étapes :
+  1. **Inclure le Script Générique** : Ajouter `<script src="/assets/tag-renderer.js"></script>` avant la balise `</body>` de la page d'article.
+  2. **Définir les Tags de l'Article** : Ajouter l'attribut `data-tags="tag1,tag2,..."` à la balise `<html>` de la page d'article. Ces tags doivent correspondre aux tags définis dans `tagMeta` sur `index.html`.
+  3. **Définir le Tab par Défaut (Optionnel)** : Si la page d'article correspond principalement à un onglet spécifique sur `index.html` (ex: `analyses` pour les analyses individuelles, `weekly` pour les rapports hebdomadaires), ajouter `data-tab="[nom_du_tab]"` à la balise `<html>`. Si omis, le tab `analyses` sera utilisé par défaut.
+  4. **Emplacement des Tags** : Ajouter un `div` avec l'ID `article-clickable-tags` là où les tags cliquables doivent apparaître sur la page. Exemple : `<div id="article-clickable-tags" class="card-tags"></div>`. Le script `tag-renderer.js` détectera et peuplera ce `div` automatiquement.
 - **URL params** : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — tous combinables
 - **Compteurs de tabs** (**OBLIGATOIRE**) : À chaque ajout d'article, **toujours** mettre à jour le compteur du tab correspondant dans `index.html` :
   - `<span class="tab-count" id="weeklyCount">N</span>` — nombre de cartes dans `#tab-weekly`
