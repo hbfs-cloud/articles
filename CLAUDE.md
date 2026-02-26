@@ -82,7 +82,7 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 3. Créer le dossier `weekly/YYYYMMDD/` (date du lundi de la semaine couverte)
 4. Utiliser impérativement le CSS global: `<link rel="stylesheet" href="/assets/report.css">`
 5. Créer index.html avec toutes les sections (voir weekly/CLAUDE.md)
-6. Mettre à jour index.html principal (ajouter la nouvelle carte en premier, passer l'ancienne en "Archive")
+6. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 7. Langue: Français, ton institutionnel mais accessible
 
 ### "Analyse [TICKER]" (ex: "Analyse BMNR", "Analyse BTC")
@@ -144,7 +144,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
    - Ajouter un lien `<a href="#trade" class="nav-item">Trade Idea</a>` dans la navigation
    - **Non pertinent pour** : indices (STOXX600, KOSPI), thématiques (STABLECOINS), devises (EURUSD) sauf si trade FX explicite
 9. Mettre à jour la modale Historique avec les versions archivées
-10. Mettre à jour index.html principal (carte avec data-grade + badge)
+10. Lancer `node tools/add_card.js analyses/{TICKER}/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 
 ### "Analyse Daily" / "Briefing du jour"
 Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Crypto. Le weekend, focus crypto et géopolitique.
@@ -173,7 +173,7 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
    - Ce qu'il faut surveiller aujourd'hui
    - Sources & Disclaimer
 4. **Utiliser le css dark**: `<link rel="stylesheet" href="/assets/report-dark.css">`
-5. **Mettre à jour le tab Daily** dans index.html (ajouter la carte du jour)
+5. Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 
 #### Spécificités Samedi (post-séance vendredi)
 Le briefing du samedi est un **briefing complet** qui couvre la séance de vendredi :
@@ -228,7 +228,7 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Badge géographique sur chaque setup (US 🇺🇸 / Europe 🇪🇺 / Asia 🌏 / ETF 📊)
    - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
 7. Créer les variantes multilangue/multiniveau
-8. Mettre à jour le tab Scanner dans index.html
+8. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 
 ### "Rétrospective Scanner" / "Rétro scanner"
 Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note le scanner.
@@ -244,7 +244,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
    - Note globale (A+ à F), dashboard rapide, tableau de tous les setups
    - Analyse par stratégie, top 3 / flop 3, leçons & améliorations
    - Bouton Historique pour naviguer les versions précédentes
-6. **Mettre à jour le tab Scanner** dans index.html (ajouter la carte rétrospective)
+6. Lancer `node tools/add_card.js scanner/retrospective/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 7. Voir scanner/CLAUDE.md pour le template complet
 
 ### Landing Page (index.html) — Tabs
@@ -284,11 +284,9 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
   3. **Définir le Tab par Défaut (Optionnel)** : Si la page d'article correspond principalement à un onglet spécifique sur `index.html` (ex: `analyses` pour les analyses individuelles, `weekly` pour les rapports hebdomadaires), ajouter `data-tab="[nom_du_tab]"` à la balise `<html>`. Si omis, le tab `analyses` sera utilisé par défaut.
   4. **Emplacement des Tags** : Ajouter un `div` avec l'ID `article-clickable-tags` là où les tags cliquables doivent apparaître sur la page. Exemple : `<div id="article-clickable-tags" class="card-tags"></div>`. Le script `tag-renderer.js` détectera et peuplera ce `div` automatiquement.
 - **URL params** : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — tous combinables
-- **Compteurs de tabs** (**OBLIGATOIRE**) : À chaque ajout d'article, **toujours** mettre à jour le compteur du tab correspondant dans `index.html` :
-  - `<span class="tab-count" id="weeklyCount">N</span>` — nombre de cartes dans `#tab-weekly`
-  - `<span class="tab-count" id="dailyCount">N</span>` — nombre de cartes dans `#tab-daily`
-  - `<span class="tab-count" id="scannerCount">N</span>` — nombre de cartes dans `#tab-scanner`
-  - `analysesCount` est calculé dynamiquement par JS (pas de mise à jour manuelle)
+- **Indexation et Compteurs de tabs** (**OBLIGATOIRE**) : Le contenu de `index.html` (cartes et compteurs par tab) est désormais loadé dynamiquement depuis des fichiers JSON (`data/daily.json`, etc.). La recherche utilise également un index pré-calculé. 
+  - À chaque ajout de rapport (analyse, daily, scanner...), vous DEVEZ utiliser le script automatisé : `node tools/add_card.js chemin/vers/index.html`
+  - Le script parsera l'article, créera la carte HTML, l'injectera au début du JSON (via `data/`), mettra à jour l'index de recherche global (`data/search_data.js`). Ne jamais modifier `index.html` à la main pour ajouter une carte !
 
 ## Tâches Planifiées (Scheduled Tasks)
 
