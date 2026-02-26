@@ -1,10 +1,89 @@
 # Market Watch - Weekly Instructions
 
+## Article de Référence
+
+**`weekly/20260223/index.html`** est la référence pour le format, la structure HTML, et le style visuel. Tout nouveau weekly DOIT suivre ce modèle.
+
 ## 1. RAPPORT HEBDOMADAIRE (Weekly Report)
 
 
 ### Objectif
 Rapport de niveau institutionnel à destination de retail qui couvre tous les grands marchés US, EU, Asia, sur tous les assets (Stocks, ETF, Gold, Silver, Crypto). Vision globale macro, micro et géopolitique pour la semaine à venir.
+
+### Template HTML Obligatoire (CRITIQUE)
+
+#### Balise `<html>` — Attributs Obligatoires
+```html
+<html lang="fr" dir="ltr" data-level="expert" data-tags="us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea" data-tab="weekly">
+```
+- `lang` : langue (fr, en, ar)
+- `dir` : direction texte (ltr ou rtl pour arabe)
+- `data-level` : "expert" (par défaut)
+- `data-tags` : tags pertinents du rapport
+- `data-tab="weekly"` : toujours "weekly"
+
+#### CSS — Thème Light (`report.css`)
+```html
+<link rel="stylesheet" href="/assets/report.css">
+```
+**JAMAIS** de dossier `assets/` local.
+
+#### Brand Bar (OBLIGATOIRE)
+```html
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+```
+
+#### Hero Section — `<div class="hero-section">`
+```html
+<div class="hero-section">
+  <div class="container">
+    <h1>{Titre de la semaine}</h1>
+    <p>{Sous-titre / résumé}</p>
+    <div class="hero-badges">
+      <span class="hero-badge">{Badge}</span>
+    </div>
+    <div id="article-clickable-tags" class="card-tags"></div>
+    <button onclick="document.getElementById('weeklyHistoryModal').style.display='flex'">
+      <i class="fa-solid fa-clock-rotate-left"></i> Historique des rapports
+    </button>
+  </div>
+</div>
+```
+
+#### Tags Cliquables (OBLIGATOIRE)
+```html
+<div id="article-clickable-tags" class="card-tags"></div>
+```
+Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
+
+#### FAB — Pas de FAB pour le Weekly
+Le weekly n'utilise **pas** de FAB flottant. La navigation se fait via le Navigation Grid intégré.
+
+#### Footer (OBLIGATOIRE)
+```html
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+```
+**TOUJOURS** `class="article-footer"`. Jamais d'autre classe.
+
+#### Scripts (OBLIGATOIRE — avant `</body>`)
+```html
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+```
 
 ### Sections Obligatoires (dans l'ordre)
 
@@ -121,6 +200,12 @@ Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé"
 - Les Top & Bottom Performers doivent montrer la **performance de toute la semaine** (5 jours), pas juste la dernière séance
 - Les liens internes ne doivent **jamais** contenir `/index.html` — GitHub Pages résout automatiquement
 - **Switcher langue/niveau** : ne JAMAIS inclure le switcher (boutons Expert/Beginner, FR/EN/AR) si les variantes correspondantes n'existent pas. Le switcher ne doit être présent que si toutes les pages cibles sont générées.
+- **CSS** : `/assets/report.css` (thème light). PAS de CSS local.
+- **Brand Bar** : toujours `<nav class="brand-bar">` avec `brand-bar-inner` et logo MW `/logo.svg`
+- **Footer** : toujours `<footer class="article-footer">`
+- **Tags** : toujours `data-tags` sur `<html>` + `data-tab="weekly"` + `<div id="article-clickable-tags">`
+- **Scripts** : toujours `/assets/core.js` + `/assets/tag-renderer.js` avant `</body>`
+- Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` après création
 
 ---
 

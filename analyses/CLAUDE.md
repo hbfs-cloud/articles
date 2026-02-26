@@ -4,7 +4,91 @@
 
 
 ### Référence
-**L'analyse POET (`analyses/POET/`) est la référence absolue** pour la charte graphique, la structure HTML, les classes CSS, les ECharts, le switcher langue/niveau, et les 6 variantes (expert/fr, expert/en, expert/ar, beginner/fr, beginner/en, beginner/ar). Toute nouvelle analyse doit suivre ce modèle en termes de qualité, longueur (~1600+ lignes pour expert/fr), structure des sections, et style visuel.
+**L'analyse TARA (`analyses/TARA/`) et CDIO (`analyses/CDIO/`)** sont les références pour la charte graphique, la structure HTML, les classes CSS, les ECharts, le switcher langue/niveau, et les 6 variantes. Toute nouvelle analyse doit suivre ce modèle en termes de qualité, longueur (~1000-1600+ lignes pour expert/fr), structure des sections, et style visuel.
+
+### Template HTML Obligatoire (CRITIQUE)
+
+#### Balise `<html>` — Attributs Obligatoires
+```html
+<html lang="fr" data-tags="us,tech,ai,trade-idea,speculative" data-tab="analyses" data-grade="A+" data-level="expert">
+```
+- `lang` : langue (fr, en, ar)
+- `data-tags` : tags pertinents (voir taxonomie CLAUDE.md racine)
+- `data-tab="analyses"` : toujours "analyses"
+- `data-grade` : note globale (A+, A, B+, B, C, D)
+- `data-level` : "expert" ou "beginner"
+
+#### CSS — Thème Light (`report.css`)
+```html
+<link rel="stylesheet" href="/assets/report.css">
+```
+**JAMAIS** de dossier `assets/` local.
+
+#### Brand Bar (OBLIGATOIRE)
+```html
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+```
+
+#### Hero Section — `<header class="ticker-header">`
+- Logo MW (`/logo.svg`) — JAMAIS logo société
+- Switcher langue (drapeaux FR/EN/AR) + niveau (Expert/Beginner)
+- Ticker symbol, exchange, date
+- Prix actuel + variation
+- Métriques : MCap, Volume, Float, Short Interest, Beta, 52W Range
+- Badges : secteur, thème
+- Bouton Historique
+- Tags : `<div id="article-clickable-tags" class="card-tags"></div>`
+
+#### Tags Cliquables (OBLIGATOIRE)
+```html
+<div id="article-clickable-tags" class="card-tags"></div>
+```
+Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
+
+#### FAB — Navigation Flottante (OBLIGATOIRE)
+```html
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#verdict" class="fnav-item" data-section="verdict"><i class="fas fa-gavel"></i><span>Verdict</span></a>
+    <a href="#fondamentaux" class="fnav-item" data-section="fondamentaux"><i class="fas fa-chart-line"></i><span>Fondamentaux</span></a>
+    <a href="#technique" class="fnav-item" data-section="technique"><i class="fas fa-chart-area"></i><span>Technique</span></a>
+    <a href="#risques" class="fnav-item" data-section="risques"><i class="fas fa-shield-halved"></i><span>Risques</span></a>
+    <a href="#social" class="fnav-item" data-section="social"><i class="fas fa-satellite-dish"></i><span>Social</span></a>
+    <a href="#trade" class="fnav-item" data-section="trade"><i class="fas fa-crosshairs"></i><span>Trade Idea</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+```
+Adapter les items aux sections de l'analyse. ~6-12 items selon la complexité. JS : toggle, smooth scroll, IntersectionObserver.
+
+#### Footer (OBLIGATOIRE)
+```html
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+```
+**TOUJOURS** `class="article-footer"`. Jamais d'autre classe.
+
+#### Scripts (OBLIGATOIRE — avant `</body>`)
+```html
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+```
 
 ### Objectif
 Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy inspiré SLNH : headers avec emojis, bullet points courts, verdicts clairs par section. L'objectif est qu'un lecteur comprenne rapidement ce que fait la boîte, son setup, ses risques et si c'est un trade intéressant.

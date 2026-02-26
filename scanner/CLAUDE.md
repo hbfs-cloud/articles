@@ -1,5 +1,9 @@
 # Market Watch - Scanner Instructions
 
+## Article de Référence
+
+**`scanner/20260219/index.html`** est la référence absolue pour le format, la structure HTML, les ECharts, et le style visuel. Tout nouveau scan DOIT suivre ce modèle exactement.
+
 ## 5. SCANNER QUOTIDIEN
 
 
@@ -11,7 +15,6 @@ Article quotidien généré par le scanner algorithmique. Détecte automatiqueme
 scanner/
 ├── YYYYMMDD/
 │   ├── index.html                # Default = expert/fr
-│   ├── assets/report.css         # CSS spécifique (thème dark)
 │   ├── variants.json             # Manifest des variantes
 │   ├── expert/
 │   │   ├── en/index.html
@@ -21,6 +24,8 @@ scanner/
 │       ├── en/index.html
 │       └── ar/index.html
 ```
+
+**IMPORTANT** : Ne PAS créer de dossier `assets/` local. Utiliser exclusivement le CSS global via `/assets/report.css`.
 
 ### Collecte des Données
 1. **`RunAutoScreener`** : Détection du régime de marché + candidats auto-adaptatifs
@@ -99,38 +104,156 @@ Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la couvertur
 **Exemple** :
 > "Rotation défensive confirmée. Hausse VIX +4.2%. 10 setups analysés : XOM, HRL, UNH (US), SAP, BBVA (EU), EWJ (Asie), GLD, XLE (ETFs)."
 
+### Template HTML Obligatoire (CRITIQUE)
+
+Chaque scanner DOIT suivre exactement cette structure HTML. Référence : `scanner/20260219/index.html`.
+
+#### Balise `<html>` — Attributs Obligatoires
+```html
+<html lang="fr" data-tags="us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare" data-tab="scanner">
+```
+- `lang` : langue de l'article (fr, en, ar)
+- `data-tags` : tags pertinents (voir taxonomie dans CLAUDE.md racine)
+- `data-tab="scanner"` : toujours "scanner"
+
+#### CSS — Thème Light (`report.css`)
+```html
+<link rel="stylesheet" href="/assets/report.css">
+```
+**JAMAIS** `report-dark.css` pour le scanner. **JAMAIS** de dossier `assets/` local.
+
+#### Brand Bar (OBLIGATOIRE)
+```html
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+```
+
+#### Hero Section — `<div class="ticker-header">`
+Le hero du scanner utilise `ticker-header` (pas `hero-section`) :
+- Logo MW (jamais logo société)
+- Switcher langue (drapeaux FR/EN/AR) + niveau (Expert/Beginner)
+- Titre : "Scanner Market Watch — {Date}"
+- Métriques : Régime, Score Moyen, Nb Setups, Stratégie Dominante
+- Badges : régime couleur, stratégies
+- Tags cliquables : `<div id="article-clickable-tags" class="card-tags"></div>`
+
+#### Tags Cliquables (OBLIGATOIRE)
+```html
+<div id="article-clickable-tags" class="card-tags"></div>
+```
+Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
+
+#### FAB — Navigation Flottante (OBLIGATOIRE — 6 items)
+```html
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#regime" class="fnav-item" data-section="regime"><i class="fas fa-gauge"></i><span>Régime</span></a>
+    <a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-list"></i><span>Vue d'Ensemble</span></a>
+    <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-chart-pie"></i><span>Synthèse</span></a>
+    <a href="#performance" class="fnav-item" data-section="performance"><i class="fas fa-chart-bar"></i><span>Performance</span></a>
+    <a href="#methodo" class="fnav-item" data-section="methodo"><i class="fas fa-flask"></i><span>Méthodologie</span></a>
+    <a href="#disclaimer" class="fnav-item" data-section="disclaimer"><i class="fas fa-triangle-exclamation"></i><span>Disclaimer</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+```
+**TOUJOURS 6 items.** Le JS gère le toggle, le smooth scroll, et l'IntersectionObserver pour l'item actif.
+
+#### Footer (OBLIGATOIRE)
+```html
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+```
+**TOUJOURS** `class="article-footer"`. Jamais `report-footer`, `footer-bar`, `site-footer`, etc.
+
+#### Scripts (OBLIGATOIRE — avant `</body>`)
+```html
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+```
+
 ### Sections de l'Article Scanner
 
 #### Thème
-Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`) comme toutes les autres pages. **JAMAIS de thème dark.**
+Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`) via `/assets/report.css`. **JAMAIS de thème dark.**
+
+#### Charts — ECharts UNIQUEMENT
+**IMPORTANT** : Utiliser exclusivement **ECharts** pour tous les graphiques. **Ne PAS mélanger** ApexCharts et ECharts. Pas de sparklines ApexCharts.
+- Conteneur : `<div id="chartId" class="echart-box" style="width:100%; height:300px;"></div>`
+- Initialisation dans un `<script>` en fin de page
 
 #### Sections Obligatoires
-1. **Hero** : Date, badge régime de marché (couleur selon régime), stats clés (nb setups, score moyen, stratégie dominante)
-2. **Régime de Marché** : Description du régime détecté, composantes (VIX, SPX, DXY, crédit, liquidité, TLT), pondérations des stratégies
-   - **ECharts Pie** : Répartition des stratégies (%)
+1. **Hero** (`ticker-header`) : Date, badge régime de marché (couleur selon régime), stats clés (nb setups, score moyen, stratégie dominante), tags cliquables
+2. **Régime de Marché** (`id="regime"`) : Description du régime détecté, composantes (VIX, SPX, DXY, crédit, liquidité, TLT), pondérations des stratégies
+   - **ECharts Pie (donut)** : Répartition des stratégies (%)
    - **ECharts Gauge** : Score moyen des setups (0-100)
-3. **Vue d'Ensemble Visuelle** (NOUVELLE SECTION OBLIGATOIRE) :
+   - `pedagogy-box` expliquant la sélection
+3. **Vue d'Ensemble Visuelle** (`id="overview"`) :
    - **ECharts Radar** : Profil agrégé des 10 setups (axes: Technique, Volume, Momentum, Risque, R/R, Conviction)
    - **ECharts Treemap** : Répartition sectorielle des 10 setups (taille = score, couleur = variation)
    - **ECharts Heatmap** : Matrice de corrélations entre les 10 tickers (si applicable)
-4. **Navigation Grid** : Liens internes vers chaque setup
-5. **10 Setup Cards** : Pour chaque ticker :
+4. **Navigation Grid** : Liens internes vers chaque setup (grille cliquable)
+5. **10 Setup Cards** (`id="setup-{TICKER}"` pour chaque) :
    - Header avec ticker, nom, prix, variation
-   - Badges : stratégie détectée, fiabilité, signal technique
-   - **ECharts Gauge** : Score composite 0-100 (visuel)
-   - **ECharts Radar** : Profil du setup (6 axes: technique, volume, momentum, risque, liquidité, conviction)
-   - **Description du setup** : ce qu'on voit techniquement (pattern, volumes, indicateurs)
-   - **Confirmations** : ce qui valide le setup
-   - **Invalidations** : ce qui annule le setup
-   - **Alertes à placer** : niveaux de prix à surveiller
-   - **Niveaux clés** : entrée, stop, target(s)
-   - **ApexCharts Bar** : Prix + volume derniers 30 jours (bar chart avec volume)
-6. **Synthèse** :
-   - Tableau récapitulatif des 10 setups
+   - Badges : stratégie détectée, fiabilité, signal technique, badge géographique (US/EU/Asia/ETF)
+   - **ECharts Gauge** : Score composite 0-100 (`id="gaugeSetup{TICKER}"`)
+   - **ECharts Radar** : Profil du setup 6 axes (`id="radarSetup{TICKER}"`)
+   - **Thèse d'investissement** : paragraphe explicatif du setup
+   - **Confirmations** (OBLIGATOIRE — fond vert) :
+     ```html
+     <div style="background:#f0fdf4; border:1px solid #86efac; padding:1rem; border-radius:12px;">
+       <h4 style="color:#16a34a;">Confirmations</h4>
+       <ul><li>...</li><li>...</li><li>...</li><li>...</li></ul>
+     </div>
+     ```
+   - **Invalidations** (OBLIGATOIRE — fond rouge) :
+     ```html
+     <div style="background:#fef2f2; border:1px solid #fecaca; padding:1rem; border-radius:12px;">
+       <h4 style="color:#dc2626;">Invalidations</h4>
+       <ul><li>...</li><li>...</li><li>...</li><li>...</li></ul>
+     </div>
+     ```
+   - **Niveaux Clés** (OBLIGATOIRE — grille CSS) :
+     ```html
+     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem;">
+       <div><strong>Entrée :</strong> ${prix}-${prix}</div>
+       <div><strong>Stop Loss :</strong> ${prix}</div>
+       <div><strong>Target 1 :</strong> ${prix}</div>
+       <div><strong>Target 2 :</strong> ${prix}</div>
+       <div><strong>R/R :</strong> 1:{ratio}</div>
+       <div><strong>Horizon :</strong> {N}-{N} jours</div>
+     </div>
+     ```
+   - **4 items min** dans Confirmations ET Invalidations
+   - **6 entrées** dans Niveaux Clés (Entrée, Stop, TP1, TP2, R/R, Horizon)
+6. **Synthèse** (`id="synthese"`) :
+   - Tableau récapitulatif `.data-table` des 10 setups (Ticker, Score, Stratégie, Entry, Stop, TP1, R/R)
    - **ECharts Bar** : Scores composites comparatifs (horizontal bar chart)
    - **ECharts Sankey** (optionnel) : Flux Secteur → Stratégie → Setup
-7. **Méthodologie** : Explication du scoring et des stratégies
-8. **Disclaimer** : Avertissement standard
+7. **Performance** (`id="performance"`) : Résumé des métriques globales
+8. **Méthodologie** (`id="methodo"`) — **5 sous-sections obligatoires** dans des `pedagogy-box` :
+   1. Détection du Régime de Marché
+   2. Screening Multi-Stratégie
+   3. Scoring Composite (4 Facteurs)
+   4. Critères de Sélection A+
+   5. Validation & Ranking
+   - Plus un bloc "Sources de données" en fin de section
+9. **Disclaimer** (`id="disclaimer"`) : Avertissement standard dans `.content-card`
 
 #### Niveaux de Complexité
 - **Expert** : Toutes les sections, jargon technique complet, Wyckoff, RSI divergences, volume profile
@@ -146,9 +269,11 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
 - 10 setups maximum par scan
 - Diversification sectorielle obligatoire
 - Inclure le régime de marché dans le titre et le badge hero
-- Charts ApexCharts pour chaque setup (bar chart avec volume)
+- **ECharts UNIQUEMENT** : Gauge + Radar par setup, Pie + Gauge pour régime, Treemap + Bar pour synthèse. PAS d'ApexCharts.
 - Score composite 0-100 pour chaque setup
-- Ajouter la carte dans le tab Scanner de index.html
+- **Niveaux Clés OBLIGATOIRES** dans chaque setup card (Entry, Stop, TP1, TP2, R/R, Horizon)
+- **Confirmations/Invalidations OBLIGATOIRES** avec fond coloré (vert/rouge) dans chaque setup card
+- Ajouter la carte dans le tab Scanner via `node tools/add_card.js scanner/YYYYMMDD/index.html`
 - **OBLIGATOIRE — Feedback rétrospective** : Avant de générer un nouveau scan, **toujours lire la dernière rétrospective** (`scanner/retrospective/index.html`) pour :
   - Identifier les stratégies qui sous-performent et réduire leur poids
   - Identifier les secteurs qui génèrent trop de faux signaux
@@ -170,12 +295,19 @@ Article de rétrospective publié chaque vendredi soir (23h) qui passe en revue 
 scanner/
 ├── retrospective/
 │   ├── index.html                # Latest = dernier article de rétrospective
-│   ├── assets/report.css         # CSS (thème light, comme le scanner)
 │   ├── variants.json             # Manifest (incluant archive)
 │   └── archive/
 │       └── YYYYMMDD/             # Versions précédentes
 │           └── index.html
 ```
+
+**IMPORTANT** : Pas de dossier `assets/` local. Utiliser `/assets/report.css`.
+
+### Template HTML — Même structure que le Scanner
+La rétrospective utilise le **même template HTML** que le scanner (brand-bar, footer, FAB, tags, scripts). Voir la section "Template HTML Obligatoire" ci-dessus. Les seules différences :
+- `data-tags` inclut `retrospective`
+- Hero avec badge note globale (A+ à F) au lieu de badge régime
+- Style spécial pour la carte rétrospective (bordure dorée `#f59e0b`)
 
 ### Collecte des Données
 

@@ -7,7 +7,97 @@
 Briefing matinal quotidien publié à 7h00 couvrant tous les marchés (US, Europe, Asie-Pacifique, Crypto). Langue : anglais beginner par défaut. Style concis, actionnable, données à jour.
 
 ### Référence
-Le daily du **20 février 2026** (`daily/20260220/`) est la référence pour la structure HTML, les classes CSS, les ECharts, et le style visuel d'un briefing semaine.
+Le daily du **25 février 2026** (`daily/20260225/`) est la référence pour la structure HTML, les classes CSS, les ECharts, et le style visuel d'un briefing semaine.
+
+### Template HTML Obligatoire (CRITIQUE)
+
+#### Balise `<html>` — Attributs Obligatoires
+```html
+<html lang="fr" data-tags="crypto,macro,trade-idea,formation" data-tab="daily">
+```
+- `lang` : langue (fr, en, ar)
+- `data-tags` : tags pertinents du briefing
+- `data-tab="daily"` : toujours "daily"
+
+#### CSS — Thème Light (`report.css`)
+```html
+<link rel="stylesheet" href="/assets/report.css">
+```
+**JAMAIS** de dossier `assets/` local. **JAMAIS** de `report-dark.css` pour le daily.
+
+#### Brand Bar (OBLIGATOIRE)
+```html
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+```
+
+#### Hero Section — `<section class="hero-section">`
+```html
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-date">{Jour} {Date} • {Édition}</div>
+    <h1 class="hero-title">{Titre du briefing}</h1>
+    <p class="hero-subtitle">{Sous-titre}</p>
+    <div class="hero-badges">
+      <span class="hero-badge">{Badge}</span>
+    </div>
+    <div id="article-clickable-tags" class="card-tags"></div>
+  </div>
+</section>
+```
+
+#### Tags Cliquables (OBLIGATOIRE)
+```html
+<div id="article-clickable-tags" class="card-tags"></div>
+```
+Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
+
+#### FAB — Navigation Flottante (OBLIGATOIRE — 6 items)
+```html
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#alerte" class="fnav-item" data-section="alerte"><i class="fas fa-bullhorn"></i><span>Flash Info</span></a>
+    <a href="#dashboard" class="fnav-item" data-section="dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+    <a href="#explications" class="fnav-item" data-section="explications"><i class="fas fa-lightbulb"></i><span>Explications</span></a>
+    <a href="#sentiment" class="fnav-item" data-section="sentiment"><i class="fas fa-brain"></i><span>Sentiment</span></a>
+    <a href="#formation" class="fnav-item" data-section="formation"><i class="fas fa-graduation-cap"></i><span>Formation</span></a>
+    <a href="#trade" class="fnav-item" data-section="trade"><i class="fas fa-crosshairs"></i><span>Trade Idea</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+```
+Adapter les 6 items aux sections principales du briefing. Le JS gère toggle, smooth scroll, IntersectionObserver.
+
+#### Footer (OBLIGATOIRE)
+```html
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+```
+**TOUJOURS** `class="article-footer"`. Jamais d'autre classe de footer.
+
+#### Scripts (OBLIGATOIRE — avant `</body>`)
+```html
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+```
+
+#### Charts — ECharts
+Utiliser ECharts pour les visualisations (bar, radar, gauge, line). Conteneur : `<div id="chartId" class="echart-box" style="width:100%; height:300px;"></div>`
 
 ### Sections Obligatoires — Jour de Semaine (Lun-Ven) & Samedi
 
@@ -99,9 +189,15 @@ Le dimanche est le **seul jour** avec format réduit crypto-only :
 - Chaque chiffre doit être sourcé et daté
 - Ton : professionnel mais accessible, pas de jargon non expliqué
 - Mobile-first : tableaux responsive, grilles adaptatives
-- Le CSS de base utilisé est `/assets/report-dark.css`
+- **CSS** : `/assets/report.css` (thème light). **PAS** `report-dark.css`.
 - Toujours inclure GTM (GTM-T5Z595CW), Inter font, Font Awesome 6.4.0
-- ECharts et ApexCharts disponibles
+- ECharts pour les charts (préféré). ApexCharts acceptable en complément.
+- **Brand Bar** : toujours `<nav class="brand-bar">` avec `brand-bar-inner` et logo MW
+- **Footer** : toujours `<footer class="article-footer">`
+- **FAB** : toujours 6 items dans `.fnav`
+- **Tags** : toujours `data-tags` sur `<html>` + `data-tab="daily"` + `<div id="article-clickable-tags">`
+- **Scripts** : toujours `/assets/core.js` + `/assets/tag-renderer.js` avant `</body>`
+- Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` après création
 
 ---
 

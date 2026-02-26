@@ -211,7 +211,7 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
    - **Idées de Trading** — 2-3 trades swing argumentés avec entrée/stop/target/R:R
    - Ce qu'il faut surveiller aujourd'hui
    - Sources & Disclaimer
-4. **Utiliser le css dark**: `<link rel="stylesheet" href="/assets/report-dark.css">`
+4. **Utiliser le css light**: `<link rel="stylesheet" href="/assets/report.css">`
 5. Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 
 #### Spécificités Samedi (post-séance vendredi)
@@ -295,14 +295,84 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 - **Ordre des cartes** (**OBLIGATOIRE**) : Dans tous les tabs, les cartes `.report-card` sont **toujours triées par date décroissante** (plus récent en haut). Exception : dans le tab Scanner, le bloc "Performance du Scanner" reste fixe en tout premier (avant les cartes). Les rétrospectives et scans sont ensuite mélangés et triés strictement par date.
 
 ## Conventions
-- **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
-- **CSS**: Utiliser EXCLUSIVEMENT le CSS global via racine: `<link rel="stylesheet" href="/assets/report.css">` ou `report-dark.css` pour le scanner. Ne plus jamais recréer le dossier `assets/` localement.
-- **Pas de CSS inline** (**OBLIGATOIRE**) : Ne JAMAIS utiliser d'attribut `style="..."` sur les éléments HTML. Toujours utiliser les classes CSS définies dans `report.css` / `report-dark.css`. Si une nouvelle classe est nécessaire, l'ajouter dans le CSS global. Les seules exceptions tolérées sont les `style` sur les conteneurs ECharts (`width`/`height` dynamiques).
+
+### CSS et Assets
+- **CSS**: Utiliser EXCLUSIVEMENT le CSS global : `<link rel="stylesheet" href="/assets/report.css">`. **JAMAIS** de dossier `assets/` local. **JAMAIS** de `report-dark.css` (obsolète).
+- **Pas de CSS inline** (**OBLIGATOIRE**) : Ne JAMAIS utiliser d'attribut `style="..."` sur les éléments HTML. Toujours utiliser les classes CSS définies dans `report.css`. Les seules exceptions tolérées sont les `style` sur les conteneurs ECharts (`width`/`height` dynamiques) et les blocs Confirmations/Invalidations dans le scanner.
 - **GTM**: Toujours inclure Google Tag Manager (GTM-T5Z595CW)
 - **Fonts**: Inter (Google Fonts) + Font Awesome 6.4.0
-- **Charts**: ApexCharts + ECharts
+- **Charts**: ECharts (préféré pour tous les types). ApexCharts acceptable en complément mais **ne pas mélanger** les deux dans un même article.
 - **Responsive**: Mobile-first, breakpoints 768px et 480px
 - **Données**: Toujours citer les sources, disclaimer en bas
+- **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
+
+### Structure HTML Commune (OBLIGATOIRE pour TOUS les types d'articles)
+
+Chaque article (daily, weekly, scanner, analyses, tech, series) DOIT respecter cette structure :
+
+#### 1. Balise `<html>` — Attributs Data
+```html
+<html lang="{fr|en|ar}" data-tags="{tags}" data-tab="{tab}">
+```
+- `data-tags` : tags CSV pertinents (voir taxonomie ci-dessous)
+- `data-tab` : type d'article (`daily`, `weekly`, `scanner`, `analyses`, `tech`)
+- `data-level` : optionnel (`expert`, `beginner`)
+- `data-grade` : optionnel, pour analyses (`A+`, `A`, `B+`, etc.)
+
+#### 2. Brand Bar (OBLIGATOIRE)
+```html
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+```
+**TOUJOURS** `<nav class="brand-bar">` avec `<div class="brand-bar-inner">`. Logo MW (`/logo.svg`).
+
+#### 3. Tags Cliquables (OBLIGATOIRE)
+```html
+<div id="article-clickable-tags" class="card-tags"></div>
+```
+Placé dans le hero de chaque article. Peuplé automatiquement par `/assets/tag-renderer.js`.
+
+#### 4. FAB — Navigation Flottante
+```html
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#section" class="fnav-item" data-section="section"><i class="fas fa-icon"></i><span>Label</span></a>
+    <!-- 6 items typiquement -->
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+```
+**Obligatoire pour** : scanner, daily, analyses, tech, series. **Pas pour** : weekly.
+
+#### 5. Footer (OBLIGATOIRE)
+```html
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+```
+**TOUJOURS** `class="article-footer"`. **JAMAIS** `report-footer`, `footer-bar`, `site-footer`, `briefing-footer`, ou toute autre classe.
+
+#### 6. Scripts (OBLIGATOIRE — avant `</body>`)
+```html
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+```
+
+### Autres Conventions
 - **Logo brand-bar** (**OBLIGATOIRE**) : Dans les pages d'analyses individuelles (`analyses/{TICKER}/`), le `ticker-header` doit **TOUJOURS** utiliser le logo Market Watch (`<img src="https://market-watch.xyz/logo.svg" alt="MW">`), **JAMAIS** le logo de la société. Le logo de la société (parqet.com) est réservé **uniquement** aux cartes de listing dans `index.html`.
 - **Logo société dans index.html** : Sur la landing page (cartes `.report-card`), utiliser `<img src="https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg">` avec fallback initiales. Pour les tickers européens, utiliser le ticker court (AIR, AF, ENX) et non AIR.PA.
 - **Accents** (**OBLIGATOIRE**) : Toujours utiliser les caractères accentués français (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç). Ne JAMAIS écrire "resultat" → écrire "résultat", "benefice" → "bénéfice", "marche" → "marché", "premiere" → "première", etc. Les entités HTML (`&eacute;`, `&agrave;`) sont acceptables dans le HTML mais les caractères UTF-8 directs sont préférés.
