@@ -42,11 +42,25 @@ let finalGrade = doc.documentElement.getAttribute('data-grade') || "";
 let title = doc.querySelector('title') ? doc.querySelector('title').textContent.split('|')[0].trim() : "";
 
 // Try to grab a better title (e.g. the first h2 inside a content-card, or the main title)
-if (tab === 'scanner' || tab === 'daily' || tab === 'weekly') {
-    // For scanner/daily, the actual title we want (e.g. "Top 10 A+...") is often in a specific div>h2 or just an h2 in the content.
-    // Daily: <h2 style="...">Top 10...</h2>
-    // But daily might not even have that.
-    // Let's try to find an h2 that has "Top 10" or "Briefing"
+if (tab === 'scanner') {
+    // For scanner: build a rich title from og:description (has regime + tickers)
+    // e.g. "Top 10 setups A+ — Régime EARLY RISK-OFF — 5 US + 2 EU + 1 APAC + 2 ETFs"
+    const ogDesc = doc.querySelector('meta[property="og:description"]');
+    if (ogDesc) {
+        const ogText = ogDesc.getAttribute('content');
+        // Extract regime from badge or og:description
+        const regimeMatch = ogText.match(/Régime\s+(\S+(?:\s+\S+)?)/i);
+        const regime = regimeMatch ? regimeMatch[1] : '';
+        // Extract tickers from setup cards (id="setup-TICKER")
+        const setupCards = Array.from(doc.querySelectorAll('[id^="setup-"]'));
+        const tickers = setupCards.map(el => el.id.replace('setup-', '')).filter(Boolean).slice(0, 10);
+        if (tickers.length > 0 && regime) {
+            title = `Top ${tickers.length} A+ ${regime} — ${tickers.join(', ')}`;
+        } else if (regime) {
+            title = `Top 10 A+ ${regime}`;
+        }
+    }
+} else if (tab === 'daily' || tab === 'weekly') {
     const h2s = Array.from(doc.querySelectorAll('h2'));
     const betterTitle = h2s.find(h => /Top 10|Briefing|Synthèse|Hebdo|Macro/i.test(h.textContent));
     if (betterTitle) {

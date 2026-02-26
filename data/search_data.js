@@ -2306,7 +2306,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Synthèse Rapide — 10 Setups",
+    "title": "Top 10 A+ EARLY RISK-OFF — ODD, CNQ, DAC, CP, LPG, BBVA, PHG, EWY, GLD, SLV",
     "desc": "Suite à la rétrospective du 10-20 Fév (note\n                C+, hit rate 62.5% sur setups valides), nous avons ajusté notre approche :\n                (1) Renforcement des hedges : 20% de la sélection en métaux précieux (GLD, SLV) comme couverture\n                en régime Early Risk-Off ; (2) Diver...",
     "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare",
     "grade": "",
