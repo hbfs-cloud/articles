@@ -1,0 +1,37 @@
+---
+/**
+ * CompareTable — Dark-header comparison table.
+ * Fixed column widths for consistent layout.
+ * Zebra striping for readability.
+ *
+ * Usage in MDX:
+ *   <CompareTable headers={["Date","Event","Result"]}
+ *     rows={[
+ *       ["Oct 2007","Pre-GFC Top","-57%"],
+ *       ["Dec 2021","Post-COVID Top","-27%"],
+ *     ]}
+ *   />
+ */
+
+interface Props {
+  headers: string[];
+  rows: string[][];
+}
+
+const { headers, rows } = Astro.props;
+---
+
+<table class="compare-table">
+  <thead>
+    <tr>
+      {headers.map(h => <th>{h}</th>)}
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map(row => (
+      <tr>
+        {row.map(cell => <td set:html={cell} />)}
+      </tr>
+    ))}
+  </tbody>
+</table>

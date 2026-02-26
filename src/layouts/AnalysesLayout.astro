@@ -1,0 +1,157 @@
+---
+/**
+ * AnalysesLayout — Individual ticker analyses.
+ * Integrates: VariantSwitcher (level/lang), HistoryModal, ChartModal, ArticleNav.
+ */
+import BaseLayout from './BaseLayout.astro';
+import HeroSection from '../components/HeroSection.astro';
+import ArticleNav from '../components/ArticleNav.astro';
+import VariantSwitcher from '../components/VariantSwitcher.astro';
+import HistoryModal from '../components/HistoryModal.astro';
+import ChartModal from '../components/ChartModal.astro';
+
+interface SectionItem {
+  id: string;
+  icon?: string;
+  label: string;
+}
+
+interface HeroBadge {
+  text: string;
+  color: 'red' | 'green' | 'blue' | 'purple' | 'amber' | 'silver';
+  icon?: string;
+}
+
+interface LevelOption {
+  level: 'expert' | 'beginner' | 'intermediate';
+  label?: string;
+  active?: boolean;
+}
+
+interface LangOption {
+  lang: string;
+  flag: string;
+  active?: boolean;
+}
+
+interface HistoryEntry {
+  date: string;
+  title: string;
+  href?: string;
+  current?: boolean;
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  dateLine?: string;
+  dateColor?: string;
+  heroGradient?: string;
+  date: string;
+  tags: string[];
+  badges?: HeroBadge[];
+  sections?: SectionItem[];
+  levels?: LevelOption[];
+  langs?: LangOption[];
+  variantsJsonPath?: string;
+  history?: HistoryEntry[];
+  description?: string;
+  lang?: string;
+  dir?: 'ltr' | 'rtl';
+  level?: 'expert' | 'beginner' | 'intermediate';
+}
+
+const {
+  title,
+  subtitle,
+  dateLine,
+  dateColor = '#2563eb',
+  heroGradient = 'linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%)',
+  date,
+  tags,
+  badges = [],
+  sections = [],
+  levels = [],
+  langs = [],
+  variantsJsonPath = 'variants.json',
+  history = [],
+  description,
+  lang = 'fr',
+  dir = 'ltr',
+  level = 'expert',
+} = Astro.props;
+---
+
+<BaseLayout
+  title={title}
+  description={description || subtitle}
+  date={date}
+  tags={tags}
+  tab="analyses"
+  lang={lang}
+  dir={dir}
+  theme="light"
+  level={level}
+>
+  <Fragment slot="head">
+    <script is:inline src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  </Fragment>
+
+  <!-- Hero with switcher -->
+  <HeroSection
+    title={title}
+    subtitle={subtitle}
+    dateLine={dateLine}
+    dateColor={dateColor}
+    badges={badges}
+    gradient={heroGradient}
+  >
+    {(levels.length > 0 || langs.length > 0) && (
+      <VariantSwitcher
+        levels={levels}
+        langs={langs}
+        variantsJsonPath={variantsJsonPath}
+      />
+    )}
+    {history.length > 0 && (
+      <div style="margin-top:1rem; display:flex; justify-content:center;">
+        <HistoryModal
+          modalTitle={`Historique — ${title}`}
+          entries={history}
+        />
+      </div>
+    )}
+  </HeroSection>
+
+  <!-- Main content -->
+  <div class="container">
+    <slot />
+  </div>
+
+  <!-- Floating section nav -->
+  {sections.length > 0 && (
+    <ArticleNav
+      sections={sections}
+      levels={levels.length > 0 ? levels.map(l => ({
+        level: l.level,
+        href: '#',
+        active: l.active,
+      })) : undefined}
+      langs={langs.length > 0 ? langs.map(l => ({
+        lang: l.lang,
+        flag: l.flag,
+        href: '#',
+        active: l.active,
+      })) : undefined}
+    />
+  )}
+
+  <!-- Chart modal -->
+  <ChartModal />
+
+  <!-- Extra scripts -->
+  <Fragment slot="scripts">
+    <slot name="charts" />
+  </Fragment>
+</BaseLayout>

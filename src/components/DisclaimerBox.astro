@@ -1,0 +1,39 @@
+---
+/**
+ * DisclaimerBox — Large warning/disclaimer box.
+ * Dark red gradient background, white text, red icons.
+ */
+
+interface DisclaimerItem {
+  icon?: string;
+  text: string;
+}
+
+interface Props {
+  title?: string;
+  titleIcon?: string;
+  items?: DisclaimerItem[];
+}
+
+const {
+  title = 'AVERTISSEMENT',
+  titleIcon = 'fa-solid fa-exclamation-triangle',
+  items = [],
+} = Astro.props;
+---
+
+<div class="disclaimer-mega">
+  <h3><i class={titleIcon}></i> {title}</h3>
+  {items.length > 0 ? (
+    <ul>
+      {items.map(item => (
+        <li>
+          <i class={item.icon || 'fa-solid fa-xmark-circle'}></i>
+          <span set:html={item.text} />
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <slot />
+  )}
+</div>

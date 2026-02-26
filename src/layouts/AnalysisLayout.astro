@@ -1,0 +1,151 @@
+---
+/**
+ * AnalysisLayout — Individual ticker analysis template.
+ * Handles: ticker header, level/lang switcher, variants.
+ */
+import BaseLayout from './BaseLayout.astro';
+
+interface TickerMetric {
+  label: string;
+  value: string;
+}
+
+interface Variant {
+  level: 'expert' | 'beginner';
+  lang: string;
+  path: string;
+}
+
+interface Props {
+  ticker: string;
+  name: string;
+  exchange?: string;
+  price: string;
+  priceChange: string;
+  grade?: string;
+  tags: string[];
+  metrics?: TickerMetric[];
+  badges?: { text: string; type: string }[];
+  date: string;
+  variants?: Variant[];
+  level?: 'expert' | 'beginner';
+  lang?: string;
+  description?: string;
+}
+
+const {
+  ticker,
+  name,
+  exchange = '',
+  price,
+  priceChange,
+  grade,
+  tags,
+  metrics = [],
+  badges = [],
+  date,
+  variants = [],
+  level = 'expert',
+  lang = 'fr',
+  description,
+} = Astro.props;
+
+const isPositive = priceChange.includes('+');
+const priceClass = isPositive ? 'up' : 'down';
+
+// Build switcher paths
+const hasAllVariants = variants.length >= 6;
+const expertVariants = variants.filter(v => v.level === 'expert');
+const beginnerVariants = variants.filter(v => v.level === 'beginner');
+---
+
+<BaseLayout
+  title={`Analyse ${ticker} (${name})`}
+  description={description || `Analyse ${level} de ${ticker} — ${name} (${exchange})`}
+  date={date}
+  tags={tags}
+  tab="analyses"
+  lang={lang}
+  dir={lang === 'ar' ? 'rtl' : 'ltr'}
+  level={level}
+>
+  <Fragment slot="head">
+    <script is:inline src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  </Fragment>
+
+  <!-- Ticker Header -->
+  <div class="ticker-header">
+    <div class="ticker-symbol">{ticker}</div>
+    <div class="ticker-name">{name} &mdash; {exchange}</div>
+    <div class={`ticker-price ${priceClass}`}>
+      {price} <span>{priceChange}</span>
+    </div>
+
+    {metrics.length > 0 && (
+      <div class="ticker-metrics">
+        {metrics.map(m => (
+          <div class="ticker-metric">
+            <div class="tm-value">{m.value}</div>
+            <div class="tm-label">{m.label}</div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {badges.length > 0 && (
+      <div class="hero-badges">
+        {badges.map(b => (
+          <span class={`badge badge-${b.type}`}>{b.text}</span>
+        ))}
+      </div>
+    )}
+
+    {grade && (
+      <div class="score-card">
+        <div class="score-value">{grade}</div>
+        <div class="score-label">Grade Market Watch</div>
+      </div>
+    )}
+
+    <!-- Level/Lang Switcher -->
+    {hasAllVariants && (
+      <div class="article-switcher">
+        <div class="level-switcher">
+          <a class={`level-tab ${level === 'beginner' ? 'active' : ''}`}
+             href={beginnerVariants.find(v => v.lang === lang)?.path || '#'}>
+            Beginner
+          </a>
+          <a class={`level-tab ${level === 'expert' ? 'active' : ''}`}
+             href={expertVariants.find(v => v.lang === lang)?.path || '#'}>
+            Expert
+          </a>
+        </div>
+        <div class="lang-switcher">
+          {['fr', 'en', 'ar'].map(l => {
+            const v = variants.find(vv => vv.level === level && vv.lang === l);
+            const flag = l === 'fr' ? '🇫🇷' : l === 'en' ? '🇬🇧' : '🇸🇦';
+            return v ? (
+              <a class={`lang-flag ${lang === l ? 'active' : ''}`} href={v.path}>
+                {flag}
+              </a>
+            ) : null;
+          })}
+        </div>
+      </div>
+    )}
+
+    <div class="ticker-date">
+      {date} &bull; Données temps réel via MarketWatch Gateway
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="container">
+    <slot />
+  </div>
+
+  <Fragment slot="scripts">
+    <slot name="charts" />
+  </Fragment>
+</BaseLayout>

@@ -1,0 +1,350 @@
+---
+title: "Tech Demo — Code & Diagrams"
+subtitle: "Syntax highlighting (Shiki) + Mermaid diagrams in Astro MDX"
+dateLine: "Demo Article"
+dateColor: "#0d9488"
+heroGradient: "linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%)"
+date: "27 Février 2026"
+tags: ["tech"]
+lang: "en"
+badges:
+  - text: "DEMO"
+    color: "purple"
+    icon: "fa-solid fa-flask"
+  - text: "SHIKI"
+    color: "blue"
+    icon: "fa-solid fa-code"
+  - text: "MERMAID"
+    color: "green"
+    icon: "fa-solid fa-diagram-project"
+sections:
+  - id: sql-section
+    icon: "fas fa-database"
+    label: "SQL"
+  - id: python-section
+    icon: "fab fa-python"
+    label: "Python"
+  - id: json-section
+    icon: "fas fa-brackets-curly"
+    label: "JSON"
+  - id: bash-section
+    icon: "fas fa-terminal"
+    label: "Bash"
+  - id: mermaid-section
+    icon: "fas fa-diagram-project"
+    label: "Mermaid"
+  - id: go-section
+    icon: "fas fa-code"
+    label: "Go"
+series:
+  title: "Securities Master"
+  steps:
+    - label: "Foundations"
+      href: "/tech/demo-code/"
+      current: true
+    - label: "Pipelines"
+      href: "#"
+    - label: "Transforms"
+      href: "#"
+    - label: "Corp Actions"
+      href: "#"
+    - label: "Dashboards"
+      href: "#"
+    - label: "Operations"
+      href: "#"
+---
+
+import ContentCard from '../../components/ContentCard.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import PedagogyBox from '../../components/PedagogyBox.astro';
+
+<ContentCard title="SQL — Point-in-Time Queries" id="sql-section">
+  <CodeBlock label="SQL — SCD Type 2 Pattern">
+    ```sql
+    -- The instruments table stores every version of every security
+    SELECT symbol, name, sector, exchange,
+           valid_from, valid_to
+    FROM   instruments
+    WHERE  symbol = 'AAPL'
+      AND  valid_from <= '2017-06-15'
+      AND  (valid_to > '2017-06-15' OR valid_to IS NULL);
+
+    -- Create a materialized view for fast lookups
+    CREATE MATERIALIZED VIEW mv_current_instruments AS
+    SELECT *
+    FROM   instruments
+    WHERE  valid_to IS NULL
+    WITH DATA;
+
+    -- Partition by exchange for performance
+    CREATE TABLE prices (
+        symbol     TEXT NOT NULL,
+        trade_date DATE NOT NULL,
+        open       NUMERIC(12,4),
+        high       NUMERIC(12,4),
+        low        NUMERIC(12,4),
+        close      NUMERIC(12,4),
+        volume     BIGINT
+    ) PARTITION BY RANGE (trade_date);
+    ```
+  </CodeBlock>
+
+  <PedagogyBox title="Why SCD Type 2?">
+    Slowly Changing Dimensions Type 2 keeps a full history of every change.
+    When Apple changed its sector from "Consumer Electronics" to "Technology",
+    both versions are preserved with `valid_from` / `valid_to` timestamps.
+  </PedagogyBox>
+</ContentCard>
+
+<ContentCard title="Python — Data Pipeline" id="python-section">
+  <CodeBlock label="Python — Fetching market data with async">
+    ```python
+    import asyncio
+    import aiohttp
+    from dataclasses import dataclass
+    from datetime import datetime
+
+    @dataclass
+    class Quote:
+        symbol: str
+        price: float
+        volume: int
+        timestamp: datetime
+
+    async def fetch_quotes(symbols: list[str]) -> list[Quote]:
+        """Fetch real-time quotes from MarketWatch Gateway."""
+        async with aiohttp.ClientSession() as session:
+            tasks = [_fetch_one(session, sym) for sym in symbols]
+            return await asyncio.gather(*tasks)
+
+    async def _fetch_one(session, symbol: str) -> Quote:
+        url = f"https://api.market-watch.xyz/v1/quote/{symbol}"
+        async with session.get(url) as resp:
+            data = await resp.json()
+            return Quote(
+                symbol=data["symbol"],
+                price=data["last"],
+                volume=data["volume"],
+                timestamp=datetime.fromisoformat(data["timestamp"]),
+            )
+
+    # Usage
+    if __name__ == "__main__":
+        quotes = asyncio.run(fetch_quotes(["AAPL", "NVDA", "MSFT"]))
+        for q in quotes:
+            print(f"{q.symbol}: ${q.price:.2f} ({q.volume:,} shares)")
+    ```
+  </CodeBlock>
+</ContentCard>
+
+<ContentCard title="JSON — Configuration" id="json-section">
+  <CodeBlock label="JSON — MCP Server Configuration">
+    ```json
+    {
+      "mcpServers": {
+        "secmaster": {
+          "command": "python",
+          "args": ["mcp_server.py"],
+          "env": {
+            "DATABASE_URL": "postgresql://user:pass@localhost:5432/secmaster",
+            "REDIS_URL": "redis://localhost:6379/0"
+          }
+        },
+        "market-data": {
+          "command": "node",
+          "args": ["gateway.js", "--port", "8080"],
+          "env": {
+            "API_KEY": "${MARKET_DATA_KEY}",
+            "RATE_LIMIT": "100"
+          }
+        }
+      }
+    }
+    ```
+  </CodeBlock>
+
+  <CodeBlock label="YAML — dbt Model Configuration">
+    ```yaml
+    version: 2
+
+    models:
+      - name: stg_instruments
+        description: "Staged instruments with SCD Type 2"
+        columns:
+          - name: symbol
+            tests:
+              - not_null
+              - unique:
+                  config:
+                    where: "valid_to IS NULL"
+          - name: valid_from
+            tests:
+              - not_null
+          - name: sector
+            tests:
+              - accepted_values:
+                  values: ['Technology', 'Healthcare', 'Financials',
+                           'Energy', 'Consumer', 'Industrials']
+    ```
+  </CodeBlock>
+</ContentCard>
+
+<ContentCard title="Bash — DevOps Scripts" id="bash-section">
+  <CodeBlock label="Bash — Deploy pipeline">
+    ```bash
+    #!/bin/bash
+    set -euo pipefail
+
+    # Build and deploy the securities master
+    echo "🔧 Building securities master..."
+
+    # Run dbt transformations
+    cd /opt/secmaster
+    dbt run --target prod --select tag:daily
+    dbt test --target prod --select tag:daily
+
+    # Refresh materialized views
+    psql $DATABASE_URL <<SQL
+      REFRESH MATERIALIZED VIEW CONCURRENTLY mv_current_instruments;
+      REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_prices;
+      ANALYZE instruments;
+      ANALYZE prices;
+    SQL
+
+    # Notify via webhook
+    curl -s -X POST "$SLACK_WEBHOOK" \
+      -H 'Content-Type: application/json' \
+      -d "{\"text\": \"✅ Securities Master updated: $(date +%Y-%m-%d)\"}"
+
+    echo "✅ Deploy complete"
+    ```
+  </CodeBlock>
+</ContentCard>
+
+<ContentCard title="Architecture Diagrams" id="mermaid-section">
+  <Mermaid
+    title="Securities Master Architecture"
+    subtitle="Data flow from sources to dashboards"
+    primaryColor="#0d9488"
+    code={`graph TD
+    A[Market Data APIs] -->|Meltano EL| B[Raw Layer]
+    C[SEC Filings] -->|Meltano EL| B
+    D[Corporate Actions] -->|Meltano EL| B
+
+    B -->|dbt| E[Staging Layer]
+    E -->|dbt| F[Marts Layer]
+
+    F --> G[Evidence.dev Dashboard]
+    F --> H[MCP Server]
+    F --> I[REST API]
+
+    H --> J[Claude Code]
+    H --> K[Claude Desktop]
+
+    classDef source fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef raw fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef transform fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    classDef output fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px
+
+    class A,C,D source
+    class B raw
+    class E,F transform
+    class G,H,I,J,K output`}
+  />
+
+  <Mermaid
+    title="SCD Type 2 State Machine"
+    subtitle="How instrument records transition through states"
+    primaryColor="#3b82f6"
+    code={`stateDiagram-v2
+    [*] --> Active: INSERT
+    Active --> Superseded: UPDATE (close old)
+    Active --> Active: No change
+    Superseded --> [*]: Archived
+    Active --> Delisted: Company delisted
+
+    note right of Active
+      valid_to IS NULL
+      Current version
+    end note
+
+    note right of Superseded
+      valid_to = update_date
+      Historical version
+    end note`}
+  />
+</ContentCard>
+
+<ContentCard title="Go — MCP Server" id="go-section">
+  <CodeBlock label="Go — MCP Tool Handler">
+    ```go
+    package main
+
+    import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "log"
+
+        "github.com/mark3labs/mcp-go/mcp"
+        "github.com/mark3labs/mcp-go/server"
+    )
+
+    type QueryParams struct {
+        Symbol string `json:"symbol"`
+        From   string `json:"from"`
+        To     string `json:"to"`
+    }
+
+    func handleQuery(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+        var params QueryParams
+        raw, _ := json.Marshal(req.Params.Arguments)
+        if err := json.Unmarshal(raw, &params); err != nil {
+            return nil, fmt.Errorf("invalid params: %w", err)
+        }
+
+        rows, err := db.QueryContext(ctx,
+            `SELECT trade_date, close, volume
+             FROM   prices
+             WHERE  symbol = $1
+               AND  trade_date BETWEEN $2 AND $3
+             ORDER BY trade_date`,
+            params.Symbol, params.From, params.To,
+        )
+        if err != nil {
+            return nil, err
+        }
+        defer rows.Close()
+
+        var results []map[string]any
+        for rows.Next() {
+            var date string
+            var close float64
+            var volume int64
+            rows.Scan(&date, &close, &volume)
+            results = append(results, map[string]any{
+                "date":   date,
+                "close":  close,
+                "volume": volume,
+            })
+        }
+
+        data, _ := json.Marshal(results)
+        return mcp.NewToolResultText(string(data)), nil
+    }
+
+    func main() {
+        s := server.NewMCPServer("secmaster", "1.0.0")
+        s.AddTool(mcp.NewTool("query_prices",
+            mcp.WithDescription("Query historical prices"),
+            mcp.WithString("symbol", mcp.Required()),
+            mcp.WithString("from"),
+            mcp.WithString("to"),
+        ), handleQuery)
+
+        log.Fatal(server.ServeStdio(s))
+    }
+    ```
+  </CodeBlock>
+</ContentCard>

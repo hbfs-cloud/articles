@@ -1,0 +1,39 @@
+---
+/**
+ * TakeawayBox — Key takeaways summary box.
+ * Blue gradient background, icon list items.
+ */
+
+interface TakeawayItem {
+  icon?: string;
+  text: string;
+}
+
+interface Props {
+  title?: string;
+  titleIcon?: string;
+  items?: TakeawayItem[];
+}
+
+const {
+  title = 'Key Takeaways',
+  titleIcon = 'fa-solid fa-graduation-cap',
+  items = [],
+} = Astro.props;
+---
+
+<div class="takeaway-box">
+  <h3><i class={titleIcon}></i> {title}</h3>
+  {items.length > 0 ? (
+    <ul class="takeaway-list">
+      {items.map(item => (
+        <li>
+          {item.icon && <i class={item.icon}></i>}
+          <span set:html={item.text} />
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <slot />
+  )}
+</div>

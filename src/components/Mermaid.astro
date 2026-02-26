@@ -1,0 +1,57 @@
+---
+/**
+ * Mermaid — Renders a Mermaid diagram from code string.
+ *
+ * Usage in MDX:
+ *   <Mermaid code={`graph TD; A-->B; B-->C;`} />
+ *   <Mermaid title="Architecture" code={`...`} />
+ */
+
+interface Props {
+  code: string;
+  title?: string;
+  subtitle?: string;
+  theme?: 'default' | 'dark' | 'forest' | 'base';
+  primaryColor?: string;
+}
+
+const {
+  code,
+  title,
+  subtitle,
+  theme = 'base',
+  primaryColor = '#3b82f6',
+} = Astro.props;
+
+const mermaidId = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div class="mermaid-container">
+  {title && <div class="mermaid-title">{title}</div>}
+  {subtitle && <div class="mermaid-subtitle">{subtitle}</div>}
+  <div class="mermaid" id={mermaidId} set:html={code} />
+</div>
+
+<script is:inline define:vars={{ theme, primaryColor }}>
+(function() {
+  if (window.__mermaidLoaded) return;
+  window.__mermaidLoaded = true;
+
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+  script.onload = function() {
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: theme,
+      themeVariables: {
+        primaryColor: primaryColor,
+        primaryTextColor: '#0f172a',
+        lineColor: '#64748b',
+        fontSize: '14px'
+      }
+    });
+    mermaid.run();
+  };
+  document.head.appendChild(script);
+})();
+</script>

@@ -1,0 +1,61 @@
+---
+/**
+ * HistoryModal — Modal dialog for navigating article versions.
+ * Shows current version (non-clickable) + archived versions (links).
+ */
+
+interface HistoryEntry {
+  date: string;
+  title: string;
+  href?: string;
+  current?: boolean;
+}
+
+interface Props {
+  id?: string;
+  modalTitle?: string;
+  entries: HistoryEntry[];
+}
+
+const {
+  id = 'historyModal',
+  modalTitle = 'Historique',
+  entries,
+} = Astro.props;
+---
+
+<button class="history-btn" onclick={`document.getElementById('${id}').style.display='flex'`}>
+  <i class="fa-solid fa-clock-rotate-left"></i> Historique
+</button>
+
+<div id={id} class="modal-overlay" onclick={`if(event.target===this)this.style.display='none'`}>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>
+        <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb; margin-right:0.5rem;"></i>
+        {modalTitle}
+      </h3>
+      <button onclick={`document.getElementById('${id}').style.display='none'`} class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      {entries.map(entry => entry.current ? (
+        <div class="history-entry history-current">
+          <i class="fa-solid fa-circle" style="color:#3b82f6; font-size:0.5rem;"></i>
+          <div class="history-entry-info">
+            <div class="history-entry-date">{entry.date}</div>
+            <div class="history-entry-title">{entry.title}</div>
+          </div>
+          <span class="history-badge-current">Actuel</span>
+        </div>
+      ) : (
+        <a href={entry.href} class="history-entry history-link">
+          <i class="fa-solid fa-circle" style="color:#94a3b8; font-size:0.4rem;"></i>
+          <div class="history-entry-info">
+            <div class="history-entry-date">{entry.date}</div>
+            <div class="history-entry-title">{entry.title}</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+---
+// Dynamic route for tech articles
+import { getCollection } from 'astro:content';
+import TechLayout from '../../layouts/TechLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('tech');
+  return entries.map(entry => ({
+    params: { slug: entry.id.replace(/\.[^.]+$/, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const data = entry.data;
+---
+
+<TechLayout
+  title={data.title}
+  subtitle={data.subtitle}
+  dateLine={data.dateLine}
+  dateColor={data.dateColor}
+  heroGradient={data.heroGradient}
+  date={data.date}
+  tags={data.tags}
+  badges={data.badges}
+  sections={data.sections}
+  series={data.series}
+  description={data.description}
+  lang={data.lang}
+>
+  <Content />
+</TechLayout>

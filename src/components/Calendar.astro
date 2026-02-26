@@ -1,0 +1,44 @@
+---
+/**
+ * Calendar — Weekly event calendar grid (Lun-Ven).
+ */
+interface CalendarEvent {
+  time?: string;
+  text: string;
+  importance?: 'critical' | 'important' | 'normal';
+}
+
+interface CalendarDay {
+  label: string;
+  date: string;
+  events: CalendarEvent[];
+}
+
+interface Props {
+  days: CalendarDay[];
+}
+
+const { days } = Astro.props;
+
+function eventClass(importance?: string): string {
+  if (importance === 'critical') return 'event-critical';
+  if (importance === 'important') return 'event-important';
+  return 'event-normal';
+}
+---
+
+<div class="calendar-days-grid">
+  {days.map(day => (
+    <div class="calendar-day">
+      <div class="calendar-days-header">{day.label} {day.date}</div>
+      <div class="calendar-events">
+        {day.events.map(ev => (
+          <div class={`calendar-event ${eventClass(ev.importance)}`}>
+            {ev.time && <span class="event-time">{ev.time}</span>}
+            <span>{ev.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+</div>

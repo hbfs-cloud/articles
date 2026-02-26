@@ -1,0 +1,99 @@
+---
+/**
+ * DailyLayout — Daily briefing template.
+ * Uses ArticleNav for smart sticky navigation with scroll-spy.
+ */
+import BaseLayout from './BaseLayout.astro';
+import HeroSection from '../components/HeroSection.astro';
+import ArticleNav from '../components/ArticleNav.astro';
+import ChartModal from '../components/ChartModal.astro';
+
+interface HeroBadge {
+  text: string;
+  color: 'red' | 'green' | 'blue' | 'purple' | 'amber' | 'silver';
+  icon?: string;
+}
+
+interface NavItem {
+  href: string;
+  icon: string;
+  label: string;
+  color?: string;
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  dateLine: string;
+  dateColor?: string;
+  heroGradient?: string;
+  date: string;
+  tags: string[];
+  badges?: HeroBadge[];
+  navItems?: NavItem[];
+  description?: string;
+  lang?: string;
+}
+
+const {
+  title,
+  subtitle,
+  dateLine,
+  dateColor = '#dc2626',
+  heroGradient = 'linear-gradient(180deg, #fff7ed 0%, #f8fafc 100%)',
+  date,
+  tags,
+  badges = [],
+  navItems = [],
+  description,
+  lang = 'fr',
+} = Astro.props;
+
+/* Convert navItems to ArticleNav sections format */
+const sections = navItems.map(item => ({
+  id: item.href.replace('#', ''),
+  icon: item.icon,
+  label: item.label,
+}));
+---
+
+<BaseLayout
+  title={title}
+  description={description || subtitle}
+  date={date}
+  tags={tags}
+  tab="daily"
+  lang={lang}
+  theme="light"
+>
+  <Fragment slot="head">
+    <script is:inline src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  </Fragment>
+
+  <!-- Hero -->
+  <HeroSection
+    title={title}
+    subtitle={subtitle}
+    dateLine={dateLine}
+    dateColor={dateColor}
+    badges={badges}
+    gradient={heroGradient}
+  />
+
+  <!-- Smart sticky nav with scroll-spy -->
+  {sections.length > 0 && <ArticleNav sections={sections} />}
+
+  <!-- Main content -->
+  <div class="container">
+    <slot />
+  </div>
+
+  <!-- Chart modal -->
+  <ChartModal />
+
+  <!-- Extra scripts (ECharts init) -->
+  <Fragment slot="scripts">
+    <slot name="charts" />
+  </Fragment>
+</BaseLayout>

@@ -1,0 +1,31 @@
+---
+/**
+ * NewsList — News items with colored borders.
+ */
+interface NewsItem {
+  title: string;
+  source?: string;
+  date?: string;
+  type: 'critical' | 'positive' | 'info' | 'warning';
+  summary?: string;
+}
+
+interface Props {
+  items: NewsItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="news-list">
+  {items.map(item => (
+    <div class={`news-item news-${item.type}`}>
+      <div class="news-header">
+        <strong>{item.title}</strong>
+        {item.source && <span class="news-source">{item.source}</span>}
+        {item.date && <span class="news-date">{item.date}</span>}
+      </div>
+      {item.summary && <p>{item.summary}</p>}
+    </div>
+  ))}
+</div>

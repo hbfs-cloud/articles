@@ -6,57 +6,96 @@ Site de publication d'analyses financières institutionnelles hebdomadaires et p
 ## Structure du Projet
 ```
 articles/
-├── index.html                    # Page d'accueil (galerie des rapports)
-├── assets/style.css              # CSS global (landing page)
-├── weekly/                       # Rapports hebdomadaires
-│   ├── YYYYMMDD/                 # Format de nommage: date du lundi
-│   │   │   ├── index.html            # Article HTML complet
-│   └── assets/                   # Assets partagés weekly
-├── analyses/                     # Analyses individuelles par ticker
-│   ├── {TICKER}/                 # Dossier par ticker (ex: AAPL/)
-│   │   ├── index.html            # Default = beginner/en
-│   │   ├── variants.json         # Manifest des variantes disponibles
-│   │   ├── expert/               # Niveau expert
-│   │   │   ├── fr/index.html     # Français expert
-│   │   │   ├── en/index.html     # English expert
-│   │   │   └── ar/index.html     # العربية expert
-│   │   ├── intermediate/         # Niveau intermédiaire
-│   │   │   └── fr/index.html
-│   │   ├── beginner/             # Niveau débutant
-│   │   │   └── fr/index.html
-│   │   └── archive/              # Versions précédentes
-│   │       └── YYYYMMDD/
-│   │           └── index.html
-
-├── daily/                        # Briefings quotidiens
-│   └── YYYYMMDD/                 # Format de nommage: date du briefing
-│       ├── index.html            # Default = beginner/en
-│       └── variants.json         # Manifest des variantes (optionnel)
-├── scanner/                      # Scans quotidiens algorithmiques
-│   └── YYYYMMDD/                 # Format de nommage: date du scan
-│       ├── index.html            # Default = beginner/en
-│       ├── variants.json         # Manifest des variantes
-│       ├── expert/{en,ar}/       # Variantes expert
-│       └── beginner/{fr,en,ar}/  # Variantes débutant
-│   └── retrospective/            # Rétrospective hebdomadaire du scanner
-│       ├── index.html            # Latest = dernière rétrospective
-│       ├── variants.json         # Manifest avec archives
-│       └── archive/YYYYMMDD/     # Versions précédentes
-├── lab/                          # Output Evidence.dev (fichiers statiques commités)
-│   ├── index.html                # Dashboard (built by Evidence)
-│   ├── explorer/index.html       # Stock Explorer
-│   ├── sectors/index.html        # Sector Deep Dive
-│   ├── regions/index.html        # Geographic Analysis
-│   ├── valuations/index.html     # Valuation Lab
-│   ├── earnings/index.html       # Earnings Tracker
-│   └── _app/...                  # Assets Evidence (JS, CSS, DuckDB WASM)
-├── lab-src/                      # Source Evidence (pas servi par GH Pages)
-│   ├── pages/                    # 6 pages Markdown + SQL
-│   ├── sources/market/stocks.csv # Dataset 146 stocks
-│   ├── evidence.config.yaml
-│   └── package.json
+├── src/                          # Source Astro (nouveaux articles)
+│   ├── components/               # 36 composants réutilisables (*.astro)
+│   │   ├── HeroSection.astro     # Hero avec badges, date, switcher slot
+│   │   ├── ArticleNav.astro      # FAB flottant + dropdown sections
+│   │   ├── SeriesBar.astro       # Wizard séries (top + bottom)
+│   │   ├── VariantSwitcher.astro # Switcher langue/niveau (variants.json)
+│   │   ├── HistoryModal.astro    # Modal historique versions
+│   │   ├── ChartModal.astro      # Modal chart Finviz/TradingView
+│   │   ├── ContentCard.astro     # Carte contenu (sections)
+│   │   ├── DataTable.astro       # Tableau de données
+│   │   ├── CompareTable.astro    # Tableau comparatif dark-header
+│   │   ├── QuoteBlock.astro      # Citation avec auteur
+│   │   ├── TakeawayBox.astro     # Résumé points clés
+│   │   ├── DisclaimerBox.astro   # Avertissement rouge
+│   │   ├── BiasGrid.astro        # Grille de biais/concepts
+│   │   ├── LayerCard.astro       # Carte framework multicouche
+│   │   ├── RoadmapGrid.astro     # Grille chapitres/parties
+│   │   ├── ScoreRow.astro        # Métriques en grille
+│   │   ├── HofCard.astro         # Carte Hall of Fame
+│   │   ├── SetupCard.astro       # Carte setup scanner
+│   │   ├── NextCta.astro         # CTA article suivant
+│   │   ├── SectionDivider.astro  # Séparateur avec icône
+│   │   ├── EChart.astro          # Conteneur ECharts
+│   │   ├── Mermaid.astro         # Diagramme Mermaid
+│   │   ├── CodeBlock.astro       # Bloc code avec label
+│   │   └── ...                   # MetricGrid, Badge, Calendar, etc.
+│   ├── layouts/                  # 8 layouts (*.astro)
+│   │   ├── BaseLayout.astro      # Layout de base (GTM, fonts, CSS, brand-bar, footer)
+│   │   ├── DailyLayout.astro     # Briefing quotidien
+│   │   ├── WeeklyLayout.astro    # Rapport hebdomadaire
+│   │   ├── AnalysesLayout.astro  # Analyse ticker (hero + switcher + history)
+│   │   ├── AnalysisLayout.astro  # Analyse ticker (legacy ticker-header)
+│   │   ├── ScannerLayout.astro   # Scanner quotidien
+│   │   ├── SeriesLayout.astro    # Série multi-chapitres
+│   │   └── TechLayout.astro      # Articles techniques (code + mermaid)
+│   ├── content/                  # Collections de contenu (MDX)
+│   │   ├── config.ts             # Schémas Zod (daily, tech, analyses, weekly, scanner)
+│   │   ├── daily/                # Nouveaux briefings en MDX
+│   │   └── tech/                 # Nouveaux articles tech en MDX
+│   └── pages/                    # Routes dynamiques
+│       ├── daily/[...slug].astro
+│       └── tech/[...slug].astro
+├── public/                       # Fichiers statiques (servis par Astro)
+│   └── logo.svg                  # Logo Market Watch
+├── assets/                       # CSS global partagé
+│   ├── report.css                # Theme light (3000+ lignes)
+│   ├── report-dark.css           # Theme dark (scanner)
+│   ├── core.js                   # Tag renderer + filtres
+│   └── style.css                 # Landing page CSS
+├── weekly/                       # Rapports hebdomadaires (legacy HTML)
+├── daily/                        # Briefings quotidiens (legacy HTML)
+├── analyses/                     # Analyses par ticker (legacy HTML)
+├── scanner/                      # Scans quotidiens (legacy HTML)
+├── series/                       # Séries éducatives (legacy HTML)
+├── tech/                         # Guides techniques (legacy HTML)
+├── data/                         # Index JSON par tab + search_data.js
+├── tools/                        # Scripts de migration et maintenance
+│   ├── migrate_astro.js          # Migration/fix en masse (433 articles)
+│   ├── add_card.js               # Ajout automatique à l'index JSON
+│   └── ...
+├── scripts/
+│   └── copy-legacy.mjs           # Post-build: copie legacy HTML → dist/
+├── astro.config.mjs              # Config Astro (Shiki, MDX)
+├── package.json                  # npm scripts: dev, build, preview
 ├── CLAUDE.md                     # Ce fichier (instructions pour Claude)
 └── CNAME                         # DNS: market-watch.xyz
+```
+
+## Architecture Hybride (Astro + Legacy)
+- **Nouveaux articles** : écrits en MDX dans `src/content/`, rendus via layouts Astro
+- **Articles existants** (433) : HTML fixé in-place, copié dans `dist/` par `copy-legacy.mjs`
+- **Build** : `npm run build` = `astro build` + `copy-legacy.mjs`
+- **Priorité** : Astro-generated files > legacy HTML (copy-legacy n'écrase pas)
+- **Migration tool** : `node tools/migrate_astro.js --apply` standardise tous les HTML legacy
+
+## Composants Astro Disponibles
+Les LLMs qui génèrent du contenu MDX doivent utiliser ces composants importés :
+```mdx
+import ContentCard from '../../components/ContentCard.astro'
+import DataTable from '../../components/DataTable.astro'
+import CompareTable from '../../components/CompareTable.astro'
+import QuoteBlock from '../../components/QuoteBlock.astro'
+import TakeawayBox from '../../components/TakeawayBox.astro'
+import ScoreRow from '../../components/ScoreRow.astro'
+import LayerCard from '../../components/LayerCard.astro'
+import BiasGrid from '../../components/BiasGrid.astro'
+import SetupCard from '../../components/SetupCard.astro'
+import SectionDivider from '../../components/SectionDivider.astro'
+import NextCta from '../../components/NextCta.astro'
+import EChart from '../../components/EChart.astro'
 ```
 
 ## MCP Gateway

@@ -1,0 +1,36 @@
+---
+/**
+ * Dynamic route for daily briefings.
+ * Maps src/content/daily/YYYYMMDD.mdx → /daily/YYYYMMDD/
+ */
+import { getCollection } from 'astro:content';
+import DailyLayout from '../../layouts/DailyLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('daily');
+  return entries.map(entry => ({
+    params: { slug: entry.id.replace(/\.[^.]+$/, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const data = entry.data;
+---
+
+<DailyLayout
+  title={data.title}
+  subtitle={data.subtitle}
+  dateLine={data.dateLine}
+  dateColor={data.dateColor}
+  heroGradient={data.heroGradient}
+  date={data.date}
+  tags={data.tags}
+  badges={data.badges}
+  navItems={data.navItems}
+  description={data.description}
+  lang={data.lang}
+>
+  <Content />
+</DailyLayout>

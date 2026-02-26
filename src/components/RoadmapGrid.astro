@@ -1,0 +1,34 @@
+---
+/**
+ * RoadmapGrid — Grid of series parts/chapters.
+ * Numbered items with title and description.
+ * Supports optional links for navigation.
+ */
+
+interface RoadmapItem {
+  number: number | string;
+  title: string;
+  description?: string;
+  href?: string;
+  current?: boolean;
+}
+
+interface Props {
+  items: RoadmapItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="roadmap-grid">
+  {items.map(item => {
+    const Tag = item.href ? 'a' : 'div';
+    return (
+      <Tag href={item.href} class={`roadmap-item ${item.current ? 'current' : ''}`}>
+        <div class="part-num">{item.number}</div>
+        <div class="part-title">{item.title}</div>
+        {item.description && <div class="part-desc">{item.description}</div>}
+      </Tag>
+    );
+  })}
+</div>

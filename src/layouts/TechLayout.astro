@@ -1,0 +1,104 @@
+---
+/**
+ * TechLayout — Tech articles (series, guides, deep dives).
+ * SeriesBar at top + bottom, ArticleNav floating for sections.
+ */
+import BaseLayout from './BaseLayout.astro';
+import HeroSection from '../components/HeroSection.astro';
+import ArticleNav from '../components/ArticleNav.astro';
+import SeriesBar from '../components/SeriesBar.astro';
+
+interface SectionItem {
+  id: string;
+  icon?: string;
+  label: string;
+}
+
+interface SeriesStep {
+  label: string;
+  href: string;
+  current?: boolean;
+}
+
+interface HeroBadge {
+  text: string;
+  color: 'red' | 'green' | 'blue' | 'purple' | 'amber' | 'silver';
+  icon?: string;
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  dateLine?: string;
+  dateColor?: string;
+  heroGradient?: string;
+  date: string;
+  tags: string[];
+  badges?: HeroBadge[];
+  sections?: SectionItem[];
+  series?: {
+    title: string;
+    steps: SeriesStep[];
+  };
+  description?: string;
+  lang?: string;
+}
+
+const {
+  title,
+  subtitle,
+  dateLine,
+  dateColor = '#0d9488',
+  heroGradient = 'linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%)',
+  date,
+  tags,
+  badges = [],
+  sections = [],
+  series,
+  description,
+  lang = 'en',
+} = Astro.props;
+---
+
+<BaseLayout
+  title={title}
+  description={description || subtitle}
+  date={date}
+  tags={tags}
+  tab="tech"
+  lang={lang}
+  theme="light"
+>
+  <Fragment slot="head">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script is:inline src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  </Fragment>
+
+  <!-- Hero -->
+  <HeroSection
+    title={title}
+    subtitle={subtitle}
+    dateLine={dateLine}
+    dateColor={dateColor}
+    badges={badges}
+    gradient={heroGradient}
+  />
+
+  <!-- Series wizard (TOP) -->
+  {series && <SeriesBar title={series.title} steps={series.steps} position="top" />}
+
+  <!-- Main content -->
+  <div class="container">
+    <slot />
+  </div>
+
+  <!-- Series wizard (BOTTOM) — identical to top -->
+  {series && <SeriesBar title={series.title} steps={series.steps} position="bottom" />}
+
+  <!-- Floating section nav -->
+  {sections.length > 0 && <ArticleNav sections={sections} />}
+
+  <Fragment slot="scripts">
+    <slot name="charts" />
+  </Fragment>
+</BaseLayout>

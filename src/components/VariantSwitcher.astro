@@ -1,0 +1,97 @@
+---
+/**
+ * VariantSwitcher — Language & Level navigation for multi-variant articles.
+ * Level toggle (Expert/Beginner) + language flags.
+ * Reads variants.json to determine navigation targets.
+ */
+
+interface LevelOption {
+  level: 'expert' | 'beginner' | 'intermediate';
+  label?: string;
+  active?: boolean;
+}
+
+interface LangOption {
+  lang: string;
+  flag: string;
+  active?: boolean;
+}
+
+interface Props {
+  levels?: LevelOption[];
+  langs?: LangOption[];
+  variantsJsonPath?: string;
+}
+
+const {
+  levels = [
+    { level: 'expert', label: 'Expert' },
+    { level: 'beginner', label: 'Beginner' },
+  ],
+  langs = [
+    { lang: 'fr', flag: '🇫🇷' },
+    { lang: 'en', flag: '🇬🇧' },
+    { lang: 'ar', flag: '🇸🇦' },
+  ],
+  variantsJsonPath = 'variants.json',
+} = Astro.props;
+---
+
+<div class="variant-switcher">
+  {levels.length > 0 && (
+    <div class="level-switcher">
+      {levels.map(l => (
+        <button
+          class={`level-tab ${l.active ? 'active' : ''}`}
+          data-level={l.level}
+          type="button"
+        >
+          {l.label || (l.level === 'beginner' ? 'Beginner' : l.level === 'intermediate' ? 'Intermediate' : 'Expert')}
+        </button>
+      ))}
+    </div>
+  )}
+  {langs.length > 0 && (
+    <div class="lang-switcher">
+      {langs.map(l => (
+        <a class={`lang-flag ${l.active ? 'active' : ''}`} data-lang={l.lang} title={l.lang.toUpperCase()}>
+          {l.flag}
+        </a>
+      ))}
+    </div>
+  )}
+</div>
+
+<script is:inline define:vars={{ variantsJsonPath }}>
+(function(){
+  fetch(variantsJsonPath).then(function(r){
+    return r.json();
+  }).then(function(data){
+    var current = data.default || {};
+
+    document.querySelectorAll('.level-tab').forEach(function(tab){
+      tab.addEventListener('click', function(){
+        var level = this.dataset.level;
+        var lang = document.querySelector('.lang-flag.active');
+        var langCode = lang ? lang.dataset.lang : current.lang;
+        var variant = data.variants.find(function(v){
+          return v.level === level && v.lang === langCode;
+        });
+        if(variant) window.location.href = variant.path + '/';
+      });
+    });
+
+    document.querySelectorAll('.lang-flag').forEach(function(flag){
+      flag.addEventListener('click', function(){
+        var lang = this.dataset.lang;
+        var levelTab = document.querySelector('.level-tab.active');
+        var level = levelTab ? levelTab.dataset.level : current.level;
+        var variant = data.variants.find(function(v){
+          return v.level === level && v.lang === lang;
+        });
+        if(variant) window.location.href = variant.path + '/';
+      });
+    });
+  }).catch(function(){});
+})();
+</script>

@@ -1,0 +1,58 @@
+---
+/**
+ * SeriesBar — Series wizard progress bar.
+ * Reusable: placed at top AND bottom of tech articles by the layout.
+ */
+
+interface SeriesStep {
+  label: string;
+  href: string;
+  current?: boolean;
+}
+
+interface Props {
+  title: string;
+  steps: SeriesStep[];
+  position?: 'top' | 'bottom';
+}
+
+const { title, steps, position = 'top' } = Astro.props;
+
+const currentStep = steps.findIndex(s => s.current);
+const totalSteps = steps.length;
+const prevStep = currentStep > 0 ? steps[currentStep - 1] : null;
+const nextStep = currentStep < totalSteps - 1 ? steps[currentStep + 1] : null;
+---
+
+<div class={`series-bar ${position === 'bottom' ? 'series-bar-bottom' : ''}`}>
+  <div class="series-bar-inner">
+    {prevStep ? (
+      <a href={prevStep.href} class="series-arrow" title={prevStep.label}>
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    ) : (
+      <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
+    )}
+    <span class="series-title">{title}</span>
+    <div class="series-steps">
+      {steps.map((step, i) => (
+        <a
+          href={step.href}
+          class={`series-step ${step.current ? 'current' : i < currentStep ? 'done' : ''}`}
+          title={step.label}
+        >
+          <span class="series-num">{i + 1}</span>
+          <span class="series-label">{step.label}</span>
+        </a>
+      ))}
+    </div>
+    <span class="series-counter">{currentStep + 1}/{totalSteps}</span>
+    {nextStep ? (
+      <a href={nextStep.href} class="series-arrow" title={nextStep.label}>
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    ) : (
+      <span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span>
+    )}
+  </div>
+</div>
