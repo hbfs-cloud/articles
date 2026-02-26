@@ -40,9 +40,35 @@ let finalGrade = doc.documentElement.getAttribute('data-grade') || "";
 // Extract title and description
 // Usually title is in <title> or h1
 let title = doc.querySelector('title') ? doc.querySelector('title').textContent.split('|')[0].trim() : "";
+
+// Try to grab a better title (e.g. the first h2 inside a content-card, or the main title)
+if (tab === 'scanner' || tab === 'daily' || tab === 'weekly') {
+    // For scanner/daily, the actual title we want (e.g. "Top 10 A+...") is often in a specific div>h2 or just an h2 in the content.
+    // Daily: <h2 style="...">Top 10...</h2>
+    // But daily might not even have that.
+    // Let's try to find an h2 that has "Top 10" or "Briefing"
+    const h2s = Array.from(doc.querySelectorAll('h2'));
+    const betterTitle = h2s.find(h => /Top 10|Briefing|Synthèse|Hebdo|Macro/i.test(h.textContent));
+    if (betterTitle) {
+        title = betterTitle.textContent.trim();
+    }
+}
+
 let desc = "";
 const metaDesc = doc.querySelector('meta[name="description"]') || doc.querySelector('meta[property="og:description"]');
 if (metaDesc) desc = metaDesc.getAttribute('content');
+
+if (tab === 'scanner' || tab === 'daily' || tab === 'weekly') {
+    // If we have a specific overview paragraph, that's much better than the meta desc.
+    // Daily/Scanner typically have a <p> after an h2 in a content-card.
+    // Or we can find the first paragraph inside `.content-card` that has some length.
+    const pEl = Array.from(doc.querySelectorAll('.content-card p')).find(p => p.textContent.trim().length > 50);
+    if (pEl) {
+        desc = pEl.textContent.trim();
+        // Truncate to a reasonable length if too long
+        if (desc.length > 300) desc = desc.substring(0, 300) + '...';
+    }
+}
 
 // For daily/scanner/weekly, we have dates
 let date = "";

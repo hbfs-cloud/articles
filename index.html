@@ -2256,20 +2256,32 @@
     }
 
     // ===================================================================
-    // GRADE COUNTS ON CHIPS
+    // COUNTERS ON TABS AND CHIPS
     // ===================================================================
     (function () {
+      if (!window.searchDataPrebuilt) return;
       var counts = {};
-      var total = 0;
-      document
-        .querySelectorAll(
-          "#tab-analyses .grid-cards .report-card[data-grade]",
-        )
-        .forEach(function (card) {
-          var g = card.dataset.grade.charAt(0);
-          counts[g] = (counts[g] || 0) + 1;
-          total++;
-        });
+      var totalAnalyses = 0;
+      var totalWeekly = 0;
+      var totalDaily = 0;
+      var totalScanner = 0;
+
+      window.searchDataPrebuilt.forEach(function (item) {
+        if (item.type === 'analyse') {
+          totalAnalyses++;
+          if (item.grade) {
+            var g = item.grade.charAt(0);
+            counts[g] = (counts[g] || 0) + 1;
+          }
+        } else if (item.type === 'hebdo') {
+          totalWeekly++;
+        } else if (item.type === 'daily') {
+          totalDaily++;
+        } else if (item.type === 'scanner') {
+          totalScanner++;
+        }
+      });
+
       document
         .querySelectorAll("#gradeFilter .filter-chip[data-grade]")
         .forEach(function (btn) {
@@ -2277,8 +2289,15 @@
           if (g !== "all" && counts[g])
             btn.textContent = g + " (" + counts[g] + ")";
         });
-      var el = document.getElementById("analysesCount");
-      if (el) el.textContent = total;
+
+      var elAn = document.getElementById("analysesCount");
+      if (elAn) elAn.textContent = totalAnalyses;
+      var elWk = document.getElementById("weeklyCount");
+      if (elWk) elWk.textContent = totalWeekly;
+      var elDy = document.getElementById("dailyCount");
+      if (elDy) elDy.textContent = totalDaily;
+      var elSc = document.getElementById("scannerCount");
+      if (elSc) elSc.textContent = totalScanner;
     })();
 
     // ===================================================================
@@ -2790,6 +2809,11 @@
         state.page = 0;
       }
 
+      const oldTrigger = grid.querySelector('.infinite-scroll-trigger');
+      if (oldTrigger) {
+        oldTrigger.remove();
+      }
+
       const start = state.page * itemsPerPage;
       const end = Math.min(start + itemsPerPage, state.data.length);
 
@@ -2800,24 +2824,24 @@
 
       state.page++;
 
-      let btnContainer = panel.querySelector('.load-more-container');
-      if (!btnContainer && end < state.data.length) {
-        btnContainer = document.createElement('div');
-        btnContainer.className = 'load-more-container';
-        btnContainer.style.textAlign = 'center';
-        btnContainer.style.marginTop = '2rem';
-        btnContainer.style.marginBottom = '2rem';
+      if (end < state.data.length) {
+        const trigger = document.createElement('div');
+        trigger.className = 'infinite-scroll-trigger';
+        trigger.style.height = '1px';
+        trigger.style.width = '100%';
+        trigger.style.marginTop = '10px';
+        grid.appendChild(trigger);
 
-        const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = 'btn-action';
-        loadMoreBtn.textContent = 'Charger plus';
-        loadMoreBtn.onclick = () => { renderCards(tab); applyAllFilters(); };
-        btnContainer.appendChild(loadMoreBtn);
-        panel.appendChild(btnContainer);
-      }
-
-      if (btnContainer && end >= state.data.length) {
-        btnContainer.style.display = 'none';
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            observer.disconnect();
+            renderCards(tab);
+            if (typeof applyAllFilters === 'function') {
+              applyAllFilters();
+            }
+          }
+        });
+        observer.observe(trigger);
       }
     }
 

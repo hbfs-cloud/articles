@@ -122,19 +122,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Briefing Quotidien - 26 Février 2026",
-    "desc": "",
-    "tags": "daily,us,eu,asia,crypto,macro,trade-idea,formation",
-    "grade": "",
-    "href": "/daily/20260226/",
-    "date": "26 février 2026"
-  },
-  {
-    "type": "daily",
-    "icon": "fa-sun",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "Le Grand Rebond : Le Marché Crypto Sort du Coma",
     "desc": "Bitcoin repasse les $68K (+2.67%), Solana explose (+7.0%) et Ethereum vise les $2,100. Décryptage d'un short squeeze massif qui a liquidé $323M en 24h. Inclus : Analyse sentiment social et Trade Idea SOL.",
     "tags": "crypto,macro,trade-idea,formation",
@@ -2312,19 +2299,6 @@ window.searchDataPrebuilt = [
     "grade": "N/A",
     "href": "analyses/PHE",
     "date": ""
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Scanner Quotidien",
-    "desc": "Top 10 setups — Régime EARLY RISK-OFF — Scan algorithmique haute conviction.",
-    "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro",
-    "grade": "",
-    "href": "/scanner/20260226/",
-    "date": "26 Février 2026"
   },
   {
     "type": "scanner",
