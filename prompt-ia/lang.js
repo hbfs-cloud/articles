@@ -80,7 +80,8 @@ var LANG = {
       modeCustomLabel: 'Prompt Custom',
       modeCustomSub: 'Ticker + IA = méga-prompt',
       modeLibLabel: 'Bibliothèque',
-      modeLibSub: 'Prompts prêts à l\'emploi'
+      modeLibSub: 'Prompts prêts à l\'emploi',
+      libIntro: '👇 Cliquez sur un prompt pour le déplier et le copier'
     },
     en: {
       heroTitle: 'AI Prompt',
@@ -154,7 +155,8 @@ var LANG = {
       modeCustomLabel: 'Custom Prompt',
       modeCustomSub: 'Ticker + AI = mega-prompt',
       modeLibLabel: 'Library',
-      modeLibSub: 'Ready-to-use prompts'
+      modeLibSub: 'Ready-to-use prompts',
+      libIntro: '👇 Click any prompt to expand and copy'
     },
     ar: {
       heroTitle: '\u0628\u0631\u0648\u0645\u064a\u062a IA',
@@ -228,7 +230,8 @@ var LANG = {
       modeCustomLabel: '\u0628\u0631\u0648\u0645\u0628\u062a \u0645\u062e\u0635\u0635',
       modeCustomSub: '\u0631\u0645\u0632 + \u0630\u0643\u0627\u0621 = \u0628\u0631\u0648\u0645\u0628\u062a \u0636\u062e\u0645',
       modeLibLabel: '\u0627\u0644\u0645\u0643\u062a\u0628\u0629',
-      modeLibSub: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062c\u0627\u0647\u0632\u0629'
+      modeLibSub: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062c\u0627\u0647\u0632\u0629',
+      libIntro: '👇 انقر على أي برومبت للتوسيع والنسخ'
     }
   },
   chips: {

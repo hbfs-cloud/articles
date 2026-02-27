@@ -18,14 +18,21 @@
   <style>
     *{box-sizing:border-box}
     body{background:#f8fafc}
-    .brand-bar{background:rgba(238,242,255,.92)!important}
+    .brand-bar{background:#eef2ff!important;border-bottom:none!important;box-shadow:none!important}
 
-    /* ── HERO — compact ── */
-    .hero{background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 50%,#f8fafc 100%);padding:1.75rem 1.5rem 2.5rem;text-align:center}
-    .hero h1{font-size:1.75rem;font-weight:800;margin:0;color:#0f172a;letter-spacing:-.02em}
-    .hero h1 i{color:#6366f1;margin-right:.4rem}
-    .hero-sub{color:#64748b;font-size:.82rem;margin:.3rem 0 0;line-height:1.4}
-    .lang-row{display:flex;justify-content:center;gap:.4rem;margin-top:.75rem}
+    /* ── HERO — vivid gradient + floating sparkles ── */
+    .hero{background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 40%,#ede9fe 70%,#f8fafc 100%);padding:2rem 1.5rem 2.75rem;text-align:center;position:relative;overflow:hidden;margin-top:0}
+    .hero::before{content:'';position:absolute;top:-50%;right:-30%;width:300px;height:300px;background:radial-gradient(circle,rgba(99,102,241,.08) 0%,transparent 70%);border-radius:50%;animation:floatBlob 8s ease-in-out infinite}
+    .hero::after{content:'';position:absolute;bottom:-40%;left:-20%;width:250px;height:250px;background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);border-radius:50%;animation:floatBlob 10s ease-in-out infinite reverse}
+    .hero h1{font-size:1.85rem;font-weight:800;margin:0;color:#0f172a;letter-spacing:-.02em;position:relative;z-index:1}
+    .hero h1 .hero-emoji{font-size:1.6rem;margin-right:.35rem;display:inline-block;animation:wiggle 2s ease-in-out infinite}
+    .hero-sub{color:#64748b;font-size:.84rem;margin:.4rem 0 0;line-height:1.5;position:relative;z-index:1}
+    .hero-badges{display:flex;justify-content:center;gap:.4rem;margin-top:.65rem;flex-wrap:wrap;position:relative;z-index:1}
+    .hero-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:20px;font-size:.64rem;font-weight:600;animation:slideUp .5s ease both}
+    .hero-badge:nth-child(1){background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;animation-delay:.1s}
+    .hero-badge:nth-child(2){background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;animation-delay:.2s}
+    .hero-badge:nth-child(3){background:#fef3c7;color:#d97706;border:1px solid #fde68a;animation-delay:.3s}
+    .lang-row{display:flex;justify-content:center;gap:.4rem;margin-top:.65rem;position:relative;z-index:1}
     .lang-row a{color:#94a3b8;text-decoration:none;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:14px;border:1px solid #e2e8f0;transition:all .2s}
     .lang-row a:hover{color:#6366f1;border-color:#6366f1}
     .lang-row a.active{color:#fff;background:#6366f1;border-color:#6366f1}
@@ -34,7 +41,7 @@
     .prompt-wrap{max-width:600px;margin:-1.25rem auto 0;padding:0 1rem 2rem;position:relative;z-index:2}
 
     /* ── FORM CARD ── */
-    .prompt-card{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;padding:1.25rem;box-shadow:0 8px 30px -8px rgba(0,0,0,.07)}
+    .prompt-card{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;padding:1.25rem;box-shadow:0 8px 30px -8px rgba(0,0,0,.07);animation:slideUp .4s ease both}
 
     /* ── INPUTS ── */
     .fi{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:'Inter',sans-serif;font-size:.88rem;color:#0f172a;background:#f8fafc;transition:border-color .15s,box-shadow .15s;outline:none}
@@ -55,7 +62,7 @@
     .tpl{margin-bottom:5px}
 
     /* ── ASSET BADGE ── */
-    .asset-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:.67rem;font-weight:700;margin-top:3px;animation:fadeIn .2s ease}
+    .asset-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:.67rem;font-weight:700;margin-top:3px;animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
     .asset-badge.stock{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
     .asset-badge.crypto{background:#fff7ed;color:#ea580c;border:1px solid #fed7aa}
     .asset-badge.forex{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
@@ -66,30 +73,32 @@
     .asset-badge.macro{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
 
     /* ── GENERATE ── */
-    .gen-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.25);transition:all .2s;margin-top:.75rem}
+    .gen-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4338ca,#6366f1,#818cf8);background-size:200% 200%;color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.25);transition:all .2s;margin-top:.75rem;animation:gradientShift 4s ease infinite}
     .gen-btn:hover{box-shadow:0 8px 24px rgba(99,102,241,.35);transform:translateY(-1px)}
-    .gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+    .gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;animation:none}
     .generating{position:relative;overflow:hidden}
     .generating::after{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1.5s infinite}
 
     /* ── MODE SWITCHER — 2 big buttons ── */
     .mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem}
-    .mode-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;transition:all .25s;font-family:'Inter',sans-serif}
-    .mode-btn:hover{border-color:#a5b4fc;background:#f5f3ff}
+    .mode-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;transition:all .25s;font-family:'Inter',sans-serif;animation:slideUp .4s ease both}
+    .mode-btn:nth-child(1){animation-delay:.05s}
+    .mode-btn:nth-child(2){animation-delay:.12s}
+    .mode-btn:hover{border-color:#a5b4fc;background:#f5f3ff;transform:translateY(-2px);box-shadow:0 6px 20px rgba(99,102,241,.08)}
     .mode-btn.active{border-color:#6366f1;background:#eef2ff;box-shadow:0 4px 16px rgba(99,102,241,.12)}
-    .mode-btn-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .25s}
-    .mode-btn.active .mode-btn-icon{transform:scale(1.1)}
+    .mode-btn-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;transition:all .3s}
+    .mode-btn.active .mode-btn-icon{transform:scale(1.15)}
     .mode-btn[data-mode="custom"] .mode-btn-icon{background:#eef2ff;color:#6366f1}
-    .mode-btn[data-mode="custom"].active .mode-btn-icon{background:#6366f1;color:#fff}
+    .mode-btn[data-mode="custom"].active .mode-btn-icon{background:#6366f1;color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.3)}
     .mode-btn[data-mode="library"] .mode-btn-icon{background:#faf5ff;color:#8b5cf6}
-    .mode-btn[data-mode="library"].active .mode-btn-icon{background:#8b5cf6;color:#fff}
-    .mode-btn-label{font-size:.78rem;font-weight:700;color:#334155}
+    .mode-btn[data-mode="library"].active .mode-btn-icon{background:#8b5cf6;color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.3)}
+    .mode-btn-label{font-size:.8rem;font-weight:700;color:#334155;display:flex;align-items:center;gap:3px}
     .mode-btn.active .mode-btn-label{color:#4338ca}
     .mode-btn-sub{font-size:.62rem;color:#94a3b8;font-weight:500}
     .mode-btn.active .mode-btn-sub{color:#6366f1}
 
     /* ── MODE PANELS ── */
-    .mode-panel{display:none;animation:fadeIn .25s ease}
+    .mode-panel{display:none;animation:slideUp .3s ease both}
     .mode-panel.active{display:block}
 
     /* ── CUSTOMIZE toggle ── */
@@ -102,11 +111,11 @@
 
     /* ── COLLAPSIBLE ── */
     .collapse{display:none}
-    .collapse.open{display:block;animation:fadeIn .2s ease}
+    .collapse.open{display:block;animation:slideUp .3s ease both}
     .adv-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:.6rem}
 
     /* ── LIB COUNT BADGE ── */
-    .lib-count-badge{font-size:.62rem;font-weight:600;color:#8b5cf6;background:#f5f3ff;padding:1px 7px;border-radius:8px;margin-left:2px}
+    .lib-count-badge{font-size:.62rem;font-weight:700;color:#8b5cf6;background:#f5f3ff;padding:1px 7px;border-radius:8px;margin-left:2px}
 
     /* ── OUTPUT ── */
     .output-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;margin-top:1rem;overflow:hidden;display:none;animation:slideUp .4s ease}
@@ -178,9 +187,9 @@
     .copy-success-text span:first-child{font-size:.95rem;font-weight:700}
     .copy-success-text span:last-child{font-size:.74rem;color:#94a3b8;font-weight:400;display:block;margin-top:2px}
 
-    /* ── PROMPT LIBRARY — always visible ── */
+    /* ── PROMPT LIBRARY ── */
     .prompt-lib-grid{display:grid;gap:.5rem}
-    .prompt-lib-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s}
+    .prompt-lib-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s;animation:slideUp .3s ease both}
     .prompt-lib-card:hover{border-color:#6366f1;box-shadow:0 4px 12px rgba(99,102,241,.08);transform:translateY(-1px)}
     .prompt-lib-header{display:flex;align-items:center;padding:8px 10px;cursor:pointer;gap:6px}
     .prompt-lib-header .plh-left{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;flex:1}
@@ -193,7 +202,7 @@
     .plh-share.shared{border-color:#10b981;color:#10b981;background:#ecfdf5}
     .plh-chevron{color:#94a3b8;font-size:.55rem;transition:transform .2s;flex-shrink:0}
     .prompt-lib-body{display:none;padding:0 10px 10px}
-    .prompt-lib-card[open] .prompt-lib-body{display:block;animation:fadeIn .25s ease}
+    .prompt-lib-card[open] .prompt-lib-body{display:block;animation:slideUp .25s ease both}
     .prompt-lib-card[open] .plh-chevron{transform:rotate(180deg)}
     .prompt-lib-desc{font-size:.73rem;color:#475569;margin:0 0 .5rem;line-height:1.5}
     .prompt-lib-code{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:.75rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.7rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;position:relative;margin-bottom:.4rem;max-height:260px;overflow-y:auto}
@@ -203,6 +212,7 @@
     .prompt-lib-tab{padding:3px 10px;border-radius:7px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#475569;transition:all .2s}
     .prompt-lib-tab:hover{border-color:#818cf8;color:#6366f1}
     .prompt-lib-tab.active{background:#eef2ff;border-color:#6366f1;color:#6366f1}
+    .lib-intro{font-size:.72rem;color:#64748b;text-align:center;margin-bottom:.65rem;line-height:1.5}
 
     /* ── SHARE TOAST ── */
     .share-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:#0f172a;color:#fff;padding:.7rem 1.5rem;border-radius:12px;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.3);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none}
@@ -212,15 +222,20 @@
     /* ── ANIMATIONS ── */
     @keyframes shimmer{100%{left:100%}}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     @keyframes copyPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}60%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
     @keyframes checkDraw{to{stroke-dashoffset:0}}
+    @keyframes wiggle{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+    @keyframes floatBlob{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+    @keyframes popIn{0%{opacity:0;transform:scale(.7)}100%{opacity:1;transform:scale(1)}}
+    @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 
     /* ── RTL ── */
     [dir="rtl"] .brand-bar-inner{flex-direction:row-reverse}
     [dir="rtl"] .brand-logo{flex-direction:row-reverse}
     [dir="rtl"] .hero{direction:rtl}
-    [dir="rtl"] .hero h1 i{margin-right:0;margin-left:.4rem}
+    [dir="rtl"] .hero h1 .hero-emoji{margin-right:0;margin-left:.35rem}
     [dir="rtl"] .fl{flex-direction:row-reverse}
     [dir="rtl"] select.fi{background-position:left 12px center;padding-left:32px;padding-right:12px}
     [dir="rtl"] .comp-card{direction:rtl}
@@ -231,14 +246,13 @@
     [dir="rtl"] .output-meta{flex-direction:row-reverse}
     [dir="rtl"] .smart-link{flex-direction:row-reverse}
     [dir="rtl"] .sec-btn{flex-direction:row-reverse}
-    [dir="rtl"] .section-divider-label{flex-direction:row-reverse}
     [dir="rtl"] .plh-actions{flex-direction:row-reverse}
     [dir="rtl"] .mode-btn{direction:rtl}
 
     /* ── RESPONSIVE ── */
     @media(max-width:640px){
-      .hero{padding:1.25rem 1rem 2rem}
-      .hero h1{font-size:1.4rem}
+      .hero{padding:1.5rem 1rem 2.25rem}
+      .hero h1{font-size:1.45rem}
       .hero-sub{font-size:.76rem}
       .prompt-card{padding:1rem;border-radius:14px}
       .frow,.frow3{grid-template-columns:1fr}
@@ -246,6 +260,8 @@
       .output-header,.output-actions,.comp-prompts,.smart-links,.open-ai-row{padding-left:.6rem;padding-right:.6rem}
       .prompt-output{margin:.6rem;font-size:.7rem;padding:.75rem}
       .open-ai-dropdown{left:auto;right:0}
+      .mode-btn{padding:12px 8px}
+      .mode-btn-icon{width:34px;height:34px;font-size:.95rem}
     }
   </style>
 </head>
@@ -265,12 +281,17 @@
   </nav>
 
   <div class="hero">
-    <h1><i class="fa-solid fa-wand-magic-sparkles"></i><span id="heroTitle">AI Prompt</span></h1>
+    <h1><span class="hero-emoji">✨</span><span id="heroTitle">AI Prompt</span></h1>
     <p class="hero-sub" id="heroSub">One ticker, one click. Get an institutional-grade AI prompt.</p>
+    <div class="hero-badges">
+      <span class="hero-badge" id="heroBadge1">🎯 Multi-asset</span>
+      <span class="hero-badge" id="heroBadge2">🤖 AI recommended</span>
+      <span class="hero-badge" id="heroBadge3">🛡️ Anti-hallucination</span>
+    </div>
     <div class="lang-row" id="langSwitcher">
-      <a href="?lang=fr" data-lang="fr">FR</a>
-      <a href="?lang=en" data-lang="en">EN</a>
-      <a href="?lang=ar" data-lang="ar">AR</a>
+      <a href="?lang=fr" data-lang="fr">🇫🇷 FR</a>
+      <a href="?lang=en" data-lang="en">🇬🇧 EN</a>
+      <a href="?lang=ar" data-lang="ar">🇸🇦 AR</a>
     </div>
   </div>
 
@@ -280,12 +301,12 @@
     <div class="mode-switcher" id="modeSwitcher">
       <button class="mode-btn active" data-mode="custom" id="modeCustomBtn" type="button">
         <span class="mode-btn-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-        <span class="mode-btn-label" id="modeCustomLabel">Custom Prompt</span>
+        <span class="mode-btn-label">✍️ <span id="modeCustomLabel">Custom Prompt</span></span>
         <span class="mode-btn-sub" id="modeCustomSub">Ticker + AI = mega-prompt</span>
       </button>
       <button class="mode-btn" data-mode="library" id="modeLibBtn" type="button">
         <span class="mode-btn-icon"><i class="fa-solid fa-book-bookmark"></i></span>
-        <span class="mode-btn-label"><span id="modeLibLabel">Library</span> <span class="lib-count-badge" id="libCountBadge"></span></span>
+        <span class="mode-btn-label">📚 <span id="modeLibLabel">Library</span> <span class="lib-count-badge" id="libCountBadge"></span></span>
         <span class="mode-btn-sub" id="modeLibSub">Ready-to-use prompts</span>
       </button>
     </div>
@@ -391,6 +412,7 @@
 
     <!-- ═══ MODE: LIBRARY ═══ -->
     <div class="mode-panel" id="panelLibrary">
+      <p class="lib-intro" id="libIntro">👇 Click any prompt to expand, then copy &amp; paste into your favorite AI</p>
       <div class="prompt-lib-tabs" id="libTabs"></div>
       <div class="prompt-lib-grid" id="promptLibGrid"></div>
     </div>
@@ -421,8 +443,8 @@
   </footer>
 
   <script src="/assets/core.js"></script>
-  <script src="/prompt-ia/lang.js?v=11"></script>
-  <script src="/prompt-ia/library.js?v=11"></script>
-  <script src="/prompt-ia/app.js?v=11"></script>
+  <script src="/prompt-ia/lang.js?v=13"></script>
+  <script src="/prompt-ia/library.js?v=13"></script>
+  <script src="/prompt-ia/app.js?v=13"></script>
 </body>
 </html>

@@ -57,6 +57,17 @@
     var libBadge = document.getElementById('libCountBadge');
     if (libBadge) libBadge.textContent = LIBRARY.length;
 
+    // Hero badges
+    var hb1 = document.getElementById('heroBadge1');
+    if (hb1) hb1.textContent = '🎯 ' + L.badgeMulti;
+    var hb2 = document.getElementById('heroBadge2');
+    if (hb2) hb2.textContent = '🤖 ' + L.badgeAi;
+    var hb3 = document.getElementById('heroBadge3');
+    if (hb3) hb3.textContent = '🛡️ ' + L.badgeAntiH;
+
+    // Library intro
+    setText('libIntro', L.libIntro);
+
     // Placeholders
     var thesisInput = document.getElementById('thesisInput');
     if (thesisInput) thesisInput.placeholder = L.thesisPlaceholder;
