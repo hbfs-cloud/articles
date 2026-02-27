@@ -190,12 +190,16 @@
     if (fmt && fmt.selectedOptions[0]) parts.push(fmt.selectedOptions[0].textContent);
     el.textContent = parts.join(' · ');
   }
-  document.getElementById('advToggle').addEventListener('click', function() {
-    var section = document.getElementById('advSection');
-    section.classList.toggle('visible');
-    this.classList.toggle('open');
-    updateAdvDefaults();
-  });
+  var advBtn = document.getElementById('advToggle');
+  if (advBtn) {
+    advBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var section = document.getElementById('advSection');
+      if (section) section.classList.toggle('visible');
+      this.classList.toggle('open');
+      updateAdvDefaults();
+    });
+  }
   // Refresh defaults hint after controls render
   setTimeout(updateAdvDefaults, 50);
 
