@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr" data-tags="tech,technique,formation,education" data-tab="tech">
+<html lang="fr" data-tags="tech,trading,architecture,risk-management,monitoring,education" data-tab="tech">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Trading Stack — Partie 2 : L'Architecture de Monitoring | Market Watch</title>
+    <title>Architecture de Monitoring : Séparation des Concerns et Gestion du Risque | Market Watch</title>
     <meta name="description"
-        content="Architecture de monitoring pour trading systématique : séparation des concerns, gestion du risque, circuit breakers, kill switch, best practices et anti-patterns.">
-    <meta property="og:title" content="Monitoring Trading Stack — Partie 2 : L'Architecture de Monitoring">
+        content="Guide complet sur l'architecture de monitoring pour les stacks de trading systématique : séparation des concerns, 4 couches de monitoring, gestion du risque en temps réel, alerting et métriques essentielles.">
+    <meta property="og:title" content="Architecture de Monitoring : Séparation des Concerns et Gestion du Risque">
     <meta property="og:description"
-        content="Séparation des concerns, kill switch, circuit breakers, gestion du risque et best/bad practices pour le trading systématique.">
+        content="Partie 2/3 — Comment structurer le monitoring d'une stack de trading : couches, risque temps réel, alerting intelligent et métriques clés.">
     <meta property="og:image" content="/logo.svg">
     <meta property="og:url" content="https://market-watch.xyz/tech/monitoring-trading-stack/architecture/">
     <meta property="og:type" content="article">
@@ -29,11 +29,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
     <style>
+        /* Theme color: Blue (#2563eb) */
         .hero-section {
-            padding: 5rem 2rem 8rem 2rem;
+            padding: 5rem 2rem 8rem;
             background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
             text-align: center;
-            border-bottom: 1px solid #bfdbfe;
+            border-bottom: 1px solid #93c5fd;
         }
 
         .hero-date {
@@ -87,7 +88,7 @@
             font-size: 1.8rem;
             font-weight: 900;
             color: #0f172a;
-            margin: 1.5rem 0 1.5rem;
+            margin: 1.5rem 0;
             letter-spacing: -0.02em;
             display: flex;
             align-items: center;
@@ -101,13 +102,6 @@
             font-weight: 800;
             color: #1e293b;
             margin: 2rem 0 1rem;
-        }
-
-        h4 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #334155;
-            margin: 1.5rem 0 0.75rem;
         }
 
         p {
@@ -140,118 +134,6 @@
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         }
 
-        ol.best-practices {
-            counter-reset: bp;
-            list-style: none;
-            padding: 0;
-        }
-
-        ol.best-practices > li {
-            counter-increment: bp;
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1rem;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 12px;
-        }
-
-        ol.best-practices > li .bp-num {
-            min-width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #16a34a;
-            color: white;
-            font-weight: 800;
-            font-size: 0.9rem;
-            flex-shrink: 0;
-        }
-
-        ol.best-practices > li .bp-content strong {
-            display: block;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-        }
-
-        ol.anti-patterns {
-            counter-reset: ap;
-            list-style: none;
-            padding: 0;
-        }
-
-        ol.anti-patterns > li {
-            counter-increment: ap;
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1rem;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 12px;
-        }
-
-        ol.anti-patterns > li .ap-num {
-            min-width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #dc2626;
-            color: white;
-            font-weight: 800;
-            font-size: 0.9rem;
-            flex-shrink: 0;
-        }
-
-        ol.anti-patterns > li .ap-content strong {
-            display: block;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-        }
-
-        .series-nav {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .series-nav a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1.25rem 1.5rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .series-nav a:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-
-        .series-nav .prev {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            color: #475569;
-        }
-
-        .series-nav .next {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #2563eb;
-        }
-
         @media (max-width: 768px) {
             .content-card {
                 padding: 1.5rem;
@@ -277,20 +159,6 @@
             .metric-value {
                 font-size: 1.25rem !important;
             }
-
-            .series-nav {
-                grid-template-columns: 1fr;
-            }
-
-            h2 {
-                font-size: 1.4rem;
-            }
-
-            ol.best-practices > li,
-            ol.anti-patterns > li {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
         }
 
         @media (max-width: 480px) {
@@ -303,1103 +171,1406 @@
 
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
-            style="display:none;visibility:hidden"></iframe></noscript>
+            class="gtm-noscript"></iframe></noscript>
 
     <nav class="brand-bar">
-    <div class="brand-bar-inner">
-      <a href="/" class="brand-logo">
-        <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
-      </a>
-      <div class="brand-actions">
-        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
-      </div>
-    </div>
-  </nav>
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
 
     <header class="hero-section">
-        <div class="hero-date">MONITORING TRADING STACK — PARTIE 2/3</div>
-        <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
-            L'Architecture de Monitoring
-        </h1>
-        <p style="font-size:1.2rem; color:#475569; max-width:750px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
-            Séparation des concerns, gestion du risque, circuit breakers et kill switch.
-            Les fondations d'un système de trading qui ne vous ruinera pas.
-        </p>
+        <div class="hero-date">Guide Technique &mdash; Partie 2/3</div>
+        <h1>Architecture de Monitoring : S&eacute;paration des Concerns et Gestion du Risque</h1>
+        <p>Comment structurer le monitoring d'une stack de trading syst&eacute;matique pour d&eacute;tecter les anomalies avant qu'elles ne deviennent des pertes.</p>
 
         <div class="hero-badges">
-            <div class="hero-badge"><i class="fa-solid fa-layer-group"></i> Partie 2/3</div>
-            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 20 min</div>
-            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Architecture</div>
+            <div class="hero-badge"><i class="fa-solid fa-layer-group"></i> Architecture</div>
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Gestion du Risque</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 25 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Interm&eacute;diaire</div>
         </div>
-        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+        <div id="article-clickable-tags" class="card-tags"></div>
     </header>
 
     <div class="container">
 
-        <!-- ========== SECTION 1: INTRODUCTION ========== -->
-        <div id="intro" class="content-card">
-            <h2><i class="fa-solid fa-microchip" style="color:#2563eb;"></i> Le Trading Systématique, c'est du Software Engineering</h2>
+        <!-- ============================================================ -->
+        <!-- SERIES NAVIGATION — TOP                                       -->
+        <!-- ============================================================ -->
+        <div class="content-card" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 2px solid #2563eb; text-align: center; padding: 2rem;">
+            <p style="font-weight: 800; color: #1e40af; margin-bottom: 1rem;">S&eacute;rie : Monitorer sa Stack de Trading</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="../" style="padding: 0.5rem 1.25rem; border-radius: 99px; background: white; color: #d97706; font-weight: 700; font-size: 0.85rem; border: 1px solid #d97706; text-decoration: none;">&#9312; Post-Mortems</a>
+                <span style="padding: 0.5rem 1.25rem; border-radius: 99px; background: #2563eb; color: white; font-weight: 700; font-size: 0.85rem;">&#9313; Architecture</span>
+                <a href="../tooling/" style="padding: 0.5rem 1.25rem; border-radius: 99px; background: white; color: #059669; font-weight: 700; font-size: 0.85rem; border: 1px solid #059669; text-decoration: none;">&#9314; Tooling</a>
+            </div>
+        </div>
 
-            <p>Voici une vérité que beaucoup de traders systématiques découvrent trop tard : <strong>un système de trading est un logiciel de production</strong>. Et comme tout logiciel de production, il a besoin de monitoring, de tests, de rollback, de CI/CD, et d'une architecture pensée pour la résilience.</p>
+        <!-- ============================================================ -->
+        <!-- SECTION 1 : INTRODUCTION                                      -->
+        <!-- ============================================================ -->
+        <div id="introduction" class="content-card">
+            <h2><i class="fa-solid fa-compass"></i> Introduction &mdash; L'Architecture de Monitoring</h2>
 
-            <p>Quand un développeur web déploie une nouvelle version de son application, il a des health checks, des alertes Slack, des dashboards Grafana, et un bouton de rollback. Mais quand un trader systématique déploie une nouvelle stratégie qui manipule de l'argent réel, il fait souvent un simple <code>python strategy.py</code> dans un terminal et croise les doigts.</p>
+            <p>Dans la <a href="../">Partie 1</a>, nous avons analys&eacute; les post-mortems les plus instructifs du trading syst&eacute;matique. Chaque incident partageait un point commun : <strong>le monitoring &eacute;tait soit absent, soit mal architectur&eacute;.</strong> Des logs existaient, des dashboards clignotaient, mais l'architecture globale ne permettait pas de d&eacute;tecter, comprendre et r&eacute;agir &agrave; temps.</p>
 
-            <p>C'est exactement comme ça que Knight Capital a perdu <strong>440 millions de dollars en 45 minutes</strong>. Pas un bug exotique. Pas un hack. Juste un déploiement mal monitoré d'un code qui n'aurait jamais du tourner en production.</p>
+            <p>Cette deuxi&egrave;me partie est le c&oelig;ur de la s&eacute;rie. Nous allons construire, couche par couche, une architecture de monitoring robuste pour une stack de trading. Pas un produit sp&eacute;cifique, pas un outil particulier &mdash; une <strong>architecture</strong>, c'est-&agrave;-dire un ensemble de principes, de patterns et de d&eacute;cisions de design qui guident ensuite tous les choix techniques.</p>
+
+            <h3>Pourquoi l'architecture compte plus que l'outil</h3>
+
+            <p>Un pi&egrave;ge fr&eacute;quent : commencer par choisir un outil (Grafana, Datadog, Prometheus) puis essayer de faire rentrer son syst&egrave;me dedans. C'est comme choisir la couleur de la fa&ccedil;ade avant de dessiner les plans de la maison. L'outil vient <em>apr&egrave;s</em> l'architecture, jamais avant.</p>
+
+            <p>Une bonne architecture de monitoring repose sur <strong>trois piliers fondamentaux</strong> :</p>
 
             <div class="metric-grid">
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> 5</div>
-                    <div class="metric-label">Composants séparés dans une architecture de trading robuste</div>
+                    <div class="metric-value"><i class="fa-solid fa-eye"></i></div>
+                    <div class="metric-label"><strong>1. Observer</strong><br>Collecter les bonnes donn&eacute;es, au bon endroit, avec la bonne granularit&eacute;. Sans observation, pas de diagnostic. C'est la fondation : logs structur&eacute;s, m&eacute;triques, traces distribu&eacute;es.</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-shield-halved" style="color:#16a34a;"></i> 3</div>
-                    <div class="metric-label">Couches de contrôle : pré-trade, in-flight, post-trade</div>
+                    <div class="metric-value"><i class="fa-solid fa-bell"></i></div>
+                    <div class="metric-label"><strong>2. Alerter</strong><br>Transformer les observations en signaux actionnables. Pas &laquo; il se passe quelque chose &raquo; mais &laquo; voici exactement ce qui se passe, pourquoi c'est grave, et quoi faire &raquo;. L'art de l'alerte, c'est la pr&eacute;cision.</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-power-off" style="color:#dc2626;"></i> 1</div>
-                    <div class="metric-label">Kill switch obligatoire : votre meilleur ami en cas de crise</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-rotate" style="color:#f59e0b;"></i> 3</div>
-                    <div class="metric-label">États du circuit breaker : Closed, Open, Half-Open</div>
+                    <div class="metric-value"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="metric-label"><strong>3. R&eacute;agir</strong><br>Avoir des runbooks, des circuit breakers, des kill switches. Quand l'alerte sonne, la r&eacute;action doit &ecirc;tre imm&eacute;diate et pr&eacute;d&eacute;finie. Pas de panique, pas d'improvisation &mdash; un playbook test&eacute;.</div>
                 </div>
             </div>
 
             <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-graduation-cap"></i> Ce que vous allez apprendre</h4>
-                <p>Dans cette Partie 2, nous allons construire ensemble l'architecture de monitoring d'un système de trading. Pas de théorie abstraite : chaque concept est illustré par des exemples concrets, des tableaux de contrôle, et des diagrammes. À la fin de cet article, vous saurez exactement quels composants mettre en place et pourquoi.</p>
+                <h4><i class="fa-solid fa-lightbulb"></i> Qu'est-ce que l'observabilit&eacute; ?</h4>
+                <p>Le terme &laquo; observabilit&eacute; &raquo; (observability) vient de la th&eacute;orie du contr&ocirc;le. Un syst&egrave;me est <strong>observable</strong> si, en analysant ses sorties (outputs), on peut d&eacute;duire son &eacute;tat interne complet. En monitoring, cela signifie que vos m&eacute;triques, logs et traces vous permettent de comprendre <em>pourquoi</em> le syst&egrave;me se comporte d'une certaine fa&ccedil;on &mdash; pas seulement <em>ce qui</em> se passe.</p>
+                <p>Les trois piliers de l'observabilit&eacute; moderne sont :</p>
+                <ul>
+                    <li><strong>M&eacute;triques</strong> &mdash; Valeurs num&eacute;riques agr&eacute;g&eacute;es dans le temps (ex: CPU usage moyen sur 5 min). Elles r&eacute;pondent &agrave; &laquo; quoi ? &raquo;</li>
+                    <li><strong>Logs</strong> &mdash; Enregistrements discrets d'&eacute;v&eacute;nements (ex: &laquo; ordre rejet&eacute; par le broker &raquo;). Ils r&eacute;pondent &agrave; &laquo; quand et o&ugrave; ? &raquo;</li>
+                    <li><strong>Traces</strong> &mdash; Parcours d'une requ&ecirc;te &agrave; travers les services (ex: signal &rarr; risk check &rarr; execution). Elles r&eacute;pondent &agrave; &laquo; pourquoi ? &raquo;</li>
+                </ul>
+                <p>Ensemble, ils forment un triangle qui permet de naviguer de &laquo; quelque chose ne va pas &raquo; &agrave; &laquo; voici la ligne de code responsable &raquo;.</p>
             </div>
+
+            <h3>Ce que vous allez apprendre</h3>
+
+            <p>Ce guide couvre huit domaines essentiels, chacun d&eacute;di&eacute; &agrave; un aspect critique de l'architecture de monitoring :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">1</div>
+                    <div class="metric-label"><strong>S&eacute;paration des concerns</strong> &mdash; Pourquoi trading, risque et monitoring doivent vivre dans des processus ind&eacute;pendants, et comment les connecter sans cr&eacute;er de couplage.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2</div>
+                    <div class="metric-label"><strong>Les 4 couches</strong> &mdash; Infrastructure, Application, Business Logic, March&eacute;. Chaque couche a ses propres m&eacute;triques, ses propres seuils, et ses propres responsables.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label"><strong>Risque temps r&eacute;el</strong> &mdash; Pre-trade checks, intra-trade monitoring, post-trade analysis, kill switches et drawdown budgeting.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4</div>
+                    <div class="metric-label"><strong>Alerting intelligent</strong> &mdash; Niveaux d'escalation, d&eacute;duplication, contextualisation, et comment &eacute;viter la fatigue d'alertes qui tue.</div>
+                </div>
+            </div>
+
+            <p>Que vous construisiez un syst&egrave;me institutionnel g&eacute;rant des milliards ou un bot retail sur un VPS &agrave; 10$/mois, les principes sont identiques. Seule l'&eacute;chelle change.</p>
         </div>
 
-        <!-- ========== SECTION 2: SÉPARATION DES CONCERNS ========== -->
+        <!-- ============================================================ -->
+        <!-- SECTION 2 : SÉPARATION DES CONCERNS (SoC)                    -->
+        <!-- ============================================================ -->
         <div id="separation" class="content-card">
-            <h2><i class="fa-solid fa-puzzle-piece" style="color:#8b5cf6;"></i> La Séparation des Concerns — Le Principe #1</h2>
+            <h2><i class="fa-solid fa-puzzle-piece"></i> S&eacute;paration des Concerns (SoC)</h2>
 
-            <p>En génie logiciel, la <strong>séparation des concerns</strong> (Separation of Concerns) est le principe fondamental qui consiste à diviser un système en parties distinctes, chacune responsable d'une seule préoccupation. En trading systématique, ce principe n'est pas optionnel : c'est une question de <strong>survie financière</strong>.</p>
+            <p>La <strong>S&eacute;paration des Concerns</strong> (Separation of Concerns, SoC) est le principe fondamental de toute architecture logicielle robuste. Dans le contexte du trading, elle prend une dimension critique : quand votre monitoring tourne <em>dans</em> le m&ecirc;me processus que votre strat&eacute;gie, un bug de monitoring peut crasher votre strat&eacute;gie. Et inversement, une strat&eacute;gie qui consomme 100% du CPU ne laisse rien au monitoring pour d&eacute;tecter le probl&egrave;me.</p>
 
-            <p>Un système de trading robuste se décompose en <strong>5 composants indépendants</strong>, chacun avec un rôle unique et des responsabilités claires :</p>
+            <h3>Les trois moteurs ind&eacute;pendants</h3>
 
-            <h3>Les 5 Composants</h3>
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Composant</th>
-                            <th>Rôle</th>
-                            <th>Métaphore</th>
-                            <th>Exemple</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Signal Generation</strong></td>
-                            <td>Génère les signaux d'achat/vente</td>
-                            <td>Le stratège</td>
-                            <td>RSI &lt; 30 + MACD cross up = signal BUY</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Risk Management</strong></td>
-                            <td>Valide avant exécution</td>
-                            <td>Le gardien</td>
-                            <td>Position max 5% du portefeuille, loss limit ok</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Execution</strong></td>
-                            <td>Envoie les ordres au broker</td>
-                            <td>L'exécuteur</td>
-                            <td>Ordre limite AAPL 150.00 x 100 shares via IBKR</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Monitoring</strong></td>
-                            <td>Observe tout en temps réel</td>
-                            <td>L'observateur</td>
-                            <td>Latence API, P&amp;L, drawdown, erreurs</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Recovery</strong></td>
-                            <td>Gère les pannes et erreurs</td>
-                            <td>Le pompier</td>
-                            <td>Kill switch, rollback, réconciliation</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <p>Une stack de trading bien architectur&eacute;e se compose de trois moteurs qui <strong>doivent</strong> tourner dans des processus s&eacute;par&eacute;s, id&eacute;alement sur des machines distinctes :</p>
 
-            <!-- Architecture Flow EChart -->
-            <h3>Flux de données entre les composants</h3>
-            <div id="architectureChart" style="width:100%; height:480px; margin:1.5rem 0;"></div>
-
-            <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-lightbulb"></i> En pratique</h4>
-                <p>Même si vous faites tourner tout sur une seule machine (un Raspberry Pi, un VPS à 10$/mois), <strong>séparez logiquement vos composants</strong>. Concrètement, cela signifie : des fichiers séparés, des classes séparées, des processus séparés si possible. Le signal generator ne doit <em>jamais</em> envoyer un ordre directement au broker. Il passe toujours par le risk manager d'abord.</p>
-                <p>Pensez-y comme une chaîne de commandement militaire : le général (stratégie) donne l'ordre, l'officier (risk) valide que c'est faisable, le soldat (exécution) agit, le drone (monitoring) observe, et les secours (recovery) interviennent si ça tourne mal.</p>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="metric-label"><strong>Trading Engine</strong><br>Le c&oelig;ur du syst&egrave;me. Re&ccedil;oit les donn&eacute;es de march&eacute;, ex&eacute;cute la strat&eacute;gie, envoie les ordres. Son unique responsabilit&eacute; : <em>trader</em>. Il ne doit rien faire d'autre. Pas de calcul de risque complexe, pas de g&eacute;n&eacute;ration de dashboard, pas d'envoi d'emails.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="metric-label"><strong>Risk Engine</strong><br>Le gardien. V&eacute;rifie chaque ordre avant qu'il ne parte, surveille les expositions en temps r&eacute;el, applique les limites de drawdown. Il peut <em>bloquer</em> un ordre du Trading Engine. C'est le seul composant qui a un droit de v&eacute;to sur le trading.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-satellite-dish"></i></div>
+                    <div class="metric-label"><strong>Monitoring Layer</strong><br>L'observateur. Collecte les m&eacute;triques des deux autres moteurs, les agr&egrave;ge, les visualise, d&eacute;clenche les alertes. Il ne modifie <em>jamais</em> le comportement du trading &mdash; il observe et rapporte. Son crash ne doit pas impacter le trading.</div>
+                </div>
             </div>
 
             <div class="alert-box">
-                <h4><i class="fa-solid fa-skull-crossbones"></i> Anti-pattern : Le Monolithe Trading</h4>
-                <p>Le piège classique du débutant : <strong>tout dans un seul script Python</strong>. Le signal, le sizing, l'envoi d'ordre, la gestion d'erreur, tout dans un <code>main.py</code> de 2000 lignes. Quand une erreur survient dans le calcul du RSI, elle peut propager jusqu'à l'envoi d'ordres. Quand vous voulez modifier le risk management, vous risquez de casser le signal generator. C'est exactement le scénario Knight Capital : un vieux code de test activé par erreur dans le monolithe, sans aucun garde-fou.</p>
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> R&egrave;gle d'or de l'ind&eacute;pendance</h4>
+                <p>Le crash du monitoring ne doit <strong>jamais</strong> arr&ecirc;ter le trading. Et le crash du trading ne doit <strong>jamais</strong> arr&ecirc;ter le monitoring. Ce sont deux avions diff&eacute;rents &mdash; si l'un tombe, l'autre continue de voler pour rapporter ce qui s'est pass&eacute;. Si votre trading et votre monitoring partagent le m&ecirc;me processus, un seul OOM (Out Of Memory) suffit &agrave; tout faire tomber silencieusement.</p>
             </div>
+
+            <h3>Le flux de donn&eacute;es &mdash; Comprendre le chemin critique</h3>
+
+            <p>Comprendre le flux de donn&eacute;es est essentiel pour savoir o&ugrave; placer vos points d'observation. Voici le chemin que suit chaque d&eacute;cision de trading, depuis la donn&eacute;e de march&eacute; brute jusqu'&agrave; l'ex&eacute;cution sur l'exchange :</p>
+
+            <!-- ECharts: Data Flow Diagram -->
+            <div id="chart-dataflow" class="content-card" style="width:100%; height:420px; padding:0; box-shadow:none; border:none; margin:1rem 0;"></div>
+            <script>
+            (function() {
+                var dom = document.getElementById('chart-dataflow');
+                var chart = echarts.init(dom);
+                var option = {
+                    tooltip: { trigger: 'item', formatter: '{b}' },
+                    series: [{
+                        type: 'graph',
+                        layout: 'none',
+                        symbolSize: 60,
+                        roam: false,
+                        label: { show: true, fontSize: 11, fontWeight: 'bold', color: '#1e293b' },
+                        edgeSymbol: ['none', 'arrow'],
+                        edgeSymbolSize: [0, 10],
+                        lineStyle: { width: 2, curveness: 0.1 },
+                        data: [
+                            { name: 'Market\nData', x: 50, y: 200, itemStyle: { color: '#3b82f6' } },
+                            { name: 'Strategy\nEngine', x: 220, y: 200, itemStyle: { color: '#8b5cf6' } },
+                            { name: 'Risk\nEngine', x: 390, y: 200, itemStyle: { color: '#ef4444' } },
+                            { name: 'Execution', x: 560, y: 200, itemStyle: { color: '#f59e0b' } },
+                            { name: 'Exchange\n/ Broker', x: 730, y: 200, itemStyle: { color: '#10b981' } },
+                            { name: 'Monitoring\nLayer', x: 390, y: 50, itemStyle: { color: '#2563eb' }, symbolSize: 70 }
+                        ],
+                        links: [
+                            { source: 'Market\nData', target: 'Strategy\nEngine', lineStyle: { color: '#3b82f6' } },
+                            { source: 'Strategy\nEngine', target: 'Risk\nEngine', lineStyle: { color: '#8b5cf6' } },
+                            { source: 'Risk\nEngine', target: 'Execution', lineStyle: { color: '#ef4444' } },
+                            { source: 'Execution', target: 'Exchange\n/ Broker', lineStyle: { color: '#f59e0b' } },
+                            { source: 'Market\nData', target: 'Monitoring\nLayer', lineStyle: { color: '#94a3b8', type: 'dashed' } },
+                            { source: 'Strategy\nEngine', target: 'Monitoring\nLayer', lineStyle: { color: '#94a3b8', type: 'dashed' } },
+                            { source: 'Risk\nEngine', target: 'Monitoring\nLayer', lineStyle: { color: '#94a3b8', type: 'dashed' } },
+                            { source: 'Execution', target: 'Monitoring\nLayer', lineStyle: { color: '#94a3b8', type: 'dashed' } },
+                            { source: 'Exchange\n/ Broker', target: 'Monitoring\nLayer', lineStyle: { color: '#94a3b8', type: 'dashed' } }
+                        ]
+                    }]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', function() { chart.resize(); });
+            })();
+            </script>
+
+            <p>Les fl&egrave;ches pleines repr&eacute;sentent le <strong>flux de trading</strong> (le chemin critique &mdash; celui qui doit &ecirc;tre le plus rapide possible). Les fl&egrave;ches en pointill&eacute;s repr&eacute;sentent le <strong>flux de monitoring</strong> : chaque composant &eacute;met des m&eacute;triques vers le Monitoring Layer, mais le Monitoring Layer n'&eacute;met <em>jamais</em> rien vers le flux de trading.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Unidirectionnalit&eacute; du monitoring</h4>
+                <p>C'est un principe fondamental que beaucoup de d&eacute;butants violent : le flux de monitoring est <strong>strictement unidirectionnel</strong>. Les composants de trading &eacute;mettent des &eacute;v&eacute;nements vers le monitoring (push), ou le monitoring vient lire des m&eacute;triques expos&eacute;es (pull). Mais le monitoring ne doit <strong>jamais injecter de donn&eacute;es dans le flux de trading</strong>.</p>
+                <p>La seule exception est le <em>kill switch</em> : un m&eacute;canisme d'urgence qui arr&ecirc;te tout le syst&egrave;me. Mais m&ecirc;me le kill switch agit par <strong>interruption</strong> (arr&ecirc;ter), pas par <strong>modification</strong> (changer le comportement). Nous en reparlerons en d&eacute;tail dans la section sur la gestion du risque.</p>
+            </div>
+
+            <h3>Anti-patterns : le monitoring dans la boucle de trading</h3>
+
+            <p>Voici les erreurs les plus fr&eacute;quentes que nous observons dans les syst&egrave;mes de trading, particuli&egrave;rement chez les d&eacute;veloppeurs qui d&eacute;butent en architecture :</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Anti-pattern</th>
+                        <th>Risque</th>
+                        <th>Correction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Monitoring synchrone</strong></td>
+                        <td>L'envoi de m&eacute;triques bloque la boucle de trading. Si le serveur de m&eacute;triques est lent ou indisponible, le trading est paralys&eacute;.</td>
+                        <td>Toujours &eacute;mettre les m&eacute;triques de mani&egrave;re <strong>asynchrone</strong> (fire-and-forget avec buffer local).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Logs dans le hot path</strong></td>
+                        <td>L'&eacute;criture de logs I/O ralentit chaque tick. Sur une strat&eacute;gie HFT, 1ms de latence ajout&eacute;e peut co&ucirc;ter des milliers de dollars par jour.</td>
+                        <td>Ring buffer en m&eacute;moire, flush asynchrone par batch. Logs structur&eacute;s (JSON) au lieu de concat&eacute;nations de cha&icirc;nes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Base de donn&eacute;es partag&eacute;e</strong></td>
+                        <td>Le trading et le monitoring &eacute;crivent dans la m&ecirc;me base. Un SELECT analytique lent du dashboard verrouille les tables que le trading utilise.</td>
+                        <td>Bases de donn&eacute;es s&eacute;par&eacute;es. Le monitoring lit une <strong>r&eacute;plique read-only</strong> ou un stream d'&eacute;v&eacute;nements.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monitoring = condition de trading</strong></td>
+                        <td>&laquo; Si le monitoring d&eacute;tecte X, alors trade Y. &raquo; Le monitoring influence le trading &rarr; perte totale de la s&eacute;paration des concerns.</td>
+                        <td>Le monitoring observe et alerte uniquement. Les d&eacute;cisions de trading restent dans le Strategy Engine, les d&eacute;cisions de risque dans le Risk Engine.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Single process</strong></td>
+                        <td>Trading + Risk + Monitoring dans un seul binaire. Un OOM (Out Of Memory) du module de monitoring tue le trading.</td>
+                        <td>Processus s&eacute;par&eacute;s. Communication via message bus (Redis, NATS, ZeroMQ) ou fichiers partag&eacute;s.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Communication inter-processus : les options</h3>
+
+            <p>Si les trois moteurs sont des processus s&eacute;par&eacute;s, comment communiquent-ils ? Voici les patterns recommand&eacute;s par ordre de complexit&eacute; croissante :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-file"></i></div>
+                    <div class="metric-label"><strong>Fichiers partag&eacute;s</strong><br>Le plus simple. Le trading &eacute;crit un fichier JSON/CSV avec ses positions, son P&amp;L, son &eacute;tat. Le monitoring le lit p&eacute;riodiquement (toutes les 5-10 secondes). Latence : secondes. Parfait pour le retail.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-database"></i></div>
+                    <div class="metric-label"><strong>Redis / Memcached</strong><br>Stockage cl&eacute;-valeur en m&eacute;moire. Le trading publie ses m&eacute;triques dans Redis (Pub/Sub ou simple SET), le monitoring s'abonne ou interroge. Latence : millisecondes. Excellent compromis performance/simplicit&eacute;.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-envelope"></i></div>
+                    <div class="metric-label"><strong>Message Queue (NATS, ZMQ, Kafka)</strong><br>Pub/sub haute performance. Chaque composant publie sur des topics d&eacute;di&eacute;s. Le monitoring souscrit &agrave; tous les topics pertinents. Latence : microsecondes. Le standard institutionnel.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-network-wired"></i></div>
+                    <div class="metric-label"><strong>gRPC / Protocol Buffers</strong><br>Communication typ&eacute;e et performante. Chaque service expose un endpoint /metrics. Le monitoring scrape p&eacute;riodiquement (mod&egrave;le Prometheus). Latence : millisecondes. Excellent pour les architectures microservices.</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Le choix pragmatique</h4>
+                <p>Pour un syst&egrave;me retail, <strong>Redis Pub/Sub</strong> est souvent le meilleur compromis. C'est simple &agrave; installer (une seule commande Docker), rapide (sub-milliseconde), et supporte aussi bien le push (le trading publie) que le pull (le monitoring interroge une cl&eacute;). Pour un syst&egrave;me institutionnel, <strong>NATS</strong> ou <strong>Kafka</strong> offrent des garanties de livraison et une scalabilit&eacute; sup&eacute;rieures.</p>
+                <p>Mais ne sur-ing&eacute;niez pas : un fichier JSON lu toutes les 5 secondes par un cron fonctionne parfaitement pour un bot avec 10 positions. Commencez simple, complexifiez quand le besoin le justifie.</p>
+            </div>
+
+            <h3>Exemple concret : un message de monitoring</h3>
+
+            <p>Voici &agrave; quoi ressemble un message typ&eacute; &eacute;mis par le Trading Engine vers le Monitoring Layer, au format JSON structur&eacute; :</p>
+
+            <pre><code>{
+  "timestamp": "2026-02-27T14:30:05.123Z",
+  "component": "trading_engine",
+  "event_type": "order_sent",
+  "correlation_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+  "data": {
+    "symbol": "AAPL",
+    "side": "BUY",
+    "quantity": 100,
+    "order_type": "LIMIT",
+    "price": 178.50,
+    "strategy": "momentum_v3"
+  },
+  "metrics": {
+    "queue_depth": 2,
+    "open_positions": 5,
+    "daily_pnl": 1250.00,
+    "current_drawdown_pct": 0.3
+  }
+}</code></pre>
+
+            <p>Chaque message contient un <code>correlation_id</code> qui permet de retracer tout le parcours de cette d&eacute;cision &agrave; travers le syst&egrave;me. Le Risk Engine verra ce m&ecirc;me ID quand il validera l'ordre. L'Execution Engine le verra quand il enverra l'ordre au broker. Et le monitoring les connecte tous pour reconstituer l'histoire compl&egrave;te.</p>
         </div>
 
-        <!-- ========== SECTION 3: LES 3 COUCHES DE CONTRÔLE ========== -->
+        <!-- ============================================================ -->
+        <!-- SECTION 3 : LES 4 COUCHES DU MONITORING                      -->
+        <!-- ============================================================ -->
         <div id="couches" class="content-card">
-            <h2><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> Les 3 Couches de Contrôle</h2>
+            <h2><i class="fa-solid fa-layer-group"></i> Les 4 Couches du Monitoring</h2>
 
-            <p>Un système de trading professionnel vérifie <strong>avant</strong>, <strong>pendant</strong> et <strong>après</strong> chaque transaction. Ces trois couches de contrôle sont votre filet de sécurité. Si l'une d'entre elles manque, vous avez un trou dans votre armure.</p>
+            <p>Le monitoring d'une stack de trading s'organise naturellement en <strong>quatre couches</strong>, de la plus basse (l'infrastructure physique) &agrave; la plus haute (le march&eacute; lui-m&ecirc;me). Chaque couche a ses propres m&eacute;triques, ses propres seuils, et ses propres responsables.</p>
 
-            <!-- COUCHE 1: PRÉ-TRADE -->
-            <h3><i class="fa-solid fa-clipboard-check" style="color:#16a34a;"></i> Couche 1 : Contrôles Pré-Trade (Avant l'Ordre)</h3>
-            <p>Les contrôles pré-trade sont votre <strong>première ligne de défense</strong>. Ils vérifient que chaque ordre respecte vos règles <em>avant</em> qu'il ne soit envoyé au broker. C'est ici que vous empêchez 90% des catastrophes.</p>
+            <p>L'id&eacute;e cl&eacute; &agrave; retenir : <strong>un probl&egrave;me dans une couche basse se manifeste toujours dans les couches sup&eacute;rieures</strong>, mais avec un d&eacute;lai et une perte de contexte. Un probl&egrave;me r&eacute;seau (Layer 1) apparait d'abord comme de la latence (Layer 2), puis comme du slippage (Layer 3), et finalement comme une perte inexplicable (Layer 4). Si vous ne monitorez que le P&amp;L, vous d&eacute;tectez le probl&egrave;me trop tard pour agir.</p>
 
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Contrôle</th>
-                            <th>Règle</th>
-                            <th>Exemple</th>
-                            <th>Action si violation</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Taille de position max</strong></td>
-                            <td>Position &le; X% du portefeuille</td>
-                            <td>Max 5% sur un seul ticker</td>
-                            <td>Rejeter l'ordre + alerte</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Perte journalière max</strong></td>
-                            <td>P&amp;L du jour &ge; -Y%</td>
-                            <td>Stop si perte &gt; 2% du capital</td>
-                            <td>Kill switch + notification</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Nombre de trades/jour</strong></td>
-                            <td>Trades &le; N par session</td>
-                            <td>Max 20 trades par jour</td>
-                            <td>Rejeter les ordres suivants</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Cohérence du prix</strong></td>
-                            <td>|prix_ordre - prix_marché| &le; Z%</td>
-                            <td>Écart max 2% vs dernier prix</td>
-                            <td>Rejeter + log anomalie</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Filtre de volatilité</strong></td>
-                            <td>VIX &le; seuil ou ATR &le; seuil</td>
-                            <td>Pas de trading si VIX &gt; 40</td>
-                            <td>Pause stratégie</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Heures de marché</strong></td>
-                            <td>Ordre dans les heures autorisées</td>
-                            <td>9h30-16h00 ET seulement</td>
-                            <td>Rejeter + alerte</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- ECharts: Layered Architecture Pyramid -->
+            <div id="chart-layers" class="content-card" style="width:100%; height:380px; padding:0; box-shadow:none; border:none; margin:1rem 0;"></div>
+            <script>
+            (function() {
+                var dom = document.getElementById('chart-layers');
+                var chart = echarts.init(dom);
+                var option = {
+                    tooltip: { trigger: 'item', formatter: function(p) { return p.name + '<br/>Fr\u00e9quence: ' + p.data.freq; } },
+                    series: [{
+                        type: 'funnel',
+                        left: '10%',
+                        top: 20,
+                        bottom: 20,
+                        width: '80%',
+                        min: 0,
+                        max: 100,
+                        minSize: '30%',
+                        maxSize: '100%',
+                        sort: 'ascending',
+                        gap: 4,
+                        label: { show: true, position: 'inside', fontSize: 13, fontWeight: 'bold', color: '#fff' },
+                        itemStyle: { borderColor: '#fff', borderWidth: 2 },
+                        data: [
+                            { value: 100, name: 'Layer 4 \u2014 March\u00e9 (r\u00e9gime, volatilit\u00e9, liquidit\u00e9)', itemStyle: { color: '#2563eb' }, freq: 'Tick / 1s' },
+                            { value: 75, name: 'Layer 3 \u2014 Business Logic (P&L, Drawdown, Exposure)', itemStyle: { color: '#7c3aed' }, freq: 'Par trade / 1min' },
+                            { value: 50, name: 'Layer 2 \u2014 Application (Heartbeat, Order Flow, Fill Quality)', itemStyle: { color: '#f59e0b' }, freq: '1s / 5s' },
+                            { value: 25, name: 'Layer 1 \u2014 Infrastructure (CPU, RAM, R\u00e9seau, Disque)', itemStyle: { color: '#10b981' }, freq: '10s / 30s' }
+                        ]
+                    }]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', function() { chart.resize(); });
+            })();
+            </script>
 
-            <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-scale-balanced"></i> Référence réglementaire : SEC Rule 15c3-5</h4>
-                <p>Depuis 2010, la SEC impose aux brokers américains d'implémenter des contrôles de risque pré-trade. Cette règle, appelée "Market Access Rule", exige des vérifications automatiques sur la taille des ordres, les limites de crédit, et les prix aberrants. Même si vous êtes un trader retail, adopter ces standards professionnels est une excellente habitude.</p>
-            </div>
+            <p>La pyramide se lit de bas en haut. Plus on monte, plus les m&eacute;triques sont &laquo; business &raquo; et moins elles sont &laquo; techniques &raquo;. Mais les couches basses sont les fondations &mdash; sans elles, rien au-dessus ne fonctionne.</p>
 
-            <!-- COUCHE 2: IN-FLIGHT -->
-            <h3><i class="fa-solid fa-satellite-dish" style="color:#f59e0b;"></i> Couche 2 : Contrôles In-Flight (Pendant l'Exécution)</h3>
-            <p>Une fois l'ordre envoyé, votre travail n'est pas fini. Il faut <strong>surveiller activement</strong> ce qui se passe entre le moment où l'ordre part et le moment où il est entièrement exécuté.</p>
+            <!-- Layer 1 -->
+            <h3><i class="fa-solid fa-server"></i> Layer 1 &mdash; Infrastructure</h3>
 
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Contrôle</th>
-                            <th>Ce qu'on mesure</th>
-                            <th>Seuil d'alerte</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Statut de l'ordre</strong></td>
-                            <td>Filled, Partial, Rejected, Timeout</td>
-                            <td>Timeout &gt; 30s ou rejet inattendu</td>
-                            <td>Retry ou annulation + log</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Détection de slippage</strong></td>
-                            <td>|prix_exécuté - prix_demandé|</td>
-                            <td>Slippage &gt; 0.5% du prix</td>
-                            <td>Log + ajustement du stop</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Latence API</strong></td>
-                            <td>Temps de réponse du broker</td>
-                            <td>Latence &gt; 2 secondes</td>
-                            <td>Alerte + passage en mode dégradé</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Taux de remplissage</strong></td>
-                            <td>% de l'ordre exécuté</td>
-                            <td>Partial fill &gt; 5 minutes</td>
-                            <td>Annuler le restant ou modifier</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Ordres orphelins</strong></td>
-                            <td>Ordres ouverts sans suivi</td>
-                            <td>Tout ordre sans update &gt; 60s</td>
-                            <td>Vérification forcée + annulation si besoin</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <p>La base de la pyramide. M&ecirc;me le meilleur algorithme ne peut rien si le serveur n'a plus de m&eacute;moire, si le r&eacute;seau est satur&eacute;, ou si le disque est plein. Le monitoring d'infrastructure est le socle indispensable &mdash; souvent n&eacute;glig&eacute; par les traders qui pensent que seul le P&amp;L compte.</p>
 
-            <!-- COUCHE 3: POST-TRADE -->
-            <h3><i class="fa-solid fa-magnifying-glass-chart" style="color:#8b5cf6;"></i> Couche 3 : Contrôles Post-Trade (Après l'Exécution)</h3>
-            <p>Les contrôles post-trade sont votre <strong>bilan de santé quotidien</strong>. Ils vérifient que tout s'est passé comme prévu et détectent les dérives avant qu'elles ne deviennent des problèmes.</p>
-
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Contrôle</th>
-                            <th>Ce qu'on vérifie</th>
-                            <th>Fréquence</th>
-                            <th>Exemple</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Réconciliation P&amp;L</strong></td>
-                            <td>P&amp;L attendu vs P&amp;L réel</td>
-                            <td>Après chaque trade + fin de journée</td>
-                            <td>Écart &gt; 1$ = investigation immédiate</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Réconciliation positions</strong></td>
-                            <td>Positions locales vs positions broker</td>
-                            <td>Toutes les heures + fin de journée</td>
-                            <td>Delta de quantité = alerte critique</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Attribution de performance</strong></td>
-                            <td>Source du P&amp;L (stratégie, timing, sizing)</td>
-                            <td>Fin de journée</td>
-                            <td>Alpha vs beta, slippage total</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Calcul du drawdown</strong></td>
-                            <td>Drawdown courant vs max historique</td>
-                            <td>Temps réel + fin de journée</td>
-                            <td>DD &gt; 10% = réduction d'exposition</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Rapport de fin de journée</strong></td>
-                            <td>Synthèse complète (trades, P&amp;L, métriques)</td>
-                            <td>16h30 ET (après clôture)</td>
-                            <td>Email/Slack automatique avec KPIs</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-circle-question"></i> Pourquoi 3 couches et pas une seule ?</h4>
-                <p>Imaginez un aéroport : le contrôle de sécurité avant l'embarquement (pré-trade), le suivi radar du vol en temps réel (in-flight), et l'inspection à l'atterrissage (post-trade). Si vous ne faites que le contrôle de sécurité, vous ne savez pas si l'avion a dévié de sa trajectoire. Si vous ne faites que le suivi radar, un passager dangereux est déjà à bord. Les trois couches sont complémentaires et <strong>indispensables</strong>.</p>
-            </div>
-        </div>
-
-        <!-- ========== SECTION 4: KILL SWITCH ========== -->
-        <div id="killswitch" class="content-card">
-            <h2><i class="fa-solid fa-power-off" style="color:#dc2626;"></i> Le Kill Switch — Votre Meilleur Ami</h2>
-
-            <p>Le kill switch est un mécanisme automatisé qui <strong>ferme toutes vos positions et arrête tout trading</strong> quand les choses tournent mal. C'est le bouton d'arrêt d'urgence de votre système. Et comme dans une centrale nucléaire, il doit fonctionner même quand tout le reste est en panne.</p>
-
-            <h3>Quand le kill switch se déclenche</h3>
             <div class="metric-grid">
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-chart-line-down" style="color:#dc2626;"></i></div>
-                    <div class="metric-label"><strong>Perte journalière dépassée.</strong> Votre P&amp;L du jour franchit le seuil (ex: -2% du capital). Toutes les positions sont liquidées immédiatement.</div>
+                    <div class="metric-value"><i class="fa-solid fa-microchip"></i></div>
+                    <div class="metric-label"><strong>CPU Usage</strong><br>Seuil warning : 70%. Critique : 90%. Un trading engine &agrave; 95% CPU ne peut plus r&eacute;pondre aux &eacute;v&eacute;nements de march&eacute; en temps voulu. Les spikes ponctuels sont normaux ; c'est l'utilisation <em>soutenue</em> qui compte. Fr&eacute;quence de collecte : toutes les 10 secondes.</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-arrow-trend-down" style="color:#dc2626;"></i></div>
-                    <div class="metric-label"><strong>Drawdown maximum atteint.</strong> Le drawdown cumulé depuis le dernier sommet dépasse votre limite (ex: -15%). Arrêt complet jusqu'à investigation.</div>
+                    <div class="metric-value"><i class="fa-solid fa-memory"></i></div>
+                    <div class="metric-label"><strong>M&eacute;moire (RAM)</strong><br>Seuil warning : 75%. Critique : 90%. Surveillez aussi les <em>memory leaks</em> : une croissance lin&eacute;aire de la RAM sur 24h est un signal d'alerte m&ecirc;me si le seuil absolu n'est pas atteint. Un leak de 10 Mo/heure ne se voit pas en 1h mais crashe le syst&egrave;me en 3 jours.</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i></div>
-                    <div class="metric-label"><strong>Anomalie système détectée.</strong> Latence API anormale, erreurs en cascade, données de marché incohérentes. Le système se met en sécurité.</div>
+                    <div class="metric-value"><i class="fa-solid fa-hard-drive"></i></div>
+                    <div class="metric-label"><strong>Disque I/O et Espace</strong><br>Latence d'&eacute;criture et espace disponible. Les logs qui remplissent le disque sont un classique des pannes silencieuses. Seuil : &lt; 20% espace libre = warning. La rotation automatique des logs est obligatoire, pas optionnelle.</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-hand" style="color:#8b5cf6;"></i></div>
-                    <div class="metric-label"><strong>Déclenchement manuel (panic button).</strong> Vous voyez quelque chose d'anormal sur les marchés ou dans votre système. Un clic ou une commande suffit.</div>
+                    <div class="metric-value"><i class="fa-solid fa-wifi"></i></div>
+                    <div class="metric-label"><strong>R&eacute;seau / Latence</strong><br>Mesurez le RTT (Round-Trip Time) vers le broker/exchange en continu. Les seuils d&eacute;pendent de la strat&eacute;gie. HFT : &gt; 1ms = critique. Intraday : &gt; 50ms = warning. Swing : &gt; 500ms = warning. Surveillez aussi la perte de paquets : &gt; 0.1% est d&eacute;j&agrave; probl&eacute;matique.</div>
                 </div>
             </div>
 
-            <h3>Comment l'implémenter</h3>
-            <p>Le kill switch doit respecter des règles strictes pour être fiable :</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>M&eacute;trique</th>
+                        <th>Outil typique</th>
+                        <th>Fr&eacute;quence</th>
+                        <th>Warning</th>
+                        <th>Critique</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>CPU %</td><td>node_exporter / top</td><td>10s</td><td>&gt; 70%</td><td>&gt; 90%</td></tr>
+                    <tr><td>RAM %</td><td>node_exporter</td><td>10s</td><td>&gt; 75%</td><td>&gt; 90%</td></tr>
+                    <tr><td>Disk free</td><td>node_exporter / df</td><td>30s</td><td>&lt; 20%</td><td>&lt; 5%</td></tr>
+                    <tr><td>Disk I/O latency</td><td>iostat / sar</td><td>10s</td><td>&gt; 10ms</td><td>&gt; 50ms</td></tr>
+                    <tr><td>Network RTT (broker)</td><td>ping / TCP probe</td><td>5s</td><td>&gt; 50ms</td><td>&gt; 200ms</td></tr>
+                    <tr><td>Packet loss</td><td>mtr / smokeping</td><td>30s</td><td>&gt; 0.1%</td><td>&gt; 1%</td></tr>
+                    <tr><td>DNS resolution</td><td>dig / DNS probe</td><td>60s</td><td>&gt; 100ms</td><td>Timeout</td></tr>
+                    <tr><td>Process count</td><td>ps / supervisord</td><td>10s</td><td>Processus manquant</td><td>Trading engine down</td></tr>
+                </tbody>
+            </table>
 
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Règle</th>
-                            <th>Pourquoi</th>
-                            <th>Implémentation</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Processus séparé</strong></td>
-                            <td>Si le trading plante, le kill switch doit encore fonctionner</td>
-                            <td>Service indépendant, machine séparée idéalement</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Pas dans le même codebase</strong></td>
-                            <td>Un bug dans la stratégie ne doit pas affecter le kill switch</td>
-                            <td>Repo séparé, déploiement séparé</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Niveaux progressifs</strong></td>
-                            <td>Pas besoin de tout couper pour une alerte mineure</td>
-                            <td>Niveau 1: pause stratégie, Niveau 2: close positions, Niveau 3: block all orders</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Hardware fallback</strong></td>
-                            <td>En dernier recours, un dispositif physique</td>
-                            <td>Raspberry Pi dédié qui peut couper le réseau ou envoyer des ordres de clôture</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Test régulier</strong></td>
-                            <td>Un kill switch jamais testé ne marchera pas le jour J</td>
-                            <td>Test hebdomadaire en paper trading, mensuel en production (hors heures)</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Layer 2 -->
+            <h3><i class="fa-solid fa-heartbeat"></i> Layer 2 &mdash; Application</h3>
+
+            <p>La couche application v&eacute;rifie que vos composants logiciels fonctionnent correctement. M&ecirc;me si l'infrastructure est parfaitement saine, un bug logiciel, une d&eacute;pendance cass&eacute;e, une API qui change de format de r&eacute;ponse ou un WebSocket qui se d&eacute;connecte silencieusement peut paralyser le syst&egrave;me.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div class="metric-label"><strong>Heartbeat</strong><br>Chaque composant &eacute;met un signal de vie &agrave; intervalle r&eacute;gulier. Si le heartbeat manque, on sait imm&eacute;diatement qu'un composant est tomb&eacute; &mdash; m&ecirc;me s'il n'a pas eu le temps d'&eacute;mettre une erreur avant de mourir.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-exchange-alt"></i></div>
+                    <div class="metric-label"><strong>Order Flow</strong><br>Nombre d'ordres envoy&eacute;s vs confirm&eacute;s. Temps entre soumission et confirmation (fill latency). Taux de rejet. Un pic de rejets peut signaler un probl&egrave;me d'API, de format, de permissions ou de rate limiting.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-tachometer-alt"></i></div>
+                    <div class="metric-label"><strong>Execution Quality</strong><br>Slippage moyen par trade. &Eacute;cart entre le prix demand&eacute; et le prix obtenu. Sur 1000 trades, 2 bps de slippage syst&eacute;matique repr&eacute;sentent un co&ucirc;t cach&eacute; consid&eacute;rable qui &eacute;rode votre alpha.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-plug"></i></div>
+                    <div class="metric-label"><strong>Connexions API</strong><br>&Eacute;tat des WebSockets, taux d'erreurs HTTP (4xx, 5xx), rate limits restants. Une connexion WebSocket qui se d&eacute;connecte toutes les 5 minutes indique un probl&egrave;me sous-jacent (timeout, payload size, auth).</div>
+                </div>
             </div>
 
-            <h3>Les 3 niveaux d'intervention</h3>
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Niveau</th>
-                            <th>Déclencheur</th>
-                            <th>Action</th>
-                            <th>Réversible ?</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Niveau 1 — Pause</strong></td>
-                            <td>3 pertes consécutives, latence élevée</td>
-                            <td>La stratégie cesse de générer des signaux. Positions existantes maintenues.</td>
-                            <td>Oui, automatiquement après cooldown (15 min)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Niveau 2 — Clôture</strong></td>
-                            <td>Loss limit atteint, anomalie confirmée</td>
-                            <td>Toutes les positions sont fermées au marché. Ordres ouverts annulés.</td>
-                            <td>Oui, manuellement après investigation</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Niveau 3 — Lockout</strong></td>
-                            <td>Erreur système critique, drawdown extrême</td>
-                            <td>Tout est fermé. API keys révoquées. Aucun ordre ne peut passer.</td>
-                            <td>Non. Intervention manuelle obligatoire.</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Le pattern Heartbeat expliqu&eacute;</h4>
+                <p>Un heartbeat est un message simple (&laquo; je suis vivant &raquo;) envoy&eacute; &agrave; intervalle r&eacute;gulier par chaque composant. Le monitoring attend ce message et d&eacute;marre un timer. Si le message n'arrive pas avant le timeout, le composant est consid&eacute;r&eacute; <strong>mort</strong>.</p>
+                <p>Un bon heartbeat inclut plus qu'un simple timestamp : il contient aussi l'&eacute;tat du composant (nombre d'ordres en attente, nombre de positions ouvertes, dernier prix vu, version du code). Cela permet de d&eacute;tecter un composant &laquo; zombie &raquo; &mdash; techniquement vivant (il envoie des heartbeats) mais fonctionnellement mort (il ne traite plus d'ordres, il est bloqu&eacute; dans une boucle infinie).</p>
+                <p><strong>Bonnes pratiques</strong> : heartbeat toutes les 5-10 secondes pour un syst&egrave;me intraday, toutes les 30-60 secondes pour un syst&egrave;me swing. Timeout = 3x l'intervalle. Si le heartbeat est toutes les 10s, alerter apr&egrave;s 30s sans signal.</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>M&eacute;trique</th>
+                        <th>Description</th>
+                        <th>Fr&eacute;quence</th>
+                        <th>Warning</th>
+                        <th>Critique</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Heartbeat</td><td>Signal de vie de chaque composant</td><td>5-10s</td><td>1 miss</td><td>3 miss cons&eacute;cutifs</td></tr>
+                    <tr><td>Order rejection rate</td><td>% d'ordres rejet&eacute;s par le broker</td><td>Par trade</td><td>&gt; 5%</td><td>&gt; 20%</td></tr>
+                    <tr><td>Fill latency</td><td>Temps envoi &rarr; confirmation</td><td>Par trade</td><td>&gt; 500ms</td><td>&gt; 2s</td></tr>
+                    <tr><td>Slippage</td><td>&Eacute;cart prix demand&eacute; vs obtenu (bps)</td><td>Par trade</td><td>&gt; 5 bps</td><td>&gt; 20 bps</td></tr>
+                    <tr><td>WebSocket reconnections</td><td>Nombre de reconnexions par heure</td><td>1 min</td><td>&gt; 2/h</td><td>&gt; 10/h</td></tr>
+                    <tr><td>API rate limit remaining</td><td>% du quota API restant</td><td>Par call</td><td>&lt; 30%</td><td>&lt; 10%</td></tr>
+                    <tr><td>Queue depth</td><td>Ordres en attente d'envoi</td><td>1s</td><td>&gt; 10</td><td>&gt; 50</td></tr>
+                    <tr><td>Error rate</td><td>Exceptions applicatives / minute</td><td>1 min</td><td>&gt; 1/min</td><td>&gt; 10/min</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Layer 3 -->
+            <h3><i class="fa-solid fa-coins"></i> Layer 3 &mdash; Business Logic</h3>
+
+            <p>C'est la couche qui parle la langue du trader, pas celle de l'ing&eacute;nieur. P&amp;L, drawdown, exposition, taille des positions, concentration sectorielle. C'est ici que les d&eacute;cisions de risque se prennent et que les limites op&eacute;rationnelles sont appliqu&eacute;es.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-pie"></i></div>
+                    <div class="metric-label"><strong>P&amp;L Temps R&eacute;el</strong><br>Profit &amp; Loss r&eacute;alis&eacute; et non r&eacute;alis&eacute;, par strat&eacute;gie, par instrument, par p&eacute;riode. Le P&amp;L doit &ecirc;tre calcul&eacute; ind&eacute;pendamment par le Risk Engine &mdash; ne faites jamais confiance au seul chiffre du Trading Engine.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div class="metric-label"><strong>Drawdown</strong><br>Drawdown courant vs max drawdown historique vs limite de drawdown pr&eacute;d&eacute;finie. Si le drawdown courant atteint 80% de la limite, l'alerte doit se d&eacute;clencher <em>avant</em> qu'il ne soit trop tard pour agir.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="metric-label"><strong>Exposition Nette</strong><br>Somme des positions longues moins les positions courtes (en notionnel). Un syst&egrave;me market-neutral doit avoir une exposition nette proche de z&eacute;ro. Tout d&eacute;passement significatif est une alerte de risque.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-arrows-left-right"></i></div>
+                    <div class="metric-label"><strong>Position Sizing &amp; Concentration</strong><br>Taille de chaque position vs taille maximale autoris&eacute;e. Concentration par secteur, par pays, par devise. Un portefeuille avec 80% sur un seul ticker est un probl&egrave;me de risque, pas de performance.</div>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>M&eacute;trique</th>
+                        <th>Formule</th>
+                        <th>Fr&eacute;quence</th>
+                        <th>Warning</th>
+                        <th>Critique</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>P&amp;L journalier</td><td>&Sigma;(unrealized + realized)</td><td>1 min</td><td>&lt; -1% du capital</td><td>&lt; -2% du capital</td></tr>
+                    <tr><td>Current drawdown</td><td>(Peak - Current) / Peak</td><td>1 min</td><td>&gt; 5%</td><td>&gt; 10%</td></tr>
+                    <tr><td>Net exposure</td><td>&Sigma;Long - &Sigma;Short (notional)</td><td>Par trade</td><td>&gt; 20% capital</td><td>&gt; 50% capital</td></tr>
+                    <tr><td>Position concentration</td><td>Max position / Total capital</td><td>Par trade</td><td>&gt; 10%</td><td>&gt; 25%</td></tr>
+                    <tr><td>Win rate (rolling 20)</td><td>Wins / Total (20 derniers trades)</td><td>Par trade</td><td>&lt; 40%</td><td>&lt; 25%</td></tr>
+                    <tr><td>Sharpe ratio (rolling)</td><td>(E[R] - Rf) / &sigma;(R) &times; &radic;252</td><td>Journalier</td><td>&lt; 1.0</td><td>&lt; 0.5</td></tr>
+                    <tr><td>Trade frequency</td><td>Ordres / p&eacute;riode vs baseline</td><td>1 min</td><td>&gt; 2x normal</td><td>&gt; 5x normal</td></tr>
+                    <tr><td>Sector exposure</td><td>Max sector / Total portfolio</td><td>Par trade</td><td>&gt; 30%</td><td>&gt; 50%</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Layer 4 -->
+            <h3><i class="fa-solid fa-globe"></i> Layer 4 &mdash; March&eacute;</h3>
+
+            <p>La couche la plus haute et la plus subtile. Ici, ce n'est pas votre syst&egrave;me qui a un probl&egrave;me &mdash; c'est le march&eacute; qui a chang&eacute;. Un regime shift, un flash crash, une &eacute;vaporation de la liquidit&eacute;, un gap overnight massif. Votre algorithme qui &eacute;tait profitable hier peut devenir catastrophique aujourd'hui si les conditions de march&eacute; ont fondamentalement chang&eacute;.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-wind"></i></div>
+                    <div class="metric-label"><strong>R&eacute;gime de March&eacute;</strong><br>Le VIX, la corr&eacute;lation inter-actifs, le bid-ask spread moyen, le ratio put/call. Un passage de Risk-On &agrave; Risk-Off change radicalement le comportement des strat&eacute;gies momentum et mean-reversion.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-bar"></i></div>
+                    <div class="metric-label"><strong>Volatilit&eacute;</strong><br>Volatilit&eacute; r&eacute;alis&eacute;e vs implicite (VIX). Ratio VIX/VIX3M (structure par terme). Une inversion de la courbe de volatilit&eacute; (backwardation) est un signal puissant de stress imm&eacute;diat.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-water"></i></div>
+                    <div class="metric-label"><strong>Liquidit&eacute;</strong><br>Bid-ask spread des instruments trad&eacute;s, profondeur du carnet d'ordres, volume relatif (vs moyenne 20 jours). Une chute brutale de la liquidit&eacute; pr&eacute;c&egrave;de souvent un mouvement violent et unidirectionnel.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-link-slash"></i></div>
+                    <div class="metric-label"><strong>Corr&eacute;lations</strong><br>Corr&eacute;lation entre les actifs du portefeuille. En crise, &laquo; toutes les corr&eacute;lations convergent vers 1 &raquo;. Si le beta de votre portefeuille vs le march&eacute; explose soudainement, la diversification ne vous prot&egrave;ge plus.</div>
+                </div>
             </div>
 
             <div class="alert-box">
-                <h4><i class="fa-solid fa-skull-crossbones"></i> Le kill switch de Knight Capital</h4>
-                <p><strong>Knight Capital Group, 1er août 2012.</strong> Un déploiement défectueux active par erreur un ancien code de test sur 8 serveurs de production. Le système commence à acheter et vendre massivement des actions sans logique cohérente. En 45 minutes, Knight Capital accumule <strong>440 millions de dollars de pertes</strong>.</p>
-                <p>Pourquoi ? Parce qu'il n'y avait <strong>pas de kill switch automatique</strong>. Les ingénieurs ont vu les alertes, mais le temps de comprendre ce qui se passait et de trouver comment arrêter le système manuellement, le mal était fait. Knight Capital a frôlé la faillite et a été racheté par Getco quelques mois plus tard.</p>
-                <p>La leçon : un kill switch n'est pas un luxe. C'est <strong>la première chose que vous devez implémenter</strong>, avant même votre première stratégie.</p>
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le danger sp&eacute;cifique du Layer 4</h4>
+                <p>Les probl&egrave;mes de Layer 4 sont les plus dangereux car ils sont les moins pr&eacute;visibles et les plus difficiles &agrave; g&eacute;rer algorithmiquement. Un changement de r&eacute;gime de march&eacute; peut invalider les hypoth&egrave;ses fondamentales de votre strat&eacute;gie du jour au lendemain. C'est pourquoi le monitoring de march&eacute; n'est pas un luxe &mdash; c'est un <strong>stop-loss intellectuel</strong>. Il vous dit : &laquo; Les conditions dans lesquelles tu as backtest&eacute; ne sont plus r&eacute;unies. Attention. &raquo;</p>
             </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>M&eacute;trique</th>
+                        <th>Source</th>
+                        <th>Fr&eacute;quence</th>
+                        <th>Signal d'alerte</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>VIX level</td><td>CBOE</td><td>Tick / 1min</td><td>&gt; 25 = stress, &gt; 35 = panique</td></tr>
+                    <tr><td>VIX/VIX3M ratio</td><td>CBOE</td><td>Journalier</td><td>&gt; 1.0 = backwardation = stress court terme</td></tr>
+                    <tr><td>SPY bid-ask spread</td><td>Exchange data</td><td>Tick</td><td>&gt; 2x normal = liquidit&eacute; r&eacute;duite</td></tr>
+                    <tr><td>Volume ratio</td><td>Volume / SMA(20)</td><td>5 min</td><td>&gt; 3x = activit&eacute; anormale</td></tr>
+                    <tr><td>Cross-asset correlation</td><td>Rolling 20d</td><td>Journalier</td><td>&gt; 0.8 = contagion entre actifs</td></tr>
+                    <tr><td>ATR expansion</td><td>ATR(14) / ATR(14)[20d]</td><td>Journalier</td><td>&gt; 1.5x = changement de r&eacute;gime vol</td></tr>
+                    <tr><td>Overnight gap</td><td>Open - Previous Close</td><td>Opening</td><td>&gt; 2% = gap significatif</td></tr>
+                    <tr><td>News sentiment shift</td><td>NLP / API</td><td>Horaire</td><td>Score &lt; -0.5 = n&eacute;gatif fort</td></tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- ========== SECTION 5: CIRCUIT BREAKERS ========== -->
-        <div id="breakers" class="content-card">
-            <h2><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Les Circuit Breakers</h2>
-
-            <p>Inspirés des disjoncteurs électriques (et des "circuit breakers" boursiers post-Flash Crash de 2010), les circuit breakers dans un système de trading sont un mécanisme de <strong>protection automatique progressive</strong>. Contrairement au kill switch qui est un arrêt d'urgence, le circuit breaker gère les situations dégradées avec nuance.</p>
-
-            <h3>Les 3 états du circuit breaker</h3>
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>État</th>
-                            <th>Signification</th>
-                            <th>Comportement</th>
-                            <th>Transition</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Closed (Fermé)</strong></td>
-                            <td>Tout va bien, fonctionnement normal</td>
-                            <td>Tous les signaux sont traités, tous les ordres passent</td>
-                            <td>Vers Open si seuil de pertes/erreurs atteint</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Open (Ouvert)</strong></td>
-                            <td>Problème détecté, trading en pause</td>
-                            <td>Aucun nouveau signal traité. Positions existantes surveillées.</td>
-                            <td>Vers Half-Open après cooldown (ex: 15 min)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Half-Open (Mi-Ouvert)</strong></td>
-                            <td>Phase de test, reprise prudente</td>
-                            <td>Un seul trade autorisé pour tester les conditions</td>
-                            <td>Vers Closed si succès, vers Open si échec</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Circuit Breaker State Machine EChart -->
-            <h3>Machine à états du circuit breaker</h3>
-            <div id="circuitBreakerChart" style="width:100%; height:400px; margin:1.5rem 0;"></div>
-
-            <h3>Quand le circuit breaker doit s'ouvrir</h3>
-            <div class="metric-grid">
-                <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-arrow-down" style="color:#dc2626;"></i> 3</div>
-                    <div class="metric-label">Pertes consécutives sur la même stratégie</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-chart-bar" style="color:#f59e0b;"></i> 2x</div>
-                    <div class="metric-label">Volatilité supérieure à 2 fois la moyenne sur 20 jours</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-bug" style="color:#dc2626;"></i> 5</div>
-                    <div class="metric-label">Erreurs API en moins de 10 minutes</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value"><i class="fa-solid fa-clock" style="color:#8b5cf6;"></i> 5s</div>
-                    <div class="metric-label">Latence moyenne dépassant 5 secondes</div>
-                </div>
-            </div>
-
-            <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-lightbulb"></i> Circuit Breaker vs Kill Switch</h4>
-                <p>Le <strong>circuit breaker</strong> est automatique, progressif et auto-réparable. Il gère les situations dégradées courantes (une mauvaise série, un pic de volatilité temporaire). Le <strong>kill switch</strong> est un arrêt d'urgence pour les situations critiques (perte massive, bug système). Pensez au circuit breaker comme le frein à main de votre voiture, et au kill switch comme l'airbag : vous espérez ne jamais avoir besoin du second, mais il doit être là.</p>
-            </div>
-        </div>
-
-        <!-- ========== SECTION 6: GESTION DU RISQUE ========== -->
+        <!-- ============================================================ -->
+        <!-- SECTION 4 : GESTION DU RISQUE EN TEMPS RÉEL                  -->
+        <!-- ============================================================ -->
         <div id="risque" class="content-card">
-            <h2><i class="fa-solid fa-shield-halved" style="color:#16a34a;"></i> La Gestion du Risque en Pratique</h2>
+            <h2><i class="fa-solid fa-shield-halved"></i> Gestion du Risque en Temps R&eacute;el</h2>
 
-            <p>Le monitoring ne sert à rien si vos règles de risque sont mal définies. Voici les piliers d'une gestion du risque solide pour un trader systématique.</p>
+            <p>La gestion du risque est la <strong>seule raison pour laquelle les syst&egrave;mes de trading institutionnels survivent</strong> sur le long terme. Pas la qualit&eacute; de l'alpha, pas la vitesse d'ex&eacute;cution, pas la sophistication du mod&egrave;le &mdash; le risk management. Un syst&egrave;me avec un alpha m&eacute;diocre mais un excellent risk management sera profitable sur 10 ans. L'inverse ne survivra pas 6 mois.</p>
 
-            <h3>Position Sizing — Combien risquer par trade ?</h3>
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Méthode</th>
-                            <th>Principe</th>
-                            <th>Pour qui</th>
-                            <th>Exemple (capital 100k$)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Fixed Fractional</strong></td>
-                            <td>Risquer X% du capital par trade</td>
-                            <td>Débutants, stabilité</td>
-                            <td>1% = risque max 1 000$ par trade</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Kelly Criterion</strong></td>
-                            <td>Optimiser le sizing selon le win rate et le ratio R/R</td>
-                            <td>Intermédiaires, croissance</td>
-                            <td>Kelly = 2.5%, Half-Kelly = 1.25% (plus prudent)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Volatility-Adjusted</strong></td>
-                            <td>Ajuster la taille selon la volatilité (ATR)</td>
-                            <td>Avancés, marchés variés</td>
-                            <td>ATR bas = position plus grande, ATR haut = position réduite</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <p>Le risk management en trading syst&eacute;matique s'organise en trois phases temporelles : avant, pendant, et apr&egrave;s le trade.</p>
 
-            <h3>Limites d'exposition</h3>
-            <p>Au-delà du sizing par trade, vous devez contrôler votre <strong>exposition globale</strong> :</p>
+            <h3><i class="fa-solid fa-clipboard-check"></i> Phase 1 &mdash; Pre-Trade Checks</h3>
 
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Dimension</th>
-                            <th>Limite recommandée</th>
-                            <th>Pourquoi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Par secteur</strong></td>
-                            <td>Max 25% du portefeuille</td>
-                            <td>Éviter la concentration sectorielle (ex: tout en tech)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Par géographie</strong></td>
-                            <td>Max 40% sur un seul pays</td>
-                            <td>Protection contre le risque pays</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Par classe d'actifs</strong></td>
-                            <td>Max 60% en actions</td>
-                            <td>Diversification structurelle</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Corrélation</strong></td>
-                            <td>Max 3 positions corrélées &gt; 0.7</td>
-                            <td>Éviter l'effet domino (toutes les positions bougent ensemble)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Exposition brute</strong></td>
-                            <td>Max 150% du capital (avec levier)</td>
-                            <td>Limiter le risque de levier excessif</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <p>Avant qu'un ordre ne quitte votre syst&egrave;me, il doit passer une s&eacute;rie de v&eacute;rifications automatiques. Ce sont des <strong>garde-fous</strong> qui emp&ecirc;chent les erreurs les plus co&ucirc;teuses : les fat fingers, les d&eacute;passements de limites, et les ordres absurdes.</p>
 
-            <!-- Risk Allocation Chart -->
-            <h3>Répartition idéale du risque</h3>
-            <div id="riskChart" style="width:100%; height:400px; margin:1.5rem 0;"></div>
-
-            <h3>VaR Quotidienne et Stress Testing</h3>
-            <p>La <strong>Value at Risk (VaR)</strong> répond à la question : "Combien puis-je perdre, au maximum, dans 95% des cas sur une journée ?" C'est un indicateur standard dans toutes les institutions financières.</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Check</th>
+                        <th>Description</th>
+                        <th>Seuil typique</th>
+                        <th>Action si viol&eacute;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Order size</strong></td>
+                        <td>La taille de l'ordre ne d&eacute;passe pas la limite maximale par instrument</td>
+                        <td>Max 5% du capital par position</td>
+                        <td>Rejet automatique + alerte</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fat finger</strong></td>
+                        <td>Le prix de l'ordre est coh&eacute;rent avec le prix actuel du march&eacute;</td>
+                        <td>&Eacute;cart &lt; 5% du mid price</td>
+                        <td>Rejet + alerte critique</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Position limit</strong></td>
+                        <td>La nouvelle position totale ne d&eacute;passe pas la limite de concentration</td>
+                        <td>Max 25% du capital par ticker</td>
+                        <td>Rejet</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Notional limit</strong></td>
+                        <td>L'exposition totale (gross) reste dans les limites autoris&eacute;es</td>
+                        <td>Max 200% du capital (si leverage)</td>
+                        <td>Rejet + alerte</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Drawdown gate</strong></td>
+                        <td>Si le drawdown journalier d&eacute;passe le seuil, plus aucun nouvel ordre</td>
+                        <td>Drawdown &gt; 2% = halt</td>
+                        <td>Halt trading + alerte critique</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Order rate</strong></td>
+                        <td>Nombre d'ordres par minute ne d&eacute;passe pas le seuil anti-emballement</td>
+                        <td>Max 60 ordres/min (retail)</td>
+                        <td>Throttle + alerte warning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Market hours</strong></td>
+                        <td>V&eacute;rifier que le march&eacute; concern&eacute; est bien ouvert</td>
+                        <td>Heures d'ouverture exchange</td>
+                        <td>Rejet silencieux</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Duplicate detection</strong></td>
+                        <td>Pas de doublon (m&ecirc;me ticker, direction, taille dans un intervalle court)</td>
+                        <td>D&eacute;duplication sur 1 seconde</td>
+                        <td>Rejet du doublon + log</td>
+                    </tr>
+                </tbody>
+            </table>
 
             <div class="pedagogy-box">
-                <h4><i class="fa-solid fa-calculator"></i> Calcul simplifié de la VaR</h4>
-                <p>Pour un portefeuille de 100 000$, si votre VaR quotidienne à 95% est de 2 000$, cela signifie : "Il y a 95% de chances que ma perte journalière ne dépasse pas 2 000$." Dit autrement, <strong>environ 1 jour sur 20</strong>, vous pourriez perdre plus que 2 000$.</p>
-                <p><strong>Stress testing</strong> : que se passe-t-il si le marché chute de 10% en une journée ? Simulez ce scénario sur votre portefeuille actuel. Si la perte simulée dépasse votre tolérance, réduisez votre exposition <em>avant</em> que la crise n'arrive.</p>
+                <h4><i class="fa-solid fa-lightbulb"></i> Qu'est-ce qu'un &laquo; fat finger &raquo; ?</h4>
+                <p>Un &laquo; fat finger &raquo; (doigt gras) est une erreur de saisie qui envoie un ordre avec un prix ou une quantit&eacute; absurde. Exemple : acheter 10 000 actions au lieu de 100, ou vendre &agrave; 0.01$ au lieu de 100$. En trading algorithmique, l'&eacute;quivalent est un bug qui g&eacute;n&egrave;re des ordres aberrants.</p>
+                <p>Le pre-trade check de fat finger compare le prix de l'ordre au prix actuel du march&eacute; (mid price). Si l'&eacute;cart d&eacute;passe un seuil (typiquement 5%), l'ordre est rejet&eacute; automatiquement et une alerte critique est envoy&eacute;e.</p>
+                <p><strong>Cas c&eacute;l&egrave;bre</strong> : en 2012, Knight Capital a perdu 440 millions de dollars en 45 minutes &agrave; cause d'un code de test d&eacute;ploy&eacute; en production qui envoyait des ordres erratiques. Un simple pre-trade check sur le volume et la fr&eacute;quence des ordres aurait &eacute;vit&eacute; la catastrophe compl&egrave;te.</p>
+            </div>
+
+            <h3><i class="fa-solid fa-magnifying-glass"></i> Phase 2 &mdash; Intra-Trade Monitoring</h3>
+
+            <p>Une fois l'ordre envoy&eacute;, le monitoring ne s'arr&ecirc;te pas &mdash; il s'intensifie. C'est pendant l'ex&eacute;cution que les probl&egrave;mes les plus subtils et co&ucirc;teux apparaissent : slippage excessif, fills partiels, ordres zombies en attente qui bloquent la queue.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-stopwatch"></i></div>
+                    <div class="metric-label"><strong>Fill Time</strong><br>Temps entre l'envoi de l'ordre et le fill complet. Un fill time anormalement long (p95 &gt; 2x la m&eacute;diane) peut indiquer un probl&egrave;me de liquidit&eacute;, une d&eacute;gradation de la connexion, ou un probl&egrave;me c&ocirc;t&eacute; broker.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-simple"></i></div>
+                    <div class="metric-label"><strong>Slippage</strong><br>Diff&eacute;rence entre le prix attendu (au moment de la d&eacute;cision) et le prix obtenu (apr&egrave;s fill). Un slippage n&eacute;gatif constant (&gt; 3 bps en moyenne) signifie que votre sizing est trop gros pour la liquidit&eacute;, ou que votre routing est sous-optimal.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-puzzle-piece"></i></div>
+                    <div class="metric-label"><strong>Partial Fills</strong><br>Ordres qui ne sont que partiellement ex&eacute;cut&eacute;s. Un taux &eacute;lev&eacute; de partial fills cr&eacute;e des positions asym&eacute;triques non d&eacute;sir&eacute;es et complique la gestion du portefeuille. Cela indique un probl&egrave;me de liquidit&eacute; ou un order type inadapt&eacute;.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-rotate"></i></div>
+                    <div class="metric-label"><strong>Queue Monitoring</strong><br>Nombre d'ordres en attente dans la queue d'envoi. Si la queue grandit alors que les ordres ne partent pas, c'est un signe clair de probl&egrave;me de connexion, de rate limiting, ou de backpressure.</div>
+                </div>
+            </div>
+
+            <h3><i class="fa-solid fa-chart-column"></i> Phase 3 &mdash; Post-Trade Analysis</h3>
+
+            <p>Apr&egrave;s chaque trade et &agrave; la fin de chaque journ&eacute;e, une analyse automatique &eacute;value la qualit&eacute; de l'ex&eacute;cution et les performances. Ce n'est pas du monitoring temps r&eacute;el &mdash; c'est de l'analyse batch qui alimente les am&eacute;liorations continues du syst&egrave;me.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="metric-label"><strong>P&amp;L Attribution</strong><br>D&eacute;composer le P&amp;L en composantes : alpha (qualit&eacute; du signal), beta (exposition au march&eacute;), slippage, frais de transaction, co&ucirc;t de financement. Savoir exactement d'o&ugrave; vient le profit (ou la perte) est essentiel.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-microscope"></i></div>
+                    <div class="metric-label"><strong>Execution Quality Score</strong><br>Comparer chaque trade &agrave; des benchmarks : VWAP, Implementation Shortfall, Arrival Price. Chaque trade re&ccedil;oit un score de qualit&eacute; d'ex&eacute;cution de 0 &agrave; 100. Un score moyen &lt; 70 = revoir la strat&eacute;gie d'ex&eacute;cution.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-area"></i></div>
+                    <div class="metric-label"><strong>Trade Journal Automatique</strong><br>Chaque trade est enregistr&eacute; avec son contexte complet : conditions de march&eacute; au moment de la d&eacute;cision, signal d&eacute;clencheur, r&eacute;sultat final, temps de holding. Cela permet des post-mortems r&eacute;guliers.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-scale-unbalanced-flip"></i></div>
+                    <div class="metric-label"><strong>Risk-Adjusted Returns</strong><br>Sharpe, Sortino, Calmar Ratios. Ces ratios normalis&eacute;s permettent de comparer les performances ajust&eacute;es du risque d'une p&eacute;riode &agrave; l'autre et de d&eacute;tecter une d&eacute;gradation progressive.</div>
+                </div>
+            </div>
+
+            <h3><i class="fa-solid fa-power-off"></i> Le Kill Switch &mdash; Dernier Recours</h3>
+
+            <p>Le kill switch est le <strong>m&eacute;canisme d'arr&ecirc;t d'urgence</strong> de votre syst&egrave;me de trading. Quand tout va mal &mdash; vraiment mal &mdash; le kill switch arr&ecirc;te tout imm&eacute;diatement. C'est l'extincteur de la finance algorithmique.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-fire-extinguisher"></i> Les 4 r&egrave;gles du Kill Switch</h4>
+                <p><strong>1. Ind&eacute;pendant</strong> &mdash; Le kill switch ne doit PAS &ecirc;tre dans le m&ecirc;me processus que le trading engine. Si le trading engine est en boucle infinie ou gel&eacute;, un kill switch interne ne fonctionnera jamais. Il doit vivre dans un processus s&eacute;par&eacute;.</p>
+                <p><strong>2. Multiples d&eacute;clencheurs</strong> &mdash; Trois types : automatique (drawdown &gt; X%), semi-automatique (un clic sur un dashboard ou un message Discord), et physique (un script shell ex&eacute;cutable depuis n'importe o&ugrave;, y compris votre t&eacute;l&eacute;phone).</p>
+                <p><strong>3. Test&eacute; r&eacute;guli&egrave;rement</strong> &mdash; Un kill switch non test&eacute; est un kill switch qui ne fonctionne pas. Testez-le en production (avec de tr&egrave;s petites positions) au moins une fois par mois. V&eacute;rifiez qu'il annule effectivement les ordres et ferme les positions.</p>
+                <p><strong>4. Actions exhaustives et claires</strong> &mdash; Le kill switch ne se contente pas d'arr&ecirc;ter les nouveaux ordres. Il : (1) annule <em>tous</em> les ordres en attente, (2) peut optionnellement fermer toutes les positions ouvertes, (3) notifie toutes les parties prenantes, (4) log l'&eacute;v&eacute;nement de mani&egrave;re immuable avec timestamp et raison.</p>
+            </div>
+
+            <h3>Risk Budgeting &amp; Drawdown Limits</h3>
+
+            <p>Le risk budgeting est l'art d'allouer un &laquo; budget de risque &raquo; &agrave; chaque strat&eacute;gie, chaque instrument, et chaque p&eacute;riode temporelle. L'id&eacute;e fondamentale : vous d&eacute;finissez &agrave; l'avance combien vous &ecirc;tes pr&ecirc;t &agrave; perdre par jour, par semaine, par mois. Quand le budget est &eacute;puis&eacute;, le trading s'arr&ecirc;te automatiquement. Pas de n&eacute;gociation, pas de &laquo; juste un dernier trade &raquo;.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>P&eacute;riode</th>
+                        <th>Drawdown Max</th>
+                        <th>Action automatique</th>
+                        <th>Reset</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Par trade</strong></td>
+                        <td>-1% du capital</td>
+                        <td>Stop loss automatique</td>
+                        <td>Prochain trade</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Journalier</strong></td>
+                        <td>-2% du capital</td>
+                        <td>Halt trading pour la journ&eacute;e enti&egrave;re</td>
+                        <td>Lendemain 9h30</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hebdomadaire</strong></td>
+                        <td>-5% du capital</td>
+                        <td>R&eacute;duction du sizing de 50% la semaine suivante</td>
+                        <td>Lundi suivant</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mensuel</strong></td>
+                        <td>-10% du capital</td>
+                        <td>Halt trading complet + review obligatoire</td>
+                        <td>Apr&egrave;s review manuelle valid&eacute;e</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Peak-to-trough</strong></td>
+                        <td>-20% du peak</td>
+                        <td>Kill switch total + analyse compl&egrave;te de la strat&eacute;gie</td>
+                        <td>Apr&egrave;s refonte et re-backtest</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi des limites &eacute;tag&eacute;es ?</h4>
+                <p>Les limites &eacute;tag&eacute;es (par trade, jour, semaine, mois) agissent comme des <strong>couches de d&eacute;fense successives</strong> &mdash; le mod&egrave;le du Swiss Cheese (fromage suisse). Chaque couche a des trous (des sc&eacute;narios qu'elle ne couvre pas), mais les trous ne s'alignent (presque) jamais.</p>
+                <p>Perdre 1% sur un trade, c'est normal et attendu. Perdre 2% sur la journ&eacute;e, c'est le signe qu'aujourd'hui n'est pas votre jour &mdash; mieux vaut s'arr&ecirc;ter et pr&eacute;server le capital. Perdre 5% sur la semaine sugg&egrave;re un probl&egrave;me plus profond : conditions de march&eacute; d&eacute;favorables, bug dans la strat&eacute;gie, ou param&egrave;tres d&eacute;cal&eacute;s.</p>
+                <p>La r&egrave;gle empirique : <strong>votre max drawdown en live sera typiquement 2-3x celui observ&eacute; en backtest</strong>. Si votre backtest montre un max drawdown de 10%, calibrez vos limites pour tol&eacute;rer 20-30% en r&eacute;el.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5 : ALERTING ET ESCALATION                           -->
+        <!-- ============================================================ -->
+        <div id="alerting" class="content-card">
+            <h2><i class="fa-solid fa-bell"></i> Alerting et Escalation</h2>
+
+            <p>Un syst&egrave;me de monitoring sans alerting, c'est un d&eacute;tecteur de fum&eacute;e sans sir&egrave;ne. L'alerting est le pont entre l'observation et l'action. Mais un alerting mal con&ccedil;u est parfois <em>pire</em> que pas d'alerting du tout &mdash; il cr&eacute;e de l'<strong>alert fatigue</strong>, cette insensibilisation progressive aux alertes qui fait qu'on finit par ignorer m&ecirc;me les vraies urgences.</p>
+
+            <h3>Les 4 niveaux d'alerte</h3>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-circle-info"></i></div>
+                    <div class="metric-label"><strong>INFO</strong><br>Notification informative, aucune action requise. Exemples : ouverture/fermeture du march&eacute;, d&eacute;but d'une session de trading, r&eacute;sum&eacute; journalier automatique. Canal : dashboard uniquement. Pas de notification push.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <div class="metric-label"><strong>WARNING</strong><br>Quelque chose d&eacute;vie de la norme mais n'est pas encore critique. Action : surveiller dans les prochaines minutes/heures. Canal : Slack ou Discord + dashboard. Exemples : drawdown &agrave; 60% de la limite, CPU soutenu &agrave; 75%, slippage en hausse.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="metric-label"><strong>CRITICAL</strong><br>Probl&egrave;me s&eacute;rieux n&eacute;cessitant une intervention imm&eacute;diate. Action : quelqu'un doit regarder MAINTENANT. Canal : SMS + Slack/Discord urgent + potentiellement appel t&eacute;l&eacute;phonique. Exemples : drawdown limit atteinte, composant down, connexion broker perdue.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-skull-crossbones"></i></div>
+                    <div class="metric-label"><strong>EMERGENCY</strong><br>Le syst&egrave;me a d&eacute;j&agrave; d&eacute;clench&eacute; un kill switch ou est en train de perdre de l'argent activement et de mani&egrave;re incontr&ocirc;l&eacute;e. Action automatique + notification &agrave; toutes les parties. Canal : TOUS les canaux simultan&eacute;ment.</div>
+                </div>
+            </div>
+
+            <h3>Matrice d'escalation</h3>
+
+            <p>La matrice d'escalation d&eacute;finit qui est notifi&eacute;, quand, et comment. Elle &eacute;vite le <em>bystander effect</em> &mdash; ce ph&eacute;nom&egrave;ne o&ugrave; personne n'agit parce que chacun pense que quelqu'un d'autre s'en occupe.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Niveau</th>
+                        <th>Qui est notifi&eacute;</th>
+                        <th>D&eacute;lai r&eacute;ponse max</th>
+                        <th>Canal</th>
+                        <th>Si non acquitt&eacute;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>INFO</strong></td>
+                        <td>Dashboard / logs uniquement</td>
+                        <td>Aucun</td>
+                        <td>Dashboard</td>
+                        <td>Pas d'escalation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WARNING</strong></td>
+                        <td>Trader / op&eacute;rateur on-call</td>
+                        <td>&lt; 30 minutes</td>
+                        <td>Slack + Discord</td>
+                        <td>&rarr; CRITICAL apr&egrave;s 30 min</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CRITICAL</strong></td>
+                        <td>Trader + Risk Manager</td>
+                        <td>&lt; 5 minutes</td>
+                        <td>SMS + Slack + Appel</td>
+                        <td>&rarr; EMERGENCY apr&egrave;s 15 min</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMERGENCY</strong></td>
+                        <td>Tous + CTO / Head of Trading</td>
+                        <td>Imm&eacute;diat</td>
+                        <td>Tous canaux</td>
+                        <td>Kill switch auto si non ack 5 min</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3><i class="fa-solid fa-tired"></i> Alert Fatigue : Le Gar&ccedil;on qui Criait au Loup</h3>
+
+            <p>L'alert fatigue est le ph&eacute;nom&egrave;ne o&ugrave; les op&eacute;rateurs deviennent insensibles aux alertes parce qu'il y en a <strong>trop, trop souvent, et trop peu pertinentes</strong>. Des &eacute;tudes dans le domaine m&eacute;dical montrent que quand le taux de fausses alertes d&eacute;passe 85%, les op&eacute;rateurs finissent par ignorer <em>toutes</em> les alertes &mdash; y compris les vraies urgences. C'est exactement le m&ecirc;me probl&egrave;me en trading.</p>
+
+            <p>Voici les quatre techniques cl&eacute;s pour lutter contre l'alert fatigue :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-filter"></i></div>
+                    <div class="metric-label"><strong>D&eacute;duplication</strong><br>Ne pas envoyer la m&ecirc;me alerte 50 fois par minute. Regrouper : &laquo; CPU &gt; 90% d&eacute;tect&eacute; depuis 5 minutes (12 occurrences) &raquo; est bien mieux que 12 alertes s&eacute;par&eacute;es qui saturent le canal.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-brain"></i></div>
+                    <div class="metric-label"><strong>Contextualisation</strong><br>Chaque alerte doit inclure : (1) ce qui se passe, (2) pourquoi c'est grave, (3) quoi faire. &laquo; CPU 92% &raquo; ne sert &agrave; rien. &laquo; CPU 92% sur le trading engine, probable backtest en parall&egrave;le, arr&ecirc;ter le backtest via: kill-backtest.sh &raquo; est actionnable.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="metric-label"><strong>Cooldown</strong><br>Apr&egrave;s d&eacute;clenchement, l'alerte entre en p&eacute;riode de cooldown (ex: 15 minutes). Elle ne se red&eacute;clenche que si la condition persiste <em>et</em> que le cooldown est expir&eacute;. Cela emp&ecirc;che la rafale d'alertes sur un probl&egrave;me d&eacute;j&agrave; connu.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-ranking-star"></i></div>
+                    <div class="metric-label"><strong>Priorisation</strong><br>Les alertes business (Layer 3-4 : P&amp;L, drawdown, r&eacute;gime) passent toujours avant les alertes infra (Layer 1-2 : CPU, disk). Un drawdown de -2% est immensement plus urgent que CPU &agrave; 72%.</div>
+                </div>
+            </div>
+
+            <!-- ECharts: Alert Flow Sankey Diagram -->
+            <h3>Flux de traitement des alertes</h3>
+            <div id="chart-alertflow" class="content-card" style="width:100%; height:450px; padding:0; box-shadow:none; border:none; margin:1rem 0;"></div>
+            <script>
+            (function() {
+                var dom = document.getElementById('chart-alertflow');
+                var chart = echarts.init(dom);
+                var option = {
+                    tooltip: { trigger: 'item' },
+                    series: [{
+                        type: 'sankey',
+                        layout: 'none',
+                        emphasis: { focus: 'adjacency' },
+                        nodeAlign: 'left',
+                        lineStyle: { color: 'gradient', curveness: 0.5 },
+                        label: { fontSize: 11, fontWeight: 'bold' },
+                        data: [
+                            { name: 'Raw Events', itemStyle: { color: '#94a3b8' } },
+                            { name: 'Filter & Dedup', itemStyle: { color: '#64748b' } },
+                            { name: 'INFO', itemStyle: { color: '#3b82f6' } },
+                            { name: 'WARNING', itemStyle: { color: '#f59e0b' } },
+                            { name: 'CRITICAL', itemStyle: { color: '#ef4444' } },
+                            { name: 'EMERGENCY', itemStyle: { color: '#7f1d1d' } },
+                            { name: 'Dashboard', itemStyle: { color: '#06b6d4' } },
+                            { name: 'Slack/Discord', itemStyle: { color: '#8b5cf6' } },
+                            { name: 'SMS + Call', itemStyle: { color: '#ec4899' } },
+                            { name: 'Kill Switch', itemStyle: { color: '#dc2626' } },
+                            { name: 'Suppressed', itemStyle: { color: '#cbd5e1' } }
+                        ],
+                        links: [
+                            { source: 'Raw Events', target: 'Filter & Dedup', value: 100 },
+                            { source: 'Filter & Dedup', target: 'Suppressed', value: 40 },
+                            { source: 'Filter & Dedup', target: 'INFO', value: 30 },
+                            { source: 'Filter & Dedup', target: 'WARNING', value: 18 },
+                            { source: 'Filter & Dedup', target: 'CRITICAL', value: 9 },
+                            { source: 'Filter & Dedup', target: 'EMERGENCY', value: 3 },
+                            { source: 'INFO', target: 'Dashboard', value: 30 },
+                            { source: 'WARNING', target: 'Dashboard', value: 10 },
+                            { source: 'WARNING', target: 'Slack/Discord', value: 8 },
+                            { source: 'CRITICAL', target: 'Dashboard', value: 3 },
+                            { source: 'CRITICAL', target: 'Slack/Discord', value: 4 },
+                            { source: 'CRITICAL', target: 'SMS + Call', value: 2 },
+                            { source: 'EMERGENCY', target: 'Dashboard', value: 1 },
+                            { source: 'EMERGENCY', target: 'Slack/Discord', value: 1 },
+                            { source: 'EMERGENCY', target: 'SMS + Call', value: 1 },
+                            { source: 'EMERGENCY', target: 'Kill Switch', value: 1 }
+                        ]
+                    }]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', function() { chart.resize(); });
+            })();
+            </script>
+
+            <p>Le diagramme Sankey ci-dessus illustre un point crucial : sur 100 &eacute;v&eacute;nements bruts, <strong>seulement 3 devraient d&eacute;clencher une alerte EMERGENCY</strong>, et environ 40% devraient &ecirc;tre supprim&eacute;s (dupliqu&eacute;s, d&eacute;j&agrave; connus, en cooldown). Si votre ratio est tr&egrave;s diff&eacute;rent &mdash; trop d'alertes critiques ou trop peu de suppression &mdash; votre syst&egrave;me d'alerting est mal calibr&eacute; et g&eacute;n&egrave;re de la fatigue.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Le ratio sain d'alertes</h4>
+                <p>Un syst&egrave;me d'alerting bien calibr&eacute; suit approximativement cette distribution :</p>
+                <ul>
+                    <li><strong>Supprim&eacute;es / d&eacute;dupliqu&eacute;es : ~40%</strong> &mdash; La majorit&eacute; des &eacute;v&eacute;nements bruts ne m&eacute;ritent pas d'alerte</li>
+                    <li><strong>INFO : ~30%</strong> &mdash; Informations de routine, visibles sur le dashboard</li>
+                    <li><strong>WARNING : ~18%</strong> &mdash; &Eacute;carts significatifs, &agrave; surveiller</li>
+                    <li><strong>CRITICAL : ~9%</strong> &mdash; Probl&egrave;mes s&eacute;rieux, intervention n&eacute;cessaire</li>
+                    <li><strong>EMERGENCY : ~3%</strong> &mdash; Urgences absolues, action imm&eacute;diate</li>
+                </ul>
+                <p>Si plus de 20% de vos alertes sont CRITICAL ou EMERGENCY, vos seuils sont trop sensibles. Si vous avez z&eacute;ro alerte WARNING, vous ne d&eacute;tectez pas les probl&egrave;mes assez t&ocirc;t &mdash; vous passez directement de &laquo; tout va bien &raquo; &agrave; &laquo; catastrophe &raquo;.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6 : MÉTRIQUES ESSENTIELLES                           -->
+        <!-- ============================================================ -->
+        <div id="metriques" class="content-card">
+            <h2><i class="fa-solid fa-chart-bar"></i> Les 20 M&eacute;triques Essentielles</h2>
+
+            <p>Si vous ne pouvez monitorer que 20 m&eacute;triques sur votre syst&egrave;me de trading, voici celles qui comptent le plus. Elles couvrent les quatre couches et donnent une vue compl&egrave;te et &eacute;quilibr&eacute;e de la sant&eacute; de votre stack.</p>
+
+            <h3><i class="fa-solid fa-tachometer-alt"></i> Ex&eacute;cution (5 m&eacute;triques)</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>M&eacute;trique</th>
+                        <th>Formule / Description</th>
+                        <th>Seuil d'alerte</th>
+                        <th>Fr&eacute;quence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td><strong>Fill Rate</strong></td><td>Ordres ex&eacute;cut&eacute;s / Ordres envoy&eacute;s &times; 100</td><td>&lt; 95%</td><td>Par trade</td></tr>
+                    <tr><td>2</td><td><strong>Average Slippage</strong></td><td>(Prix obtenu - Prix demand&eacute;) / Prix demand&eacute;, en bps</td><td>&gt; 5 bps (rolling 20)</td><td>Par trade</td></tr>
+                    <tr><td>3</td><td><strong>Order-to-Fill Latency</strong></td><td>Temps entre envoi et fill complet (ms, percentile 95)</td><td>&gt; 500ms (p95)</td><td>Par trade</td></tr>
+                    <tr><td>4</td><td><strong>Rejection Rate</strong></td><td>Ordres rejet&eacute;s / Ordres envoy&eacute;s &times; 100</td><td>&gt; 5%</td><td>Par trade</td></tr>
+                    <tr><td>5</td><td><strong>Implementation Shortfall</strong></td><td>(Prix d&eacute;cision - Prix ex&eacute;cution) &times; Quantit&eacute;</td><td>&gt; 10 bps (rolling 20)</td><td>Par trade</td></tr>
+                </tbody>
+            </table>
+
+            <h3><i class="fa-solid fa-shield-halved"></i> Risque (5 m&eacute;triques)</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>M&eacute;trique</th>
+                        <th>Formule / Description</th>
+                        <th>Seuil d'alerte</th>
+                        <th>Fr&eacute;quence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>6</td><td><strong>Current Drawdown</strong></td><td>(Peak Equity - Current Equity) / Peak Equity</td><td>&gt; 5% (W), &gt; 10% (C)</td><td>1 min</td></tr>
+                    <tr><td>7</td><td><strong>Daily VaR (95%)</strong></td><td>Value at Risk &agrave; 95% confiance, horizon 1 jour</td><td>&gt; 2% du capital</td><td>Horaire</td></tr>
+                    <tr><td>8</td><td><strong>Gross Exposure</strong></td><td>&Sigma;|Long| + &Sigma;|Short| / Capital total</td><td>&gt; 200% (si leveraged)</td><td>Par trade</td></tr>
+                    <tr><td>9</td><td><strong>Concentration Max</strong></td><td>Max(Position / Capital) par instrument</td><td>&gt; 20%</td><td>Par trade</td></tr>
+                    <tr><td>10</td><td><strong>Sharpe Ratio (rolling 30d)</strong></td><td>(E[R] - Rf) / &sigma;(R) &times; &radic;252</td><td>&lt; 0.5 (W), &lt; 0 (C)</td><td>Journalier</td></tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Comprendre le Sharpe Ratio</h4>
+                <p>Le <strong>Sharpe Ratio</strong> mesure le rendement ajust&eacute; du risque. Il r&eacute;pond &agrave; la question : &laquo; Pour chaque unit&eacute; de risque (volatilit&eacute;) que je prends, combien de rendement exc&eacute;dentaire est-ce que j'obtiens ? &raquo;</p>
+                <p>La formule : <strong>Sharpe = (Rendement moyen - Taux sans risque) / &Eacute;cart-type des rendements</strong>, annualis&eacute; en multipliant par &radic;252 (jours de trading).</p>
+                <ul>
+                    <li><strong>Sharpe &gt; 2.0</strong> &mdash; Excellent. Tr&egrave;s rare en r&eacute;el sur le long terme.</li>
+                    <li><strong>Sharpe 1.0 - 2.0</strong> &mdash; Bon. Le risque est bien r&eacute;mun&eacute;r&eacute;.</li>
+                    <li><strong>Sharpe 0.5 - 1.0</strong> &mdash; M&eacute;diocre. La strat&eacute;gie compense &agrave; peine le risque.</li>
+                    <li><strong>Sharpe &lt; 0.5</strong> &mdash; Signal d'alerte. Am&eacute;liorer ou arr&ecirc;ter.</li>
+                </ul>
+                <p><strong>Limite</strong> : le Sharpe ne capture pas les risques de queue (tail risks). Compl&eacute;tez avec le <strong>Sortino</strong> (p&eacute;nalise uniquement la volatilit&eacute; n&eacute;gative) et le <strong>Calmar</strong> (rendement annualis&eacute; / max drawdown).</p>
+            </div>
+
+            <h3><i class="fa-solid fa-server"></i> Infrastructure (5 m&eacute;triques)</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>M&eacute;trique</th>
+                        <th>Description</th>
+                        <th>Seuil d'alerte</th>
+                        <th>Fr&eacute;quence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>11</td><td><strong>CPU Usage</strong></td><td>Utilisation CPU du trading engine (%)</td><td>&gt; 70% (W), &gt; 90% (C)</td><td>10s</td></tr>
+                    <tr><td>12</td><td><strong>Memory RSS</strong></td><td>M&eacute;moire r&eacute;sidente du processus trading</td><td>Croissance &gt; 10%/heure</td><td>30s</td></tr>
+                    <tr><td>13</td><td><strong>Network RTT</strong></td><td>Round-trip time vers le broker/exchange</td><td>&gt; 50ms (W), &gt; 200ms (C)</td><td>5s</td></tr>
+                    <tr><td>14</td><td><strong>Disk Free</strong></td><td>Espace disque disponible (%)</td><td>&lt; 20% (W), &lt; 5% (C)</td><td>60s</td></tr>
+                    <tr><td>15</td><td><strong>Process Uptime</strong></td><td>Dur&eacute;e depuis le dernier restart du processus</td><td>Restart non planifi&eacute; = alerte</td><td>10s</td></tr>
+                </tbody>
+            </table>
+
+            <h3><i class="fa-solid fa-globe"></i> March&eacute; (5 m&eacute;triques)</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>M&eacute;trique</th>
+                        <th>Description</th>
+                        <th>Seuil d'alerte</th>
+                        <th>Fr&eacute;quence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>16</td><td><strong>VIX Level</strong></td><td>CBOE Volatility Index</td><td>&gt; 25 (W), &gt; 35 (C)</td><td>1 min</td></tr>
+                    <tr><td>17</td><td><strong>Volume Ratio</strong></td><td>Volume actuel / SMA(volume, 20j)</td><td>&gt; 3x = activit&eacute; anormale</td><td>5 min</td></tr>
+                    <tr><td>18</td><td><strong>Bid-Ask Spread</strong></td><td>(Ask - Bid) / Mid, en bps, vs moyenne</td><td>&gt; 2x normal</td><td>Tick</td></tr>
+                    <tr><td>19</td><td><strong>Cross-Asset Correlation</strong></td><td>Corr&eacute;lation rolling 20j entre actifs du portefeuille</td><td>&gt; 0.8 = contagion</td><td>Journalier</td></tr>
+                    <tr><td>20</td><td><strong>ATR Expansion</strong></td><td>ATR(14) actuel / ATR(14) il y a 20 jours</td><td>&gt; 1.5x = regime shift</td><td>Journalier</td></tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Comprendre le Drawdown et la VaR</h4>
+                <p>Le <strong>drawdown</strong> mesure la perte depuis le point le plus haut (peak). Si votre portefeuille a atteint 110 000$ puis est redescendu &agrave; 99 000$, votre drawdown est de (110 000 - 99 000) / 110 000 = <strong>10%</strong>. C'est la m&eacute;trique de risque la plus intuitive.</p>
+                <p>La <strong>VaR</strong> (Value at Risk) r&eacute;pond &agrave; : &laquo; Quel est le montant maximum que je peux perdre avec 95% de probabilit&eacute; sur 1 jour ? &raquo; Une VaR de 5 000$ &agrave; 95% signifie : 1 jour sur 20, vous pourriez perdre <em>plus</em> de 5 000$. Compl&eacute;tez par la <strong>CVaR</strong> (Conditional VaR) qui mesure la perte moyenne <em>quand on d&eacute;passe</em> la VaR.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7 : PATTERNS ET ANTI-PATTERNS                        -->
+        <!-- ============================================================ -->
+        <div id="patterns" class="content-card">
+            <h2><i class="fa-solid fa-check-double"></i> Patterns et Anti-Patterns</h2>
+
+            <p>En architecture de monitoring, il existe des patterns &eacute;prouv&eacute;s qui fonctionnent dans presque tous les contextes, et des anti-patterns qui m&egrave;nent invariablement &agrave; des incidents. Voici les plus importants.</p>
+
+            <h3><i class="fa-solid fa-circle-check"></i> Bons Patterns</h3>
+
+            <h4>1. Immutable Logs (Logs Immuables)</h4>
+            <p>Les logs ne doivent <strong>jamais &ecirc;tre modifi&eacute;s apr&egrave;s &eacute;criture</strong>. Pas de rotation destructive, pas de troncature. Chaque &eacute;v&eacute;nement est &eacute;crit une fois et conserv&eacute; pour une dur&eacute;e d&eacute;finie (30-90 jours minimum). Les logs immutables sont votre bo&icirc;te noire &mdash; quand l'avion s'&eacute;crase, c'est la seule chose qui permet de comprendre pourquoi.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check"></i></div>
+                    <div class="metric-label"><strong>Append-only storage</strong><br>&Eacute;crire en mode append uniquement. Jamais de seek+write. Utiliser S3 (immutable par d&eacute;faut), un WAL (Write-Ahead Log), ou un fichier en mode O_APPEND.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check"></i></div>
+                    <div class="metric-label"><strong>Logs structur&eacute;s (JSON)</strong><br>Chaque log est un objet JSON avec des champs fix&eacute;s : timestamp, level, component, message, context, correlation_id. Cela permet le parsing automatique, le filtrage et la recherche.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check"></i></div>
+                    <div class="metric-label"><strong>Rotation sans perte</strong><br>Compresser les vieux logs (gzip), les archiver (S3 / GCS), ne jamais supprimer avant la p&eacute;riode de r&eacute;tention. Automatiser avec logrotate ou un pipeline de log shipping (Filebeat, Fluentd).</div>
+                </div>
+            </div>
+
+            <h4>2. Circuit Breakers</h4>
+            <p>Inspir&eacute; du pattern &eacute;lectrique : quand un composant d&eacute;tecte trop d'erreurs (ex: 5 rejets cons&eacute;cutifs de l'API broker), il &laquo; ouvre le circuit &raquo; et arr&ecirc;te d'envoyer des requ&ecirc;tes au composant d&eacute;faillant. Apr&egrave;s un cooldown (ex: 30 secondes), il envoie une requ&ecirc;te test (half-open state). Si elle r&eacute;ussit, le circuit se referme. Sinon, il reste ouvert.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check"></i></div>
+                    <div class="metric-label"><strong>Par connexion broker</strong><br>Si l'API du broker renvoie 5 erreurs cons&eacute;cutives, arr&ecirc;ter d'envoyer des ordres pendant 30 secondes. Cela &eacute;vite d'aggraver un probl&egrave;me (rate limiting, maintenance) en envoyant encore plus de requ&ecirc;tes.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check"></i></div>
+                    <div class="metric-label"><strong>Par market data feed</strong><br>Si les donn&eacute;es de march&eacute; n'ont pas &eacute;t&eacute; mises &agrave; jour depuis 10 secondes en intraday (stale data), arr&ecirc;ter de trader imm&eacute;diatement. Trader sur des donn&eacute;es obsol&egrave;tes est plus dangereux que ne pas trader.</div>
+                </div>
+            </div>
+
+            <h4>3. Health Checks Compos&eacute;s</h4>
+            <p>Chaque composant expose un endpoint <code>/health</code> qui retourne non seulement &laquo; healthy / unhealthy &raquo; mais un &eacute;tat d&eacute;taill&eacute; incluant : la v&eacute;rification de ses propres d&eacute;pendances (DB, broker, feed) et son &eacute;tat business (positions, dernier trade, P&amp;L). Cela d&eacute;tecte les composants &laquo; zombies &raquo; &mdash; techniquement vivants mais fonctionnellement morts.</p>
+
+            <h4>4. Correlation IDs</h4>
+            <p>Chaque d&eacute;cision de trading re&ccedil;oit un identifiant unique (UUID) qui la suit &agrave; travers tous les composants, du signal initial &agrave; l'ex&eacute;cution finale. En cas de probl&egrave;me, il suffit de filtrer les logs par cet ID pour retracer le parcours complet d'une d&eacute;cision en quelques secondes.</p>
+
+            <h3><i class="fa-solid fa-circle-xmark"></i> Anti-Patterns &agrave; &Eacute;viter</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Anti-Pattern</th>
+                        <th>Pourquoi c'est dangereux</th>
+                        <th>Pattern correct</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Silent Failures</strong></td>
+                        <td>Un composant &eacute;choue sans &eacute;mettre d'erreur. Le syst&egrave;me continue avec des donn&eacute;es manquantes ou corrompues. Des semaines peuvent passer avant d&eacute;tection.</td>
+                        <td><strong>Fail loud.</strong> Chaque erreur est logg&eacute;e, chaque exception non g&eacute;r&eacute;e d&eacute;clenche une alerte. Un composant qui ne sait pas quoi faire doit s'arr&ecirc;ter, pas continuer silencieusement.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Log-and-Forget</strong></td>
+                        <td>Les erreurs sont logg&eacute;es mais personne ne les lit. Des fichiers de 10 Go que personne n'a jamais ouverts. Le log existe pour la bonne conscience, pas pour l'action.</td>
+                        <td>Chaque log d'erreur a une alerte associ&eacute;e ou est inclus dans un dashboard de tendances. Un log qui n'est jamais lu ne devrait pas exister.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Single Point of Failure</strong></td>
+                        <td>Un seul serveur, une seule connexion broker, un seul feed de donn&eacute;es. Si ce composant tombe, tout le syst&egrave;me tombe avec.</td>
+                        <td>Redondance sur le chemin critique. Deux connexions broker (primaire + failover). Deux sources de donn&eacute;es. Le monitoring lui-m&ecirc;me a un backup (m&ecirc;me simple).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>God Dashboard</strong></td>
+                        <td>Un seul dashboard avec 200 m&eacute;triques. Personne ne sait o&ugrave; regarder. L'information noy&eacute;e dans le bruit est pire que pas d'information du tout.</td>
+                        <td>Un dashboard par couche, un dashboard de synth&egrave;se. Maximum 8-10 m&eacute;triques par &eacute;cran. Chaque m&eacute;trique a un seuil visuel (vert/jaune/rouge).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Copy-Paste Monitoring</strong></td>
+                        <td>Copier la config monitoring d'un autre projet sans l'adapter. Seuils g&eacute;n&eacute;riques qui ne correspondent pas au comportement r&eacute;el de votre syst&egrave;me.</td>
+                        <td>Calibrer les seuils sur les donn&eacute;es historiques <em>de votre syst&egrave;me</em>. Seuils bas&eacute;s sur les percentiles (p95, p99), pas sur des valeurs arbitraires.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>No Runbook</strong></td>
+                        <td>L'alerte sonne mais personne ne sait quoi faire. L'op&eacute;rateur improvise pendant que le syst&egrave;me perd de l'argent.</td>
+                        <td>Chaque alerte CRITICAL/EMERGENCY a un lien vers un runbook : (1) cause, (2) diagnostic, (3) actions correctives, (4) quand escalader.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Testing in Prod Only</strong></td>
+                        <td>Le monitoring n'est jamais test&eacute;. On d&eacute;couvre qu'il ne fonctionne pas le jour o&ugrave; on en a besoin &mdash; le pire moment possible.</td>
+                        <td>Tester r&eacute;guli&egrave;rement : (1) injecter des pannes simul&eacute;es, (2) v&eacute;rifier les alertes, (3) tester le kill switch en conditions r&eacute;elles avec des petites positions.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le pattern le plus sous-estim&eacute; : les Runbooks</h4>
+                <p>Un runbook est un document qui dit : &laquo; Quand l'alerte X sonne, voici exactement les &eacute;tapes &agrave; suivre. &raquo; C'est l'&eacute;quivalent d'une checklist de pilote d'avion. Sans runbook, chaque incident est une improvisation sous pression. Avec un runbook, c'est une proc&eacute;dure test&eacute;e et valid&eacute;e.</p>
+                <p>Chaque alerte CRITICAL ou EMERGENCY devrait avoir un runbook associ&eacute; contenant : (1) les conditions de d&eacute;clenchement, (2) les commandes de diagnostic &agrave; ex&eacute;cuter, (3) les actions correctives par ordre de priorit&eacute;, (4) les crit&egrave;res de r&eacute;solution, (5) le contact d'escalation si les &eacute;tapes ne suffisent pas.</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 8 : APPLICATION RETAIL                               -->
+        <!-- ============================================================ -->
+        <div id="retail" class="content-card">
+            <h2><i class="fa-solid fa-user"></i> Application Retail</h2>
+
+            <p>Tout ce que nous avons couvert peut sembler &eacute;crasant pour un trader retail avec un bot sur un VPS &agrave; 10$/mois. La bonne nouvelle : les principes sont exactement les m&ecirc;mes, seule l'&eacute;chelle change. Voici comment adapter cette architecture &agrave; un budget et une complexit&eacute; de niveau retail.</p>
+
+            <h3>Architecture simplifi&eacute;e pour le retail</h3>
+
+            <!-- ECharts: Retail Monitoring Stack -->
+            <div id="chart-retail" class="content-card" style="width:100%; height:400px; padding:0; box-shadow:none; border:none; margin:1rem 0;"></div>
+            <script>
+            (function() {
+                var dom = document.getElementById('chart-retail');
+                var chart = echarts.init(dom);
+                var option = {
+                    tooltip: { trigger: 'item', formatter: '{b}' },
+                    series: [{
+                        type: 'graph',
+                        layout: 'none',
+                        symbolSize: 55,
+                        roam: false,
+                        label: { show: true, fontSize: 10, fontWeight: 'bold', color: '#1e293b' },
+                        edgeSymbol: ['none', 'arrow'],
+                        edgeSymbolSize: [0, 8],
+                        lineStyle: { width: 2, curveness: 0.15 },
+                        data: [
+                            { name: 'Trading\nBot', x: 100, y: 200, itemStyle: { color: '#8b5cf6' }, symbolSize: 65 },
+                            { name: 'Broker\nAPI', x: 300, y: 200, itemStyle: { color: '#10b981' } },
+                            { name: 'JSON\nState File', x: 100, y: 50, itemStyle: { color: '#f59e0b' } },
+                            { name: 'Cron\nHealth Check', x: 300, y: 50, itemStyle: { color: '#2563eb' } },
+                            { name: 'Discord\nWebhook', x: 500, y: 50, itemStyle: { color: '#7c3aed' } },
+                            { name: 'Grafana\nCloud (free)', x: 500, y: 200, itemStyle: { color: '#ef4444' } },
+                            { name: 'Kill\nScript', x: 300, y: 330, itemStyle: { color: '#dc2626' }, symbolSize: 50 }
+                        ],
+                        links: [
+                            { source: 'Trading\nBot', target: 'Broker\nAPI', lineStyle: { color: '#8b5cf6' } },
+                            { source: 'Trading\nBot', target: 'JSON\nState File', lineStyle: { color: '#94a3b8', type: 'dashed' } },
+                            { source: 'Cron\nHealth Check', target: 'JSON\nState File', lineStyle: { color: '#2563eb', type: 'dashed' } },
+                            { source: 'Cron\nHealth Check', target: 'Discord\nWebhook', lineStyle: { color: '#7c3aed' } },
+                            { source: 'Cron\nHealth Check', target: 'Grafana\nCloud (free)', lineStyle: { color: '#ef4444', type: 'dashed' } },
+                            { source: 'Cron\nHealth Check', target: 'Kill\nScript', lineStyle: { color: '#dc2626' } },
+                            { source: 'Kill\nScript', target: 'Broker\nAPI', lineStyle: { color: '#dc2626' } }
+                        ]
+                    }]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', function() { chart.resize(); });
+            })();
+            </script>
+
+            <p>L'architecture retail se r&eacute;sume &agrave; trois composants simples et gratuits :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-robot"></i></div>
+                    <div class="metric-label"><strong>Trading Bot</strong><br>Votre bot (Python, Node, Go...) qui tourne sur un VPS. Il &eacute;crit son &eacute;tat dans un fichier JSON local &agrave; chaque cycle : positions ouvertes, P&amp;L r&eacute;alis&eacute; et non r&eacute;alis&eacute;, dernier heartbeat, drawdown courant, dernier prix vu.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-clock"></i></div>
+                    <div class="metric-label"><strong>Cron Health Check</strong><br>Un script cron (bash ou Python) ind&eacute;pendant qui tourne toutes les minutes. Il lit le fichier JSON d'&eacute;tat, v&eacute;rifie le heartbeat, compare le drawdown aux limites. Processus s&eacute;par&eacute; du bot = principe de SoC respect&eacute;.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-bell"></i></div>
+                    <div class="metric-label"><strong>Discord/Telegram Webhook</strong><br>Quand le health check d&eacute;tecte un probl&egrave;me, il envoie un message via webhook. Gratuit, imm&eacute;diat, et vous recevez les notifications push sur votre t&eacute;l&eacute;phone 24/7.</div>
+                </div>
+            </div>
+
+            <h3>Checklist du Monitoring Viable Minimum (MVM)</h3>
+
+            <p>Voici les 12 &eacute;l&eacute;ments que tout trader retail doit avoir, <strong>m&ecirc;me avec le syst&egrave;me le plus simple possible</strong> :</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>&Eacute;l&eacute;ment</th>
+                        <th>Difficult&eacute;</th>
+                        <th>Outil gratuit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td><strong>Heartbeat du bot</strong> (alive/dead)</td><td>Facile</td><td>Fichier JSON + cron</td></tr>
+                    <tr><td>2</td><td><strong>P&amp;L journalier</strong> logg&eacute;</td><td>Facile</td><td>CSV / SQLite local</td></tr>
+                    <tr><td>3</td><td><strong>Alerte drawdown</strong> (&gt; X%)</td><td>Facile</td><td>Discord/Telegram webhook</td></tr>
+                    <tr><td>4</td><td><strong>Alerte position trop grosse</strong></td><td>Facile</td><td>Script de v&eacute;rification cron</td></tr>
+                    <tr><td>5</td><td><strong>Kill switch</strong> (annule tout)</td><td>Moyen</td><td>Script bash/Python + API broker</td></tr>
+                    <tr><td>6</td><td><strong>Trade journal automatique</strong></td><td>Facile</td><td>Log chaque trade dans un CSV/DB</td></tr>
+                    <tr><td>7</td><td><strong>Monitoring connexion broker</strong></td><td>Facile</td><td>Ping / API status check</td></tr>
+                    <tr><td>8</td><td><strong>VIX level check</strong></td><td>Facile</td><td>Yahoo Finance API gratuite</td></tr>
+                    <tr><td>9</td><td><strong>Dashboard P&amp;L visuel</strong></td><td>Moyen</td><td>Grafana Cloud (free tier)</td></tr>
+                    <tr><td>10</td><td><strong>Backup des configs</strong></td><td>Facile</td><td>Git</td></tr>
+                    <tr><td>11</td><td><strong>Log rotation</strong></td><td>Facile</td><td>logrotate (Linux natif)</td></tr>
+                    <tr><td>12</td><td><strong>Weekly review automatis&eacute;e</strong></td><td>Moyen</td><td>Script qui g&eacute;n&egrave;re un r&eacute;sum&eacute; hebdo</td></tr>
+                </tbody>
+            </table>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Le minimum absolu &mdash; 3 choses obligatoires</h4>
+                <p>Si vous ne faites que <strong>3 choses</strong>, faites celles-ci :</p>
+                <ol>
+                    <li><strong>Un heartbeat</strong> qui vous alerte quand votre bot est mort (fichier JSON + cron + Discord webhook).</li>
+                    <li><strong>Un drawdown limit</strong> qui arr&ecirc;te le trading automatiquement au-del&agrave; de -2% journalier (dans le cron, pas dans le bot).</li>
+                    <li><strong>Un kill switch</strong> que vous pouvez activer depuis votre t&eacute;l&eacute;phone (un simple script qui appelle l'API broker pour annuler tous les ordres et optionnellement fermer les positions).</li>
+                </ol>
+                <p>Ces trois &eacute;l&eacute;ments &agrave; eux seuls auraient &eacute;vit&eacute; la majorit&eacute; des catastrophes que nous avons analys&eacute;es dans la <a href="../">Partie 1</a> de cette s&eacute;rie.</p>
+            </div>
+
+            <h3>De retail &agrave; semi-pro : la roadmap de maturit&eacute;</h3>
+
+            <p>Une fois le MVM en place et fonctionnel, voici les &eacute;tapes pour monter en maturit&eacute; progressivement :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">Phase 1</div>
+                    <div class="metric-label"><strong>Structured Logging</strong><br>Remplacer les <code>print()</code> par des logs JSON structur&eacute;s avec timestamp, composant, niveau, correlation ID. Cela transforme vos logs d'un journal illisible en une base de donn&eacute;es interrogeable.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Phase 2</div>
+                    <div class="metric-label"><strong>M&eacute;triques Prometheus</strong><br>Exposer vos m&eacute;triques cl&eacute;s (P&amp;L, drawdown, latence) au format Prometheus. Utiliser Grafana Cloud (gratuit, 10k s&eacute;ries) pour les visualiser. Vous passez d'un cron &agrave; un vrai monitoring continu.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Phase 3</div>
+                    <div class="metric-label"><strong>S&eacute;paration des processus</strong><br>Sortir le risk management du bot pour en faire un processus s&eacute;par&eacute; communiquant via Redis. M&ecirc;me sur le m&ecirc;me VPS, deux processus sont vastement sup&eacute;rieurs &agrave; un monolithe.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Phase 4</div>
+                    <div class="metric-label"><strong>Chaos Testing</strong><br>Volontairement tuer votre bot pendant les heures de march&eacute; (positions minimales). V&eacute;rifier que le monitoring d&eacute;tecte, alerte, et que le kill switch fonctionne. Le test ultime de votre architecture.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION SYNTHÈSE                                              -->
+        <!-- ============================================================ -->
+        <div id="synthese" class="content-card">
+            <h2><i class="fa-solid fa-bookmark"></i> Synth&egrave;se &mdash; Les 6 Principes Fondamentaux</h2>
+
+            <p>Voici la synth&egrave;se des principes cl&eacute;s de cette Partie 2. Ces six principes s'appliquent &agrave; tout syst&egrave;me de trading, quelle que soit l'&eacute;chelle :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">1</div>
+                    <div class="metric-label"><strong>S&eacute;paration des Concerns</strong><br>Trading, Risk et Monitoring sont trois processus ind&eacute;pendants. Le crash de l'un ne doit pas impacter les autres. Le monitoring est strictement unidirectionnel : il observe, il n'intervient jamais dans le flux de trading.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2</div>
+                    <div class="metric-label"><strong>4 Couches de Monitoring</strong><br>Infrastructure &rarr; Application &rarr; Business Logic &rarr; March&eacute;. Monitorez toutes les couches. Un probl&egrave;me en bas se manifeste toujours en haut &mdash; mais trop tard si vous ne surveillez que le haut.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label"><strong>D&eacute;fense en Profondeur</strong><br>Pre-trade checks + intra-trade monitoring + post-trade analysis + kill switch. Chaque couche de d&eacute;fense attrape ce que la pr&eacute;c&eacute;dente a rat&eacute;. Mod&egrave;le Swiss Cheese.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4</div>
+                    <div class="metric-label"><strong>Alerting Intelligent</strong><br>4 niveaux (INFO / WARNING / CRITICAL / EMERGENCY). D&eacute;duplication, contextualisation, cooldown. Ratio cible : 40% supprim&eacute;es, 30% INFO, 18% WARNING, 9% CRITICAL, 3% EMERGENCY.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">5</div>
+                    <div class="metric-label"><strong>20 M&eacute;triques Essentielles</strong><br>5 par cat&eacute;gorie (Ex&eacute;cution, Risque, Infrastructure, March&eacute;). Chaque m&eacute;trique a une formule, un seuil, et une fr&eacute;quence de collecte d&eacute;finis explicitement.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">6</div>
+                    <div class="metric-label"><strong>Patterns &gt; Outils</strong><br>Les bons patterns (immutable logs, circuit breakers, health checks, correlation IDs, runbooks) sont plus importants que le choix de l'outil. L'architecture guide, l'outil ex&eacute;cute.</div>
+                </div>
             </div>
 
             <div class="alert-box">
-                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège de la corrélation en crise</h4>
-                <p>En période de panique, <strong>toutes les corrélations convergent vers 1</strong>. Votre portefeuille "diversifié" de 10 actions tech, 5 actions fintech, et 3 ETF croissance se comporte soudainement comme une seule position. C'est pourquoi les limites de corrélation sont critiques, et pourquoi le stress testing doit simuler des scénarios extrêmes, pas juste des corrections normales.</p>
+                <h4><i class="fa-solid fa-arrow-right"></i> Et maintenant ?</h4>
+                <p>Vous avez l'architecture. Vous connaissez les principes, les couches, les m&eacute;triques, les patterns et les anti-patterns. La prochaine &eacute;tape &mdash; la <strong><a href="../tooling/">Partie 3 : Tooling</a></strong> &mdash; transformera ces principes en r&eacute;alit&eacute; concr&egrave;te : quels outils choisir et configurer (Prometheus, Grafana, Loki, PagerDuty, Discord bots), comment construire votre stack de monitoring de A &agrave; Z, avec des exemples de code fonctionnels en Python et Go.</p>
             </div>
         </div>
 
-        <!-- ========== SECTION 7: BEST PRACTICES ========== -->
-        <div id="best" class="content-card">
-            <h2><i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Les 10 Commandements du Trading Systématique</h2>
-
-            <p>Ces règles sont le fruit de décennies d'expérience collective dans le trading algorithmique. Chacune d'entre elles a été écrite après qu'un trader (ou une firme) l'ait apprise à ses dépens.</p>
-
-            <ol class="best-practices">
-                <li>
-                    <div class="bp-num">1</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-file-lines" style="color:#16a34a;"></i> Tout logger, tout tracer</strong>
-                        Chaque signal généré, chaque ordre envoyé, chaque erreur rencontrée, chaque décision du risk manager doit être loggé avec un timestamp précis. En cas de problème, les logs sont votre seule source de vérité. Sans eux, vous êtes aveugle.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">2</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-arrows-split-up-and-left" style="color:#16a34a;"></i> Monitoring séparé du trading</strong>
-                        Votre système de monitoring doit tourner dans un processus indépendant, idéalement sur une machine différente. Si le processus de trading plante, le monitoring doit continuer à fonctionner et alerter.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">3</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-bell" style="color:#16a34a;"></i> Alertes graduées</strong>
-                        Pas un seul niveau d'alerte, mais une échelle : INFO (tout va bien, log de routine) → WARNING (anomalie détectée, surveillance renforcée) → CRITICAL (problème confirmé, action requise) → KILL (arrêt d'urgence automatique). Chaque niveau déclenche une action proportionnée.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">4</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-flask" style="color:#16a34a;"></i> Paper trading d'abord</strong>
-                        Minimum 2 semaines de paper trading avant de passer en live. Et pas du paper trading bâclé : simulez les vrais horaires, la vraie latence, le vrai slippage. Un backtest parfait ne garantit rien. Seul le paper trading révèle les vrais problèmes.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">5</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-rotate-left" style="color:#16a34a;"></i> Rollback automatique</strong>
-                        Chaque déploiement d'une nouvelle version de stratégie doit pouvoir être annulé en quelques secondes. Gardez toujours la version précédente prête à redémarrer. Utilisez des feature flags pour activer/désactiver une stratégie sans redéploiement.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">6</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-scale-balanced" style="color:#16a34a;"></i> Réconciliation quotidienne</strong>
-                        Chaque soir, comparez automatiquement vos positions locales avec celles du broker. Comparez votre P&amp;L calculé avec celui du broker. Le moindre écart doit déclencher une investigation. Les bugs de réconciliation non détectés grossissent exponentiellement.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">7</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-microscope" style="color:#16a34a;"></i> Post-mortem hebdomadaire</strong>
-                        Chaque semaine, analysez chaque perte significative : qu'est-ce qui s'est passé, pourquoi, et comment éviter que ça se reproduise. Documentez-le. Un post-mortem non documenté est un post-mortem inutile.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">8</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-diagram-project" style="color:#16a34a;"></i> Diversification des sources</strong>
-                        Ne dépendez pas d'un seul broker, d'un seul flux de données, d'un seul fournisseur cloud. Ayez un broker de backup. Validez vos données avec une source alternative. Le jour où votre broker tombe en panne, vous devez pouvoir réagir.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">9</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-database" style="color:#16a34a;"></i> Backups quotidiens</strong>
-                        Base de données des trades, fichiers de configuration, logs, paramètres de stratégie : tout doit être sauvegardé quotidiennement. Utilisez le versionnement (git) pour vos configs. Testez régulièrement la restauration.
-                    </div>
-                </li>
-                <li>
-                    <div class="bp-num">10</div>
-                    <div class="bp-content">
-                        <strong><i class="fa-solid fa-book" style="color:#16a34a;"></i> Documentation vivante</strong>
-                        Chaque stratégie a sa fiche technique : paramètres, conditions d'entrée/sortie, univers d'instruments, limites de risque, historique de performance, et changelog. Quand vous revenez sur une stratégie 6 mois plus tard, cette fiche doit suffire à tout comprendre.
-                    </div>
-                </li>
-            </ol>
-        </div>
-
-        <!-- ========== SECTION 8: ANTI-PATTERNS ========== -->
-        <div id="bad" class="content-card">
-            <h2><i class="fa-solid fa-ban" style="color:#dc2626;"></i> Les 10 Erreurs Fatales</h2>
-
-            <p>Ces anti-patterns ont causé des pertes allant de quelques milliers à plusieurs centaines de millions de dollars. Apprenez-les par coeur pour ne jamais les commettre.</p>
-
-            <ol class="anti-patterns">
-                <li>
-                    <div class="ap-num">1</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-clock" style="color:#dc2626;"></i> "Je verrai demain"</strong>
-                        Reporter le fix d'une alerte est la première cause de catastrophe en trading systématique. Une alerte ignorée aujourd'hui est une perte de demain. Règle absolue : chaque alerte CRITICAL doit être traitée dans l'heure. Pas demain. Pas "quand j'aurai le temps".
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">2</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-cube" style="color:#dc2626;"></i> Le Monolithe</strong>
-                        Tout dans un seul script Python : signal, sizing, exécution, monitoring, recovery. Quand ça casse (et ça cassera), tout casse en même temps. Impossible de debugger, impossible de rollback partiellement, impossible de tester un composant isolé.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">3</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-volume-xmark" style="color:#dc2626;"></i> Le Silence Radio</strong>
-                        Pas de notifications, pas de dashboards, pas d'alertes. "Tant que ça tourne, tout va bien." Jusqu'au jour où vous découvrez que votre stratégie n'a pas tradé depuis 3 jours parce que l'API key a expiré. Ou pire : qu'elle a tradé dans le mauvais sens pendant 3 jours.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">4</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-chart-pie" style="color:#dc2626;"></i> L'Overfitting en Production</strong>
-                        Votre stratégie a un Sharpe de 4.5 en backtest sur 10 ans. Magnifique. En live, elle perd de l'argent dès la première semaine. Pourquoi ? Parce qu'elle a mémorisé le passé au lieu d'apprendre des patterns. 200 paramètres optimisés sur des données historiques = une stratégie fragile.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">5</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-user-shield" style="color:#dc2626;"></i> Le Hero Trading</strong>
-                        Ignorer le kill switch "parce que je sais ce que je fais" ou "le marché va se retourner". Le kill switch existe pour vous protéger de vous-même dans les moments de stress. Le désactiver est comme retirer sa ceinture de sécurité parce qu'on est "un bon conducteur".
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">6</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-eye-slash" style="color:#dc2626;"></i> Zero Logs</strong>
-                        "Ça marche, pourquoi logger ?" Parce que quand ça ne marchera plus (et ce jour viendra), vous n'aurez aucun moyen de comprendre ce qui s'est passé. Les logs sont votre boîte noire. Sans eux, chaque incident est un mystère non résolu.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">7</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-bomb" style="color:#dc2626;"></i> Le Test en Production</strong>
-                        "Le paper trading c'est ennuyeux, autant tester directement en live avec une petite somme." Sauf que les bugs en live coûtent de l'argent réel, et les "petites sommes" ont tendance à grossir quand on est pressé de valider.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">8</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-lock-open" style="color:#dc2626;"></i> La Config Hardcodée</strong>
-                        API keys dans le code source, seuils de risque en dur dans la stratégie, URL du broker dans un string. Impossible de changer un paramètre sans redéployer. Risque de fuite de secrets si le repo est public. Utilisez des variables d'environnement et des fichiers de config externalisés.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">9</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-server" style="color:#dc2626;"></i> Le One-Broker</strong>
-                        Un seul broker, un seul point de défaillance. Quand Interactive Brokers a eu sa panne de 2 heures en plein selloff, les traders qui n'avaient pas de backup ont regardé leurs positions fondre sans pouvoir agir. Ayez toujours un plan B.
-                    </div>
-                </li>
-                <li>
-                    <div class="ap-num">10</div>
-                    <div class="ap-content">
-                        <strong><i class="fa-solid fa-repeat" style="color:#dc2626;"></i> L'Absence de Post-Mortem</strong>
-                        Faire la même erreur deux fois est impardonnable en trading systématique. Chaque incident significatif mérite un document écrit : que s'est-il passé, pourquoi, quel a été l'impact, et qu'avons-nous changé pour que ça ne se reproduise pas. Pas de post-mortem = pas d'apprentissage.
-                    </div>
-                </li>
-            </ol>
-        </div>
-
-        <!-- ========== SECTION 9: NAVIGATION SÉRIE ========== -->
-        <div id="navigation" class="content-card">
-            <h2><i class="fa-solid fa-compass" style="color:#2563eb;"></i> Navigation de la Série</h2>
-
-            <p>Cet article fait partie d'une série en 3 parties sur le monitoring d'un stack de trading systématique. Chaque partie est indépendante mais complémentaire.</p>
-
-            <div class="data-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Partie</th>
-                            <th>Titre</th>
-                            <th>Contenu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Partie 1</strong></td>
-                            <td>Les Post-Mortems qui ont Changé le Trading</td>
-                            <td>Knight Capital, Flash Crash 2010, London Whale — les leçons des catastrophes</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Partie 2 (cet article)</strong></td>
-                            <td>L'Architecture de Monitoring</td>
-                            <td>Séparation des concerns, kill switch, circuit breakers, gestion du risque</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Partie 3</strong></td>
-                            <td>Le Tooling du Retail Trader</td>
-                            <td>Outils concrets, stack technique, implémentation pas à pas</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="series-nav">
-                <a href="/tech/monitoring-trading-stack/" class="prev">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <div>
-                        <small>Partie 1</small><br>
-                        <strong>Les Post-Mortems</strong>
-                    </div>
-                </a>
-                <a href="/tech/monitoring-trading-stack/tooling/" class="next">
-                    <div>
-                        <small>Partie 3</small><br>
-                        <strong>Le Tooling du Retail Trader</strong>
-                    </div>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
+        <!-- ============================================================ -->
+        <!-- SERIES NAVIGATION — BOTTOM                                    -->
+        <!-- ============================================================ -->
+        <div class="content-card" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 2px solid #2563eb; text-align: center; padding: 2rem;">
+            <p style="font-weight: 800; color: #1e40af; margin-bottom: 1rem;">S&eacute;rie : Monitorer sa Stack de Trading</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="../" style="padding: 0.5rem 1.25rem; border-radius: 99px; background: white; color: #d97706; font-weight: 700; font-size: 0.85rem; border: 1px solid #d97706; text-decoration: none;">&#9312; Post-Mortems</a>
+                <span style="padding: 0.5rem 1.25rem; border-radius: 99px; background: #2563eb; color: white; font-weight: 700; font-size: 0.85rem;">&#9313; Architecture</span>
+                <a href="../tooling/" style="padding: 0.5rem 1.25rem; border-radius: 99px; background: white; color: #059669; font-weight: 700; font-size: 0.85rem; border: 1px solid #059669; text-decoration: none;">&#9314; Tooling</a>
             </div>
         </div>
 
-    </div><!-- end container -->
+    </div><!-- /container -->
 
     <footer class="article-footer">
-        &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+        &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
         Ceci n'est pas un conseil financier.
         <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
     </footer>
 
-    <!-- ========== ECHARTS INITIALIZATION ========== -->
-    <script>
-        // 1. Architecture Flow Chart
-        (function() {
-            var chart = echarts.init(document.getElementById('architectureChart'));
-            var option = {
-                backgroundColor: 'transparent',
-                title: {
-                    text: 'Architecture de Monitoring — Flux de Données',
-                    left: 'center',
-                    textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a', fontFamily: 'Inter' }
-                },
-                tooltip: { trigger: 'item', formatter: '{b}: {c}' },
-                series: [{
-                    type: 'graph',
-                    layout: 'none',
-                    animation: true,
-                    roam: false,
-                    label: {
-                        show: true,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fontFamily: 'Inter',
-                        color: '#fff',
-                        formatter: function(p) { return p.data.name; }
-                    },
-                    edgeLabel: {
-                        show: true,
-                        fontSize: 9,
-                        fontFamily: 'Inter',
-                        color: '#64748b',
-                        formatter: function(p) { return p.data.label || ''; }
-                    },
-                    lineStyle: {
-                        color: '#94a3b8',
-                        width: 2,
-                        curveness: 0.15
-                    },
-                    edgeSymbol: ['none', 'arrow'],
-                    edgeSymbolSize: 8,
-                    data: [
-                        { name: 'Market Data', x: 80, y: 60, symbolSize: 55, itemStyle: { color: '#64748b' }, value: 'Données de marché en temps réel' },
-                        { name: 'Signal\nGenerator', x: 260, y: 60, symbolSize: 65, itemStyle: { color: '#2563eb' }, value: 'Génération des signaux buy/sell' },
-                        { name: 'Risk\nManager', x: 440, y: 60, symbolSize: 65, itemStyle: { color: '#16a34a' }, value: 'Validation pré-trade des ordres' },
-                        { name: 'Execution\nEngine', x: 620, y: 60, symbolSize: 65, itemStyle: { color: '#f59e0b' }, value: 'Envoi des ordres au broker' },
-                        { name: 'Broker\nAPI', x: 800, y: 60, symbolSize: 55, itemStyle: { color: '#64748b' }, value: 'Courtier (IBKR, Alpaca, etc.)' },
-                        { name: 'Monitoring', x: 440, y: 220, symbolSize: 70, itemStyle: { color: '#8b5cf6' }, value: 'Observation temps réel de tout le système' },
-                        { name: 'Recovery\n& Kill Switch', x: 440, y: 350, symbolSize: 65, itemStyle: { color: '#dc2626' }, value: 'Arrêt d\'urgence et récupération' }
-                    ],
-                    edges: [
-                        { source: 'Market Data', target: 'Signal\nGenerator', label: 'prix, volume' },
-                        { source: 'Signal\nGenerator', target: 'Risk\nManager', label: 'signal buy/sell' },
-                        { source: 'Risk\nManager', target: 'Execution\nEngine', label: 'ordre validé' },
-                        { source: 'Execution\nEngine', target: 'Broker\nAPI', label: 'ordre envoyé' },
-                        { source: 'Broker\nAPI', target: 'Execution\nEngine', label: 'fill/reject', lineStyle: { type: 'dashed' } },
-                        { source: 'Signal\nGenerator', target: 'Monitoring', label: 'logs', lineStyle: { type: 'dotted', color: '#c4b5fd' } },
-                        { source: 'Risk\nManager', target: 'Monitoring', label: 'logs', lineStyle: { type: 'dotted', color: '#c4b5fd' } },
-                        { source: 'Execution\nEngine', target: 'Monitoring', label: 'logs', lineStyle: { type: 'dotted', color: '#c4b5fd' } },
-                        { source: 'Broker\nAPI', target: 'Monitoring', label: 'état', lineStyle: { type: 'dotted', color: '#c4b5fd' } },
-                        { source: 'Monitoring', target: 'Recovery\n& Kill Switch', label: 'alerte critique', lineStyle: { color: '#dc2626' } },
-                        { source: 'Recovery\n& Kill Switch', target: 'Execution\nEngine', label: 'close all', lineStyle: { color: '#dc2626', type: 'dashed' } },
-                        { source: 'Recovery\n& Kill Switch', target: 'Signal\nGenerator', label: 'halt', lineStyle: { color: '#dc2626', type: 'dashed' } }
-                    ]
-                }]
-            };
-            chart.setOption(option);
-            window.addEventListener('resize', function() { chart.resize(); });
-        })();
-
-        // 2. Circuit Breaker State Machine
-        (function() {
-            var chart = echarts.init(document.getElementById('circuitBreakerChart'));
-            var option = {
-                backgroundColor: 'transparent',
-                title: {
-                    text: 'Machine à États du Circuit Breaker',
-                    left: 'center',
-                    textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a', fontFamily: 'Inter' }
-                },
-                tooltip: { trigger: 'item' },
-                series: [{
-                    type: 'graph',
-                    layout: 'none',
-                    animation: true,
-                    roam: false,
-                    label: {
-                        show: true,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        fontFamily: 'Inter',
-                        color: '#fff',
-                        formatter: function(p) { return p.data.name; }
-                    },
-                    edgeLabel: {
-                        show: true,
-                        fontSize: 10,
-                        fontFamily: 'Inter',
-                        color: '#475569',
-                        formatter: function(p) { return p.data.label || ''; }
-                    },
-                    lineStyle: {
-                        width: 3,
-                        curveness: 0.3
-                    },
-                    edgeSymbol: ['none', 'arrow'],
-                    edgeSymbolSize: 10,
-                    data: [
-                        { name: 'CLOSED\n(Normal)', x: 150, y: 180, symbolSize: 90, itemStyle: { color: '#16a34a' }, value: 'Trading normal, tous les ordres passent' },
-                        { name: 'OPEN\n(Halted)', x: 650, y: 180, symbolSize: 90, itemStyle: { color: '#dc2626' }, value: 'Trading arrêté, positions surveillées' },
-                        { name: 'HALF-OPEN\n(Testing)', x: 400, y: 40, symbolSize: 80, itemStyle: { color: '#f59e0b' }, value: 'Reprise prudente, 1 trade test' }
-                    ],
-                    edges: [
-                        { source: 'CLOSED\n(Normal)', target: 'OPEN\n(Halted)', label: 'seuil atteint\n(pertes, erreurs)', lineStyle: { color: '#dc2626' } },
-                        { source: 'OPEN\n(Halted)', target: 'HALF-OPEN\n(Testing)', label: 'cooldown expiré\n(15 min)', lineStyle: { color: '#f59e0b' } },
-                        { source: 'HALF-OPEN\n(Testing)', target: 'CLOSED\n(Normal)', label: 'trade test\nréussi', lineStyle: { color: '#16a34a' } },
-                        { source: 'HALF-OPEN\n(Testing)', target: 'OPEN\n(Halted)', label: 'trade test\néchoué', lineStyle: { color: '#dc2626', type: 'dashed' } }
-                    ]
-                }]
-            };
-            chart.setOption(option);
-            window.addEventListener('resize', function() { chart.resize(); });
-        })();
-
-        // 3. Risk Allocation Radar Chart
-        (function() {
-            var chart = echarts.init(document.getElementById('riskChart'));
-            var option = {
-                backgroundColor: 'transparent',
-                title: {
-                    text: 'Répartition du Risque — Portfolio Systématique Modèle',
-                    left: 'center',
-                    textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a', fontFamily: 'Inter' }
-                },
-                tooltip: {
-                    trigger: 'item',
-                    formatter: function(p) {
-                        if (p.componentSubType === 'pie') {
-                            return p.name + ' : ' + p.value + '%';
-                        }
-                        return p.seriesName + '<br/>' + p.data.value.map(function(v, i) {
-                            var labels = ['Exposition Max', 'Corrélation Avg', 'Drawdown Toléré', 'VaR Quotidienne', 'Concentration', 'Levier'];
-                            return labels[i] + ' : ' + v;
-                        }).join('<br/>');
-                    }
-                },
-                legend: {
-                    bottom: 10,
-                    textStyle: { fontFamily: 'Inter', fontSize: 11 }
-                },
-                grid: [
-                    { left: '5%', right: '55%', top: '15%', bottom: '15%' },
-                    { left: '55%', right: '5%', top: '15%', bottom: '15%' }
-                ],
-                series: [
-                    {
-                        name: 'Allocation par classe d\'actifs',
-                        type: 'pie',
-                        radius: ['30%', '55%'],
-                        center: ['25%', '55%'],
-                        avoidLabelOverlap: true,
-                        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
-                        label: {
-                            fontSize: 11,
-                            fontFamily: 'Inter',
-                            fontWeight: 600,
-                            formatter: '{b}\n{d}%'
-                        },
-                        data: [
-                            { value: 35, name: 'Actions US', itemStyle: { color: '#2563eb' } },
-                            { value: 15, name: 'Actions EU', itemStyle: { color: '#3b82f6' } },
-                            { value: 10, name: 'Actions APAC', itemStyle: { color: '#60a5fa' } },
-                            { value: 15, name: 'Obligations', itemStyle: { color: '#16a34a' } },
-                            { value: 10, name: 'Commodities', itemStyle: { color: '#f59e0b' } },
-                            { value: 10, name: 'Crypto', itemStyle: { color: '#8b5cf6' } },
-                            { value: 5, name: 'Cash', itemStyle: { color: '#94a3b8' } }
-                        ]
-                    },
-                    {
-                        name: 'Limites de Risque',
-                        type: 'radar',
-                        center: ['72%', '55%'],
-                        radius: '45%',
-                        indicator: [
-                            { name: 'Exposition Max', max: 100 },
-                            { name: 'Corrélation\nMoyenne', max: 100 },
-                            { name: 'Drawdown\nToléré', max: 100 },
-                            { name: 'VaR\nQuotidienne', max: 100 },
-                            { name: 'Concentration', max: 100 },
-                            { name: 'Levier', max: 100 }
-                        ],
-                        data: [
-                            {
-                                value: [75, 40, 60, 45, 35, 30],
-                                name: 'Profil Conservateur',
-                                areaStyle: { color: 'rgba(22, 163, 74, 0.15)' },
-                                lineStyle: { color: '#16a34a', width: 2 },
-                                itemStyle: { color: '#16a34a' }
-                            },
-                            {
-                                value: [90, 60, 80, 65, 55, 60],
-                                name: 'Profil Agressif',
-                                areaStyle: { color: 'rgba(220, 38, 38, 0.1)' },
-                                lineStyle: { color: '#dc2626', width: 2, type: 'dashed' },
-                                itemStyle: { color: '#dc2626' }
-                            }
-                        ]
-                    }
-                ]
-            };
-            chart.setOption(option);
-            window.addEventListener('resize', function() { chart.resize(); });
-        })();
-    </script>
-
     <script src="/assets/core.js"></script>
 
-<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bookmark"></i><span>Introduction</span></a><a href="#separation" class="fnav-item" data-section="separation"><i class="fas fa-bookmark"></i><span>Séparation des Conc...</span></a><a href="#couches" class="fnav-item" data-section="couches"><i class="fas fa-bookmark"></i><span>3 Couches de Contrôl...</span></a><a href="#killswitch" class="fnav-item" data-section="killswitch"><i class="fas fa-bookmark"></i><span>Le Kill Switch</span></a><a href="#breakers" class="fnav-item" data-section="breakers"><i class="fas fa-bookmark"></i><span>Circuit Breakers</span></a><a href="#risque" class="fnav-item" data-section="risque"><i class="fas fa-bookmark"></i><span>Gestion du Risque</span></a><a href="#best" class="fnav-item" data-section="best"><i class="fas fa-bookmark"></i><span>Best Practices</span></a><a href="#bad" class="fnav-item" data-section="bad"><i class="fas fa-bookmark"></i><span>Anti-Patterns</span></a><a href="#navigation" class="fnav-item" data-section="navigation"><i class="fas fa-bookmark"></i><span>Navigation Série</span></a></div>
-<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
-<script>
-(function() {
-  var fab = document.getElementById('fnavBtn');
-  var menu = document.getElementById('fnavMenu');
-  var icon = document.getElementById('fnavIcon');
-  var label = document.getElementById('fnavLabel');
-  if (!fab || !menu) return;
-  var items = menu.querySelectorAll('.fnav-item');
-  var sections = [];
-  var isOpen = false;
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#introduction" class="fnav-item" data-section="introduction"><i class="fas fa-compass"></i><span>Introduction</span></a>
+            <a href="#separation" class="fnav-item" data-section="separation"><i class="fas fa-puzzle-piece"></i><span>S&eacute;paration des Concerns</span></a>
+            <a href="#couches" class="fnav-item" data-section="couches"><i class="fas fa-layer-group"></i><span>Les 4 Couches</span></a>
+            <a href="#risque" class="fnav-item" data-section="risque"><i class="fas fa-shield-halved"></i><span>Gestion du Risque</span></a>
+            <a href="#alerting" class="fnav-item" data-section="alerting"><i class="fas fa-bell"></i><span>Alerting &amp; Escalation</span></a>
+            <a href="#metriques" class="fnav-item" data-section="metriques"><i class="fas fa-chart-bar"></i><span>M&eacute;triques Essentielles</span></a>
+            <a href="#patterns" class="fnav-item" data-section="patterns"><i class="fas fa-check-double"></i><span>Patterns &amp; Anti-Patterns</span></a>
+            <a href="#retail" class="fnav-item" data-section="retail"><i class="fas fa-user"></i><span>Application Retail</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+    <script>
+    (function() {
+        var fab = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        var icon = document.getElementById('fnavIcon');
+        var label = document.getElementById('fnavLabel');
+        if (!fab || !menu) return;
+        var items = menu.querySelectorAll('.fnav-item');
+        var sections = [];
+        var isOpen = false;
 
-  items.forEach(function(item) {
-    var id = item.getAttribute('data-section');
-    var el = document.getElementById(id);
-    if (el) sections.push({ id: id, el: el, item: item });
-  });
+        items.forEach(function(item) {
+            var id = item.getAttribute('data-section');
+            var el = document.getElementById(id);
+            if (el) sections.push({ id: id, el: el, item: item });
+        });
 
-  function toggle() {
-    isOpen = !isOpen;
-    menu.classList.toggle('open', isOpen);
-    fab.classList.toggle('open', isOpen);
-    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
-  }
-
-  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
-  document.addEventListener('click', function(e) {
-    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
-  });
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
-
-  items.forEach(function(item) {
-    item.addEventListener('click', function(e) {
-      e.preventDefault();
-      var id = this.getAttribute('data-section');
-      var target = document.getElementById(id);
-      if (target) {
-        var brandBar = document.querySelector('.brand-bar');
-        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
-        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
-      }
-      if (isOpen) toggle();
-    });
-  });
-
-  var currentActive = null;
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        var match = sections.find(function(s) { return s.el === entry.target; });
-        if (match) {
-          if (currentActive) currentActive.item.classList.remove('active');
-          match.item.classList.add('active');
-          currentActive = match;
-          label.textContent = match.item.querySelector('span').textContent;
+        function toggle() {
+            isOpen = !isOpen;
+            menu.classList.toggle('open', isOpen);
+            fab.classList.toggle('open', isOpen);
+            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
         }
-      }
-    });
-  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
 
-  sections.forEach(function(s) { observer.observe(s.el); });
-  if (sections.length > 0) {
-    sections[0].item.classList.add('active');
-    currentActive = sections[0];
-    label.textContent = sections[0].item.querySelector('span').textContent;
-  }
-})();
-</script>
-<script src="/assets/tag-renderer.js"></script>
+        fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+        document.addEventListener('click', function(e) {
+            if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+        });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+        items.forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                var id = this.getAttribute('data-section');
+                var target = document.getElementById(id);
+                if (target) {
+                    var brandBar = document.querySelector('.brand-bar');
+                    var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+                    window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+                }
+                if (isOpen) toggle();
+            });
+        });
+
+        var currentActive = null;
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var match = sections.find(function(s) { return s.el === entry.target; });
+                    if (match) {
+                        if (currentActive) currentActive.item.classList.remove('active');
+                        match.item.classList.add('active');
+                        currentActive = match;
+                        label.textContent = match.item.querySelector('span').textContent;
+                    }
+                }
+            });
+        }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+
+        sections.forEach(function(s) { observer.observe(s.el); });
+        if (sections.length > 0) {
+            sections[0].item.classList.add('active');
+            currentActive = sections[0];
+            label.textContent = sections[0].item.querySelector('span').textContent;
+        }
+    })();
+    </script>
+    <script src="/assets/tag-renderer.js"></script>
 </body>
 
 </html>
