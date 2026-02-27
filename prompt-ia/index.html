@@ -41,6 +41,20 @@
     .input-hint{font-size:.7rem;color:#94a3b8;margin-top:4px}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+    /* ── ADVANCED TOGGLE ── */
+    .adv-divider{display:flex;align-items:center;gap:12px;margin:1.25rem 0 .5rem}
+    .adv-divider::before,.adv-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+    .adv-toggle{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border:1px solid #e2e8f0;border-radius:20px;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;background:#fff;color:#94a3b8;transition:all .25s;white-space:nowrap;box-sizing:border-box;flex-shrink:0}
+    .adv-toggle:hover{border-color:#c7d2fe;color:#6366f1;background:#fafaff}
+    .adv-toggle i.fa-sliders{font-size:.7rem}
+    .adv-toggle i.chevron{font-size:.55rem;transition:transform .25s}
+    .adv-toggle.open{border-color:#c7d2fe;color:#6366f1;background:#eef2ff}
+    .adv-toggle.open i.chevron{transform:rotate(180deg)}
+    .adv-defaults{font-size:.68rem;font-weight:500;color:#a5b4c8;letter-spacing:.02em;text-align:center;margin-bottom:.25rem;min-height:1rem}
+    .adv-section{display:none}
+    .adv-section.visible{display:block;animation:slideUp .3s ease}
+    [dir="rtl"] .adv-divider{flex-direction:row-reverse}
+    [dir="rtl"] .adv-toggle{flex-direction:row-reverse}
     /* ── ASSET BADGE ── */
     .asset-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;font-size:.73rem;font-weight:700;margin-top:5px;animation:fadeIn .3s ease}
     .asset-badge.stock{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
@@ -236,47 +250,60 @@
         </div>
       </div>
 
-      <!-- Row: Level + AI -->
-      <div class="form-row">
-        <div class="form-section">
-          <div class="form-label"><i class="fa-solid fa-graduation-cap"></i> <span id="levelLabel">Level</span></div>
-          <select class="form-select" id="levelSelect"></select>
-        </div>
-        <div class="form-section">
-          <div class="form-label"><i class="fa-solid fa-robot"></i> <span id="aiLabel">Target AI</span></div>
-          <select class="form-select" id="aiSelect"></select>
-          <div class="input-hint" id="aiHint">Auto = AI recommended based on context</div>
-        </div>
+      <!-- Advanced toggle -->
+      <div class="adv-divider">
+        <button class="adv-toggle" id="advToggle" type="button">
+          <i class="fa-solid fa-sliders"></i> <span id="advToggleLabel">Advanced settings</span> <i class="fa-solid fa-chevron-down chevron"></i>
+        </button>
       </div>
+      <div class="adv-defaults" id="advDefaults"></div>
 
-      <!-- Row: Format + Language + Focus -->
-      <div class="form-row-3">
-        <div class="form-section">
-          <div class="form-label"><i class="fa-solid fa-file-lines"></i> <span id="formatLabel">Format</span></div>
-          <select class="form-select" id="formatSelect"></select>
-        </div>
-        <div class="form-section">
-          <div class="form-label"><i class="fa-solid fa-language"></i> <span id="reportLangLabel">Report lang</span></div>
-          <select class="form-select" id="langSelect"></select>
-        </div>
-        <div class="form-section">
-          <div class="form-label"><i class="fa-solid fa-crosshairs"></i> <span id="focusLabel">Focus</span></div>
-          <select class="form-select" id="focusSelect" multiple></select>
-        </div>
-      </div>
+      <!-- Advanced section (collapsed by default) -->
+      <div class="adv-section" id="advSection">
 
-      <!-- Thesis -->
-      <div class="form-section">
-        <div class="form-label"><i class="fa-solid fa-lightbulb"></i> <span id="thesisLabel">Thesis</span> <span class="opt" id="thesisOpt">&mdash; optional</span></div>
-        <select class="form-select" id="thesisTemplateSelect" style="margin-bottom:8px"></select>
-        <textarea class="form-input" id="thesisInput" rows="2" placeholder=""></textarea>
-      </div>
+        <!-- Row: Level + AI -->
+        <div class="form-row">
+          <div class="form-section">
+            <div class="form-label"><i class="fa-solid fa-graduation-cap"></i> <span id="levelLabel">Level</span></div>
+            <select class="form-select" id="levelSelect"></select>
+          </div>
+          <div class="form-section">
+            <div class="form-label"><i class="fa-solid fa-robot"></i> <span id="aiLabel">Target AI</span></div>
+            <select class="form-select" id="aiSelect"></select>
+            <div class="input-hint" id="aiHint">Auto = AI recommended based on context</div>
+          </div>
+        </div>
 
-      <!-- Catalysts -->
-      <div class="form-section">
-        <div class="form-label"><i class="fa-solid fa-bolt"></i> <span id="catalystLabel">Catalysts</span> <span class="opt" id="catalystOpt">&mdash; optional</span></div>
-        <select class="form-select" id="catalystTemplateSelect" style="margin-bottom:8px"></select>
-        <input type="text" class="form-input" id="catalystInput" placeholder="" autocomplete="off">
+        <!-- Row: Format + Language + Focus -->
+        <div class="form-row-3">
+          <div class="form-section">
+            <div class="form-label"><i class="fa-solid fa-file-lines"></i> <span id="formatLabel">Format</span></div>
+            <select class="form-select" id="formatSelect"></select>
+          </div>
+          <div class="form-section">
+            <div class="form-label"><i class="fa-solid fa-language"></i> <span id="reportLangLabel">Report lang</span></div>
+            <select class="form-select" id="langSelect"></select>
+          </div>
+          <div class="form-section">
+            <div class="form-label"><i class="fa-solid fa-crosshairs"></i> <span id="focusLabel">Focus</span></div>
+            <select class="form-select" id="focusSelect" multiple></select>
+          </div>
+        </div>
+
+        <!-- Thesis -->
+        <div class="form-section">
+          <div class="form-label"><i class="fa-solid fa-lightbulb"></i> <span id="thesisLabel">Thesis</span> <span class="opt" id="thesisOpt">&mdash; optional</span></div>
+          <select class="form-select" id="thesisTemplateSelect" style="margin-bottom:8px"></select>
+          <textarea class="form-input" id="thesisInput" rows="2" placeholder=""></textarea>
+        </div>
+
+        <!-- Catalysts -->
+        <div class="form-section">
+          <div class="form-label"><i class="fa-solid fa-bolt"></i> <span id="catalystLabel">Catalysts</span> <span class="opt" id="catalystOpt">&mdash; optional</span></div>
+          <select class="form-select" id="catalystTemplateSelect" style="margin-bottom:8px"></select>
+          <input type="text" class="form-input" id="catalystInput" placeholder="" autocomplete="off">
+        </div>
+
       </div>
 
       <!-- Generate -->

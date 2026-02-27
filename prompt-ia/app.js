@@ -46,6 +46,7 @@
     setText('copyLabel', L.copy);
     setText('resetLabel', L.newBtn);
     setText('copiedText', L.copiedMsg);
+    setText('advToggleLabel', L.advToggle);
     setText('libToggleLabel', L.libTitle);
 
     // Placeholders
@@ -173,6 +174,30 @@
       }
     });
   }
+
+  // Advanced settings toggle
+  function updateAdvDefaults() {
+    var el = document.getElementById('advDefaults');
+    if (!el) return;
+    var section = document.getElementById('advSection');
+    if (section && section.classList.contains('visible')) { el.textContent = ''; return; }
+    var level = document.getElementById('levelSelect');
+    var ai = document.getElementById('aiSelect');
+    var fmt = document.getElementById('formatSelect');
+    var parts = [];
+    if (level && level.selectedOptions[0]) parts.push(level.selectedOptions[0].textContent);
+    if (ai && ai.selectedOptions[0]) parts.push(ai.selectedOptions[0].textContent);
+    if (fmt && fmt.selectedOptions[0]) parts.push(fmt.selectedOptions[0].textContent);
+    el.textContent = parts.join(' · ');
+  }
+  document.getElementById('advToggle').addEventListener('click', function() {
+    var section = document.getElementById('advSection');
+    section.classList.toggle('visible');
+    this.classList.toggle('open');
+    updateAdvDefaults();
+  });
+  // Refresh defaults hint after controls render
+  setTimeout(updateAdvDefaults, 50);
 
   // Library toggle
   document.getElementById('libToggle').addEventListener('click', function() {
