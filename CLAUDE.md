@@ -419,3 +419,19 @@ Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bo
 | Briefing Daily | Tous les jours 7h00 | `every day at 07:00 articles analyse daily` |
 | Scanner Quotidien | Lun-Ven 23h00 | `every weekday at 23:00 articles scan du jour` |
 | Rétrospective Scanner | Vendredi 23h00 | `every friday at 23:00 articles rétrospective scanner` |
+
+### Post-tâche : Auto Commit & Push (OBLIGATOIRE)
+
+Après chaque tâche schedulée (daily, scanner, rétrospective, weekly) qui se termine **avec succès** (fichier HTML généré + indexé), Claude **DOIT** automatiquement :
+
+1. **`git add`** les fichiers créés/modifiés (dossier article + `data/*.json` + `data/search_data.js`)
+2. **`git commit`** avec un message descriptif au format : `feat: {type} {date} — {titre court}`
+   - Exemples : `feat: briefing quotidien 27 février 2026 — NVIDIA selloff`, `feat: scanner 20260227 — Risk-Off, 10 setups A+`
+3. **`git push origin main`** pour déclencher le déploiement GitHub Pages
+
+**Ne PAS push si** :
+- La génération a échoué ou est incomplète
+- Le fichier HTML fait moins de 10KB (probablement tronqué)
+- `node tools/add_card.js` a échoué (article non indexé)
+
+**Vérification post-push** : Attendre 60s puis vérifier que le GitHub Actions deploy a bien démarré via `gh run list --limit 1`.
