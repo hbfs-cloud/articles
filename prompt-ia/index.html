@@ -71,6 +71,26 @@
     .generating{position:relative;overflow:hidden}
     .generating::after{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1.5s infinite}
 
+    /* ── MODE SWITCHER — 2 big buttons ── */
+    .mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem}
+    .mode-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;transition:all .25s;font-family:'Inter',sans-serif}
+    .mode-btn:hover{border-color:#a5b4fc;background:#f5f3ff}
+    .mode-btn.active{border-color:#6366f1;background:#eef2ff;box-shadow:0 4px 16px rgba(99,102,241,.12)}
+    .mode-btn-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .25s}
+    .mode-btn.active .mode-btn-icon{transform:scale(1.1)}
+    .mode-btn[data-mode="custom"] .mode-btn-icon{background:#eef2ff;color:#6366f1}
+    .mode-btn[data-mode="custom"].active .mode-btn-icon{background:#6366f1;color:#fff}
+    .mode-btn[data-mode="library"] .mode-btn-icon{background:#faf5ff;color:#8b5cf6}
+    .mode-btn[data-mode="library"].active .mode-btn-icon{background:#8b5cf6;color:#fff}
+    .mode-btn-label{font-size:.78rem;font-weight:700;color:#334155}
+    .mode-btn.active .mode-btn-label{color:#4338ca}
+    .mode-btn-sub{font-size:.62rem;color:#94a3b8;font-weight:500}
+    .mode-btn.active .mode-btn-sub{color:#6366f1}
+
+    /* ── MODE PANELS ── */
+    .mode-panel{display:none;animation:fadeIn .25s ease}
+    .mode-panel.active{display:block}
+
     /* ── CUSTOMIZE toggle ── */
     .adv-toggle-row{display:flex;justify-content:center;margin-top:.6rem}
     .sec-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:600;color:#94a3b8;cursor:pointer;transition:all .2s}
@@ -84,12 +104,8 @@
     .collapse.open{display:block;animation:fadeIn .2s ease}
     .adv-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:.6rem}
 
-    /* ── SECTION DIVIDER ── */
-    .section-divider{display:flex;align-items:center;gap:10px;margin:1.5rem 0 .75rem;padding:0}
-    .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
-    .section-divider-label{font-size:.78rem;font-weight:700;color:#475569;display:flex;align-items:center;gap:6px;white-space:nowrap}
-    .section-divider-label i{color:#6366f1}
-    .section-divider-count{font-size:.68rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:1px 8px;border-radius:10px}
+    /* ── LIB COUNT BADGE ── */
+    .lib-count-badge{font-size:.62rem;font-weight:600;color:#8b5cf6;background:#f5f3ff;padding:1px 7px;border-radius:8px;margin-left:2px}
 
     /* ── OUTPUT ── */
     .output-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;margin-top:1rem;overflow:hidden;display:none;animation:slideUp .4s ease}
@@ -216,6 +232,7 @@
     [dir="rtl"] .sec-btn{flex-direction:row-reverse}
     [dir="rtl"] .section-divider-label{flex-direction:row-reverse}
     [dir="rtl"] .plh-actions{flex-direction:row-reverse}
+    [dir="rtl"] .mode-btn{direction:rtl}
 
     /* ── RESPONSIVE ── */
     @media(max-width:640px){
@@ -258,110 +275,124 @@
 
   <div class="prompt-wrap">
 
-    <!-- ═══ GENERATOR ═══ -->
-    <div class="prompt-card" id="generatorCard">
-      <div class="fg">
-        <div class="fl"><i class="fa-solid fa-chart-line"></i> Ticker</div>
-        <input type="text" class="fi" id="tickerInput" placeholder="AAPL, BTC-USD, ASML..." maxlength="20" autocomplete="off" spellcheck="false">
-        <div id="assetBadgeArea"></div>
-      </div>
-      <div class="fg">
-        <div class="fl"><i class="fa-solid fa-compass"></i> <span id="intentLabel">Intent</span></div>
-        <select class="fi" id="intentSelect"></select>
-      </div>
-      <select id="assetSelect" hidden></select>
-      <button class="gen-btn" id="generateBtn" type="button">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="generateLabel">Generate Prompt</span>
+    <!-- ═══ MODE SWITCHER ═══ -->
+    <div class="mode-switcher" id="modeSwitcher">
+      <button class="mode-btn active" data-mode="custom" id="modeCustomBtn" type="button">
+        <span class="mode-btn-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+        <span class="mode-btn-label" id="modeCustomLabel">Custom Prompt</span>
+        <span class="mode-btn-sub" id="modeCustomSub">Ticker + AI = mega-prompt</span>
       </button>
-      <div class="adv-toggle-row">
-        <button class="sec-btn" id="advToggle" type="button">
-          <i class="fa-solid fa-sliders"></i> <span id="advToggleLabel">Customize</span> <i class="fa-solid fa-chevron-down chev"></i>
+      <button class="mode-btn" data-mode="library" id="modeLibBtn" type="button">
+        <span class="mode-btn-icon"><i class="fa-solid fa-book-bookmark"></i></span>
+        <span class="mode-btn-label"><span id="modeLibLabel">Library</span> <span class="lib-count-badge" id="libCountBadge"></span></span>
+        <span class="mode-btn-sub" id="modeLibSub">Ready-to-use prompts</span>
+      </button>
+    </div>
+
+    <!-- ═══ MODE: CUSTOM ═══ -->
+    <div class="mode-panel active" id="panelCustom">
+      <div class="prompt-card" id="generatorCard">
+        <div class="fg">
+          <div class="fl"><i class="fa-solid fa-chart-line"></i> Ticker</div>
+          <input type="text" class="fi" id="tickerInput" placeholder="AAPL, BTC-USD, ASML..." maxlength="20" autocomplete="off" spellcheck="false">
+          <div id="assetBadgeArea"></div>
+        </div>
+        <div class="fg">
+          <div class="fl"><i class="fa-solid fa-compass"></i> <span id="intentLabel">Intent</span></div>
+          <select class="fi" id="intentSelect"></select>
+        </div>
+        <select id="assetSelect" hidden></select>
+        <button class="gen-btn" id="generateBtn" type="button">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="generateLabel">Generate Prompt</span>
         </button>
+        <div class="adv-toggle-row">
+          <button class="sec-btn" id="advToggle" type="button">
+            <i class="fa-solid fa-sliders"></i> <span id="advToggleLabel">Customize</span> <i class="fa-solid fa-chevron-down chev"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ ADVANCED PANEL ═══ -->
+      <div class="collapse adv-panel" id="advSection">
+        <div class="frow">
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-graduation-cap"></i> <span id="levelLabel">Level</span></div>
+            <select class="fi" id="levelSelect"></select>
+          </div>
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-robot"></i> <span id="aiLabel">Target AI</span></div>
+            <select class="fi" id="aiSelect"></select>
+            <div class="hint" id="aiHint">Auto = best AI for this context</div>
+          </div>
+        </div>
+        <div class="frow3">
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-file-lines"></i> <span id="formatLabel">Format</span></div>
+            <select class="fi" id="formatSelect"></select>
+          </div>
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-language"></i> <span id="reportLangLabel">Lang</span></div>
+            <select class="fi" id="langSelect"></select>
+          </div>
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-crosshairs"></i> <span id="focusLabel">Focus</span></div>
+            <select class="fi" id="focusSelect" multiple></select>
+          </div>
+        </div>
+        <div class="fg">
+          <div class="fl"><i class="fa-solid fa-tags"></i> <span id="assetLabel">Asset type</span></div>
+          <select class="fi" id="assetSelectAdv"></select>
+        </div>
+        <div class="fg">
+          <div class="fl"><i class="fa-solid fa-lightbulb"></i> <span id="thesisLabel">Thesis</span> <span class="opt" id="thesisOpt">optional</span></div>
+          <select class="fi tpl" id="thesisTemplateSelect"></select>
+          <textarea class="fi" id="thesisInput" rows="2" placeholder=""></textarea>
+        </div>
+        <div class="fg">
+          <div class="fl"><i class="fa-solid fa-bolt"></i> <span id="catalystLabel">Catalysts</span> <span class="opt" id="catalystOpt">optional</span></div>
+          <select class="fi tpl" id="catalystTemplateSelect"></select>
+          <input type="text" class="fi" id="catalystInput" placeholder="" autocomplete="off">
+        </div>
+        <div class="fg">
+          <div class="fl"><i class="fa-solid fa-clock"></i> <span id="scheduleLabel">Auto-run</span> <span class="opt" id="scheduleOpt">optional</span></div>
+          <select class="fi" id="scheduleSelect"></select>
+          <div class="hint" id="scheduleHint">The AI will be instructed to repeat this analysis at the chosen frequency</div>
+        </div>
+      </div>
+
+      <!-- ═══ OUTPUT ═══ -->
+      <div class="output-card" id="outputCard">
+        <div class="output-header">
+          <h3><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="outputTitle">Prompt</span></h3>
+          <div class="output-meta">
+            <span id="outputTarget"><i class="fa-solid fa-robot"></i> ChatGPT</span>
+            <span id="outputAsset"></span>
+            <span id="outputChars"><i class="fa-solid fa-text-width"></i> 0</span>
+          </div>
+        </div>
+        <pre class="prompt-output" id="promptOutput"></pre>
+        <div id="smartLinksArea" class="smart-links"></div>
+        <div class="output-actions">
+          <button class="action-btn primary" id="copyBtn" type="button">
+            <i class="fa-solid fa-copy"></i> <span id="copyLabel">Copy</span>
+          </button>
+          <button class="action-btn" id="downloadBtn" type="button">
+            <i class="fa-solid fa-download"></i> .txt
+          </button>
+          <button class="action-btn" id="resetBtn" type="button">
+            <i class="fa-solid fa-rotate-left"></i> <span id="resetLabel">New</span>
+          </button>
+        </div>
+        <div class="open-ai-row" id="openAiRow"></div>
+        <div id="compPromptsArea" class="comp-prompts"></div>
       </div>
     </div>
 
-    <!-- ═══ ADVANCED PANEL ═══ -->
-    <div class="collapse adv-panel" id="advSection">
-      <div class="frow">
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-graduation-cap"></i> <span id="levelLabel">Level</span></div>
-          <select class="fi" id="levelSelect"></select>
-        </div>
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-robot"></i> <span id="aiLabel">Target AI</span></div>
-          <select class="fi" id="aiSelect"></select>
-          <div class="hint" id="aiHint">Auto = best AI for this context</div>
-        </div>
-      </div>
-      <div class="frow3">
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-file-lines"></i> <span id="formatLabel">Format</span></div>
-          <select class="fi" id="formatSelect"></select>
-        </div>
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-language"></i> <span id="reportLangLabel">Lang</span></div>
-          <select class="fi" id="langSelect"></select>
-        </div>
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-crosshairs"></i> <span id="focusLabel">Focus</span></div>
-          <select class="fi" id="focusSelect" multiple></select>
-        </div>
-      </div>
-      <div class="fg">
-        <div class="fl"><i class="fa-solid fa-tags"></i> <span id="assetLabel">Asset type</span></div>
-        <select class="fi" id="assetSelectAdv"></select>
-      </div>
-      <div class="fg">
-        <div class="fl"><i class="fa-solid fa-lightbulb"></i> <span id="thesisLabel">Thesis</span> <span class="opt" id="thesisOpt">optional</span></div>
-        <select class="fi tpl" id="thesisTemplateSelect"></select>
-        <textarea class="fi" id="thesisInput" rows="2" placeholder=""></textarea>
-      </div>
-      <div class="fg">
-        <div class="fl"><i class="fa-solid fa-bolt"></i> <span id="catalystLabel">Catalysts</span> <span class="opt" id="catalystOpt">optional</span></div>
-        <select class="fi tpl" id="catalystTemplateSelect"></select>
-        <input type="text" class="fi" id="catalystInput" placeholder="" autocomplete="off">
-      </div>
-      <div class="fg">
-        <div class="fl"><i class="fa-solid fa-clock"></i> <span id="scheduleLabel">Auto-run</span> <span class="opt" id="scheduleOpt">optional</span></div>
-        <select class="fi" id="scheduleSelect"></select>
-        <div class="hint" id="scheduleHint">The AI will be instructed to repeat this analysis at the chosen frequency</div>
-      </div>
+    <!-- ═══ MODE: LIBRARY ═══ -->
+    <div class="mode-panel" id="panelLibrary">
+      <div class="prompt-lib-tabs" id="libTabs"></div>
+      <div class="prompt-lib-grid" id="promptLibGrid"></div>
     </div>
-
-    <!-- ═══ OUTPUT ═══ -->
-    <div class="output-card" id="outputCard">
-      <div class="output-header">
-        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="outputTitle">Prompt</span></h3>
-        <div class="output-meta">
-          <span id="outputTarget"><i class="fa-solid fa-robot"></i> ChatGPT</span>
-          <span id="outputAsset"></span>
-          <span id="outputChars"><i class="fa-solid fa-text-width"></i> 0</span>
-        </div>
-      </div>
-      <pre class="prompt-output" id="promptOutput"></pre>
-      <div id="smartLinksArea" class="smart-links"></div>
-      <div class="output-actions">
-        <button class="action-btn primary" id="copyBtn" type="button">
-          <i class="fa-solid fa-copy"></i> <span id="copyLabel">Copy</span>
-        </button>
-        <button class="action-btn" id="downloadBtn" type="button">
-          <i class="fa-solid fa-download"></i> .txt
-        </button>
-        <button class="action-btn" id="resetBtn" type="button">
-          <i class="fa-solid fa-rotate-left"></i> <span id="resetLabel">New</span>
-        </button>
-      </div>
-      <div class="open-ai-row" id="openAiRow"></div>
-      <div id="compPromptsArea" class="comp-prompts"></div>
-    </div>
-
-    <!-- ═══ LIBRARY — always visible ═══ -->
-    <div class="section-divider">
-      <span class="section-divider-label"><i class="fa-solid fa-book-bookmark"></i> <span id="libDividerLabel">Prompt Library</span></span>
-      <span class="section-divider-count" id="libToggleCount"></span>
-    </div>
-    <div class="prompt-lib-tabs" id="libTabs"></div>
-    <div class="prompt-lib-grid" id="promptLibGrid"></div>
 
   </div>
 
@@ -389,8 +420,8 @@
   </footer>
 
   <script src="/assets/core.js"></script>
-  <script src="/prompt-ia/lang.js?v=9"></script>
-  <script src="/prompt-ia/library.js?v=9"></script>
-  <script src="/prompt-ia/app.js?v=9"></script>
+  <script src="/prompt-ia/lang.js?v=10"></script>
+  <script src="/prompt-ia/library.js?v=10"></script>
+  <script src="/prompt-ia/app.js?v=10"></script>
 </body>
 </html>

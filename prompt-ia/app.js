@@ -50,9 +50,12 @@
     setText('resetLabel', L.newBtn);
     setText('copiedText', L.copiedMsg);
     setText('advToggleLabel', L.advToggle);
-    setText('libDividerLabel', L.libDividerTitle);
-    var libCount = document.getElementById('libToggleCount');
-    if (libCount) libCount.textContent = LIBRARY.length;
+    setText('modeCustomLabel', L.modeCustomLabel);
+    setText('modeCustomSub', L.modeCustomSub);
+    setText('modeLibLabel', L.modeLibLabel);
+    setText('modeLibSub', L.modeLibSub);
+    var libBadge = document.getElementById('libCountBadge');
+    if (libBadge) libBadge.textContent = LIBRARY.length;
 
     // Placeholders
     var thesisInput = document.getElementById('thesisInput');
@@ -210,6 +213,15 @@
     });
   }
   togglePanel('advToggle', 'advSection');
+
+  // ── MODE SWITCHER ──
+  function switchMode(mode) {
+    document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.mode === mode); });
+    document.getElementById('panelCustom').classList.toggle('active', mode === 'custom');
+    document.getElementById('panelLibrary').classList.toggle('active', mode === 'library');
+  }
+  document.getElementById('modeCustomBtn').addEventListener('click', function() { switchMode('custom'); });
+  document.getElementById('modeLibBtn').addEventListener('click', function() { switchMode('library'); });
 
   // ── AI RECOMMENDATION ENGINE ──
   var aiLabels = { chatgpt:'ChatGPT', claude:'Claude', perplexity:'Perplexity', grok:'Grok', gemini:'Gemini', deepseek:'DeepSeek' };
@@ -1259,6 +1271,8 @@
 
   // Open library prompt by number (from URL param)
   function openLibraryPrompt(num) {
+    // Switch to library mode
+    switchMode('library');
     // Show all tab
     var allTab = document.querySelector('.prompt-lib-tab[data-cat="all"]');
     if (allTab) allTab.click();

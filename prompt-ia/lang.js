@@ -76,7 +76,11 @@ var LANG = {
       resTitle: 'S\u00e9ries \u00c9ducatives',
       scheduleLabel: 'Auto-run',
       scheduleOpt: '\u2014 optionnel',
-      scheduleHint: 'L\'IA sera instruit\u00e9e de r\u00e9p\u00e9ter cette analyse \u00e0 la fr\u00e9quence choisie'
+      scheduleHint: 'L\'IA sera instruit\u00e9e de r\u00e9p\u00e9ter cette analyse \u00e0 la fr\u00e9quence choisie',
+      modeCustomLabel: 'Prompt Custom',
+      modeCustomSub: 'Ticker + IA = méga-prompt',
+      modeLibLabel: 'Bibliothèque',
+      modeLibSub: 'Prompts prêts à l\'emploi'
     },
     en: {
       heroTitle: 'AI Prompt',
@@ -146,7 +150,11 @@ var LANG = {
       resTitle: 'Educational Series',
       scheduleLabel: 'Auto-run',
       scheduleOpt: '\u2014 optional',
-      scheduleHint: 'The AI will be instructed to repeat this analysis at the chosen frequency'
+      scheduleHint: 'The AI will be instructed to repeat this analysis at the chosen frequency',
+      modeCustomLabel: 'Custom Prompt',
+      modeCustomSub: 'Ticker + AI = mega-prompt',
+      modeLibLabel: 'Library',
+      modeLibSub: 'Ready-to-use prompts'
     },
     ar: {
       heroTitle: '\u0628\u0631\u0648\u0645\u064a\u062a IA',
@@ -216,7 +224,11 @@ var LANG = {
       resTitle: '\u0633\u0644\u0627\u0633\u0644 \u062a\u0639\u0644\u064a\u0645\u064a\u0629',
       scheduleLabel: '\u062a\u0634\u063a\u064a\u0644 \u062a\u0644\u0642\u0627\u0626\u064a',
       scheduleOpt: '\u2014 \u0627\u062e\u062a\u064a\u0627\u0631\u064a',
-      scheduleHint: '\u0633\u064a\u064f\u0637\u0644\u0628 \u0645\u0646 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u062a\u0643\u0631\u0627\u0631 \u0647\u0630\u0627 \u0627\u0644\u062a\u062d\u0644\u064a\u0644 \u0628\u0627\u0644\u062a\u0631\u062f\u062f \u0627\u0644\u0645\u062e\u062a\u0627\u0631'
+      scheduleHint: '\u0633\u064a\u064f\u0637\u0644\u0628 \u0645\u0646 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u062a\u0643\u0631\u0627\u0631 \u0647\u0630\u0627 \u0627\u0644\u062a\u062d\u0644\u064a\u0644 \u0628\u0627\u0644\u062a\u0631\u062f\u062f \u0627\u0644\u0645\u062e\u062a\u0627\u0631',
+      modeCustomLabel: '\u0628\u0631\u0648\u0645\u0628\u062a \u0645\u062e\u0635\u0635',
+      modeCustomSub: '\u0631\u0645\u0632 + \u0630\u0643\u0627\u0621 = \u0628\u0631\u0648\u0645\u0628\u062a \u0636\u062e\u0645',
+      modeLibLabel: '\u0627\u0644\u0645\u0643\u062a\u0628\u0629',
+      modeLibSub: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062c\u0627\u0647\u0632\u0629'
     }
   },
   chips: {
