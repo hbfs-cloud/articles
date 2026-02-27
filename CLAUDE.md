@@ -182,7 +182,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
    - **Timing & Sizing** : dans un `alert-box`, préciser horizon (swing/moyen terme), catalyseurs calendrier, sizing (% portefeuille), beta, entrée échelonnée
    - Ajouter un lien `<a href="#trade" class="nav-item">Trade Idea</a>` dans la navigation
    - **Non pertinent pour** : indices (STOXX600, KOSPI), thématiques (STABLECOINS), devises (EURUSD) sauf si trade FX explicite
-9. Mettre à jour la modale Historique avec les versions archivées
+9. Lancer `node tools/update_history.js analyses/{TICKER}/index.html` pour auto-générer la modale Historique à partir des versions archivées dans `archive/`
 10. Lancer `node tools/add_card.js analyses/{TICKER}/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 
 ### "Analyse Daily" / "Briefing du jour"
