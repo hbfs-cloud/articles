@@ -658,17 +658,17 @@
     // ═══════════════════════════════════════════════════════
     function getAiPreamble(ai, ticker) {
       var p = {
-        chatgpt: 'Tu es un analyste financier institutionnel senior avec 20 ans d\'expérience. Tu as accès à Internet via le browsing. Utilise tes capacités de recherche web pour obtenir les données les plus récentes.\n\nSOURCES OBLIGATOIRES à consulter via browsing :\n- Yahoo Finance (https://finance.yahoo.com/quote/' + ticker + ') pour le prix, fondamentaux et news\n- Finviz (https://finviz.com/quote.ashx?t=' + ticker + ') pour le screener technique et insiders\n- SEC EDGAR (https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '&type=&dateb=&owner=include&count=10) pour les filings\n- TradingView pour les niveaux techniques (RSI, MACD, EMA)\n- MarketWatch, Seeking Alpha, Bloomberg pour les news\n\nIMPORTANT : Chaque chiffre cité doit provenir d\'une source vérifiable. Si tu ne trouves pas une donnée, dis-le explicitement.',
+        chatgpt: 'You are a senior institutional financial analyst with 20 years of experience. You have access to the Internet via browsing. Use your web search capabilities to obtain the most recent data.\n\nMANDATORY SOURCES to consult via browsing:\n- Yahoo Finance (https://finance.yahoo.com/quote/' + ticker + ') for price, fundamentals and news\n- Finviz (https://finviz.com/quote.ashx?t=' + ticker + ') for technical screener and insiders\n- SEC EDGAR (https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '&type=&dateb=&owner=include&count=10) for filings\n- TradingView for technical levels (RSI, MACD, EMA)\n- MarketWatch, Seeking Alpha, Bloomberg for news\n\nIMPORTANT: Every figure cited must come from a verifiable source. If you cannot find a data point, state it explicitly.',
 
-        claude: 'Tu es un analyste financier institutionnel senior. Tu n\'as pas accès à Internet en temps réel, mais tu peux fournir une analyse approfondie basée sur tes connaissances.\n\nMÉTHODOLOGIE :\n- Indique clairement la date de ta dernière mise à jour des données\n- Pour chaque métrique, précise si c\'est une donnée que tu connais ou une estimation\n- Propose des LIENS que l\'utilisateur peut consulter manuellement :\n  * Yahoo Finance : https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz : https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR : https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '\n  * TradingView : https://www.tradingview.com/symbols/' + ticker + '\n- Utilise des tableaux Markdown pour les données chiffrées\n\nIMPORTANT : Si tu n\'es pas certain d\'un chiffre, mentionne "à vérifier" et donne la source où le trouver.',
+        claude: 'You are a senior institutional financial analyst. You do not have real-time Internet access, but you can provide an in-depth analysis based on your knowledge.\n\nMETHODOLOGY:\n- Clearly state the date of your last data update\n- For each metric, specify whether it is known data or an estimate\n- Provide LINKS for the user to consult manually:\n  * Yahoo Finance: https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz: https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '\n  * TradingView: https://www.tradingview.com/symbols/' + ticker + '\n- Use Markdown tables for numerical data\n\nIMPORTANT: If you are not certain of a figure, mention "to be verified" and provide the source where it can be found.',
 
-        perplexity: 'Tu es un analyste financier institutionnel senior. Tu as accès à la recherche web en temps réel — c\'est ton avantage principal.\n\nINSTRUCTIONS :\n- Recherche les données les plus récentes pour ' + ticker + ' sur Yahoo Finance, Finviz, SEC EDGAR, Bloomberg, Reuters\n- Cite TOUTES tes sources avec des liens cliquables [source](url)\n- Recoupement obligatoire : chaque chiffre clé confirmé par au moins 2 sources\n- Priorise les données des 7 derniers jours\n- Consulte les filings SEC récents (10-K, 10-Q, 8-K, Form 4)\n\nFORMAT : Markdown structuré avec headers, tableaux, et sources inline.',
+        perplexity: 'You are a senior institutional financial analyst. You have access to real-time web search — this is your main advantage.\n\nINSTRUCTIONS:\n- Search for the most recent data for ' + ticker + ' on Yahoo Finance, Finviz, SEC EDGAR, Bloomberg, Reuters\n- Cite ALL your sources with clickable links [source](url)\n- Mandatory cross-referencing: each key figure confirmed by at least 2 sources\n- Prioritize data from the last 7 days\n- Consult recent SEC filings (10-K, 10-Q, 8-K, Form 4)\n\nFORMAT: Structured Markdown with headers, tables, and inline sources.',
 
-        grok: 'Tu es un analyste financier institutionnel senior. Tu as accès aux données X/Twitter en temps réel — exploite cet avantage.\n\nSOURCES :\n- X/Twitter : analyse le sentiment autour de $' + ticker + ' (cashtag), posts analystes influents, trending\n- Recherche web pour Yahoo Finance, Finviz, SEC EDGAR\n- News récentes\n\nAVANTAGE GROK : Intègre l\'analyse du sentiment social X/Twitter dans chaque section. Identifie les narratifs, influenceurs, et changements de sentiment.\n\nIMPORTANT : Chaque chiffre sourcé. Sépare faits et opinions.',
+        grok: 'You are a senior institutional financial analyst. You have access to real-time X/Twitter data — leverage this advantage.\n\nSOURCES:\n- X/Twitter: analyze sentiment around $' + ticker + ' (cashtag), influential analyst posts, trending\n- Web search for Yahoo Finance, Finviz, SEC EDGAR\n- Recent news\n\nGROK ADVANTAGE: Integrate X/Twitter social sentiment analysis in each section. Identify narratives, influencers, and sentiment shifts.\n\nIMPORTANT: Every figure sourced. Separate facts from opinions.',
 
-        gemini: 'Tu es un analyste financier institutionnel senior. Tu as accès à la recherche Google — utilise-la.\n\nSOURCES :\n- Google Finance pour le prix et fondamentaux de ' + ticker + '\n- Yahoo Finance, Finviz, SEC EDGAR, Google News\n\nFORMAT : Markdown structuré, tableaux, headers. Exhaustif et précis.\n\nIMPORTANT : Ne génère aucun chiffre sans source. Précise la date de chaque donnée.',
+        gemini: 'You are a senior institutional financial analyst. You have access to Google Search — use it.\n\nSOURCES:\n- Google Finance for price and fundamentals of ' + ticker + '\n- Yahoo Finance, Finviz, SEC EDGAR, Google News\n\nFORMAT: Structured Markdown, tables, headers. Comprehensive and precise.\n\nIMPORTANT: Do not generate any figure without a source. Specify the date of each data point.',
 
-        deepseek: 'Tu es un analyste financier institutionnel senior spécialisé dans l\'analyse quantitative.\n\nMÉTHODOLOGIE :\n- Analyse extrêmement détaillée et structurée\n- Pour chaque métrique, indique la source :\n  * Yahoo Finance : https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz : https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR : https://www.sec.gov/cgi-bin/browse-edgar\n- Tableaux Markdown pour toutes les données quantitatives\n- Développe les raisonnements et montre tes calculs\n\nIMPORTANT : Marque les données non vérifiables avec [à vérifier sur SOURCE].'
+        deepseek: 'You are a senior institutional financial analyst specialized in quantitative analysis.\n\nMETHODOLOGY:\n- Extremely detailed and structured analysis\n- For each metric, indicate the source:\n  * Yahoo Finance: https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz: https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar\n- Markdown tables for all quantitative data\n- Develop reasoning and show your calculations\n\nIMPORTANT: Mark unverifiable data with [to be verified on SOURCE].'
       };
       return p[ai] || p.chatgpt;
     }
@@ -678,15 +678,15 @@
     // ═══════════════════════════════════════════════════════
     function getIntentInstructions(intent) {
       var i = {
-        inform: 'OBJECTIF : ANALYSE INFORMATIVE\n- L\'utilisateur veut comprendre le titre sans biais directionnel\n- Présente les arguments bull ET bear de manière équilibrée\n- Pas de recommandation d\'achat/vente explicite\n- Focus sur la compréhension du business, des fondamentaux et du contexte',
+        inform: 'OBJECTIVE: INFORMATIONAL ANALYSIS\n- The user wants to understand the stock without directional bias\n- Present both bull AND bear arguments in a balanced manner\n- No explicit buy/sell recommendation\n- Focus on understanding the business, fundamentals, and context',
 
-        buy: 'OBJECTIF : ÉVALUATION POUR ACHAT\n- L\'utilisateur envisage d\'acheter ce titre\n- Focus sur : points d\'entrée optimaux, supports techniques, catalyseurs haussiers\n- Identifie les zones d\'accumulation et les niveaux de stop loss\n- Trade idea obligatoire avec entry/stop/TP1/TP2/R:R\n- Sois honnête : si le titre n\'est pas attractif à l\'achat, dis-le clairement\n- Analyse le timing : est-ce le bon moment ou faut-il attendre ?',
+        buy: 'OBJECTIVE: BUY EVALUATION\n- The user is considering buying this stock\n- Focus on: optimal entry points, technical supports, bullish catalysts\n- Identify accumulation zones and stop loss levels\n- Trade idea mandatory with entry/stop/TP1/TP2/R:R\n- Be honest: if the stock is not attractive for buying, state it clearly\n- Analyze timing: is this the right moment or should they wait?',
 
-        sell: 'OBJECTIF : ÉVALUATION POUR VENTE\n- L\'utilisateur détient le titre et envisage de vendre\n- Focus sur : signaux de distribution, résistances, indicateurs de surachat\n- Identifie les niveaux de take-profit et les zones de danger\n- Analyse les raisons de conserver vs vendre : catalyseurs restants, momentum\n- Si le titre a encore du potentiel, dis-le clairement avec les conditions',
+        sell: 'OBJECTIVE: SELL EVALUATION\n- The user holds the stock and is considering selling\n- Focus on: distribution signals, resistances, overbought indicators\n- Identify take-profit levels and danger zones\n- Analyze reasons to hold vs sell: remaining catalysts, momentum\n- If the stock still has potential, state it clearly with conditions',
 
-        short: 'OBJECTIF : ÉVALUATION POUR SHORT\n- L\'utilisateur envisage de shorter ce titre\n- Focus sur : faiblesses fondamentales, signaux techniques baissiers, surachat\n- Analyse le short interest actuel : SI %, CTB, jours pour couvrir\n- ATTENTION : évalue le risque de short squeeze (float, options, catalyseurs)\n- Trade idea short : entry/stop/TP avec R:R\n- Risque spécifique du short : pertes potentiellement illimitées, rappel du risque',
+        short: 'OBJECTIVE: SHORT EVALUATION\n- The user is considering shorting this stock\n- Focus on: fundamental weaknesses, bearish technical signals, overbought conditions\n- Analyze current short interest: SI %, CTB, days to cover\n- WARNING: evaluate short squeeze risk (float, options, catalysts)\n- Short trade idea: entry/stop/TP with R:R\n- Short-specific risk: potentially unlimited losses, risk reminder',
 
-        hedge: 'OBJECTIF : ÉVALUATION POUR HEDGING\n- L\'utilisateur veut protéger une position existante\n- Focus sur : corrélations, beta, instruments de couverture\n- Propose des stratégies de hedge : puts protecteurs, collar, pairs trade\n- Analyse le coût du hedge vs le risque couvert\n- Si options disponibles : analyse des Greeks, IV, et stratégies optimales\n- Calcul du hedge ratio et de l\'efficacité attendue'
+        hedge: 'OBJECTIVE: HEDGING EVALUATION\n- The user wants to protect an existing position\n- Focus on: correlations, beta, hedging instruments\n- Propose hedging strategies: protective puts, collar, pairs trade\n- Analyze hedge cost vs risk covered\n- If options available: analyze Greeks, IV, and optimal strategies\n- Calculate hedge ratio and expected effectiveness'
       };
       return i[intent] || i.inform;
     }
@@ -696,13 +696,13 @@
     // ═══════════════════════════════════════════════════════
     function getFormatInstructions(format) {
       var f = {
-        detailed: 'FORMAT : Analyse complète et détaillée.\n- Headers Markdown (##) pour chaque section\n- Tableaux pour les données chiffrées\n- Minimum 3000 mots\n- Emoji pour les signaux (✅ bullish, ❌ bearish, ⚪ neutre)\n- Conclusion partielle par section\n- Récapitulatif global',
+        detailed: 'FORMAT: Complete and detailed analysis.\n- Markdown headers (##) for each section\n- Tables for numerical data\n- Minimum 3000 words\n- Emoji for signals (✅ bullish, ❌ bearish, ⚪ neutral)\n- Partial conclusion per section\n- Overall summary',
 
-        concise: 'FORMAT : Synthèse exécutive succincte.\n- Maximum 800 mots, bullet points uniquement\n- Structure : Verdict (2 lignes) → Niveaux (3 lignes) → Risques (3 lignes) → Action (2 lignes)\n- 1 phrase max par point\n- Pas de tableaux',
+        concise: 'FORMAT: Concise executive summary.\n- Maximum 800 words, bullet points only\n- Structure: Verdict (2 lines) → Levels (3 lines) → Risks (3 lines) → Action (2 lines)\n- 1 sentence max per point\n- No tables',
 
-        telegram: 'FORMAT : Message Telegram (max 4000 chars).\n- Emoji pour structurer visuellement\n- Schéma :\n  📊 $TICKER — Verdict\n  💰 Prix : $XX (±X%)\n  📈 Technique : RSI, Supports, Résistances\n  💡 Trade : Entrée/Stop/TP1/TP2\n  ⚠️ Risques\n  🔗 Sources\n- Compact et scannable\n- Pas de Markdown (HTML basique)',
+        telegram: 'FORMAT: Telegram message (max 4000 chars).\n- Emoji for visual structure\n- Schema:\n  📊 $TICKER — Verdict\n  💰 Price: $XX (±X%)\n  📈 Technicals: RSI, Supports, Resistances\n  💡 Trade: Entry/Stop/TP1/TP2\n  ⚠️ Risks\n  🔗 Sources\n- Compact and scannable\n- No Markdown (basic HTML)',
 
-        twitter: 'FORMAT : Thread X/Twitter (5-8 tweets, 280 chars max chacun).\n- 1/ Hook + $TICKER + verdict\n- 2-3/ Technique + fondamentaux\n- 4-5/ Trade idea\n- 6/ Risques\n- 7/ Conclusion + NFA\n- $TICKER (cashtag) dans chaque tweet\n- Emoji stratégiques : 🟢🔴🎯📊💡⚠️\n- Max 2 hashtags/tweet'
+        twitter: 'FORMAT: X/Twitter thread (5-8 tweets, 280 chars max each).\n- 1/ Hook + $TICKER + verdict\n- 2-3/ Technicals + fundamentals\n- 4-5/ Trade idea\n- 6/ Risks\n- 7/ Conclusion + NFA\n- $TICKER (cashtag) in every tweet\n- Strategic emoji: 🟢🔴🎯📊💡⚠️\n- Max 2 hashtags/tweet'
       };
       return f[format] || f.detailed;
     }
@@ -712,11 +712,11 @@
     // ═══════════════════════════════════════════════════════
     function getLevelInstructions(level) {
       var l = {
-        beginner: 'NIVEAU : DÉBUTANT\n- Explique chaque terme technique entre parenthèses\n- Analogies du quotidien pour les concepts\n- "pullback" → "recul temporaire du prix"\n- Encadrés pédagogiques avant chaque concept complexe\n- Avis clair et actionnable\n- Rappelle les règles de base : diversifier, ne jamais investir plus que ce qu\'on peut perdre',
+        beginner: 'LEVEL: BEGINNER\n- Explain each technical term in parentheses\n- Use everyday analogies for concepts\n- "pullback" → "temporary price decline"\n- Educational boxes before each complex concept\n- Clear and actionable advice\n- Remind basic rules: diversify, never invest more than you can afford to lose',
 
-        intermediate: 'NIVEAU : INTERMÉDIAIRE\n- L\'utilisateur connaît RSI, MACD, support/résistance, P/E, EPS\n- Développe les concepts avancés\n- Confluence des signaux techniques et fondamentaux\n- Niveaux techniques précis avec justification\n- Corrélations sectorielles et macro\n- Trade ideas avec sizing et gestion du risque',
+        intermediate: 'LEVEL: INTERMEDIATE\n- The user knows RSI, MACD, support/resistance, P/E, EPS\n- Develop advanced concepts\n- Confluence of technical and fundamental signals\n- Precise technical levels with justification\n- Sector and macro correlations\n- Trade ideas with sizing and risk management',
 
-        expert: 'NIVEAU : EXPERT\n- Terminologie sans explication : Wyckoff, VWAP, gamma exposure, dark pools, FTDs\n- Analyse quantitative : ratios, z-scores\n- Greeks pour les options si pertinent\n- Analyse inter-marché : corrélations, régime VIX, DXY, credit spreads\n- Trades complexes : spreads, hedges, Kelly criterion\n- Flux institutionnels (13F, dark pools, block trades)\n- Anomalies de marché et arbitrage\n- Wyckoff phase'
+        expert: 'LEVEL: EXPERT\n- Terminology without explanation: Wyckoff, VWAP, gamma exposure, dark pools, FTDs\n- Quantitative analysis: ratios, z-scores\n- Greeks for options if relevant\n- Inter-market analysis: correlations, VIX regime, DXY, credit spreads\n- Complex trades: spreads, hedges, Kelly criterion\n- Institutional flows (13F, dark pools, block trades)\n- Market anomalies and arbitrage\n- Wyckoff phase'
       };
       return l[level] || l.intermediate;
     }
@@ -726,37 +726,37 @@
     // ═══════════════════════════════════════════════════════
     function getSections(focus, level, intent) {
       var all = {
-        verdict: '## 1. VERDICT EXPRESS\n- Note : A+ à D, conviction %, biais directionnel\n- Ce que fait l\'entreprise en 2-3 phrases\n- Setup actuel : bullish / bearish / neutre + justification\n- 3 raisons d\'acheter vs 3 raisons d\'éviter\n- Radar : Marges, ROE, Croissance, Cash Flow, Valorisation, Momentum (/10)',
+        verdict: '## 1. EXPRESS VERDICT\n- Rating: A+ to D, conviction %, directional bias\n- What the company does in 2-3 sentences\n- Current setup: bullish / bearish / neutral + justification\n- 3 reasons to buy vs 3 reasons to avoid\n- Radar: Margins, ROE, Growth, Cash Flow, Valuation, Momentum (/10)',
 
-        business: '## 2. BUSINESS MODEL\n- Description en 2-3 phrases\n- Segments principaux avec % du CA\n- Moat / avantage compétitif\n- Position dans le cycle de vie',
+        business: '## 2. BUSINESS MODEL\n- Description in 2-3 sentences\n- Main segments with % of revenue\n- Moat / competitive advantage\n- Position in lifecycle',
 
-        news: '## 3. ACTUALITÉS RÉCENTES\n- 4-6 news récentes : [Date] Titre — Impact (✅/❌/⚪)\n- Résumé de l\'impact sur le cours',
+        news: '## 3. RECENT NEWS\n- 4-6 recent news items: [Date] Title — Impact (✅/❌/⚪)\n- Summary of impact on price',
 
-        fundamentals: '## 4. FONDAMENTAUX\n| Métrique | Valeur | Commentaire |\n|----------|--------|-------------|\n| CA | | YoY +/- % |\n| EBITDA | | Marge % |\n| Résultat net | | Marge nette % |\n| EPS | | vs consensus |\n| P/E | | vs secteur |\n| FCF | | Yield % |\n| Dette/Equity | | |\n| Cash | | Runway mois |\n| Target analystes | | Upside/downside % |',
+        fundamentals: '## 4. FUNDAMENTALS\n| Metric | Value | Comment |\n|--------|-------|----------|\n| Revenue | | YoY +/- % |\n| EBITDA | | Margin % |\n| Net Income | | Net margin % |\n| EPS | | vs consensus |\n| P/E | | vs sector |\n| FCF | | Yield % |\n| Debt/Equity | | |\n| Cash | | Runway months |\n| Analyst targets | | Upside/downside % |',
 
-        insiders: '## 5. INSIDERS & INSTITUTIONNELS\n- % insiders, principaux noms\n- % institutions, top 5 holders\n- Transactions récentes : achats/ventes significatifs\n- Signal directionnel',
+        insiders: '## 5. INSIDERS & INSTITUTIONS\n- % insiders, key names\n- % institutions, top 5 holders\n- Recent transactions: significant buys/sells\n- Directional signal',
 
-        dilution: '## 6. STRUCTURE DU CAPITAL & DILUTION\n- Actions en circulation vs autorisées\n- Warrants, convertibles, ATM\n- Historique de dilution 1/2/5 ans\n- Verdict dilution : faible / modéré / élevé / critique',
+        dilution: '## 6. CAPITAL STRUCTURE & DILUTION\n- Shares outstanding vs authorized\n- Warrants, convertibles, ATM\n- Dilution history 1/2/5 years\n- Dilution verdict: low / moderate / high / critical',
 
-        short: '## 7. SHORT INTEREST & SQUEEZE\n- SI %, jours pour couvrir, CTB\n- Historique SI 3-6 mois\n- Score potentiel de squeeze\n- Activité dark pool',
+        short: '## 7. SHORT INTEREST & SQUEEZE\n- SI %, days to cover, CTB\n- SI history 3-6 months\n- Squeeze potential score\n- Dark pool activity',
 
-        technicals: '## 8. ANALYSE TECHNIQUE\n| Indicateur | Valeur | Signal |\n|------------|--------|--------|\n| RSI(14) | | |\n| MACD | | |\n| EMA 20/50/200 | | |\n| ATR(14) | | |\n| OBV | | |\n\n- Phase Wyckoff\n- 3 Supports clés + 3 Résistances clés\n- Pattern en cours\n- Signal global : ACHAT / VENTE / NEUTRE',
+        technicals: '## 8. TECHNICAL ANALYSIS\n| Indicator | Value | Signal |\n|-----------|-------|--------|\n| RSI(14) | | |\n| MACD | | |\n| EMA 20/50/200 | | |\n| ATR(14) | | |\n| OBV | | |\n\n- Wyckoff phase\n- 3 Key supports + 3 Key resistances\n- Current pattern\n- Overall signal: BUY / SELL / NEUTRAL',
 
-        sector: '## 9. POSITIONNEMENT SECTORIEL\n- Comparaison 4-5 peers\n- Performance YTD relative\n- Rotation sectorielle',
+        sector: '## 9. SECTOR POSITIONING\n- Comparison with 4-5 peers\n- Relative YTD performance\n- Sector rotation',
 
-        macro: '## 10. CONTEXTE MACRO\n- Régime : risk-on / risk-off / neutre\n- Corrélations BTC, SPX, VIX, DXY, TLT\n- Impact macro sur le titre\n- Événements à venir (FOMC, CPI, NFP)',
+        macro: '## 10. MACRO CONTEXT\n- Regime: risk-on / risk-off / neutral\n- Correlations BTC, SPX, VIX, DXY, TLT\n- Macro impact on the stock\n- Upcoming events (FOMC, CPI, NFP)',
 
-        bottom: '## 11. ESTIMATION DE BOTTOM (expert)\n- Volume Profile : POC, VAH, VAL\n- Fibonacci 0.382, 0.5, 0.618, 0.786\n- Moyennes mobiles confluentes\n- RSI historique (niveaux de rebond)\n- 3 scénarios : optimiste / base / pessimiste avec prix et confluences',
+        bottom: '## 11. BOTTOM ESTIMATION (expert)\n- Volume Profile: POC, VAH, VAL\n- Fibonacci 0.382, 0.5, 0.618, 0.786\n- Confluent moving averages\n- Historical RSI (bounce levels)\n- 3 scenarios: optimistic / base / pessimistic with prices and confluences',
 
-        manipulation: '## 12. SIGNAUX DE MANIPULATION & SOCIAL RADAR\n- Dark pool, FTDs, options sweeps\n- Sentiment : StockTwits, Reddit, X/Twitter\n- Détection pump & dump (6 critères)\n- Filings SEC clés : 13D, Form 4, 8-K',
+        manipulation: '## 12. MANIPULATION SIGNALS & SOCIAL RADAR\n- Dark pool, FTDs, options sweeps\n- Sentiment: StockTwits, Reddit, X/Twitter\n- Pump & dump detection (6 criteria)\n- Key SEC filings: 13D, Form 4, 8-K',
 
-        risk: '## 13. ANALYSE DES RISQUES (8 catégories)\n1. Dilution & Warrants\n2. Fonds toxiques / Death Spiral\n3. ATM & Shelf Registrations\n4. Short Interest\n5. Cash Burn & Viabilité\n6. Risque d\'exécution\n7. Régulation / Légal\n8. Concentration / Dépendance\n- Score global : 1-3 Faible | 4-5 Modéré | 6-7 Élevé | 8-10 Très Élevé',
+        risk: '## 13. RISK ANALYSIS (8 categories)\n1. Dilution & Warrants\n2. Toxic funds / Death Spiral\n3. ATM & Shelf Registrations\n4. Short Interest\n5. Cash Burn & Viability\n6. Execution risk\n7. Regulation / Legal\n8. Concentration / Dependency\n- Overall score: 1-3 Low | 4-5 Moderate | 6-7 High | 8-10 Very High',
 
-        trade: '## 14. TRADE IDEA\n- Entrée : $XX-$XX + justification\n- Stop Loss : $XX + invalidation\n- TP1 : $XX + raisonnement\n- TP2 : $XX + raisonnement\n- R/R : 1:X.X (min 1:1.5)\n- Thèse du trade en 3-4 phrases\n- 4 signaux de confirmation\n- 4 signaux d\'invalidation\n- Horizon, sizing, entrée échelonnée',
+        trade: '## 14. TRADE IDEA\n- Entry: $XX-$XX + justification\n- Stop Loss: $XX + invalidation\n- TP1: $XX + reasoning\n- TP2: $XX + reasoning\n- R/R: 1:X.X (min 1:1.5)\n- Trade thesis in 3-4 sentences\n- 4 confirmation signals\n- 4 invalidation signals\n- Horizon, sizing, scaled entry',
 
-        sharia: '## 15. CONFORMITÉ SHARIA\n- Classification : ✅ Halal | ⚠️ Borderline | ❌ Non-Halal\n- Ratio dette/capitalisation (seuil : < 30%)\n- Revenus non-halal en % du CA (seuil : < 5%)\n- Secteurs exclus : armes, surveillance, oppression, alcool, jeux\n- Verdict : conforme / non conforme avec justification',
+        sharia: '## 15. SHARIA COMPLIANCE\n- Classification: ✅ Halal | ⚠️ Borderline | ❌ Non-Halal\n- Debt/capitalization ratio (threshold: < 30%)\n- Non-halal revenue as % of total (threshold: < 5%)\n- Excluded sectors: weapons, surveillance, oppression, alcohol, gambling\n- Verdict: compliant / non-compliant with justification',
 
-        rating: '## 16. NOTE GLOBALE\n- Conviction : A+ à D\n- Biais + Confiance %\n- Profil : Spéculatif / Croissance / Valeur / Momentum / Contrariant\n- 3 points positifs + 3 risques majeurs\n- Conseil mindset'
+        rating: '## 16. OVERALL RATING\n- Conviction: A+ to D\n- Bias + Confidence %\n- Profile: Speculative / Growth / Value / Momentum / Contrarian\n- 3 positives + 3 major risks\n- Mindset advice'
       };
 
       var focusMap = {
@@ -827,116 +827,116 @@
       p += getFormatInstructions(format) + '\n\n';
 
       p += '═══════════════════════════════════════\n';
-      p += 'TICKER : ' + ticker + '\n';
-      if (sector) p += 'SECTEUR : ' + sector + '\n';
-      p += 'DATE : aujourd\'hui\n';
+      p += 'TICKER: ' + ticker + '\n';
+      if (sector) p += 'SECTOR: ' + sector + '\n';
+      p += 'DATE: today\n';
       p += '═══════════════════════════════════════\n\n';
 
       if (thesis) {
-        p += 'THÈSE D\'INVESTISSEMENT :\n« ' + thesis + ' »\nValide ou infirme cette thèse avec des données factuelles. Si la thèse est fragile, dis-le clairement.\n\n';
+        p += 'INVESTMENT THESIS:\n« ' + thesis + ' »\nValidate or invalidate this thesis with factual data. If the thesis is weak, say so clearly.\n\n';
       }
       if (catalyst) {
-        p += 'CATALYSEURS À ANALYSER :\n' + catalyst + '\nIntègre ces catalyseurs et évalue leur impact potentiel.\n\n';
+        p += 'CATALYSTS TO ANALYZE:\n' + catalyst + '\nIntegrate these catalysts and assess their potential impact.\n\n';
       }
 
       p += '═══════════════════════════════════════\n';
-      p += 'SECTIONS DE L\'ANALYSE\n';
+      p += 'ANALYSIS SECTIONS\n';
       p += '═══════════════════════════════════════\n\n';
       p += getSections(focus, level, intent);
 
       p += '═══════════════════════════════════════\n';
       p += 'CONVICTION ENGINE\n';
       p += '═══════════════════════════════════════\n';
-      p += 'Grades : A+, A, A-, B+, B, B-, C+, C, C-, D\n';
+      p += 'Grades: A+, A, A-, B+, B, B-, C+, C, C-, D\n';
       p += 'Bias = Long / Neutral / Avoid\n';
-      p += 'La conviction reflète la cohérence entre signaux techniques, fondamentaux, sentiment et macro.\n';
-      p += 'Plus les signaux convergent, plus la note est élevée.\n';
-      p += 'Explicite les facteurs qui augmentent ou diminuent la confiance.\n\n';
+      p += 'Conviction reflects the coherence between technical signals, fundamentals, sentiment, and macro.\n';
+      p += 'The more signals converge, the higher the grade.\n';
+      p += 'Explicitly state the factors that increase or decrease confidence.\n\n';
 
       p += '═══════════════════════════════════════\n';
-      p += 'DONNÉES FX & CROSS-ASSET (OBLIGATOIRE)\n';
+      p += 'FX & CROSS-ASSET DATA (MANDATORY)\n';
       p += '═══════════════════════════════════════\n';
-      p += 'Intègre dans l\'analyse :\n';
-      p += '- EUR/USD et DXY (impact sur les exportateurs, multinationales, émergents)\n';
-      p += '- BTC/USD (indicateur risk-on/risk-off)\n';
-      p += '- US10Y et spread 2Y/10Y (courbe des taux, anticipation récession)\n';
-      p += '- VIX (régime de volatilité)\n';
-      p += '- Or (GLD) et pétrole (USO) si pertinent pour le secteur\n';
-      p += 'Précise comment ces facteurs macro impactent ' + ticker + ' spécifiquement.\n\n';
+      p += 'Integrate into the analysis:\n';
+      p += '- EUR/USD and DXY (impact on exporters, multinationals, emerging markets)\n';
+      p += '- BTC/USD (risk-on/risk-off indicator)\n';
+      p += '- US10Y and 2Y/10Y spread (yield curve, recession expectations)\n';
+      p += '- VIX (volatility regime)\n';
+      p += '- Gold (GLD) and oil (USO) if relevant to the sector\n';
+      p += 'Specify how these macro factors impact ' + ticker + ' specifically.\n\n';
 
       if (level === 'beginner' || level === 'intermediate') {
         p += '═══════════════════════════════════════\n';
-        p += 'COUCHE PÉDAGOGIQUE\n';
+        p += 'EDUCATIONAL LAYER\n';
         p += '═══════════════════════════════════════\n';
-        p += '- Explique ton raisonnement de manière transparente\n';
-        p += '- Mets en avant UN insight d\'apprentissage (ex : "Pourquoi le RSI est trompeur en tendance forte")\n';
-        p += '- Identifie UN piège de trading courant lié à cette situation\n';
-        p += '- Suggère UNE amélioration stratégique pour le lecteur\n';
-        p += '- Encourage la curiosité, le calme et la réflexion systématique\n\n';
+        p += '- Explain your reasoning transparently\n';
+        p += '- Highlight ONE learning insight (e.g., "Why RSI is misleading in strong trends")\n';
+        p += '- Identify ONE common trading trap related to this situation\n';
+        p += '- Suggest ONE strategic improvement for the reader\n';
+        p += '- Encourage curiosity, composure, and systematic thinking\n\n';
       }
 
       p += '═══════════════════════════════════════\n';
-      p += 'COACHING MENTAL & BIAIS COGNITIFS\n';
+      p += 'MENTAL COACHING & COGNITIVE BIASES\n';
       p += '═══════════════════════════════════════\n';
-      p += '- Identifie les biais cognitifs qui pourraient affecter la décision :\n';
-      p += '  * FOMO (Fear Of Missing Out) si le titre a déjà beaucoup monté\n';
-      p += '  * Biais de confirmation si l\'utilisateur a une thèse forte\n';
-      p += '  * Aversion à la perte si le titre est en chute\n';
-      p += '  * Biais d\'ancrage sur un prix historique\n';
-      p += '  * Effet de meute si forte activité sociale\n';
-      p += '- Termine par un conseil mindset adapté à la situation\n';
-      p += '- Rappelle : "Le marché récompense la discipline, pas l\'émotion"\n\n';
+      p += '- Identify cognitive biases that could affect the decision:\n';
+      p += '  * FOMO (Fear Of Missing Out) if the stock has already risen significantly\n';
+      p += '  * Confirmation bias if the user has a strong thesis\n';
+      p += '  * Loss aversion if the stock is falling\n';
+      p += '  * Anchoring bias on a historical price\n';
+      p += '  * Herd effect if there is strong social activity\n';
+      p += '- End with a mindset tip tailored to the situation\n';
+      p += '- Remind: "The market rewards discipline, not emotion"\n\n';
 
       p += '═══════════════════════════════════════\n';
-      p += 'EXPANSION DE PERSPECTIVE\n';
+      p += 'PERSPECTIVE EXPANSION\n';
       p += '═══════════════════════════════════════\n';
-      p += '- Identifie les liens cross-sectoriels et macro (ex : IA → semis → énergie)\n';
-      p += '- Propose 1-2 trades alternatifs ou hedges complémentaires\n';
-      p += '- Mentionne les corridors thématiques inexplorés\n';
-      p += '- Indique ce qui pourrait changer fondamentalement la thèse\n\n';
+      p += '- Identify cross-sector and macro linkages (e.g., AI → semis → energy)\n';
+      p += '- Suggest 1-2 alternative trades or complementary hedges\n';
+      p += '- Mention unexplored thematic corridors\n';
+      p += '- Indicate what could fundamentally change the thesis\n\n';
 
       p += '═══════════════════════════════════════\n';
-      p += 'RÈGLES ANTI-HALLUCINATION (CRITIQUE)\n';
+      p += 'ANTI-HALLUCINATION RULES (CRITICAL)\n';
       p += '═══════════════════════════════════════\n';
-      p += '1. NE JAMAIS inventer un chiffre — écris "Non disponible — vérifier sur [SOURCE]" si inconnu\n';
-      p += '2. Chaque métrique financière DOIT avoir sa source et sa date\n';
-      p += '3. Distingue CLAIREMENT les FAITS (données vérifiables) des OPINIONS (ton analyse)\n';
-      p += '4. Pour les prix : précise toujours la date (et l\'heure si intraday)\n';
-      p += '5. Pour les estimations : indique la méthode de calcul utilisée\n';
-      p += '6. Si le titre est illiquide ou peu couvert par les analystes, signale-le comme risque majeur\n';
-      p += '7. NE JAMAIS garantir un rendement ou un mouvement de prix\n';
-      p += '8. Si deux sources se contredisent, mentionne les deux et explique la divergence\n';
-      p += '9. Utilise des fourchettes plutôt que des chiffres uniques quand l\'incertitude est élevée\n';
-      p += '10. Disclaimer OBLIGATOIRE en fin d\'analyse : "Cette analyse est à titre informatif uniquement. Elle ne constitue pas un conseil en investissement. Faites vos propres recherches (DYOR)."\n\n';
+      p += '1. NEVER fabricate a number — write "Not available — verify on [SOURCE]" if unknown\n';
+      p += '2. Every financial metric MUST have its source and date\n';
+      p += '3. CLEARLY distinguish FACTS (verifiable data) from OPINIONS (your analysis)\n';
+      p += '4. For prices: always specify the date (and time if intraday)\n';
+      p += '5. For estimates: indicate the calculation method used\n';
+      p += '6. If the stock is illiquid or poorly covered by analysts, flag it as a major risk\n';
+      p += '7. NEVER guarantee a return or a price movement\n';
+      p += '8. If two sources contradict each other, mention both and explain the discrepancy\n';
+      p += '9. Use ranges rather than single figures when uncertainty is high\n';
+      p += '10. MANDATORY disclaimer at the end of the analysis: "This analysis is for informational purposes only. It does not constitute investment advice. Do your own research (DYOR)."\n\n';
 
       p += '═══════════════════════════════════════\n';
-      p += 'OÙ TROUVER LES DONNÉES (SOURCES VÉRIFIÉES)\n';
+      p += 'WHERE TO FIND THE DATA (VERIFIED SOURCES)\n';
       p += '═══════════════════════════════════════\n';
-      p += '| Donnée | Sources primaires | URL |\n';
-      p += '|--------|-------------------|-----|\n';
-      p += '| Prix, volume, market cap, P/E, EPS | Yahoo Finance, Google Finance | finance.yahoo.com, google.com/finance |\n';
-      p += '| RSI, MACD, EMA, supports/résistances | TradingView, Finviz | tradingview.com, finviz.com |\n';
+      p += '| Data | Primary Sources | URL |\n';
+      p += '|------|-----------------|-----|\n';
+      p += '| Price, volume, market cap, P/E, EPS | Yahoo Finance, Google Finance | finance.yahoo.com, google.com/finance |\n';
+      p += '| RSI, MACD, EMA, support/resistance | TradingView, Finviz | tradingview.com, finviz.com |\n';
       p += '| Insiders, Form 4 | SEC EDGAR, Finviz | sec.gov, finviz.com |\n';
       p += '| Short interest, CTB, FTDs | Finviz, Fintel, ChartExchange | fintel.io, chartexchange.com |\n';
-      p += '| Filings SEC (10-K, 10-Q, 8-K, 13D) | SEC EDGAR | sec.gov/cgi-bin/browse-edgar |\n';
-      p += '| Sentiment social | StockTwits, Reddit, X/Twitter | stocktwits.com, reddit.com |\n';
+      p += '| SEC filings (10-K, 10-Q, 8-K, 13D) | SEC EDGAR | sec.gov/cgi-bin/browse-edgar |\n';
+      p += '| Social sentiment | StockTwits, Reddit, X/Twitter | stocktwits.com, reddit.com |\n';
       p += '| Options chain, IV, OI | Yahoo Finance, Barchart, CBOE | barchart.com, cboe.com |\n';
       p += '| Analyst ratings & targets | TipRanks, MarketBeat, Zacks | tipranks.com, marketbeat.com |\n';
-      p += '| News récentes | Google News, Bloomberg, Reuters | news.google.com, reuters.com |\n';
+      p += '| Recent news | Google News, Bloomberg, Reuters | news.google.com, reuters.com |\n';
       p += '| Dark pool data | ChartExchange, FINRA ATS | chartexchange.com |\n';
       p += '| Earnings calendar & history | EarningsWhispers, Yahoo Finance | earningswhispers.com |\n';
       p += '| FX (EUR/USD, DXY) | TradingView, Yahoo Finance | tradingview.com |\n\n';
 
       p += '═══════════════════════════════════════\n';
-      p += 'BLOC FINAL OBLIGATOIRE\n';
+      p += 'MANDATORY FINAL BLOCK\n';
       p += '═══════════════════════════════════════\n';
-      p += '✅ Points clés (3-5 takeaways)\n';
-      p += '⚠️ Risques principaux (3-5 alertes)\n';
-      p += '🎯 Biais & Déclencheur (quand agir)\n';
-      p += '📊 Conviction : [Note] | Confiance : [%]\n';
-      p += '💡 Conseil mindset du jour\n\n';
+      p += '✅ Key takeaways (3-5 points)\n';
+      p += '⚠️ Main risks (3-5 alerts)\n';
+      p += '🎯 Bias & Trigger (when to act)\n';
+      p += '📊 Conviction: [Grade] | Confidence: [%]\n';
+      p += '💡 Mindset tip of the day\n\n';
 
-      p += 'Lance l\'analyse complète de ' + ticker + ' maintenant.';
+      p += 'Launch the complete analysis of ' + ticker + ' now.';
       return p;
     }
 
