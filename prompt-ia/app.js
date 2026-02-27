@@ -42,18 +42,26 @@
     setText('thesisOpt', L.thesisOpt);
     setText('catalystLabel', L.catalysts);
     setText('catalystOpt', L.catalystOpt);
+    setText('scheduleLabel', L.scheduleLabel);
+    setText('scheduleOpt', L.scheduleOpt);
+    setText('scheduleHint', L.scheduleHint);
     setText('outputTitle', L.outputTitle);
     setText('copyLabel', L.copy);
     setText('resetLabel', L.newBtn);
     setText('copiedText', L.copiedMsg);
     setText('advToggleLabel', L.advToggle);
     setText('libToggleLabel', L.libTitle);
+    var libCount = document.getElementById('libToggleCount');
+    if (libCount) libCount.textContent = '(' + LIBRARY.length + ')';
 
     // Placeholders
     var thesisInput = document.getElementById('thesisInput');
     if (thesisInput) thesisInput.placeholder = L.thesisPlaceholder;
     var catalystInput = document.getElementById('catalystInput');
     if (catalystInput) catalystInput.placeholder = L.catalystPlaceholder;
+
+    // Share toast
+    setText('shareToastText', L.shareCopied);
 
     // Home button
     var homeBtn = document.getElementById('homeBtn');
@@ -100,6 +108,7 @@
     renderSelect('formatSelect', c.format[CURRENT_LANG]);
     renderSelect('langSelect', c.reportLang[CURRENT_LANG]);
     renderSelect('focusSelect', c.focus[CURRENT_LANG]);
+    renderSelect('scheduleSelect', c.schedule[CURRENT_LANG]);
   }
 
   // ── GET VALUES ──
@@ -231,6 +240,12 @@
       short_grok: 'Détection de pump & dump, activité suspecte sur X/Twitter',
       hedge_deepseek: 'Calculs de Greeks, stratégies de couverture optimales, hedge ratio',
       hedge_chatgpt: 'Options chain, corrélations, instruments de couverture disponibles',
+      earnings_chatgpt: 'Historique des surprises, consensus, implied move — données factuelles via browsing',
+      earnings_claude: 'Analyse qualitative des guidances, détection de signaux faibles dans les transcripts',
+      dividend_chatgpt: 'Historique complet des dividendes, payout ratio, comparaisons sectorielles',
+      dividend_deepseek: 'Modélisation de couverture, stress tests, calculs DCF pour pérennité',
+      learn_claude: 'Pédagogie structurée, raisonnement étape par étape, exercices bien conçus',
+      learn_chatgpt: 'Exemples concrets avec données récentes, quiz interactifs, liens de ressources',
       default_claude: 'Le meilleur pour identifier les risques cachés et challenger votre thèse',
       default_perplexity: 'Actualités sourcées, consensus analystes, calendrier à venir'
     },
@@ -255,6 +270,12 @@
       short_grok: 'Pump & dump detection, suspicious activity on X/Twitter',
       hedge_deepseek: 'Greeks calculations, optimal hedging strategies, hedge ratio',
       hedge_chatgpt: 'Options chain, correlations, available hedging instruments',
+      earnings_chatgpt: 'Surprise history, consensus, implied move — factual data via browsing',
+      earnings_claude: 'Qualitative guidance analysis, detecting weak signals in transcripts',
+      dividend_chatgpt: 'Complete dividend history, payout ratio, sector comparisons',
+      dividend_deepseek: 'Coverage modeling, stress tests, DCF calculations for sustainability',
+      learn_claude: 'Structured pedagogy, step-by-step reasoning, well-designed exercises',
+      learn_chatgpt: 'Concrete examples with recent data, interactive quizzes, resource links',
       default_claude: 'Best at identifying hidden risks and challenging your thesis',
       default_perplexity: 'Sourced news, analyst consensus, upcoming calendar'
     },
@@ -279,6 +300,12 @@
       short_grok: 'كشف pump & dump، نشاط مشبوه على X/Twitter',
       hedge_deepseek: 'حسابات Greeks، استراتيجيات تحوط مثلى',
       hedge_chatgpt: 'سلسلة الخيارات، ارتباطات، أدوات تحوط متاحة',
+      earnings_chatgpt: 'تاريخ المفاجآت، الإجماع، الحركة الضمنية — بيانات واقعية عبر التصفح',
+      earnings_claude: 'تحليل نوعي للتوجيهات، كشف الإشارات الضعيفة في المحاضر',
+      dividend_chatgpt: 'تاريخ كامل للتوزيعات، نسبة التوزيع، مقارنات قطاعية',
+      dividend_deepseek: 'نمذجة التغطية، اختبارات الإجهاد، حسابات DCF للاستدامة',
+      learn_claude: 'تعليم منظم، تفكير خطوة بخطوة، تمارين مصممة جيداً',
+      learn_chatgpt: 'أمثلة ملموسة مع بيانات حديثة، اختبارات تفاعلية، روابط موارد',
       default_claude: 'الأفضل في تحديد المخاطر الخفية وتحدي أطروحتك',
       default_perplexity: 'أخبار موثقة، إجماع المحللين، تقويم قادم'
     }
@@ -286,9 +313,9 @@
 
   // Angle labels per language
   var aiAngleMap = {
-    fr: { social:'Sentiment social', news_onchain:'News & on-chain', risk:'Analyse risque', pipeline:'Pipeline complet', quant:'Quantitatif', technique:'Analyse technique', structural:'Analyse structurelle', data:'Données détaillées', flux:'Flux & holdings', quant2:'Analyse quantitative', supply:'Supply/demand', trends:'Google Trends', full:'Analyse complète', stats:'Quant', news:'Actualités', social2:'Social momentum', short_data:'Données short', sentiment:'Sentiment', options:'Options & Greeks', instruments:'Instruments', contra:'Analyse contradictoire', catalysts:'News & catalyseurs' },
-    en: { social:'Social sentiment', news_onchain:'News & on-chain', risk:'Risk analysis', pipeline:'Full pipeline', quant:'Quantitative', technique:'Technical analysis', structural:'Structural analysis', data:'Detailed data', flux:'Flows & holdings', quant2:'Quantitative analysis', supply:'Supply/demand', trends:'Google Trends', full:'Full analysis', stats:'Quant', news:'News', social2:'Social momentum', short_data:'Short data', sentiment:'Sentiment', options:'Options & Greeks', instruments:'Instruments', contra:'Contrarian analysis', catalysts:'News & catalysts' },
-    ar: { social:'معنويات اجتماعية', news_onchain:'أخبار & on-chain', risk:'تحليل مخاطر', pipeline:'خط أنابيب كامل', quant:'كمي', technique:'تحليل فني', structural:'تحليل هيكلي', data:'بيانات مفصلة', flux:'تدفقات & حيازات', quant2:'تحليل كمي', supply:'عرض/طلب', trends:'Google Trends', full:'تحليل كامل', stats:'كمي', news:'أخبار', social2:'زخم اجتماعي', short_data:'بيانات short', sentiment:'معنويات', options:'Options & Greeks', instruments:'أدوات', contra:'تحليل معاكس', catalysts:'أخبار & محفزات' }
+    fr: { social:'Sentiment social', news_onchain:'News & on-chain', risk:'Analyse risque', pipeline:'Pipeline complet', quant:'Quantitatif', technique:'Analyse technique', structural:'Analyse structurelle', data:'Données détaillées', flux:'Flux & holdings', quant2:'Analyse quantitative', supply:'Supply/demand', trends:'Google Trends', full:'Analyse complète', stats:'Quant', news:'Actualités', social2:'Social momentum', short_data:'Données short', sentiment:'Sentiment', options:'Options & Greeks', instruments:'Instruments', contra:'Analyse contradictoire', catalysts:'News & catalyseurs', earnings_data:'Données earnings', earnings_qual:'Analyse qualitative', div_data:'Données dividendes', div_model:'Modélisation', pedagogy:'Pédagogie', learn_data:'Exemples & quiz' },
+    en: { social:'Social sentiment', news_onchain:'News & on-chain', risk:'Risk analysis', pipeline:'Full pipeline', quant:'Quantitative', technique:'Technical analysis', structural:'Structural analysis', data:'Detailed data', flux:'Flows & holdings', quant2:'Quantitative analysis', supply:'Supply/demand', trends:'Google Trends', full:'Full analysis', stats:'Quant', news:'News', social2:'Social momentum', short_data:'Short data', sentiment:'Sentiment', options:'Options & Greeks', instruments:'Instruments', contra:'Contrarian analysis', catalysts:'News & catalysts', earnings_data:'Earnings data', earnings_qual:'Qualitative analysis', div_data:'Dividend data', div_model:'Modeling', pedagogy:'Pedagogy', learn_data:'Examples & quiz' },
+    ar: { social:'معنويات اجتماعية', news_onchain:'أخبار & on-chain', risk:'تحليل مخاطر', pipeline:'خط أنابيب كامل', quant:'كمي', technique:'تحليل فني', structural:'تحليل هيكلي', data:'بيانات مفصلة', flux:'تدفقات & حيازات', quant2:'تحليل كمي', supply:'عرض/طلب', trends:'Google Trends', full:'تحليل كامل', stats:'كمي', news:'أخبار', social2:'زخم اجتماعي', short_data:'بيانات short', sentiment:'معنويات', options:'Options & Greeks', instruments:'أدوات', contra:'تحليل معاكس', catalysts:'أخبار & محفزات', earnings_data:'بيانات الأرباح', earnings_qual:'تحليل نوعي', div_data:'بيانات التوزيعات', div_model:'نمذجة', pedagogy:'تعليم', learn_data:'أمثلة & اختبار' }
   };
 
   function getAiRecommendations(assetType, intent) {
@@ -356,6 +383,24 @@
         rec.complementary = [
           { ai:'deepseek', angle:A.options, reason:R.hedge_deepseek },
           { ai:'chatgpt', angle:A.instruments, reason:R.hedge_chatgpt }
+        ];
+      } else if (intent === 'earnings') {
+        rec.primary = 'perplexity';
+        rec.complementary = [
+          { ai:'chatgpt', angle:A.earnings_data, reason:R.earnings_chatgpt },
+          { ai:'claude', angle:A.earnings_qual, reason:R.earnings_claude }
+        ];
+      } else if (intent === 'dividend') {
+        rec.primary = 'chatgpt';
+        rec.complementary = [
+          { ai:'deepseek', angle:A.div_model, reason:R.dividend_deepseek },
+          { ai:'perplexity', angle:A.div_data, reason:R.dividend_chatgpt }
+        ];
+      } else if (intent === 'learn') {
+        rec.primary = 'claude';
+        rec.complementary = [
+          { ai:'chatgpt', angle:A.learn_data, reason:R.learn_chatgpt },
+          { ai:'perplexity', angle:A.catalysts, reason:R.default_perplexity }
         ];
       } else {
         rec.primary = 'chatgpt';
@@ -460,7 +505,10 @@
       short: 'OBJECTIF : ÉVALUATION POUR SHORT\n- Focus sur : faiblesses fondamentales, signaux baissiers, surachat\n- Analyse le short interest : SI %, CTB, jours pour couvrir\n- ATTENTION : risque de short squeeze\n- Trade idea short : entry/stop/TP avec R:R',
       hedge: 'OBJECTIF : HEDGING\n- Focus sur : corrélations, beta, instruments de couverture\n- Propose : puts protecteurs, collar, pairs trade\n- Analyse le coût du hedge vs le risque couvert\n- Si options disponibles : Greeks, IV, stratégies optimales',
       scan: 'OBJECTIF : SCREENING / SCANNER\n- Identifie les meilleurs candidats selon les critères donnés\n- Score chaque candidat sur : technique, fondamental, sentiment, risque\n- Top 5-10 avec justification détaillée\n- Pour chaque candidat : entrée suggérée, stop, catalyseur',
-      macro: 'OBJECTIF : ANALYSE MACRO\n- Vue d\'ensemble des marchés et de l\'environnement macro\n- Taux, devises, commodities, indices — interconnexions\n- Régime de marché : risk-on / risk-off / transition\n- Implications pour le portefeuille et les secteurs'
+      macro: 'OBJECTIF : ANALYSE MACRO\n- Vue d\'ensemble des marchés et de l\'environnement macro\n- Taux, devises, commodities, indices — interconnexions\n- Régime de marché : risk-on / risk-off / transition\n- Implications pour le portefeuille et les secteurs',
+      earnings: 'OBJECTIF : ANALYSE PRÉ-EARNINGS\n- Date du prochain rapport, consensus EPS et CA\n- Whisper numbers et attentes implicites du marché\n- Historique des surprises (4 derniers trimestres)\n- Implied move (volatilité options) vs move réel historique\n- Setup pré-earnings : straddle, directional, ou pass\n- Scénario beat / miss / in-line avec niveaux de prix',
+      dividend: 'OBJECTIF : ÉVALUATION DIVIDENDE\n- Rendement actuel vs historique 5 ans\n- Payout ratio (earnings ET FCF)\n- Historique de croissance du dividende (streak, CAGR 5 ans)\n- Couverture : FCF/dividende, dette, cash on hand\n- Date ex-div, record date, paiement\n- Pérennité : stress test si -20% des revenus\n- Comparaison avec les 5 meilleurs dividendes du secteur',
+      learn: 'OBJECTIF : FORMATION & APPRENTISSAGE\n- Explique le sujet comme un professeur expert et passionné\n- Structure pédagogique : du simple au complexe\n- Exemples concrets tirés des marchés réels\n- Erreurs courantes des débutants à éviter\n- Exercices pratiques à faire soi-même\n- Ressources pour approfondir (livres, sites, outils)\n- Quiz de validation en fin de leçon (5 questions)'
     },
     en: {
       inform: 'OBJECTIVE: INFORMATIVE ANALYSIS\n- Present bull AND bear arguments in a balanced way\n- No direct recommendation\n- Focus on understanding the business, fundamentals and context',
@@ -469,7 +517,10 @@
       short: 'OBJECTIVE: SHORT EVALUATION\n- Focus on: fundamental weaknesses, bearish signals, overbought\n- Analyze short interest: SI %, CTB, days to cover\n- WARNING: short squeeze risk\n- Short trade idea: entry/stop/TP with R:R',
       hedge: 'OBJECTIVE: HEDGING\n- Focus on: correlations, beta, hedging instruments\n- Suggest: protective puts, collar, pairs trade\n- Analyze hedge cost vs covered risk\n- If options available: Greeks, IV, optimal strategies',
       scan: 'OBJECTIVE: SCREENING / SCANNER\n- Identify best candidates based on given criteria\n- Score each candidate on: technical, fundamental, sentiment, risk\n- Top 5-10 with detailed justification\n- For each candidate: suggested entry, stop, catalyst',
-      macro: 'OBJECTIVE: MACRO ANALYSIS\n- Market overview and macro environment\n- Rates, FX, commodities, indices — interconnections\n- Market regime: risk-on / risk-off / transition\n- Portfolio and sector implications'
+      macro: 'OBJECTIVE: MACRO ANALYSIS\n- Market overview and macro environment\n- Rates, FX, commodities, indices — interconnections\n- Market regime: risk-on / risk-off / transition\n- Portfolio and sector implications',
+      earnings: 'OBJECTIVE: PRE-EARNINGS ANALYSIS\n- Next report date, consensus EPS and revenue\n- Whisper numbers and market implied expectations\n- Surprise history (last 4 quarters)\n- Implied move (options volatility) vs historical actual move\n- Pre-earnings setup: straddle, directional, or pass\n- Beat / miss / in-line scenario with price levels',
+      dividend: 'OBJECTIVE: DIVIDEND EVALUATION\n- Current yield vs 5-year historical\n- Payout ratio (earnings AND FCF)\n- Dividend growth history (streak, 5Y CAGR)\n- Coverage: FCF/dividend, debt, cash on hand\n- Ex-div date, record date, payment\n- Sustainability: stress test if -20% revenue\n- Comparison with top 5 sector dividend payers',
+      learn: 'OBJECTIVE: LEARNING & EDUCATION\n- Explain the topic like an expert passionate teacher\n- Pedagogical structure: from simple to complex\n- Concrete examples from real markets\n- Common beginner mistakes to avoid\n- Practical exercises to do on your own\n- Resources to go further (books, websites, tools)\n- Validation quiz at the end (5 questions)'
     },
     ar: {
       inform: 'الهدف: تحليل معلوماتي\n- قدم حجج الشراء والبيع بشكل متوازن\n- بدون توصية مباشرة\n- التركيز على فهم العمل والأساسيات والسياق',
@@ -478,7 +529,10 @@
       short: 'الهدف: تقييم للبيع على المكشوف\n- التركيز على: نقاط الضعف الأساسية، إشارات هبوطية\n- تحليل SI %، CTB\n- تحذير: خطر short squeeze',
       hedge: 'الهدف: التحوط\n- التركيز على: الارتباطات، بيتا، أدوات التحوط\n- اقتراح: puts واقية، collar، pairs trade',
       scan: 'الهدف: فرز / مسح\n- حدد أفضل المرشحين\n- سجل كل مرشح: فني، أساسي، معنويات، مخاطر\n- أعلى 5-10 مع تبرير مفصل',
-      macro: 'الهدف: تحليل ماكرو\n- نظرة عامة على الأسواق والبيئة الكلية\n- أسعار، عملات، سلع، مؤشرات — ترابطات\n- نظام السوق: risk-on / risk-off'
+      macro: 'الهدف: تحليل ماكرو\n- نظرة عامة على الأسواق والبيئة الكلية\n- أسعار، عملات، سلع، مؤشرات — ترابطات\n- نظام السوق: risk-on / risk-off',
+      earnings: 'الهدف: تحليل ما قبل الأرباح\n- تاريخ التقرير القادم، إجماع EPS والإيرادات\n- أرقام Whisper وتوقعات السوق الضمنية\n- تاريخ المفاجآت (آخر 4 أرباع)\n- الحركة الضمنية (تقلب الخيارات) مقابل الحركة الفعلية التاريخية\n- سيناريو beat / miss / in-line مع مستويات الأسعار',
+      dividend: 'الهدف: تقييم التوزيعات\n- العائد الحالي مقابل المعدل التاريخي 5 سنوات\n- نسبة التوزيع (أرباح وتدفقات نقدية حرة)\n- تاريخ نمو التوزيعات (سلسلة، CAGR 5 سنوات)\n- التغطية: FCF/توزيعات، دين، نقد متاح\n- المقارنة مع أفضل 5 موزعين في القطاع',
+      learn: 'الهدف: تعلّم وتعليم\n- اشرح الموضوع كأستاذ خبير وشغوف\n- هيكل تعليمي: من البسيط إلى المعقد\n- أمثلة حقيقية من الأسواق\n- أخطاء المبتدئين الشائعة لتجنبها\n- تمارين عملية\n- موارد للتعمق (كتب، مواقع، أدوات)\n- اختبار تحقق في النهاية (5 أسئلة)'
     }
   };
 
@@ -535,6 +589,36 @@
     var reportLang = getSelected('langSelect') || CURRENT_LANG;
     var m = levelMap[reportLang] || levelMap.en;
     return m[level] || m.intermediate;
+  }
+
+  var scheduleMap = {
+    fr: {
+      daily: 'FRÉQUENCE : QUOTIDIEN\nCette analyse doit être exécutée chaque jour ouvré à l\'ouverture du marché.\nCompare avec l\'analyse précédente : qu\'est-ce qui a changé ? Nouveaux signaux ?\nFormat condensé : focus sur les CHANGEMENTS uniquement.',
+      weekly: 'FRÉQUENCE : HEBDOMADAIRE\nCette analyse doit être exécutée chaque dimanche soir.\nCompare avec la semaine précédente : évolution des métriques, nouveaux catalyseurs, changement de biais.\nInclus un bilan semaine + preview semaine prochaine.',
+      biweekly: 'FRÉQUENCE : BI-MENSUEL\nCette analyse doit être exécutée toutes les 2 semaines.\nCompare avec le rapport précédent : tendances émergentes, rotation sectorielle, changement de régime.',
+      monthly: 'FRÉQUENCE : MENSUEL\nCette analyse doit être exécutée le 1er de chaque mois.\nVue stratégique : évolution sur 30 jours, révision de la thèse, ajustement des niveaux.',
+      earnings: 'FRÉQUENCE : PRÉ-EARNINGS\nCette analyse doit être exécutée 5 jours avant chaque publication de résultats.\nFocus : consensus, whisper numbers, implied move, setup options, scénarios beat/miss.'
+    },
+    en: {
+      daily: 'FREQUENCY: DAILY\nThis analysis should be run every trading day at market open.\nCompare with previous analysis: what changed? New signals?\nCondensed format: focus on CHANGES only.',
+      weekly: 'FREQUENCY: WEEKLY\nThis analysis should be run every Sunday evening.\nCompare with previous week: metric evolution, new catalysts, bias change.\nInclude weekly recap + next week preview.',
+      biweekly: 'FREQUENCY: BI-WEEKLY\nThis analysis should be run every 2 weeks.\nCompare with previous report: emerging trends, sector rotation, regime change.',
+      monthly: 'FREQUENCY: MONTHLY\nThis analysis should be run on the 1st of each month.\nStrategic view: 30-day evolution, thesis revision, level adjustments.',
+      earnings: 'FREQUENCY: PRE-EARNINGS\nThis analysis should be run 5 days before each earnings release.\nFocus: consensus, whisper numbers, implied move, options setup, beat/miss scenarios.'
+    },
+    ar: {
+      daily: 'التردد: يومي\nيجب تشغيل هذا التحليل كل يوم تداول عند فتح السوق.\nقارن مع التحليل السابق: ما الذي تغيّر؟ إشارات جديدة؟',
+      weekly: 'التردد: أسبوعي\nيجب تشغيل هذا التحليل كل مساء أحد.\nقارن مع الأسبوع السابق: تطور المقاييس، محفزات جديدة، تغيير في التحيز.',
+      biweekly: 'التردد: نصف شهري\nيجب تشغيل هذا التحليل كل أسبوعين.\nقارن مع التقرير السابق: اتجاهات ناشئة، دوران قطاعي.',
+      monthly: 'التردد: شهري\nيجب تشغيل هذا التحليل في الأول من كل شهر.\nرؤية استراتيجية: تطور 30 يوماً، مراجعة الأطروحة.',
+      earnings: 'التردد: قبل الأرباح\nيجب تشغيل هذا التحليل 5 أيام قبل كل نشر نتائج.\nالتركيز: الإجماع، أرقام whisper، الحركة الضمنية، سيناريوهات beat/miss.'
+    }
+  };
+
+  function getScheduleInstructions(schedule) {
+    var reportLang = getSelected('langSelect') || CURRENT_LANG;
+    var m = scheduleMap[reportLang] || scheduleMap.en;
+    return m[schedule] || '';
   }
 
   // ── SECTIONS (adapted per asset type, in report language) ──
@@ -697,7 +781,7 @@
     if (level !== 'expert') {
       selected = selected.filter(function(s) { return s !== 'bottom' && s !== 'manipulation'; });
     }
-    if (['buy','sell','short','hedge'].indexOf(intent) !== -1 && selected.indexOf('trade') === -1 && sections.trade) {
+    if (['buy','sell','short','hedge','earnings','dividend'].indexOf(intent) !== -1 && selected.indexOf('trade') === -1 && sections.trade) {
       selected.splice(selected.length - 1, 0, 'trade');
     }
 
@@ -804,6 +888,11 @@
 
     p += '═══════════════════════════════════════\n' + ML.antiHalluc + '\n═══════════════════════════════════════\n';
     p += ML.ah1 + '\n' + ML.ah2 + '\n' + ML.ah3 + '\n' + ML.ah4 + '\n' + ML.ah5 + '\n\n';
+
+    var schedule = getSelected('scheduleSelect') || 'none';
+    if (schedule && schedule !== 'none') {
+      p += getScheduleInstructions(schedule, ticker) + '\n\n';
+    }
 
     if (level === 'beginner' || level === 'intermediate') {
       p += '═══════════════════════════════════════\n' + ML.pedagogy + '\n═══════════════════════════════════════\n';
@@ -1094,6 +1183,7 @@
       } else {
         bodyHtml = (desc ? '<p class="prompt-lib-desc">' + desc + '</p>' : '') +
           '<div class="prompt-lib-code" style="position:relative">' +
+            '<button class="prompt-lib-share" data-num="' + p.num + '" onclick="sharePromptUrl(this)" title="Share"><i class="fa-solid fa-share-nodes"></i></button>' +
             '<button class="prompt-lib-copy" onclick="copyLib(this)">' + L.copy + '</button>' +
             code +
           '</div>' +
@@ -1131,11 +1221,73 @@
     });
   };
 
+  // ── URL SHARING ──
+  function getShareUrl(promptNum) {
+    var base = location.origin + location.pathname;
+    return base + '?lang=' + CURRENT_LANG + '&prompt=' + promptNum;
+  }
+
+  function sharePrompt(num) {
+    var url = getShareUrl(num);
+    clipCopy(url, function() {
+      showShareToast();
+    });
+  }
+
+  function showShareToast() {
+    var toast = document.getElementById('shareToast');
+    if (!toast) return;
+    setText('shareToastText', L.shareCopied);
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 2200);
+  }
+
+  // Open library prompt by number (from URL param)
+  function openLibraryPrompt(num) {
+    // Open library panel if closed
+    var libPanel = document.getElementById('libSection');
+    var libBtn = document.getElementById('libToggle');
+    if (libPanel && !libPanel.classList.contains('open')) {
+      libPanel.classList.add('open');
+      if (libBtn) libBtn.classList.add('open');
+    }
+    // Show all tab
+    var allTab = document.querySelector('.prompt-lib-tab[data-cat="all"]');
+    if (allTab) allTab.click();
+    // Find and open the card
+    setTimeout(function() {
+      var cards = document.querySelectorAll('.prompt-lib-card');
+      cards.forEach(function(card) {
+        var numEl = card.querySelector('.prompt-lib-num');
+        if (numEl && parseInt(numEl.textContent) === num) {
+          card.setAttribute('open', '');
+          setTimeout(function() { card.scrollIntoView({ behavior:'smooth', block:'center' }); }, 200);
+        }
+      });
+    }, 100);
+  }
+
+  window.sharePromptUrl = function(btn) {
+    var num = parseInt(btn.getAttribute('data-num'));
+    sharePrompt(num);
+    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+    setTimeout(function() { btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i>'; }, 1500);
+  };
+
   // ── INIT ──
   applyLang();
   renderAllControls();
   renderTemplateSelect('thesisTemplateSelect', LANG.thesisTemplates[CURRENT_LANG], 'thesisInput', L.thesisTemplatePh);
   renderTemplateSelect('catalystTemplateSelect', LANG.catalystTemplates[CURRENT_LANG], 'catalystInput', L.catalystTemplatePh);
   renderLibrary();
+
+  // Auto-open prompt from URL
+  var promptParam = params.get('prompt');
+  if (promptParam) {
+    var pNum = parseInt(promptParam);
+    if (pNum > 0 && pNum <= LIBRARY.length) {
+      openLibraryPrompt(pNum);
+    }
+  }
 
 })();

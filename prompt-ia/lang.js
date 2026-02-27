@@ -38,12 +38,13 @@ var LANG = {
       newBtn: 'Nouveau',
       advToggle: 'Personnaliser',
       libTitle: 'Biblioth\u00e8que',
-      libCount: '30 prompts test\u00e9s',
+      libCount: '51 prompts testés',
       libOpen: 'Ouvrir',
       libClose: 'Fermer',
       copiedMsg: 'Prompt copi\u00e9 !',
       copiedSub: 'Collez-le dans ',
       copyAiDefault: 'votre IA',
+      shareCopied: 'Lien copi\u00e9 !',
       openIn: 'Ouvrir dans ',
       otherAi: 'Autre IA',
       compTitle: 'Prompts compl\u00e9mentaires',
@@ -72,7 +73,10 @@ var LANG = {
       aiColStr: 'Forces',
       aiColWeak: 'Faiblesses',
       resDividerTitle: 'Aller plus loin',
-      resTitle: 'S\u00e9ries \u00c9ducatives'
+      resTitle: 'S\u00e9ries \u00c9ducatives',
+      scheduleLabel: 'Auto-run',
+      scheduleOpt: '\u2014 optionnel',
+      scheduleHint: 'L\'IA sera instruit\u00e9e de r\u00e9p\u00e9ter cette analyse \u00e0 la fr\u00e9quence choisie'
     },
     en: {
       heroTitle: 'AI Prompt',
@@ -104,12 +108,13 @@ var LANG = {
       newBtn: 'New',
       advToggle: 'Customize',
       libTitle: 'Library',
-      libCount: '30 tested prompts',
+      libCount: '51 tested prompts',
       libOpen: 'Open',
       libClose: 'Close',
       copiedMsg: 'Prompt copied!',
       copiedSub: 'Paste it into ',
       copyAiDefault: 'your AI',
+      shareCopied: 'Link copied!',
       openIn: 'Open in ',
       otherAi: 'Other AI',
       compTitle: 'Complementary prompts',
@@ -138,7 +143,10 @@ var LANG = {
       aiColStr: 'Strengths',
       aiColWeak: 'Weaknesses',
       resDividerTitle: 'Learn more',
-      resTitle: 'Educational Series'
+      resTitle: 'Educational Series',
+      scheduleLabel: 'Auto-run',
+      scheduleOpt: '\u2014 optional',
+      scheduleHint: 'The AI will be instructed to repeat this analysis at the chosen frequency'
     },
     ar: {
       heroTitle: '\u0628\u0631\u0648\u0645\u064a\u062a IA',
@@ -170,12 +178,13 @@ var LANG = {
       newBtn: '\u062c\u062f\u064a\u062f',
       advToggle: '\u062a\u062e\u0635\u064a\u0635',
       libTitle: '\u0627\u0644\u0645\u0643\u062a\u0628\u0629',
-      libCount: '30 \u0628\u0631\u0648\u0645\u0628\u062a \u0645\u062e\u062a\u0628\u0631',
+      libCount: '51 برومبت مختبر',
       libOpen: '\u0641\u062a\u062d',
       libClose: '\u0625\u063a\u0644\u0627\u0642',
       copiedMsg: '!\u062a\u0645 \u0646\u0633\u062e \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a',
       copiedSub: '\u0627\u0644\u0635\u0642\u0647 \u0641\u064a ',
       copyAiDefault: '\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a',
+      shareCopied: '\u062a\u0645 \u0646\u0633\u062e \u0627\u0644\u0631\u0627\u0628\u0637!',
       openIn: '\u0641\u062a\u062d \u0641\u064a ',
       otherAi: '\u0630\u0643\u0627\u0621 \u0622\u062e\u0631',
       compTitle: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062a\u0643\u0645\u064a\u0644\u064a\u0629',
@@ -204,7 +213,10 @@ var LANG = {
       aiColStr: '\u0627\u0644\u0642\u0648\u0629',
       aiColWeak: '\u0627\u0644\u0636\u0639\u0641',
       resDividerTitle: '\u0627\u0639\u0631\u0641 \u0623\u0643\u062b\u0631',
-      resTitle: '\u0633\u0644\u0627\u0633\u0644 \u062a\u0639\u0644\u064a\u0645\u064a\u0629'
+      resTitle: '\u0633\u0644\u0627\u0633\u0644 \u062a\u0639\u0644\u064a\u0645\u064a\u0629',
+      scheduleLabel: '\u062a\u0634\u063a\u064a\u0644 \u062a\u0644\u0642\u0627\u0626\u064a',
+      scheduleOpt: '\u2014 \u0627\u062e\u062a\u064a\u0627\u0631\u064a',
+      scheduleHint: '\u0633\u064a\u064f\u0637\u0644\u0628 \u0645\u0646 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u062a\u0643\u0631\u0627\u0631 \u0647\u0630\u0627 \u0627\u0644\u062a\u062d\u0644\u064a\u0644 \u0628\u0627\u0644\u062a\u0631\u062f\u062f \u0627\u0644\u0645\u062e\u062a\u0627\u0631'
     }
   },
   chips: {
@@ -213,27 +225,36 @@ var LANG = {
         { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Analyser' },
         { value:'buy', icon:'fa-solid fa-cart-shopping', label:'Acheter' },
         { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'Vendre' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Earnings' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'Dividende' },
         { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Shorter' },
         { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Hedger' },
         { value:'scan', icon:'fa-solid fa-binoculars', label:'Scanner' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'Apprendre' },
         { value:'macro', icon:'fa-solid fa-globe', label:'Macro' }
       ],
       en: [
         { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Analyze' },
         { value:'buy', icon:'fa-solid fa-cart-shopping', label:'Buy' },
         { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'Sell' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Earnings' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'Dividend' },
         { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Short' },
         { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Hedge' },
         { value:'scan', icon:'fa-solid fa-binoculars', label:'Scan' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'Learn' },
         { value:'macro', icon:'fa-solid fa-globe', label:'Macro' }
       ],
       ar: [
         { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'\u0627\u0644\u0628\u062d\u062b' },
         { value:'buy', icon:'fa-solid fa-cart-shopping', label:'\u0634\u0631\u0627\u0621' },
         { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'\u0628\u064a\u0639' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'\u0623\u0631\u0628\u0627\u062d' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'\u062a\u0648\u0632\u064a\u0639\u0627\u062a' },
         { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Short' },
         { value:'hedge', icon:'fa-solid fa-shield-halved', label:'\u062a\u062d\u0648\u0651\u0637' },
         { value:'scan', icon:'fa-solid fa-binoculars', label:'\u0645\u0633\u062d' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'\u062a\u0639\u0644\u0651\u0645' },
         { value:'macro', icon:'fa-solid fa-globe', label:'\u0645\u0627\u0643\u0631\u0648' }
       ]
     },
@@ -349,6 +370,32 @@ var LANG = {
         { value:'risk', icon:'fa-solid fa-triangle-exclamation', label:'\u0645\u062e\u0627\u0637\u0631' },
         { value:'trade', icon:'fa-solid fa-bullseye', label:'\u062a\u062f\u0627\u0648\u0644' },
         { value:'sharia', icon:'fa-solid fa-mosque', label:'\u0634\u0631\u064a\u0639\u0629' }
+      ]
+    },
+    schedule: {
+      fr: [
+        { value:'none', label:'Désactivé' },
+        { value:'daily', label:'Quotidien' },
+        { value:'weekly', label:'Hebdomadaire' },
+        { value:'biweekly', label:'Bi-mensuel' },
+        { value:'monthly', label:'Mensuel' },
+        { value:'earnings', label:'Avant chaque earnings' }
+      ],
+      en: [
+        { value:'none', label:'Off' },
+        { value:'daily', label:'Daily' },
+        { value:'weekly', label:'Weekly' },
+        { value:'biweekly', label:'Bi-weekly' },
+        { value:'monthly', label:'Monthly' },
+        { value:'earnings', label:'Before each earnings' }
+      ],
+      ar: [
+        { value:'none', label:'معطّل' },
+        { value:'daily', label:'يومي' },
+        { value:'weekly', label:'أسبوعي' },
+        { value:'biweekly', label:'نصف شهري' },
+        { value:'monthly', label:'شهري' },
+        { value:'earnings', label:'قبل كل أرباح' }
       ]
     },
     ai: [

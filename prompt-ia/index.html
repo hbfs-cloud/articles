@@ -156,27 +156,34 @@
 
     /* ── PROMPT LIBRARY ── */
     .prompt-lib-grid{display:grid;gap:.5rem}
-    .prompt-lib-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;transition:border-color .2s}
-    .prompt-lib-card:hover{border-color:#6366f1}
+    .prompt-lib-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s}
+    .prompt-lib-card:hover{border-color:#6366f1;box-shadow:0 4px 12px rgba(99,102,241,.08);transform:translateY(-1px)}
     .prompt-lib-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;gap:6px}
     .prompt-lib-header .plh-left{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
     .prompt-lib-num{width:22px;height:22px;border-radius:6px;font-size:.67rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
     .prompt-lib-header h4{font-size:.76rem;font-weight:700;margin:0;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .prompt-lib-badge{font-size:.56rem;font-weight:600;padding:2px 6px;border-radius:5px;flex-shrink:0;white-space:nowrap}
     .prompt-lib-body{display:none;padding:0 10px 10px}
-    .prompt-lib-card[open] .prompt-lib-body{display:block}
+    .prompt-lib-card[open] .prompt-lib-body{display:block;animation:fadeIn .25s ease}
     .prompt-lib-card[open] .plh-chevron{transform:rotate(180deg)}
     .plh-chevron{color:#94a3b8;font-size:.55rem;transition:transform .2s;flex-shrink:0}
     .prompt-lib-desc{font-size:.73rem;color:#475569;margin:0 0 .5rem;line-height:1.5}
     .prompt-lib-code{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:.75rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.7rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;position:relative;margin-bottom:.4rem;max-height:260px;overflow-y:auto}
-    .prompt-lib-copy{position:absolute;top:6px;right:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;border-radius:5px;padding:3px 8px;font-size:.65rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
-    .prompt-lib-copy:hover{background:rgba(255,255,255,.2);color:#fff}
+    .prompt-lib-copy,.prompt-lib-share{position:absolute;top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;border-radius:5px;padding:3px 8px;font-size:.65rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+    .prompt-lib-copy{right:6px}
+    .prompt-lib-share{right:60px;padding:3px 7px}
+    .prompt-lib-copy:hover,.prompt-lib-share:hover{background:rgba(255,255,255,.2);color:#fff}
     .prompt-lib-source{font-size:.65rem;color:#94a3b8;display:flex;align-items:center;gap:3px}
     .prompt-lib-source a{color:#6366f1;text-decoration:none}
     .prompt-lib-tabs{display:flex;gap:4px;margin-bottom:.5rem;flex-wrap:wrap}
     .prompt-lib-tab{padding:3px 10px;border-radius:7px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#475569;transition:all .2s}
     .prompt-lib-tab:hover{border-color:#818cf8;color:#6366f1}
     .prompt-lib-tab.active{background:#eef2ff;border-color:#6366f1;color:#6366f1}
+
+    /* ── SHARE TOAST ── */
+    .share-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:#0f172a;color:#fff;padding:.7rem 1.5rem;border-radius:12px;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.3);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none}
+    .share-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    .share-toast i{color:#6366f1}
 
     /* ── ANIMATIONS ── */
     @keyframes shimmer{100%{left:100%}}
@@ -273,7 +280,7 @@
           <i class="fa-solid fa-sliders"></i> <span id="advToggleLabel">Customize</span> <i class="fa-solid fa-chevron-down chev"></i>
         </button>
         <button class="sec-btn" id="libToggle" type="button">
-          <i class="fa-solid fa-book-bookmark"></i> <span id="libToggleLabel">Library</span> <span class="sec-count" id="libToggleCount">(30)</span> <i class="fa-solid fa-chevron-down chev"></i>
+          <i class="fa-solid fa-book-bookmark"></i> <span id="libToggleLabel">Library</span> <span class="sec-count" id="libToggleCount"></span> <i class="fa-solid fa-chevron-down chev"></i>
         </button>
       </div>
     </div>
@@ -324,6 +331,12 @@
         <select class="fi tpl" id="catalystTemplateSelect"></select>
         <input type="text" class="fi" id="catalystInput" placeholder="" autocomplete="off">
       </div>
+
+      <div class="fg">
+        <div class="fl"><i class="fa-solid fa-clock"></i> <span id="scheduleLabel">Auto-run</span> <span class="opt" id="scheduleOpt">optional</span></div>
+        <select class="fi" id="scheduleSelect"></select>
+        <div class="hint" id="scheduleHint">The AI will be instructed to repeat this analysis at the chosen frequency</div>
+      </div>
     </div>
 
     <!-- ═══ LIBRARY PANEL ═══ -->
@@ -373,6 +386,11 @@
     </div>
   </div>
 
+  <!-- Share Toast -->
+  <div class="share-toast" id="shareToast">
+    <i class="fa-solid fa-link"></i> <span id="shareToastText">Link copied!</span>
+  </div>
+
   <footer class="article-footer" id="footerArea">
     &copy; 2026 Market Watch. Data via MarketWatch Gateway.
     This is not financial advice.
@@ -380,8 +398,8 @@
   </footer>
 
   <script src="/assets/core.js"></script>
-  <script src="/prompt-ia/lang.js?v=5"></script>
-  <script src="/prompt-ia/library.js?v=5"></script>
-  <script src="/prompt-ia/app.js?v=5"></script>
+  <script src="/prompt-ia/lang.js?v=7"></script>
+  <script src="/prompt-ia/library.js?v=7"></script>
+  <script src="/prompt-ia/app.js?v=7"></script>
 </body>
 </html>
