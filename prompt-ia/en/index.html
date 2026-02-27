@@ -6,7 +6,7 @@
   <title>AI Prompt | Market Watch</title>
   <meta name="description" content="Financial analysis mega-prompt generator — Paste the prompt into ChatGPT, Claude, Grok or Perplexity and get a complete institutional analysis.">
   <meta property="og:title" content="AI Prompt | Market Watch">
-  <meta property="og:description" content="Generate a financial analysis mega-prompt tailored to your AI, language, and level.">
+  <meta property="og:description" content="Generate a financial analysis mega-prompt tailored to your AI, language and level.">
   <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
   <meta property="og:url" content="https://market-watch.xyz/prompt-ia/en/">
   <meta property="og:type" content="website">
@@ -17,168 +17,158 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--pa:#6366f1;--pa-l:#818cf8;--pa-bg:#eef2ff;--pg:#10b981;--pg-bg:#ecfdf5;--po:#f59e0b;--pr:#ef4444;--ps:#fff;--pb:#e2e8f0;--pbg:#f8fafc;--pt:#0f172a;--pt2:#475569;--ptm:#94a3b8}
-    *{box-sizing:border-box}
-    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--pbg);color:var(--pt);margin:0;line-height:1.6;-webkit-font-smoothing:antialiased}
-
-    /* Hero */
-    .prompt-hero{background:linear-gradient(135deg,#312e81 0%,#4338ca 40%,#6366f1 100%);padding:3rem 2rem 2.5rem;text-align:center;position:relative;overflow:hidden}
-    .prompt-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
-    .prompt-hero h1{color:#fff;font-size:2.2rem;font-weight:800;margin:0 0 .5rem;letter-spacing:-.02em}
-    .prompt-hero h1 i{margin-right:.5rem;opacity:.9}
-    .prompt-hero p{color:rgba(255,255,255,.8);font-size:1.05rem;max-width:640px;margin:0 auto;line-height:1.5}
+    /* Hero — matching series pages pattern */
+    .hero-section{background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 50%,#f8fafc 100%);padding:3rem 2rem 2.5rem;text-align:center;position:relative}
+    .hero-date{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#6366f1;margin-bottom:.5rem}
+    .hero-section h1{font-size:2.4rem;font-weight:800;margin:0 0 .5rem;color:#0f172a;letter-spacing:-.02em}
+    .hero-section h1 i{color:#6366f1;margin-right:.5rem}
+    .hero-section>p{color:#475569;font-size:1.05rem;max-width:640px;margin:0 auto;line-height:1.5}
     .hero-badges{display:flex;justify-content:center;gap:.5rem;margin-top:1.25rem;flex-wrap:wrap}
-    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:500}
-
-    /* Lang switcher */
+    .hero-badge-blue,.hero-badge-green,.hero-badge-purple{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600}
+    .hero-badge-blue{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+    .hero-badge-green{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
+    .hero-badge-purple{background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe}
     .lang-switcher{display:flex;justify-content:center;gap:.5rem;margin-top:1rem}
-    .lang-switcher a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.8rem;font-weight:600;padding:4px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.2);transition:all .2s}
-    .lang-switcher a:hover{color:#fff;border-color:rgba(255,255,255,.5)}
-    .lang-switcher a.active{color:#fff;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4)}
+    .lang-switcher a{color:#64748b;text-decoration:none;font-size:.8rem;font-weight:600;padding:4px 12px;border-radius:16px;border:1px solid #cbd5e1;transition:all .2s}
+    .lang-switcher a:hover{color:#6366f1;border-color:#6366f1}
+    .lang-switcher a.active{color:#fff;background:#6366f1;border-color:#6366f1}
 
     /* Container */
-    .prompt-container{max-width:900px;margin:-1.5rem auto 3rem;padding:0 1.25rem;position:relative;z-index:1}
+    .prompt-container{max-width:860px;margin:2rem auto 3rem;padding:0 1.25rem}
 
-    /* How */
-    .how-it-works{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:2rem}
-    .how-step{background:var(--ps);border:1px solid var(--pb);border-radius:14px;padding:1.1rem;text-align:center;transition:transform .2s,box-shadow .2s}
-    .how-step:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
-    .how-step-num{width:34px;height:34px;border-radius:10px;background:var(--pa-bg);color:var(--pa);font-weight:800;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center;margin-bottom:.6rem}
-    .how-step h3{font-size:.85rem;font-weight:700;margin:0 0 .3rem;color:var(--pt)}
-    .how-step p{font-size:.75rem;color:var(--ptm);margin:0;line-height:1.4}
-
-    /* Form */
-    .form-card{background:var(--ps);border:1px solid var(--pb);border-radius:20px;padding:0;box-shadow:0 4px 20px rgba(0,0,0,.04);overflow:hidden}
-
-    /* Wizard Steps */
-    .wizard-progress{display:flex;border-bottom:1px solid var(--pb);background:var(--pbg)}
-    .wizard-step-indicator{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 8px;font-size:.8rem;font-weight:600;color:var(--ptm);cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;position:relative}
-    .wizard-step-indicator.active{color:var(--pa);border-bottom-color:var(--pa);background:rgba(99,102,241,.04)}
-    .wizard-step-indicator.done{color:var(--pg)}
-    .wizard-step-indicator .step-num{width:22px;height:22px;border-radius:50%;background:var(--pb);color:var(--ptm);font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transition:all .2s}
-    .wizard-step-indicator.active .step-num{background:var(--pa);color:#fff}
-    .wizard-step-indicator.done .step-num{background:var(--pg);color:#fff}
-
-    .wizard-body{padding:1.75rem}
-    .wizard-panel{display:none;animation:fadeSlide .3s ease}
-    .wizard-panel.active{display:block}
-    @keyframes fadeSlide{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
-
-    .wizard-nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.75rem;border-top:1px solid var(--pb);background:var(--pbg)}
-    .wiz-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border:1.5px solid var(--pb);border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;background:var(--ps);color:var(--pt2)}
-    .wiz-btn:hover{border-color:var(--pa);color:var(--pa);background:var(--pa-bg)}
-    .wiz-btn.primary{background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(99,102,241,.3)}
-    .wiz-btn.primary:hover{box-shadow:0 8px 24px rgba(99,102,241,.4);transform:translateY(-1px)}
-    .wiz-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
-
-    /* Form fields */
+    /* Form elements */
     .form-section{margin-bottom:1.5rem}
-    .form-section:last-child{margin-bottom:0}
-    .form-section-title{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--pt);margin-bottom:.65rem;text-transform:uppercase;letter-spacing:.05em}
-    .form-section-title i{color:var(--pa);font-size:.9rem}
-    .form-input{width:100%;padding:11px 14px;border:1.5px solid var(--pb);border-radius:11px;font-family:'Inter',sans-serif;font-size:.92rem;color:var(--pt);background:var(--pbg);transition:border-color .2s,box-shadow .2s;outline:none}
-    .form-input:focus{border-color:var(--pa);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
-    .form-input::placeholder{color:var(--ptm)}
+    .form-label{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:#0f172a;margin-bottom:.65rem;text-transform:uppercase;letter-spacing:.05em}
+    .form-label i{color:#6366f1;font-size:.9rem}
+    .form-input{width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:11px;font-family:'Inter',sans-serif;font-size:.95rem;color:#0f172a;background:#f8fafc;transition:border-color .2s,box-shadow .2s;outline:none}
+    .form-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+    .form-input::placeholder{color:#94a3b8}
     textarea.form-input{resize:vertical;min-height:76px}
-    .input-hint{font-size:.72rem;color:var(--ptm);margin-top:3px}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
-    .form-divider{height:1px;background:var(--pb);margin:1.25rem 0}
-
-    /* Thesis templates */
-    .thesis-templates{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-    .thesis-tpl{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--pb);border-radius:8px;font-size:.75rem;font-weight:500;cursor:pointer;transition:all .2s;background:var(--ps);color:var(--pt2)}
-    .thesis-tpl:hover{border-color:var(--pa-l);background:var(--pa-bg);color:var(--pa)}
-    .thesis-tpl i{font-size:.7rem}
+    .input-hint{font-size:.72rem;color:#94a3b8;margin-top:4px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
 
     /* Chips */
     .chip-group{display:flex;flex-wrap:wrap;gap:7px}
-    .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border:1.5px solid var(--pb);border-radius:10px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;background:var(--ps);color:var(--pt2);user-select:none}
-    .chip:hover{border-color:var(--pa-l);background:var(--pa-bg)}
-    .chip.selected{border-color:var(--pa);background:var(--pa-bg);color:var(--pa);box-shadow:0 2px 8px rgba(99,102,241,.12)}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;background:#fff;color:#475569;user-select:none}
+    .chip:hover{border-color:#818cf8;background:#eef2ff}
+    .chip.selected{border-color:#6366f1;background:#eef2ff;color:#6366f1;box-shadow:0 2px 8px rgba(99,102,241,.12)}
     .chip i{font-size:.83rem}
-    .chip[data-value="chatgpt"].selected{border-color:#10a37f;background:#ecfdf5;color:#10a37f;box-shadow:0 2px 8px rgba(16,163,127,.12)}
-    .chip[data-value="claude"].selected{border-color:#d97706;background:#fffbeb;color:#d97706;box-shadow:0 2px 8px rgba(217,119,6,.12)}
-    .chip[data-value="grok"].selected{border-color:#0f172a;background:#f1f5f9;color:#0f172a;box-shadow:0 2px 8px rgba(15,23,42,.12)}
-    .chip[data-value="perplexity"].selected{border-color:#20b2aa;background:#f0fdfa;color:#0d9488;box-shadow:0 2px 8px rgba(13,148,136,.12)}
-    .chip[data-value="gemini"].selected{border-color:#4285f4;background:#eff6ff;color:#4285f4;box-shadow:0 2px 8px rgba(66,133,244,.12)}
-    .chip[data-value="deepseek"].selected{border-color:#2563eb;background:#eff6ff;color:#2563eb;box-shadow:0 2px 8px rgba(37,99,235,.12)}
+    .chip[data-value="chatgpt"].selected{border-color:#10a37f;background:#ecfdf5;color:#10a37f}
+    .chip[data-value="claude"].selected{border-color:#d97706;background:#fffbeb;color:#d97706}
+    .chip[data-value="grok"].selected{border-color:#0f172a;background:#f1f5f9;color:#0f172a}
+    .chip[data-value="perplexity"].selected{border-color:#0d9488;background:#f0fdfa;color:#0d9488}
+    .chip[data-value="gemini"].selected{border-color:#4285f4;background:#eff6ff;color:#4285f4}
+    .chip[data-value="deepseek"].selected{border-color:#2563eb;background:#eff6ff;color:#2563eb}
 
-    /* Field help */
-    .field-help{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--pa-bg);color:var(--pa);font-size:.58rem;font-weight:700;cursor:help;margin-left:4px;position:relative}
-    .field-help:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0f172a;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:.72rem;font-weight:400;max-width:280px;white-space:normal;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.2);line-height:1.4}
+    /* Thesis templates */
+    .thesis-templates{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .thesis-tpl{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.75rem;font-weight:500;cursor:pointer;transition:all .2s;background:#fff;color:#475569}
+    .thesis-tpl:hover{border-color:#818cf8;background:#eef2ff;color:#6366f1}
+
+    /* Advanced options */
+    .advanced-toggle{border:1px solid #e2e8f0;border-radius:12px;margin-top:.5rem;background:#fff}
+    .advanced-toggle summary{padding:12px 16px;font-size:.85rem;font-weight:600;color:#475569;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+    .advanced-toggle summary::-webkit-details-marker{display:none}
+    .advanced-toggle summary::before{content:'\f078';font-family:'Font Awesome 6 Free';font-weight:900;font-size:.7rem;color:#94a3b8;transition:transform .2s}
+    .advanced-toggle[open] summary::before{transform:rotate(180deg)}
+    .advanced-toggle .adv-body{padding:0 16px 16px;display:grid;gap:1.25rem}
+
+    /* Generate button */
+    .generate-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;box-shadow:0 4px 16px rgba(99,102,241,.3);transition:all .2s;margin-top:1.5rem}
+    .generate-btn:hover{box-shadow:0 8px 24px rgba(99,102,241,.4);transform:translateY(-1px)}
+    .generate-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+    .generating{position:relative;overflow:hidden}
+    .generating::after{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1.5s infinite}
+    @keyframes shimmer{100%{left:100%}}
 
     /* Output */
-    .output-card{background:var(--ps);border:1px solid var(--pb);border-radius:20px;margin-top:1.5rem;overflow:hidden;display:none;animation:slideUp .4s ease}
+    .output-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;margin-top:1.5rem;overflow:hidden;display:none;animation:slideUp .4s ease}
     .output-card.visible{display:block}
     @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    .output-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--pb);background:var(--pbg)}
-    .output-header-left{display:flex;align-items:center;gap:10px}
-    .output-header h3{font-size:.95rem;font-weight:700;margin:0;color:var(--pt)}
-    .output-meta{font-size:.75rem;color:var(--ptm);display:flex;align-items:center;gap:12px}
+    .output-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+    .output-header h3{font-size:.95rem;font-weight:700;margin:0;display:flex;align-items:center;gap:8px}
+    .output-meta{font-size:.75rem;color:#94a3b8;display:flex;align-items:center;gap:12px}
     .output-meta span{display:inline-flex;align-items:center;gap:4px}
-    .output-body{padding:1.5rem;position:relative}
-    .prompt-output{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:1.25rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.8rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:500px;overflow-y:auto;border:1px solid #1e293b}
+    .prompt-output{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:1.25rem;margin:1.5rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.8rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:500px;overflow-y:auto;border:1px solid #1e293b}
     .prompt-output::-webkit-scrollbar{width:6px}
-    .prompt-output::-webkit-scrollbar-track{background:transparent}
     .prompt-output::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
-    .output-actions{display:flex;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid var(--pb);background:var(--pbg)}
-    .action-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:1.5px solid var(--pb);border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;background:var(--ps);color:var(--pt2)}
-    .action-btn:hover{border-color:var(--pa);color:var(--pa);background:var(--pa-bg)}
+    .output-actions{display:flex;gap:.5rem;padding:1rem 1.5rem;border-top:1px solid #e2e8f0;background:#f8fafc}
+    .action-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;background:#fff;color:#475569}
+    .action-btn:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
     .action-btn.primary{background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border-color:transparent}
     .action-btn.primary:hover{box-shadow:0 4px 16px rgba(99,102,241,.3);transform:translateY(-1px)}
 
-    /* Final CTA block */
-    .final-cta{background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1.5px solid #c7d2fe;border-radius:14px;padding:1.5rem;text-align:center;margin-top:1rem}
-    .final-cta h3{margin:0 0 .5rem;font-size:1.05rem;font-weight:700;color:#4338ca}
-    .final-cta p{margin:0 0 .75rem;font-size:.88rem;color:var(--pt2);line-height:1.5}
-    .final-cta .steps-row{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
-    .final-cta .cta-step{display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:#4338ca}
-    .final-cta .cta-step .cta-num{width:24px;height:24px;border-radius:50%;background:#4338ca;color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
-
     /* Copy animation */
-    .copy-success{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);background:#0f172a;color:#fff;padding:1.5rem 2.5rem;border-radius:16px;font-size:1rem;font-weight:600;z-index:9999;display:none;align-items:center;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-    .copy-success.show{display:flex;animation:copyPop .5s cubic-bezier(.34,1.56,.64,1) forwards}
-    @keyframes copyPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}60%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-    .copy-success .check-icon{width:40px;height:40px;border-radius:50%;background:var(--pg);display:flex;align-items:center;justify-content:center}
-    .copy-success .check-icon svg{width:22px;height:22px;stroke:#fff;stroke-width:3;fill:none}
-    .copy-success .check-icon svg path{stroke-dasharray:30;stroke-dashoffset:30;animation:checkDraw .4s .2s ease forwards}
-    @keyframes checkDraw{to{stroke-dashoffset:0}}
-    .copy-success-text{display:flex;flex-direction:column}
-    .copy-success-text span:first-child{font-size:1.05rem;font-weight:700}
-    .copy-success-text span:last-child{font-size:.8rem;color:#94a3b8;font-weight:400}
     .copy-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);z-index:9998;display:none}
     .copy-overlay.show{display:block;animation:fadeIn .2s ease}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .copy-success{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);background:#0f172a;color:#fff;padding:1.5rem 2.5rem;border-radius:16px;font-size:1rem;font-weight:600;z-index:9999;display:none;align-items:center;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .copy-success.show{display:flex;animation:copyPop .5s cubic-bezier(.34,1.56,.64,1) forwards}
+    @keyframes copyPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}60%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    .copy-success .check-icon{width:40px;height:40px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center}
+    .copy-success .check-icon svg{width:22px;height:22px;stroke:#fff;stroke-width:3;fill:none}
+    .copy-success .check-icon svg path{stroke-dasharray:30;stroke-dashoffset:30;animation:checkDraw .4s .2s ease forwards}
+    @keyframes checkDraw{to{stroke-dashoffset:0}}
+    .copy-success-text span:first-child{font-size:1.05rem;font-weight:700}
+    .copy-success-text span:last-child{font-size:.8rem;color:#94a3b8;font-weight:400;display:block;margin-top:2px}
 
-    /* Generating shimmer */
-    .generating{position:relative;overflow:hidden}
-    .generating::after{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:shimmer 1.5s infinite}
-    @keyframes shimmer{100%{left:100%}}
+    /* Workflow steps */
+    .workflow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1rem 0}
+    .wf-step{text-align:center;padding:1rem .75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;position:relative}
+    .wf-step::after{content:'→';position:absolute;right:-14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-weight:700;font-size:1.1rem}
+    .wf-step:last-child::after{display:none}
+    .wf-num{width:28px;height:28px;border-radius:8px;background:#eef2ff;color:#6366f1;font-weight:800;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;margin-bottom:.4rem}
+    .wf-step h4{font-size:.8rem;font-weight:700;margin:0 0 .2rem;color:#0f172a}
+    .wf-step p{font-size:.7rem;color:#94a3b8;margin:0;line-height:1.3}
+
+    /* Resource cards */
+    .resource-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+    .resource-card{display:flex;gap:1rem;padding:1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;text-decoration:none;color:inherit;transition:all .2s}
+    .resource-card:hover{border-color:#6366f1;background:#eef2ff;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+    .resource-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .resource-card h4{font-size:.88rem;font-weight:700;margin:0 0 .2rem;color:#0f172a}
+    .resource-card p{font-size:.75rem;color:#64748b;margin:0;line-height:1.4}
+
+    /* Prompt library */
+    .prompt-lib-grid{display:grid;gap:1rem;margin-top:1rem}
+    .prompt-lib-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;transition:border-color .2s}
+    .prompt-lib-card:hover{border-color:#6366f1}
+    .prompt-lib-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;gap:8px}
+    .prompt-lib-header .plh-left{display:flex;align-items:center;gap:10px;min-width:0}
+    .prompt-lib-num{width:28px;height:28px;border-radius:8px;font-size:.75rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .prompt-lib-header h4{font-size:.88rem;font-weight:700;margin:0;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .prompt-lib-badge{font-size:.65rem;font-weight:600;padding:3px 8px;border-radius:6px;flex-shrink:0;white-space:nowrap}
+    .prompt-lib-body{display:none;padding:0 16px 16px}
+    .prompt-lib-card[open] .prompt-lib-body{display:block}
+    .prompt-lib-card[open] .plh-chevron{transform:rotate(180deg)}
+    .plh-chevron{color:#94a3b8;font-size:.7rem;transition:transform .2s;flex-shrink:0}
+    .prompt-lib-desc{font-size:.82rem;color:#475569;margin:0 0 .75rem;line-height:1.5}
+    .prompt-lib-code{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.78rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;position:relative;margin-bottom:.5rem}
+    .prompt-lib-copy{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;border-radius:6px;padding:4px 10px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+    .prompt-lib-copy:hover{background:rgba(255,255,255,.2);color:#fff}
+    .prompt-lib-source{font-size:.72rem;color:#94a3b8;display:flex;align-items:center;gap:4px}
+    .prompt-lib-source a{color:#6366f1;text-decoration:none}
+    .prompt-lib-source a:hover{text-decoration:underline}
+    .prompt-lib-tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+    .prompt-lib-tab{padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#475569;transition:all .2s}
+    .prompt-lib-tab:hover{border-color:#818cf8;color:#6366f1}
+    .prompt-lib-tab.active{background:#eef2ff;border-color:#6366f1;color:#6366f1}
 
     /* Responsive */
     @media(max-width:768px){
-      .prompt-hero{padding:2rem 1.25rem}
-      .prompt-hero h1{font-size:1.5rem}
-      .prompt-hero p{font-size:.88rem}
-      .prompt-container{padding:0 .75rem}
-      .wizard-body{padding:1.25rem}
-      .form-row{grid-template-columns:1fr;gap:.75rem}
-      .how-it-works{grid-template-columns:repeat(2,1fr);gap:.5rem}
-      .how-step{padding:.85rem}
+      .hero-section h1{font-size:1.6rem}
+      .hero-section>p{font-size:.88rem}
+      .form-row{grid-template-columns:1fr}
+      .workflow-grid{grid-template-columns:repeat(2,1fr)}
+      .wf-step::after{display:none}
+      .resource-grid{grid-template-columns:1fr}
       .output-actions{flex-wrap:wrap}
       .action-btn{flex:1;justify-content:center;min-width:130px}
-      .hero-badges{gap:.35rem}
-      .hero-badge{font-size:.7rem;padding:5px 10px}
-      .wizard-step-indicator{font-size:.7rem;padding:10px 4px}
-      .wizard-step-indicator .step-label{display:none}
-      .wizard-nav{padding:.75rem 1.25rem}
-      .final-cta .steps-row{flex-direction:column;gap:.5rem}
     }
     @media(max-width:480px){
-      .prompt-hero h1{font-size:1.3rem}
+      .hero-section h1{font-size:1.3rem}
       .chip{padding:6px 11px;font-size:.78rem}
-      .chip-group{gap:5px}
-      .how-it-works{grid-template-columns:1fr 1fr}
+      .workflow-grid{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
@@ -199,169 +189,112 @@
   </nav>
 
   <!-- Hero -->
-  <div class="prompt-hero">
-    <h1><i class="fa-solid fa-wand-magic-sparkles"></i>AI Prompt</h1>
-    <p>Generate a financial analysis mega-prompt. Paste it into the AI of your choice and get a complete, sourced, hallucination-free institutional report.</p>
+  <div class="hero-section">
+    <div class="hero-date"><i class="fa-solid fa-flask"></i> Interactive tool</div>
+    <h1><i class="fa-solid fa-wand-magic-sparkles"></i>Prompt IA</h1>
+    <p>Generate a financial analysis mega-prompt. Paste it into your favorite AI and get a complete institutional report.</p>
     <div class="hero-badges">
-      <span class="hero-badge"><i class="fa-solid fa-bullseye"></i> 17 sections</span>
-      <span class="hero-badge"><i class="fa-solid fa-language"></i> 5 languages</span>
-      <span class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Anti-hallucination</span>
-      <span class="hero-badge"><i class="fa-solid fa-robot"></i> 6 AIs supported</span>
+      <span class="hero-badge-purple"><i class="fa-solid fa-bullseye"></i> 16 analysis sections</span>
+      <span class="hero-badge-blue"><i class="fa-solid fa-robot"></i> 6 supported AIs</span>
+      <span class="hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Anti-hallucination</span>
     </div>
     <div class="lang-switcher">
-      <a href="/prompt-ia/fr/">Fran&ccedil;ais</a>
+      <a href="/prompt-ia/fr/">Français</a>
       <a href="/prompt-ia/en/" class="active">English</a>
-      <a href="/prompt-ia/ar/">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</a>
+      <a href="/prompt-ia/ar/">العربية</a>
     </div>
   </div>
 
   <div class="prompt-container">
-    <!-- How It Works -->
-    <div class="how-it-works">
-      <div class="how-step">
-        <div class="how-step-num">1</div>
-        <h3>Configure</h3>
-        <p>Ticker, intent, investment thesis</p>
-      </div>
-      <div class="how-step">
-        <div class="how-step-num">2</div>
-        <h3>Customize</h3>
-        <p>Language, level, target AI, format</p>
-      </div>
-      <div class="how-step">
-        <div class="how-step-num">3</div>
-        <h3>Generate</h3>
-        <p>A mega-prompt optimized for your AI</p>
-      </div>
-      <div class="how-step">
-        <div class="how-step-num">4</div>
-        <h3>Paste</h3>
-        <p>Copy &rarr; Paste into AI &rarr; Analyze</p>
+
+    <!-- ═══ How it works ═══ -->
+    <div class="content-card">
+      <h2><i class="fa-solid fa-circle-info" style="color:#6366f1"></i> How it works</h2>
+      <div class="workflow-grid">
+        <div class="wf-step">
+          <div class="wf-num">1</div>
+          <h4>Configure</h4>
+          <p>Ticker, intent and level</p>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">2</div>
+          <h4>Customize</h4>
+          <p>Thesis and target AI</p>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">3</div>
+          <h4>Generate</h4>
+          <p>An optimized prompt</p>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">4</div>
+          <h4>Paste</h4>
+          <p>Into your favorite AI</p>
+        </div>
       </div>
     </div>
 
-    <!-- Wizard Form -->
-    <div class="form-card">
-      <!-- Progress -->
-      <div class="wizard-progress">
-        <div class="wizard-step-indicator active" data-step="1">
-          <span class="step-num">1</span>
-          <span class="step-label">Ticker &amp; Intent</span>
-        </div>
-        <div class="wizard-step-indicator" data-step="2">
-          <span class="step-num">2</span>
-          <span class="step-label">Thesis &amp; Context</span>
-        </div>
-        <div class="wizard-step-indicator" data-step="3">
-          <span class="step-num">3</span>
-          <span class="step-label">AI Settings</span>
-        </div>
-        <div class="wizard-step-indicator" data-step="4">
-          <span class="step-num">4</span>
-          <span class="step-label">Generate</span>
+    <!-- ═══ Form ═══ -->
+    <div class="content-card" id="generatorCard">
+      <h2><i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1"></i> Prompt Generator</h2>
+
+      <!-- Ticker -->
+      <div class="form-section">
+        <div class="form-label"><i class="fa-solid fa-chart-line"></i> Ticker to analyze</div>
+        <input type="text" class="form-input" id="tickerInput" placeholder="E.g.: AAPL, BTC-USD, ASML..." maxlength="20" autocomplete="off" spellcheck="false">
+        <div class="input-hint">Stock or crypto symbol (Yahoo Finance format)</div>
+      </div>
+
+      <!-- Intent -->
+      <div class="form-section">
+        <div class="form-label"><i class="fa-solid fa-compass"></i> Your intent</div>
+        <div class="chip-group" id="intentGroup">
+          <div class="chip selected" data-value="inform"><i class="fa-solid fa-magnifying-glass"></i> Research</div>
+          <div class="chip" data-value="buy"><i class="fa-solid fa-cart-shopping"></i> Buy</div>
+          <div class="chip" data-value="sell"><i class="fa-solid fa-hand-holding-dollar"></i> Sell</div>
+          <div class="chip" data-value="short"><i class="fa-solid fa-arrow-trend-down"></i> Short</div>
+          <div class="chip" data-value="hedge"><i class="fa-solid fa-shield-halved"></i> Hedge</div>
         </div>
       </div>
 
-      <div class="wizard-body">
-        <!-- STEP 1: Ticker & Intent -->
-        <div class="wizard-panel active" id="step1">
-          <div class="form-section">
-            <div class="form-section-title"><i class="fa-solid fa-chart-line"></i> Ticker to analyze</div>
-            <div class="form-row">
-              <div>
-                <input type="text" class="form-input" id="tickerInput" placeholder="E.g.: AAPL, BTC-USD, ASML..." maxlength="20" autocomplete="off" spellcheck="false">
-                <div class="input-hint">Stock or crypto symbol (Yahoo Finance format)</div>
-              </div>
-              <div>
-                <input type="text" class="form-input" id="sectorInput" placeholder="E.g.: Tech, Biotech, Energy..." autocomplete="off">
-                <div class="input-hint">Sector or industry (optional)</div>
-              </div>
-            </div>
-          </div>
+      <!-- Thesis -->
+      <div class="form-section">
+        <div class="form-label"><i class="fa-solid fa-lightbulb"></i> Investment thesis <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;font-size:.75rem">— optional</span></div>
+        <div class="thesis-templates" id="thesisTemplates"></div>
+        <textarea class="form-input" id="thesisInput" placeholder="Describe your hypothesis or select a template above..."></textarea>
+        <div class="input-hint">The more detailed the thesis, the more relevant the analysis will be</div>
+      </div>
 
-          <div class="form-divider"></div>
-
-          <div class="form-section">
-            <div class="form-section-title"><i class="fa-solid fa-compass"></i> What is your intent?</div>
-            <div class="chip-group" id="intentGroup">
-              <div class="chip selected" data-value="inform"><i class="fa-solid fa-magnifying-glass"></i> Inform</div>
-              <div class="chip" data-value="buy"><i class="fa-solid fa-cart-shopping"></i> Buy</div>
-              <div class="chip" data-value="sell"><i class="fa-solid fa-hand-holding-dollar"></i> Sell</div>
-              <div class="chip" data-value="short"><i class="fa-solid fa-arrow-trend-down"></i> Short</div>
-              <div class="chip" data-value="hedge"><i class="fa-solid fa-shield-halved"></i> Hedge</div>
-            </div>
+      <!-- Level + AI side by side -->
+      <div class="form-row">
+        <div class="form-section">
+          <div class="form-label"><i class="fa-solid fa-graduation-cap"></i> Your level</div>
+          <div class="chip-group" id="levelGroup">
+            <div class="chip" data-value="beginner"><i class="fa-solid fa-seedling"></i> Beginner</div>
+            <div class="chip selected" data-value="intermediate"><i class="fa-solid fa-chart-simple"></i> Intermediate</div>
+            <div class="chip" data-value="expert"><i class="fa-solid fa-brain"></i> Expert</div>
           </div>
         </div>
-
-        <!-- STEP 2: Thesis & Catalysts -->
-        <div class="wizard-panel" id="step2">
-          <div class="form-section">
-            <div class="form-section-title">
-              <i class="fa-solid fa-lightbulb"></i> Investment thesis
-              <span class="field-help" data-tip="Describe why you are interested in this stock. Use a template or write freely.">?</span>
-            </div>
-            <div class="thesis-templates" id="thesisTemplates"></div>
-            <textarea class="form-input" id="thesisInput" placeholder="Describe your thesis or select a template above..."></textarea>
-            <div class="input-hint">The more detailed the thesis, the more relevant the analysis will be</div>
-          </div>
-
-          <div class="form-divider"></div>
-
-          <div class="form-section">
-            <div class="form-section-title">
-              <i class="fa-solid fa-bolt"></i> Specific catalysts
-              <span class="field-help" data-tip="Upcoming events: earnings, FDA, conference, product launch, spin-off...">?</span>
-            </div>
-            <input type="text" class="form-input" id="catalystInput" placeholder="E.g.: Earnings on May 1st, product launch Q2, China tariffs..." autocomplete="off">
-            <div class="input-hint">Optional — Catalysts or events to integrate into the analysis</div>
+        <div class="form-section">
+          <div class="form-label"><i class="fa-solid fa-robot"></i> Target AI</div>
+          <div class="chip-group" id="aiGroup">
+            <div class="chip selected" data-value="chatgpt"><i class="fa-solid fa-message"></i> ChatGPT</div>
+            <div class="chip" data-value="claude"><i class="fa-solid fa-feather"></i> Claude</div>
+            <div class="chip" data-value="perplexity"><i class="fa-solid fa-magnifying-glass-chart"></i> Perplexity</div>
+            <div class="chip" data-value="grok"><i class="fa-solid fa-xmark"></i> Grok</div>
+            <div class="chip" data-value="gemini"><i class="fa-solid fa-gem"></i> Gemini</div>
+            <div class="chip" data-value="deepseek"><i class="fa-solid fa-water"></i> DeepSeek</div>
           </div>
         </div>
+      </div>
 
-        <!-- STEP 3: AI Params -->
-        <div class="wizard-panel" id="step3">
+      <!-- Advanced options -->
+      <details class="advanced-toggle">
+        <summary><i class="fa-solid fa-sliders"></i> Advanced options</summary>
+        <div class="adv-body">
           <div class="form-row">
             <div class="form-section">
-              <div class="form-section-title"><i class="fa-solid fa-language"></i> Report language</div>
-              <div class="chip-group" id="langGroup">
-                <div class="chip" data-value="fr"><i class="fa-solid fa-flag"></i> Fran&ccedil;ais</div>
-                <div class="chip selected" data-value="en"><i class="fa-solid fa-flag"></i> English</div>
-                <div class="chip" data-value="ar"><i class="fa-solid fa-flag"></i> &#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</div>
-                <div class="chip" data-value="de"><i class="fa-solid fa-flag"></i> Deutsch</div>
-                <div class="chip" data-value="es"><i class="fa-solid fa-flag"></i> Espa&ntilde;ol</div>
-              </div>
-            </div>
-            <div class="form-section">
-              <div class="form-section-title"><i class="fa-solid fa-graduation-cap"></i> Level</div>
-              <div class="chip-group" id="levelGroup">
-                <div class="chip" data-value="beginner"><i class="fa-solid fa-seedling"></i> Beginner</div>
-                <div class="chip selected" data-value="intermediate"><i class="fa-solid fa-chart-simple"></i> Intermediate</div>
-                <div class="chip" data-value="expert"><i class="fa-solid fa-brain"></i> Expert</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-divider"></div>
-
-          <div class="form-section">
-            <div class="form-section-title">
-              <i class="fa-solid fa-robot"></i> Target AI
-              <span class="field-help" data-tip="The prompt will be optimized for the chosen AI: instructions, sources, adapted format. Each AI has its strengths.">?</span>
-            </div>
-            <div class="chip-group" id="aiGroup">
-              <div class="chip selected" data-value="chatgpt"><i class="fa-solid fa-message"></i> ChatGPT</div>
-              <div class="chip" data-value="claude"><i class="fa-solid fa-feather"></i> Claude</div>
-              <div class="chip" data-value="perplexity"><i class="fa-solid fa-magnifying-glass-chart"></i> Perplexity</div>
-              <div class="chip" data-value="grok"><i class="fa-solid fa-xmark"></i> Grok</div>
-              <div class="chip" data-value="gemini"><i class="fa-solid fa-gem"></i> Gemini</div>
-              <div class="chip" data-value="deepseek"><i class="fa-solid fa-water"></i> DeepSeek</div>
-            </div>
-          </div>
-
-          <div class="form-divider"></div>
-
-          <div class="form-row">
-            <div class="form-section">
-              <div class="form-section-title"><i class="fa-solid fa-file-lines"></i> Output format</div>
+              <div class="form-label"><i class="fa-solid fa-file-lines"></i> Output format</div>
               <div class="chip-group" id="formatGroup">
                 <div class="chip selected" data-value="detailed"><i class="fa-solid fa-file-alt"></i> Detailed</div>
                 <div class="chip" data-value="concise"><i class="fa-solid fa-compress"></i> Concise</div>
@@ -370,76 +303,51 @@
               </div>
             </div>
             <div class="form-section">
-              <div class="form-section-title">
-                <i class="fa-solid fa-crosshairs"></i> Focus
-                <span class="field-help" data-tip="Select one or more priority axes.">?</span>
-              </div>
-              <div class="chip-group multi" id="focusGroup">
-                <div class="chip selected" data-value="all"><i class="fa-solid fa-layer-group"></i> Complete</div>
-                <div class="chip" data-value="technical"><i class="fa-solid fa-chart-area"></i> Technical</div>
-                <div class="chip" data-value="fundamental"><i class="fa-solid fa-building-columns"></i> Fundamental</div>
-                <div class="chip" data-value="sentiment"><i class="fa-solid fa-users"></i> Sentiment</div>
-                <div class="chip" data-value="risk"><i class="fa-solid fa-triangle-exclamation"></i> Risks</div>
-                <div class="chip" data-value="trade"><i class="fa-solid fa-bullseye"></i> Trade Idea</div>
-                <div class="chip" data-value="sharia"><i class="fa-solid fa-mosque"></i> Sharia</div>
+              <div class="form-label"><i class="fa-solid fa-language"></i> Report language</div>
+              <div class="chip-group" id="langGroup">
+                <div class="chip" data-value="fr"><i class="fa-solid fa-flag"></i> Français</div>
+                <div class="chip selected" data-value="en"><i class="fa-solid fa-flag"></i> English</div>
+                <div class="chip" data-value="ar"><i class="fa-solid fa-flag"></i> العربية</div>
+                <div class="chip" data-value="de"><i class="fa-solid fa-flag"></i> Deutsch</div>
+                <div class="chip" data-value="es"><i class="fa-solid fa-flag"></i> Español</div>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- STEP 4: Generate -->
-        <div class="wizard-panel" id="step4">
           <div class="form-section">
-            <div class="form-section-title"><i class="fa-solid fa-clipboard-check"></i> Summary</div>
-            <div id="wizardSummary" class="pedagogy-box"></div>
-          </div>
-
-          <div class="form-divider"></div>
-
-          <button class="wiz-btn primary" id="generateBtn" type="button" style="width:100%;justify-content:center;padding:16px;font-size:1rem">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Mega-Prompt
-          </button>
-
-          <div class="final-cta" id="finalCta" style="display:none">
-            <h3><i class="fa-solid fa-rocket"></i> Prompt ready!</h3>
-            <p>Your mega-prompt has been generated and optimized. Follow these steps:</p>
-            <div class="steps-row">
-              <div class="cta-step"><span class="cta-num">1</span> Click "Copy prompt"</div>
-              <div class="cta-step"><span class="cta-num">2</span> Open <span id="ctaAiName" class="fw700">ChatGPT</span></div>
-              <div class="cta-step"><span class="cta-num">3</span> Paste the prompt (Ctrl+V)</div>
-              <div class="cta-step"><span class="cta-num">4</span> Launch the analysis</div>
+            <div class="form-label"><i class="fa-solid fa-crosshairs"></i> Analysis focus</div>
+            <div class="chip-group multi" id="focusGroup">
+              <div class="chip selected" data-value="all"><i class="fa-solid fa-layer-group"></i> Complete</div>
+              <div class="chip" data-value="technical"><i class="fa-solid fa-chart-area"></i> Technical</div>
+              <div class="chip" data-value="fundamental"><i class="fa-solid fa-building-columns"></i> Fundamental</div>
+              <div class="chip" data-value="sentiment"><i class="fa-solid fa-users"></i> Sentiment</div>
+              <div class="chip" data-value="risk"><i class="fa-solid fa-triangle-exclamation"></i> Risks</div>
+              <div class="chip" data-value="trade"><i class="fa-solid fa-bullseye"></i> Trade Idea</div>
+              <div class="chip" data-value="sharia"><i class="fa-solid fa-mosque"></i> Sharia</div>
             </div>
           </div>
+          <div class="form-section">
+            <div class="form-label"><i class="fa-solid fa-bolt"></i> Specific catalysts <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;font-size:.75rem">— optional</span></div>
+            <input type="text" class="form-input" id="catalystInput" placeholder="E.g.: Earnings on May 1st, product launch Q2, China tariffs..." autocomplete="off">
+          </div>
         </div>
-      </div>
+      </details>
 
-      <!-- Navigation -->
-      <div class="wizard-nav">
-        <button class="wiz-btn" id="prevBtn" type="button" disabled>
-          <i class="fa-solid fa-arrow-left"></i> Back
-        </button>
-        <div class="wizard-step-label" id="stepLabel">Step 1 / 4</div>
-        <button class="wiz-btn primary" id="nextBtn" type="button">
-          Next <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </div>
+      <!-- Generate -->
+      <button class="generate-btn" id="generateBtn" type="button">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Mega-Prompt
+      </button>
     </div>
 
-    <!-- Output -->
+    <!-- ═══ Output ═══ -->
     <div class="output-card" id="outputCard">
       <div class="output-header">
-        <div class="output-header-left">
-          <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--pa)"></i>
-          <h3>Generated Mega-Prompt</h3>
-        </div>
+        <h3><i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1"></i> Generated Mega-Prompt</h3>
         <div class="output-meta">
           <span id="outputTarget"><i class="fa-solid fa-robot"></i> ChatGPT</span>
           <span id="outputChars"><i class="fa-solid fa-text-width"></i> 0 chars</span>
         </div>
       </div>
-      <div class="output-body">
-        <pre class="prompt-output" id="promptOutput"></pre>
-      </div>
+      <pre class="prompt-output" id="promptOutput"></pre>
       <div class="output-actions">
         <button class="action-btn primary" id="copyBtn" type="button">
           <i class="fa-solid fa-copy"></i> Copy prompt
@@ -450,6 +358,304 @@
         <button class="action-btn" id="resetBtn" type="button">
           <i class="fa-solid fa-rotate-left"></i> New prompt
         </button>
+      </div>
+    </div>
+
+    <!-- ═══ Prompt Library ═══ -->
+    <div class="section-divider">
+      <span><i class="fa-solid fa-book-bookmark"></i> Prompt Library</span>
+    </div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-copy" style="color:#6366f1"></i> Ready-to-use Prompts</h2>
+      <p>11 tested and optimized prompts from our educational series. Click to expand, then copy directly.</p>
+
+      <div class="prompt-lib-tabs">
+        <div class="prompt-lib-tab active" data-cat="all">All (11)</div>
+        <div class="prompt-lib-tab" data-cat="stock">Stock-Picking (4)</div>
+        <div class="prompt-lib-tab" data-cat="portfolio">Portfolio (6)</div>
+        <div class="prompt-lib-tab" data-cat="earnings">Earnings (1)</div>
+      </div>
+
+      <div class="prompt-lib-grid" id="promptLibGrid">
+
+        <!-- STOCK-PICKING #1 -->
+        <div class="prompt-lib-card" data-cat="stock">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#ecfdf5;color:#059669">#1</div>
+              <h4>Initial Screening</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#ecfdf5;color:#059669">Stock-Picking</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Find candidates based on your fundamental criteria. Replace [SECTOR] with your target.</p>
+            <div class="prompt-lib-code">I'm looking for stocks in the [SECTOR] sector with: a P/E &lt; 20, revenue growth &gt; 10%/year over 3 years, net debt/EBITDA &lt; 2. Give me 10 candidates with their key metrics. For each one, indicate a major risk I might overlook. Also expand to adjacent sectors I may not have considered.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/stock-picking/">Bien Débuter en Bourse</a></div>
+          </div>
+        </div>
+
+        <!-- STOCK-PICKING #2 -->
+        <div class="prompt-lib-card" data-cat="stock">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#fef2f2;color:#dc2626">#2</div>
+              <h4>Adversarial Analysis ⭐</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#fef2f2;color:#dc2626">Most important</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">The most important prompt. Forces the AI to play devil's advocate to identify risks you're overlooking.</p>
+            <div class="prompt-lib-code">I want to buy [TICKER] at [PRICE]. Play the role of an aggressive bear analyst: give me 7 reasons why this trade could fail. Include macro, sector, valuation risks, and specific risks that bulls often ignore. Don't be polite, be honest.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/stock-picking/">Bien Débuter en Bourse</a></div>
+          </div>
+        </div>
+
+        <!-- STOCK-PICKING #3 -->
+        <div class="prompt-lib-card" data-cat="stock">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#ecfdf5;color:#059669">#3</div>
+              <h4>Detailed Comparison</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#ecfdf5;color:#059669">Stock-Picking</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Compare multiple tickers across all axes (valuation, growth, quality, momentum).</p>
+            <div class="prompt-lib-code">Compare [TICKER A] vs [TICKER B] vs [TICKER C] on these criteria: valuation (P/E, EV/EBITDA, PEG), growth (revenue, EPS), quality (net margin, ROE, debt), momentum (6-month performance, RSI). Create a table and conclude with a reasoned ranking. Also mention competitors I may have overlooked.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/stock-picking/">Bien Débuter en Bourse</a></div>
+          </div>
+        </div>
+
+        <!-- STOCK-PICKING #4 -->
+        <div class="prompt-lib-card" data-cat="stock">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#ecfdf5;color:#059669">#4</div>
+              <h4>Thematic Expansion</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#ecfdf5;color:#059669">Stock-Picking</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Explore beyond the obvious names: picks &amp; shovels, indirect beneficiaries, thematic ETFs.</p>
+            <div class="prompt-lib-code">I'm interested in [THEME/SECTOR]. Beyond the obvious names, what are the lesser-known players, indirect beneficiaries (picks &amp; shovels), and systemic risks that retail investors overlook? Also cover thematic ETFs and proxies for gaining exposure to this trend.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/stock-picking/">Bien Débuter en Bourse</a></div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO #1 -->
+        <div class="prompt-lib-card" data-cat="portfolio">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#f5f3ff;color:#7c3aed">#5</div>
+              <h4>Portfolio Audit</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#f5f3ff;color:#7c3aed">Portfolio</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Full diagnostic of your portfolio: concentration, correlations, factors, crash risk. Do it once a week.</p>
+            <div class="prompt-lib-code">Here is my portfolio: [LIST OF POSITIONS + % ALLOCATION]. Analyze it like a fund manager: 1) Sector and geographic concentration 2) Likely correlations between positions 3) Factor exposure (growth, value, momentum, quality) 4) Drawdown risk in a crash (-20% on the S&amp;P 500) 5) What's missing to improve the risk/reward. Be critical.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/portfolio-construction/">Construction de Portefeuille</a></div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO #2 -->
+        <div class="prompt-lib-card" data-cat="portfolio">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#f5f3ff;color:#7c3aed">#6</div>
+              <h4>DCA Optimization</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#f5f3ff;color:#7c3aed">Portfolio</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Adapt your monthly investment to market conditions (ATH, correction, bear market).</p>
+            <div class="prompt-lib-code">I invest $[AMOUNT]/month via DCA. My target allocation: [BREAKDOWN]. The market is currently [CONTEXT: all-time high / -10% correction / bear market]. Should I: a) maintain my standard allocation, b) overweight certain assets, c) temporarily increase cash? Back your argument with historical data on DCA during similar periods.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/portfolio-construction/">Construction de Portefeuille</a></div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO #3 -->
+        <div class="prompt-lib-card" data-cat="portfolio">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#f5f3ff;color:#7c3aed">#7</div>
+              <h4>Correlation Detection</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#f5f3ff;color:#7c3aed">Portfolio</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Identify hidden correlations between your positions and find decorrelating assets.</p>
+            <div class="prompt-lib-code">My positions: [LIST]. What hidden correlations exist between these assets? In the event of rising rates, recession, or geopolitical crisis, which ones would move in the same direction? Identify the most correlated pairs and suggest decorrelating assets (gold, bonds, real estate, crypto, commodities).<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/portfolio-construction/">Construction de Portefeuille</a></div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO #4 -->
+        <div class="prompt-lib-card" data-cat="portfolio">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#f5f3ff;color:#7c3aed">#8</div>
+              <h4>Macro Stress-Test</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#f5f3ff;color:#7c3aed">Portfolio</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Simulate the impact of 4 catastrophe scenarios on your portfolio. Do it every quarter.</p>
+            <div class="prompt-lib-code">Simulate the impact on my portfolio [LIST OF POSITIONS] of these 4 scenarios: 1) US recession with S&amp;P -30% 2) Persistent inflation at 6%+ with hawkish Fed 3) Major geopolitical crisis (Taiwan/NATO) 4) Tech crash (-40% on the Nasdaq). For each scenario, estimate the loss in % and identify the most vulnerable positions.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/portfolio-construction/">Construction de Portefeuille</a></div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO #5 -->
+        <div class="prompt-lib-card" data-cat="portfolio">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#f5f3ff;color:#7c3aed">#9</div>
+              <h4>Smart Rebalancing</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#f5f3ff;color:#7c3aed">Portfolio</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Tax-optimized rebalancing plan that respects the momentum of your positions.</p>
+            <div class="prompt-lib-code">My target allocation was [TARGET]. After market moves, it has become [CURRENT]. Propose a rebalancing plan considering: 1) Tax implications (401k vs Roth IRA vs taxable account, unrealized gains) 2) Transaction costs 3) Current momentum of positions (should I really cut the winners?) 4) Calendar (upcoming earnings, ex-dividend). Minimize unnecessary moves.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/portfolio-construction/">Construction de Portefeuille</a></div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO #6 -->
+        <div class="prompt-lib-card" data-cat="portfolio">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#f5f3ff;color:#7c3aed">#10</div>
+              <h4>Personalized Morning Brief</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#eff6ff;color:#2563eb">Perplexity</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">5-minute morning briefing tailored to YOUR positions. Ideal with Perplexity (web access). Use it every day.</p>
+            <div class="prompt-lib-code">My positions: [LIST]. Write a 5-minute morning briefing: 1) Pre-market moves on my positions 2) Relevant overnight news 3) Today's calendar (earnings, macro data) impacting my portfolio 4) Key technical levels to watch 5) Recommended actions (do nothing / monitor / act). Format: bullet points, prioritized by impact.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/portfolio-construction/">Construction de Portefeuille</a></div>
+          </div>
+        </div>
+
+        <!-- EARNINGS -->
+        <div class="prompt-lib-card" data-cat="earnings">
+          <div class="prompt-lib-header" onclick="this.parentElement.toggleAttribute('open')">
+            <div class="plh-left">
+              <div class="prompt-lib-num" style="background:#fff7ed;color:#ea580c">#11</div>
+              <h4>Earnings Analysis</h4>
+            </div>
+            <span class="prompt-lib-badge" style="background:#fff7ed;color:#ea580c">Earnings</span>
+            <i class="fa-solid fa-chevron-down plh-chevron"></i>
+          </div>
+          <div class="prompt-lib-body">
+            <p class="prompt-lib-desc">Analyze a company's quarterly results in 5 key points.</p>
+            <div class="prompt-lib-code">Analyze the quarterly results of [TICKER] ([QUARTER]).
+
+1. Summary in 5 bullet points (EPS, revenue, margins, guidance, surprise)
+2. Compare with analyst consensus
+3. Identify the 3 major risks mentioned in the call
+4. Score management sentiment (1 to 10)
+5. Give a verdict: buy, hold, or sell
+
+Include the call transcript or 10-K link if available.<button class="prompt-lib-copy" onclick="copyLib(this)">Copy</button></div>
+            <div class="prompt-lib-source"><i class="fa-solid fa-link"></i> Source: <a href="/series/ia-et-bourse/">L'IA et la Bourse</a></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ Resources ═══ -->
+    <div class="section-divider">
+      <span><i class="fa-solid fa-book-open"></i> Resources &amp; Guides</span>
+    </div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-route" style="color:#6366f1"></i> Recommended AI Workflow</h2>
+      <p>This generator fits into a 4-step analysis workflow, detailed in our series <a href="/series/ia-et-bourse/" style="color:#6366f1;font-weight:600">L'IA et la Bourse</a>:</p>
+      <div class="workflow-grid">
+        <div class="wf-step">
+          <div class="wf-num">1</div>
+          <h4>SCREEN</h4>
+          <p>Filter candidates with a screener</p>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">2</div>
+          <h4>RESEARCH</h4>
+          <p>Collect data (fundamentals, technicals)</p>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">3</div>
+          <h4>ANALYZE</h4>
+          <p>Use this prompt for a complete AI analysis</p>
+        </div>
+        <div class="wf-step">
+          <div class="wf-num">4</div>
+          <h4>DECIDE</h4>
+          <p>Cross-check with your judgment and act</p>
+        </div>
+      </div>
+
+      <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-lightbulb"></i> Key tip</h4>
+        <p>AI is an <strong>assistant</strong>, not an oracle. Use the generated prompt as a starting point, then verify the data on primary sources (Yahoo Finance, SEC EDGAR, TradingView). Our series <a href="/series/ia-et-bourse/" style="color:#6366f1">IA et Bourse</a> details the 5 pitfalls to avoid.</p>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i> Known limitations</h2>
+      <ul>
+        <li><strong>Hallucinations</strong> — AIs can make up numbers. The prompt includes anti-hallucination rules, but always verify.</li>
+        <li><strong>Stale data</strong> — Only ChatGPT, Perplexity, Grok and Gemini have web access. Claude and DeepSeek work with their internal knowledge.</li>
+        <li><strong>Confirmation bias</strong> — If you provide a strong thesis, the AI may confirm it instead of challenging it. Vary your intents (buy vs sell).</li>
+        <li><strong>Length</strong> — In "Detailed" format, the response may exceed the AI's limit. It will stop and ask you to type "Continue".</li>
+      </ul>
+    </div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-graduation-cap" style="color:#6366f1"></i> Going further</h2>
+      <p>These educational series complement the prompt generator:</p>
+      <div class="resource-grid">
+        <a href="/series/ia-et-bourse/" class="resource-card">
+          <div class="resource-icon" style="background:#f5f3ff;color:#7c3aed"><i class="fa-solid fa-robot"></i></div>
+          <div>
+            <h4>L'IA et la Bourse</h4>
+            <p>3 parts — Screeners, sentiment, automated signals, complete workflow and AI limitations in finance.</p>
+          </div>
+        </a>
+        <a href="/series/stock-picking/" class="resource-card">
+          <div class="resource-icon" style="background:#ecfdf5;color:#059669"><i class="fa-solid fa-chart-pie"></i></div>
+          <div>
+            <h4>Bien Débuter en Bourse</h4>
+            <p>6 parts — Investor profiles, stock-picking (rotation, momentum, value), setup validation.</p>
+          </div>
+        </a>
+        <a href="/series/guide-speculateur/" class="resource-card">
+          <div class="resource-icon" style="background:#fff7ed;color:#ea580c"><i class="fa-solid fa-fire"></i></div>
+          <div>
+            <h4>Le Guide du Spéculateur</h4>
+            <p>7 parts — Short squeeze, small caps, catalysts, speculative risk management.</p>
+          </div>
+        </a>
+        <a href="/series/patrimoine-europe/" class="resource-card">
+          <div class="resource-icon" style="background:#eff6ff;color:#2563eb"><i class="fa-solid fa-landmark"></i></div>
+          <div>
+            <h4>Patrimoine en Europe</h4>
+            <p>6 parts — PEA, CTO, taxation, European ETFs, portfolio construction.</p>
+          </div>
+        </a>
       </div>
     </div>
   </div>
@@ -475,7 +681,7 @@
   <script src="/assets/core.js"></script>
   <script>
     // ═══════════════════════════════════════════════════════
-    // THESIS TEMPLATES (by output language)
+    // THESIS TEMPLATES
     // ═══════════════════════════════════════════════════════
     var thesisTemplates = {
       fr: [
@@ -485,7 +691,6 @@
         { icon: 'fa-chart-bar', label: 'Pré-earnings', text: 'Les earnings arrivent bientôt. Je veux analyser les attentes du marché, l\'historique de surprises, et déterminer s\'il y a une opportunité avant ou après l\'annonce des résultats.' },
         { icon: 'fa-coins', label: 'Dividende', text: 'Je m\'intéresse à ce titre pour son dividende. Je veux évaluer la pérennité du dividende, le payout ratio, l\'historique de croissance du dividende et la solidité financière de l\'entreprise.' },
         { icon: 'fa-bolt', label: 'Short squeeze', text: 'Le short interest est élevé et le CTB augmente. Je veux évaluer le potentiel de short squeeze : float, SI %, FTDs, catalyseurs qui pourraient déclencher un squeeze.' },
-        { icon: 'fa-arrows-spin', label: 'Rotation sectorielle', text: 'Je pense qu\'une rotation sectorielle est en cours vers ce secteur. Je veux confirmer les flux, la performance relative, et identifier les meilleurs titres positionnés pour en bénéficier.' },
         { icon: 'fa-compass', label: 'Découverte', text: 'Je découvre ce titre et je veux une analyse complète pour comprendre le business model, la valorisation, les risques et le potentiel. Je n\'ai pas de thèse prédéfinie.' }
       ],
       en: [
@@ -495,7 +700,6 @@
         { icon: 'fa-chart-bar', label: 'Pre-earnings', text: 'Earnings are coming soon. I want to analyze market expectations, surprise history, and determine if there is an opportunity before or after the results announcement.' },
         { icon: 'fa-coins', label: 'Dividend', text: 'I am interested in this stock for its dividend. I want to evaluate dividend sustainability, payout ratio, dividend growth history, and the company\'s financial strength.' },
         { icon: 'fa-bolt', label: 'Short squeeze', text: 'Short interest is high and CTB is rising. I want to evaluate the short squeeze potential: float, SI %, FTDs, catalysts that could trigger a squeeze.' },
-        { icon: 'fa-arrows-spin', label: 'Sector rotation', text: 'I believe a sector rotation is underway into this sector. I want to confirm flows, relative performance, and identify the best positioned stocks to benefit.' },
         { icon: 'fa-compass', label: 'Discovery', text: 'I am discovering this stock and want a complete analysis to understand the business model, valuation, risks and potential. I have no predefined thesis.' }
       ],
       ar: [
@@ -505,13 +709,13 @@
         { icon: 'fa-compass', label: 'استكشاف', text: 'أكتشف هذا السهم وأريد تحليلاً كاملاً لفهم نموذج الأعمال والتقييم والمخاطر والإمكانات. ليس لدي فرضية محددة مسبقاً.' }
       ],
       de: [
-        { icon: 'fa-arrow-trend-up', label: 'Technische Erholung', text: 'Die Aktie scheint nach einer Korrektur überverkauft zu sein. Technische Indikatoren (RSI < 30, MACD-Divergenz) deuten auf eine bevorstehende Erholung hin. Ich möchte prüfen, ob jetzt ein guter Einstiegszeitpunkt ist.' },
-        { icon: 'fa-gem', label: 'Versteckter Wert', text: 'Ich glaube, der Markt unterbewertet dieses Unternehmen. Das KGV liegt unter dem Branchendurchschnitt und die Fundamentaldaten sind solide. Ich möchte diese Unterbewertung bestätigen.' },
+        { icon: 'fa-arrow-trend-up', label: 'Technische Erholung', text: 'Die Aktie scheint nach einer Korrektur überverkauft zu sein. Technische Indikatoren (RSI < 30, MACD-Divergenz) deuten auf eine bevorstehende Erholung hin.' },
+        { icon: 'fa-gem', label: 'Versteckter Wert', text: 'Ich glaube, der Markt unterbewertet dieses Unternehmen. Das KGV liegt unter dem Branchendurchschnitt und die Fundamentaldaten sind solide.' },
         { icon: 'fa-compass', label: 'Entdeckung', text: 'Ich entdecke diese Aktie und möchte eine vollständige Analyse, um das Geschäftsmodell, die Bewertung, Risiken und das Potenzial zu verstehen.' }
       ],
       es: [
-        { icon: 'fa-arrow-trend-up', label: 'Rebote técnico', text: 'La acción parece sobrevendida después de una corrección reciente. Los indicadores técnicos (RSI < 30, divergencia MACD alcista) sugieren un rebote inminente. Quiero validar si es el momento adecuado para entrar.' },
-        { icon: 'fa-gem', label: 'Valor oculto', text: 'Creo que el mercado infravalora esta empresa. El P/E está por debajo del promedio sectorial y los fundamentales son sólidos. Quiero confirmar esta infravaloración.' },
+        { icon: 'fa-arrow-trend-up', label: 'Rebote técnico', text: 'La acción parece sobrevendida después de una corrección reciente. Los indicadores técnicos (RSI < 30, divergencia MACD alcista) sugieren un rebote inminente.' },
+        { icon: 'fa-gem', label: 'Valor oculto', text: 'Creo que el mercado infravalora esta empresa. El P/E está por debajo del promedio sectorial y los fundamentales son sólidos.' },
         { icon: 'fa-compass', label: 'Descubrimiento', text: 'Estoy descubriendo esta acción y quiero un análisis completo para entender el modelo de negocio, la valoración, los riesgos y el potencial.' }
       ]
     };
@@ -577,98 +781,21 @@
     renderThesisTemplates();
 
     // ═══════════════════════════════════════════════════════
-    // WIZARD NAVIGATION
-    // ═══════════════════════════════════════════════════════
-    var currentStep = 1;
-    var totalSteps = 4;
-
-    function goToStep(n) {
-      if (n < 1 || n > totalSteps) return;
-      if (n > 1 && currentStep === 1) {
-        var ticker = document.getElementById('tickerInput').value.trim();
-        if (!ticker) {
-          document.getElementById('tickerInput').focus();
-          document.getElementById('tickerInput').style.borderColor = '#ef4444';
-          setTimeout(function() { document.getElementById('tickerInput').style.borderColor = ''; }, 2000);
-          return;
-        }
-      }
-      currentStep = n;
-      document.querySelectorAll('.wizard-panel').forEach(function(p) { p.classList.remove('active'); });
-      document.getElementById('step' + n).classList.add('active');
-      document.querySelectorAll('.wizard-step-indicator').forEach(function(ind) {
-        var s = parseInt(ind.dataset.step);
-        ind.classList.remove('active', 'done');
-        if (s === n) ind.classList.add('active');
-        else if (s < n) ind.classList.add('done');
-      });
-      document.getElementById('prevBtn').disabled = (n === 1);
-      var nextBtn = document.getElementById('nextBtn');
-      nextBtn.style.display = (n === totalSteps) ? 'none' : '';
-      document.getElementById('stepLabel').textContent = 'Step ' + n + ' / ' + totalSteps;
-      if (n === 4) buildSummary();
-    }
-
-    document.getElementById('nextBtn').addEventListener('click', function() { goToStep(currentStep + 1); });
-    document.getElementById('prevBtn').addEventListener('click', function() { goToStep(currentStep - 1); });
-    document.querySelectorAll('.wizard-step-indicator').forEach(function(ind) {
-      ind.addEventListener('click', function() {
-        var target = parseInt(this.dataset.step);
-        if (target <= currentStep || target === currentStep + 1) goToStep(target);
-      });
-    });
-
-    // ═══════════════════════════════════════════════════════
     // LABELS
     // ═══════════════════════════════════════════════════════
-    var langLabels = { fr: 'French', en: 'English', ar: 'Arabic', de: 'German', es: 'Spanish' };
-    var levelLabels = { beginner: 'Beginner', intermediate: 'Intermediate', expert: 'Expert' };
     var aiLabels = { chatgpt: 'ChatGPT', claude: 'Claude', perplexity: 'Perplexity', grok: 'Grok', gemini: 'Gemini', deepseek: 'DeepSeek' };
-    var intentLabels = { inform: 'Inform', buy: 'Buy', sell: 'Sell', short: 'Short', hedge: 'Hedge' };
-    var formatLabels = { detailed: 'Detailed', concise: 'Concise', telegram: 'Telegram', twitter: 'X / Twitter' };
-
-    // ═══════════════════════════════════════════════════════
-    // SUMMARY
-    // ═══════════════════════════════════════════════════════
-    function buildSummary() {
-      var ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
-      var intent = getSelected('intentGroup');
-      var lang = getSelected('langGroup');
-      var level = getSelected('levelGroup');
-      var ai = getSelected('aiGroup');
-      var format = getSelected('formatGroup');
-      var focus = getAllSelected('focusGroup');
-      var thesis = document.getElementById('thesisInput').value.trim();
-
-      var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem">';
-      html += '<div><strong>Ticker:</strong> ' + ticker + '</div>';
-      html += '<div><strong>Intent:</strong> ' + (intentLabels[intent] || intent) + '</div>';
-      html += '<div><strong>Language:</strong> ' + (langLabels[lang] || lang) + '</div>';
-      html += '<div><strong>Level:</strong> ' + (levelLabels[level] || level) + '</div>';
-      html += '<div><strong>Target AI:</strong> ' + (aiLabels[ai] || ai) + '</div>';
-      html += '<div><strong>Format:</strong> ' + (formatLabels[format] || format) + '</div>';
-      html += '</div>';
-      if (thesis) html += '<div style="margin-top:.75rem;padding:.75rem;background:#fff;border:1px solid var(--pb);border-radius:8px;font-size:.8rem"><strong>Thesis:</strong> ' + thesis.substring(0, 200) + (thesis.length > 200 ? '...' : '') + '</div>';
-
-      document.getElementById('wizardSummary').innerHTML = html;
-    }
 
     // ═══════════════════════════════════════════════════════
     // AI PREAMBLES
     // ═══════════════════════════════════════════════════════
     function getAiPreamble(ai, ticker) {
       var p = {
-        chatgpt: 'You are a senior institutional financial analyst with 20 years of experience. You have access to the Internet via browsing. Use your web search capabilities to obtain the most recent data.\n\nMANDATORY SOURCES to consult via browsing:\n- Yahoo Finance (https://finance.yahoo.com/quote/' + ticker + ') for price, fundamentals and news\n- Finviz (https://finviz.com/quote.ashx?t=' + ticker + ') for technical screener and insiders\n- SEC EDGAR (https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '&type=&dateb=&owner=include&count=10) for filings\n- TradingView for technical levels (RSI, MACD, EMA)\n- MarketWatch, Seeking Alpha, Bloomberg for news\n\nIMPORTANT: Every figure cited must come from a verifiable source. If you cannot find a data point, state it explicitly.',
-
-        claude: 'You are a senior institutional financial analyst. You do not have real-time Internet access, but you can provide an in-depth analysis based on your knowledge.\n\nMETHODOLOGY:\n- Clearly state the date of your last data update\n- For each metric, specify whether it is known data or an estimate\n- Provide LINKS for the user to consult manually:\n  * Yahoo Finance: https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz: https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '\n  * TradingView: https://www.tradingview.com/symbols/' + ticker + '\n- Use Markdown tables for numerical data\n\nIMPORTANT: If you are not certain of a figure, mention "to be verified" and provide the source where it can be found.',
-
-        perplexity: 'You are a senior institutional financial analyst. You have access to real-time web search — this is your main advantage.\n\nINSTRUCTIONS:\n- Search for the most recent data for ' + ticker + ' on Yahoo Finance, Finviz, SEC EDGAR, Bloomberg, Reuters\n- Cite ALL your sources with clickable links [source](url)\n- Mandatory cross-referencing: each key figure confirmed by at least 2 sources\n- Prioritize data from the last 7 days\n- Consult recent SEC filings (10-K, 10-Q, 8-K, Form 4)\n\nFORMAT: Structured Markdown with headers, tables, and inline sources.',
-
-        grok: 'You are a senior institutional financial analyst. You have access to real-time X/Twitter data — leverage this advantage.\n\nSOURCES:\n- X/Twitter: analyze sentiment around $' + ticker + ' (cashtag), influential analyst posts, trending\n- Web search for Yahoo Finance, Finviz, SEC EDGAR\n- Recent news\n\nGROK ADVANTAGE: Integrate X/Twitter social sentiment analysis in each section. Identify narratives, influencers, and sentiment shifts.\n\nIMPORTANT: Every figure sourced. Separate facts from opinions.',
-
-        gemini: 'You are a senior institutional financial analyst. You have access to Google Search — use it.\n\nSOURCES:\n- Google Finance for price and fundamentals of ' + ticker + '\n- Yahoo Finance, Finviz, SEC EDGAR, Google News\n\nFORMAT: Structured Markdown, tables, headers. Comprehensive and precise.\n\nIMPORTANT: Do not generate any figure without a source. Specify the date of each data point.',
-
-        deepseek: 'You are a senior institutional financial analyst specialized in quantitative analysis.\n\nMETHODOLOGY:\n- Extremely detailed and structured analysis\n- For each metric, indicate the source:\n  * Yahoo Finance: https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz: https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar\n- Markdown tables for all quantitative data\n- Develop reasoning and show your calculations\n\nIMPORTANT: Mark unverifiable data with [to be verified on SOURCE].'
+        chatgpt: 'You are a senior institutional financial analyst with 20 years of experience. You have Internet access via browsing. Use your web search capabilities to obtain the most recent data.\n\nMANDATORY SOURCES to consult via browsing:\n- Yahoo Finance (https://finance.yahoo.com/quote/' + ticker + ') for price, fundamentals and news\n- Finviz (https://finviz.com/quote.ashx?t=' + ticker + ') for technical screener and insiders\n- SEC EDGAR (https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '&type=&dateb=&owner=include&count=10) for filings\n- TradingView for technical levels (RSI, MACD, EMA)\n- MarketWatch, Seeking Alpha, Bloomberg for news\n\nIMPORTANT: Every cited number must come from a verifiable source. If you cannot find a data point, state it explicitly.',
+        claude: 'You are a senior institutional financial analyst. You do not have real-time Internet access, but you can provide in-depth analysis based on your knowledge.\n\nMETHODOLOGY:\n- Clearly state the date of your last data update\n- For each metric, specify whether it is known data or an estimate\n- Provide LINKS the user can check manually:\n  * Yahoo Finance: https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz: https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + ticker + '\n  * TradingView: https://www.tradingview.com/symbols/' + ticker + '\n- Use Markdown tables for numerical data\n\nIMPORTANT: If you are unsure about a number, mention "to be verified" and provide the source where to find it.',
+        perplexity: 'You are a senior institutional financial analyst. You have real-time web search access — this is your main advantage.\n\nINSTRUCTIONS:\n- Search for the most recent data on ' + ticker + ' from Yahoo Finance, Finviz, SEC EDGAR, Bloomberg, Reuters\n- Cite ALL your sources with clickable links [source](url)\n- Mandatory cross-referencing: each key number confirmed by at least 2 sources\n- Prioritize data from the last 7 days\n- Check recent SEC filings (10-K, 10-Q, 8-K, Form 4)\n\nFORMAT: Structured Markdown with headers, tables, and inline sources.',
+        grok: 'You are a senior institutional financial analyst. You have real-time X/Twitter data access — leverage this advantage.\n\nSOURCES:\n- X/Twitter: analyze sentiment around $' + ticker + ' (cashtag), influential analyst posts, trending\n- Web search for Yahoo Finance, Finviz, SEC EDGAR\n- Recent news\n\nGROK ADVANTAGE: Integrate X/Twitter social sentiment analysis into each section. Identify narratives, influencers, and sentiment shifts.\n\nIMPORTANT: Every number must be sourced. Separate facts from opinions.',
+        gemini: 'You are a senior institutional financial analyst. You have Google search access — use it.\n\nSOURCES:\n- Google Finance for ' + ticker + ' price and fundamentals\n- Yahoo Finance, Finviz, SEC EDGAR, Google News\n\nFORMAT: Structured Markdown, tables, headers. Thorough and precise.\n\nIMPORTANT: Do not generate any number without a source. Specify the date of each data point.',
+        deepseek: 'You are a senior institutional financial analyst specializing in quantitative analysis.\n\nMETHODOLOGY:\n- Extremely detailed and structured analysis\n- For each metric, indicate the source:\n  * Yahoo Finance: https://finance.yahoo.com/quote/' + ticker + '\n  * Finviz: https://finviz.com/quote.ashx?t=' + ticker + '\n  * SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar\n- Markdown tables for all quantitative data\n- Develop your reasoning and show your calculations\n\nIMPORTANT: Mark unverifiable data with [to be verified on SOURCE].'
       };
       return p[ai] || p.chatgpt;
     }
@@ -678,15 +805,11 @@
     // ═══════════════════════════════════════════════════════
     function getIntentInstructions(intent) {
       var i = {
-        inform: 'OBJECTIVE: INFORMATIONAL ANALYSIS\n- The user wants to understand the stock without directional bias\n- Present both bull AND bear arguments in a balanced manner\n- No explicit buy/sell recommendation\n- Focus on understanding the business, fundamentals, and context',
-
-        buy: 'OBJECTIVE: BUY EVALUATION\n- The user is considering buying this stock\n- Focus on: optimal entry points, technical supports, bullish catalysts\n- Identify accumulation zones and stop loss levels\n- Trade idea mandatory with entry/stop/TP1/TP2/R:R\n- Be honest: if the stock is not attractive for buying, state it clearly\n- Analyze timing: is this the right moment or should they wait?',
-
-        sell: 'OBJECTIVE: SELL EVALUATION\n- The user holds the stock and is considering selling\n- Focus on: distribution signals, resistances, overbought indicators\n- Identify take-profit levels and danger zones\n- Analyze reasons to hold vs sell: remaining catalysts, momentum\n- If the stock still has potential, state it clearly with conditions',
-
-        short: 'OBJECTIVE: SHORT EVALUATION\n- The user is considering shorting this stock\n- Focus on: fundamental weaknesses, bearish technical signals, overbought conditions\n- Analyze current short interest: SI %, CTB, days to cover\n- WARNING: evaluate short squeeze risk (float, options, catalysts)\n- Short trade idea: entry/stop/TP with R:R\n- Short-specific risk: potentially unlimited losses, risk reminder',
-
-        hedge: 'OBJECTIVE: HEDGING EVALUATION\n- The user wants to protect an existing position\n- Focus on: correlations, beta, hedging instruments\n- Propose hedging strategies: protective puts, collar, pairs trade\n- Analyze hedge cost vs risk covered\n- If options available: analyze Greeks, IV, and optimal strategies\n- Calculate hedge ratio and expected effectiveness'
+        inform: 'OBJECTIVE: INFORMATIVE ANALYSIS\n- The user wants to understand the stock without directional bias\n- Present both bull AND bear arguments in a balanced way\n- No explicit buy/sell recommendation\n- Focus on understanding the business, fundamentals and context',
+        buy: 'OBJECTIVE: BUY EVALUATION\n- The user is considering buying this stock\n- Focus on: optimal entry points, technical supports, bullish catalysts\n- Identify accumulation zones and stop loss levels\n- Mandatory trade idea with entry/stop/TP1/TP2/R:R\n- Be honest: if the stock is not attractive for buying, say it clearly\n- Analyze timing: is it the right moment or should they wait?',
+        sell: 'OBJECTIVE: SELL EVALUATION\n- The user holds the stock and is considering selling\n- Focus on: distribution signals, resistances, overbought indicators\n- Identify take-profit levels and danger zones\n- Analyze reasons to hold vs sell: remaining catalysts, momentum\n- If the stock still has potential, say it clearly with conditions',
+        short: 'OBJECTIVE: SHORT EVALUATION\n- The user is considering shorting this stock\n- Focus on: fundamental weaknesses, bearish technical signals, overbought\n- Analyze current short interest: SI %, CTB, days to cover\n- WARNING: evaluate short squeeze risk (float, options, catalysts)\n- Short trade idea: entry/stop/TP with R:R\n- Specific short risk: potentially unlimited losses, risk reminder',
+        hedge: 'OBJECTIVE: HEDGING EVALUATION\n- The user wants to protect an existing position\n- Focus on: correlations, beta, hedging instruments\n- Propose hedge strategies: protective puts, collar, pairs trade\n- Analyze hedge cost vs covered risk\n- If options available: analyze Greeks, IV, and optimal strategies\n- Calculate hedge ratio and expected effectiveness'
       };
       return i[intent] || i.inform;
     }
@@ -696,13 +819,10 @@
     // ═══════════════════════════════════════════════════════
     function getFormatInstructions(format) {
       var f = {
-        detailed: 'FORMAT: Complete and detailed analysis.\n- Markdown headers (##) for each section\n- Tables for numerical data\n- Minimum 3000 words\n- Emoji for signals (✅ bullish, ❌ bearish, ⚪ neutral)\n- Partial conclusion per section\n- Overall summary',
-
+        detailed: 'FORMAT: Complete and detailed analysis.\n- Markdown headers (##) for each section\n- Tables for numerical data\n- Minimum 3000 words\n- Emoji for signals (✅ bullish, ❌ bearish, ⚪ neutral)\n- Partial conclusion per section\n- Global summary',
         concise: 'FORMAT: Concise executive summary.\n- Maximum 800 words, bullet points only\n- Structure: Verdict (2 lines) → Levels (3 lines) → Risks (3 lines) → Action (2 lines)\n- 1 sentence max per point\n- No tables',
-
         telegram: 'FORMAT: Telegram message (max 4000 chars).\n- Emoji for visual structure\n- Schema:\n  📊 $TICKER — Verdict\n  💰 Price: $XX (±X%)\n  📈 Technicals: RSI, Supports, Resistances\n  💡 Trade: Entry/Stop/TP1/TP2\n  ⚠️ Risks\n  🔗 Sources\n- Compact and scannable\n- No Markdown (basic HTML)',
-
-        twitter: 'FORMAT: X/Twitter thread (5-8 tweets, 280 chars max each).\n- 1/ Hook + $TICKER + verdict\n- 2-3/ Technicals + fundamentals\n- 4-5/ Trade idea\n- 6/ Risks\n- 7/ Conclusion + NFA\n- $TICKER (cashtag) in every tweet\n- Strategic emoji: 🟢🔴🎯📊💡⚠️\n- Max 2 hashtags/tweet'
+        twitter: 'FORMAT: X/Twitter thread (5-8 tweets, 280 chars max each).\n- 1/ Hook + $TICKER + verdict\n- 2-3/ Technicals + fundamentals\n- 4-5/ Trade idea\n- 6/ Risks\n- 7/ Conclusion + NFA\n- $TICKER (cashtag) in each tweet\n- Strategic emoji: 🟢🔴🎯📊💡⚠️\n- Max 2 hashtags/tweet'
       };
       return f[format] || f.detailed;
     }
@@ -712,11 +832,9 @@
     // ═══════════════════════════════════════════════════════
     function getLevelInstructions(level) {
       var l = {
-        beginner: 'LEVEL: BEGINNER\n- Explain each technical term in parentheses\n- Use everyday analogies for concepts\n- "pullback" → "temporary price decline"\n- Educational boxes before each complex concept\n- Clear and actionable advice\n- Remind basic rules: diversify, never invest more than you can afford to lose',
-
+        beginner: 'LEVEL: BEGINNER\n- Explain each technical term in parentheses\n- Everyday analogies for concepts\n- "pullback" → "temporary price decline"\n- Educational boxes before each complex concept\n- Clear and actionable opinion\n- Remind basic rules: diversify, never invest more than you can afford to lose',
         intermediate: 'LEVEL: INTERMEDIATE\n- The user knows RSI, MACD, support/resistance, P/E, EPS\n- Develop advanced concepts\n- Confluence of technical and fundamental signals\n- Precise technical levels with justification\n- Sector and macro correlations\n- Trade ideas with sizing and risk management',
-
-        expert: 'LEVEL: EXPERT\n- Terminology without explanation: Wyckoff, VWAP, gamma exposure, dark pools, FTDs\n- Quantitative analysis: ratios, z-scores\n- Greeks for options if relevant\n- Inter-market analysis: correlations, VIX regime, DXY, credit spreads\n- Complex trades: spreads, hedges, Kelly criterion\n- Institutional flows (13F, dark pools, block trades)\n- Market anomalies and arbitrage\n- Wyckoff phase'
+        expert: 'LEVEL: EXPERT\n- Terminology without explanation: Wyckoff, VWAP, gamma exposure, dark pools, FTDs\n- Quantitative analysis: ratios, z-scores\n- Greeks for options if relevant\n- Cross-market analysis: correlations, VIX regime, DXY, credit spreads\n- Complex trades: spreads, hedges, Kelly criterion\n- Institutional flows (13F, dark pools, block trades)\n- Market anomalies and arbitrage\n- Wyckoff phase'
       };
       return l[level] || l.intermediate;
     }
@@ -726,39 +844,23 @@
     // ═══════════════════════════════════════════════════════
     function getSections(focus, level, intent) {
       var all = {
-        verdict: '## 1. EXPRESS VERDICT\n- Rating: A+ to D, conviction %, directional bias\n- What the company does in 2-3 sentences\n- Current setup: bullish / bearish / neutral + justification\n- 3 reasons to buy vs 3 reasons to avoid\n- Radar: Margins, ROE, Growth, Cash Flow, Valuation, Momentum (/10)',
-
-        business: '## 2. BUSINESS MODEL\n- Description in 2-3 sentences\n- Main segments with % of revenue\n- Moat / competitive advantage\n- Position in lifecycle',
-
+        verdict: '## 1. EXPRESS VERDICT\n- Grade: A+ to D, conviction %, directional bias\n- What the company does in 2-3 sentences\n- Current setup: bullish / bearish / neutral + justification\n- 3 reasons to buy vs 3 reasons to avoid\n- Radar: Margins, ROE, Growth, Cash Flow, Valuation, Momentum (/10)',
+        business: '## 2. BUSINESS MODEL\n- Description in 2-3 sentences\n- Main segments with % of revenue\n- Moat / competitive advantage\n- Position in the business lifecycle',
         news: '## 3. RECENT NEWS\n- 4-6 recent news items: [Date] Title — Impact (✅/❌/⚪)\n- Summary of impact on price',
-
-        fundamentals: '## 4. FUNDAMENTALS\n| Metric | Value | Comment |\n|--------|-------|----------|\n| Revenue | | YoY +/- % |\n| EBITDA | | Margin % |\n| Net Income | | Net margin % |\n| EPS | | vs consensus |\n| P/E | | vs sector |\n| FCF | | Yield % |\n| Debt/Equity | | |\n| Cash | | Runway months |\n| Analyst targets | | Upside/downside % |',
-
-        insiders: '## 5. INSIDERS & INSTITUTIONS\n- % insiders, key names\n- % institutions, top 5 holders\n- Recent transactions: significant buys/sells\n- Directional signal',
-
+        fundamentals: '## 4. FUNDAMENTALS\n| Metric | Value | Comment |\n|--------|-------|----------|\n| Revenue | | YoY +/- % |\n| EBITDA | | Margin % |\n| Net Income | | Net Margin % |\n| EPS | | vs consensus |\n| P/E | | vs sector |\n| FCF | | Yield % |\n| Debt/Equity | | |\n| Cash | | Runway months |\n| Analyst Target | | Upside/downside % |',
+        insiders: '## 5. INSIDERS & INSTITUTIONAL\n- % insiders, key names\n- % institutions, top 5 holders\n- Recent transactions: significant buys/sells\n- Directional signal',
         dilution: '## 6. CAPITAL STRUCTURE & DILUTION\n- Shares outstanding vs authorized\n- Warrants, convertibles, ATM\n- Dilution history 1/2/5 years\n- Dilution verdict: low / moderate / high / critical',
-
         short: '## 7. SHORT INTEREST & SQUEEZE\n- SI %, days to cover, CTB\n- SI history 3-6 months\n- Squeeze potential score\n- Dark pool activity',
-
-        technicals: '## 8. TECHNICAL ANALYSIS\n| Indicator | Value | Signal |\n|-----------|-------|--------|\n| RSI(14) | | |\n| MACD | | |\n| EMA 20/50/200 | | |\n| ATR(14) | | |\n| OBV | | |\n\n- Wyckoff phase\n- 3 Key supports + 3 Key resistances\n- Current pattern\n- Overall signal: BUY / SELL / NEUTRAL',
-
+        technicals: '## 8. TECHNICAL ANALYSIS\n| Indicator | Value | Signal |\n|-----------|-------|--------|\n| RSI(14) | | |\n| MACD | | |\n| EMA 20/50/200 | | |\n| ATR(14) | | |\n| OBV | | |\n\n- Wyckoff phase\n- 3 Key Supports + 3 Key Resistances\n- Current pattern\n- Overall signal: BUY / SELL / NEUTRAL',
         sector: '## 9. SECTOR POSITIONING\n- Comparison with 4-5 peers\n- Relative YTD performance\n- Sector rotation',
-
         macro: '## 10. MACRO CONTEXT\n- Regime: risk-on / risk-off / neutral\n- Correlations BTC, SPX, VIX, DXY, TLT\n- Macro impact on the stock\n- Upcoming events (FOMC, CPI, NFP)',
-
         bottom: '## 11. BOTTOM ESTIMATION (expert)\n- Volume Profile: POC, VAH, VAL\n- Fibonacci 0.382, 0.5, 0.618, 0.786\n- Confluent moving averages\n- Historical RSI (bounce levels)\n- 3 scenarios: optimistic / base / pessimistic with prices and confluences',
-
         manipulation: '## 12. MANIPULATION SIGNALS & SOCIAL RADAR\n- Dark pool, FTDs, options sweeps\n- Sentiment: StockTwits, Reddit, X/Twitter\n- Pump & dump detection (6 criteria)\n- Key SEC filings: 13D, Form 4, 8-K',
-
-        risk: '## 13. RISK ANALYSIS (8 categories)\n1. Dilution & Warrants\n2. Toxic funds / Death Spiral\n3. ATM & Shelf Registrations\n4. Short Interest\n5. Cash Burn & Viability\n6. Execution risk\n7. Regulation / Legal\n8. Concentration / Dependency\n- Overall score: 1-3 Low | 4-5 Moderate | 6-7 High | 8-10 Very High',
-
+        risk: '## 13. RISK ANALYSIS (8 categories)\n1. Dilution & Warrants\n2. Toxic Funds / Death Spiral\n3. ATM & Shelf Registrations\n4. Short Interest\n5. Cash Burn & Viability\n6. Execution Risk\n7. Regulation / Legal\n8. Concentration / Dependency\n- Overall score: 1-3 Low | 4-5 Moderate | 6-7 High | 8-10 Very High',
         trade: '## 14. TRADE IDEA\n- Entry: $XX-$XX + justification\n- Stop Loss: $XX + invalidation\n- TP1: $XX + reasoning\n- TP2: $XX + reasoning\n- R/R: 1:X.X (min 1:1.5)\n- Trade thesis in 3-4 sentences\n- 4 confirmation signals\n- 4 invalidation signals\n- Horizon, sizing, scaled entry',
-
-        sharia: '## 15. SHARIA COMPLIANCE\n- Classification: ✅ Halal | ⚠️ Borderline | ❌ Non-Halal\n- Debt/capitalization ratio (threshold: < 30%)\n- Non-halal revenue as % of total (threshold: < 5%)\n- Excluded sectors: weapons, surveillance, oppression, alcohol, gambling\n- Verdict: compliant / non-compliant with justification',
-
-        rating: '## 16. OVERALL RATING\n- Conviction: A+ to D\n- Bias + Confidence %\n- Profile: Speculative / Growth / Value / Momentum / Contrarian\n- 3 positives + 3 major risks\n- Mindset advice'
+        sharia: '## 15. SHARIA COMPLIANCE\n- Classification: ✅ Halal | ⚠️ Borderline | ❌ Non-Halal\n- Debt/capitalization ratio (threshold: < 30%)\n- Non-halal revenue as % of total revenue (threshold: < 5%)\n- Excluded sectors: weapons, surveillance, oppression, alcohol, gambling\n- Verdict: compliant / non-compliant with justification',
+        rating: '## 16. OVERALL RATING\n- Conviction: A+ to D\n- Bias + Confidence %\n- Profile: Speculative / Growth / Value / Momentum / Contrarian\n- 3 positive points + 3 major risks\n- Mindset advice'
       };
-
       var focusMap = {
         all: Object.keys(all),
         technical: ['verdict', 'technicals', 'bottom', 'trade', 'rating'],
@@ -768,22 +870,18 @@
         trade: ['verdict', 'technicals', 'trade', 'rating'],
         sharia: ['verdict', 'business', 'fundamentals', 'sharia', 'risk', 'rating']
       };
-
       var selected = [];
       focus.forEach(function(f) {
         (focusMap[f] || focusMap.all).forEach(function(k) {
           if (selected.indexOf(k) === -1) selected.push(k);
         });
       });
-
       if (level !== 'expert') {
         selected = selected.filter(function(s) { return s !== 'bottom' && s !== 'manipulation'; });
       }
-
       if (['buy', 'sell', 'short', 'hedge'].indexOf(intent) !== -1 && selected.indexOf('trade') === -1) {
         selected.splice(selected.length - 1, 0, 'trade');
       }
-
       var result = '', num = 1;
       selected.forEach(function(key) {
         result += all[key].replace(/^## \d+\./, '## ' + num + '.') + '\n\n';
@@ -793,13 +891,12 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // GENERATE
+    // GENERATE PROMPT
     // ═══════════════════════════════════════════════════════
     function generatePrompt() {
       var ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
       if (!ticker) return null;
 
-      var sector = document.getElementById('sectorInput').value.trim();
       var thesis = document.getElementById('thesisInput').value.trim();
       var catalyst = document.getElementById('catalystInput').value.trim();
       var lang = getSelected('langGroup');
@@ -811,10 +908,14 @@
 
       var p = '';
       p += getAiPreamble(ai, ticker) + '\n\n';
+
+      // Continue instruction (fix ChatGPT length limit)
+      p += 'IMPORTANT: If you reach your response length limit, cleanly finish the current section and write:\n"⏩ CONTINUED — type \'Continue\' for the rest of the analysis."\nThe user will prompt you again to get the remaining sections.\n\n';
+
       var langInstr = {
         fr: 'LANGUE : FRANÇAIS\nRédige TOUTE l\'analyse en français. Utilise les accents (é, è, à, ç, etc.).',
         en: 'LANGUAGE: ENGLISH\nWrite the ENTIRE analysis in English. Use clear, professional financial English.',
-        ar: 'اللغة: العربية\nاكتب التحليل بالكامل باللغة العربية. استخدم اتجاه الكتابة من اليمين إلى اليسار (RTL).\n\nLANGUE : ARABE\nRédige TOUTE l\'analyse en arabe. Utilise une écriture de droite à gauche (RTL).',
+        ar: 'اللغة: العربية\nاكتب التحليل بالكامل باللغة العربية الفصحى. احتفظ بالمصطلحات التقنية العالمية (RSI, MACD, P/E) بالأحرف اللاتينية.',
         de: 'SPRACHE: DEUTSCH\nSchreibe die GESAMTE Analyse auf Deutsch. Verwende professionelle Finanzsprache.',
         es: 'IDIOMA: ESPAÑOL\nEscribe TODO el análisis en español. Usa lenguaje financiero profesional.'
       };
@@ -828,15 +929,14 @@
 
       p += '═══════════════════════════════════════\n';
       p += 'TICKER: ' + ticker + '\n';
-      if (sector) p += 'SECTOR: ' + sector + '\n';
       p += 'DATE: today\n';
       p += '═══════════════════════════════════════\n\n';
 
       if (thesis) {
-        p += 'INVESTMENT THESIS:\n« ' + thesis + ' »\nValidate or invalidate this thesis with factual data. If the thesis is weak, say so clearly.\n\n';
+        p += 'INVESTMENT THESIS:\n"' + thesis + '"\nValidate or disprove this thesis with factual data. If the thesis is weak, say it clearly.\n\n';
       }
       if (catalyst) {
-        p += 'CATALYSTS TO ANALYZE:\n' + catalyst + '\nIntegrate these catalysts and assess their potential impact.\n\n';
+        p += 'CATALYSTS TO ANALYZE:\n' + catalyst + '\nIntegrate these catalysts and evaluate their potential impact.\n\n';
       }
 
       p += '═══════════════════════════════════════\n';
@@ -847,9 +947,9 @@
       p += '═══════════════════════════════════════\n';
       p += 'CONVICTION ENGINE\n';
       p += '═══════════════════════════════════════\n';
-      p += 'Grades: A+, A, A-, B+, B, B-, C+, C, C-, D\n';
+      p += 'Grades : A+, A, A-, B+, B, B-, C+, C, C-, D\n';
       p += 'Bias = Long / Neutral / Avoid\n';
-      p += 'Conviction reflects the coherence between technical signals, fundamentals, sentiment, and macro.\n';
+      p += 'Conviction reflects the coherence between technical, fundamental, sentiment and macro signals.\n';
       p += 'The more signals converge, the higher the grade.\n';
       p += 'Explicitly state the factors that increase or decrease confidence.\n\n';
 
@@ -861,7 +961,7 @@
       p += '- BTC/USD (risk-on/risk-off indicator)\n';
       p += '- US10Y and 2Y/10Y spread (yield curve, recession expectations)\n';
       p += '- VIX (volatility regime)\n';
-      p += '- Gold (GLD) and oil (USO) if relevant to the sector\n';
+      p += '- Gold (GLD) and oil (USO) if relevant for the sector\n';
       p += 'Specify how these macro factors impact ' + ticker + ' specifically.\n\n';
 
       if (level === 'beginner' || level === 'intermediate') {
@@ -869,28 +969,28 @@
         p += 'EDUCATIONAL LAYER\n';
         p += '═══════════════════════════════════════\n';
         p += '- Explain your reasoning transparently\n';
-        p += '- Highlight ONE learning insight (e.g., "Why RSI is misleading in strong trends")\n';
+        p += '- Highlight ONE learning insight (e.g.: "Why RSI is misleading in strong trends")\n';
         p += '- Identify ONE common trading trap related to this situation\n';
         p += '- Suggest ONE strategic improvement for the reader\n';
-        p += '- Encourage curiosity, composure, and systematic thinking\n\n';
+        p += '- Encourage curiosity, calm and systematic thinking\n\n';
       }
 
       p += '═══════════════════════════════════════\n';
       p += 'MENTAL COACHING & COGNITIVE BIASES\n';
       p += '═══════════════════════════════════════\n';
       p += '- Identify cognitive biases that could affect the decision:\n';
-      p += '  * FOMO (Fear Of Missing Out) if the stock has already risen significantly\n';
+      p += '  * FOMO (Fear Of Missing Out) if the stock has already rallied significantly\n';
       p += '  * Confirmation bias if the user has a strong thesis\n';
       p += '  * Loss aversion if the stock is falling\n';
       p += '  * Anchoring bias on a historical price\n';
-      p += '  * Herd effect if there is strong social activity\n';
-      p += '- End with a mindset tip tailored to the situation\n';
+      p += '  * Herd effect if there is high social activity\n';
+      p += '- End with a mindset tip adapted to the situation\n';
       p += '- Remind: "The market rewards discipline, not emotion"\n\n';
 
       p += '═══════════════════════════════════════\n';
       p += 'PERSPECTIVE EXPANSION\n';
       p += '═══════════════════════════════════════\n';
-      p += '- Identify cross-sector and macro linkages (e.g., AI → semis → energy)\n';
+      p += '- Identify cross-sector and macro linkages (e.g.: AI → semis → energy)\n';
       p += '- Suggest 1-2 alternative trades or complementary hedges\n';
       p += '- Mention unexplored thematic corridors\n';
       p += '- Indicate what could fundamentally change the thesis\n\n';
@@ -898,15 +998,15 @@
       p += '═══════════════════════════════════════\n';
       p += 'ANTI-HALLUCINATION RULES (CRITICAL)\n';
       p += '═══════════════════════════════════════\n';
-      p += '1. NEVER fabricate a number — write "Not available — verify on [SOURCE]" if unknown\n';
+      p += '1. NEVER invent a number — write "Not available — verify on [SOURCE]" if unknown\n';
       p += '2. Every financial metric MUST have its source and date\n';
       p += '3. CLEARLY distinguish FACTS (verifiable data) from OPINIONS (your analysis)\n';
       p += '4. For prices: always specify the date (and time if intraday)\n';
       p += '5. For estimates: indicate the calculation method used\n';
-      p += '6. If the stock is illiquid or poorly covered by analysts, flag it as a major risk\n';
+      p += '6. If the stock is illiquid or has little analyst coverage, flag it as a major risk\n';
       p += '7. NEVER guarantee a return or a price movement\n';
       p += '8. If two sources contradict each other, mention both and explain the discrepancy\n';
-      p += '9. Use ranges rather than single figures when uncertainty is high\n';
+      p += '9. Use ranges rather than single numbers when uncertainty is high\n';
       p += '10. MANDATORY disclaimer at the end of the analysis: "This analysis is for informational purposes only. It does not constitute investment advice. Do your own research (DYOR)."\n\n';
 
       p += '═══════════════════════════════════════\n';
@@ -936,7 +1036,7 @@
       p += '📊 Conviction: [Grade] | Confidence: [%]\n';
       p += '💡 Mindset tip of the day\n\n';
 
-      p += 'Launch the complete analysis of ' + ticker + ' now.';
+      p += 'Start the complete analysis of ' + ticker + ' now.';
       return p;
     }
 
@@ -944,6 +1044,14 @@
     // GENERATE BUTTON
     // ═══════════════════════════════════════════════════════
     document.getElementById('generateBtn').addEventListener('click', function() {
+      var ticker = document.getElementById('tickerInput').value.trim();
+      if (!ticker) {
+        document.getElementById('tickerInput').focus();
+        document.getElementById('tickerInput').style.borderColor = '#ef4444';
+        setTimeout(function() { document.getElementById('tickerInput').style.borderColor = ''; }, 2000);
+        return;
+      }
+
       var btn = this;
       btn.disabled = true;
       btn.classList.add('generating');
@@ -968,24 +1076,20 @@
         void outputCard.offsetWidth;
         outputCard.classList.add('visible');
 
-        document.getElementById('finalCta').style.display = '';
-        document.getElementById('ctaAiName').textContent = aiLabels[ai] || ai;
-
         btn.disabled = false;
         btn.classList.remove('generating');
         btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Mega-Prompt';
 
         setTimeout(function() { outputCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
-      }, 600);
+      }, 500);
     });
 
     // ═══════════════════════════════════════════════════════
-    // COPY
+    // COPY / DOWNLOAD / RESET
     // ═══════════════════════════════════════════════════════
     document.getElementById('copyBtn').addEventListener('click', function() {
       var prompt = document.getElementById('promptOutput').textContent;
       var ai = getSelected('aiGroup');
-
       navigator.clipboard.writeText(prompt).then(function() {
         document.getElementById('copyAiName').textContent = aiLabels[ai] || ai;
         document.getElementById('copyOverlay').classList.add('show');
@@ -1007,7 +1111,6 @@
       });
     });
 
-    // Download
     document.getElementById('downloadBtn').addEventListener('click', function() {
       var prompt = document.getElementById('promptOutput').textContent;
       var ticker = document.getElementById('tickerInput').value.trim().toUpperCase() || 'PROMPT';
@@ -1019,20 +1122,50 @@
       URL.revokeObjectURL(a.href);
     });
 
-    // Reset
     document.getElementById('resetBtn').addEventListener('click', function() {
       document.getElementById('outputCard').classList.remove('visible');
-      document.getElementById('finalCta').style.display = 'none';
-      goToStep(1);
+      document.getElementById('tickerInput').value = '';
+      document.getElementById('thesisInput').value = '';
+      document.getElementById('catalystInput').value = '';
+      document.getElementById('tickerInput').focus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // Enter on ticker
     document.getElementById('tickerInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); goToStep(2); }
+      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('generateBtn').click(); }
     });
     document.getElementById('tickerInput').addEventListener('input', function() {
       this.value = this.value.toUpperCase();
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // PROMPT LIBRARY
+    // ═══════════════════════════════════════════════════════
+    function copyLib(btn) {
+      var code = btn.parentElement;
+      var text = code.textContent.replace('Copy', '').trim();
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = '✓ Copied';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      }).catch(function() {
+        var t = document.createElement('textarea');
+        t.value = text; t.style.position = 'fixed'; t.style.left = '-9999px';
+        document.body.appendChild(t); t.select(); document.execCommand('copy');
+        document.body.removeChild(t);
+        btn.textContent = '✓ Copied';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      });
+    }
+
+    document.querySelectorAll('.prompt-lib-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.prompt-lib-tab').forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        var cat = this.dataset.cat;
+        document.querySelectorAll('.prompt-lib-card').forEach(function(card) {
+          card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+        });
+      });
     });
   </script>
 </body>
