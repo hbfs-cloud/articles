@@ -864,12 +864,14 @@
         var h = '<h4><i class="fa-solid fa-layer-group"></i> ' + L.compTitle + '</h4>';
         rec.complementary.forEach(function(c) {
           var compPrompt = generatePrompt(c.ai, assetType);
+          var b64 = btoa(unescape(encodeURIComponent(compPrompt)));
           h += '<div class="comp-card">';
           h += '<span class="comp-ai-badge ' + c.ai + '">' + (aiLabels[c.ai] || c.ai) + '</span>';
           h += '<div class="comp-info"><p class="comp-angle">' + c.angle + '</p><p class="comp-reason">' + c.reason + '</p></div>';
-          h += '<button class="comp-open" data-ai="' + c.ai + '" data-prompt="' + btoa(unescape(encodeURIComponent(compPrompt))) + '" onclick="openCompInAi(this)"><i class="fa-solid fa-arrow-up-right-from-square"></i> ' + L.openIn + (aiLabels[c.ai] || c.ai) + '</button>';
-          h += '<button class="comp-copy" data-prompt="' + btoa(unescape(encodeURIComponent(compPrompt))) + '" onclick="copyCompPrompt(this)"><i class="fa-solid fa-copy"></i> ' + L.copy + '</button>';
-          h += '</div>';
+          h += '<div class="comp-actions">';
+          h += '<button class="comp-open" data-ai="' + c.ai + '" data-prompt="' + b64 + '" onclick="openCompInAi(this)"><i class="fa-solid fa-arrow-up-right-from-square"></i> ' + L.openIn + (aiLabels[c.ai] || c.ai) + '</button>';
+          h += '<button class="comp-copy" data-prompt="' + b64 + '" onclick="copyCompPrompt(this)"><i class="fa-solid fa-copy"></i> ' + L.copy + '</button>';
+          h += '</div></div>';
         });
         compArea.innerHTML = h;
       }
