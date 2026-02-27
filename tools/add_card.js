@@ -155,14 +155,46 @@ if (tab === 'analyses') {
 `;
 }
 
-// Append to json
+// Append to json — behavior depends on tab type
 const jsonFile = path.resolve(__dirname, `../data/${tab}.json`);
 let cards = [];
 if (fs.existsSync(jsonFile)) {
     cards = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
 }
-// Add to top
-cards.unshift(cardHtml.trim());
+
+const hrefPattern = `href="${href}"`;
+
+if (tab === 'daily') {
+    // Daily: no dedup, entries just accumulate (one per day)
+    cards.unshift(cardHtml.trim());
+
+} else if (tab === 'analyses') {
+    // Analyses: archive the old card before replacing
+    const oldIndex = cards.findIndex(c => c.includes(hrefPattern));
+    if (oldIndex !== -1) {
+        const archiveFile = path.resolve(__dirname, '../data/analyses_archive.json');
+        let archive = [];
+        if (fs.existsSync(archiveFile)) {
+            archive = JSON.parse(fs.readFileSync(archiveFile, 'utf8'));
+        }
+        archive.unshift({ date: new Date().toISOString().slice(0, 10), card: cards[oldIndex] });
+        fs.writeFileSync(archiveFile, JSON.stringify(archive, null, 2));
+        cards.splice(oldIndex, 1);
+        console.log(`Analyses: archived old card for ${href} → analyses_archive.json`);
+    }
+    cards.unshift(cardHtml.trim());
+
+} else {
+    // Scanner, weekly, tech, series: dedup (overwrite)
+    const before = cards.length;
+    cards = cards.filter(c => !c.includes(hrefPattern));
+    const removed = before - cards.length;
+    if (removed > 0) {
+        console.log(`Dedup: replaced ${removed} existing card(s) for ${href}`);
+    }
+    cards.unshift(cardHtml.trim());
+}
+
 fs.writeFileSync(jsonFile, JSON.stringify(cards, null, 2));
 console.log(`Added card to ${tab}.json successfully.`);
 
