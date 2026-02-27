@@ -50,9 +50,9 @@
     setText('resetLabel', L.newBtn);
     setText('copiedText', L.copiedMsg);
     setText('advToggleLabel', L.advToggle);
-    setText('libToggleLabel', L.libTitle);
+    setText('libDividerLabel', L.libDividerTitle);
     var libCount = document.getElementById('libToggleCount');
-    if (libCount) libCount.textContent = '(' + LIBRARY.length + ')';
+    if (libCount) libCount.textContent = LIBRARY.length;
 
     // Placeholders
     var thesisInput = document.getElementById('thesisInput');
@@ -210,9 +210,6 @@
     });
   }
   togglePanel('advToggle', 'advSection');
-  togglePanel('libToggle', 'libSection');
-
-  // (lib toggle handled by togglePanel above)
 
   // ── AI RECOMMENDATION ENGINE ──
   var aiLabels = { chatgpt:'ChatGPT', claude:'Claude', perplexity:'Perplexity', grok:'Grok', gemini:'Gemini', deepseek:'DeepSeek' };
@@ -1170,8 +1167,6 @@
       var badge = p.badge ? (p.badge[CURRENT_LANG] || p.badge.en) : '';
       var desc = p.desc ? (p.desc[CURRENT_LANG] || p.desc.en) : '';
       var code = p.code ? (p.code[CURRENT_LANG] || p.code.en) : '';
-      var hasSource = p.source && p.source.url;
-      var sourceLabel = hasSource ? (p.source[CURRENT_LANG] || p.source.en) : '';
       var isStub = !code;
 
       var bodyHtml = '';
@@ -1182,12 +1177,10 @@
         bodyHtml = '<p class="prompt-lib-desc" style="opacity:.5;font-style:italic">' + stubMsg + '</p>';
       } else {
         bodyHtml = (desc ? '<p class="prompt-lib-desc">' + desc + '</p>' : '') +
-          '<div class="prompt-lib-code" style="position:relative">' +
-            '<button class="prompt-lib-share" data-num="' + p.num + '" onclick="sharePromptUrl(this)" title="Share"><i class="fa-solid fa-share-nodes"></i></button>' +
+          '<div class="prompt-lib-code">' +
             '<button class="prompt-lib-copy" onclick="copyLib(this)">' + L.copy + '</button>' +
             code +
-          '</div>' +
-          (hasSource ? '<div class="prompt-lib-source"><i class="fa-solid fa-book"></i> <a href="' + p.source.url + '">' + sourceLabel + '</a></div>' : '');
+          '</div>';
       }
 
       card.innerHTML =
@@ -1197,12 +1190,34 @@
             '<h4>' + title + '</h4>' +
           '</div>' +
           '<span class="prompt-lib-badge" style="background:' + p.badgeBg + ';color:' + p.badgeColor + '">' + badge + '</span>' +
-          (isStub ? '<span style="font-size:.6rem;color:var(--slate-400);font-weight:600">SOON</span>' : '<i class="fa-solid fa-chevron-down plh-chevron"></i>') +
+          (isStub ? '<span style="font-size:.6rem;color:#94a3b8;font-weight:600">SOON</span>' :
+            '<div class="plh-actions">' +
+              '<button class="plh-share" data-num="' + p.num + '" title="Share"><i class="fa-solid fa-share-nodes"></i></button>' +
+              '<i class="fa-solid fa-chevron-down plh-chevron"></i>' +
+            '</div>') +
         '</div>' +
         '<div class="prompt-lib-body">' + bodyHtml + '</div>';
 
+      // Share button click (stop propagation so it doesn't toggle the card)
+      var shareBtn = card.querySelector('.plh-share');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var num = parseInt(this.getAttribute('data-num'));
+          var btn = this;
+          sharePrompt(num);
+          btn.classList.add('shared');
+          btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+          setTimeout(function() {
+            btn.classList.remove('shared');
+            btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i>';
+          }, 1500);
+        });
+      }
+
       // Expand/collapse
-      card.querySelector('.prompt-lib-header').addEventListener('click', function() {
+      card.querySelector('.prompt-lib-header').addEventListener('click', function(e) {
+        if (e.target.closest('.plh-share')) return;
         var isOpen = card.hasAttribute('open');
         if (isOpen) card.removeAttribute('open');
         else card.setAttribute('open','');
@@ -1244,13 +1259,6 @@
 
   // Open library prompt by number (from URL param)
   function openLibraryPrompt(num) {
-    // Open library panel if closed
-    var libPanel = document.getElementById('libSection');
-    var libBtn = document.getElementById('libToggle');
-    if (libPanel && !libPanel.classList.contains('open')) {
-      libPanel.classList.add('open');
-      if (libBtn) libBtn.classList.add('open');
-    }
     // Show all tab
     var allTab = document.querySelector('.prompt-lib-tab[data-cat="all"]');
     if (allTab) allTab.click();
@@ -1266,13 +1274,6 @@
       });
     }, 100);
   }
-
-  window.sharePromptUrl = function(btn) {
-    var num = parseInt(btn.getAttribute('data-num'));
-    sharePrompt(num);
-    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-    setTimeout(function() { btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i>'; }, 1500);
-  };
 
   // ── INIT ──
   applyLang();
