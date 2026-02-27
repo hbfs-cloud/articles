@@ -109,6 +109,30 @@
     .comp-reason{font-size:.72rem;color:#64748b;margin:2px 0 0}
     .comp-copy{padding:6px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;background:#fff;color:#475569;transition:all .2s;white-space:nowrap;font-family:'Inter',sans-serif;flex-shrink:0}
     .comp-copy:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
+    .comp-open{padding:6px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;background:#fff;color:#475569;transition:all .2s;white-space:nowrap;font-family:'Inter',sans-serif;flex-shrink:0;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+    .comp-open:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
+    /* Open in AI */
+    .open-ai-row{display:flex;gap:.5rem;padding:0 1.5rem .75rem;align-items:center;flex-wrap:wrap}
+    .open-ai-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;font-family:'Inter',sans-serif;border:none}
+    .open-ai-primary i{font-size:.75rem}
+    .open-ai-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+    .open-ai-primary.chatgpt{background:#ecfdf5;color:#10a37f;border:1.5px solid #a7f3d0}.open-ai-primary.chatgpt:hover{background:#d1fae5}
+    .open-ai-primary.claude{background:#fffbeb;color:#b45309;border:1.5px solid #fde68a}.open-ai-primary.claude:hover{background:#fef3c7}
+    .open-ai-primary.perplexity{background:#f0fdfa;color:#0d9488;border:1.5px solid #99f6e4}.open-ai-primary.perplexity:hover{background:#ccfbf1}
+    .open-ai-primary.grok{background:#f1f5f9;color:#0f172a;border:1.5px solid #cbd5e1}.open-ai-primary.grok:hover{background:#e2e8f0}
+    .open-ai-primary.gemini{background:#eff6ff;color:#4285f4;border:1.5px solid #bfdbfe}.open-ai-primary.gemini:hover{background:#dbeafe}
+    .open-ai-primary.deepseek{background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe}.open-ai-primary.deepseek:hover{background:#dbeafe}
+    .open-ai-more{position:relative}
+    .open-ai-more-btn{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;background:#fff;color:#64748b;font-family:'Inter',sans-serif;transition:all .2s}
+    .open-ai-more-btn:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
+    .open-ai-more-btn i{font-size:.65rem;transition:transform .2s}
+    .open-ai-more.open .open-ai-more-btn i.fa-chevron-down{transform:rotate(180deg)}
+    .open-ai-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);left:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12);padding:6px;min-width:180px;z-index:50}
+    .open-ai-more.open .open-ai-dropdown{display:block;animation:fadeIn .15s ease}
+    .open-ai-drop-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:.78rem;font-weight:600;color:#475569;text-decoration:none;transition:all .15s;white-space:nowrap}
+    .open-ai-drop-item:hover{background:#f1f5f9;color:#0f172a}
+    .open-ai-drop-item .ai-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .ai-dot.chatgpt{background:#10a37f}.ai-dot.claude{background:#d97706}.ai-dot.perplexity{background:#0d9488}.ai-dot.grok{background:#0f172a}.ai-dot.gemini{background:#4285f4}.ai-dot.deepseek{background:#2563eb}
     /* Smart links */
     .smart-links{display:flex;flex-wrap:wrap;gap:6px;padding:0 1.5rem 1rem}
     .smart-link{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.73rem;font-weight:600;color:#475569;text-decoration:none;transition:all .2s;background:#fff}
@@ -186,15 +210,18 @@
       .output-actions{flex-wrap:wrap}
       .action-btn{flex:1;justify-content:center;min-width:120px}
       .comp-card{flex-wrap:wrap;gap:8px}
-      .comp-copy{width:100%;text-align:center}
-      .ai-table{font-size:.72rem}
+      .comp-copy,.comp-open{width:auto;text-align:center}
+      .open-ai-primary{padding:7px 14px;font-size:.78rem}
+      .open-ai-more-btn{padding:7px 12px;font-size:.74rem}
+      .open-ai-dropdown{left:auto;right:0}
     }
     @media(max-width:480px){
       .hero-section h1{font-size:1.3rem}
       .chip{padding:6px 11px;font-size:.78rem}
-      .workflow-grid{grid-template-columns:1fr 1fr 1fr}
       .smart-links{gap:4px}
       .smart-link{font-size:.68rem;padding:4px 8px}
+      .open-ai-primary{padding:6px 12px;font-size:.74rem}
+      .open-ai-more-btn{padding:6px 10px;font-size:.7rem}
     }
   </style>
 </head>
@@ -393,6 +420,7 @@
           <i class="fa-solid fa-rotate-left"></i> Nouveau
         </button>
       </div>
+      <div class="open-ai-row" id="openAiRow"></div>
       <div id="compPromptsArea" class="comp-prompts"></div>
     </div>
 
@@ -2034,6 +2062,8 @@ VERDICT : ☐ Recommandé ☐ Acceptable ☐ Il y a mieux ☐ Éviter (frais tro
           h += '<div class="comp-card">';
           h += '<span class="comp-ai-badge ' + c.ai + '">' + (aiLabels[c.ai] || c.ai) + '</span>';
           h += '<div class="comp-info"><p class="comp-angle">' + c.angle + '</p><p class="comp-reason">' + c.reason + '</p></div>';
+          var compTruncated = compPrompt.length > 12000 ? compPrompt.substring(0, 12000) : compPrompt;
+          h += '<a class="comp-open" href="' + aiDeepLinks[c.ai](compTruncated) + '" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir</a>';
           h += '<button class="comp-copy" data-prompt="' + btoa(unescape(encodeURIComponent(compPrompt))) + '" onclick="copyCompPrompt(this)"><i class="fa-solid fa-copy"></i> Copier</button>';
           h += '</div>';
         });
@@ -2050,6 +2080,9 @@ VERDICT : ☐ Recommandé ☐ Acceptable ☐ Il y a mieux ☐ Éviter (frais tro
       } else {
         linksArea.innerHTML = '';
       }
+
+      // Render "Open in AI" buttons
+      renderOpenAiButtons(primaryAi, prompt);
 
       // Show output
       var outputCard = document.getElementById('outputCard');
@@ -2075,6 +2108,52 @@ VERDICT : ☐ Recommandé ☐ Acceptable ☐ Il y a mieux ☐ Éviter (frais tro
       document.getElementById('copyOverlay').classList.remove('show');
       document.getElementById('copySuccess').classList.remove('show');
     }, 2000);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // DEEP LINKS — Open prompt directly in AI tools
+  // ═══════════════════════════════════════════════════════
+  var aiDeepLinks = {
+    chatgpt:    function(p) { return 'https://chatgpt.com/?q=' + encodeURIComponent(p); },
+    claude:     function(p) { return 'https://claude.ai/new?q=' + encodeURIComponent(p); },
+    grok:       function(p) { return 'https://x.com/i/grok?text=' + encodeURIComponent(p); },
+    perplexity: function(p) { return 'https://www.perplexity.ai/?q=' + encodeURIComponent(p); },
+    gemini:     function(p) { return 'https://gemini.google.com/app?q=' + encodeURIComponent(p); },
+    deepseek:   function(p) { return 'https://chat.deepseek.com/?q=' + encodeURIComponent(p); }
+  };
+
+  var aiIcons = { chatgpt:'fa-brands fa-openai', claude:'fa-solid fa-feather', grok:'fa-brands fa-x-twitter', perplexity:'fa-solid fa-magnifying-glass', gemini:'fa-solid fa-gem', deepseek:'fa-solid fa-water' };
+
+  function renderOpenAiButtons(primaryAi, prompt) {
+    var row = document.getElementById('openAiRow');
+    var truncated = prompt.length > 12000 ? prompt.substring(0, 12000) + '\n\n[Prompt tronqué — collez la version complète via le bouton Copier]' : prompt;
+
+    // Primary button
+    var others = Object.keys(aiDeepLinks).filter(function(k) { return k !== primaryAi; });
+    var h = '<a class="open-ai-primary ' + primaryAi + '" href="' + aiDeepLinks[primaryAi](truncated) + '" target="_blank" rel="noopener">';
+    h += '<i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir dans ' + (aiLabels[primaryAi] || primaryAi) + '</a>';
+
+    // "Autre IA" dropdown
+    h += '<div class="open-ai-more" id="openAiMore">';
+    h += '<button class="open-ai-more-btn" type="button" id="openAiMoreBtn">Autre IA <i class="fa-solid fa-chevron-down"></i></button>';
+    h += '<div class="open-ai-dropdown">';
+    others.forEach(function(ai) {
+      h += '<a class="open-ai-drop-item" href="' + aiDeepLinks[ai](truncated) + '" target="_blank" rel="noopener">';
+      h += '<span class="ai-dot ' + ai + '"></span>' + (aiLabels[ai] || ai) + '</a>';
+    });
+    h += '</div></div>';
+    row.innerHTML = h;
+
+    // Toggle dropdown
+    document.getElementById('openAiMoreBtn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.getElementById('openAiMore').classList.toggle('open');
+    });
+    document.addEventListener('click', function closeDropdown() {
+      var el = document.getElementById('openAiMore');
+      if (el) el.classList.remove('open');
+      document.removeEventListener('click', closeDropdown);
+    });
   }
 
   function clipCopy(text, cb) {
