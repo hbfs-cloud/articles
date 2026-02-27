@@ -23,7 +23,7 @@ if (!existsSync(dist)) {
 // Directories to copy (legacy content)
 const legacyDirs = [
   'daily', 'analyses', 'weekly', 'scanner', 'series', 'tech', 'lab',
-  'assets', 'data',
+  'assets', 'data', 'prompt-ia',
 ];
 
 // Files to copy
