@@ -26,12 +26,11 @@
     var ogTitle = document.getElementById('ogTitle'); if (ogTitle) ogTitle.content = m.ogTitle;
     var ogDesc = document.getElementById('ogDesc'); if (ogDesc) ogDesc.content = m.ogDesc;
 
-    // UI text elements
+    // UI text
     setText('heroTitle', L.heroTitle);
     setText('heroSub', L.heroSub);
-    setText('generateLabel', L.generate);
+    setText('generateLabel', L.generateFull);
     setText('intentLabel', L.intentLabel);
-    setText('customizeLabel', L.customize);
     setText('assetLabel', L.assetType);
     setText('aiLabel', L.targetAi);
     setText('aiHint', L.aiHint);
@@ -46,11 +45,8 @@
     setText('outputTitle', L.outputTitle);
     setText('copyLabel', L.copy);
     setText('resetLabel', L.newBtn);
-    setText('libTitle', L.libTitle);
-    setText('libCount', L.libCount);
-    setText('libOpenLabel', L.libOpen);
     setText('copiedText', L.copiedMsg);
-    setText('disclaimerHint', L.disclaimer);
+    setText('libToggleLabel', L.libTitle);
 
     // Placeholders
     var thesisInput = document.getElementById('thesisInput');
@@ -58,37 +54,13 @@
     var catalystInput = document.getElementById('catalystInput');
     if (catalystInput) catalystInput.placeholder = L.catalystPlaceholder;
 
-    // Home button title
+    // Home button
     var homeBtn = document.getElementById('homeBtn');
     if (homeBtn) homeBtn.title = L.homeTitle;
 
     // Footer
     var footer = document.getElementById('footerArea');
     if (footer) footer.innerHTML = L.footer + '<br><a href="/" title="' + L.homeTitle + '"><i class="fas fa-house"></i></a>';
-
-    // New UI text elements
-    setText('heroToolLabel', L.heroToolLabel);
-    setText('badgeMulti', L.badgeMulti);
-    setText('badgeAi', L.badgeAi);
-    setText('badgeAntiH', L.badgeAntiH);
-    setText('howTitle', L.howTitle);
-    setText('step1Title', L.step1Title);
-    setText('step1Desc', L.step1Desc);
-    setText('step2Title', L.step2Title);
-    setText('step2Desc', L.step2Desc);
-    setText('step3Title', L.step3Title);
-    setText('step3Desc', L.step3Desc);
-    setText('genTitle', L.genTitle);
-    setText('libDividerTitle', L.libDividerTitle);
-    setText('libDesc', L.libDesc);
-    setText('aiDividerTitle', L.aiDividerTitle);
-    setText('aiCompareTitle', L.aiCompareTitle);
-    setText('aiCompareDesc', L.aiCompareDesc);
-    setText('aiColAi', L.aiColAi);
-    setText('aiColStr', L.aiColStr);
-    setText('aiColWeak', L.aiColWeak);
-    setText('resDividerTitle', L.resDividerTitle);
-    setText('resTitle', L.resTitle);
 
     // Lang switcher
     document.querySelectorAll('#langSwitcher a').forEach(function(a) {
@@ -103,68 +75,41 @@
     if (el && text !== undefined) el.textContent = text;
   }
 
-  // ── RENDER INTENT CHIPS (only intent stays as chips) ──
-  function renderChips(groupId, chips) {
-    var group = document.getElementById(groupId);
-    if (!group) return;
-    group.innerHTML = '';
-    chips.forEach(function(c) {
-      var chip = document.createElement('div');
-      chip.className = 'chip' + (c.selected ? ' selected' : '');
-      chip.setAttribute('data-value', c.value);
-      chip.innerHTML = '<i class="' + c.icon + '"></i> ' + c.label;
-      chip.addEventListener('click', function() {
-        group.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('selected'); });
-        this.classList.add('selected');
-      });
-      group.appendChild(chip);
-    });
-  }
-
-  // ── RENDER MULTI-SELECT CHIPS (focus group allows multiple) ──
-  function renderMultiChips(groupId, chips) {
-    var group = document.getElementById(groupId);
-    if (!group) return;
-    group.innerHTML = '';
-    chips.forEach(function(c) {
-      var chip = document.createElement('div');
-      chip.className = 'chip' + (c.selected ? ' selected' : '');
-      chip.setAttribute('data-value', c.value);
-      chip.innerHTML = '<i class="' + c.icon + '"></i> ' + c.label;
-      chip.addEventListener('click', function() {
-        if (c.value === 'all') {
-          group.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('selected'); });
-          this.classList.add('selected');
-        } else {
-          group.querySelector('.chip[data-value="all"]')?.classList.remove('selected');
-          this.classList.toggle('selected');
-          if (!group.querySelector('.chip.selected')) {
-            group.querySelector('.chip[data-value="all"]')?.classList.add('selected');
-          }
-        }
-      });
-      group.appendChild(chip);
+  // ── RENDER SELECT ──
+  function renderSelect(selectId, options) {
+    var sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = '';
+    options.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.selected) opt.selected = true;
+      sel.appendChild(opt);
     });
   }
 
   function renderAllControls() {
-    var chips = LANG.chips;
-    renderChips('intentGroup', chips.intent[CURRENT_LANG]);
-    renderChips('assetGroup', chips.asset[CURRENT_LANG]);
-    renderChips('aiGroup', chips.ai);
-    renderChips('levelGroup', chips.level[CURRENT_LANG]);
-    renderChips('formatGroup', chips.format[CURRENT_LANG]);
-    renderChips('langGroup', chips.reportLang[CURRENT_LANG]);
-    renderMultiChips('focusGroup', chips.focus[CURRENT_LANG]);
+    var c = LANG.chips;
+    renderSelect('intentSelect', c.intent[CURRENT_LANG]);
+    renderSelect('assetSelect', c.asset[CURRENT_LANG]);
+    renderSelect('aiSelect', c.ai);
+    renderSelect('levelSelect', c.level[CURRENT_LANG]);
+    renderSelect('formatSelect', c.format[CURRENT_LANG]);
+    renderSelect('langSelect', c.reportLang[CURRENT_LANG]);
+    renderSelect('focusSelect', c.focus[CURRENT_LANG]);
   }
 
-  // ── GET VALUES (chip groups) ──
+  // ── GET VALUES ──
   function getSelected(id) {
-    var chip = document.querySelector('#' + id + ' .chip.selected');
-    return chip ? chip.dataset.value : '';
+    var sel = document.getElementById(id);
+    return sel ? sel.value : '';
   }
   function getAllSelected(id) {
-    return Array.from(document.querySelectorAll('#' + id + ' .chip.selected')).map(function(c) { return c.dataset.value; });
+    var sel = document.getElementById(id);
+    if (!sel) return [];
+    if (sel.multiple) return Array.from(sel.selectedOptions).map(function(o) { return o.value; });
+    return [sel.value];
   }
 
   // ── ASSET TYPE AUTO-DETECTION ──
@@ -200,38 +145,41 @@
   document.getElementById('tickerInput').addEventListener('input', function() {
     this.value = this.value.toUpperCase();
     var detected = detectAssetType(this.value.trim());
-    var current = getSelected('assetGroup') || 'stock';
+    var sel = document.getElementById('assetSelect');
+    var current = sel ? sel.value : 'stock';
     if (current === 'stock' || current === detected) {
-      selectChip('assetGroup', detected);
+      if (sel) sel.value = detected;
     }
     updateAssetBadge(detected);
   });
 
-  // Helper: programmatically select a chip in a group
-  function selectChip(groupId, value) {
-    var group = document.getElementById(groupId);
-    if (!group) return;
-    group.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
-    var target = group.querySelector('.chip[data-value="' + value + '"]');
-    if (target) target.classList.add('selected');
-  }
-
-  // ── TEMPLATES (thesis & catalyst) ──
-  function renderTemplates(templates, containerId, targetId) {
-    var container = document.getElementById(containerId);
-    container.innerHTML = '';
+  // ── TEMPLATE SELECTS ──
+  function renderTemplateSelect(selectId, templates, targetId, placeholder) {
+    var sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">' + placeholder + '</option>';
     templates.forEach(function(t) {
-      var btn = document.createElement('div');
-      btn.className = 'thesis-tpl';
-      btn.innerHTML = '<i class="fa-solid ' + t.icon + '"></i> ' + t.label;
-      btn.addEventListener('click', function() {
+      var opt = document.createElement('option');
+      opt.value = t.text;
+      opt.textContent = t.label;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function() {
+      if (this.value) {
         var el = document.getElementById(targetId);
-        el.value = t.text;
+        el.value = this.value;
         el.focus();
-      });
-      container.appendChild(btn);
+        this.value = '';
+      }
     });
   }
+
+  // Library toggle
+  document.getElementById('libToggle').addEventListener('click', function() {
+    var section = document.getElementById('libSection');
+    section.classList.toggle('visible');
+    this.classList.toggle('open');
+  });
 
   // ── AI RECOMMENDATION ENGINE ──
   var aiLabels = { chatgpt:'ChatGPT', claude:'Claude', perplexity:'Perplexity', grok:'Grok', gemini:'Gemini', deepseek:'DeepSeek' };
@@ -471,7 +419,7 @@
   };
 
   function getAiPreamble(ai, ticker, assetType) {
-    var reportLang = getSelected('langGroup') || CURRENT_LANG;
+    var reportLang = getSelected('langSelect') || CURRENT_LANG;
     var pm = preambleMap[reportLang] || preambleMap.en;
     var role = pm.roles[assetType] || pm.roles.default;
     var fn = pm[ai] || pm.chatgpt;
@@ -549,17 +497,17 @@
   };
 
   function getIntentInstructions(intent) {
-    var reportLang = getSelected('langGroup') || CURRENT_LANG;
+    var reportLang = getSelected('langSelect') || CURRENT_LANG;
     var m = intentMap[reportLang] || intentMap.en;
     return m[intent] || m.inform;
   }
   function getFormatInstructions(format) {
-    var reportLang = getSelected('langGroup') || CURRENT_LANG;
+    var reportLang = getSelected('langSelect') || CURRENT_LANG;
     var m = formatMap[reportLang] || formatMap.en;
     return m[format] || m.detailed;
   }
   function getLevelInstructions(level) {
-    var reportLang = getSelected('langGroup') || CURRENT_LANG;
+    var reportLang = getSelected('langSelect') || CURRENT_LANG;
     var m = levelMap[reportLang] || levelMap.en;
     return m[level] || m.intermediate;
   }
@@ -694,7 +642,7 @@
   };
 
   function getSections(focus, level, intent, assetType) {
-    var reportLang = getSelected('langGroup') || CURRENT_LANG;
+    var reportLang = getSelected('langSelect') || CURRENT_LANG;
     var sm = sectionsMap[reportLang] || sectionsMap.en;
     var sections;
     if (assetType === 'crypto') sections = sm.crypto();
@@ -794,11 +742,11 @@
 
     var thesis = document.getElementById('thesisInput').value.trim();
     var catalyst = document.getElementById('catalystInput').value.trim();
-    var lang = getSelected('langGroup') || CURRENT_LANG;
-    var level = getSelected('levelGroup') || 'intermediate';
-    var format = getSelected('formatGroup') || 'detailed';
-    var focus = getAllSelected('focusGroup');
-    var intent = getSelected('intentGroup') || 'inform';
+    var lang = getSelected('langSelect') || CURRENT_LANG;
+    var level = getSelected('levelSelect') || 'intermediate';
+    var format = getSelected('formatSelect') || 'detailed';
+    var focus = getAllSelected('focusSelect');
+    var intent = getSelected('intentSelect') || 'inform';
     var ML = promptMiscLabels[lang] || promptMiscLabels.en;
     var assetLabel = promptAssetLabels[lang] || promptAssetLabels.en;
 
@@ -846,8 +794,8 @@
   // ── GENERATE BUTTON ──
   document.getElementById('generateBtn').addEventListener('click', function() {
     var ticker = document.getElementById('tickerInput').value.trim();
-    var assetType = getSelected('assetGroup') || 'stock';
-    var intent = getSelected('intentGroup') || 'inform';
+    var assetType = getSelected('assetSelect') || 'stock';
+    var intent = getSelected('intentSelect') || 'inform';
 
     if (!ticker && assetType !== 'macro') {
       document.getElementById('tickerInput').focus();
@@ -862,7 +810,7 @@
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + L.generating;
 
     setTimeout(function() {
-      var selectedAi = getSelected('aiGroup');
+      var selectedAi = getSelected('aiSelect');
       var rec = getAiRecommendations(assetType, intent);
       var primaryAi = (selectedAi && selectedAi !== 'auto') ? selectedAi : rec.primary;
 
@@ -1042,8 +990,8 @@
 
   document.getElementById('copyBtn').addEventListener('click', function() {
     var prompt = document.getElementById('promptOutput').textContent;
-    var selectedAi = getSelected('aiGroup');
-    var rec = getAiRecommendations(getSelected('assetGroup'), getSelected('intentGroup'));
+    var selectedAi = getSelected('aiSelect');
+    var rec = getAiRecommendations(getSelected('assetSelect'), getSelected('intentSelect'));
     var ai = (selectedAi && selectedAi !== 'auto') ? selectedAi : rec.primary;
     clipCopy(prompt, function() { showCopySuccess(aiLabels[ai] || ai); });
   });
@@ -1156,93 +1104,11 @@
     });
   };
 
-  // ── AI COMPARISON TABLE ──
-  function renderAiTable() {
-    var data = {
-      fr: [
-        { name:'ChatGPT', str:['Browsing web','Analyse longue','Polyvalent'], weak:['Hallucinations','Pas de sources'] },
-        { name:'Claude', str:['Raisonnement','Analyse risque','Nuanc\u00e9'], weak:['Pas d\'Internet','Coupure de connaissances'] },
-        { name:'Perplexity', str:['Sources cit\u00e9es','Temps r\u00e9el','Factuel'], weak:['Analyse courte','Moins cr\u00e9atif'] },
-        { name:'Grok', str:['X/Twitter live','Sentiment social','Crypto'], weak:['Mod\u00e8le jeune','Moins fiable'] },
-        { name:'Gemini', str:['Google Search','Trends','Multimodal'], weak:['Prudent','Analyse financi\u00e8re limit\u00e9e'] },
-        { name:'DeepSeek', str:['Quantitatif','Calculs','Open-source'], weak:['Pas d\'Internet','Censure CN'] }
-      ],
-      en: [
-        { name:'ChatGPT', str:['Web browsing','Long analysis','Versatile'], weak:['Hallucinations','No citations'] },
-        { name:'Claude', str:['Reasoning','Risk analysis','Nuanced'], weak:['No Internet','Knowledge cutoff'] },
-        { name:'Perplexity', str:['Cited sources','Real-time','Factual'], weak:['Short analysis','Less creative'] },
-        { name:'Grok', str:['X/Twitter live','Social sentiment','Crypto'], weak:['Young model','Less reliable'] },
-        { name:'Gemini', str:['Google Search','Trends','Multimodal'], weak:['Conservative','Limited finance'] },
-        { name:'DeepSeek', str:['Quantitative','Calculations','Open-source'], weak:['No Internet','CN censorship'] }
-      ],
-      ar: [
-        { name:'ChatGPT', str:['Browsing','\u062a\u062d\u0644\u064a\u0644 \u0637\u0648\u064a\u0644','\u0645\u062a\u0639\u062f\u062f'], weak:['\u0647\u0644\u0648\u0633\u0627\u062a','\u0628\u062f\u0648\u0646 \u0645\u0635\u0627\u062f\u0631'] },
-        { name:'Claude', str:['\u062a\u0641\u0643\u064a\u0631','\u0645\u062e\u0627\u0637\u0631','\u062f\u0642\u064a\u0642'], weak:['\u0628\u062f\u0648\u0646 \u0625\u0646\u062a\u0631\u0646\u062a','\u0642\u0637\u0639 \u0645\u0639\u0631\u0641\u064a'] },
-        { name:'Perplexity', str:['\u0645\u0635\u0627\u062f\u0631','\u0641\u0648\u0631\u064a','\u0648\u0627\u0642\u0639\u064a'], weak:['\u062a\u062d\u0644\u064a\u0644 \u0642\u0635\u064a\u0631','\u0623\u0642\u0644 \u0625\u0628\u062f\u0627\u0639\u064b\u0627'] },
-        { name:'Grok', str:['X/Twitter','\u0645\u0639\u0646\u0648\u064a\u0627\u062a','\u0643\u0631\u064a\u0628\u062a\u0648'], weak:['\u0646\u0645\u0648\u0630\u062c \u062c\u062f\u064a\u062f','\u0623\u0642\u0644 \u0645\u0648\u062b\u0648\u0642\u064a\u0629'] },
-        { name:'Gemini', str:['Google Search','Trends','\u0645\u062a\u0639\u062f\u062f'], weak:['\u062d\u0630\u0631','\u0645\u0627\u0644\u064a\u0629 \u0645\u062d\u062f\u0648\u062f\u0629'] },
-        { name:'DeepSeek', str:['\u0643\u0645\u0651\u064a','\u062d\u0633\u0627\u0628\u0627\u062a','\u0645\u0641\u062a\u0648\u062d'], weak:['\u0628\u062f\u0648\u0646 \u0625\u0646\u062a\u0631\u0646\u062a','\u0631\u0642\u0627\u0628\u0629 CN'] }
-      ]
-    };
-    var rows = data[CURRENT_LANG] || data.en;
-    var tbody = document.getElementById('aiTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = rows.map(function(r) {
-      return '<tr><td class="ai-name">' + r.name + '</td><td>' +
-        r.str.map(function(s) { return '<span class="str-tag green">' + s + '</span>'; }).join(' ') +
-        '</td><td>' +
-        r.weak.map(function(w) { return '<span class="str-tag red">' + w + '</span>'; }).join(' ') +
-        '</td></tr>';
-    }).join('');
-  }
-
-  // ── RESOURCE GRID ──
-  function renderResources() {
-    var resources = {
-      fr: [
-        { icon:'fa-solid fa-graduation-cap', bg:'#eef2ff', color:'#6366f1', title:'Guide du Sp\u00e9culateur', desc:'7 parties pour ma\u00eetriser le trading', href:'/series/guide-speculateur/part1/' },
-        { icon:'fa-solid fa-chart-line', bg:'#ecfdf5', color:'#059669', title:'Swing Mode', desc:'Scanner, setups et gestion du risque', href:'/series/swing-mode/part1-setup/' },
-        { icon:'fa-solid fa-building-columns', bg:'#fffbeb', color:'#d97706', title:'Patrimoine en Europe', desc:'Fiscalit\u00e9, PEA, assurance-vie', href:'/series/patrimoine-europe/part1/' },
-        { icon:'fa-solid fa-newspaper', bg:'#fef2f2', color:'#dc2626', title:'Briefings Quotidiens', desc:'Analyses de march\u00e9 chaque matin', href:'/?tab=daily' }
-      ],
-      en: [
-        { icon:'fa-solid fa-graduation-cap', bg:'#eef2ff', color:'#6366f1', title:'Speculator Guide', desc:'7-part trading mastery course', href:'/series/guide-speculateur/part1/' },
-        { icon:'fa-solid fa-chart-line', bg:'#ecfdf5', color:'#059669', title:'Swing Mode', desc:'Scanner, setups and risk management', href:'/series/swing-mode/part1-setup/' },
-        { icon:'fa-solid fa-building-columns', bg:'#fffbeb', color:'#d97706', title:'European Wealth', desc:'Tax optimization, PEA, insurance', href:'/series/patrimoine-europe/part1/' },
-        { icon:'fa-solid fa-newspaper', bg:'#fef2f2', color:'#dc2626', title:'Daily Briefings', desc:'Market analysis every morning', href:'/?tab=daily' }
-      ],
-      ar: [
-        { icon:'fa-solid fa-graduation-cap', bg:'#eef2ff', color:'#6366f1', title:'\u062f\u0644\u064a\u0644 \u0627\u0644\u0645\u0636\u0627\u0631\u0628', desc:'7 \u0623\u062c\u0632\u0627\u0621 \u0644\u0625\u062a\u0642\u0627\u0646 \u0627\u0644\u062a\u062f\u0627\u0648\u0644', href:'/series/guide-speculateur/part1/' },
-        { icon:'fa-solid fa-chart-line', bg:'#ecfdf5', color:'#059669', title:'Swing Mode', desc:'\u0645\u0627\u0633\u062d\u060c \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0648\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u062e\u0627\u0637\u0631', href:'/series/swing-mode/part1-setup/' },
-        { icon:'fa-solid fa-building-columns', bg:'#fffbeb', color:'#d97706', title:'\u0627\u0644\u062b\u0631\u0648\u0629 \u0627\u0644\u0623\u0648\u0631\u0648\u0628\u064a\u0629', desc:'\u0636\u0631\u0627\u0626\u0628\u060c PEA\u060c \u062a\u0623\u0645\u064a\u0646', href:'/series/patrimoine-europe/part1/' },
-        { icon:'fa-solid fa-newspaper', bg:'#fef2f2', color:'#dc2626', title:'\u062a\u0642\u0627\u0631\u064a\u0631 \u064a\u0648\u0645\u064a\u0629', desc:'\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0643\u0644 \u0635\u0628\u0627\u062d', href:'/?tab=daily' }
-      ]
-    };
-    var items = resources[CURRENT_LANG] || resources.en;
-    var grid = document.getElementById('resourceGrid');
-    if (!grid) return;
-    grid.innerHTML = items.map(function(r) {
-      return '<a href="' + r.href + '" class="resource-card">' +
-        '<div class="resource-icon" style="background:' + r.bg + ';color:' + r.color + '"><i class="' + r.icon + '"></i></div>' +
-        '<div><h4>' + r.title + '</h4><p>' + r.desc + '</p></div></a>';
-    }).join('');
-  }
-
-  // ── DISCLAIMER ──
-  function renderDisclaimer() {
-    var box = document.getElementById('disclaimerBox');
-    if (!box) return;
-    box.innerHTML = '<i class="fa-solid fa-shield-halved"></i> ' + L.disclaimer;
-  }
-
   // ── INIT ──
   applyLang();
   renderAllControls();
-  renderTemplates(LANG.thesisTemplates[CURRENT_LANG], 'thesisTemplates', 'thesisInput');
-  renderTemplates(LANG.catalystTemplates[CURRENT_LANG], 'catalystTemplates', 'catalystInput');
+  renderTemplateSelect('thesisTemplateSelect', LANG.thesisTemplates[CURRENT_LANG], 'thesisInput', L.thesisTemplatePh);
+  renderTemplateSelect('catalystTemplateSelect', LANG.catalystTemplates[CURRENT_LANG], 'catalystInput', L.catalystTemplatePh);
   renderLibrary();
-  renderAiTable();
-  renderResources();
-  renderDisclaimer();
 
 })();
