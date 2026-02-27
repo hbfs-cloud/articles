@@ -94,6 +94,7 @@
     var c = LANG.chips;
     renderSelect('intentSelect', c.intent[CURRENT_LANG]);
     renderSelect('assetSelect', c.asset[CURRENT_LANG]);
+    renderSelect('assetSelectAdv', c.asset[CURRENT_LANG]);
     renderSelect('aiSelect', c.ai);
     renderSelect('levelSelect', c.level[CURRENT_LANG]);
     renderSelect('formatSelect', c.format[CURRENT_LANG]);
@@ -143,16 +144,30 @@
   }
 
   // Auto-suggest asset type on ticker input
+  function syncAsset(val) {
+    var sel = document.getElementById('assetSelect');
+    var adv = document.getElementById('assetSelectAdv');
+    if (sel) sel.value = val;
+    if (adv) adv.value = val;
+  }
   document.getElementById('tickerInput').addEventListener('input', function() {
     this.value = this.value.toUpperCase();
     var detected = detectAssetType(this.value.trim());
     var sel = document.getElementById('assetSelect');
     var current = sel ? sel.value : 'stock';
     if (current === 'stock' || current === detected) {
-      if (sel) sel.value = detected;
+      syncAsset(detected);
     }
     updateAssetBadge(detected);
   });
+  // Sync adv asset select → hidden asset select
+  var assetAdv = document.getElementById('assetSelectAdv');
+  if (assetAdv) {
+    assetAdv.addEventListener('change', function() {
+      var sel = document.getElementById('assetSelect');
+      if (sel) sel.value = this.value;
+    });
+  }
 
   // ── TEMPLATE SELECTS ──
   function renderTemplateSelect(selectId, templates, targetId, placeholder) {
@@ -175,40 +190,20 @@
     });
   }
 
-  // Advanced settings toggle
-  function updateAdvDefaults() {
-    var el = document.getElementById('advDefaults');
-    if (!el) return;
-    var section = document.getElementById('advSection');
-    if (section && section.classList.contains('visible')) { el.textContent = ''; return; }
-    var level = document.getElementById('levelSelect');
-    var ai = document.getElementById('aiSelect');
-    var fmt = document.getElementById('formatSelect');
-    var parts = [];
-    if (level && level.selectedOptions[0]) parts.push(level.selectedOptions[0].textContent);
-    if (ai && ai.selectedOptions[0]) parts.push(ai.selectedOptions[0].textContent);
-    if (fmt && fmt.selectedOptions[0]) parts.push(fmt.selectedOptions[0].textContent);
-    el.textContent = parts.join(' · ');
-  }
-  var advBtn = document.getElementById('advToggle');
-  if (advBtn) {
-    advBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var section = document.getElementById('advSection');
-      if (section) section.classList.toggle('visible');
-      this.classList.toggle('open');
-      updateAdvDefaults();
+  // ── TOGGLE HELPERS ──
+  function togglePanel(btnId, panelId) {
+    var btn = document.getElementById(btnId);
+    var panel = document.getElementById(panelId);
+    if (!btn || !panel) return;
+    btn.addEventListener('click', function() {
+      var isOpen = panel.classList.toggle('open');
+      this.classList.toggle('open', isOpen);
     });
   }
-  // Refresh defaults hint after controls render
-  setTimeout(updateAdvDefaults, 50);
+  togglePanel('advToggle', 'advSection');
+  togglePanel('libToggle', 'libSection');
 
-  // Library toggle
-  document.getElementById('libToggle').addEventListener('click', function() {
-    var section = document.getElementById('libSection');
-    section.classList.toggle('visible');
-    this.classList.toggle('open');
-  });
+  // (lib toggle handled by togglePanel above)
 
   // ── AI RECOMMENDATION ENGINE ──
   var aiLabels = { chatgpt:'ChatGPT', claude:'Claude', perplexity:'Perplexity', grok:'Grok', gemini:'Gemini', deepseek:'DeepSeek' };
@@ -409,6 +404,7 @@
       if (assetType !== 'index' && assetType !== 'commodity') {
         links.push({ icon:'fa-solid fa-file-lines', label:'SEC EDGAR', url:'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + t + '&type=&dateb=&owner=include&count=10' });
       }
+      links.push({ icon:'fa-solid fa-binoculars', label:'Fintel', url:'https://fintel.io/s/us/' + t.toLowerCase() });
       links.push({ icon:'fa-solid fa-comments', label:'StockTwits', url:'https://stocktwits.com/symbol/' + t });
       links.push({ icon:'fa-brands fa-x-twitter', label:'$' + t, url:'https://x.com/search?q=%24' + t + '&f=live' });
       links.push({ icon:'fa-solid fa-arrow-trend-up', label:'Google Trends', url:'https://trends.google.com/trends/explore?q=' + t + '&geo=US' });
