@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="tech,data,architecture,trading,education" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Science 101 : Le Guide Complet pour le Trading | Market Watch</title>
+    <meta name="description"
+        content="Du Data Lake au Semantic Layer — Maîtrisez la Data Science pour le trading retail. Architecture Medallion, Star Schema, Modern Data Stack, profils data et best practices.">
+    <meta property="og:title" content="Data Science 101 : Le Guide Complet pour le Trading">
+    <meta property="og:description"
+        content="Du Data Lake au Semantic Layer — Maîtrisez la Data pour Mieux Trader. Guide complet 360° pour les traders retail.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://market-watch.xyz/tech/data-science-101/">
+    <meta property="og:type" content="article">
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 8rem;
+            background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+            text-align: center;
+            border-bottom: 1px solid #c4b5fd;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -5rem auto 0;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            .metric-label {
+                font-size: 0.85rem !important;
+            }
+
+            .metric-value {
+                font-size: 1.25rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metric-label {
+                font-size: 0.8rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            class="gtm-noscript"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE DATA SCIENCE</div>
+        <h1>Data Science 101 : Le Guide Complet pour le Trading</h1>
+        <p>Du Data Lake au Semantic Layer — Maîtrisez la Data pour Mieux Trader.
+            Architecture, outils, profils et best practices pour construire votre infrastructure data de trading.</p>
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-database"></i> Data 360°</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 30 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Débutant</div>
+            <div class="hero-badge"><i class="fa-solid fa-chart-line"></i> Trading</div>
+            <div class="hero-badge"><i class="fa-solid fa-layer-group"></i> 10 sections</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 1 : INTRODUCTION                                       -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-rocket"></i> Pourquoi la Data Science en Trading ?</h2>
+
+            <p>En 2026, la data est le carburant du trading moderne. Les hedge funds quantitatifs comme <strong>Two Sigma</strong>,
+                <strong>Renaissance Technologies</strong> et <strong>Citadel</strong> ne sont pas des fonds
+                d'investissement traditionnels : ce sont des <strong>entreprises de données</strong> qui font aussi du
+                trading. Leur avantage compétitif repose sur la qualité, la vitesse et la profondeur de leurs pipelines
+                de données.</p>
+
+            <p>Mais la révolution data ne concerne plus uniquement les institutionnels. Les outils qui coûtaient des
+                millions de dollars par an sont désormais accessibles gratuitement aux traders retail. <strong>DuckDB</strong>,
+                <strong>dbt</strong>, <strong>Grafana</strong>, <strong>Evidence</strong> — ces technologies open-source
+                vous permettent de construire une infrastructure de données digne d'un hedge fund depuis votre ordinateur
+                portable.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">$1M+/an</div>
+                    <div class="metric-label">Coût historique d'une infrastructure data de trading institutionnel en 2015</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">$0</div>
+                    <div class="metric-label">Coût d'un stack data retail en 2026 avec les outils open-source</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2.5 Exaoctets</div>
+                    <div class="metric-label">Volume de données financières générées chaque jour sur les marchés mondiaux</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">10x</div>
+                    <div class="metric-label">Avantage en vitesse de décision pour les traders équipés data vs intuition pure</div>
+                </div>
+            </div>
+
+            <h3>Qu'est-ce que la Data Science, exactement ?</h3>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Définition simple</h4>
+                <p>La <strong>Data Science</strong> est l'art et la science d'extraire des connaissances utiles à partir
+                    de données brutes. Elle combine trois disciplines :</p>
+                <ul>
+                    <li><strong>L'informatique</strong> : stocker, transformer et déplacer les données</li>
+                    <li><strong>Les statistiques</strong> : analyser, modéliser et prédire</li>
+                    <li><strong>L'expertise métier</strong> : poser les bonnes questions et interpréter les résultats</li>
+                </ul>
+                <p>En trading, la Data Science vous aide à répondre à des questions comme : "Le RSI est-il vraiment
+                    prédictif sur mon univers de stocks ?", "Quelle est la corrélation entre le VIX et mes drawdowns ?",
+                    ou "Mon screener a-t-il un edge statistiquement significatif ?"</p>
+            </div>
+
+            <h3>Comment les meilleurs utilisent la data</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fonds / Entreprise</th>
+                            <th>Approche Data</th>
+                            <th>Avantage Compétitif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Renaissance Technologies</strong></td>
+                            <td>Modèles mathématiques sur données historiques massives</td>
+                            <td>66% de rendement annuel moyen (Medallion Fund)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Two Sigma</strong></td>
+                            <td>Machine learning + données alternatives (satellites, NLP)</td>
+                            <td>$60 milliards AUM, équipe de 1600 ingénieurs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Citadel</strong></td>
+                            <td>Infrastructure low-latency + data lakes massifs</td>
+                            <td>$65 milliards AUM, latence en microsecondes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Jane Street</strong></td>
+                            <td>Analyse quantitative temps réel des order books</td>
+                            <td>Market maker dominant, $21B profit en 2024</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Trader Retail (vous)</strong></td>
+                            <td>DuckDB + dbt + screeners + sentiment + MCP Gateway</td>
+                            <td>Gratuit, rapide, adaptable, data-driven</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Le paysage de la Data Science</h3>
+
+            <p>La Data Science est un domaine vaste. Voici une cartographie des sous-domaines pertinents pour le trading :</p>
+
+            <div id="chartLandscape" style="width:100%; height:600px;"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 2 : LE DATA LAKE                                       -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="datalake" class="content-card">
+            <h2><i class="fa-solid fa-water"></i> Le Data Lake — Le Réservoir Brut</h2>
+
+            <p>Le <strong>Data Lake</strong> est le point de départ de toute architecture data moderne. C'est un
+                système de stockage qui accepte <strong>toutes les données</strong>, dans <strong>tous les formats</strong>,
+                sans transformation préalable. Contrairement à un data warehouse qui impose un schéma rigide à l'écriture,
+                le data lake stocke les données telles quelles et ne les structure qu'au moment de la lecture.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Imaginez un lac...</h4>
+                <p>Un <strong>data lake</strong>, c'est littéralement un lac de données. Imaginez un immense lac naturel
+                    dans lequel se déversent des rivières de toute taille :</p>
+                <ul>
+                    <li>Une rivière de <strong>données de marché</strong> (prix, volumes, tick data)</li>
+                    <li>Un ruisseau de <strong>news financières</strong> (Reuters, Bloomberg, Twitter)</li>
+                    <li>Un torrent de <strong>données SEC</strong> (filings 10-K, 10-Q, 8-K)</li>
+                    <li>Des gouttes de <strong>sentiment social</strong> (Reddit, StockTwits)</li>
+                </ul>
+                <p>Toute cette eau se mélange dans le lac. Quand vous avez besoin d'une information précise, vous
+                    "pêchez" dans le lac en appliquant un filtre (une requête). C'est le concept de
+                    <strong>schema-on-read</strong> : la structure s'applique au moment où vous lisez, pas quand vous stockez.</p>
+            </div>
+
+            <h3>Data Lake vs Data Warehouse</h3>
+
+            <p>Ces deux concepts sont souvent confondus. Voici les différences fondamentales :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>Data Lake</th>
+                            <th>Data Warehouse</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Schéma</strong></td>
+                            <td>Schema-on-read (structure au moment de la lecture)</td>
+                            <td>Schema-on-write (structure imposée à l'écriture)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Données</strong></td>
+                            <td>Brutes, semi-structurées, non-structurées</td>
+                            <td>Structurées, nettoyées, modélisées</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Formats</strong></td>
+                            <td>JSON, CSV, Parquet, Avro, images, logs</td>
+                            <td>Tables relationnelles (SQL)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Utilisateurs</strong></td>
+                            <td>Data engineers, data scientists</td>
+                            <td>Analystes, managers, outils BI</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Coût</strong></td>
+                            <td>Faible (stockage object)</td>
+                            <td>Élevé (compute + stockage optimisé)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qualité</strong></td>
+                            <td>Variable — risque de "data swamp"</td>
+                            <td>Haute — données validées et testées</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cas d'usage trading</strong></td>
+                            <td>Archivage tick data, raw API responses, sentiment brut</td>
+                            <td>OHLCV agrégé, indicateurs calculés, P&L quotidien</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Les formats de données en trading</h3>
+
+            <p>Dans un data lake de trading, vous rencontrerez différents formats de fichiers. Chacun a ses avantages :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-file-csv"></i> CSV</div>
+                    <div class="metric-label">Format texte universel. Simple mais lent et volumineux. Idéal pour les petits datasets et l'import/export rapide.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-file-code"></i> JSON</div>
+                    <div class="metric-label">Format semi-structuré. Flexible pour les API responses (quotes, order books). Lisible mais peu performant en volumétrie.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-columns"></i> Parquet</div>
+                    <div class="metric-label">Format colonaire compressé. Le standard pour les données analytiques. 10x plus rapide que CSV, 5x plus compact.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-database"></i> Avro</div>
+                    <div class="metric-label">Format binaire orienté lignes avec schéma embarqué. Idéal pour le streaming et les messages (Kafka).</div>
+                </div>
+            </div>
+
+            <h3>Technologies de Data Lake</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Technologie</th>
+                            <th>Type</th>
+                            <th>Coût</th>
+                            <th>Idéal pour</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Amazon S3</strong></td>
+                            <td>Object storage cloud</td>
+                            <td>~$0.023/Go/mois</td>
+                            <td>Production, scalabilité infinie</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MinIO</strong></td>
+                            <td>Object storage self-hosted</td>
+                            <td>Gratuit (open-source)</td>
+                            <td>Alternative S3 on-premise</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Azure Data Lake</strong></td>
+                            <td>Object storage cloud</td>
+                            <td>~$0.018/Go/mois</td>
+                            <td>Écosystème Microsoft</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fichiers locaux</strong></td>
+                            <td>Dossiers Parquet/CSV</td>
+                            <td>Gratuit</td>
+                            <td>Trader retail, prototypage</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DuckDB</strong></td>
+                            <td>Base analytique in-process</td>
+                            <td>Gratuit (open-source)</td>
+                            <td>Requêter directement des fichiers Parquet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention au "Data Swamp"</h4>
+                <p>Un data lake mal géré devient un <strong>data swamp</strong> (marécage de données) : personne ne sait
+                    ce que contiennent les fichiers, les données sont dupliquées, corrompues ou obsolètes. Pour éviter cela :
+                    <strong>cataloguez vos données</strong>, <strong>nommez vos fichiers de manière cohérente</strong>, et
+                    <strong>documentez les sources</strong>. C'est exactement ce que résout l'architecture Medallion
+                    (section suivante).</p>
+            </div>
+
+            <h3>Pour le trader retail</h3>
+
+            <p>En pratique, votre "data lake" sera probablement un <strong>dossier de fichiers Parquet</strong> organisé
+                par source et par date. Voici un exemple de structure :</p>
+
+            <pre><code>data-lake/
+├── market/
+│   ├── daily/
+│   │   ├── 2026-02-27_ohlcv.parquet
+│   │   └── 2026-02-26_ohlcv.parquet
+│   └── intraday/
+│       └── 2026-02-27_15m.parquet
+├── fundamentals/
+│   ├── earnings_q4_2025.parquet
+│   └── financials_annual.parquet
+├── sentiment/
+│   ├── reddit_wsb_2026-02-27.json
+│   └── stocktwits_trending.json
+├── sec/
+│   ├── 10k_filings_2025.parquet
+│   └── insider_transactions.parquet
+└── news/
+    └── 2026-02-27_reuters.json</code></pre>
+
+            <p>Avec <strong>DuckDB</strong>, vous pouvez requêter ces fichiers directement en SQL sans les charger dans
+                une base de données :</p>
+
+            <pre><code>-- Requêter directement un fichier Parquet avec DuckDB
+SELECT symbol, date, close, volume
+FROM 'data-lake/market/daily/2026-02-27_ohlcv.parquet'
+WHERE volume > 1000000
+ORDER BY volume DESC
+LIMIT 20;</code></pre>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 3 : ARCHITECTURE MEDALLION                             -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="medallion" class="content-card">
+            <h2><i class="fa-solid fa-layer-group"></i> L'Architecture Medallion (Bronze, Silver, Gold)</h2>
+
+            <p>L'architecture <strong>Medallion</strong>, popularisée par <strong>Databricks</strong>, est le standard
+                de facto pour organiser les données dans un data lake. Elle divise les données en trois couches de qualité
+                croissante : <strong>Bronze</strong> (brut), <strong>Silver</strong> (nettoyé) et <strong>Gold</strong>
+                (prêt à l'emploi).</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">🥉 Bronze</div>
+                    <div class="metric-label">Données brutes telles que reçues de la source. Aucune transformation. Copie fidèle de l'API, du fichier ou du flux.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">🥈 Silver</div>
+                    <div class="metric-label">Données nettoyées, dédupliquées, typées et validées. Schéma normalisé, jointures possibles.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">🥇 Gold</div>
+                    <div class="metric-label">Données métier prêtes à consommer. Agrégations, indicateurs calculés, features pour modèles ML.</div>
+                </div>
+            </div>
+
+            <h3>Flux de la donnée : de Bronze à Gold</h3>
+
+            <div id="chartMedallion" style="width:100%; height:500px;"></div>
+
+            <h3>Exemple concret en trading</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Couche</th>
+                            <th>Contenu Trading</th>
+                            <th>Exemple</th>
+                            <th>Transformation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Bronze</strong></td>
+                            <td>Réponse brute API Yahoo Finance</td>
+                            <td>JSON complet avec metadata, timestamps Unix</td>
+                            <td>Aucune — stockage tel quel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Silver</strong></td>
+                            <td>OHLCV normalisé</td>
+                            <td>Parquet avec colonnes typées (date, float64)</td>
+                            <td>Parsing JSON, conversion types, déduplication</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gold</strong></td>
+                            <td>Indicateurs techniques calculés</td>
+                            <td>RSI14, EMA20, MACD, Bollinger Bands</td>
+                            <td>Calcul fenêtré, agrégations, features</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi ne pas aller directement au Gold ?</h4>
+                <p>Vous vous dites peut-être : "Pourquoi stocker les données brutes ? Je veux directement les indicateurs !"
+                    Trois raisons fondamentales :</p>
+                <ul>
+                    <li><strong>Reproductibilité</strong> : si votre calcul de RSI a un bug, vous pouvez recalculer à
+                        partir du Bronze sans re-télécharger les données</li>
+                    <li><strong>Auditabilité</strong> : vous pouvez toujours vérifier ce que la source a réellement envoyé</li>
+                    <li><strong>Flexibilité</strong> : demain vous voudrez peut-être calculer un nouvel indicateur. Avec
+                        le Bronze, c'est trivial. Sans lui, il faut tout re-télécharger.</li>
+                </ul>
+                <p>C'est la règle d'or du data engineering : <strong>ne jamais jeter les données brutes</strong>.</p>
+            </div>
+
+            <h3>Pipeline Bronze → Silver en Python</h3>
+
+            <pre><code># Pipeline Bronze → Silver pour les données OHLCV
+import json
+import pandas as pd
+from pathlib import Path
+
+def bronze_to_silver(bronze_path: str, silver_path: str):
+    """Transforme les réponses JSON brutes en Parquet normalisé."""
+
+    # 1. Lire le Bronze (JSON brut de l'API)
+    with open(bronze_path) as f:
+        raw = json.load(f)
+
+    # 2. Extraire et normaliser
+    records = []
+    for item in raw['chart']['result']:
+        symbol = item['meta']['symbol']
+        timestamps = item['timestamp']
+        quotes = item['indicators']['quote'][0]
+
+        for i, ts in enumerate(timestamps):
+            records.append({
+                'symbol': symbol,
+                'date': pd.Timestamp(ts, unit='s').date(),
+                'open': round(quotes['open'][i], 2),
+                'high': round(quotes['high'][i], 2),
+                'low': round(quotes['low'][i], 2),
+                'close': round(quotes['close'][i], 2),
+                'volume': int(quotes['volume'][i] or 0),
+            })
+
+    # 3. Créer le DataFrame, dédupliquer, trier
+    df = pd.DataFrame(records)
+    df = df.drop_duplicates(subset=['symbol', 'date'])
+    df = df.sort_values(['symbol', 'date'])
+
+    # 4. Écrire en Parquet (Silver)
+    df.to_parquet(silver_path, index=False)
+    print(f"Silver: {len(df)} rows → {silver_path}")</code></pre>
+
+            <h3>Pipeline Silver → Gold en SQL (dbt)</h3>
+
+            <pre><code>-- models/gold/fct_daily_indicators.sql
+-- Calcule les indicateurs techniques à partir du Silver
+
+WITH daily AS (
+    SELECT * FROM {{ ref('stg_daily_ohlcv') }}
+),
+
+with_indicators AS (
+    SELECT
+        symbol,
+        date,
+        close,
+        volume,
+
+        -- Moyenne mobile simple 20 jours
+        AVG(close) OVER (
+            PARTITION BY symbol
+            ORDER BY date
+            ROWS BETWEEN 19 PRECEDING AND CURRENT ROW
+        ) AS sma_20,
+
+        -- Moyenne mobile exponentielle approximée
+        AVG(close) OVER (
+            PARTITION BY symbol
+            ORDER BY date
+            ROWS BETWEEN 49 PRECEDING AND CURRENT ROW
+        ) AS sma_50,
+
+        -- Volume moyen 20 jours
+        AVG(volume) OVER (
+            PARTITION BY symbol
+            ORDER BY date
+            ROWS BETWEEN 19 PRECEDING AND CURRENT ROW
+        ) AS avg_volume_20,
+
+        -- Rendement quotidien
+        (close - LAG(close) OVER (PARTITION BY symbol ORDER BY date))
+        / NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY date), 0)
+        AS daily_return
+
+    FROM daily
+)
+
+SELECT
+    *,
+    CASE WHEN close > sma_20 THEN 'above' ELSE 'below' END AS trend_sma20,
+    CASE WHEN volume > avg_volume_20 * 2 THEN true ELSE false END AS volume_surge
+FROM with_indicators</code></pre>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 4 : STAR SCHEMA                                        -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="starschema" class="content-card">
+            <h2><i class="fa-solid fa-star"></i> Le Star Schema et la Modélisation Dimensionnelle</h2>
+
+            <p>La <strong>modélisation dimensionnelle</strong>, inventée par <strong>Ralph Kimball</strong> dans les
+                années 1990, reste la méthode la plus utilisée pour organiser les données dans un data warehouse. Son
+                concept central est le <strong>Star Schema</strong> (schéma en étoile) : une table de faits centrale
+                entourée de tables de dimensions.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pensez à Excel, mais en mieux...</h4>
+                <p>Si vous avez déjà utilisé un tableau croisé dynamique dans Excel, vous connaissez déjà le concept.
+                    Les <strong>faits</strong>, ce sont les chiffres que vous mesurez (prix, volume, P&L). Les
+                    <strong>dimensions</strong>, ce sont les axes par lesquels vous les découpez (date, instrument,
+                    stratégie, secteur).</p>
+                <p>Le Star Schema, c'est simplement cette idée formalisée dans une base de données relationnelle.
+                    Et c'est incroyablement puissant pour répondre à des questions comme : "Quel est mon P&L par
+                    secteur, par mois, pour ma stratégie momentum ?"</p>
+            </div>
+
+            <h3>Les composants du Star Schema</h3>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-table"></i> Faits</div>
+                    <div class="metric-label">Tables contenant les mesures numériques (trades, positions, P&L quotidien, OHLCV). Grandes tables avec beaucoup de lignes.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-cube"></i> Dimensions</div>
+                    <div class="metric-label">Tables descriptives (instruments, exchanges, stratégies, dates). Petites tables avec des attributs textuels.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-link"></i> Clés</div>
+                    <div class="metric-label">Foreign keys reliant les faits aux dimensions. Permettent les jointures rapides et les analyses multidimensionnelles.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-bolt"></i> Performance</div>
+                    <div class="metric-label">Les requêtes analytiques sont 10-100x plus rapides qu'un schéma normalisé (3NF) grâce à moins de jointures.</div>
+                </div>
+            </div>
+
+            <h3>Star Schema pour le trading</h3>
+
+            <div id="chartStarSchema" style="width:100%; height:550px;"></div>
+
+            <h3>Exemple de tables</h3>
+
+            <p><strong>Table de faits : fct_daily_trades</strong></p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Colonne</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>trade_id</td>
+                            <td>INT (PK)</td>
+                            <td>Identifiant unique du trade</td>
+                        </tr>
+                        <tr>
+                            <td>instrument_key</td>
+                            <td>INT (FK)</td>
+                            <td>Référence vers dim_instruments</td>
+                        </tr>
+                        <tr>
+                            <td>date_key</td>
+                            <td>INT (FK)</td>
+                            <td>Référence vers dim_dates</td>
+                        </tr>
+                        <tr>
+                            <td>strategy_key</td>
+                            <td>INT (FK)</td>
+                            <td>Référence vers dim_strategies</td>
+                        </tr>
+                        <tr>
+                            <td>entry_price</td>
+                            <td>DECIMAL(10,2)</td>
+                            <td>Prix d'entrée</td>
+                        </tr>
+                        <tr>
+                            <td>exit_price</td>
+                            <td>DECIMAL(10,2)</td>
+                            <td>Prix de sortie</td>
+                        </tr>
+                        <tr>
+                            <td>quantity</td>
+                            <td>INT</td>
+                            <td>Nombre d'actions/contrats</td>
+                        </tr>
+                        <tr>
+                            <td>pnl</td>
+                            <td>DECIMAL(12,2)</td>
+                            <td>Profit & Loss réalisé</td>
+                        </tr>
+                        <tr>
+                            <td>fees</td>
+                            <td>DECIMAL(8,2)</td>
+                            <td>Commissions et frais</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p><strong>Table de dimension : dim_instruments</strong></p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Colonne</th>
+                            <th>Type</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>instrument_key</td>
+                            <td>INT (PK)</td>
+                            <td>42</td>
+                        </tr>
+                        <tr>
+                            <td>symbol</td>
+                            <td>VARCHAR(10)</td>
+                            <td>AAPL</td>
+                        </tr>
+                        <tr>
+                            <td>name</td>
+                            <td>VARCHAR(100)</td>
+                            <td>Apple Inc.</td>
+                        </tr>
+                        <tr>
+                            <td>sector</td>
+                            <td>VARCHAR(50)</td>
+                            <td>Technology</td>
+                        </tr>
+                        <tr>
+                            <td>industry</td>
+                            <td>VARCHAR(50)</td>
+                            <td>Consumer Electronics</td>
+                        </tr>
+                        <tr>
+                            <td>exchange</td>
+                            <td>VARCHAR(10)</td>
+                            <td>NASDAQ</td>
+                        </tr>
+                        <tr>
+                            <td>market_cap_tier</td>
+                            <td>VARCHAR(20)</td>
+                            <td>Mega Cap</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Requête analytique exemple</h3>
+
+            <pre><code>-- P&L mensuel par secteur et par stratégie
+SELECT
+    d.month_name,
+    i.sector,
+    s.strategy_name,
+    SUM(f.pnl) AS total_pnl,
+    COUNT(*) AS nb_trades,
+    ROUND(SUM(CASE WHEN f.pnl > 0 THEN 1 ELSE 0 END)::FLOAT / COUNT(*) * 100, 1) AS win_rate
+FROM fct_daily_trades f
+JOIN dim_dates d ON f.date_key = d.date_key
+JOIN dim_instruments i ON f.instrument_key = i.instrument_key
+JOIN dim_strategies s ON f.strategy_key = s.strategy_key
+WHERE d.year = 2026
+GROUP BY d.month_name, i.sector, s.strategy_name
+ORDER BY total_pnl DESC;</code></pre>
+
+            <h3>Star Schema vs Snowflake Schema</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>Star Schema</th>
+                            <th>Snowflake Schema</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Structure</strong></td>
+                            <td>Dimensions plates (dénormalisées)</td>
+                            <td>Dimensions normalisées (sous-tables)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Jointures</strong></td>
+                            <td>Peu (1 niveau)</td>
+                            <td>Nombreuses (multi-niveaux)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Performance</strong></td>
+                            <td>Excellente (requêtes simples)</td>
+                            <td>Bonne (plus complexe)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stockage</strong></td>
+                            <td>Plus d'espace (redondance)</td>
+                            <td>Moins d'espace (normalisé)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Simplicité</strong></td>
+                            <td>Très simple à comprendre</td>
+                            <td>Plus complexe</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recommandé pour</strong></td>
+                            <td>Trading retail, petites équipes</td>
+                            <td>Grandes entreprises, données complexes</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 5 : LE SEMANTIC LAYER                                  -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="semantic" class="content-card">
+            <h2><i class="fa-solid fa-brain"></i> Le Semantic Layer — La Couche de Sens</h2>
+
+            <p>Le <strong>Semantic Layer</strong> (couche sémantique) est peut-être le concept le plus sous-estimé de la
+                data science moderne. C'est une couche d'abstraction qui définit de manière unique et cohérente ce que
+                signifient vos métriques. Quand quelqu'un demande "Quel est le Sharpe ratio de ma stratégie ?", le
+                semantic layer garantit que <strong>tout le monde obtient la même réponse</strong>, calculée de la même
+                manière, quelle que soit l'outil utilisé.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le problème sans semantic layer</h4>
+                <p>Imaginez cette situation classique :</p>
+                <ul>
+                    <li>Votre spreadsheet Excel calcule le Sharpe ratio avec les rendements mensuels</li>
+                    <li>Votre dashboard Grafana le calcule avec les rendements quotidiens</li>
+                    <li>Votre script Python utilise un risk-free rate de 4%, votre Excel utilise 0%</li>
+                </ul>
+                <p>Résultat : <strong>trois chiffres différents pour la même métrique</strong>. C'est le chaos.
+                    Le semantic layer résout ce problème en définissant <strong>une seule source de vérité</strong>
+                    pour chaque métrique.</p>
+            </div>
+
+            <h3>Avec vs Sans Semantic Layer</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Situation</th>
+                            <th>Sans Semantic Layer</th>
+                            <th>Avec Semantic Layer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>"Quel est le P&L ?"</strong></td>
+                            <td>Chaque outil a sa propre formule. Résultats divergents.</td>
+                            <td>Définition unique : SUM(exit_price - entry_price) * quantity - fees</td>
+                        </tr>
+                        <tr>
+                            <td><strong>"Win rate de ma stratégie"</strong></td>
+                            <td>Inclut-on les trades flat ? Les trades partiels ?</td>
+                            <td>Règle claire : trades avec pnl > 0 / total trades (excluant flat)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>"Volume moyen"</strong></td>
+                            <td>20 jours ? 50 jours ? Incluant les jours fériés ?</td>
+                            <td>SMA 20 jours ouvrés, excluant les half-days</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nouveau dashboard</strong></td>
+                            <td>Re-coder toutes les métriques from scratch</td>
+                            <td>Réutiliser les définitions existantes du semantic layer</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Changement de formule</strong></td>
+                            <td>Modifier dans 5 endroits différents</td>
+                            <td>Modifier une seule fois, propagé partout</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Technologies de Semantic Layer</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Approche</th>
+                            <th>Coût</th>
+                            <th>Idéal pour</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>dbt Metrics</strong></td>
+                            <td>Définitions YAML dans le projet dbt</td>
+                            <td>Gratuit (open-source)</td>
+                            <td>Équipes utilisant déjà dbt</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cube.js</strong></td>
+                            <td>API semantic layer indépendante</td>
+                            <td>Gratuit (self-hosted)</td>
+                            <td>Applications custom, temps réel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Looker (LookML)</strong></td>
+                            <td>Modèle sémantique propriétaire</td>
+                            <td>$$$</td>
+                            <td>Grandes entreprises, Google Cloud</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MetriQL</strong></td>
+                            <td>Open-source, compatible dbt</td>
+                            <td>Gratuit</td>
+                            <td>Petites équipes, prototypage</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Exemple : définir des métriques trading en dbt</h3>
+
+            <pre><code># models/metrics/trading_metrics.yml
+metrics:
+  - name: sharpe_ratio
+    label: "Sharpe Ratio (annualisé)"
+    description: "Rendement ajusté du risque, annualisé sur 252 jours ouvrés"
+    type: derived
+    type_params:
+      expr: "(avg_daily_return * 252) / (stddev_daily_return * sqrt(252))"
+      metrics:
+        - avg_daily_return
+        - stddev_daily_return
+
+  - name: max_drawdown
+    label: "Max Drawdown"
+    description: "Perte maximale depuis le pic le plus haut"
+    type: derived
+    type_params:
+      expr: "min(drawdown_pct)"
+      metrics:
+        - drawdown_pct
+
+  - name: win_rate
+    label: "Win Rate (%)"
+    description: "Pourcentage de trades profitables (excluant les trades flat)"
+    type: ratio
+    type_params:
+      numerator: winning_trades_count
+      denominator: total_trades_count
+    filter: "pnl != 0"</code></pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Pour le trader retail</h4>
+                <p>Vous n'avez pas besoin d'un outil de semantic layer dédié pour commencer. Créez simplement un
+                    fichier <code>metrics.sql</code> ou <code>metrics.py</code> qui contient toutes vos définitions
+                    de métriques. L'important est d'avoir <strong>une seule source de vérité</strong> pour chaque calcul.
+                    Si votre Sharpe ratio est défini à un seul endroit, vous ne vous tromperez jamais.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 6 : LE MODERN DATA STACK                              -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="mds" class="content-card">
+            <h2><i class="fa-solid fa-cubes"></i> Le Modern Data Stack (MDS)</h2>
+
+            <p>Le <strong>Modern Data Stack</strong> (MDS) est une architecture modulaire où chaque composant est un
+                outil spécialisé, interchangeable, et souvent open-source. Contrairement aux plateformes monolithiques
+                d'antan (Informatica, Oracle Data Integrator), le MDS favorise le <strong>best-of-breed</strong> :
+                choisissez le meilleur outil pour chaque fonction.</p>
+
+            <h3>Les 7 couches du Modern Data Stack</h3>
+
+            <div id="chartMDS" style="width:100%; height:600px;"></div>
+
+            <h3>Détail de chaque couche</h3>
+
+            <h3>1. Ingestion (Extract & Load)</h3>
+
+            <p>La première étape consiste à récupérer les données de vos sources et à les charger dans votre warehouse.
+                C'est le "EL" du pipeline ELT.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Type</th>
+                            <th>Free Tier</th>
+                            <th>Points forts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Meltano</strong></td>
+                            <td>Open-source CLI</td>
+                            <td>Illimité</td>
+                            <td>500+ connecteurs Singer, extensible, GitOps</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Airbyte</strong></td>
+                            <td>Open-source UI/CLI</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>400+ connecteurs, UI intuitive, CDC</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fivetran</strong></td>
+                            <td>SaaS managé</td>
+                            <td>500K rows/mois</td>
+                            <td>Zero maintenance, 600+ connecteurs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scripts Python</strong></td>
+                            <td>Code custom</td>
+                            <td>Gratuit</td>
+                            <td>Flexibilité totale, API custom</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>2. Stockage (Data Warehouse)</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Type</th>
+                            <th>Free Tier</th>
+                            <th>Points forts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>DuckDB</strong></td>
+                            <td>In-process analytique</td>
+                            <td>Illimité</td>
+                            <td>Zéro config, ultra-rapide, Parquet natif</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PostgreSQL</strong></td>
+                            <td>RDBMS open-source</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Mature, extensible, JSONB support</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Snowflake</strong></td>
+                            <td>Cloud warehouse</td>
+                            <td>$400 credits</td>
+                            <td>Scalabilité, séparation compute/storage</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BigQuery</strong></td>
+                            <td>Cloud warehouse</td>
+                            <td>1 TB requêtes/mois</td>
+                            <td>Serverless, ML intégré, Google ecosystem</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SQLite</strong></td>
+                            <td>Base embarquée</td>
+                            <td>Illimité</td>
+                            <td>Fichier unique, zéro dépendance, ubiquitaire</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>3. Transformation</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Langage</th>
+                            <th>Free Tier</th>
+                            <th>Points forts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>dbt Core</strong></td>
+                            <td>SQL + Jinja</td>
+                            <td>Illimité</td>
+                            <td>Standard de facto, tests, docs, lineage</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SQLMesh</strong></td>
+                            <td>SQL + Python</td>
+                            <td>Illimité</td>
+                            <td>Environnements virtuels, planification</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pandas / Polars</strong></td>
+                            <td>Python</td>
+                            <td>Illimité</td>
+                            <td>Flexibilité maximale, ML-friendly</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>4. Orchestration</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Approche</th>
+                            <th>Free Tier</th>
+                            <th>Points forts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dagster</strong></td>
+                            <td>Asset-based orchestration</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Data-aware, intégration dbt native</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prefect</strong></td>
+                            <td>Flow-based orchestration</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Pythonique, monitoring intégré</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Apache Airflow</strong></td>
+                            <td>DAG-based orchestration</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Standard entreprise, énorme écosystème</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cron + scripts</strong></td>
+                            <td>Planification OS</td>
+                            <td>Gratuit</td>
+                            <td>Simple, zéro dépendance, suffisant pour débuter</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>5. Visualisation</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Type</th>
+                            <th>Free Tier</th>
+                            <th>Points forts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Evidence</strong></td>
+                            <td>BI as code (Markdown)</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Git-native, DuckDB, SQL + Markdown</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Grafana</strong></td>
+                            <td>Dashboarding temps réel</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Alertes, 150+ sources, community</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Metabase</strong></td>
+                            <td>BI self-service</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>No-code questions, embedding</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Apache Superset</strong></td>
+                            <td>BI enterprise</td>
+                            <td>Illimité (self-hosted)</td>
+                            <td>Semantic layer, SQL Lab, 40+ viz types</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le stack recommandé pour le trader retail</h4>
+                <p>Si vous démarrez de zéro, voici le stack minimal que nous recommandons :</p>
+                <ul>
+                    <li><strong>Ingestion</strong> : Scripts Python (requests + pandas) ou MCP Gateway</li>
+                    <li><strong>Stockage</strong> : DuckDB (fichier unique, zéro config, SQL standard)</li>
+                    <li><strong>Transformation</strong> : dbt Core (modèles SQL, tests, documentation)</li>
+                    <li><strong>Orchestration</strong> : Cron jobs ou Dagster (si vous avez plusieurs pipelines)</li>
+                    <li><strong>Visualisation</strong> : Evidence (dashboards en Markdown) ou Grafana</li>
+                </ul>
+                <p>Coût total : <strong>$0</strong>. Temps de setup : <strong>une après-midi</strong>.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 7 : DATA MARTS ET DATA MESH                           -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="marts" class="content-card">
+            <h2><i class="fa-solid fa-store"></i> Data Marts et Data Mesh</h2>
+
+            <p>À mesure que votre architecture data grandit, vous aurez besoin d'organiser vos données Gold en
+                sous-ensembles spécialisés. C'est le rôle des <strong>data marts</strong> et, à plus grande échelle,
+                du <strong>data mesh</strong>.</p>
+
+            <h3>Data Marts : des boutiques spécialisées</h3>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Analogie</h4>
+                <p>Si le data warehouse est un <strong>hypermarché</strong> (tout est disponible), un data mart est une
+                    <strong>boutique spécialisée</strong> : la fromagerie ne vend que du fromage, la boulangerie ne vend
+                    que du pain. Chaque mart est optimisé pour un usage précis.</p>
+            </div>
+
+            <p>En trading, vous pourriez avoir ces data marts :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-pie"></i> Performance</div>
+                    <div class="metric-label">P&L quotidien, drawdowns, Sharpe, win rate par stratégie, par période, par secteur. Utilisé par le dashboard principal.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-shield-halved"></i> Risque</div>
+                    <div class="metric-label">VaR, corrélations, exposition sectorielle, beta portfolio, concentration. Utilisé pour les alertes et le rebalancing.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-magnifying-glass-chart"></i> Screener</div>
+                    <div class="metric-label">Indicateurs techniques, scores composites, signaux de trading, backtest results. Utilisé par le scanner quotidien.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-comments"></i> Sentiment</div>
+                    <div class="metric-label">Scores sentiment Reddit/StockTwits/Twitter, volume de mentions, polarité. Utilisé pour les analyses contrariantes.</div>
+                </div>
+            </div>
+
+            <h3>Structure dbt des data marts</h3>
+
+            <pre><code>models/
+├── staging/          # Bronze → Silver (nettoyage)
+│   ├── stg_yahoo_ohlcv.sql
+│   ├── stg_sec_filings.sql
+│   └── stg_reddit_posts.sql
+├── intermediate/     # Silver → Silver (jointures, enrichissements)
+│   ├── int_daily_with_indicators.sql
+│   └── int_trades_enriched.sql
+└── marts/            # Gold (data marts finaux)
+    ├── performance/
+    │   ├── fct_daily_pnl.sql
+    │   ├── fct_strategy_metrics.sql
+    │   └── dim_strategies.sql
+    ├── risk/
+    │   ├── fct_portfolio_var.sql
+    │   ├── fct_correlation_matrix.sql
+    │   └── fct_sector_exposure.sql
+    ├── screener/
+    │   ├── fct_daily_signals.sql
+    │   ├── fct_composite_scores.sql
+    │   └── fct_backtest_results.sql
+    └── sentiment/
+        ├── fct_daily_sentiment.sql
+        └── fct_mention_volume.sql</code></pre>
+
+            <h3>Le Data Mesh : la décentralisation</h3>
+
+            <p>Le <strong>Data Mesh</strong> est un paradigme architectural proposé par <strong>Zhamak Dehghani</strong>
+                (Thoughtworks) en 2019. Il s'oppose à l'approche centralisée traditionnelle où une seule équipe data
+                gère tout le pipeline.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Principe</th>
+                            <th>Description</th>
+                            <th>En trading</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Ownership par domaine</strong></td>
+                            <td>Chaque équipe possède et maintient ses propres données</td>
+                            <td>L'équipe "alpha" gère les signaux, l'équipe "risk" gère le VaR</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data as a Product</strong></td>
+                            <td>Les datasets sont traités comme des produits avec SLA, docs, versioning</td>
+                            <td>Le mart "screener" a une API, une doc, et un SLA de fraîcheur</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Self-serve platform</strong></td>
+                            <td>Infrastructure partagée accessible en libre-service</td>
+                            <td>Templates dbt, pipelines pré-configurés, catalogue data</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Governance fédérée</strong></td>
+                            <td>Standards globaux, implémentation locale</td>
+                            <td>Convention de nommage, tests obligatoires, SLA minimum</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Data Mesh : pour les grandes organisations</h4>
+                <p>Le Data Mesh est conçu pour les organisations avec <strong>plusieurs équipes data</strong> (50+
+                    personnes). Si vous êtes un trader retail ou une petite équipe, le Data Mesh est <strong>overkill</strong>.
+                    Restez avec des data marts bien organisés dans un projet dbt unique. Vous pourrez toujours
+                    migrer vers un mesh quand votre organisation grandira.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 8 : LES PROFILS DATA                                  -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="profils" class="content-card">
+            <h2><i class="fa-solid fa-users"></i> Les Profils Data</h2>
+
+            <p>L'écosystème data regroupe plusieurs métiers distincts. Comprendre ces rôles vous aidera à identifier
+                quelles compétences développer pour votre stack de trading.</p>
+
+            <h3>Les 5 profils clés</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Profil</th>
+                            <th>Mission principale</th>
+                            <th>Outils typiques</th>
+                            <th>Salaire moyen (US)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data Engineer</strong></td>
+                            <td>Construire et maintenir les pipelines de données</td>
+                            <td>Python, Spark, Airflow, Kafka, Docker</td>
+                            <td>$140-180K</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Analyst</strong></td>
+                            <td>Analyser les données, créer des dashboards, répondre aux questions business</td>
+                            <td>SQL, Excel, Tableau, Looker, Python</td>
+                            <td>$85-120K</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Scientist</strong></td>
+                            <td>Créer des modèles prédictifs, feature engineering, expérimentation</td>
+                            <td>Python, R, scikit-learn, TensorFlow, notebooks</td>
+                            <td>$130-170K</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Analytics Engineer</strong></td>
+                            <td>Modéliser les données, définir les métriques, assurer la qualité</td>
+                            <td>dbt, SQL, YAML, Git, Looker/Metabase</td>
+                            <td>$120-160K</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ML Engineer</strong></td>
+                            <td>Déployer les modèles en production, monitoring, serving</td>
+                            <td>Python, MLflow, Kubernetes, FastAPI, Docker</td>
+                            <td>$150-200K</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Matrice de compétences</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Compétence</th>
+                            <th>Data Engineer</th>
+                            <th>Data Analyst</th>
+                            <th>Data Scientist</th>
+                            <th>Analytics Engineer</th>
+                            <th>ML Engineer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SQL</strong></td>
+                            <td>Expert</td>
+                            <td>Expert</td>
+                            <td>Avancé</td>
+                            <td>Expert</td>
+                            <td>Avancé</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Python</strong></td>
+                            <td>Expert</td>
+                            <td>Intermédiaire</td>
+                            <td>Expert</td>
+                            <td>Intermédiaire</td>
+                            <td>Expert</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Statistiques</strong></td>
+                            <td>Basique</td>
+                            <td>Avancé</td>
+                            <td>Expert</td>
+                            <td>Avancé</td>
+                            <td>Avancé</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Infrastructure</strong></td>
+                            <td>Expert</td>
+                            <td>Basique</td>
+                            <td>Intermédiaire</td>
+                            <td>Intermédiaire</td>
+                            <td>Expert</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Visualisation</strong></td>
+                            <td>Basique</td>
+                            <td>Expert</td>
+                            <td>Avancé</td>
+                            <td>Avancé</td>
+                            <td>Intermédiaire</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Machine Learning</strong></td>
+                            <td>Basique</td>
+                            <td>Basique</td>
+                            <td>Expert</td>
+                            <td>Basique</td>
+                            <td>Expert</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Communication</strong></td>
+                            <td>Intermédiaire</td>
+                            <td>Expert</td>
+                            <td>Avancé</td>
+                            <td>Expert</td>
+                            <td>Intermédiaire</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> En trading retail, vous êtes TOUS ces profils</h4>
+                <p>C'est la beauté (et le défi) du trading retail data-driven. Vous devez :</p>
+                <ul>
+                    <li><strong>Ingérer les données</strong> (Data Engineer) : API calls, webscraping, fichiers</li>
+                    <li><strong>Nettoyer et modéliser</strong> (Analytics Engineer) : dbt models, tests, docs</li>
+                    <li><strong>Analyser</strong> (Data Analyst) : dashboards, requêtes ad-hoc, rapports</li>
+                    <li><strong>Expérimenter</strong> (Data Scientist) : backtests, feature engineering, signaux</li>
+                    <li><strong>Automatiser</strong> (ML Engineer) : screeners en production, alertes, bots</li>
+                </ul>
+                <p>La bonne nouvelle : les outils modernes simplifient chaque étape. Vous n'avez pas besoin d'être
+                    expert dans tout. Commencez par SQL (le langage universel de la data) et élargissez progressivement.</p>
+            </div>
+
+            <h3>Le profil en T</h3>
+
+            <p>Le concept du <strong>profil en T</strong> (T-shaped) est particulièrement pertinent pour le trader
+                data-driven :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">Barre horizontale</div>
+                    <div class="metric-label">Connaissances larges mais superficielles dans TOUS les domaines : SQL, Python, stats, infra, viz, ML. Assez pour comprendre et communiquer.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Barre verticale</div>
+                    <div class="metric-label">Expertise profonde dans 1-2 domaines : par exemple SQL/dbt + analyse technique. C'est votre avantage compétitif.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 9 : PRINCIPES ET BEST PRACTICES                       -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="bestpractices" class="content-card">
+            <h2><i class="fa-solid fa-check-double"></i> Principes et Best Practices</h2>
+
+            <p>Construire une infrastructure data fiable nécessite de respecter des principes fondamentaux. Voici les
+                règles d'or du data engineering appliquées au trading.</p>
+
+            <h3>Les 10 commandements de la data</h3>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">1. Idempotence</div>
+                    <div class="metric-label">Même input, même output, toujours. Exécuter un pipeline 2 fois ne doit pas créer de doublons ni altérer les résultats.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2. Immutabilité</div>
+                    <div class="metric-label">Ne jamais modifier les données brutes (Bronze). Toujours créer de nouvelles versions. Append-only pour l'historique.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3. Reproductibilité</div>
+                    <div class="metric-label">Tout résultat doit pouvoir être reproduit. Fixez les seeds aléatoires, versionnez le code ET les données d'entrée.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4. Testabilité</div>
+                    <div class="metric-label">Chaque modèle, chaque transformation doit être testé : unicité, non-null, plage de valeurs, relations.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">5. Documentation</div>
+                    <div class="metric-label">Si ce n'est pas documenté, ça n'existe pas. Chaque colonne, chaque métrique, chaque pipeline doit avoir une description.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">6. Observabilité</div>
+                    <div class="metric-label">Savoir en temps réel si vos pipelines fonctionnent. Logs, métriques, alertes. Pas de pipeline silencieux.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">7. Lineage</div>
+                    <div class="metric-label">Traçabilité complète : d'où vient chaque donnée ? Quelles transformations a-t-elle subies ? Qui l'utilise ?</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">8. Fraîcheur</div>
+                    <div class="metric-label">Les données périmées sont des données fausses. Définissez un SLA de fraîcheur pour chaque dataset (5 min, 1h, 1 jour).</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">9. Version Control</div>
+                    <div class="metric-label">Tout le code data dans Git. Branches, PRs, code review. Comme du code applicatif, mais pour les données.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">10. Sécurité</div>
+                    <div class="metric-label">Protégez vos données sensibles : clés API, credentials, positions. Chiffrement, accès limité, rotation des secrets.</div>
+                </div>
+            </div>
+
+            <h3>Data Quality : les 4 dimensions</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Question</th>
+                            <th>Test dbt</th>
+                            <th>Exemple trading</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Complétude</strong></td>
+                            <td>Manque-t-il des données ?</td>
+                            <td><code>not_null</code>, row count check</td>
+                            <td>Toutes les dates de trading sont présentes ? Pas de trous ?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exactitude</strong></td>
+                            <td>Les données sont-elles correctes ?</td>
+                            <td><code>accepted_values</code>, range check</td>
+                            <td>Le prix close est entre le low et le high ? Volume > 0 ?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cohérence</strong></td>
+                            <td>Les données sont-elles cohérentes entre les sources ?</td>
+                            <td>Cross-source validation</td>
+                            <td>Le prix Yahoo = le prix de la source alternative ?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fraîcheur</strong></td>
+                            <td>Les données sont-elles à jour ?</td>
+                            <td><code>freshness</code> source check</td>
+                            <td>Les données datent d'aujourd'hui ? Pas de retard > 1h ?</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Best Practices vs Bad Practices</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sujet</th>
+                            <th>Best Practice</th>
+                            <th>Bad Practice</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Nommage</strong></td>
+                            <td><code>stg_yahoo__daily_ohlcv</code> (convention claire)</td>
+                            <td><code>data2</code>, <code>final_v3_FIXED</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Schéma</strong></td>
+                            <td>Types explicites, colonnes documentées</td>
+                            <td>Tout en VARCHAR, pas de documentation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tests</strong></td>
+                            <td>Tests automatiques sur chaque modèle (unique, not_null, range)</td>
+                            <td>Pas de tests, "ça marche sur ma machine"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pipeline</strong></td>
+                            <td>Idempotent, versionné, documenté, orchestré</td>
+                            <td>Script ad-hoc, exécuté manuellement, non reproductible</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stockage</strong></td>
+                            <td>Parquet pour l'analytique, partition par date</td>
+                            <td>CSV géants non partitionnés, pas de compression</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Secrets</strong></td>
+                            <td>Variables d'environnement, vault, rotation</td>
+                            <td>API keys en dur dans le code, pas de .gitignore</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Backfill</strong></td>
+                            <td>Script de backfill dédié, paramétrable par date range</td>
+                            <td>Modifier manuellement les données historiques</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Les 5 péchés capitaux de la data</h3>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-skull-crossbones"></i> Les erreurs qui tuent vos analyses</h4>
+                <ol>
+                    <li><strong>Le Survivorship Bias</strong> : ne backtester que sur les actions qui existent encore
+                        (ignorer les délistées). Gonfle artificiellement les rendements de +2-4% par an.</li>
+                    <li><strong>Le Look-Ahead Bias</strong> : utiliser dans votre modèle des données qui n'étaient pas
+                        disponibles au moment de la décision. Exemple : utiliser le close du jour pour décider d'acheter
+                        le matin.</li>
+                    <li><strong>L'Overfitting</strong> : optimiser vos paramètres sur les données historiques jusqu'à ce
+                        que le backtest soit parfait. En live, le modèle s'effondre.</li>
+                    <li><strong>Le Data Snooping</strong> : tester des centaines de combinaisons de paramètres et ne
+                        publier que celle qui marche. C'est du p-hacking financier.</li>
+                    <li><strong>La Data Decay</strong> : ne pas monitorer la fraîcheur de vos données. Trader sur des
+                        données périmées de 3 heures en pensant qu'elles sont temps réel.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 10 : APPLICATION AU TRADING RETAIL                     -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <div id="application" class="content-card">
+            <h2><i class="fa-solid fa-flask"></i> Application au Trading Retail</h2>
+
+            <p>Maintenant que vous maîtrisez les concepts, voyons comment tout assembler en une architecture
+                fonctionnelle pour le trading retail. Voici l'architecture que nous utilisons chez
+                <strong>Market Watch</strong>.</p>
+
+            <h3>Architecture complète : du marché au signal</h3>
+
+            <div id="chartRetailPipeline" style="width:100%; height:650px;"></div>
+
+            <h3>Le stack Market Watch</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Couche</th>
+                            <th>Outil utilisé</th>
+                            <th>Rôle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Sources</strong></td>
+                            <td>Yahoo Finance, SEC EDGAR, Reddit, StockTwits</td>
+                            <td>Données brutes de marché, fondamentaux, sentiment</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ingestion</strong></td>
+                            <td>MCP Gateway + Meltano</td>
+                            <td>API calls automatisés, extraction ELT</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stockage Bronze</strong></td>
+                            <td>PostgreSQL (raw schemas)</td>
+                            <td>Données brutes, JSON stocké tel quel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Transformation</strong></td>
+                            <td>dbt Core</td>
+                            <td>Staging → Intermediate → Marts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stockage Gold</strong></td>
+                            <td>PostgreSQL (mart schemas) + DuckDB</td>
+                            <td>Données prêtes pour les dashboards et les analyses</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Orchestration</strong></td>
+                            <td>Nomad + Discord Bot</td>
+                            <td>Planification des pipelines et des publications</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Visualisation</strong></td>
+                            <td>Evidence.dev + ECharts</td>
+                            <td>Dashboards interactifs, rapports automatisés</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Analyse IA</strong></td>
+                            <td>Claude (Anthropic) + MCP</td>
+                            <td>Rédaction des analyses, screening, synthèse</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Pipeline quotidien : de la donnée brute au signal</h3>
+
+            <pre><code># Exemple simplifié du pipeline quotidien Market Watch
+
+# 1. INGESTION (6h00) — Bronze
+# Le MCP Gateway collecte les données de marché
+mcp_gateway.query(
+    types="quote,bars_daily,technicals,sentiment_overall",
+    symbols="SPY,QQQ,DIA,IWM,GLD,TLT,BTC-USD,ETH-USD"
+)
+
+# 2. TRANSFORMATION (6h15) — Silver → Gold
+# dbt transforme les données brutes en indicateurs
+# $ dbt run --models staging intermediate marts
+
+# 3. SCREENING (6h30) — Signaux
+# Le screener analyse les données Gold
+auto_screener.run(
+    regime_detection=True,
+    strategies=["momentum", "breakout", "oversold", "squeeze"],
+    min_score=85,
+    top_k=10
+)
+
+# 4. PUBLICATION (7h00) — Briefing
+# Claude génère le briefing quotidien
+briefing = claude.generate(
+    template="daily_briefing",
+    data=market_data + screener_results + sentiment,
+    lang="fr"
+)
+
+# 5. DÉPLOIEMENT
+# GitHub Pages publie automatiquement
+git.add("daily/20260227/index.html")
+git.commit("daily: briefing 27 février 2026")
+git.push()</code></pre>
+
+            <h3>Minimum Viable Data Stack (MVDS)</h3>
+
+            <p>Vous n'avez pas besoin de tout cela pour commencer. Voici le <strong>stack minimum</strong> pour un
+                trader retail data-driven :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">Étape 1</div>
+                    <div class="metric-label"><strong>DuckDB + SQL</strong> : Installez DuckDB, téléchargez des fichiers Parquet de données historiques, et commencez à explorer en SQL. Durée : 1 heure.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Étape 2</div>
+                    <div class="metric-label"><strong>dbt Core</strong> : Créez un projet dbt, modélisez vos données (staging → marts), ajoutez des tests. Durée : 1 après-midi.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Étape 3</div>
+                    <div class="metric-label"><strong>Cron + Script Python</strong> : Automatisez l'ingestion quotidienne avec un script Python planifié par cron. Durée : 2 heures.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Étape 4</div>
+                    <div class="metric-label"><strong>Evidence ou Grafana</strong> : Créez votre premier dashboard connecté à DuckDB ou PostgreSQL. Durée : 1 après-midi.</div>
+                </div>
+            </div>
+
+            <h3>Checklist : êtes-vous prêt ?</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Compétence</th>
+                            <th>Niveau requis</th>
+                            <th>Ressource recommandée</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SQL basique</strong></td>
+                            <td>SELECT, WHERE, JOIN, GROUP BY</td>
+                            <td>SQLBolt (gratuit, interactif)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ligne de commande</strong></td>
+                            <td>cd, ls, pip install, git basics</td>
+                            <td>The Missing Semester (MIT, gratuit)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Python basique</strong></td>
+                            <td>Variables, boucles, fonctions, pip</td>
+                            <td>Automate the Boring Stuff (gratuit en ligne)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Git</strong></td>
+                            <td>init, add, commit, push, branch</td>
+                            <td>Oh My Git! (jeu interactif)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Concepts data</strong></td>
+                            <td>Ce guide (vous y êtes !)</td>
+                            <td>Market Watch Tech</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Ressources pour aller plus loin</h3>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-book"></i> Livres</div>
+                    <div class="metric-label">
+                        "Fundamentals of Data Engineering" (Joe Reis & Matt Housley) — la bible du data engineering moderne.<br>
+                        "The Data Warehouse Toolkit" (Ralph Kimball) — modélisation dimensionnelle.<br>
+                        "Designing Data-Intensive Applications" (Martin Kleppmann) — systèmes distribués.
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-globe"></i> En ligne</div>
+                    <div class="metric-label">
+                        dbt Learn (courses.getdbt.com) — gratuit, officiel.<br>
+                        DataTalks.Club — bootcamp data engineering gratuit.<br>
+                        Market Watch Tech — nos guides techniques sur le trading data-driven.
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-podcast"></i> Podcasts</div>
+                    <div class="metric-label">
+                        "The Analytics Engineering Podcast" (dbt Labs).<br>
+                        "Data Engineering Podcast" (Tobias Macey).<br>
+                        "Software Engineering Daily" — épisodes data.
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-users"></i> Communautés</div>
+                    <div class="metric-label">
+                        dbt Community Slack (20K+ membres).<br>
+                        r/dataengineering (Reddit).<br>
+                        Data Council (conférence annuelle).
+                    </div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le mot de la fin</h4>
+                <p>La data science n'est pas une destination, c'est un <strong>voyage itératif</strong>. Vous n'avez pas
+                    besoin de maîtriser tous les concepts de ce guide avant de commencer. Commencez petit :</p>
+                <ol>
+                    <li>Téléchargez DuckDB et un fichier Parquet de données historiques</li>
+                    <li>Écrivez votre première requête SQL</li>
+                    <li>Ajoutez un modèle dbt simple</li>
+                    <li>Créez un dashboard basique</li>
+                    <li>Itérez, améliorez, documentez</li>
+                </ol>
+                <p>En 6 mois, vous aurez un stack data plus sophistiqué que 95% des traders retail. Et surtout, vous
+                    prendrez des décisions basées sur des <strong>données</strong>, pas sur des <strong>émotions</strong>.</p>
+            </div>
+        </div>
+
+    </div> <!-- /container -->
+
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-rocket"></i><span>Introduction</span></a>
+            <a href="#datalake" class="fnav-item" data-section="datalake"><i class="fas fa-water"></i><span>Data Lake</span></a>
+            <a href="#medallion" class="fnav-item" data-section="medallion"><i class="fas fa-layer-group"></i><span>Architecture Medallion</span></a>
+            <a href="#starschema" class="fnav-item" data-section="starschema"><i class="fas fa-star"></i><span>Star Schema</span></a>
+            <a href="#semantic" class="fnav-item" data-section="semantic"><i class="fas fa-brain"></i><span>Semantic Layer</span></a>
+            <a href="#mds" class="fnav-item" data-section="mds"><i class="fas fa-cubes"></i><span>Modern Data Stack</span></a>
+            <a href="#marts" class="fnav-item" data-section="marts"><i class="fas fa-store"></i><span>Data Marts &amp; Mesh</span></a>
+            <a href="#profils" class="fnav-item" data-section="profils"><i class="fas fa-users"></i><span>Profils Data</span></a>
+            <a href="#bestpractices" class="fnav-item" data-section="bestpractices"><i class="fas fa-check-double"></i><span>Best Practices</span></a>
+            <a href="#application" class="fnav-item" data-section="application"><i class="fas fa-flask"></i><span>Application Trading</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <!-- FAB Script -->
+    <script>
+    (function() {
+        var fab = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        var icon = document.getElementById('fnavIcon');
+        var label = document.getElementById('fnavLabel');
+        if (!fab || !menu) return;
+        var items = menu.querySelectorAll('.fnav-item');
+        var sections = [];
+        var isOpen = false;
+
+        items.forEach(function(item) {
+            var id = item.getAttribute('data-section');
+            var el = document.getElementById(id);
+            if (el) sections.push({ id: id, el: el, item: item });
+        });
+
+        function toggle() {
+            isOpen = !isOpen;
+            menu.classList.toggle('open', isOpen);
+            fab.classList.toggle('open', isOpen);
+            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+        }
+
+        fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+        document.addEventListener('click', function(e) {
+            if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+        });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+        items.forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                var id = this.getAttribute('data-section');
+                var target = document.getElementById(id);
+                if (target) {
+                    var brandBar = document.querySelector('.brand-bar');
+                    var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+                    window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+                }
+                if (isOpen) toggle();
+            });
+        });
+
+        var currentActive = null;
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var match = sections.find(function(s) { return s.el === entry.target; });
+                    if (match) {
+                        if (currentActive) currentActive.item.classList.remove('active');
+                        match.item.classList.add('active');
+                        currentActive = match;
+                        label.textContent = match.item.querySelector('span').textContent;
+                    }
+                }
+            });
+        }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+
+        sections.forEach(function(s) { observer.observe(s.el); });
+        if (sections.length > 0) {
+            sections[0].item.classList.add('active');
+            currentActive = sections[0];
+            label.textContent = sections[0].item.querySelector('span').textContent;
+        }
+    })();
+    </script>
+
+    <!-- ECharts Visualizations -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ═══════════════════════════════════════════════
+        // CHART 1: Data Science Landscape (Tree/Mind Map)
+        // ═══════════════════════════════════════════════
+        var domLandscape = document.getElementById('chartLandscape');
+        if (domLandscape) {
+            var chartLandscape = echarts.init(domLandscape);
+            chartLandscape.setOption({
+                tooltip: { trigger: 'item', triggerOn: 'mousemove' },
+                series: [{
+                    type: 'tree',
+                    data: [{
+                        name: 'Data Science\nen Trading',
+                        children: [
+                            {
+                                name: 'Infrastructure',
+                                children: [
+                                    { name: 'Data Lake', value: 1 },
+                                    { name: 'Data Warehouse', value: 1 },
+                                    { name: 'Medallion\n(Bronze/Silver/Gold)', value: 1 },
+                                    { name: 'Orchestration\n(Dagster, Airflow)', value: 1 }
+                                ]
+                            },
+                            {
+                                name: 'Modélisation',
+                                children: [
+                                    { name: 'Star Schema\n(Kimball)', value: 1 },
+                                    { name: 'Semantic Layer', value: 1 },
+                                    { name: 'Data Marts', value: 1 },
+                                    { name: 'Feature Store', value: 1 }
+                                ]
+                            },
+                            {
+                                name: 'Analyse',
+                                children: [
+                                    { name: 'Analyse Technique\n(RSI, MACD, BB)', value: 1 },
+                                    { name: 'Analyse Fondamentale\n(P/E, EPS, FCF)', value: 1 },
+                                    { name: 'Sentiment Analysis\n(NLP, Reddit)', value: 1 },
+                                    { name: 'Données Alternatives\n(satellite, web)', value: 1 }
+                                ]
+                            },
+                            {
+                                name: 'Machine Learning',
+                                children: [
+                                    { name: 'Prédiction de prix\n(régression)', value: 1 },
+                                    { name: 'Classification\n(signal buy/sell)', value: 1 },
+                                    { name: 'Clustering\n(régimes marché)', value: 1 },
+                                    { name: 'Reinforcement\nLearning', value: 1 }
+                                ]
+                            },
+                            {
+                                name: 'Outils',
+                                children: [
+                                    { name: 'Python\n(pandas, numpy)', value: 1 },
+                                    { name: 'SQL\n(DuckDB, Postgres)', value: 1 },
+                                    { name: 'dbt\n(transformation)', value: 1 },
+                                    { name: 'Visualisation\n(Evidence, Grafana)', value: 1 }
+                                ]
+                            }
+                        ]
+                    }],
+                    top: '5%',
+                    left: '15%',
+                    bottom: '5%',
+                    right: '25%',
+                    symbolSize: 10,
+                    orient: 'LR',
+                    label: {
+                        position: 'left',
+                        verticalAlign: 'middle',
+                        align: 'right',
+                        fontSize: 11,
+                        color: '#334155',
+                        fontFamily: 'Inter'
+                    },
+                    leaves: {
+                        label: {
+                            position: 'right',
+                            verticalAlign: 'middle',
+                            align: 'left'
+                        }
+                    },
+                    lineStyle: { color: '#c4b5fd', width: 1.5 },
+                    itemStyle: { color: '#7c3aed', borderColor: '#7c3aed' },
+                    emphasis: {
+                        focus: 'descendant',
+                        itemStyle: { color: '#5b21b6' }
+                    },
+                    expandAndCollapse: true,
+                    animationDuration: 550,
+                    animationDurationUpdate: 750
+                }]
+            });
+            window.addEventListener('resize', function() { chartLandscape.resize(); });
+        }
+
+        // ═══════════════════════════════════════════════
+        // CHART 2: Medallion Architecture Flow (Sankey)
+        // ═══════════════════════════════════════════════
+        var domMedallion = document.getElementById('chartMedallion');
+        if (domMedallion) {
+            var chartMedallion = echarts.init(domMedallion);
+            chartMedallion.setOption({
+                tooltip: { trigger: 'item', triggerOn: 'mousemove' },
+                series: [{
+                    type: 'sankey',
+                    layout: 'none',
+                    emphasis: { focus: 'adjacency' },
+                    nodeAlign: 'justify',
+                    lineStyle: { color: 'gradient', curveness: 0.5 },
+                    label: { fontSize: 12, fontFamily: 'Inter', color: '#1e293b' },
+                    data: [
+                        { name: 'Yahoo Finance API', itemStyle: { color: '#7c3aed' } },
+                        { name: 'SEC EDGAR', itemStyle: { color: '#7c3aed' } },
+                        { name: 'Reddit / StockTwits', itemStyle: { color: '#7c3aed' } },
+                        { name: 'News Feeds', itemStyle: { color: '#7c3aed' } },
+                        { name: 'Bronze\n(Raw JSON/CSV)', itemStyle: { color: '#cd7f32' } },
+                        { name: 'Silver\n(Clean Parquet)', itemStyle: { color: '#c0c0c0' } },
+                        { name: 'Gold\n(Indicateurs)', itemStyle: { color: '#ffd700' } },
+                        { name: 'Dashboard', itemStyle: { color: '#10b981' } },
+                        { name: 'Screener', itemStyle: { color: '#10b981' } },
+                        { name: 'ML Models', itemStyle: { color: '#10b981' } },
+                        { name: 'Alertes', itemStyle: { color: '#10b981' } }
+                    ],
+                    links: [
+                        { source: 'Yahoo Finance API', target: 'Bronze\n(Raw JSON/CSV)', value: 8 },
+                        { source: 'SEC EDGAR', target: 'Bronze\n(Raw JSON/CSV)', value: 4 },
+                        { source: 'Reddit / StockTwits', target: 'Bronze\n(Raw JSON/CSV)', value: 3 },
+                        { source: 'News Feeds', target: 'Bronze\n(Raw JSON/CSV)', value: 3 },
+                        { source: 'Bronze\n(Raw JSON/CSV)', target: 'Silver\n(Clean Parquet)', value: 18 },
+                        { source: 'Silver\n(Clean Parquet)', target: 'Gold\n(Indicateurs)', value: 18 },
+                        { source: 'Gold\n(Indicateurs)', target: 'Dashboard', value: 6 },
+                        { source: 'Gold\n(Indicateurs)', target: 'Screener', value: 5 },
+                        { source: 'Gold\n(Indicateurs)', target: 'ML Models', value: 4 },
+                        { source: 'Gold\n(Indicateurs)', target: 'Alertes', value: 3 }
+                    ]
+                }]
+            });
+            window.addEventListener('resize', function() { chartMedallion.resize(); });
+        }
+
+        // ═══════════════════════════════════════════════
+        // CHART 3: Star Schema (Graph)
+        // ═══════════════════════════════════════════════
+        var domStar = document.getElementById('chartStarSchema');
+        if (domStar) {
+            var chartStar = echarts.init(domStar);
+            var categories = [
+                { name: 'Fact Table', itemStyle: { color: '#7c3aed' } },
+                { name: 'Dimension', itemStyle: { color: '#3b82f6' } }
+            ];
+            chartStar.setOption({
+                tooltip: {},
+                legend: { data: ['Fact Table', 'Dimension'], bottom: 10, textStyle: { fontFamily: 'Inter' } },
+                animationDuration: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [{
+                    type: 'graph',
+                    layout: 'force',
+                    categories: categories,
+                    roam: true,
+                    label: { show: true, fontSize: 11, fontFamily: 'Inter', color: '#fff' },
+                    force: { repulsion: 350, edgeLength: [120, 200], gravity: 0.1 },
+                    data: [
+                        { name: 'fct_trades\n(Faits)', category: 0, symbolSize: 80, itemStyle: { color: '#7c3aed' } },
+                        { name: 'dim_instruments', category: 1, symbolSize: 55, itemStyle: { color: '#3b82f6' } },
+                        { name: 'dim_dates', category: 1, symbolSize: 55, itemStyle: { color: '#0ea5e9' } },
+                        { name: 'dim_strategies', category: 1, symbolSize: 55, itemStyle: { color: '#6366f1' } },
+                        { name: 'dim_exchanges', category: 1, symbolSize: 50, itemStyle: { color: '#8b5cf6' } },
+                        { name: 'dim_accounts', category: 1, symbolSize: 50, itemStyle: { color: '#a78bfa' } }
+                    ],
+                    links: [
+                        { source: 'fct_trades\n(Faits)', target: 'dim_instruments', lineStyle: { width: 3, color: '#c4b5fd' } },
+                        { source: 'fct_trades\n(Faits)', target: 'dim_dates', lineStyle: { width: 3, color: '#c4b5fd' } },
+                        { source: 'fct_trades\n(Faits)', target: 'dim_strategies', lineStyle: { width: 3, color: '#c4b5fd' } },
+                        { source: 'fct_trades\n(Faits)', target: 'dim_exchanges', lineStyle: { width: 2, color: '#c4b5fd' } },
+                        { source: 'fct_trades\n(Faits)', target: 'dim_accounts', lineStyle: { width: 2, color: '#c4b5fd' } }
+                    ],
+                    lineStyle: { opacity: 0.6 },
+                    emphasis: { focus: 'adjacency', lineStyle: { width: 5 } }
+                }]
+            });
+            window.addEventListener('resize', function() { chartStar.resize(); });
+        }
+
+        // ═══════════════════════════════════════════════
+        // CHART 4: Modern Data Stack Architecture (Treemap)
+        // ═══════════════════════════════════════════════
+        var domMDS = document.getElementById('chartMDS');
+        if (domMDS) {
+            var chartMDS = echarts.init(domMDS);
+            chartMDS.setOption({
+                tooltip: { formatter: function(info) { return '<b>' + info.name + '</b><br/>' + (info.data.desc || ''); } },
+                series: [{
+                    type: 'treemap',
+                    roam: false,
+                    nodeClick: false,
+                    breadcrumb: { show: false },
+                    label: { show: true, formatter: '{b}', fontSize: 12, fontFamily: 'Inter', color: '#fff' },
+                    upperLabel: { show: true, height: 30, fontSize: 14, fontWeight: 800, fontFamily: 'Inter', color: '#fff' },
+                    itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
+                    levels: [
+                        { itemStyle: { borderWidth: 3, borderColor: '#334155', gapWidth: 3 }, upperLabel: { show: false } },
+                        { colorSaturation: [0.35, 0.5], itemStyle: { borderWidth: 2, gapWidth: 1, borderColorSaturation: 0.6 } }
+                    ],
+                    data: [
+                        {
+                            name: 'Ingestion (EL)',
+                            itemStyle: { color: '#7c3aed' },
+                            children: [
+                                { name: 'Meltano', value: 8, desc: 'Open-source, 500+ connecteurs Singer' },
+                                { name: 'Airbyte', value: 7, desc: 'Open-source, UI intuitive' },
+                                { name: 'Fivetran', value: 6, desc: 'SaaS managé, zero maintenance' },
+                                { name: 'Python scripts', value: 5, desc: 'Flexibilité totale pour les API custom' }
+                            ]
+                        },
+                        {
+                            name: 'Stockage',
+                            itemStyle: { color: '#3b82f6' },
+                            children: [
+                                { name: 'DuckDB', value: 9, desc: 'In-process, ultra-rapide, Parquet natif' },
+                                { name: 'PostgreSQL', value: 8, desc: 'Relationnel mature, extensible' },
+                                { name: 'Snowflake', value: 7, desc: 'Cloud warehouse, scalable' },
+                                { name: 'BigQuery', value: 6, desc: 'Serverless, ML intégré' }
+                            ]
+                        },
+                        {
+                            name: 'Transformation',
+                            itemStyle: { color: '#10b981' },
+                            children: [
+                                { name: 'dbt Core', value: 10, desc: 'Standard de facto, SQL + Jinja' },
+                                { name: 'SQLMesh', value: 5, desc: 'Alternative dbt, environnements virtuels' },
+                                { name: 'Pandas/Polars', value: 6, desc: 'Python, flexibilité maximale' }
+                            ]
+                        },
+                        {
+                            name: 'Orchestration',
+                            itemStyle: { color: '#f59e0b' },
+                            children: [
+                                { name: 'Dagster', value: 8, desc: 'Asset-based, dbt natif' },
+                                { name: 'Prefect', value: 6, desc: 'Pythonique, monitoring intégré' },
+                                { name: 'Airflow', value: 7, desc: 'Standard entreprise' },
+                                { name: 'Cron', value: 4, desc: 'Simple, suffisant pour débuter' }
+                            ]
+                        },
+                        {
+                            name: 'Visualisation',
+                            itemStyle: { color: '#ef4444' },
+                            children: [
+                                { name: 'Evidence', value: 8, desc: 'BI as code, Markdown + SQL' },
+                                { name: 'Grafana', value: 7, desc: 'Temps réel, alertes' },
+                                { name: 'Metabase', value: 6, desc: 'No-code, self-service' },
+                                { name: 'Superset', value: 5, desc: 'Enterprise BI open-source' }
+                            ]
+                        },
+                        {
+                            name: 'Semantic Layer',
+                            itemStyle: { color: '#06b6d4' },
+                            children: [
+                                { name: 'dbt Metrics', value: 7, desc: 'Intégré à dbt, YAML' },
+                                { name: 'Cube.js', value: 6, desc: 'API indépendante' },
+                                { name: 'LookML', value: 5, desc: 'Propriétaire Google' }
+                            ]
+                        },
+                        {
+                            name: 'Qualité',
+                            itemStyle: { color: '#8b5cf6' },
+                            children: [
+                                { name: 'dbt tests', value: 8, desc: 'Intégré, YAML, custom' },
+                                { name: 'Great Expectations', value: 5, desc: 'Python, data contracts' },
+                                { name: 'Elementary', value: 4, desc: 'Observabilité dbt native' },
+                                { name: 'Soda', value: 4, desc: 'Data monitoring, alertes' }
+                            ]
+                        }
+                    ]
+                }]
+            });
+            window.addEventListener('resize', function() { chartMDS.resize(); });
+        }
+
+        // ═══════════════════════════════════════════════
+        // CHART 5: Retail Trading Data Pipeline (Graph)
+        // ═══════════════════════════════════════════════
+        var domPipeline = document.getElementById('chartRetailPipeline');
+        if (domPipeline) {
+            var chartPipeline = echarts.init(domPipeline);
+            chartPipeline.setOption({
+                tooltip: {},
+                animationDuration: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [{
+                    type: 'graph',
+                    layout: 'none',
+                    roam: true,
+                    label: { show: true, fontSize: 10, fontFamily: 'Inter', color: '#fff', formatter: function(p) { return p.data.name; } },
+                    edgeLabel: { show: true, fontSize: 9, fontFamily: 'Inter', color: '#64748b', formatter: function(p) { return p.data.label || ''; } },
+                    data: [
+                        { name: 'Yahoo\nFinance', x: 50, y: 80, symbolSize: 40, itemStyle: { color: '#7c3aed' } },
+                        { name: 'SEC\nEDGAR', x: 50, y: 200, symbolSize: 35, itemStyle: { color: '#7c3aed' } },
+                        { name: 'Reddit\nStockTwits', x: 50, y: 320, symbolSize: 35, itemStyle: { color: '#7c3aed' } },
+                        { name: 'MCP\nGateway', x: 50, y: 440, symbolSize: 40, itemStyle: { color: '#7c3aed' } },
+                        { name: 'Meltano\n(Extract)', x: 250, y: 150, symbolSize: 55, itemStyle: { color: '#6366f1' } },
+                        { name: 'MCP\nIngestion', x: 250, y: 380, symbolSize: 50, itemStyle: { color: '#6366f1' } },
+                        { name: 'PostgreSQL\n(Bronze)', x: 450, y: 200, symbolSize: 55, itemStyle: { color: '#cd7f32' } },
+                        { name: 'DuckDB\n(Bronze)', x: 450, y: 360, symbolSize: 50, itemStyle: { color: '#cd7f32' } },
+                        { name: 'dbt\n(Transform)', x: 650, y: 280, symbolSize: 60, itemStyle: { color: '#10b981' } },
+                        { name: 'Gold\nMarts', x: 850, y: 200, symbolSize: 50, itemStyle: { color: '#ffd700' } },
+                        { name: 'Evidence\nDashboard', x: 1050, y: 100, symbolSize: 45, itemStyle: { color: '#ef4444' } },
+                        { name: 'Screener\nSignals', x: 1050, y: 250, symbolSize: 45, itemStyle: { color: '#f59e0b' } },
+                        { name: 'Claude\nAnalysis', x: 1050, y: 400, symbolSize: 45, itemStyle: { color: '#8b5cf6' } },
+                        { name: 'Dagster\n(Orchestrate)', x: 650, y: 480, symbolSize: 50, itemStyle: { color: '#0ea5e9' } }
+                    ],
+                    links: [
+                        { source: 'Yahoo\nFinance', target: 'Meltano\n(Extract)', label: 'API' },
+                        { source: 'SEC\nEDGAR', target: 'Meltano\n(Extract)', label: 'API' },
+                        { source: 'Reddit\nStockTwits', target: 'Meltano\n(Extract)', label: 'API' },
+                        { source: 'MCP\nGateway', target: 'MCP\nIngestion', label: 'MCP' },
+                        { source: 'Meltano\n(Extract)', target: 'PostgreSQL\n(Bronze)', label: 'EL' },
+                        { source: 'MCP\nIngestion', target: 'DuckDB\n(Bronze)', label: 'Load' },
+                        { source: 'PostgreSQL\n(Bronze)', target: 'dbt\n(Transform)', label: 'SQL' },
+                        { source: 'DuckDB\n(Bronze)', target: 'dbt\n(Transform)', label: 'SQL' },
+                        { source: 'dbt\n(Transform)', target: 'Gold\nMarts', label: 'Models' },
+                        { source: 'Gold\nMarts', target: 'Evidence\nDashboard', label: 'Query' },
+                        { source: 'Gold\nMarts', target: 'Screener\nSignals', label: 'DSL' },
+                        { source: 'Gold\nMarts', target: 'Claude\nAnalysis', label: 'Context' },
+                        { source: 'Dagster\n(Orchestrate)', target: 'Meltano\n(Extract)', lineStyle: { type: 'dashed' }, label: 'Schedule' },
+                        { source: 'Dagster\n(Orchestrate)', target: 'dbt\n(Transform)', lineStyle: { type: 'dashed' }, label: 'Trigger' }
+                    ],
+                    lineStyle: { color: '#c4b5fd', width: 2, curveness: 0.1 },
+                    emphasis: { focus: 'adjacency', lineStyle: { width: 4 } }
+                }]
+            });
+            window.addEventListener('resize', function() { chartPipeline.resize(); });
+        }
+
+    });
+    </script>
+
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>

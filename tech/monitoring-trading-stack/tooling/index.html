@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="tech,technique,formation,education" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Trading Stack — Partie 3 : Le Tooling du Retail Trader | Market Watch</title>
+    <meta name="description"
+        content="Guide pratique : Docker, TimescaleDB, Prometheus, Grafana, Discord et Claude Code pour monitorer votre stack de trading systématique pour environ 15 euros par mois.">
+    <meta property="og:title" content="Monitoring Trading Stack — Partie 3 : Le Tooling du Retail Trader">
+    <meta property="og:description"
+        content="Stack complet open-source pour monitorer un système de trading : infrastructure, base de données, alertes, dashboards et IA.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://market-watch.xyz/tech/monitoring-trading-stack/tooling/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Theme color: Emerald (#059669) */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+            text-align: center;
+            border-bottom: 1px solid #a7f3d0;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -5rem auto 0;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Override metric-label for long-form content */
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        .code-label {
+            display: inline-block;
+            background: #334155;
+            color: #94a3b8;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px 6px 0 0;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: -1px;
+        }
+
+        .code-block .comment { color: #64748b; }
+        .code-block .keyword { color: #7dd3fc; }
+        .code-block .string { color: #86efac; }
+        .code-block .number { color: #fbbf24; }
+
+        /* Series navigation */
+        .series-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .series-nav-card {
+            display: block;
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .series-nav-card:hover {
+            border-color: #059669;
+            background: #ecfdf5;
+            transform: translateY(-2px);
+        }
+
+        .series-nav-card .nav-part {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .series-nav-card .nav-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 0.25rem;
+        }
+
+        .series-nav-card .nav-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            .metric-label {
+                font-size: 0.85rem !important;
+            }
+
+            .metric-value {
+                font-size: 1.25rem !important;
+            }
+
+            .code-block {
+                font-size: 0.75rem;
+                padding: 1rem;
+            }
+
+            .series-nav {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metric-label {
+                font-size: 0.8rem !important;
+            }
+
+            .code-block {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">MarketWatch</span>
+      </a>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">MONITORING TRADING STACK &mdash; S&Eacute;RIE 3/3</div>
+        <h1 class="hero-title">Partie 3 : Le Tooling du Retail Trader</h1>
+        <p class="hero-subtitle">
+            Docker, TimescaleDB, Prometheus, Grafana, Discord, Claude Code &mdash;
+            un stack complet de monitoring pour environ 15&nbsp;&euro;/mois.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-layer-group"></i> Partie 3/3</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 25 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-wrench"></i> Pratique</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="container">
+
+        <!-- SECTION 1: INTRODUCTION -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-rocket" style="color:#059669;"></i> Le Stack Complet pour ~15&nbsp;&euro;/mois</h2>
+
+            <p>Bonne nouvelle : vous n'avez pas besoin d'un terminal Bloomberg &agrave; 24&nbsp;000&nbsp;&dollar;/an ni d'un logiciel propri&eacute;taire pour monitorer s&eacute;rieusement votre trading. L'&eacute;cosyst&egrave;me open-source en 2026 offre des outils de qualit&eacute; institutionnelle, accessibles &agrave; n'importe quel retail trader motiv&eacute;.</p>
+
+            <p>Dans cette troisi&egrave;me et derni&egrave;re partie de notre s&eacute;rie sur le monitoring, nous passons &agrave; la <strong>pratique pure</strong>. Fichiers de configuration, commandes &agrave; copier-coller, sch&eacute;mas SQL, dashboards &mdash; tout ce dont vous avez besoin pour construire votre stack en un week-end.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">~15&nbsp;&euro;</div>
+                    <div class="metric-label">Budget mensuel total (VPS Hetzner CX22 ou DigitalOcean 4&nbsp;Go RAM)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">100%</div>
+                    <div class="metric-label">Open-source et auto-h&eacute;berg&eacute;. Vos donn&eacute;es restent chez vous.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">6 briques</div>
+                    <div class="metric-label">Docker + TimescaleDB + Prometheus + Grafana + Discord + Claude Code</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1 week-end</div>
+                    <div class="metric-label">Temps pour d&eacute;ployer le stack de base en suivant ce guide pas &agrave; pas</div>
+                </div>
+            </div>
+
+            <h3>Le stack en un coup d'oeil</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>R&ocirc;le</th>
+                            <th>Co&ucirc;t</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Docker</strong></td>
+                            <td>Orchestration &mdash; tout tourne dans des conteneurs isol&eacute;s</td>
+                            <td>Gratuit</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TimescaleDB</strong></td>
+                            <td>Base de donn&eacute;es temporelle &mdash; trades, prix, m&eacute;triques</td>
+                            <td>Gratuit</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prometheus</strong></td>
+                            <td>Collecte de m&eacute;triques &mdash; le &laquo;&nbsp;syst&egrave;me nerveux&nbsp;&raquo;</td>
+                            <td>Gratuit</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Grafana</strong></td>
+                            <td>Dashboards &mdash; les &laquo;&nbsp;yeux du trader&nbsp;&raquo;</td>
+                            <td>Gratuit</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Discord</strong></td>
+                            <td>Centre de commandement &mdash; alertes, kill switch, logs</td>
+                            <td>Gratuit</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Claude Code</strong></td>
+                            <td>Assistant IA &mdash; review, post-mortem, tests</td>
+                            <td>Inclus dans Claude Pro</td>
+                        </tr>
+                        <tr>
+                            <td><strong>VPS (Hetzner CX22)</strong></td>
+                            <td>Serveur &mdash; 4 Go RAM, 2 vCPU, 40 Go SSD</td>
+                            <td>~5,40&nbsp;&euro;/mois</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Budget Comparison EChart -->
+            <div id="chartBudget" style="width:100%; height:350px; margin-top:1.5rem;"></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pr&eacute;requis</h4>
+                <p>Ce guide suppose que vous avez des notions basiques de <strong>ligne de commande</strong> (terminal) et de <strong>copier-coller</strong>. Aucune exp&eacute;rience Docker ou SQL n'est n&eacute;cessaire &mdash; chaque &eacute;tape est expliqu&eacute;e. Si vous savez ouvrir un terminal et taper une commande, vous pouvez suivre ce guide.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 2: DOCKER COMPOSE -->
+        <div id="docker" class="content-card">
+            <h2><i class="fa-brands fa-docker" style="color:#2496ED;"></i> Docker Compose &mdash; L'Infrastructure en Un Fichier</h2>
+
+            <h3>Docker, c'est quoi ?</h3>
+            <p>Imaginez un <strong>conteneur maritime</strong> : peu importe ce qu'il y a dedans (v&ecirc;tements, &eacute;lectronique, nourriture), le conteneur a toujours la m&ecirc;me forme et se charge sur n'importe quel bateau de la m&ecirc;me mani&egrave;re. Docker fonctionne pareil pour les logiciels : chaque application (base de donn&eacute;es, serveur web, outil de monitoring) est emball&eacute;e dans un &laquo;&nbsp;conteneur&nbsp;&raquo; standardis&eacute; qui tourne de mani&egrave;re identique sur n'importe quel serveur.</p>
+
+            <p><strong>Docker Compose</strong> va plus loin : c'est un fichier unique (<code>docker-compose.yml</code>) qui d&eacute;crit <em>tous</em> vos conteneurs et comment ils communiquent entre eux. Un seul <code>docker compose up -d</code> et tout d&eacute;marre.</p>
+
+            <h3>Le fichier complet</h3>
+            <div class="code-label">docker-compose.yml</div>
+            <div class="code-block"><pre><span class="comment"># docker-compose.yml — Stack de monitoring trading</span>
+<span class="comment"># Usage: docker compose up -d</span>
+
+<span class="keyword">version</span>: <span class="string">"3.8"</span>
+
+<span class="keyword">services</span>:
+  <span class="comment"># --- Base de données temporelle ---</span>
+  <span class="keyword">timescaledb</span>:
+    <span class="keyword">image</span>: timescale/timescaledb:latest-pg16
+    <span class="keyword">container_name</span>: trading-tsdb
+    <span class="keyword">restart</span>: always
+    <span class="keyword">ports</span>:
+      - <span class="string">"5432:5432"</span>
+    <span class="keyword">environment</span>:
+      <span class="keyword">POSTGRES_DB</span>: trading
+      <span class="keyword">POSTGRES_USER</span>: trader
+      <span class="keyword">POSTGRES_PASSWORD</span>: <span class="string">"${TSDB_PASSWORD:-changeme}"</span>
+    <span class="keyword">volumes</span>:
+      - tsdb_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    <span class="keyword">healthcheck</span>:
+      <span class="keyword">test</span>: [<span class="string">"CMD-SHELL"</span>, <span class="string">"pg_isready -U trader"</span>]
+      <span class="keyword">interval</span>: 10s
+      <span class="keyword">timeout</span>: 5s
+      <span class="keyword">retries</span>: 5
+
+  <span class="comment"># --- Collecte de métriques ---</span>
+  <span class="keyword">prometheus</span>:
+    <span class="keyword">image</span>: prom/prometheus:latest
+    <span class="keyword">container_name</span>: trading-prometheus
+    <span class="keyword">restart</span>: always
+    <span class="keyword">ports</span>:
+      - <span class="string">"9090:9090"</span>
+    <span class="keyword">volumes</span>:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    <span class="keyword">command</span>:
+      - <span class="string">'--config.file=/etc/prometheus/prometheus.yml'</span>
+      - <span class="string">'--storage.tsdb.retention.time=90d'</span>
+
+  <span class="comment"># --- Routage d'alertes ---</span>
+  <span class="keyword">alertmanager</span>:
+    <span class="keyword">image</span>: prom/alertmanager:latest
+    <span class="keyword">container_name</span>: trading-alertmanager
+    <span class="keyword">restart</span>: always
+    <span class="keyword">ports</span>:
+      - <span class="string">"9093:9093"</span>
+    <span class="keyword">volumes</span>:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+
+  <span class="comment"># --- Métriques système (CPU, RAM, disque) ---</span>
+  <span class="keyword">node-exporter</span>:
+    <span class="keyword">image</span>: prom/node-exporter:latest
+    <span class="keyword">container_name</span>: trading-node-exporter
+    <span class="keyword">restart</span>: always
+    <span class="keyword">ports</span>:
+      - <span class="string">"9100:9100"</span>
+    <span class="keyword">volumes</span>:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - ./textfile_collector:/var/lib/node_exporter/textfile_collector
+    <span class="keyword">command</span>:
+      - <span class="string">'--path.procfs=/host/proc'</span>
+      - <span class="string">'--path.sysfs=/host/sys'</span>
+      - <span class="string">'--collector.textfile.directory=/var/lib/node_exporter/textfile_collector'</span>
+
+  <span class="comment"># --- Dashboards ---</span>
+  <span class="keyword">grafana</span>:
+    <span class="keyword">image</span>: grafana/grafana:latest
+    <span class="keyword">container_name</span>: trading-grafana
+    <span class="keyword">restart</span>: always
+    <span class="keyword">ports</span>:
+      - <span class="string">"3000:3000"</span>
+    <span class="keyword">environment</span>:
+      <span class="keyword">GF_SECURITY_ADMIN_PASSWORD</span>: <span class="string">"${GRAFANA_PASSWORD:-changeme}"</span>
+      <span class="keyword">GF_INSTALL_PLUGINS</span>: grafana-clock-panel,grafana-piechart-panel
+    <span class="keyword">volumes</span>:
+      - grafana_data:/var/lib/grafana
+    <span class="keyword">depends_on</span>:
+      - prometheus
+      - timescaledb
+
+<span class="keyword">volumes</span>:
+  tsdb_data:
+  prometheus_data:
+  grafana_data:</pre></div>
+
+            <h3>Services, ports et r&ocirc;les</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Port</th>
+                            <th>R&ocirc;le</th>
+                            <th>URL locale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TimescaleDB</strong></td>
+                            <td>5432</td>
+                            <td>Base de donn&eacute;es temporelle (trades, prix, P&amp;L)</td>
+                            <td><code>psql -h localhost -U trader trading</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prometheus</strong></td>
+                            <td>9090</td>
+                            <td>Collecte de m&eacute;triques (pull toutes les 15s)</td>
+                            <td><code>http://localhost:9090</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Alertmanager</strong></td>
+                            <td>9093</td>
+                            <td>Routage d'alertes vers Discord</td>
+                            <td><code>http://localhost:9093</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Node Exporter</strong></td>
+                            <td>9100</td>
+                            <td>M&eacute;triques syst&egrave;me (CPU, RAM, disque)</td>
+                            <td><code>http://localhost:9100/metrics</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Grafana</strong></td>
+                            <td>3000</td>
+                            <td>Dashboards visuels (P&amp;L, risque, syst&egrave;me)</td>
+                            <td><code>http://localhost:3000</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-play-circle"></i> Premier pas</h4>
+                <ol>
+                    <li>Installez <strong>Docker Desktop</strong> depuis <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">docker.com</a> (Windows, Mac ou Linux)</li>
+                    <li>Cr&eacute;ez un dossier <code>trading-monitor/</code> et copiez-y le fichier <code>docker-compose.yml</code> ci-dessus</li>
+                    <li>Ouvrez un terminal dans ce dossier et lancez : <code>docker compose up -d</code></li>
+                    <li>V&eacute;rifiez que tout tourne : <code>docker compose ps</code></li>
+                    <li>Ouvrez Grafana dans votre navigateur : <code>http://localhost:3000</code> (admin / changeme)</li>
+                </ol>
+                <p>C'est tout. Cinq conteneurs qui collaborent, lanc&eacute;s en une seule commande.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 3: TIMESCALEDB -->
+        <div id="timescale" class="content-card">
+            <h2><i class="fa-solid fa-database" style="color:#FDB515;"></i> TimescaleDB &mdash; La Base de Donn&eacute;es du Trader</h2>
+
+            <h3>Pourquoi TimescaleDB et pas PostgreSQL classique ?</h3>
+            <p>TimescaleDB est une <strong>extension PostgreSQL</strong> sp&eacute;cialis&eacute;e dans les donn&eacute;es temporelles (s&eacute;ries de prix, ticks, trades). Elle est 100% compatible SQL &mdash; tout ce que vous savez faire en PostgreSQL fonctionne &mdash; mais ajoute trois super-pouvoirs :</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-table-cells"></i></div>
+                    <div class="metric-label"><strong>Hypertables</strong><br>Les tables normales stock&eacute;es en un seul bloc. Les hypertables d&eacute;coupent automatiquement les donn&eacute;es par p&eacute;riode (chunks). R&eacute;sultat : les requ&ecirc;tes sur les derni&egrave;res 24h sont ultra-rapides car elles ne lisent qu'un seul chunk.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="metric-label"><strong>Continuous Aggregates</strong><br>Des &laquo;&nbsp;vues mat&eacute;rialis&eacute;es&nbsp;&raquo; qui se mettent &agrave; jour automatiquement. Au lieu de recalculer votre P&amp;L &agrave; chaque requ&ecirc;te, TimescaleDB maintient le r&eacute;sultat pr&eacute;-calcul&eacute; en temps r&eacute;el.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-compress"></i></div>
+                    <div class="metric-label"><strong>Compression native</strong><br>Les donn&eacute;es de plus de X jours sont automatiquement compress&eacute;es (90-95% de r&eacute;duction). Vos ann&eacute;es d'historique tiennent sur un petit SSD.</div>
+                </div>
+            </div>
+
+            <h3>Sch&eacute;ma SQL complet</h3>
+            <div class="code-label">init.sql &mdash; Tables principales</div>
+            <div class="code-block"><pre><span class="comment">-- ========================================</span>
+<span class="comment">-- Schema: trading monitoring stack</span>
+<span class="comment">-- ========================================</span>
+
+<span class="comment">-- Extension TimescaleDB</span>
+<span class="keyword">CREATE EXTENSION IF NOT EXISTS</span> timescaledb;
+
+<span class="comment">-- 1. Table des trades exécutés</span>
+<span class="keyword">CREATE TABLE</span> trades (
+    time        <span class="keyword">TIMESTAMPTZ</span> <span class="keyword">NOT NULL</span>,
+    symbol      <span class="keyword">TEXT</span>        <span class="keyword">NOT NULL</span>,
+    side        <span class="keyword">TEXT</span>        <span class="keyword">NOT NULL</span>,  <span class="comment">-- 'buy' ou 'sell'</span>
+    quantity    <span class="keyword">NUMERIC</span>     <span class="keyword">NOT NULL</span>,
+    price       <span class="keyword">NUMERIC</span>     <span class="keyword">NOT NULL</span>,
+    commission  <span class="keyword">NUMERIC</span>     <span class="keyword">DEFAULT</span> <span class="number">0</span>,
+    strategy    <span class="keyword">TEXT</span>,                   <span class="comment">-- 'momentum', 'mean_reversion', etc.</span>
+    order_id    <span class="keyword">TEXT</span>,                   <span class="comment">-- ID du broker</span>
+    notes       <span class="keyword">TEXT</span>
+);
+<span class="keyword">SELECT</span> create_hypertable(<span class="string">'trades'</span>, <span class="string">'time'</span>);
+
+<span class="comment">-- 2. Table des positions ouvertes</span>
+<span class="keyword">CREATE TABLE</span> positions (
+    time            <span class="keyword">TIMESTAMPTZ</span> <span class="keyword">NOT NULL</span>,
+    symbol          <span class="keyword">TEXT</span>        <span class="keyword">NOT NULL</span>,
+    quantity        <span class="keyword">NUMERIC</span>     <span class="keyword">NOT NULL</span>,
+    avg_price       <span class="keyword">NUMERIC</span>     <span class="keyword">NOT NULL</span>,
+    current_price   <span class="keyword">NUMERIC</span>,
+    unrealized_pnl  <span class="keyword">NUMERIC</span>,
+    strategy        <span class="keyword">TEXT</span>
+);
+<span class="keyword">SELECT</span> create_hypertable(<span class="string">'positions'</span>, <span class="string">'time'</span>);
+
+<span class="comment">-- 3. Table des données de marché (OHLCV)</span>
+<span class="keyword">CREATE TABLE</span> market_data (
+    time    <span class="keyword">TIMESTAMPTZ</span> <span class="keyword">NOT NULL</span>,
+    symbol  <span class="keyword">TEXT</span>        <span class="keyword">NOT NULL</span>,
+    open    <span class="keyword">NUMERIC</span>,
+    high    <span class="keyword">NUMERIC</span>,
+    low     <span class="keyword">NUMERIC</span>,
+    close   <span class="keyword">NUMERIC</span>,
+    volume  <span class="keyword">BIGINT</span>
+);
+<span class="keyword">SELECT</span> create_hypertable(<span class="string">'market_data'</span>, <span class="string">'time'</span>);
+
+<span class="comment">-- 4. Table des métriques de risque</span>
+<span class="keyword">CREATE TABLE</span> risk_metrics (
+    time            <span class="keyword">TIMESTAMPTZ</span> <span class="keyword">NOT NULL</span>,
+    equity          <span class="keyword">NUMERIC</span>,          <span class="comment">-- Valeur totale du portefeuille</span>
+    cash            <span class="keyword">NUMERIC</span>,
+    daily_pnl       <span class="keyword">NUMERIC</span>,
+    max_drawdown    <span class="keyword">NUMERIC</span>,          <span class="comment">-- Drawdown courant en %</span>
+    open_positions  <span class="keyword">INTEGER</span>,
+    total_exposure  <span class="keyword">NUMERIC</span>,          <span class="comment">-- Exposition totale en valeur</span>
+    largest_position <span class="keyword">NUMERIC</span>,         <span class="comment">-- Plus grosse position en %</span>
+    broker_latency  <span class="keyword">NUMERIC</span>           <span class="comment">-- Latence API broker en ms</span>
+);
+<span class="keyword">SELECT</span> create_hypertable(<span class="string">'risk_metrics'</span>, <span class="string">'time'</span>);
+
+<span class="comment">-- Index pour les requêtes fréquentes</span>
+<span class="keyword">CREATE INDEX</span> idx_trades_symbol <span class="keyword">ON</span> trades (symbol, time <span class="keyword">DESC</span>);
+<span class="keyword">CREATE INDEX</span> idx_positions_symbol <span class="keyword">ON</span> positions (symbol, time <span class="keyword">DESC</span>);
+<span class="keyword">CREATE INDEX</span> idx_market_data_symbol <span class="keyword">ON</span> market_data (symbol, time <span class="keyword">DESC</span>);
+
+<span class="comment">-- Compression automatique après 7 jours</span>
+<span class="keyword">ALTER TABLE</span> market_data <span class="keyword">SET</span> (
+    timescaledb.compress,
+    timescaledb.compress_segmentby = <span class="string">'symbol'</span>,
+    timescaledb.compress_orderby = <span class="string">'time DESC'</span>
+);
+<span class="keyword">SELECT</span> add_compression_policy(<span class="string">'market_data'</span>, INTERVAL <span class="string">'7 days'</span>);</pre></div>
+
+            <h3>Continuous Aggregates &mdash; le P&amp;L automatique</h3>
+            <div class="code-label">SQL &mdash; Agr&eacute;gats continus</div>
+            <div class="code-block"><pre><span class="comment">-- OHLCV 1 minute (pour données tick/intraday)</span>
+<span class="keyword">CREATE MATERIALIZED VIEW</span> ohlcv_1min
+<span class="keyword">WITH</span> (timescaledb.continuous) <span class="keyword">AS</span>
+<span class="keyword">SELECT</span>
+    time_bucket(<span class="string">'1 minute'</span>, time) <span class="keyword">AS</span> bucket,
+    symbol,
+    first(open, time) <span class="keyword">AS</span> open,
+    max(high)         <span class="keyword">AS</span> high,
+    min(low)          <span class="keyword">AS</span> low,
+    last(close, time) <span class="keyword">AS</span> close,
+    sum(volume)       <span class="keyword">AS</span> volume
+<span class="keyword">FROM</span> market_data
+<span class="keyword">GROUP BY</span> bucket, symbol;
+
+<span class="comment">-- P&amp;L quotidien par stratégie</span>
+<span class="keyword">CREATE MATERIALIZED VIEW</span> daily_pnl
+<span class="keyword">WITH</span> (timescaledb.continuous) <span class="keyword">AS</span>
+<span class="keyword">SELECT</span>
+    time_bucket(<span class="string">'1 day'</span>, time)  <span class="keyword">AS</span> day,
+    strategy,
+    sum(<span class="keyword">CASE WHEN</span> side = <span class="string">'sell'</span> <span class="keyword">THEN</span> quantity * price
+             <span class="keyword">WHEN</span> side = <span class="string">'buy'</span>  <span class="keyword">THEN</span> -quantity * price
+        <span class="keyword">END</span>)                    <span class="keyword">AS</span> realized_pnl,
+    count(*)                    <span class="keyword">AS</span> trade_count,
+    sum(commission)             <span class="keyword">AS</span> total_commissions
+<span class="keyword">FROM</span> trades
+<span class="keyword">GROUP BY</span> day, strategy;
+
+<span class="comment">-- Rafraîchissement automatique</span>
+<span class="keyword">SELECT</span> add_continuous_aggregate_policy(<span class="string">'ohlcv_1min'</span>,
+    start_offset    =&gt; INTERVAL <span class="string">'3 hours'</span>,
+    end_offset      =&gt; INTERVAL <span class="string">'1 minute'</span>,
+    schedule_interval =&gt; INTERVAL <span class="string">'1 minute'</span>
+);
+
+<span class="keyword">SELECT</span> add_continuous_aggregate_policy(<span class="string">'daily_pnl'</span>,
+    start_offset    =&gt; INTERVAL <span class="string">'3 days'</span>,
+    end_offset      =&gt; INTERVAL <span class="string">'1 hour'</span>,
+    schedule_interval =&gt; INTERVAL <span class="string">'1 hour'</span>
+);</pre></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Continuous Aggregates, expliqu&eacute; simplement</h4>
+                <p>Imaginez un tableau Excel qui se recalcule <strong>tout seul</strong> quand vous ajoutez des donn&eacute;es. Au lieu de relancer la formule SOMME() &agrave; chaque fois, Excel maintiendrait le r&eacute;sultat &agrave; jour automatiquement en arri&egrave;re-plan. C'est exactement ce que font les Continuous Aggregates : elles pr&eacute;-calculent vos r&eacute;sum&eacute;s (P&amp;L quotidien, OHLCV 1 minute, etc.) et les mettent &agrave; jour d&egrave;s qu'un nouveau trade ou une nouvelle bougie arrive.</p>
+                <p>R&eacute;sultat : vos dashboards Grafana r&eacute;pondent en <strong>millisecondes</strong>, m&ecirc;me avec des millions de lignes d'historique.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 4: PROMETHEUS + ALERTMANAGER -->
+        <div id="prometheus" class="content-card">
+            <h2><i class="fa-solid fa-heartbeat" style="color:#e6522c;"></i> Prometheus + Alertmanager &mdash; Le Syst&egrave;me Nerveux</h2>
+
+            <h3>Comment &ccedil;a marche</h3>
+            <p>Prometheus fonctionne en mode <strong>pull</strong> : toutes les 15 secondes, il interroge vos services (&laquo;&nbsp;hey, quelles sont tes m&eacute;triques ?&nbsp;&raquo;) et enregistre les r&eacute;ponses dans sa base de donn&eacute;es interne. Si une m&eacute;trique d&eacute;passe un seuil que vous avez d&eacute;fini (drawdown > 5%, latence > 200ms), <strong>Alertmanager</strong> prend le relais et envoie une notification sur Discord.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-clock"></i></div>
+                    <div class="metric-label"><strong>Prometheus</strong><br>Scrape toutes les 15 secondes. Stocke 90 jours d'historique. Langage de requ&ecirc;te PromQL int&eacute;gr&eacute;.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-server"></i></div>
+                    <div class="metric-label"><strong>Node Exporter</strong><br>Agent l&eacute;ger qui expose CPU, RAM, disque, r&eacute;seau de votre serveur de trading.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-bell"></i></div>
+                    <div class="metric-label"><strong>Alertmanager</strong><br>Re&ccedil;oit les alertes de Prometheus, les d&eacute;duplique, les route vers Discord par s&eacute;v&eacute;rit&eacute;.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-file-export"></i></div>
+                    <div class="metric-label"><strong>Textfile Collector</strong><br>Vos scripts &eacute;crivent des m&eacute;triques dans un fichier. Node Exporter les expose &agrave; Prometheus. Z&eacute;ro code serveur.</div>
+                </div>
+            </div>
+
+            <h3>M&eacute;triques custom pour le trading</h3>
+            <p>En plus des m&eacute;triques syst&egrave;me (CPU, RAM), vous allez exposer des m&eacute;triques <strong>sp&eacute;cifiques au trading</strong> via le textfile collector de Node Exporter. Votre strat&eacute;gie &eacute;crit un fichier <code>.prom</code> apr&egrave;s chaque cycle :</p>
+
+            <div class="code-label">update_metrics.sh &mdash; Script de mise &agrave; jour des m&eacute;triques</div>
+            <div class="code-block"><pre><span class="comment">#!/bin/bash</span>
+<span class="comment"># Ce script est appelé par votre stratégie après chaque cycle</span>
+<span class="comment"># Il écrit les métriques dans un fichier que node_exporter expose</span>
+
+<span class="keyword">METRICS_DIR</span>=<span class="string">"/var/lib/node_exporter/textfile_collector"</span>
+<span class="keyword">METRICS_FILE</span>=<span class="string">"${METRICS_DIR}/trading.prom"</span>
+
+<span class="keyword">cat</span> &gt; <span class="string">"${METRICS_FILE}"</span> &lt;&lt;<span class="keyword">EOF</span>
+<span class="comment"># HELP trading_open_positions Nombre de positions ouvertes</span>
+<span class="comment"># TYPE trading_open_positions gauge</span>
+trading_open_positions <span class="number">${OPEN_POSITIONS}</span>
+
+<span class="comment"># HELP trading_daily_pnl P&amp;L du jour en dollars</span>
+<span class="comment"># TYPE trading_daily_pnl gauge</span>
+trading_daily_pnl <span class="number">${DAILY_PNL}</span>
+
+<span class="comment"># HELP trading_broker_latency_ms Latence API broker en ms</span>
+<span class="comment"># TYPE trading_broker_latency_ms gauge</span>
+trading_broker_latency_ms <span class="number">${BROKER_LATENCY}</span>
+
+<span class="comment"># HELP trading_max_drawdown_percent Drawdown max courant en %</span>
+<span class="comment"># TYPE trading_max_drawdown_percent gauge</span>
+trading_max_drawdown_percent <span class="number">${MAX_DRAWDOWN}</span>
+
+<span class="comment"># HELP trading_equity Valeur totale du portefeuille</span>
+<span class="comment"># TYPE trading_equity gauge</span>
+trading_equity <span class="number">${EQUITY}</span>
+
+<span class="comment"># HELP trading_total_exposure Exposition totale (somme positions)</span>
+<span class="comment"># TYPE trading_total_exposure gauge</span>
+trading_total_exposure <span class="number">${TOTAL_EXPOSURE}</span>
+
+<span class="comment"># HELP trading_largest_position_pct Plus grosse position en %</span>
+<span class="comment"># TYPE trading_largest_position_pct gauge</span>
+trading_largest_position_pct <span class="number">${LARGEST_POSITION}</span>
+<span class="keyword">EOF</span></pre></div>
+
+            <h3>Configuration Prometheus</h3>
+            <div class="code-label">prometheus.yml</div>
+            <div class="code-block"><pre><span class="keyword">global</span>:
+  <span class="keyword">scrape_interval</span>: 15s
+  <span class="keyword">evaluation_interval</span>: 15s
+
+<span class="keyword">rule_files</span>:
+  - <span class="string">"alert_rules.yml"</span>
+
+<span class="keyword">alerting</span>:
+  <span class="keyword">alertmanagers</span>:
+    - <span class="keyword">static_configs</span>:
+        - <span class="keyword">targets</span>:
+            - <span class="string">"alertmanager:9093"</span>
+
+<span class="keyword">scrape_configs</span>:
+  <span class="comment"># Métriques système + trading custom</span>
+  - <span class="keyword">job_name</span>: <span class="string">"node"</span>
+    <span class="keyword">static_configs</span>:
+      - <span class="keyword">targets</span>: [<span class="string">"node-exporter:9100"</span>]
+
+  <span class="comment"># Prometheus lui-même</span>
+  - <span class="keyword">job_name</span>: <span class="string">"prometheus"</span>
+    <span class="keyword">static_configs</span>:
+      - <span class="keyword">targets</span>: [<span class="string">"localhost:9090"</span>]</pre></div>
+
+            <h3>R&egrave;gles d'alerte trading</h3>
+            <div class="code-label">alert_rules.yml &mdash; Alertes critiques</div>
+            <div class="code-block"><pre><span class="keyword">groups</span>:
+  - <span class="keyword">name</span>: trading_alerts
+    <span class="keyword">rules</span>:
+      <span class="comment"># CRITIQUE: Drawdown élevé</span>
+      - <span class="keyword">alert</span>: HighDrawdown
+        <span class="keyword">expr</span>: trading_max_drawdown_percent &gt; <span class="number">5</span>
+        <span class="keyword">for</span>: 1m
+        <span class="keyword">labels</span>:
+          <span class="keyword">severity</span>: critical
+        <span class="keyword">annotations</span>:
+          <span class="keyword">summary</span>: <span class="string">"Drawdown &gt; 5% ({{ $value }}%)"</span>
+          <span class="keyword">description</span>: <span class="string">"Le drawdown dépasse le seuil critique."</span>
+
+      <span class="comment"># WARNING: Position trop concentrée</span>
+      - <span class="keyword">alert</span>: PositionTooLarge
+        <span class="keyword">expr</span>: trading_largest_position_pct &gt; <span class="number">10</span>
+        <span class="keyword">for</span>: 5m
+        <span class="keyword">labels</span>:
+          <span class="keyword">severity</span>: warning
+        <span class="keyword">annotations</span>:
+          <span class="keyword">summary</span>: <span class="string">"Position &gt; 10% du portefeuille ({{ $value }}%)"</span>
+
+      <span class="comment"># WARNING: Latence broker élevée</span>
+      - <span class="keyword">alert</span>: BrokerLatencyHigh
+        <span class="keyword">expr</span>: trading_broker_latency_ms &gt; <span class="number">200</span>
+        <span class="keyword">for</span>: 2m
+        <span class="keyword">labels</span>:
+          <span class="keyword">severity</span>: warning
+        <span class="keyword">annotations</span>:
+          <span class="keyword">summary</span>: <span class="string">"Latence broker &gt; 200ms ({{ $value }}ms)"</span>
+
+      <span class="comment"># KILL SWITCH: Perte quotidienne limite</span>
+      - <span class="keyword">alert</span>: DailyLossLimit
+        <span class="keyword">expr</span>: trading_daily_pnl &lt; <span class="number">-1000</span>
+        <span class="keyword">for</span>: 0m
+        <span class="keyword">labels</span>:
+          <span class="keyword">severity</span>: critical
+          <span class="keyword">action</span>: kill_switch
+        <span class="keyword">annotations</span>:
+          <span class="keyword">summary</span>: <span class="string">"KILL SWITCH: Perte &gt; $1000 ({{ $value }})"</span>
+          <span class="keyword">description</span>: <span class="string">"Perte quotidienne limite atteinte. Arrêt immédiat."</span>
+
+  - <span class="keyword">name</span>: system_alerts
+    <span class="keyword">rules</span>:
+      <span class="comment"># CPU surchargé</span>
+      - <span class="keyword">alert</span>: HighCpuUsage
+        <span class="keyword">expr</span>: <span class="number">100</span> - (avg(rate(node_cpu_seconds_total{mode=<span class="string">"idle"</span>}[5m])) * <span class="number">100</span>) &gt; <span class="number">85</span>
+        <span class="keyword">for</span>: 5m
+        <span class="keyword">labels</span>:
+          <span class="keyword">severity</span>: warning
+        <span class="keyword">annotations</span>:
+          <span class="keyword">summary</span>: <span class="string">"CPU &gt; 85% ({{ $value }}%)"</span>
+
+      <span class="comment"># Disque presque plein</span>
+      - <span class="keyword">alert</span>: DiskSpaceLow
+        <span class="keyword">expr</span>: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * <span class="number">100</span> &lt; <span class="number">10</span>
+        <span class="keyword">for</span>: 5m
+        <span class="keyword">labels</span>:
+          <span class="keyword">severity</span>: warning
+        <span class="keyword">annotations</span>:
+          <span class="keyword">summary</span>: <span class="string">"Espace disque &lt; 10%"</span></pre></div>
+
+            <h3>Configuration Alertmanager</h3>
+            <div class="code-label">alertmanager.yml &mdash; Routage vers Discord</div>
+            <div class="code-block"><pre><span class="keyword">global</span>:
+  <span class="keyword">resolve_timeout</span>: 5m
+
+<span class="keyword">route</span>:
+  <span class="keyword">receiver</span>: <span class="string">"discord-default"</span>
+  <span class="keyword">group_by</span>: [<span class="string">"alertname"</span>, <span class="string">"severity"</span>]
+  <span class="keyword">group_wait</span>: 10s
+  <span class="keyword">group_interval</span>: 5m
+  <span class="keyword">repeat_interval</span>: 1h
+  <span class="keyword">routes</span>:
+    <span class="comment"># Kill switch → canal critique (immédiat)</span>
+    - <span class="keyword">match</span>:
+        <span class="keyword">action</span>: kill_switch
+      <span class="keyword">receiver</span>: <span class="string">"discord-critical"</span>
+      <span class="keyword">group_wait</span>: 0s
+      <span class="keyword">repeat_interval</span>: 5m
+
+    <span class="comment"># Alertes critiques trading</span>
+    - <span class="keyword">match</span>:
+        <span class="keyword">severity</span>: critical
+      <span class="keyword">receiver</span>: <span class="string">"discord-critical"</span>
+      <span class="keyword">repeat_interval</span>: 15m
+
+    <span class="comment"># Alertes système</span>
+    - <span class="keyword">match_re</span>:
+        <span class="keyword">alertname</span>: <span class="string">"HighCpu.*|DiskSpace.*"</span>
+      <span class="keyword">receiver</span>: <span class="string">"discord-system"</span>
+
+<span class="keyword">receivers</span>:
+  - <span class="keyword">name</span>: <span class="string">"discord-critical"</span>
+    <span class="keyword">webhook_configs</span>:
+      - <span class="keyword">url</span>: <span class="string">"https://discord.com/api/webhooks/VOTRE_WEBHOOK_CRITICAL"</span>
+        <span class="keyword">send_resolved</span>: true
+
+  - <span class="keyword">name</span>: <span class="string">"discord-default"</span>
+    <span class="keyword">webhook_configs</span>:
+      - <span class="keyword">url</span>: <span class="string">"https://discord.com/api/webhooks/VOTRE_WEBHOOK_ALERTS"</span>
+        <span class="keyword">send_resolved</span>: true
+
+  - <span class="keyword">name</span>: <span class="string">"discord-system"</span>
+    <span class="keyword">webhook_configs</span>:
+      - <span class="keyword">url</span>: <span class="string">"https://discord.com/api/webhooks/VOTRE_WEBHOOK_SYSTEM"</span>
+        <span class="keyword">send_resolved</span>: true</pre></div>
+
+            <h3>M&eacute;triques &agrave; surveiller</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>M&eacute;trique</th>
+                            <th>Type</th>
+                            <th>Seuil Warning</th>
+                            <th>Seuil Critique</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>trading_max_drawdown_percent</code></td>
+                            <td>Trading</td>
+                            <td>&gt; 3%</td>
+                            <td>&gt; 5%</td>
+                        </tr>
+                        <tr>
+                            <td><code>trading_daily_pnl</code></td>
+                            <td>Trading</td>
+                            <td>&lt; -$500</td>
+                            <td>&lt; -$1000 (kill switch)</td>
+                        </tr>
+                        <tr>
+                            <td><code>trading_largest_position_pct</code></td>
+                            <td>Risque</td>
+                            <td>&gt; 10%</td>
+                            <td>&gt; 20%</td>
+                        </tr>
+                        <tr>
+                            <td><code>trading_broker_latency_ms</code></td>
+                            <td>Infra</td>
+                            <td>&gt; 200ms</td>
+                            <td>&gt; 500ms</td>
+                        </tr>
+                        <tr>
+                            <td><code>trading_open_positions</code></td>
+                            <td>Risque</td>
+                            <td>&gt; 15</td>
+                            <td>&gt; 25</td>
+                        </tr>
+                        <tr>
+                            <td>CPU usage</td>
+                            <td>Syst&egrave;me</td>
+                            <td>&gt; 85%</td>
+                            <td>&gt; 95%</td>
+                        </tr>
+                        <tr>
+                            <td>Espace disque</td>
+                            <td>Syst&egrave;me</td>
+                            <td>&lt; 10%</td>
+                            <td>&lt; 5%</td>
+                        </tr>
+                        <tr>
+                            <td>RAM usage</td>
+                            <td>Syst&egrave;me</td>
+                            <td>&gt; 80%</td>
+                            <td>&gt; 90%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention au Kill Switch</h4>
+                <p>L'alerte <code>DailyLossLimit</code> a un d&eacute;lai de <strong>0 seconde</strong> (<code>for: 0m</code>). D&egrave;s que la perte quotidienne d&eacute;passe $1000, l'alerte se d&eacute;clenche instantan&eacute;ment. Combinez-la avec un webhook Discord qui ex&eacute;cute un script de fermeture de positions (voir section Discord ci-dessous).</p>
+            </div>
+        </div>
+
+        <!-- SECTION 5: GRAFANA -->
+        <div id="grafana" class="content-card">
+            <h2><i class="fa-solid fa-chart-line" style="color:#F46800;"></i> Grafana &mdash; Les Yeux du Trader</h2>
+
+            <p>Grafana transforme vos donn&eacute;es brutes (TimescaleDB + Prometheus) en <strong>dashboards visuels</strong> interactifs. Vous pouvez cr&eacute;er n'importe quel graphique, et configurer des alertes de secours (en plus de celles de Prometheus).</p>
+
+            <h3>Les 4 dashboards essentiels</h3>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-chart-line" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>1. P&amp;L Dashboard</strong><br>Courbe d'&eacute;quit&eacute; (equity curve), rendements journaliers en barres, P&amp;L cumul&eacute; par strat&eacute;gie, ratio de Sharpe glissant sur 30 jours. Le dashboard que vous regardez le matin.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-briefcase" style="color:#3b82f6;"></i></div>
+                    <div class="metric-label"><strong>2. Positions Dashboard</strong><br>Tableau des positions ouvertes avec P&amp;L non r&eacute;alis&eacute;, r&eacute;partition sectorielle en camembert, jauge d'exposition totale. Mise &agrave; jour en temps r&eacute;el.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i></div>
+                    <div class="metric-label"><strong>3. Risk Dashboard</strong><br>Jauge de drawdown (vert/orange/rouge), Value at Risk, heatmap de corr&eacute;lation entre positions, concentration du portefeuille. Le dashboard de survie.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-server" style="color:#8b5cf6;"></i></div>
+                    <div class="metric-label"><strong>4. System Health</strong><br>CPU, RAM, latence API broker, uptime, erreurs API, espace disque. Si votre serveur tombe, vos trades sont en danger.</div>
+                </div>
+            </div>
+
+            <h3>Cr&eacute;er votre premier dashboard &mdash; pas &agrave; pas</h3>
+            <ol>
+                <li><strong>Connexion</strong> : Ouvrez <code>http://localhost:3000</code>, connectez-vous (admin / votre mot de passe)</li>
+                <li><strong>Data Source</strong> : Menu &rarr; Connections &rarr; Add data source &rarr; Prometheus &rarr; URL = <code>http://prometheus:9090</code> &rarr; Save &amp; Test</li>
+                <li><strong>Deuxi&egrave;me Data Source</strong> : Add data source &rarr; PostgreSQL &rarr; Host = <code>timescaledb:5432</code>, Database = <code>trading</code>, User = <code>trader</code> &rarr; Save &amp; Test</li>
+                <li><strong>Nouveau Dashboard</strong> : + &rarr; Dashboard &rarr; Add visualization</li>
+                <li><strong>Premier panel</strong> : Data source = PostgreSQL, Query = <code>SELECT day AS time, SUM(realized_pnl) OVER (ORDER BY day) AS cumulative_pnl FROM daily_pnl GROUP BY day ORDER BY day</code></li>
+                <li><strong>Personnalisation</strong> : Type = Time series, Titre = &laquo;&nbsp;Equity Curve&nbsp;&raquo;, couleur verte, remplissage sous la courbe</li>
+                <li><strong>Sauvegarde</strong> : Bouton &laquo;&nbsp;Save&nbsp;&raquo; en haut &agrave; droite</li>
+            </ol>
+
+            <h3>Dashboards communautaires &agrave; importer</h3>
+            <p>Grafana poss&egrave;de une biblioth&egrave;que de dashboards pr&ecirc;ts &agrave; l'emploi. Pour les importer : Menu &rarr; Dashboards &rarr; Import &rarr; coller l'ID.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dashboard</th>
+                            <th>ID Grafana</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Node Exporter Full</strong></td>
+                            <td>1860</td>
+                            <td>M&eacute;triques syst&egrave;me compl&egrave;tes (CPU, RAM, disque, r&eacute;seau)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prometheus Stats</strong></td>
+                            <td>2</td>
+                            <td>Sant&eacute; de Prometheus lui-m&ecirc;me (scrapes, erreurs)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Docker Container</strong></td>
+                            <td>893</td>
+                            <td>M&eacute;triques par conteneur Docker (CPU, m&eacute;moire)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PostgreSQL</strong></td>
+                            <td>9628</td>
+                            <td>Performance de la base de donn&eacute;es (queries, connexions)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Equity Curve EChart -->
+            <h3>Exemple : Equity Curve + Drawdown</h3>
+            <div id="chartEquity" style="width:100%; height:400px; margin-top:1rem;"></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Astuce : Alertes Grafana en backup</h4>
+                <p>En plus des alertes Prometheus, configurez des <strong>alertes Grafana</strong> comme filet de s&eacute;curit&eacute;. Menu &rarr; Alerting &rarr; Alert rules &rarr; New rule. Si Prometheus tombe, Grafana peut toujours surveiller directement les donn&eacute;es TimescaleDB et vous alerter.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 6: DISCORD -->
+        <div id="discord" class="content-card">
+            <h2><i class="fa-brands fa-discord" style="color:#5865F2;"></i> Discord &mdash; Le Centre de Commandement</h2>
+
+            <p>Discord n'est pas qu'une appli de chat. Pour le trader, c'est un <strong>centre de commandement</strong> : vous recevez les alertes en temps r&eacute;el sur votre t&eacute;l&eacute;phone, vous pouvez v&eacute;rifier vos positions d'un coup d'oeil, et en cas d'urgence, ex&eacute;cuter un kill switch depuis n'importe o&ugrave;.</p>
+
+            <h3>Structure des canaux</h3>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Canal</th>
+                            <th>R&ocirc;le</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>#alerts-live</strong></td>
+                            <td>Trades ex&eacute;cut&eacute;s en temps r&eacute;el (buy/sell, prix, quantit&eacute;)</td>
+                            <td>Webhook strat&eacute;gie</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#pnl-daily</strong></td>
+                            <td>R&eacute;sum&eacute; P&amp;L quotidien + capture Grafana</td>
+                            <td>Cron + Grafana API</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#risk-warnings</strong></td>
+                            <td>Alertes drawdown, exposition, VaR</td>
+                            <td>Alertmanager</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#system-health</strong></td>
+                            <td>Uptime, latence, erreurs, espace disque</td>
+                            <td>Alertmanager</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#kill-switch</strong></td>
+                            <td>Commandes d'urgence (acc&egrave;s restreint admin)</td>
+                            <td>Bot Discord</td>
+                        </tr>
+                        <tr>
+                            <td><strong>#strategy-logs</strong></td>
+                            <td>Logs de d&eacute;cision de l'algo (signaux, filtres, rejets)</td>
+                            <td>Webhook strat&eacute;gie</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Approche 1 : Webhooks (le plus simple)</h3>
+            <p>Un webhook Discord est une URL unique qui accepte des messages POST. Votre strat&eacute;gie envoie un message &agrave; cette URL et il appara&icirc;t dans le canal. Z&eacute;ro installation, z&eacute;ro bot &agrave; g&eacute;rer.</p>
+
+            <div class="code-label">Python &mdash; Notification de trade via webhook</div>
+            <div class="code-block"><pre><span class="keyword">import</span> requests
+<span class="keyword">import</span> json
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">WEBHOOK_URL</span> = <span class="string">"https://discord.com/api/webhooks/VOTRE_ID/VOTRE_TOKEN"</span>
+
+<span class="keyword">def</span> <span class="string">notify_trade</span>(symbol, side, qty, price, strategy):
+    <span class="string">"""Envoie une notification de trade sur Discord."""</span>
+    emoji = <span class="string">"🟢"</span> <span class="keyword">if</span> side == <span class="string">"buy"</span> <span class="keyword">else</span> <span class="string">"🔴"</span>
+    total = qty * price
+
+    embed = {
+        <span class="string">"embeds"</span>: [{
+            <span class="string">"title"</span>: f<span class="string">"{emoji} {side.upper()} {symbol}"</span>,
+            <span class="string">"color"</span>: <span class="number">0x059669</span> <span class="keyword">if</span> side == <span class="string">"buy"</span> <span class="keyword">else</span> <span class="number">0xdc2626</span>,
+            <span class="string">"fields"</span>: [
+                {<span class="string">"name"</span>: <span class="string">"Quantité"</span>,  <span class="string">"value"</span>: str(qty),      <span class="string">"inline"</span>: True},
+                {<span class="string">"name"</span>: <span class="string">"Prix"</span>,      <span class="string">"value"</span>: f<span class="string">"${price:.2f}"</span>, <span class="string">"inline"</span>: True},
+                {<span class="string">"name"</span>: <span class="string">"Total"</span>,     <span class="string">"value"</span>: f<span class="string">"${total:.2f}"</span>, <span class="string">"inline"</span>: True},
+                {<span class="string">"name"</span>: <span class="string">"Stratégie"</span>, <span class="string">"value"</span>: strategy,      <span class="string">"inline"</span>: True},
+            ],
+            <span class="string">"timestamp"</span>: datetime.utcnow().isoformat()
+        }]
+    }
+
+    requests.post(WEBHOOK_URL, json=embed)
+
+<span class="comment"># Exemple d'utilisation</span>
+notify_trade(<span class="string">"AAPL"</span>, <span class="string">"buy"</span>, <span class="number">10</span>, <span class="number">185.50</span>, <span class="string">"momentum"</span>)</pre></div>
+
+            <h3>Approche 2 : Bot Discord (avanc&eacute;)</h3>
+            <p>Un bot Discord offre des <strong>commandes interactives</strong>. Vous tapez <code>/positions</code> et le bot r&eacute;pond avec vos positions actuelles. Vous tapez <code>/kill</code> et il ferme toutes les positions. Plus puissant que les webhooks, mais n&eacute;cessite du code suppl&eacute;mentaire.</p>
+
+            <div class="code-label">Python &mdash; Bot Discord avec commandes trading</div>
+            <div class="code-block"><pre><span class="keyword">import</span> discord
+<span class="keyword">from</span> discord <span class="keyword">import</span> app_commands
+<span class="keyword">import</span> psycopg2
+<span class="keyword">import</span> os
+
+<span class="keyword">intents</span> = discord.Intents.default()
+<span class="keyword">client</span> = discord.Client(intents=intents)
+<span class="keyword">tree</span> = app_commands.CommandTree(client)
+
+<span class="keyword">ADMIN_ROLE_ID</span> = <span class="number">123456789</span>  <span class="comment"># Votre rôle admin Discord</span>
+
+<span class="keyword">def</span> <span class="string">get_db</span>():
+    <span class="keyword">return</span> psycopg2.connect(
+        host=<span class="string">"localhost"</span>, dbname=<span class="string">"trading"</span>,
+        user=<span class="string">"trader"</span>, password=os.getenv(<span class="string">"TSDB_PASSWORD"</span>)
+    )
+
+<span class="comment"># /positions — Afficher les positions ouvertes</span>
+@tree.command(name=<span class="string">"positions"</span>, description=<span class="string">"Positions ouvertes"</span>)
+<span class="keyword">async def</span> <span class="string">positions</span>(interaction: discord.Interaction):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(<span class="string">"""
+        SELECT DISTINCT ON (symbol)
+            symbol, quantity, avg_price, current_price,
+            unrealized_pnl, strategy
+        FROM positions
+        ORDER BY symbol, time DESC
+    """</span>)
+    rows = cur.fetchall()
+    conn.close()
+
+    <span class="keyword">if not</span> rows:
+        <span class="keyword">await</span> interaction.response.send_message(<span class="string">"Aucune position ouverte."</span>)
+        <span class="keyword">return</span>
+
+    lines = []
+    <span class="keyword">for</span> sym, qty, avg, cur_p, pnl, strat <span class="keyword">in</span> rows:
+        emoji = <span class="string">"🟢"</span> <span class="keyword">if</span> pnl &gt;= <span class="number">0</span> <span class="keyword">else</span> <span class="string">"🔴"</span>
+        lines.append(f<span class="string">"{emoji} **{sym}** | {qty} @ ${avg:.2f} → ${cur_p:.2f} | P&amp;L: ${pnl:+.2f} | {strat}"</span>)
+
+    <span class="keyword">await</span> interaction.response.send_message(<span class="string">"\n"</span>.join(lines))
+
+<span class="comment"># /pnl — P&amp;L du jour</span>
+@tree.command(name=<span class="string">"pnl"</span>, description=<span class="string">"P&amp;L du jour"</span>)
+<span class="keyword">async def</span> <span class="string">pnl</span>(interaction: discord.Interaction):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(<span class="string">"SELECT daily_pnl, equity FROM risk_metrics ORDER BY time DESC LIMIT 1"</span>)
+    row = cur.fetchone()
+    conn.close()
+    pnl_val, equity = row <span class="keyword">if</span> row <span class="keyword">else</span> (<span class="number">0</span>, <span class="number">0</span>)
+    emoji = <span class="string">"🟢"</span> <span class="keyword">if</span> pnl_val &gt;= <span class="number">0</span> <span class="keyword">else</span> <span class="string">"🔴"</span>
+    <span class="keyword">await</span> interaction.response.send_message(
+        f<span class="string">"{emoji} **P&amp;L du jour**: ${pnl_val:+,.2f}\n💰 **Equity**: ${equity:,.2f}"</span>
+    )
+
+<span class="comment"># /risk — Métriques de risque</span>
+@tree.command(name=<span class="string">"risk"</span>, description=<span class="string">"Métriques de risque actuelles"</span>)
+<span class="keyword">async def</span> <span class="string">risk</span>(interaction: discord.Interaction):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(<span class="string">"""SELECT max_drawdown, open_positions,
+        total_exposure, largest_position FROM risk_metrics
+        ORDER BY time DESC LIMIT 1"""</span>)
+    row = cur.fetchone()
+    conn.close()
+    dd, pos, exp, largest = row <span class="keyword">if</span> row <span class="keyword">else</span> (<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>)
+    <span class="keyword">await</span> interaction.response.send_message(
+        f<span class="string">"📊 **Drawdown**: {dd:.1f}%\n"</span>
+        f<span class="string">"📈 **Positions**: {pos}\n"</span>
+        f<span class="string">"💵 **Exposition**: ${exp:,.0f}\n"</span>
+        f<span class="string">"⚠️ **Plus grosse position**: {largest:.1f}%"</span>
+    )
+
+<span class="comment"># /kill — KILL SWITCH (admin uniquement)</span>
+@tree.command(name=<span class="string">"kill"</span>, description=<span class="string">"KILL SWITCH — Fermer toutes les positions"</span>)
+<span class="keyword">async def</span> <span class="string">kill</span>(interaction: discord.Interaction):
+    <span class="comment"># Vérification du rôle admin</span>
+    <span class="keyword">if not any</span>(r.id == ADMIN_ROLE_ID <span class="keyword">for</span> r <span class="keyword">in</span> interaction.user.roles):
+        <span class="keyword">await</span> interaction.response.send_message(<span class="string">"❌ Accès refusé. Rôle admin requis."</span>)
+        <span class="keyword">return</span>
+
+    <span class="comment"># Étape de confirmation</span>
+    <span class="keyword">await</span> interaction.response.send_message(
+        <span class="string">"⚠️ **KILL SWITCH** ⚠️\n"</span>
+        <span class="string">"Ceci va fermer TOUTES les positions ouvertes.\n"</span>
+        <span class="string">"Tapez `/kill-confirm` dans les 30 secondes pour confirmer."</span>
+    )
+
+<span class="comment"># /pause — Pause de la stratégie</span>
+@tree.command(name=<span class="string">"pause"</span>, description=<span class="string">"Mettre la stratégie en pause"</span>)
+<span class="keyword">async def</span> <span class="string">pause</span>(interaction: discord.Interaction):
+    <span class="comment"># Écrire un flag-file que la stratégie vérifie</span>
+    <span class="keyword">with</span> open(<span class="string">"/tmp/trading_paused"</span>, <span class="string">"w"</span>) <span class="keyword">as</span> f:
+        f.write(<span class="string">"paused"</span>)
+    <span class="keyword">await</span> interaction.response.send_message(<span class="string">"⏸️ Stratégie en **pause**. `/resume` pour reprendre."</span>)
+
+client.run(os.getenv(<span class="string">"DISCORD_BOT_TOKEN"</span>))</pre></div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-lock"></i> S&eacute;curit&eacute; du Kill Switch</h4>
+                <p>Le kill switch est la commande la plus dangereuse de votre stack. Trois protections <strong>obligatoires</strong> :</p>
+                <ol>
+                    <li><strong>R&ocirc;le admin</strong> : seuls les utilisateurs avec le r&ocirc;le admin peuvent l'utiliser</li>
+                    <li><strong>Confirmation en 2 &eacute;tapes</strong> : <code>/kill</code> demande une confirmation explicite</li>
+                    <li><strong>Canal restreint</strong> : la commande ne fonctionne que dans <code>#kill-switch</code></li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- SECTION 7: CLAUDE CODE -->
+        <div id="claude" class="content-card">
+            <h2><i class="fa-solid fa-robot" style="color:#D97706;"></i> Claude Code &mdash; L'Assistant IA</h2>
+
+            <p>Claude Code est un agent IA qui tourne <strong>dans votre terminal</strong>. Il lit votre code, comprend le contexte, et peut ex&eacute;cuter des commandes. Pour le trading, c'est un alli&eacute; puissant &mdash; &agrave; condition de conna&icirc;tre ses limites.</p>
+
+            <h3>5 cas d'usage pour le trading</h3>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-magnifying-glass" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>1. Code Review</strong><br>D&eacute;tecter le look-ahead bias (utiliser des donn&eacute;es futures), l'overfitting (trop de param&egrave;tres), les erreurs de slippage/commission dans vos strat&eacute;gies.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-file-medical" style="color:#3b82f6;"></i></div>
+                    <div class="metric-label"><strong>2. Post-Mortem</strong><br>Apr&egrave;s un mauvais trade ou un crash, Claude Code analyse les logs et g&eacute;n&egrave;re un rapport structur&eacute; : chronologie, cause racine, actions correctives.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-flask" style="color:#8b5cf6;"></i></div>
+                    <div class="metric-label"><strong>3. G&eacute;n&eacute;ration de Tests</strong><br>Cr&eacute;er des tests unitaires pour vos fonctions de calcul (P&amp;L, sizing, signaux), des tests d'int&eacute;gration pour le pipeline de donn&eacute;es, des tests de r&eacute;gression.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-bug" style="color:#dc2626;"></i></div>
+                    <div class="metric-label"><strong>4. Analyse de Logs</strong><br>Chercher des anomalies dans des milliers de lignes de logs : ordres rejet&eacute;s, latence soudaine, &eacute;carts de prix, disconnexions broker.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-book" style="color:#f59e0b;"></i></div>
+                    <div class="metric-label"><strong>5. Documentation</strong><br>G&eacute;n&eacute;rer la documentation de vos strat&eacute;gies, du schema de base de donn&eacute;es, des proc&eacute;dures d'urgence.</div>
+                </div>
+            </div>
+
+            <h3>Exemples de prompts pour le trading</h3>
+            <div class="code-label">Prompt &mdash; Review d'une strat&eacute;gie</div>
+            <div class="code-block"><pre><span class="comment"># Lancer depuis le dossier de votre stratégie</span>
+claude <span class="string">"Review ma stratégie de trading dans strategy.py.
+Vérifie spécifiquement :
+1. Y a-t-il du look-ahead bias ? (utilisation de données futures)
+2. Y a-t-il de l'overfitting ? (trop de paramètres, conditions trop spécifiques)
+3. Les commissions et le slippage sont-ils pris en compte ?
+4. Le sizing des positions est-il raisonnable ?
+5. Y a-t-il un stop-loss systématique ?
+Génère un rapport avec severity (critical/warning/info) pour chaque point."</span></pre></div>
+
+            <div class="code-label">Prompt &mdash; Post-mortem automatis&eacute;</div>
+            <div class="code-block"><pre>claude <span class="string">"Analyse les logs de trading d'aujourd'hui dans logs/2026-02-27.log.
+Identifie :
+1. Tous les trades perdants et leurs causes probables
+2. Les anomalies de latence (&gt; 200ms)
+3. Les ordres rejetés par le broker
+4. Les écarts entre le prix signal et le prix d'exécution (slippage)
+Génère un post-mortem structuré avec timeline, causes racines,
+et 3 actions correctives classées par priorité."</span></pre></div>
+
+            <div class="code-label">Prompt &mdash; G&eacute;n&eacute;ration de tests</div>
+            <div class="code-block"><pre>claude <span class="string">"Lis le fichier risk_manager.py et génère des tests unitaires avec pytest.
+Couvre les cas :
+- Position sizing normal (1-2% du capital)
+- Position sizing avec drawdown élevé (devrait réduire)
+- Calcul de drawdown correct
+- Kill switch quand daily loss &gt; $1000
+- Corrélation entre positions (&gt; 0.7 = warning)
+Les tests doivent utiliser des fixtures et être déterministes."</span></pre></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Limites &mdash; ce que Claude Code ne doit PAS faire</h4>
+                <p>Claude Code est un <strong>assistant</strong>, pas un oracle financier. R&egrave;gles d'or :</p>
+                <ul>
+                    <li><strong>Ne jamais lui faire ex&eacute;cuter de trades</strong> &mdash; il g&eacute;n&egrave;re du code, il ne prend pas de d&eacute;cisions d'investissement</li>
+                    <li><strong>V&eacute;rifier les calculs financiers</strong> &mdash; les mod&egrave;les IA peuvent faire des erreurs subtiles de math&eacute;matiques financi&egrave;res (annualisation, composition, etc.)</li>
+                    <li><strong>Ne pas lui confier vos cl&eacute;s API broker</strong> &mdash; travaillez en environnement sandbox/paper trading</li>
+                    <li><strong>Valider les tests g&eacute;n&eacute;r&eacute;s</strong> &mdash; un test qui passe ne veut pas dire que la logique est correcte</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SECTION 8: AGENTS AUTONOMES -->
+        <div id="agents" class="content-card">
+            <h2><i class="fa-solid fa-microchip" style="color:#7c3aed;"></i> Agents Autonomes &mdash; L'Automatisation Intelligente</h2>
+
+            <p>Au-del&agrave; de Claude Code utilis&eacute; manuellement, il est possible d'automatiser certaines t&acirc;ches de monitoring avec des <strong>agents IA autonomes</strong> : des scripts qui tournent en arri&egrave;re-plan, analysent les donn&eacute;es, et agissent selon des r&egrave;gles pr&eacute;d&eacute;finies.</p>
+
+            <h3>Cas d'usage l&eacute;gitimes</h3>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-file-lines" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>Rapports automatiques</strong><br>Chaque soir, un agent g&eacute;n&egrave;re un r&eacute;sum&eacute; de la journ&eacute;e (P&amp;L, positions, &eacute;v&eacute;nements) et le publie sur Discord.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-bell" style="color:#f59e0b;"></i></div>
+                    <div class="metric-label"><strong>Alertes proactives</strong><br>Un agent surveille les earnings calendars, les d&eacute;cisions Fed, et vous pr&eacute;vient si un &eacute;v&eacute;nement impacte vos positions.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-database" style="color:#3b82f6;"></i></div>
+                    <div class="metric-label"><strong>Collecte de donn&eacute;es</strong><br>Un agent ex&eacute;cute des scripts de collecte (prix, volumes, sentiment) &agrave; intervalles r&eacute;guliers et alimente TimescaleDB.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-broom" style="color:#8b5cf6;"></i></div>
+                    <div class="metric-label"><strong>Maintenance</strong><br>Compression de donn&eacute;es anciennes, nettoyage de logs, v&eacute;rification d'int&eacute;grit&eacute; de la base, backup automatis&eacute;.</div>
+                </div>
+            </div>
+
+            <h3>Exemple : rapport quotidien automatis&eacute;</h3>
+            <div class="code-label">daily_report.sh &mdash; Cron job &agrave; 22h00</div>
+            <div class="code-block"><pre><span class="comment">#!/bin/bash</span>
+<span class="comment"># Exécuté tous les soirs à 22h via cron</span>
+<span class="comment"># 0 22 * * 1-5 /opt/trading/daily_report.sh</span>
+
+<span class="keyword">REPORT_DIR</span>=<span class="string">"/opt/trading/reports"</span>
+<span class="keyword">DATE</span>=$(date +%Y-%m-%d)
+
+<span class="comment"># 1. Extraire les données du jour</span>
+psql -h localhost -U trader trading -c <span class="string">"
+  SELECT strategy,
+         SUM(CASE WHEN side='sell' THEN quantity*price
+                  WHEN side='buy' THEN -quantity*price END) AS pnl,
+         COUNT(*) AS trades
+  FROM trades
+  WHERE time::date = CURRENT_DATE
+  GROUP BY strategy
+  ORDER BY pnl DESC;
+"</span> -o <span class="string">"${REPORT_DIR}/${DATE}_pnl.txt"</span>
+
+<span class="comment"># 2. Demander à Claude Code de rédiger le rapport</span>
+claude -p <span class="string">"Lis ${REPORT_DIR}/${DATE}_pnl.txt et génère un résumé
+Discord-friendly (markdown, emojis) du P&amp;L du jour.
+Inclus : P&amp;L total, meilleure/pire stratégie, nombre de trades,
+et une recommandation pour demain."</span> &gt; <span class="string">"${REPORT_DIR}/${DATE}_report.md"</span>
+
+<span class="comment"># 3. Envoyer sur Discord via webhook</span>
+<span class="keyword">CONTENT</span>=$(cat <span class="string">"${REPORT_DIR}/${DATE}_report.md"</span>)
+curl -H <span class="string">"Content-Type: application/json"</span> \
+     -d <span class="string">"{\"content\": \"${CONTENT}\"}"</span> \
+     <span class="string">"https://discord.com/api/webhooks/VOTRE_WEBHOOK"</span></pre></div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-shield-halved"></i> Avertissements importants</h4>
+                <p>Les agents autonomes sont des outils d'<strong>automatisation de monitoring</strong>, PAS des bots de trading :</p>
+                <ul>
+                    <li><strong>JAMAIS d'ex&eacute;cution de trades</strong> &mdash; un agent ne doit jamais passer d'ordres sur le march&eacute;</li>
+                    <li><strong>Risque de prompt injection</strong> &mdash; si l'agent lit des donn&eacute;es externes (news, chat), un attaquant pourrait manipuler ses actions</li>
+                    <li><strong>Principe du moindre privil&egrave;ge</strong> &mdash; l'agent n'a acc&egrave;s qu'aux donn&eacute;es en lecture, jamais aux cl&eacute;s API broker</li>
+                    <li><strong>Logs de chaque action</strong> &mdash; tout ce que fait l'agent est logg&eacute; et auditable</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SECTION 9: SCHEMA COMPLET -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fa-solid fa-diagram-project" style="color:#059669;"></i> Le Sch&eacute;ma Complet &mdash; Comment Tout S'Assemble</h2>
+
+            <p>Voici comment les six briques s'interconnectent. Chaque fl&egrave;che repr&eacute;sente un flux de donn&eacute;es :</p>
+
+            <div class="code-label">Architecture &mdash; Vue d'ensemble</div>
+            <div class="code-block"><pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                    VOTRE STRATÉGIE DE TRADING                   │
+│  (Python, Go, JavaScript... peu importe le langage)             │
+└──────┬──────────────────┬──────────────────┬────────────────────┘
+       │                  │                  │
+       │ trades,          │ métriques        │ logs de
+       │ positions        │ custom           │ décision
+       ▼                  ▼                  ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
+│ TimescaleDB  │  │  Prometheus  │  │ Discord Webhook  │
+│ (PostgreSQL) │  │  (pull 15s)  │  │ #strategy-logs   │
+│              │  │              │  │ #alerts-live     │
+│ - trades     │  │ - node_exp   │  └──────────────────┘
+│ - positions  │  │ - textfile   │           ▲
+│ - market_data│  │ - custom     │           │
+│ - risk_metrics│  │              │           │
+└──────┬───────┘  └──────┬───────┘           │
+       │                  │                  │
+       │ SQL queries      │ PromQL           │ webhooks
+       ▼                  ▼                  │
+┌──────────────┐  ┌──────────────┐           │
+│   Grafana    │  │ Alertmanager │───────────┘
+│              │  │              │
+│ - P&amp;L        │  │ → Discord    │
+│ - Positions  │  │   #critical  │
+│ - Risk       │  │   #warnings  │
+│ - System     │  │   #system    │
+└──────────────┘  └──────────────┘
+
+       ┌─────────────────────────────────────────┐
+       │          ANALYSE POST-HOC               │
+       │                                         │
+       │  Claude Code                            │
+       │  - Review de stratégie                  │
+       │  - Post-mortem après incident           │
+       │  - Génération de tests                  │
+       │  - Rapport quotidien automatisé         │
+       └─────────────────────────────────────────┘</pre></div>
+
+            <h3>Flux de donn&eacute;es expliqu&eacute; &eacute;tape par &eacute;tape</h3>
+            <ol>
+                <li><strong>Ex&eacute;cution d'un trade</strong> : votre strat&eacute;gie envoie un ordre au broker et enregistre le trade dans TimescaleDB + notifie Discord via webhook</li>
+                <li><strong>Mise &agrave; jour des m&eacute;triques</strong> : apr&egrave;s chaque cycle, la strat&eacute;gie &eacute;crit les m&eacute;triques custom dans le fichier <code>.prom</code> (positions, P&amp;L, drawdown)</li>
+                <li><strong>Collecte Prometheus</strong> : toutes les 15 secondes, Prometheus scrape Node Exporter (syst&egrave;me + m&eacute;triques custom)</li>
+                <li><strong>&Eacute;valuation des r&egrave;gles</strong> : Prometheus compare les m&eacute;triques aux seuils d&eacute;finis dans <code>alert_rules.yml</code></li>
+                <li><strong>Alerte</strong> : si un seuil est d&eacute;pass&eacute;, Alertmanager route l'alerte vers le bon canal Discord selon la s&eacute;v&eacute;rit&eacute;</li>
+                <li><strong>Visualisation</strong> : Grafana affiche en temps r&eacute;el les donn&eacute;es de Prometheus (syst&egrave;me) et TimescaleDB (trading)</li>
+                <li><strong>Analyse</strong> : p&eacute;riodiquement, Claude Code analyse les logs et g&eacute;n&egrave;re des rapports post-mortem</li>
+            </ol>
+
+            <!-- Architecture EChart -->
+            <div id="chartArchi" style="width:100%; height:500px; margin-top:1.5rem;"></div>
+        </div>
+
+        <!-- SECTION 10: PLAN D'ACTION -->
+        <div id="plan" class="content-card">
+            <h2><i class="fa-solid fa-calendar-check" style="color:#059669;"></i> Plan d'Action &mdash; Semaine par Semaine</h2>
+
+            <p>Ne tentez pas de tout construire d'un coup. Voici un plan <strong>progressif sur 5 semaines</strong> qui vous am&egrave;ne d'un serveur vide &agrave; un stack de monitoring complet.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Semaine</th>
+                            <th>Objectif</th>
+                            <th>Livrables</th>
+                            <th>Dur&eacute;e estim&eacute;e</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Semaine 1</strong></td>
+                            <td>Infrastructure de base</td>
+                            <td>Docker install&eacute;, TimescaleDB up, sch&eacute;ma SQL cr&eacute;&eacute;, premiers inserts manuels</td>
+                            <td>4-6h</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Semaine 2</strong></td>
+                            <td>M&eacute;triques syst&egrave;me</td>
+                            <td>Prometheus + Node Exporter up, Grafana connect&eacute;, dashboard System Health import&eacute;</td>
+                            <td>3-4h</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Semaine 3</strong></td>
+                            <td>Alertes trading</td>
+                            <td>Alertmanager configur&eacute;, webhooks Discord, <code>alert_rules.yml</code> avec 4 r&egrave;gles trading</td>
+                            <td>3-4h</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Semaine 4</strong></td>
+                            <td>Bot Discord + IA</td>
+                            <td>Bot Discord avec /positions, /pnl, /kill. Premier review Claude Code d'une strat&eacute;gie.</td>
+                            <td>5-6h</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Semaine 5+</strong></td>
+                            <td>Affinage</td>
+                            <td>Dashboards P&amp;L et Risk custom, continuous aggregates, textfile collector, rapport automatis&eacute;</td>
+                            <td>En continu</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Checklist de la semaine 1</h3>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check-circle" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>&Eacute;tape 1</strong><br>Installer Docker Desktop. V&eacute;rifier avec <code>docker --version</code>.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check-circle" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>&Eacute;tape 2</strong><br>Cr&eacute;er le dossier <code>trading-monitor/</code> avec <code>docker-compose.yml</code> et <code>init.sql</code>.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check-circle" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>&Eacute;tape 3</strong><br>Lancer <code>docker compose up -d</code>. V&eacute;rifier que les 5 services sont &laquo;&nbsp;healthy&nbsp;&raquo;.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value"><i class="fa-solid fa-check-circle" style="color:#059669;"></i></div>
+                    <div class="metric-label"><strong>&Eacute;tape 4</strong><br>Se connecter &agrave; TimescaleDB : <code>docker exec -it trading-tsdb psql -U trader trading</code>. Ins&eacute;rer un trade test.</div>
+                </div>
+            </div>
+
+            <div class="code-label">Test &mdash; Ins&eacute;rer un premier trade</div>
+            <div class="code-block"><pre><span class="comment">-- Se connecter à TimescaleDB</span>
+<span class="comment">-- docker exec -it trading-tsdb psql -U trader trading</span>
+
+<span class="comment">-- Insérer un trade test</span>
+<span class="keyword">INSERT INTO</span> trades (time, symbol, side, quantity, price, strategy)
+<span class="keyword">VALUES</span> (NOW(), <span class="string">'AAPL'</span>, <span class="string">'buy'</span>, <span class="number">10</span>, <span class="number">185.50</span>, <span class="string">'momentum'</span>);
+
+<span class="comment">-- Vérifier</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> trades;
+
+<span class="comment">-- Insérer des métriques de risque</span>
+<span class="keyword">INSERT INTO</span> risk_metrics (time, equity, daily_pnl, max_drawdown, open_positions)
+<span class="keyword">VALUES</span> (NOW(), <span class="number">50000</span>, <span class="number">150.25</span>, <span class="number">1.2</span>, <span class="number">3</span>);
+
+<span class="comment">-- Vérifier que les hypertables fonctionnent</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> timescaledb_information.hypertables;</pre></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Conseil : commencez en paper trading</h4>
+                <p>D&eacute;ployez d'abord votre stack complet en mode <strong>paper trading</strong> (simulation). Alimentez TimescaleDB avec des trades simul&eacute;s pendant 2 semaines. Cela vous permet de tester vos dashboards, affiner vos seuils d'alerte, et d&eacute;couvrir les probl&egrave;mes <em>avant</em> de risquer de l'argent r&eacute;el. La majorit&eacute; des traders qui perdent de l'argent n'ont jamais test&eacute; leur infrastructure en conditions r&eacute;elles.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 11: NAVIGATION SERIES -->
+        <div id="series" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#059669;"></i> Navigation &mdash; Toute la S&eacute;rie</h2>
+
+            <p>Ce guide fait partie d'une s&eacute;rie en 3 parties sur le monitoring d'un stack de trading syst&eacute;matique. Chaque partie est ind&eacute;pendante mais forme un tout coh&eacute;rent.</p>
+
+            <div class="series-nav">
+                <a href="/tech/monitoring-trading-stack/" class="series-nav-card">
+                    <div class="nav-part">Partie 1</div>
+                    <div class="nav-title">Les Post-Mortems</div>
+                    <div class="nav-desc">Analyser vos erreurs pour ne plus les r&eacute;p&eacute;ter. M&eacute;thodologie, templates et exemples concrets.</div>
+                </a>
+                <a href="/tech/monitoring-trading-stack/architecture/" class="series-nav-card">
+                    <div class="nav-part">Partie 2</div>
+                    <div class="nav-title">L'Architecture de Monitoring</div>
+                    <div class="nav-desc">Les 4 piliers du monitoring : m&eacute;triques, alertes, dashboards, escalade. Design patterns et anti-patterns.</div>
+                </a>
+                <a href="/tech/monitoring-trading-stack/tooling/" class="series-nav-card">
+                    <div class="nav-part">Partie 3 (Vous &ecirc;tes ici)</div>
+                    <div class="nav-title">Le Tooling du Retail Trader</div>
+                    <div class="nav-desc">Docker, TimescaleDB, Prometheus, Grafana, Discord, Claude Code &mdash; mise en pratique compl&egrave;te.</div>
+                </a>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-flag-checkered"></i> R&eacute;sum&eacute; de la s&eacute;rie</h4>
+                <p><strong>Partie 1</strong> vous a appris &agrave; <em>apprendre de vos erreurs</em> (post-mortems). <strong>Partie 2</strong> vous a montr&eacute; <em>comment architecturer</em> un syst&egrave;me de monitoring (design). <strong>Cette Partie 3</strong> vous donne les <em>outils concrets</em> pour le construire. Ensemble, les trois parties forment un guide complet : de la th&eacute;orie &agrave; la pratique, du &laquo;&nbsp;pourquoi&nbsp;&raquo; au &laquo;&nbsp;comment&nbsp;&raquo;.</p>
+                <p>Le co&ucirc;t total ? Un VPS &agrave; 15&euro;/mois, un week-end de mise en place, et la discipline de regarder vos dashboards <em>avant</em> de trader. C'est probablement le meilleur investissement de votre carri&egrave;re de trader.</p>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- Footer -->
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- ECHARTS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Budget Comparison Chart
+            var budgetDom = document.getElementById('chartBudget');
+            if (budgetDom) {
+                var budgetChart = echarts.init(budgetDom);
+                budgetChart.setOption({
+                    title: { text: 'Coût annuel : Retail Stack vs Solutions Pro', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+                    tooltip: { trigger: 'axis', formatter: function(params) { return params.map(function(p) { return p.marker + ' ' + p.name + ': ' + p.value.toLocaleString() + ' €/an'; }).join('<br>'); } },
+                    xAxis: { type: 'category', data: ['Bloomberg\nTerminal', 'Refinitiv\nEikon', 'TradingView\nPremium', 'Notre Stack\nOpen-Source'], axisLabel: { fontSize: 11 } },
+                    yAxis: { type: 'value', name: '€ / an', axisLabel: { formatter: function(v) { return v >= 1000 ? (v/1000) + 'k' : v; } } },
+                    series: [{
+                        type: 'bar',
+                        data: [
+                            { value: 24000, itemStyle: { color: '#ef4444' } },
+                            { value: 18000, itemStyle: { color: '#f97316' } },
+                            { value: 360, itemStyle: { color: '#eab308' } },
+                            { value: 180, itemStyle: { color: '#059669' } }
+                        ],
+                        barWidth: '50%',
+                        label: { show: true, position: 'top', formatter: function(p) { return p.value.toLocaleString() + ' €'; }, fontSize: 12, fontWeight: 700 }
+                    }],
+                    grid: { left: 60, right: 20, bottom: 40, top: 60 }
+                });
+                window.addEventListener('resize', function () { budgetChart.resize(); });
+            }
+
+            // 2. Equity Curve + Drawdown Chart
+            var equityDom = document.getElementById('chartEquity');
+            if (equityDom) {
+                var equityChart = echarts.init(equityDom);
+                // Generate sample equity curve data
+                var dates = [];
+                var equity = [];
+                var drawdown = [];
+                var val = 50000;
+                var peak = val;
+                for (var i = 0; i < 180; i++) {
+                    var d = new Date(2025, 8, 1);
+                    d.setDate(d.getDate() + i);
+                    dates.push(d.toISOString().split('T')[0]);
+                    var dailyReturn = (Math.random() - 0.47) * 0.015;
+                    val = val * (1 + dailyReturn);
+                    if (val > peak) peak = val;
+                    equity.push(Math.round(val * 100) / 100);
+                    var dd = ((val - peak) / peak) * 100;
+                    drawdown.push(Math.round(dd * 100) / 100);
+                }
+                equityChart.setOption({
+                    title: { text: 'Exemple : Equity Curve + Drawdown', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['Equity ($)', 'Drawdown (%)'], bottom: 0 },
+                    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10, rotate: 45, interval: 29 } },
+                    yAxis: [
+                        { type: 'value', name: 'Equity ($)', position: 'left', axisLabel: { formatter: function(v) { return (v/1000).toFixed(0) + 'k'; } } },
+                        { type: 'value', name: 'Drawdown (%)', position: 'right', max: 0, min: -15, axisLabel: { formatter: '{value}%' } }
+                    ],
+                    series: [
+                        {
+                            name: 'Equity ($)', type: 'line', data: equity, smooth: true,
+                            itemStyle: { color: '#059669' }, lineStyle: { width: 2 },
+                            areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(5,150,105,0.3)' }, { offset: 1, color: 'rgba(5,150,105,0.02)' }] } },
+                            symbol: 'none'
+                        },
+                        {
+                            name: 'Drawdown (%)', type: 'line', yAxisIndex: 1, data: drawdown, smooth: true,
+                            itemStyle: { color: '#dc2626' }, lineStyle: { width: 1.5 },
+                            areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(220,38,38,0.02)' }, { offset: 1, color: 'rgba(220,38,38,0.2)' }] } },
+                            symbol: 'none'
+                        }
+                    ],
+                    grid: { left: 65, right: 65, bottom: 60, top: 60 }
+                });
+                window.addEventListener('resize', function () { equityChart.resize(); });
+            }
+
+            // 3. Architecture Flow Chart
+            var archiDom = document.getElementById('chartArchi');
+            if (archiDom) {
+                var archiChart = echarts.init(archiDom);
+                archiChart.setOption({
+                    title: { text: 'Architecture du Stack de Monitoring', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+                    tooltip: {},
+                    series: [{
+                        type: 'graph',
+                        layout: 'none',
+                        symbolSize: 60,
+                        roam: false,
+                        label: { show: true, fontSize: 11, fontWeight: 600 },
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        edgeLabel: { show: true, formatter: function(p) { return p.data.label || ''; }, fontSize: 9, color: '#64748b' },
+                        lineStyle: { color: '#94a3b8', width: 2, curveness: 0.1 },
+                        data: [
+                            { name: 'Stratégie', x: 400, y: 50, symbolSize: 80, itemStyle: { color: '#059669' }, label: { fontSize: 13 } },
+                            { name: 'TimescaleDB', x: 200, y: 200, itemStyle: { color: '#FDB515' } },
+                            { name: 'Prometheus', x: 400, y: 200, itemStyle: { color: '#e6522c' } },
+                            { name: 'Discord\nWebhook', x: 600, y: 200, itemStyle: { color: '#5865F2' } },
+                            { name: 'Grafana', x: 200, y: 370, itemStyle: { color: '#F46800' } },
+                            { name: 'Alertmanager', x: 400, y: 370, itemStyle: { color: '#e6522c' } },
+                            { name: 'Discord\nAlerts', x: 500, y: 470, symbolSize: 65, itemStyle: { color: '#5865F2' } },
+                            { name: 'Claude Code', x: 200, y: 470, symbolSize: 55, itemStyle: { color: '#D97706' } },
+                            { name: 'Node\nExporter', x: 550, y: 120, symbolSize: 45, itemStyle: { color: '#94a3b8' } }
+                        ],
+                        links: [
+                            { source: 'Stratégie', target: 'TimescaleDB', label: 'trades' },
+                            { source: 'Stratégie', target: 'Prometheus', label: 'métriques' },
+                            { source: 'Stratégie', target: 'Discord\nWebhook', label: 'logs' },
+                            { source: 'Node\nExporter', target: 'Prometheus', label: 'système' },
+                            { source: 'TimescaleDB', target: 'Grafana', label: 'SQL' },
+                            { source: 'Prometheus', target: 'Grafana', label: 'PromQL' },
+                            { source: 'Prometheus', target: 'Alertmanager', label: 'alertes' },
+                            { source: 'Alertmanager', target: 'Discord\nAlerts', label: 'webhook' },
+                            { source: 'TimescaleDB', target: 'Claude Code', label: 'analyse' }
+                        ]
+                    }]
+                });
+                window.addEventListener('resize', function () { archiChart.resize(); });
+            }
+        });
+    </script>
+    <script src="/assets/core.js"></script>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bookmark"></i><span>Le Stack ~15&euro;/mois</span></a><a href="#docker" class="fnav-item" data-section="docker"><i class="fas fa-bookmark"></i><span>Docker Compose</span></a><a href="#timescale" class="fnav-item" data-section="timescale"><i class="fas fa-bookmark"></i><span>TimescaleDB</span></a><a href="#prometheus" class="fnav-item" data-section="prometheus"><i class="fas fa-bookmark"></i><span>Prometheus + Alerts</span></a><a href="#grafana" class="fnav-item" data-section="grafana"><i class="fas fa-bookmark"></i><span>Grafana Dashboards</span></a><a href="#discord" class="fnav-item" data-section="discord"><i class="fas fa-bookmark"></i><span>Discord</span></a><a href="#claude" class="fnav-item" data-section="claude"><i class="fas fa-bookmark"></i><span>Claude Code</span></a><a href="#agents" class="fnav-item" data-section="agents"><i class="fas fa-bookmark"></i><span>Agents Autonomes</span></a><a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-bookmark"></i><span>Schéma Complet</span></a><a href="#plan" class="fnav-item" data-section="plan"><i class="fas fa-bookmark"></i><span>Plan d'Action</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>
