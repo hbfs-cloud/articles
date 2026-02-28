@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 12/12 — Scaling & Exit | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Scaling au-delà du million : analyse de capacité, infrastructure multi-VM Nomad, nouvelles stratégies post-million, licensing, family office mono-personne, et stratégies de sortie. Chapitre final de la série.">
+<meta property="og:title" content="Scaling & Exit — Algo Trading De 100K au Million | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.hero-badge-red{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-rocket"></i> Série Algo Trading — De 100K au Million — Partie 12 sur 12 — FINAL</div>
+<h1 class="hero-title">Scaling &amp; Exit — Au-delà du Million</h1>
+<p class="hero-subtitle">Votre système génère 6 chiffres par an. Et maintenant ? Analyse de capacité, infrastructure multi-VM distribuée via Nomad, nouvelles stratégies accessibles post-million, licensing de vos signaux, structuration en family office mono-personne, et les quatre scénarios de sortie. Le dernier chapitre — celui où la machine vous libère.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-chart-line"></i> Capacity</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-server"></i> Multi-VM</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-key"></i> Licensing</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-building-columns"></i> Family Office</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part11-vivre-de-son-algo/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a><a href="/series/algo-million/part11-vivre-de-son-algo/" class="series-step"><span class="series-num">11</span><span class="series-label">Rente</span></a><a href="/series/algo-million/part12-scaling-exit/" class="series-step current"><span class="series-num">12</span><span class="series-label">Scaling</span></a></div><span class="series-counter">12/12</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#capacity" class="fnav-item" data-section="capacity"><i class="fa-solid fa-gauge-high"></i><span>Capacity</span></a><a href="#multivm" class="fnav-item" data-section="multivm"><i class="fa-solid fa-server"></i><span>Multi-VM</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fa-solid fa-chess"></i><span>Stratégies</span></a><a href="#licensing" class="fnav-item" data-section="licensing"><i class="fa-solid fa-key"></i><span>Licensing</span></a><a href="#familyoffice" class="fnav-item" data-section="familyoffice"><i class="fa-solid fa-building-columns"></i><span>Family Office</span></a><a href="#exit" class="fnav-item" data-section="exit"><i class="fa-solid fa-door-open"></i><span>Exit</span></a><a href="#retrospective" class="fnav-item" data-section="retrospective"><i class="fa-solid fa-flag-checkered"></i><span>Rétrospective</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<!-- ===== SECTION 1: CAPACITY ANALYSIS ===== -->
+<div class="section-divider" id="capacity"><i class="fa-solid fa-gauge-high"></i> Analyse de capacité</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-gauge-high"></i> Quand votre taille déplace le marché</h2>
+
+<p>Vous avez franchi le million. Félicitations — et bienvenue dans un nouveau problème. À 100K€, vous étiez un bruit de fond dans le carnet d'ordres. À 1M€, vous commencez à laisser une empreinte. À 3M€, certaines de vos stratégies small-cap sont physiquement impossibles à exécuter sans impact de marché significatif.</p>
+
+<p>L'analyse de capacité (<em>capacity analysis</em>) est la discipline qui quantifie combien de capital chaque stratégie peut absorber avant que son alpha ne se dégrade. C'est le plafond invisible que 90% des traders retail ignorent — jusqu'au jour où leur Sharpe se compresse sans raison apparente.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-calculator"></i> La formule fondamentale de capacité</h4>
+<p>Pour une stratégie donnée, la capacité maximale se calcule ainsi :</p>
+<p><strong>Capacity = ADV × MaxParticipation × AvgHolding × UniverseSize × DiversificationFactor</strong></p>
+<ul>
+<li><strong>ADV</strong> (Average Daily Volume en $) : volume moyen quotidien des instruments tradés</li>
+<li><strong>MaxParticipation</strong> : % max du volume journalier que vous capturez (typiquement 1-5%)</li>
+<li><strong>AvgHolding</strong> : durée moyenne de détention en jours (un holding de 5 jours = 5× le capital déployé par jour)</li>
+<li><strong>UniverseSize</strong> : nombre d'instruments dans l'univers éligible</li>
+<li><strong>DiversificationFactor</strong> : 0.3-0.7 selon la corrélation entre positions</li>
+</ul>
+<p>Exemple concret : une stratégie momentum sur les mid-caps US (ADV moyen $5M, participation 2%, holding 10 jours, univers de 200 titres, diversification 0.5) → <strong>Capacity = $5M × 0.02 × 10 × 200 × 0.5 = $100M</strong>. Vous êtes très loin du plafond. En revanche, sur des micro-caps EU (ADV $200K), la même formule donne <strong>$2M</strong> — votre million est déjà une contrainte.</p>
+</div>
+
+<h3>Capacités par stratégie et par marché</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Stratégie</th><th>US Large/Mid</th><th>US Small</th><th>EU Large</th><th>EU Small</th><th>APAC</th><th>Contrainte principale</th></tr></thead>
+<tbody>
+<tr><td><strong>Momentum 20j</strong></td><td>$50M+</td><td>$2M</td><td>$20M</td><td>$500K</td><td>$10M</td><td>Liquidité small-caps</td></tr>
+<tr><td><strong>Mean Reversion 5j</strong></td><td>$30M</td><td>$1.5M</td><td>$15M</td><td>$400K</td><td>$8M</td><td>Spread + impact</td></tr>
+<tr><td><strong>Cross-Asset Rotation</strong></td><td>$200M+</td><td>N/A</td><td>$100M+</td><td>N/A</td><td>$50M+</td><td>ETFs très liquides</td></tr>
+<tr><td><strong>Breakout Intraday</strong></td><td>$5M</td><td>$300K</td><td>$3M</td><td>$150K</td><td>$2M</td><td>Slippage</td></tr>
+<tr><td><strong>Stat Arb Pairs</strong></td><td>$20M</td><td>$800K</td><td>$10M</td><td>$300K</td><td>$5M</td><td>Corrélation instable</td></tr>
+<tr><td><strong>Options Selling</strong></td><td>$100M+</td><td>$2M</td><td>$30M</td><td>N/A</td><td>$15M</td><td>Gamma risk</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>La conclusion est limpide : <strong>avec 1-3M€, vous n'avez aucune contrainte de capacité sur les marchés US et EU large-caps</strong>. Le problème se pose uniquement sur les small-caps et les marchés APAC peu liquides. La stratégie d'adaptation est simple : au fur et à mesure que le capital croît, migrez les allocations des small-caps vers les large-caps et les ETFs.</p>
+
+<h3>Implémentation Go : CapacityAnalyzer</h3>
+
+<pre><code>package capacity
+
+import (
+	"fmt"
+	"math"
+	"time"
+)
+
+// StrategyProfile décrit les caractéristiques d'une stratégie
+// pour le calcul de capacité.
+type StrategyProfile struct {
+	Name              string
+	AvgHoldingDays    float64
+	MaxParticipation  float64 // fraction du volume quotidien (0.01 = 1%)
+	UniverseSize      int
+	DiversificationF  float64 // 0.3 à 0.7
+	MinADV            float64 // filtre de liquidité minimum en USD
+}
+
+// MarketProfile décrit les caractéristiques de liquidité d'un marché.
+type MarketProfile struct {
+	Name     string
+	MedianADV float64 // volume médian quotidien en USD
+	SpreadBps float64 // spread moyen en basis points
+	Timezone  string
+}
+
+// CapacityResult contient le résultat du calcul.
+type CapacityResult struct {
+	Strategy     string
+	Market       string
+	MaxCapacity  float64
+	CurrentAlloc float64
+	Utilization  float64 // CurrentAlloc / MaxCapacity
+	ImpactCost   float64 // coût d'impact estimé en bps
+	Degradation  float64 // dégradation du Sharpe estimée
+}
+
+// Analyzer calcule la capacité de chaque stratégie par marché.
+type Analyzer struct {
+	strategies []StrategyProfile
+	markets    []MarketProfile
+}
+
+// NewAnalyzer crée un Analyzer avec les profils donnés.
+func NewAnalyzer(strategies []StrategyProfile, markets []MarketProfile) *Analyzer {
+	return &amp;Analyzer{strategies: strategies, markets: markets}
+}
+
+// ComputeCapacity calcule la capacité maximale d'une stratégie sur un marché.
+func (a *Analyzer) ComputeCapacity(sp StrategyProfile, mp MarketProfile) CapacityResult {
+	rawCapacity := mp.MedianADV * sp.MaxParticipation * sp.AvgHoldingDays *
+		float64(sp.UniverseSize) * sp.DiversificationF
+
+	// Ajustement pour le spread : plus le spread est large, plus l'impact est élevé
+	spreadPenalty := 1.0 - (mp.SpreadBps / 10000.0 * 2.0)
+	if spreadPenalty &lt; 0.5 {
+		spreadPenalty = 0.5
+	}
+	adjustedCapacity := rawCapacity * spreadPenalty
+
+	return CapacityResult{
+		Strategy:    sp.Name,
+		Market:      mp.Name,
+		MaxCapacity: adjustedCapacity,
+	}
+}
+
+// ComputeImpact estime le coût d'impact de marché pour une taille donnée.
+// Modèle racine carrée (Almgren-Chriss simplifié) :
+// impact_bps = sigma * sqrt(Q / ADV) * kappa
+func (a *Analyzer) ComputeImpact(orderSizeUSD, adv, dailyVolatility float64) float64 {
+	if adv &lt;= 0 {
+		return 0
+	}
+	kappa := 0.5 // constante empirique (calibrer sur vos données)
+	participationRate := orderSizeUSD / adv
+	impactBps := dailyVolatility * 10000.0 * math.Sqrt(participationRate) * kappa
+	return impactBps
+}
+
+// ComputeSharpeDegradation estime la dégradation du Sharpe ratio
+// quand on scale de baseCapital à targetCapital.
+func (a *Analyzer) ComputeSharpeDegradation(
+	baseSharpe float64,
+	baseCapital float64,
+	targetCapital float64,
+	capacity float64,
+) float64 {
+	if capacity &lt;= 0 {
+		return 0
+	}
+	baseUtil := baseCapital / capacity
+	targetUtil := targetCapital / capacity
+
+	// Modèle : Sharpe_degraded = Sharpe_base * (1 - alpha * utilization^2)
+	// alpha calibré pour que Sharpe → 0 quand utilization → 1
+	alpha := 0.8
+	baseDeg := baseSharpe * (1.0 - alpha*baseUtil*baseUtil)
+	targetDeg := baseSharpe * (1.0 - alpha*targetUtil*targetUtil)
+
+	if baseDeg &lt;= 0 {
+		return 0
+	}
+	return (baseDeg - targetDeg) / baseDeg
+}
+
+// FullAnalysis génère un rapport complet de capacité.
+func (a *Analyzer) FullAnalysis(currentAllocations map[string]float64) []CapacityResult {
+	var results []CapacityResult
+	for _, sp := range a.strategies {
+		for _, mp := range a.markets {
+			r := a.ComputeCapacity(sp, mp)
+			key := fmt.Sprintf("%s_%s", sp.Name, mp.Name)
+			if alloc, ok := currentAllocations[key]; ok {
+				r.CurrentAlloc = alloc
+				r.Utilization = alloc / r.MaxCapacity
+				r.ImpactCost = a.ComputeImpact(
+					alloc/sp.AvgHoldingDays,
+					mp.MedianADV,
+					0.02, // volatilité quotidienne 2%
+				)
+			}
+			results = append(results, r)
+		}
+	}
+	return results
+}
+
+// DefaultStrategies retourne les profils des stratégies de la série.
+func DefaultStrategies() []StrategyProfile {
+	return []StrategyProfile{
+		{Name: "Momentum20", AvgHoldingDays: 20, MaxParticipation: 0.02,
+			UniverseSize: 200, DiversificationF: 0.5, MinADV: 1_000_000},
+		{Name: "MeanRev5", AvgHoldingDays: 5, MaxParticipation: 0.03,
+			UniverseSize: 150, DiversificationF: 0.4, MinADV: 2_000_000},
+		{Name: "CrossAsset", AvgHoldingDays: 30, MaxParticipation: 0.01,
+			UniverseSize: 25, DiversificationF: 0.6, MinADV: 50_000_000},
+		{Name: "StatArb", AvgHoldingDays: 3, MaxParticipation: 0.02,
+			UniverseSize: 100, DiversificationF: 0.3, MinADV: 5_000_000},
+	}
+}
+
+// DefaultMarkets retourne les profils de marché standard.
+func DefaultMarkets() []MarketProfile {
+	return []MarketProfile{
+		{Name: "US_Large", MedianADV: 50_000_000, SpreadBps: 2, Timezone: "America/New_York"},
+		{Name: "US_Small", MedianADV: 500_000, SpreadBps: 15, Timezone: "America/New_York"},
+		{Name: "EU_Large", MedianADV: 20_000_000, SpreadBps: 5, Timezone: "Europe/Paris"},
+		{Name: "EU_Small", MedianADV: 200_000, SpreadBps: 25, Timezone: "Europe/Paris"},
+		{Name: "APAC", MedianADV: 10_000_000, SpreadBps: 8, Timezone: "Asia/Tokyo"},
+	}
+}</code></pre>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège de la capacité théorique vs réelle</h4>
+<p>Les chiffres ci-dessus sont des <strong>maximums théoriques</strong>. En pratique, divisez par 3 pour obtenir la capacité confortable. À 50% d'utilisation, vous commencez à observer une dégradation mesurable du Sharpe. À 80%, votre alpha est compressé de 30-50%. La règle : <strong>ne jamais dépasser 30% de la capacité calculée</strong> sur une stratégie unique.</p>
+</div>
+
+<div id="capacityChart" class="echart-container"></div>
+</div>
+
+<!-- ===== SECTION 2: MULTI-VM INFRASTRUCTURE ===== -->
+<div class="section-divider" id="multivm"><i class="fa-solid fa-server"></i> Infrastructure Multi-VM</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-server"></i> De 1 VM à N VMs — Quand et pourquoi scaler</h2>
+
+<p>Pendant les 11 premiers chapitres, tout tournait sur une seule VM Hetzner. À 1M€+ avec 8-12 stratégies actives, trois sessions de marché (US/EU/APAC), et des pipelines de données de plus en plus gourmands, la VM unique devient un <em>single point of failure</em> inacceptable et un goulot d'étranglement en CPU/mémoire.</p>
+
+<h3>Les signaux qu'il est temps de scaler</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Signal</th><th>Symptôme</th><th>Seuil critique</th><th>Solution</th></tr></thead>
+<tbody>
+<tr><td><strong>CPU &gt; 80%</strong></td><td>Backtests ralentissent l'exécution live</td><td>Sustained &gt; 80% pendant le market open</td><td>VM dédiée backtest</td></tr>
+<tr><td><strong>RAM &gt; 90%</strong></td><td>OOM kills, swap thrashing</td><td>DuckDB + 12 stratégies &gt; 14 GB</td><td>Upgrade ou split</td></tr>
+<tr><td><strong>Latence IBKR &gt; 200ms</strong></td><td>Ordres en retard, fills dégradés</td><td>Régulièrement &gt; 200ms au market open</td><td>VM régionale US</td></tr>
+<tr><td><strong>3 sessions simultanées</strong></td><td>APAC 01h-08h, EU 08h-17h, US 14h-21h CET</td><td>Overlap EU/US = double charge</td><td>1 VM par région</td></tr>
+<tr><td><strong>Recovery time &gt; 5min</strong></td><td>Reboot/crash = ordres orphelins</td><td>Pas de failover automatique</td><td>Cluster HA</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Architecture cible : 3 VMs via HashiCorp Nomad</h3>
+
+<p>L'architecture distribuée utilise le HashiStack que vous connaissez : <strong>Nomad</strong> pour l'orchestration, <strong>Consul</strong> pour le service mesh et la discovery, <strong>Vault</strong> pour les secrets, et <strong>Tailscale</strong> pour le réseau privé inter-VM. Chaque VM est dédiée à une région de marché.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-network-wired"></i> Topologie du cluster</h4>
+<ul>
+<li><strong>vm-us</strong> (Hetzner Ashburn, CPX41) : stratégies US, IBKR Gateway US, Nomad server + client</li>
+<li><strong>vm-eu</strong> (Hetzner Falkenstein, CPX41) : stratégies EU, IBKR Gateway EU, Nomad client</li>
+<li><strong>vm-apac</strong> (Hetzner Singapore ou OVH Sydney, CPX31) : stratégies APAC, IBKR Gateway APAC, Nomad client</li>
+<li><strong>Réseau</strong> : Tailscale mesh — chaque VM voit les autres via IPs privées 100.x.x.x</li>
+<li><strong>Consul</strong> : service discovery — les stratégies trouvent le portfolio manager central</li>
+<li><strong>Vault</strong> : secrets centralisés — clés API, credentials IBKR, tokens Discord</li>
+</ul>
+</div>
+
+<h3>Terraform : provisioning des 3 VMs</h3>
+
+<pre><code>// infra/main.tf — Provisioning 3 VMs Hetzner avec Tailscale
+// Terraform + Hetzner provider + cloud-init
+
+terraform {
+  required_providers {
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "~&gt; 1.45"
+    }
+  }
+}
+
+variable "hcloud_token" {
+  sensitive = true
+}
+
+variable "tailscale_auth_key" {
+  sensitive = true
+}
+
+variable "regions" {
+  type = map(object({
+    location    = string
+    server_type = string
+    role        = string
+  }))
+  default = {
+    us = {
+      location    = "ash"       // Ashburn, VA
+      server_type = "cpx41"     // 8 vCPU, 16 GB
+      role        = "server"    // Nomad server + client
+    }
+    eu = {
+      location    = "fsn1"      // Falkenstein, DE
+      server_type = "cpx41"
+      role        = "client"
+    }
+    apac = {
+      location    = "sin"       // Singapore
+      server_type = "cpx31"     // 4 vCPU, 8 GB (marché plus petit)
+      role        = "client"
+    }
+  }
+}
+
+resource "hcloud_ssh_key" "algo" {
+  name       = "algo-trading"
+  public_key = file("~/.ssh/algo_ed25519.pub")
+}
+
+resource "hcloud_server" "algo" {
+  for_each    = var.regions
+  name        = "algo-${each.key}"
+  server_type = each.value.server_type
+  location    = each.value.location
+  image       = "ubuntu-24.04"
+  ssh_keys    = [hcloud_ssh_key.algo.id]
+
+  user_data = templatefile("${path.module}/cloud-init.yaml", {
+    region         = each.key
+    role           = each.value.role
+    tailscale_key  = var.tailscale_auth_key
+    nomad_server   = each.value.role == "server" ? "true" : "false"
+    consul_server  = each.value.role == "server" ? "true" : "false"
+  })
+
+  labels = {
+    env    = "prod"
+    region = each.key
+    role   = each.value.role
+  }
+}
+
+resource "hcloud_firewall" "algo" {
+  name = "algo-trading"
+
+  rule {
+    direction = "in"
+    protocol  = "tcp"
+    port      = "22"
+    source_ips = ["0.0.0.0/0"]  // SSH (Tailscale preferred)
+  }
+
+  rule {
+    direction = "in"
+    protocol  = "udp"
+    port      = "41641"
+    source_ips = ["0.0.0.0/0"]  // Tailscale WireGuard
+  }
+}
+
+resource "hcloud_firewall_attachment" "algo" {
+  firewall_id = hcloud_firewall.algo.id
+  server_ids  = [for s in hcloud_server.algo : s.id]
+}
+
+output "ips" {
+  value = { for k, s in hcloud_server.algo : k =&gt; s.ipv4_address }
+}</code></pre>
+
+<h3>Nomad job : déploiement d'une stratégie</h3>
+
+<pre><code>// jobs/momentum-us.nomad.hcl — Stratégie Momentum déployée sur vm-us
+
+job "momentum-us" {
+  datacenters = ["ash"]
+  type        = "service"
+
+  constraint {
+    attribute = "${meta.region}"
+    value     = "us"
+  }
+
+  group "strategy" {
+    count = 1
+
+    restart {
+      attempts = 3
+      interval = "10m"
+      delay    = "30s"
+      mode     = "fail"
+    }
+
+    network {
+      port "metrics" { to = 9090 }
+      port "health"  { to = 8080 }
+    }
+
+    service {
+      name = "momentum-us"
+      port = "health"
+      tags = ["strategy", "us", "momentum"]
+
+      check {
+        type     = "http"
+        path     = "/healthz"
+        interval = "30s"
+        timeout  = "5s"
+      }
+
+      connect {
+        sidecar_service {}  // Consul Connect mesh
+      }
+    }
+
+    task "run" {
+      driver = "docker"
+
+      config {
+        image = "ghcr.io/yourorg/algo-strategies:latest"
+        args  = ["--strategy=momentum", "--region=us", "--config=/secrets/config.yaml"]
+        ports = ["metrics", "health"]
+      }
+
+      vault {
+        policies = ["algo-strategies"]
+      }
+
+      template {
+        data        = &lt;&lt;-EOF
+          {{ with secret "secret/data/algo/ibkr-us" }}
+          ibkr_host: {{ .Data.data.host }}
+          ibkr_port: {{ .Data.data.port }}
+          ibkr_client_id: {{ .Data.data.client_id }}
+          {{ end }}
+          {{ with secret "secret/data/algo/discord" }}
+          discord_webhook: {{ .Data.data.webhook_url }}
+          {{ end }}
+        EOF
+        destination = "/secrets/config.yaml"
+      }
+
+      resources {
+        cpu    = 2000  // 2 GHz
+        memory = 4096  // 4 GB
+      }
+    }
+  }
+}</code></pre>
+
+<h3>Go : coordination distribuée via Consul</h3>
+
+<pre><code>package distributed
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"sync"
+	"time"
+
+	consul "github.com/hashicorp/consul/api"
+)
+
+// StrategyStatus représente l'état publié par chaque stratégie dans Consul KV.
+type StrategyStatus struct {
+	Name       string    `json:"name"`
+	Region     string    `json:"region"`
+	State      string    `json:"state"` // running, paused, error
+	Positions  int       `json:"positions"`
+	Exposure   float64   `json:"exposure_usd"`
+	DailyPnL   float64   `json:"daily_pnl_usd"`
+	LastUpdate time.Time `json:"last_update"`
+}
+
+// PortfolioCoordinator centralise la gestion du risque cross-VM.
+type PortfolioCoordinator struct {
+	consul     *consul.Client
+	mu         sync.RWMutex
+	strategies map[string]*StrategyStatus
+	maxExposure float64
+	logger     *slog.Logger
+}
+
+// NewPortfolioCoordinator crée un coordinateur qui écoute Consul.
+func NewPortfolioCoordinator(consulAddr string, maxExposure float64) (*PortfolioCoordinator, error) {
+	cfg := consul.DefaultConfig()
+	cfg.Address = consulAddr // ex: "100.64.0.1:8500" via Tailscale
+
+	client, err := consul.NewClient(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("consul connect: %w", err)
+	}
+
+	return &amp;PortfolioCoordinator{
+		consul:      client,
+		strategies:  make(map[string]*StrategyStatus),
+		maxExposure: maxExposure,
+		logger:      slog.Default(),
+	}, nil
+}
+
+// WatchStrategies surveille les changements de statut des stratégies
+// via Consul KV watch.
+func (pc *PortfolioCoordinator) WatchStrategies(ctx context.Context) error {
+	kv := pc.consul.KV()
+	var lastIndex uint64
+
+	for {
+		select {
+		case &lt;-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		pairs, meta, err := kv.List("algo/strategies/", &amp;consul.QueryOptions{
+			WaitIndex: lastIndex,
+			WaitTime:  30 * time.Second,
+		})
+		if err != nil {
+			pc.logger.Error("consul KV list failed", "error", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		lastIndex = meta.LastIndex
+
+		pc.mu.Lock()
+		for _, pair := range pairs {
+			var status StrategyStatus
+			if err := json.Unmarshal(pair.Value, &amp;status); err != nil {
+				continue
+			}
+			pc.strategies[status.Name+"_"+status.Region] = &amp;status
+		}
+		pc.mu.Unlock()
+
+		// Vérifier l'exposition totale
+		pc.checkTotalExposure()
+	}
+}
+
+// checkTotalExposure vérifie que l'exposition totale ne dépasse pas le max.
+func (pc *PortfolioCoordinator) checkTotalExposure() {
+	pc.mu.RLock()
+	defer pc.mu.RUnlock()
+
+	var totalExposure float64
+	for _, s := range pc.strategies {
+		totalExposure += s.Exposure
+	}
+
+	utilization := totalExposure / pc.maxExposure
+	if utilization &gt; 0.9 {
+		pc.logger.Warn("exposure near limit",
+			"total", totalExposure,
+			"max", pc.maxExposure,
+			"utilization", fmt.Sprintf("%.1f%%", utilization*100),
+		)
+		// Envoyer alerte Discord
+		pc.sendDiscordAlert(fmt.Sprintf(
+			"EXPOSITION CRITIQUE : $%.0f / $%.0f (%.0f%%)",
+			totalExposure, pc.maxExposure, utilization*100,
+		))
+	}
+}
+
+// RequestAllocation demande une allocation au coordinateur.
+// Retourne true si l'allocation est acceptée (ne dépasse pas le max).
+func (pc *PortfolioCoordinator) RequestAllocation(
+	strategy string,
+	region string,
+	requestedUSD float64,
+) bool {
+	pc.mu.RLock()
+	defer pc.mu.RUnlock()
+
+	var currentTotal float64
+	for _, s := range pc.strategies {
+		currentTotal += s.Exposure
+	}
+
+	if currentTotal+requestedUSD &gt; pc.maxExposure {
+		pc.logger.Warn("allocation rejected",
+			"strategy", strategy,
+			"region", region,
+			"requested", requestedUSD,
+			"current_total", currentTotal,
+			"headroom", pc.maxExposure-currentTotal,
+		)
+		return false
+	}
+	return true
+}
+
+// PublishStatus publie le statut d'une stratégie dans Consul KV.
+func (pc *PortfolioCoordinator) PublishStatus(status StrategyStatus) error {
+	data, err := json.Marshal(status)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("algo/strategies/%s_%s", status.Name, status.Region)
+	_, err = pc.consul.KV().Put(&amp;consul.KVPair{
+		Key:   key,
+		Value: data,
+	}, nil)
+	return err
+}
+
+func (pc *PortfolioCoordinator) sendDiscordAlert(msg string) {
+	// Implémenté via webhook Discord — voir Part 10
+}</code></pre>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-shield-halved"></i> Sécurité du cluster distribué</h4>
+<p>Avec 3 VMs exposées sur Internet, la surface d'attaque triple. Règles non négociables :</p>
+<ul>
+<li><strong>Tailscale only</strong> : aucun port ouvert sauf SSH et WireGuard UDP. Toute communication inter-VM passe par le mesh Tailscale (100.x.x.x)</li>
+<li><strong>Vault pour tous les secrets</strong> : clés IBKR, tokens Discord, API keys — jamais dans les fichiers de config, jamais dans les variables d'environnement</li>
+<li><strong>mTLS via Consul Connect</strong> : chaque service prouve son identité cryptographiquement</li>
+<li><strong>Nomad ACLs</strong> : les jobs ne peuvent accéder qu'aux secrets Vault autorisés par leur policy</li>
+</ul>
+</div>
+</div>
+
+<!-- ===== SECTION 3: NOUVELLES STRATÉGIES ===== -->
+<div class="section-divider" id="strategies"><i class="fa-solid fa-chess"></i> Nouvelles stratégies post-million</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chess"></i> Stratégies accessibles au-delà de 500K€</h2>
+
+<p>Le capital débloque des stratégies impossibles à 100K€. Pas parce qu'elles nécessitent du levier — on reste long only — mais parce que les <strong>frais fixes</strong> (données, commissions minimum, spreads) ne sont amortissables qu'au-delà d'un certain seuil. Voici les quatre familles de stratégies qui deviennent rentables post-million.</p>
+
+<h3>1. Statistical Arbitrage — Pairs Trading systématique</h3>
+
+<p>Le stat arb consiste à identifier des paires d'actions coïntégrées (leur spread est mean-reverting) et à trader la convergence. À 100K€, les commissions et le spread mangent tout le P&amp;L car les mouvements sont petits (20-50 bps par trade). À 500K€+, le sizing permet d'absorber les frais et de dégager un Sharpe de 1.5-2.0 avec un drawdown minimal.</p>
+
+<pre><code>package statarb
+
+import (
+	"math"
+	"sort"
+)
+
+// Pair représente une paire coïntégrée.
+type Pair struct {
+	SymbolA    string
+	SymbolB    string
+	HedgeRatio float64 // beta de la régression A = alpha + beta*B + epsilon
+	HalfLife   float64 // demi-vie du spread en jours
+	ZScore     float64 // z-score actuel du spread
+	Correlation float64
+}
+
+// PairScanner identifie les paires coïntégrées dans un univers.
+type PairScanner struct {
+	MinCorrelation float64  // 0.7
+	MaxHalfLife    float64  // 30 jours
+	MinHalfLife    float64  // 2 jours
+	EntryZScore    float64  // 2.0
+	ExitZScore     float64  // 0.5
+	StopZScore     float64  // 4.0
+}
+
+// SpreadTimeSeries calcule le spread entre deux séries de prix.
+func (ps *PairScanner) SpreadTimeSeries(
+	pricesA []float64,
+	pricesB []float64,
+	hedgeRatio float64,
+) []float64 {
+	n := len(pricesA)
+	if len(pricesB) &lt; n {
+		n = len(pricesB)
+	}
+	spread := make([]float64, n)
+	for i := 0; i &lt; n; i++ {
+		spread[i] = math.Log(pricesA[i]) - hedgeRatio*math.Log(pricesB[i])
+	}
+	return spread
+}
+
+// HalfLife estime la demi-vie du mean reversion via régression OLS
+// sur le modèle AR(1) : delta_spread = phi * spread_lag + epsilon
+// half_life = -ln(2) / ln(1 + phi)
+func (ps *PairScanner) HalfLife(spread []float64) float64 {
+	n := len(spread)
+	if n &lt; 20 {
+		return math.Inf(1)
+	}
+
+	// Régression OLS : y = delta_spread, x = spread_lag
+	var sumXY, sumX2, sumX, sumY float64
+	count := float64(n - 1)
+	for i := 1; i &lt; n; i++ {
+		x := spread[i-1]
+		y := spread[i] - spread[i-1]
+		sumX += x
+		sumY += y
+		sumXY += x * y
+		sumX2 += x * x
+	}
+
+	phi := (sumXY - sumX*sumY/count) / (sumX2 - sumX*sumX/count)
+	if phi &gt;= 0 {
+		return math.Inf(1) // pas mean-reverting
+	}
+
+	return -math.Ln2 / math.Log(1+phi)
+}
+
+// ZScore calcule le z-score actuel du spread.
+func (ps *PairScanner) ZScore(spread []float64, lookback int) float64 {
+	if len(spread) &lt; lookback {
+		lookback = len(spread)
+	}
+	recent := spread[len(spread)-lookback:]
+
+	var sum, sumSq float64
+	n := float64(len(recent))
+	for _, v := range recent {
+		sum += v
+		sumSq += v * v
+	}
+	mean := sum / n
+	std := math.Sqrt(sumSq/n - mean*mean)
+	if std == 0 {
+		return 0
+	}
+	return (spread[len(spread)-1] - mean) / std
+}
+
+// GenerateSignal produit un signal de trading pour une paire.
+func (ps *PairScanner) GenerateSignal(pair Pair) string {
+	switch {
+	case math.Abs(pair.ZScore) &gt; ps.StopZScore:
+		return "STOP" // spread a divergé — clôturer
+	case pair.ZScore &gt; ps.EntryZScore:
+		return "SHORT_SPREAD" // short A, long B
+	case pair.ZScore &lt; -ps.EntryZScore:
+		return "LONG_SPREAD" // long A, short B
+	case math.Abs(pair.ZScore) &lt; ps.ExitZScore:
+		return "EXIT" // spread convergé — prendre le profit
+	default:
+		return "HOLD"
+	}
+}</code></pre>
+
+<h3>2. Options Selling — Récolter la prime de volatilité</h3>
+
+<p>Avec un portefeuille de 1M€+ d'actions, vous détenez le sous-jacent nécessaire pour vendre des options couvertes. Le <strong>covered call writing</strong> sur vos positions existantes génère 1-3% de rendement mensuel supplémentaire avec un risque limité (vous ne faites que plafonner votre upside).</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-layer-group"></i> Trois stratégies options compatibles long-only</h4>
+<ul>
+<li><strong>Covered Calls</strong> : vendre des calls OTM à 30 delta sur vos positions. Rendement : 1-2%/mois, risque : assignment (mais vous vouliez vendre de toute façon)</li>
+<li><strong>Cash-Secured Puts</strong> : vendre des puts OTM à 20 delta sur des actions que vous voulez acheter. Rendement : 0.5-1.5%/mois, risque : assignment = achat à prix souhaité</li>
+<li><strong>Collar</strong> : covered call + protective put = protection contre le crash, financée par la prime du call. Coût net : quasi-nul</li>
+</ul>
+<p>La règle d'or : <strong>ne vendez que des options que vous êtes prêt à honorer</strong>. Pas de naked selling. Jamais.</p>
+</div>
+
+<h3>3. Event-Driven — Exploiter le calendrier</h3>
+
+<p>Les événements corporate (earnings, M&amp;A, spin-offs, index rebalancing) créent des dislocations de prix prévisibles et récurrentes. Avec un capital suffisant pour diversifier sur 20-30 événements simultanément, le <em>win rate</em> converge vers la moyenne historique et le Sharpe se stabilise.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Type d'événement</th><th>Fenêtre</th><th>Alpha moyen</th><th>Win Rate</th><th>Capital min</th></tr></thead>
+<tbody>
+<tr><td><strong>Post-Earnings Drift</strong></td><td>+1 à +60j après earnings</td><td>3-5% par position</td><td>55-60%</td><td>$200K</td></tr>
+<tr><td><strong>Index Rebalancing</strong></td><td>-5j à +2j autour du rebalancing</td><td>1-3%</td><td>65-70%</td><td>$500K</td></tr>
+<tr><td><strong>Spin-Off</strong></td><td>+1j à +90j post-séparation</td><td>5-15%</td><td>60%</td><td>$100K</td></tr>
+<tr><td><strong>Share Buyback</strong></td><td>Annonce +30j</td><td>2-4%</td><td>55%</td><td>$300K</td></tr>
+<tr><td><strong>Insider Buying cluster</strong></td><td>+1j à +30j après 3+ achats</td><td>3-8%</td><td>62%</td><td>$200K</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>4. Le paradoxe du capital</h3>
+
+<p>Voici la vérité que les fonds ne vous diront jamais : <strong>plus votre capital augmente, plus votre rendement marginal diminue</strong>. C'est la loi incontournable des marchés. Un système qui fait 100% par an à 100K€ fera peut-être 40% à 1M€, 20% à 10M€, et 12% à 100M€. La capacité totale du marché pour l'alpha est finie.</p>
+
+<p>C'est pourquoi les meilleurs hedge funds ferment leur fonds aux nouveaux investisseurs (<em>hard close</em>) — pas par élitisme, mais par nécessité mathématique. Renaissance Technologies gère $130B mais le Medallion Fund est limité à $10B pour ses employés. Le reste est en stratégies moins performantes.</p>
+
+<pre><code>package scaling
+
+import "math"
+
+// AlphaDecayModel modélise la décroissance de l'alpha en fonction du capital.
+// Modèle : alpha(AUM) = alpha_base * (1 / (1 + k * ln(AUM / AUM_base)))
+type AlphaDecayModel struct {
+	AlphaBase float64 // alpha annualisé au capital de base (ex: 1.0 = 100%)
+	AUMBase   float64 // capital de base en USD (ex: 100_000)
+	K         float64 // constante de décroissance (0.15 = modéré, 0.3 = agressif)
+}
+
+// AlphaAtAUM retourne l'alpha annualisé estimé pour un AUM donné.
+func (m *AlphaDecayModel) AlphaAtAUM(aum float64) float64 {
+	if aum &lt;= m.AUMBase {
+		return m.AlphaBase
+	}
+	return m.AlphaBase / (1.0 + m.K*math.Log(aum/m.AUMBase))
+}
+
+// OptimalAUM retourne l'AUM qui maximise le profit absolu.
+// profit(AUM) = AUM * alpha(AUM)
+// d/dAUM [profit] = 0 quand alpha(AUM) + AUM * alpha'(AUM) = 0
+func (m *AlphaDecayModel) OptimalAUM() float64 {
+	// Résolution numérique par recherche binaire
+	lo, hi := m.AUMBase, m.AUMBase*10000
+	for i := 0; i &lt; 100; i++ {
+		mid := (lo + hi) / 2
+		profitMid := mid * m.AlphaAtAUM(mid)
+		profitMidPlus := (mid * 1.001) * m.AlphaAtAUM(mid*1.001)
+		if profitMidPlus &gt; profitMid {
+			lo = mid
+		} else {
+			hi = mid
+		}
+	}
+	return (lo + hi) / 2
+}
+
+// ProjectGrowth projette la croissance du capital sur N années
+// en tenant compte de la décroissance de l'alpha.
+func (m *AlphaDecayModel) ProjectGrowth(years int) []float64 {
+	aum := m.AUMBase
+	trajectory := []float64{aum}
+	for y := 0; y &lt; years; y++ {
+		alpha := m.AlphaAtAUM(aum)
+		aum *= (1.0 + alpha)
+		trajectory = append(trajectory, aum)
+	}
+	return trajectory
+}</code></pre>
+
+<div id="alphaDecayChart" class="echart-container"></div>
+</div>
+
+<!-- ===== SECTION 4: LICENSING ===== -->
+<div class="section-divider" id="licensing"><i class="fa-solid fa-key"></i> Licensing &amp; monétisation du système</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-key"></i> Trois modèles de monétisation</h2>
+
+<p>Votre système tourne depuis 2+ ans, le track record est audité, le Sharpe est stable au-dessus de 1.5. Vous avez un actif intellectuel qui vaut potentiellement plus que les profits qu'il génère. Trois options s'offrent à vous.</p>
+
+<h3>Option A : Signal-as-a-Service (SaaS)</h3>
+
+<p>Vous exposez vos signaux de trading via une API REST. Les clients reçoivent les signaux en temps réel et exécutent eux-mêmes. Vous ne gérez pas leur argent — vous vendez de l'information.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Tier</th><th>Prix/mois</th><th>Contenu</th><th>Latence signal</th><th>Clients cibles</th></tr></thead>
+<tbody>
+<tr><td><strong>Discovery</strong></td><td>€99</td><td>1 stratégie, signaux daily EOD</td><td>T+1 (fin de journée)</td><td>Retail actifs</td></tr>
+<tr><td><strong>Pro</strong></td><td>€299</td><td>3 stratégies, signaux real-time</td><td>&lt; 5 min</td><td>Traders semi-pro</td></tr>
+<tr><td><strong>Institutional</strong></td><td>€999</td><td>Toutes stratégies + portfolio optimizer</td><td>&lt; 30 sec</td><td>Family offices, RIA</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code>package signalapi
+
+import (
+	"context"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+// Signal représente un signal de trading envoyé aux clients.
+type Signal struct {
+	ID         string    `json:"id"`
+	Strategy   string    `json:"strategy"`
+	Symbol     string    `json:"symbol"`
+	Action     string    `json:"action"` // BUY, SELL, HOLD
+	EntryPrice float64   `json:"entry_price"`
+	StopLoss   float64   `json:"stop_loss"`
+	Target1    float64   `json:"target_1"`
+	Target2    float64   `json:"target_2"`
+	Confidence float64   `json:"confidence"` // 0-1
+	Timestamp  time.Time `json:"timestamp"`
+}
+
+// Tier définit les droits d'accès d'un abonnement.
+type Tier struct {
+	Name        string
+	Strategies  []string
+	MaxLatency  time.Duration
+	RealTime    bool
+}
+
+// SignalServer expose les signaux via API REST.
+type SignalServer struct {
+	router     *gin.Engine
+	signals    []Signal
+	mu         sync.RWMutex
+	tiers      map[string]Tier
+	apiKeys    map[string]string // apiKey -> tierName
+	logger     *slog.Logger
+}
+
+// NewSignalServer crée un serveur de signaux.
+func NewSignalServer(logger *slog.Logger) *SignalServer {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	s := &amp;SignalServer{
+		router:  r,
+		signals: make([]Signal, 0, 1000),
+		tiers: map[string]Tier{
+			"discovery": {
+				Name:       "Discovery",
+				Strategies: []string{"momentum"},
+				MaxLatency: 24 * time.Hour,
+				RealTime:   false,
+			},
+			"pro": {
+				Name:       "Pro",
+				Strategies: []string{"momentum", "meanrev", "crossasset"},
+				MaxLatency: 5 * time.Minute,
+				RealTime:   true,
+			},
+			"institutional": {
+				Name:       "Institutional",
+				Strategies: []string{"*"}, // toutes
+				MaxLatency: 30 * time.Second,
+				RealTime:   true,
+			},
+		},
+		apiKeys: make(map[string]string),
+		logger:  logger,
+	}
+
+	// Routes
+	r.GET("/v1/signals", s.authMiddleware(), s.getSignals)
+	r.GET("/v1/signals/latest", s.authMiddleware(), s.getLatestSignals)
+	r.GET("/v1/portfolio", s.authMiddleware(), s.getPortfolio)
+	r.GET("/healthz", s.healthCheck)
+
+	return s
+}
+
+// PublishSignal publie un nouveau signal (appelé par le système de trading).
+func (s *SignalServer) PublishSignal(sig Signal) {
+	s.mu.Lock()
+	s.signals = append(s.signals, sig)
+	s.mu.Unlock()
+	s.logger.Info("signal published",
+		"strategy", sig.Strategy,
+		"symbol", sig.Symbol,
+		"action", sig.Action,
+	)
+}
+
+func (s *SignalServer) authMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := c.GetHeader("X-API-Key")
+		if key == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing API key"})
+			return
+		}
+		tierName, ok := s.apiKeys[key]
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "invalid API key"})
+			return
+		}
+		c.Set("tier", tierName)
+		c.Next()
+	}
+}
+
+func (s *SignalServer) getLatestSignals(c *gin.Context) {
+	tierName := c.GetString("tier")
+	tier := s.tiers[tierName]
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	cutoff := time.Now().Add(-tier.MaxLatency)
+	var filtered []Signal
+	for _, sig := range s.signals {
+		if sig.Timestamp.Before(cutoff) {
+			continue
+		}
+		if !s.tierHasAccess(tier, sig.Strategy) {
+			continue
+		}
+		filtered = append(filtered, sig)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"tier":    tier.Name,
+		"count":   len(filtered),
+		"signals": filtered,
+	})
+}
+
+func (s *SignalServer) getSignals(c *gin.Context) {
+	s.getLatestSignals(c) // Simplifié — en prod, pagination + filtres
+}
+
+func (s *SignalServer) getPortfolio(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "positions": []string{}})
+}
+
+func (s *SignalServer) healthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+}
+
+func (s *SignalServer) tierHasAccess(tier Tier, strategy string) bool {
+	for _, allowed := range tier.Strategies {
+		if allowed == "*" || allowed == strategy {
+			return true
+		}
+	}
+	return false
+}
+
+// Run démarre le serveur sur le port donné.
+func (s *SignalServer) Run(ctx context.Context, addr string) error {
+	srv := &amp;http.Server{Addr: addr, Handler: s.router}
+	go func() {
+		&lt;-ctx.Done()
+		srv.Shutdown(context.Background())
+	}()
+	return srv.ListenAndServe()
+}</code></pre>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Alpha Decay par dilution</h4>
+<p>Le risque principal du modèle SaaS : <strong>si 100 clients exécutent le même signal au même moment, l'alpha s'effondre</strong>. Chaque client supplémentaire est un concurrent sur le même trade. Mitigations : (1) décaler les signaux de quelques minutes entre tiers, (2) varier les points d'entrée, (3) limiter le nombre de clients par stratégie, (4) facturer un premium pour la priorité d'exécution. La règle empirique : au-delà de 50 clients actifs sur une même stratégie mid-cap, l'impact de marché devient mesurable.</p>
+</div>
+
+<h3>Option B : Licence technologique à un fonds</h3>
+
+<p>Vous ne vendez pas les signaux — vous vendez le <strong>système entier</strong> (ou une licence d'utilisation) à un fonds quantitatif. C'est le modèle le plus lucratif en one-shot mais le plus difficile à concrétiser.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-handshake"></i> Due diligence — Ce que le fonds exigera</h4>
+<ul>
+<li><strong>Track record audité</strong> : minimum 24 mois de live trading, vérifié par un tiers (IBKR statements)</li>
+<li><strong>Sharpe ratio &gt; 1.5</strong> calculé net de tous frais, sur des returns mensuels</li>
+<li><strong>Max drawdown documenté</strong> : chaque drawdown &gt; 10% doit être expliqué</li>
+<li><strong>Code review</strong> : un quant senior passera 2-3 jours dans votre codebase</li>
+<li><strong>Backtest vs live comparison</strong> : écart &lt; 20% entre backtest et live performance</li>
+<li><strong>Reproductibilité</strong> : le fonds doit pouvoir rebuilder les résultats à partir de vos données brutes</li>
+</ul>
+<p><strong>Pricing indicatif</strong> : upfront €200K-500K + 10-20% des profits générés par le système chez le fonds. Ou un flat fee de €1M-3M pour une licence perpétuelle exclusive.</p>
+</div>
+
+<h3>Option C : Managed Accounts (SMA)</h3>
+
+<p>Vous gérez l'argent de clients dans des comptes séparés (<em>Separately Managed Accounts</em>). Chaque client a son propre compte IBKR, vous avez un accès advisor pour exécuter les trades.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Modèle</th><th>Management Fee</th><th>Performance Fee</th><th>Hurdle</th><th>High Water Mark</th></tr></thead>
+<tbody>
+<tr><td><strong>Classique 2/20</strong></td><td>2%/an</td><td>20% des profits</td><td>Non</td><td>Oui</td></tr>
+<tr><td><strong>Compétitif 0/30</strong></td><td>0%</td><td>30% des profits</td><td>5%</td><td>Oui</td></tr>
+<tr><td><strong>Hybride 1/15</strong></td><td>1%/an</td><td>15% des profits</td><td>3%</td><td>Oui</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Cadre réglementaire par juridiction</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Juridiction</th><th>Statut requis</th><th>Coût setup</th><th>Délai</th><th>Capital minimum</th></tr></thead>
+<tbody>
+<tr><td><strong>France</strong></td><td>CIF (Conseiller en Investissements Financiers)</td><td>€5-10K</td><td>3-6 mois</td><td>Aucun (mais RCP obligatoire)</td></tr>
+<tr><td><strong>Luxembourg</strong></td><td>PSF de support / AIFM</td><td>€50-150K</td><td>6-12 mois</td><td>€125K (AIFM)</td></tr>
+<tr><td><strong>UK</strong></td><td>FCA Authorized (IFPRU)</td><td>£30-80K</td><td>6-12 mois</td><td>£75K</td></tr>
+<tr><td><strong>US</strong></td><td>SEC RIA (Registered Investment Advisor)</td><td>$20-50K</td><td>3-6 mois</td><td>Aucun (&lt; $100M → state, &gt; $100M → SEC)</td></tr>
+<tr><td><strong>Suisse</strong></td><td>Gestionnaire de fortune (FinIA)</td><td>CHF 50-100K</td><td>6-18 mois</td><td>CHF 100K</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ===== SECTION 5: FAMILY OFFICE ===== -->
+<div class="section-divider" id="familyoffice"><i class="fa-solid fa-building-columns"></i> Family Office mono-personne</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-building-columns"></i> Structure optimale pour &gt; 1M€</h2>
+
+<p>À partir du moment où votre patrimoine financier dépasse le million d'euros, la structuration devient un levier de performance aussi puissant que l'alpha de votre système. Un family office mono-personne bien structuré peut économiser <strong>30-50K€/an en fiscalité</strong> et protéger votre patrimoine contre les aléas juridiques.</p>
+
+<h3>Architecture juridique recommandée (France)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-sitemap"></i> Structure en 4 véhicules</h4>
+<ul>
+<li><strong>Holding SAS (IS)</strong> : société opérationnelle qui détient le système algo. Facture les prestations (signaux, licence). Taux IS : 15% jusqu'à 42.5K€ puis 25%. Cash accumulé dans la holding.</li>
+<li><strong>SCI à l'IS</strong> (détenue par la holding) : investissement immobilier. L'amortissement comptable réduit l'IS. Location nue ou meublée selon la stratégie.</li>
+<li><strong>CTO Personne Physique</strong> : compte-titres pour le trading perso. Flat tax 30% (PFU) sur les plus-values. L'enveloppe la plus flexible.</li>
+<li><strong>PEA / PEA-PME</strong> : 150K€ + 225K€ plafond. Exonération d'IR après 5 ans (17.2% PS seulement). Uniquement actions EU éligibles — parfait pour les stratégies EU long-only.</li>
+</ul>
+</div>
+
+<h3>Allocation patrimoniale cible</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Classe d'actifs</th><th>Allocation</th><th>Véhicule</th><th>Rendement cible</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><strong>Algo Trading</strong></td><td>50%</td><td>Holding SAS + CTO</td><td>15-30%/an</td><td>Moteur de performance</td></tr>
+<tr><td><strong>Immobilier</strong></td><td>20%</td><td>SCI à l'IS</td><td>5-8%/an (avec levier)</td><td>Revenus réguliers + effet de levier</td></tr>
+<tr><td><strong>Private Equity / VC</strong></td><td>10%</td><td>Holding SAS</td><td>15-25%/an (illiquide)</td><td>Diversification, upside convexe</td></tr>
+<tr><td><strong>Cash / Obligations</strong></td><td>10%</td><td>Holding SAS + Fonds €</td><td>3-4%/an</td><td>Réserve de sécurité 12 mois</td></tr>
+<tr><td><strong>Crypto</strong></td><td>10%</td><td>CTO / Cold storage</td><td>Variable</td><td>Asymétrie, décorrélation</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Budget annuel du family office</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Poste</th><th>Coût/an</th><th>Fréquence</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><strong>Expert-comptable</strong></td><td>€3-5K</td><td>Mensuel + bilan annuel</td><td>Holding + SCI + déclarations perso</td></tr>
+<tr><td><strong>Avocat fiscaliste</strong></td><td>€2-3K</td><td>1-2 consultations/an</td><td>Optimisation, veille réglementaire</td></tr>
+<tr><td><strong>RC Pro (assurance)</strong></td><td>€1-2K</td><td>Annuel</td><td>Obligatoire si CIF / gestion pour tiers</td></tr>
+<tr><td><strong>Assurance cyber</strong></td><td>€500-1K</td><td>Annuel</td><td>Couvre les incidents de sécurité IT</td></tr>
+<tr><td><strong>Assurance homme-clé</strong></td><td>€1-2K</td><td>Annuel</td><td>Si le système dépend uniquement de vous</td></tr>
+<tr><td><strong>Infrastructure IT</strong></td><td>€1-2K</td><td>Mensuel</td><td>3 VMs + données marché + domaines</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>€10-15K</strong></td><td></td><td>Soit ~1-1.5% sur 1M€ (raisonnable)</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Succession et transmission du système</h3>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-scale-balanced"></i> Le problème du bus factor = 1</h4>
+<p>Votre système algo est un actif immatériel qui <strong>meurt avec vous</strong> si vous ne préparez pas la transmission. Trois mesures essentielles :</p>
+<ul>
+<li><strong>Documentation complète</strong> : chaque stratégie documentée dans un runbook (on l'a fait en Part 10). Un tiers compétent doit pouvoir reprendre en 48h.</li>
+<li><strong>Clause testamentaire spécifique</strong> : « Mon système de trading algorithmique (code source, configurations, credentials) est légué à [personne/entité] avec instructions de [continuer l'exploitation / vendre / arrêter]. »</li>
+<li><strong>Enveloppe scellée</strong> : chez le notaire, une enveloppe contenant les accès Vault root token, les recovery keys, et les instructions de démarrage d'urgence. Mise à jour annuellement.</li>
+<li><strong>Procuration IBKR</strong> : désigner un mandataire autorisé qui peut clôturer toutes les positions en cas d'incapacité.</li>
+</ul>
+</div>
+</div>
+
+<!-- ===== SECTION 6: EXIT STRATEGIES ===== -->
+<div class="section-divider" id="exit"><i class="fa-solid fa-door-open"></i> Stratégies de sortie</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-door-open"></i> Quatre scénarios de sortie</h2>
+
+<p>Tout système a une fin de vie. Pas nécessairement parce qu'il cesse de fonctionner, mais parce que <em>vous</em> changez. Voici les quatre scénarios, classés du plus fréquent au plus rare.</p>
+
+<h3>Scénario 1 : Continuer indéfiniment (le préféré)</h3>
+
+<p>Le système tourne, vous supervisez 30 minutes par jour, les profits composent. C'est le scénario optimal — la machine de rente perpétuelle décrite dans le chapitre 11. Les risques à long terme :</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Risque</th><th>Probabilité (10 ans)</th><th>Impact</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td><strong>Alpha decay structurel</strong></td><td>Élevée (60%)</td><td>Sharpe passe de 2.0 à 1.0</td><td>Innovation continue, nouvelles stratégies</td></tr>
+<tr><td><strong>Changement réglementaire</strong></td><td>Moyenne (30%)</td><td>Interdiction du HFT retail / taxe transactions</td><td>Multi-juridiction, lobbying</td></tr>
+<tr><td><strong>Disruption technologique</strong></td><td>Moyenne (25%)</td><td>AI/ML rend vos facteurs obsolètes</td><td>Intégrer le ML (Part 9)</td></tr>
+<tr><td><strong>Broker risk</strong></td><td>Faible (5%)</td><td>IBKR faillite / changement API</td><td>Multi-broker, SIPC/FSCS protection</td></tr>
+<tr><td><strong>Incident personnel</strong></td><td>Variable</td><td>Incapacité de superviser</td><td>Succession (voir ci-dessus)</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Scénario 2 : Rejoindre un fonds quantitatif</h3>
+
+<p>Avec un track record live &gt; 3 ans et un Sharpe &gt; 2.0, vous êtes un candidat prisé pour les <em>pod shops</em> (plateformes multi-PM) : Citadel, Millennium, Point72, Balyasny, ExodusPoint. Le modèle :</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-user-tie"></i> Le deal type d'un pod shop</h4>
+<ul>
+<li><strong>Capital alloué</strong> : $20-100M selon votre track record</li>
+<li><strong>Payout</strong> : 15-25% des profits nets (après frais de plateforme)</li>
+<li><strong>Frais de plateforme</strong> : 5-15% du P&amp;L (data, infra, risk, compliance)</li>
+<li><strong>Drawdown limit</strong> : -5% du capital alloué = <em>hard cut</em> (positions liquidées)</li>
+<li><strong>Co-invest</strong> : vous pouvez investir votre propre capital aux mêmes conditions (pas de management fee)</li>
+<li><strong>Non-compete</strong> : 12-24 mois, périmètre restreint</li>
+</ul>
+<p>Le calcul : si on vous alloue $50M et que vous faites 20% → $10M de profits. Votre payout à 20% = <strong>$2M/an</strong>. C'est 10× ce que vous gagneriez seul sur votre million. Le trade-off : perte d'autonomie, stress des drawdown limits, bureaucratie corporate.</p>
+</div>
+
+<h3>Scénario 3 : Créer un fonds</h3>
+
+<p>Vous passez de trader solo à gérant de fonds. C'est un changement de métier radical : 50% de votre temps sera consacré au marketing, à la compliance, et à la gestion des investisseurs.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Étape</th><th>Coût</th><th>Délai</th><th>Détail</th></tr></thead>
+<tbody>
+<tr><td><strong>Structure juridique</strong></td><td>€30-50K</td><td>2-4 mois</td><td>Fonds (SIF/RAIF Luxembourg ou FIA France) + Management Company</td></tr>
+<tr><td><strong>Compliance &amp; AIFM</strong></td><td>€20-40K</td><td>3-6 mois</td><td>KYC/AML, prospectus, reporting AIFMD</td></tr>
+<tr><td><strong>Prime broker</strong></td><td>€0 (setup)</td><td>1-2 mois</td><td>IBKR Prime Services, Goldman Sachs PB (si &gt; $50M)</td></tr>
+<tr><td><strong>Admin &amp; audit</strong></td><td>€15-25K/an</td><td>Ongoing</td><td>NAV calculation, audit annuel (Big 4 pour crédibilité)</td></tr>
+<tr><td><strong>Marketing &amp; fundraise</strong></td><td>€10-20K</td><td>6-12 mois</td><td>Pitchbook, DDQ, roadshow (capital allocators, family offices)</td></tr>
+<tr><td><strong>Total setup</strong></td><td><strong>€80-150K</strong></td><td><strong>6-12 mois</strong></td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>Break-even</strong> : avec une structure 2/20, il vous faut ~€20M d'AUM pour couvrir les frais fixes (management fee 2% × 20M = €400K, dont ~€200K en frais fixes). En dessous, vous perdez de l'argent en frais de structure. La réalité : la levée de fonds est <strong>le métier le plus difficile en finance</strong>. Un bon trader n'est pas nécessairement un bon vendeur.</p>
+
+<h3>Scénario 4 : Vente pure du système</h3>
+
+<p>Vous vendez tout : code source, données historiques, track record, infrastructure, documentation. L'acheteur reprend l'exploitation.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-tag"></i> Méthodes de valorisation</h4>
+<ul>
+<li><strong>Multiple de revenus</strong> : 3-5× les revenus annuels nets du système. Si votre algo génère €300K/an net → valorisation €900K-1.5M</li>
+<li><strong>Multiple de profits</strong> : 10-15× le profit net annuel. Si profit net (après impôts, frais) = €200K → valorisation €2-3M</li>
+<li><strong>DCF</strong> : somme des cash flows futurs actualisés sur 5-7 ans avec un taux de 15-20% (risque élevé). Inclut un facteur d'alpha decay.</li>
+<li><strong>Comparable transactions</strong> : les acquisitions de systèmes algo par des prop firms se font typiquement à 4-8× les profits.</li>
+</ul>
+</div>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Acquéreur type</th><th>Motivation</th><th>Budget typique</th><th>Due diligence</th></tr></thead>
+<tbody>
+<tr><td><strong>Prop trading firm</strong></td><td>Ajout de stratégies décorrélées</td><td>€500K-5M</td><td>Technique intensive (code review)</td></tr>
+<tr><td><strong>Fintech / Robo-advisor</strong></td><td>Intégration dans leur plateforme</td><td>€200K-2M</td><td>Produit + scalabilité</td></tr>
+<tr><td><strong>Family office</strong></td><td>Gestion interne du patrimoine</td><td>€300K-3M</td><td>Track record + simplicité</td></tr>
+<tr><td><strong>Fonds quantitatif</strong></td><td>Acqui-hire (système + talent)</td><td>€1M-10M</td><td>La plus rigoureuse</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> La due diligence technique d'une vente</h4>
+<p>L'acheteur vérifiera systématiquement :</p>
+<ul>
+<li><strong>Reproductibilité</strong> : peut-on rebuilder les résultats historiques à partir du code + données brutes ?</li>
+<li><strong>Overfitting</strong> : les paramètres sont-ils stables dans le temps ? Test de robustesse out-of-sample.</li>
+<li><strong>Dépendance au créateur</strong> : le système tourne-t-il sans vous ? Runbooks, documentation, tests automatisés.</li>
+<li><strong>Audit trail</strong> : chaque trade historique est-il traçable (log IBKR, timestamps, fills) ?</li>
+<li><strong>Pérennité des données</strong> : les feeds de données sont-ils sous contrat ? Coût de remplacement ?</li>
+</ul>
+</div>
+</div>
+
+<!-- ===== SECTION 7: RÉTROSPECTIVE & CONCLUSION ===== -->
+<div class="section-divider" id="retrospective"><i class="fa-solid fa-flag-checkered"></i> Rétrospective &amp; Conclusion</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-flag-checkered"></i> Les 12 chapitres en un tableau</h2>
+
+<p>Vous avez parcouru 12 chapitres, des dizaines de milliers de lignes de code Go, et un framework complet pour transformer 100K€ en machine de rente. Récapitulons.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>#</th><th>Chapitre</th><th>Livrable clé</th><th>Stack</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong></td><td>Infrastructure</td><td>VM hardened + IBKR Gateway + monitoring</td><td>Hetzner, Tailscale, Docker</td></tr>
+<tr><td><strong>2</strong></td><td>Data Pipeline</td><td>Ingestion multi-source + TimescaleDB + qualité</td><td>Go, TimescaleDB, DuckDB</td></tr>
+<tr><td><strong>3</strong></td><td>Alpha Factors</td><td>120+ facteurs techniques, fondamentaux, sentiment</td><td>Go, feature store</td></tr>
+<tr><td><strong>4</strong></td><td>Portfolio Construction</td><td>Optimisation MVO + risk parity + constraints</td><td>Go, Gonum</td></tr>
+<tr><td><strong>5</strong></td><td>Exécution</td><td>Smart order routing + TWAP/VWAP + slippage control</td><td>Go, IBKR API</td></tr>
+<tr><td><strong>6</strong></td><td>Momentum</td><td>3 stratégies momentum (cross-sectional, time-series, dual)</td><td>Go, backtester</td></tr>
+<tr><td><strong>7</strong></td><td>Mean Reversion</td><td>RSI/Bollinger + pairs + stat arb</td><td>Go, z-score engine</td></tr>
+<tr><td><strong>8</strong></td><td>Cross-Asset</td><td>Rotation ETF multi-région (US/EU/APAC/Commodities)</td><td>Go, correlation matrix</td></tr>
+<tr><td><strong>9</strong></td><td>Régime ML</td><td>Détection de régime + allocation adaptative</td><td>Go, HMM, random forest</td></tr>
+<tr><td><strong>10</strong></td><td>Production Ops</td><td>Nomad + Consul + Vault + alerting + runbooks</td><td>HashiStack, Discord</td></tr>
+<tr><td><strong>11</strong></td><td>Rente</td><td>Withdrawal policy + fiscalité + psychologie</td><td>Go, simulation Monte Carlo</td></tr>
+<tr><td><strong>12</strong></td><td>Scaling &amp; Exit</td><td>Multi-VM + licensing + family office + exit</td><td>Terraform, Nomad, Consul</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Les 10 Commandements du Trader Algo</h3>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-scroll"></i> Les 10 Commandements — Gravés dans le marbre après 12 chapitres</h4>
+<ol>
+<li><strong>Tu ne traderas point sans backtest</strong> — Aucune stratégie ne touche le capital réel sans 5+ ans de backtest out-of-sample et un walk-forward positif. Pas d'exception. Pas de « j'ai un feeling ».</li>
+<li><strong>Tu diversifieras tes stratégies comme tes positions</strong> — Une seule stratégie est un single point of failure. 8-12 stratégies décorrélées, pondérées par régime de marché. La corrélation entre stratégies doit être &lt; 0.3.</li>
+<li><strong>Tu respecteras ton drawdown maximum</strong> — 25% max. Si atteint, coupe 50% de l'exposition et passe en mode défensif. Le capital est irremplaçable. L'alpha, on peut le retrouver.</li>
+<li><strong>Tu automatiseras tout ce qui peut l'être</strong> — Si tu fais une action manuellement plus de 3 fois, c'est un bug. Automatise. Les humains font des erreurs sous stress. Les machines non.</li>
+<li><strong>Tu monitoreras comme si ta vie en dépendait</strong> — Parce que ton patrimoine en dépend. Alertes Discord pour chaque trade, chaque erreur, chaque anomalie. Dashboards Prometheus. Runbooks pour chaque scénario.</li>
+<li><strong>Tu ne sur-optimiseras point</strong> — L'overfitting est l'ennemi #1 du quant. Peu de paramètres, beaucoup de données. Si ta stratégie a 20 paramètres, c'est du curve-fitting déguisé en science.</li>
+<li><strong>Tu sépareras l'exécution de la recherche</strong> — Le système de production ne fait JAMAIS de backtest. Le système de recherche n'exécute JAMAIS de trades réels. Deux environnements. Deux VMs. Deux mentalités.</li>
+<li><strong>Tu versionneras tout</strong> — Chaque ligne de code, chaque config, chaque résultat de backtest. Git n'est pas optionnel. Les tags de version marquent chaque déploiement en production.</li>
+<li><strong>Tu vivras en dessous de tes moyens</strong> — Le taux de retrait ne dépasse jamais 3% du capital. Les bonnes années ne changent pas ton train de vie. Les mauvaises années ne changent pas ta stratégie. Compound &gt; lifestyle.</li>
+<li><strong>Tu planifieras ta sortie dès le jour 1</strong> — Documentation, succession, enveloppe scellée, procuration. Le système doit pouvoir survivre à son créateur ou être vendu proprement. Un actif non-transmissible vaut zéro.</li>
+</ol>
+</div>
+
+<h3>Projection 5 ans : de 100K€ à 3M€+</h3>
+
+<p>En intégrant le modèle d'alpha decay (l'alpha diminue à mesure que le capital croît) et un taux de retrait de 3% à partir de l'année 3, voici la trajectoire réaliste sur 5 ans :</p>
+
+<div id="projectionChart" class="echart-container"></div>
+
+<h3>Le message final</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-trophy"></i> La machine tourne. L'humain supervise.</h4>
+<p>Vous avez construit, en 12 chapitres, quelque chose que 99% des traders ne construiront jamais : un <strong>système autonome de génération de richesse</strong>. Pas un robot magique. Pas un algo qui « bat le marché ». Un <em>framework</em> rigoureux, testé, documenté, monitoré, qui extrait de l'alpha de manière systématique et reproductible.</p>
+<p>La beauté de ce système, c'est qu'il vous libère. 30 minutes par jour pour vérifier les dashboards. Une heure par semaine pour la recherche de nouvelles idées. Le reste du temps est à vous — pour vivre, apprendre, créer. C'est ça, le vrai million : pas le chiffre sur le compte, mais le <strong>temps récupéré</strong>.</p>
+<p>Le marché continuera de tourner demain. Votre système aussi. La seule question qui reste : <strong>qu'allez-vous faire de votre liberté ?</strong></p>
+</div>
+
+<h3>Remerciements</h3>
+
+<p>Cette série n'aurait pas été possible sans :</p>
+<ul>
+<li><strong>Interactive Brokers</strong> — pour l'API la plus complète du marché retail</li>
+<li><strong>HashiCorp</strong> — pour Nomad, Consul et Vault qui simplifient l'infrastructure distribuée</li>
+<li><strong>Tailscale</strong> — pour avoir rendu le networking privé trivial</li>
+<li><strong>La communauté Go</strong> — pour un langage qui fait exactement ce qu'on lui demande, sans surprise</li>
+<li><strong>Vous, le lecteur</strong> — pour avoir eu la patience de parcourir 12 chapitres techniques de bout en bout</li>
+</ul>
+
+<p><strong>Fin de la série.</strong></p>
+
+</div>
+
+</div><!-- /.container -->
+
+<!-- ===== TAKEAWAY BOX FINAL ===== -->
+<div class="container">
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-gem"></i> Résumé de la série — Algo Trading : De 100K au Million sans Levier</h4>
+<ul>
+<li><strong>Infrastructure</strong> : VM Hetzner + IBKR + HashiStack + Tailscale = &lt; €100/mois pour une infrastructure de niveau institutionnel</li>
+<li><strong>Data</strong> : pipeline Go multi-source, TimescaleDB pour le stockage, DuckDB pour l'analytics, 120+ facteurs alpha</li>
+<li><strong>Stratégies</strong> : 8-12 stratégies décorrélées (momentum, mean reversion, cross-asset, stat arb, event-driven) pondérées par régime</li>
+<li><strong>Exécution</strong> : smart order routing, TWAP/VWAP, slippage &lt; 5 bps, multi-marché US/EU/APAC</li>
+<li><strong>Risk</strong> : max DD 25%, portfolio optimizer MVO + risk parity, corrélation inter-stratégies &lt; 0.3</li>
+<li><strong>ML</strong> : détection de régime HMM/Random Forest, allocation adaptative, pas de prédiction de prix</li>
+<li><strong>Ops</strong> : Nomad + Consul + Vault, alerting Discord, runbooks, incident response &lt; 5 min</li>
+<li><strong>Rente</strong> : withdrawal rate 3%, bucket strategy, fiscalité optimisée PEA/CTO/Holding</li>
+<li><strong>Scaling</strong> : multi-VM distribuées, capacity analysis, nouvelles stratégies post-million, licensing possible</li>
+<li><strong>Exit</strong> : 4 scénarios (continuer, pod shop, créer un fonds, vendre), family office mono-personne</li>
+</ul>
+<p><strong>Objectif atteint</strong> : 100K€ → 1M€ en 24-36 mois, puis 3M€+ en 5 ans, avec 30 minutes de supervision quotidienne. La machine tourne. L'humain est libre.</p>
+</div>
+</div>
+
+<!-- ===== SERIES BAR (BOTTOM) ===== -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part11-vivre-de-son-algo/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a><a href="/series/algo-million/part11-vivre-de-son-algo/" class="series-step"><span class="series-num">11</span><span class="series-label">Rente</span></a><a href="/series/algo-million/part12-scaling-exit/" class="series-step current"><span class="series-num">12</span><span class="series-label">Scaling</span></a></div><span class="series-counter">12/12</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway. Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<!-- ===== ECHARTS ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // --- Capacity Chart ---
+  var capEl = document.getElementById('capacityChart');
+  if (capEl) {
+    capEl.style.width = '100%';
+    capEl.style.height = '420px';
+    var capChart = echarts.init(capEl);
+    capChart.setOption({
+      title: { text: 'Capacité par stratégie (USD, échelle log)', left: 'center', textStyle: { fontSize: 14, fontFamily: 'Inter' } },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
+        var s = '<b>' + p[0].axisValue + '</b><br/>';
+        p.forEach(function(i) { s += i.marker + ' ' + i.seriesName + ': $' + (i.value >= 1e6 ? (i.value/1e6).toFixed(0) + 'M' : (i.value/1e3).toFixed(0) + 'K') + '<br/>'; });
+        return s;
+      }},
+      legend: { bottom: 0 },
+      grid: { left: 80, right: 20, top: 50, bottom: 60 },
+      xAxis: { type: 'category', data: ['Momentum 20j', 'Mean Rev 5j', 'Cross-Asset', 'Breakout', 'Stat Arb', 'Options Sell'], axisLabel: { rotate: 15, fontSize: 11 } },
+      yAxis: { type: 'log', name: 'Capacité (USD)', min: 100000 },
+      series: [
+        { name: 'US Large', type: 'bar', data: [50000000, 30000000, 200000000, 5000000, 20000000, 100000000], itemStyle: { color: '#3b82f6' } },
+        { name: 'US Small', type: 'bar', data: [2000000, 1500000, null, 300000, 800000, 2000000], itemStyle: { color: '#93c5fd' } },
+        { name: 'EU Large', type: 'bar', data: [20000000, 15000000, 100000000, 3000000, 10000000, 30000000], itemStyle: { color: '#10b981' } },
+        { name: 'EU Small', type: 'bar', data: [500000, 400000, null, 150000, 300000, null], itemStyle: { color: '#6ee7b7' } },
+        { name: 'APAC', type: 'bar', data: [10000000, 8000000, 50000000, 2000000, 5000000, 15000000], itemStyle: { color: '#f59e0b' } }
+      ]
+    });
+    window.addEventListener('resize', function() { capChart.resize(); });
+  }
+
+  // --- Alpha Decay Chart ---
+  var adEl = document.getElementById('alphaDecayChart');
+  if (adEl) {
+    adEl.style.width = '100%';
+    adEl.style.height = '400px';
+    var adChart = echarts.init(adEl);
+    var aumPoints = [];
+    var alphaPoints = [];
+    var profitPoints = [];
+    var alphaBase = 1.0; // 100%
+    var aumBase = 100000;
+    var k = 0.18;
+    for (var a = 100000; a <= 50000000; a *= 1.15) {
+      var alpha = alphaBase / (1.0 + k * Math.log(a / aumBase));
+      var profit = a * alpha;
+      aumPoints.push((a / 1e6).toFixed(2));
+      alphaPoints.push((alpha * 100).toFixed(1));
+      profitPoints.push((profit / 1e6).toFixed(2));
+    }
+    adChart.setOption({
+      title: { text: 'Paradoxe du capital : Alpha vs Profit absolu', left: 'center', textStyle: { fontSize: 14, fontFamily: 'Inter' } },
+      tooltip: { trigger: 'axis' },
+      legend: { bottom: 0 },
+      grid: { left: 70, right: 70, top: 50, bottom: 60 },
+      xAxis: { type: 'category', data: aumPoints, name: 'AUM ($M)', axisLabel: { formatter: '${value}M' } },
+      yAxis: [
+        { type: 'value', name: 'Alpha (%)', position: 'left', axisLabel: { formatter: '{value}%' } },
+        { type: 'value', name: 'Profit ($M)', position: 'right', axisLabel: { formatter: '${value}M' } }
+      ],
+      series: [
+        { name: 'Alpha annualisé', type: 'line', data: alphaPoints, smooth: true, lineStyle: { color: '#ef4444', width: 3 }, itemStyle: { color: '#ef4444' }, symbol: 'none' },
+        { name: 'Profit absolu', type: 'line', yAxisIndex: 1, data: profitPoints, smooth: true, lineStyle: { color: '#10b981', width: 3 }, itemStyle: { color: '#10b981' }, symbol: 'none',
+          markPoint: { data: [{ type: 'max', name: 'Optimal AUM' }], itemStyle: { color: '#10b981' } }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { adChart.resize(); });
+  }
+
+  // --- Projection 5 ans ---
+  var projEl = document.getElementById('projectionChart');
+  if (projEl) {
+    projEl.style.width = '100%';
+    projEl.style.height = '450px';
+    var projChart = echarts.init(projEl);
+
+    // Simulation mois par mois sur 5 ans (60 mois)
+    var months = [];
+    var equity = [];
+    var withdrawals = [];
+    var capital = 100000;
+    var totalWithdrawn = 0;
+    var alphaBaseM = 1.0; // 100% annualisé
+    var kDecay = 0.18;
+    var aumBaseM = 100000;
+    for (var m = 0; m <= 60; m++) {
+      var yearFrac = m / 12;
+      months.push('M' + m);
+      equity.push(Math.round(capital));
+
+      // Monthly alpha with decay
+      var annualAlpha = alphaBaseM / (1.0 + kDecay * Math.log(Math.max(capital, aumBaseM) / aumBaseM));
+      var monthlyAlpha = Math.pow(1 + annualAlpha, 1/12) - 1;
+
+      // Add some realistic noise (seeded pseudo-random)
+      var noise = Math.sin(m * 7.3 + 2.1) * 0.3 + Math.cos(m * 3.7) * 0.2;
+      var monthlyReturn = monthlyAlpha * (1 + noise * 0.5);
+
+      // Drawdown events (months 8, 24, 42)
+      if (m === 8) monthlyReturn = -0.12;
+      if (m === 24) monthlyReturn = -0.08;
+      if (m === 42) monthlyReturn = -0.15;
+
+      capital *= (1 + monthlyReturn);
+
+      // Withdrawals starting year 3 (month 36), 3% annual = 0.25%/month
+      var withdrawal = 0;
+      if (m >= 36) {
+        withdrawal = capital * 0.0025;
+        capital -= withdrawal;
+        totalWithdrawn += withdrawal;
+      }
+      withdrawals.push(Math.round(withdrawal));
+    }
+
+    projChart.setOption({
+      title: { text: 'Projection 5 ans — Equity Curve avec Alpha Decay + Retraits', left: 'center', textStyle: { fontSize: 14, fontFamily: 'Inter' } },
+      tooltip: { trigger: 'axis', formatter: function(p) {
+        var s = '<b>' + p[0].axisValue + '</b><br/>';
+        p.forEach(function(i) {
+          if (i.seriesName === 'Equity') s += i.marker + ' Capital: €' + (i.value / 1e6).toFixed(2) + 'M<br/>';
+          if (i.seriesName === 'Retrait mensuel' && i.value > 0) s += i.marker + ' Retrait: €' + (i.value).toLocaleString() + '<br/>';
+        });
+        return s;
+      }},
+      legend: { bottom: 0 },
+      grid: { left: 80, right: 30, top: 50, bottom: 60 },
+      xAxis: { type: 'category', data: months, axisLabel: { interval: 5 } },
+      yAxis: [
+        { type: 'value', name: 'Capital (€)', axisLabel: { formatter: function(v) { return v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : (v/1e3).toFixed(0) + 'K'; } } },
+        { type: 'value', name: 'Retrait (€/mois)', position: 'right' }
+      ],
+      visualMap: {
+        show: false,
+        dimension: 0,
+        pieces: [
+          { gte: 0, lt: 12, color: '#3b82f6' },
+          { gte: 12, lt: 24, color: '#8b5cf6' },
+          { gte: 24, lt: 36, color: '#10b981' },
+          { gte: 36, lt: 48, color: '#f59e0b' },
+          { gte: 48, lte: 60, color: '#059669' }
+        ],
+        seriesIndex: 0
+      },
+      series: [
+        {
+          name: 'Equity',
+          type: 'line',
+          data: equity,
+          smooth: true,
+          lineStyle: { width: 3 },
+          areaStyle: { opacity: 0.08 },
+          symbol: 'none',
+          markLine: {
+            data: [
+              { yAxis: 1000000, label: { formatter: '1M€', position: 'end' }, lineStyle: { color: '#10b981', type: 'dashed' } },
+              { yAxis: 2000000, label: { formatter: '2M€', position: 'end' }, lineStyle: { color: '#f59e0b', type: 'dashed' } },
+              { yAxis: 3000000, label: { formatter: '3M€', position: 'end' }, lineStyle: { color: '#8b5cf6', type: 'dashed' } }
+            ],
+            silent: true
+          },
+          markPoint: {
+            data: [
+              { coord: ['M8', equity[8]], value: 'DD -12%', itemStyle: { color: '#ef4444' }, symbolSize: 40 },
+              { coord: ['M24', equity[24]], value: 'DD -8%', itemStyle: { color: '#ef4444' }, symbolSize: 35 },
+              { coord: ['M42', equity[42]], value: 'DD -15%', itemStyle: { color: '#ef4444' }, symbolSize: 40 }
+            ],
+            label: { fontSize: 9 }
+          }
+        },
+        {
+          name: 'Retrait mensuel',
+          type: 'bar',
+          yAxisIndex: 1,
+          data: withdrawals,
+          itemStyle: { color: 'rgba(245,158,11,0.5)' },
+          barMaxWidth: 4
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { projChart.resize(); });
+  }
+
+});
+</script>
+
+<!-- ===== FAB JS ===== -->
+<script>
+(function(){var fab=document.getElementById('fnavBtn');var menu=document.getElementById('fnavMenu');var icon=document.getElementById('fnavIcon');var label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item');var sections=[];var isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section');var el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section');var target=document.getElementById(id);if(target){var brandBar=document.querySelector('.brand-bar');var offset=(brandBar?brandBar.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-15% 0px -65% 0px',threshold:0});sections.forEach(function(s){observer.observe(s.el);});if(sections.length>0){sections[0].item.classList.add('active');currentActive=sections[0];label.textContent=sections[0].item.querySelector('span').textContent;}})();
+</script>
+
+</body>
+</html>
