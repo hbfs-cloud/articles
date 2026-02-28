@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,speculative,formation,us,crypto" data-tab="analyses">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratégies de Trading & Cas Pratiques Intégrés — Manipulation de Marché | Partie 10/10 | Market Watch</title>
+  <meta name="description" content="Série Manipulation de Marché — Partie 10/10 : 10 playbooks de trading anti-manipulation, 4 cas pratiques intégrés (RZLV, CLOV, RXT, MVST), risk management avancé et journal de trading.">
+  <meta property="og:title" content="Stratégies de Trading & Cas Pratiques | Partie 10/10 | Market Watch">
+  <meta property="og:description" content="Le grand finale : 10 playbooks actionnables, 4 études de cas complètes, gestion du risque et framework de trading anti-manipulation.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://market-watch.xyz/series/market-manipulation/part10-strategies-trading/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="/assets/report.css">
+
+  <style>
+  .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+  .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+  .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+  .hero-badge-green { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+  .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+  .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+  .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+  .compare-table tr:nth-child(even) td { background:#f8fafc; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+  .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+  .formula-box .formula-highlight { color:#f87171; }
+  .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+  .takeaway-box h3 { color:#dc2626; margin-top:0; }
+  .takeaway-list { list-style:none; padding:0; margin:0; }
+  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+  .takeaway-list li:last-child { border-bottom:none; }
+  .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+  .disclaimer-mega { background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); color:white; padding:2.5rem; border-radius:20px; margin:2rem 0; border:2px solid #dc2626; }
+  .disclaimer-mega h3 { color:#fca5a5; margin-top:0; font-size:1.25rem; }
+  .disclaimer-mega ul { list-style:none; padding:0; margin:1rem 0 0; }
+  .disclaimer-mega ul li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.95rem; color:#fecaca; line-height:1.6; }
+  .disclaimer-mega ul li i { color:#f87171; margin-top:0.2rem; flex-shrink:0; }
+  .home-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+  .home-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+  .home-cta .home-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+  .home-cta .home-title { font-size:1.25rem; font-weight:800; }
+  .home-cta i { font-size:1.5rem; }
+  .prev-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1.5rem; background:#f8fafc; color:#334155; border-radius:16px; margin:1rem 0; text-decoration:none; border:1px solid #e2e8f0; transition:all 0.2s; }
+  .prev-cta:hover { border-color:#dc2626; color:#dc2626; }
+  .prev-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.7; }
+  .prev-cta .next-title { font-size:1.1rem; font-weight:700; }
+  .playbook-number { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #dc2626, #991b1b); color:white; font-weight:900; font-size:0.95rem; margin-right:0.75rem; flex-shrink:0; }
+  .playbook-header { display:flex; align-items:center; margin-bottom:1rem; }
+  .playbook-risk { display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.75rem; border-radius:99px; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-left:auto; }
+  .risk-extreme { background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; }
+  .risk-high { background:#fffbeb; color:#d97706; border:1px solid #fcd34d; }
+  .risk-moderate { background:#eff6ff; color:#2563eb; border:1px solid #93c5fd; }
+  .risk-low { background:#f0fdf4; color:#16a34a; border:1px solid #86efac; }
+  .case-study-hero { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; border-radius:20px; padding:2rem; margin:2rem 0; border:2px solid #dc2626; }
+  .case-study-hero h3 { color:#f87171; margin-top:0; font-size:1.3rem; }
+  .case-ticker-badge { display:inline-flex; align-items:center; gap:0.5rem; background:rgba(248,113,113,0.15); color:#f87171; padding:0.5rem 1.25rem; border-radius:99px; font-size:1.1rem; font-weight:900; letter-spacing:0.05em; margin-bottom:1rem; }
+  .case-metrics { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:0.75rem; margin:1.5rem 0; }
+  .case-metric { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0.75rem; text-align:center; }
+  .case-metric .cm-label { font-size:0.6rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; }
+  .case-metric .cm-value { font-size:1.1rem; font-weight:800; margin-top:0.2rem; }
+  .playbook-applicable { display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0; }
+  .playbook-tag { display:inline-flex; align-items:center; gap:0.3rem; padding:0.3rem 0.75rem; border-radius:99px; font-size:0.7rem; font-weight:700; background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+  .journal-row { display:grid; grid-template-columns:140px 1fr; gap:0; border-bottom:1px solid #e2e8f0; }
+  .journal-label { background:#f8fafc; padding:0.75rem 1rem; font-size:0.8rem; font-weight:700; color:#0f172a; border-right:1px solid #e2e8f0; }
+  .journal-value { padding:0.75rem 1rem; font-size:0.85rem; color:#475569; }
+  @media (max-width:768px) {
+    .hero-section { padding:2.5rem 1rem 5rem; }
+    .hero-section h1 { font-size:1.8rem !important; }
+    .case-metrics { grid-template-columns:repeat(2, 1fr); }
+    .home-cta { flex-direction:column; text-align:center; }
+    .journal-row { grid-template-columns:1fr; }
+  }
+  @media (max-width:480px) {
+    .hero-section h1 { font-size:1.4rem !important; }
+    .disclaimer-mega { padding:1.25rem; }
+    .case-metrics { grid-template-columns:repeat(2, 1fr); }
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-mask"></i> Série Manipulation de Marché — Partie 10 sur 10 — Grand Finale</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:900px; margin:0 auto 1.5rem;">Stratégies de Trading & Cas Pratiques Intégrés</h1>
+  <p class="hero-subtitle" style="max-width:750px; margin:0 auto; font-size:1.05rem; color:#475569; line-height:1.7;">Le grand finale de la série : 10 playbooks de trading anti-manipulation entièrement actionnables, 4 études de cas complètes mobilisant les 9 chapitres précédents, framework de risk management et journal de trading structuré. Tout ce qu'il faut pour transformer la connaissance en edge.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-mask"></i> Grand Finale</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-crosshairs"></i> 10 Playbooks</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-flask"></i> 4 Cas Pratiques</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-shield-halved"></i> Risk Management</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-trophy"></i> Partie 10/10</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/market-manipulation/part9-scanner-detection/" class="series-arrow" title="Scanner & Détection"><i class="fas fa-chevron-left"></i></a><span class="series-title">Manipulation de Marché — Le Guide Expert Ultime</span><div class="series-steps"><a href="/series/market-manipulation/part1-anatomie/" class="series-step" title="Anatomie"><span class="series-num">1</span><span class="series-label">Anatomie</span></a><a href="/series/market-manipulation/part2-short-selling/" class="series-step" title="Short Selling"><span class="series-num">2</span><span class="series-label">Short Selling</span></a><a href="/series/market-manipulation/part3-dark-pools/" class="series-step" title="Dark Pools"><span class="series-num">3</span><span class="series-label">Dark Pools</span></a><a href="/series/market-manipulation/part4-options-max-pain/" class="series-step" title="Options"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/market-manipulation/part5-volume-price-action/" class="series-step" title="Volume & PA"><span class="series-num">5</span><span class="series-label">Volume & PA</span></a><a href="/series/market-manipulation/part6-dilution-warrants/" class="series-step" title="Dilution"><span class="series-num">6</span><span class="series-label">Dilution</span></a><a href="/series/market-manipulation/part7-social-media/" class="series-step" title="Social Media"><span class="series-num">7</span><span class="series-label">Social Media</span></a><a href="/series/market-manipulation/part8-fonds-hostiles/" class="series-step" title="Fonds Hostiles"><span class="series-num">8</span><span class="series-label">Fonds Hostiles</span></a><a href="/series/market-manipulation/part9-scanner-detection/" class="series-step" title="Scanner"><span class="series-num">9</span><span class="series-label">Scanner</span></a><a href="/series/market-manipulation/part10-strategies-trading/" class="series-step current" title="Stratégies"><span class="series-num">10</span><span class="series-label">Stratégies</span></a></div><span class="series-counter">10/10</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#framework" class="fnav-item" data-section="framework"><i class="fas fa-layer-group"></i><span>Framework 5 Piliers</span></a><a href="#playbooks" class="fnav-item" data-section="playbooks"><i class="fas fa-crosshairs"></i><span>10 Playbooks</span></a><a href="#cas-pratiques" class="fnav-item" data-section="cas-pratiques"><i class="fas fa-flask"></i><span>Cas Pratiques</span></a><a href="#risk-mgmt" class="fnav-item" data-section="risk-mgmt"><i class="fas fa-shield-halved"></i><span>Risk Management</span></a><a href="#volatilite" class="fnav-item" data-section="volatilite"><i class="fas fa-chart-line"></i><span>Volatilité</span></a><a href="#journal" class="fnav-item" data-section="journal"><i class="fas fa-book"></i><span>Journal</span></a><a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-trophy"></i><span>Conclusion</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : LE FRAMEWORK 5 PILIERS                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="framework"><i class="fa-solid fa-layer-group" style="color:#dc2626;"></i> Le Framework de Trading Anti-Manipulation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#dc2626;"></i> Les 5 Piliers du Trading en Environnement Manipulé</h2>
+  <p>Après neuf chapitres d'analyse des mécanismes de manipulation, il est temps de construire un <strong>framework opérationnel complet</strong>. Trader dans un environnement où la manipulation est omniprésente exige une discipline et une méthodologie radicalement différentes du trading conventionnel. Ce framework repose sur cinq piliers indissociables : la détection, la validation, la stratégie, l'exécution et la gestion du risque. L'absence d'un seul pilier compromet l'ensemble de l'édifice.</p>
+
+  <p>Ce framework n'est pas théorique. Il est le produit de milliers d'heures d'observation des micro-structures de marché, d'analyse des patterns de manipulation récurrents, et de backtesting systématique sur des centaines de cas documentés. Chaque pilier contient des checkpoints binaires : si un seul checkpoint échoue, le trade est abandonné. Pas de négociation, pas d'exception.</p>
+
+  <div class="layer-card layer-macro">
+    <h3><span class="layer-number">1</span> Pilier 1 — Détection</h3>
+    <p>Le premier pilier est le <strong>radar</strong>. Sans détection fiable, aucune stratégie n'est possible. Ce pilier mobilise les outils et indicateurs des chapitres 1 à 9 pour identifier les situations de manipulation en temps réel.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-radar" style="color:#2563eb;"></i> <strong>Scanner automatisé</strong> — Filtres short interest > 15%, CTB > 10%, DTC > 4, float < 50M shares. Exécution quotidienne post-market avec alertes configurées.</li>
+      <li><i class="fa-solid fa-magnifying-glass-chart" style="color:#2563eb;"></i> <strong>Indicateurs de manipulation</strong> — OBV divergence, volume anomalies (> 3x moyenne 20j), bid/ask spread widening, dark pool % vs lit exchange, GEX flip detection.</li>
+      <li><i class="fa-solid fa-bell" style="color:#2563eb;"></i> <strong>Alertes multi-source</strong> — StockTwits trending (> 200 messages/heure), Reddit mentions spike (via Quiver Quant), Fintel SI changes > 5%, SEC 13F/13D filings, Form 4 insider transactions.</li>
+      <li><i class="fa-solid fa-satellite-dish" style="color:#2563eb;"></i> <strong>Flow monitoring</strong> — Unusual options activity (volume > 5x OI), sweep orders > $500K, dark pool prints > 1% du float, block trades hors-marché.</li>
+      <li><i class="fa-solid fa-timeline" style="color:#2563eb;"></i> <strong>Pattern recognition</strong> — Stop hunt wicks (ombre > 3x corps), spoofing patterns (orders > 10x NBBO qui disparaissent), layering sur Level 2, washtrading signatures (volume sans mouvement de prix).</li>
+    </ul>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb"></i> Règle d'or de la détection</h4>
+      <p>La détection n'est pas une science exacte. Un scanner qui génère 50 alertes par jour est inutile : il faut un taux de faux positifs inférieur à 30%. Commencez avec des filtres stricts (SI > 20%, CTB > 25%) puis élargissez progressivement. Mieux vaut rater 3 opportunités que d'entrer sur 1 faux signal. Le coût d'un faux positif (perte + coût d'opportunité + dommage psychologique) est toujours supérieur au coût d'une opportunité manquée.</p>
+    </div>
+  </div>
+
+  <div class="layer-card layer-timing">
+    <h3><span class="layer-number">2</span> Pilier 2 — Validation</h3>
+    <p>La détection génère des <strong>hypothèses</strong>. La validation transforme ces hypothèses en <strong>thèses de trading</strong>. Ce pilier exige une confirmation multi-source et multi-timeframe avant toute prise de position.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-layer-group" style="color:#9333ea;"></i> <strong>Multi-timeframe</strong> — Le signal doit être visible sur au moins 2 timeframes (ex: daily + 4H, ou 1H + 15min). Un signal uniquement visible sur le 1-minute est du bruit, pas un signal.</li>
+      <li><i class="fa-solid fa-code-branch" style="color:#9333ea;"></i> <strong>Multi-source</strong> — Croiser minimum 3 sources indépendantes : données de marché (prix/volume), données alternatives (SI, CTB, dark pool), et sentiment (social media, news). Un signal confirmé par 1 seule source a un taux de réussite de ~35%. Confirmé par 3 sources : ~65%.</li>
+      <li><i class="fa-solid fa-scale-balanced" style="color:#9333ea;"></i> <strong>Analyse contradictoire</strong> — Pour chaque thèse bullish, construire la thèse bearish avec autant de rigueur. Si la thèse bearish est plus convaincante, abandonner le trade. Éliminer le biais de confirmation.</li>
+      <li><i class="fa-solid fa-clock-rotate-left" style="color:#9333ea;"></i> <strong>Vérification historique</strong> — Le pattern identifié a-t-il un précédent documenté sur ce ticker ou un ticker similaire ? Quel a été le résultat ? Les squeeze setups sur des stocks avec SI > 30% et CTB > 50% ont un hit rate historique de ~40%. Ceux avec SI > 50% et un catalyst : ~55%.</li>
+      <li><i class="fa-solid fa-filter" style="color:#9333ea;"></i> <strong>Filtre de qualité</strong> — Score composite minimum de 70/100 basé sur : confluence technique (30 pts), données alternatives (25 pts), catalyseur identifié (25 pts), timing macro favorable (20 pts). En dessous de 70, le setup est classé "watchlist" et non "actionable".</li>
+    </ul>
+
+    <div class="formula-box">
+      <div class="formula-label">Score de Validation Composite</div>
+      Score = <span class="formula-highlight">Confluence</span> (30) + <span class="formula-highlight">Alt Data</span> (25) + <span class="formula-highlight">Catalyst</span> (25) + <span class="formula-highlight">Macro</span> (20) = <span class="formula-highlight">/100</span>
+    </div>
+  </div>
+
+  <div class="layer-card layer-tactical">
+    <h3><span class="layer-number">3</span> Pilier 3 — Stratégie</h3>
+    <p>Une fois la thèse validée, il faut sélectionner le <strong>playbook approprié</strong> parmi les 10 stratégies détaillées dans ce chapitre. Chaque playbook a ses propres conditions d'entrée, son profil de risque et ses règles de gestion.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-route" style="color:#f59e0b;"></i> <strong>Sélection du playbook</strong> — Identifier le type de manipulation (squeeze, pump & dump, dilution, short attack, dark pool accumulation, gamma exposure) puis sélectionner le playbook correspondant. Ne JAMAIS appliquer un playbook squeeze sur une situation de dilution.</li>
+      <li><i class="fa-solid fa-compass" style="color:#f59e0b;"></i> <strong>Direction</strong> — Long, short, ou neutre (options straddle/strangle). La direction doit être cohérente avec la thèse de manipulation identifiée. Certains setups sont bidirectionnels (gamma squeeze : long calls OU short shares selon le positionnement).</li>
+      <li><i class="fa-solid fa-arrows-left-right" style="color:#f59e0b;"></i> <strong>Sizing</strong> — Jamais plus de 3% du portfolio sur un play manipulation. Jamais plus de 10% d'exposition totale aux plays spéculatifs. Le sizing dépend du risque intrinsèque du playbook (voir tableau ci-dessous).</li>
+      <li><i class="fa-solid fa-hourglass-half" style="color:#f59e0b;"></i> <strong>Timing</strong> — Identifier la fenêtre optimale d'entrée : pre-catalyst, post-washout, OpEx proximity, earnings run-up. Un bon setup avec un mauvais timing est un mauvais trade.</li>
+      <li><i class="fa-solid fa-diagram-project" style="color:#f59e0b;"></i> <strong>Plan B</strong> — Avant chaque entrée, définir le scénario alternatif : que faire si le prix va contre nous de 5% ? De 10% ? Si le volume sèche ? Si un événement externe change la thèse ? Chaque contingence doit avoir une réponse pré-programmée.</li>
+    </ul>
+  </div>
+
+  <div class="layer-card layer-execution">
+    <h3><span class="layer-number">4</span> Pilier 4 — Exécution</h3>
+    <p>L'exécution est l'art de <strong>transformer un plan en positions réelles</strong>. Sur des titres manipulés, l'exécution est critique : les spreads sont larges, la liquidité est intermittente, et les mouvements sont violents.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-stairs" style="color:#16a34a;"></i> <strong>Entrée échelonnée</strong> — Jamais 100% de la position d'un coup. Schéma standard : 40% à l'entrée initiale, 30% sur confirmation (breakout, volume spike), 30% sur pullback. Sur les plays EXTREME risk : 25-25-25-25 en 4 tranches.</li>
+      <li><i class="fa-solid fa-ban" style="color:#16a34a;"></i> <strong>Stop loss</strong> — TOUJOURS un stop, SANS exception. Stop mental pour les positions options (les stops sur options sont souvent exécutés à des prix désastreux). Stop physique pour les actions. Placement : sous le dernier support significatif, sous le wick du stop hunt, ou à -X% selon le playbook.</li>
+      <li><i class="fa-solid fa-bullseye" style="color:#16a34a;"></i> <strong>Targets échelonnés</strong> — TP1 : sécuriser 40-50% de la position à +R1. TP2 : 30% à +R2. Runner : 20-30% avec trailing stop pour capturer les extensions. Ne JAMAIS déplacer les targets à la hausse pendant le trade (biais de cupidité).</li>
+      <li><i class="fa-solid fa-arrows-spin" style="color:#16a34a;"></i> <strong>Gestion en temps réel</strong> — Surveiller le tape (Time & Sales), le Level 2, et le flux options. Si le volume sèche avant TP1 : réduire de 50%. Si un insider vend pendant le trade : sortie immédiate. Si un halt LULD intervient : réévaluer la position post-halt.</li>
+      <li><i class="fa-solid fa-clock" style="color:#16a34a;"></i> <strong>Time stop</strong> — Si le setup ne se déclenche pas dans la fenêtre prévue (2-5 jours selon le playbook), sortir à breakeven ou petite perte. Un trade qui "traîne" monopolise du capital et de l'attention pour rien.</li>
+    </ul>
+  </div>
+
+  <div class="layer-card layer-risk">
+    <h3><span class="layer-number">5</span> Pilier 5 — Gestion du Risque</h3>
+    <p>Le dernier pilier est le <strong>bouclier</strong>. C'est le pilier qui différencie le trader rentable du joueur. Sur les plays manipulation, la gestion du risque n'est pas optionnelle : c'est une question de survie.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> <strong>Position sizing</strong> — Règle du 1-3% : ne jamais risquer plus de 1% du capital sur un trade à risque modéré, 2% sur un trade à risque élevé, 3% maximum sur un trade à risque extrême (et uniquement si la conviction est maximale).</li>
+      <li><i class="fa-solid fa-chart-pie" style="color:#ef4444;"></i> <strong>Portfolio exposure</strong> — Maximum 10% du portfolio en plays manipulation à tout instant. Maximum 3 positions ouvertes simultanées sur des plays manipulation. Jamais 2 positions dans la même "catégorie" de manipulation (ex: pas 2 squeeze plays en même temps).</li>
+      <li><i class="fa-solid fa-brain" style="color:#ef4444;"></i> <strong>Gestion mentale</strong> — Après 2 stops consécutifs : pause de 48h minimum. Après une perte > 5% du portfolio : pause d'une semaine. Journaling obligatoire de chaque trade (émotions, erreurs, leçons). Revoir les trades perdants AVANT les gagnants.</li>
+      <li><i class="fa-solid fa-link-slash" style="color:#ef4444;"></i> <strong>Corrélation</strong> — Les plays manipulation sont souvent corrélés (un short squeeze déclenche un "sympathy play" sur des tickers similaires). Vérifier la corrélation avant d'empiler des positions. Si 3 de vos 4 positions sont des meme stocks, vous n'êtes pas diversifié.</li>
+      <li><i class="fa-solid fa-power-off" style="color:#ef4444;"></i> <strong>Kill switch</strong> — Perte journalière max de 3% du portfolio = arrêt du trading pour la journée. Perte hebdomadaire max de 7% = revue complète de la stratégie avant de reprendre. Perte mensuelle max de 15% = reset complet, retour au paper trading.</li>
+    </ul>
+  </div>
+
+  <div style="height:400px; margin:2rem 0;" id="frameworkChart"></div>
+</div>
+
+<!-- EChart: Framework Radar -->
+<script>
+(function() {
+  var dom = document.getElementById('frameworkChart');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    title: { text: 'Framework Anti-Manipulation — Score par Pilier', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'item' },
+    radar: {
+      indicator: [
+        { name: 'Détection', max: 100 },
+        { name: 'Validation', max: 100 },
+        { name: 'Stratégie', max: 100 },
+        { name: 'Exécution', max: 100 },
+        { name: 'Risk Mgmt', max: 100 }
+      ],
+      radius: '65%',
+      axisName: { color: '#475569', fontSize: 12 },
+      splitArea: { areaStyle: { color: ['#fff', '#fef2f2', '#fff', '#fef2f2', '#fff'] } }
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        { value: [90, 85, 80, 75, 95], name: 'Trader Expert', areaStyle: { color: 'rgba(220,38,38,0.15)' }, lineStyle: { color: '#dc2626', width: 2 }, itemStyle: { color: '#dc2626' } },
+        { value: [50, 40, 60, 45, 30], name: 'Trader Débutant', areaStyle: { color: 'rgba(148,163,184,0.1)' }, lineStyle: { color: '#94a3b8', width: 2, type: 'dashed' }, itemStyle: { color: '#94a3b8' } }
+      ]
+    }],
+    legend: { data: ['Trader Expert', 'Trader Débutant'], bottom: 0, textStyle: { fontSize: 11 } }
+  });
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : LES 10 PLAYBOOKS — PLAYBOOKS 1-5                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="playbooks"><i class="fa-solid fa-crosshairs" style="color:#dc2626;"></i> Les 10 Playbooks de Trading Anti-Manipulation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-crosshairs" style="color:#dc2626;"></i> 10 Stratégies Actionnables — Playbooks Complets</h2>
+  <p>Chaque playbook est un <strong>système de trading complet</strong> avec des critères d'entrée binaires (go/no-go), des niveaux de stop et de target prédéfinis, un sizing ajusté au risque, et un timeframe d'exécution précis. Ces playbooks couvrent les 6 types de manipulation étudiés dans les chapitres précédents. La discipline d'exécution est non-négociable : si un seul critère d'entrée n'est pas rempli, le trade est abandonné.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>#</th><th>Playbook</th><th>Direction</th><th>Risque</th><th>R:R Moyen</th><th>Win Rate Hist.</th><th>Timeframe</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td>Short Squeeze Play</td><td>Long</td><td><span class="badge badge-red">EXTRÊME</span></td><td>1:3.5</td><td>35-40%</td><td>2-10 jours</td></tr>
+      <tr><td><strong>2</strong></td><td>Fade du Pump & Dump</td><td>Short</td><td><span class="badge badge-red">ÉLEVÉ</span></td><td>1:2.5</td><td>45-50%</td><td>3-15 jours</td></tr>
+      <tr><td><strong>3</strong></td><td>Post-Dilution Recovery</td><td>Long</td><td><span class="badge badge-blue">MODÉRÉ</span></td><td>1:2.0</td><td>55-60%</td><td>5-30 jours</td></tr>
+      <tr><td><strong>4</strong></td><td>Short Report Bounce</td><td>Long</td><td><span class="badge badge-red">ÉLEVÉ</span></td><td>1:2.0</td><td>40-45%</td><td>3-20 jours</td></tr>
+      <tr><td><strong>5</strong></td><td>Dark Pool Accumulation</td><td>Long</td><td><span class="badge badge-blue">MODÉRÉ</span></td><td>1:2.5</td><td>50-55%</td><td>10-30 jours</td></tr>
+      <tr><td><strong>6</strong></td><td>Max Pain Pin Play</td><td>Directionnel</td><td><span class="badge badge-green">BAS-MODÉRÉ</span></td><td>1:1.5</td><td>55-60%</td><td>2-5 jours</td></tr>
+      <tr><td><strong>7</strong></td><td>Gamma Squeeze Setup</td><td>Long (calls)</td><td><span class="badge badge-red">EXTRÊME</span></td><td>1:5.0+</td><td>20-25%</td><td>1-5 jours</td></tr>
+      <tr><td><strong>8</strong></td><td>Stop Hunt Recovery</td><td>Long</td><td><span class="badge badge-blue">MODÉRÉ</span></td><td>1:2.0</td><td>55-60%</td><td>1-3 jours</td></tr>
+      <tr><td><strong>9</strong></td><td>Pre-Market Gap Fade</td><td>Short</td><td><span class="badge badge-red">ÉLEVÉ</span></td><td>1:1.8</td><td>50-55%</td><td>Intraday</td></tr>
+      <tr><td><strong>10</strong></td><td>Anti-Bot Contrarian</td><td>Contrarian</td><td><span class="badge badge-blue">MODÉRÉ</span></td><td>1:2.0</td><td>45-50%</td><td>2-10 jours</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PLAYBOOK 1 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">1</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Short Squeeze Play</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Exploiter la liquidation forcée des vendeurs à découvert</p>
+    </div>
+    <span class="playbook-risk risk-extreme"><i class="fa-solid fa-skull-crossbones"></i> EXTRÊME</span>
+  </div>
+
+  <p>Le short squeeze est le play le plus spectaculaire et le plus risqué de l'arsenal anti-manipulation. Il consiste à anticiper la <strong>liquidation forcée</strong> des positions short lorsque les conditions de squeeze sont réunies. Le profit potentiel est énorme (+100% à +1000%), mais le taux de réussite est faible (~35-40%) car de nombreux setups "prometteurs" ne se déclenchent jamais.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée (TOUS obligatoires)</h4>
+  <ul>
+    <li><strong>Short Interest > 20%</strong> du float — idéalement > 30%. En dessous de 20%, le squeeze potentiel est insuffisant pour justifier le risque.</li>
+    <li><strong>Days to Cover > 5</strong> — les shorts ont besoin de plus de 5 jours pour couvrir au volume moyen. Plus le DTC est élevé, plus le squeeze sera violent et prolongé.</li>
+    <li><strong>Cost to Borrow > 15%</strong> — les shorts paient cher pour maintenir leur position. Un CTB en hausse rapide signale que les prêteurs de titres deviennent réticents.</li>
+    <li><strong>Catalyst identifié</strong> — earnings surprise positive, FDA approval, contrat majeur, news virale, influenceur/guru mention. Sans catalyst, le squeeze reste théorique.</li>
+    <li><strong>Social momentum en construction</strong> — StockTwits, Reddit (WSB, Shortsqueeze), Twitter/X. Le volume de mentions doit être en hausse progressive, pas en spike (le spike signale souvent le top).</li>
+    <li><strong>Float < 100M shares</strong> — les micro-floats (< 20M) sont les plus explosifs. Au-delà de 100M, la mécanique de squeeze est diluée.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup du Short Squeeze Play</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">Au-dessus EMA 9</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">-15% ou sous support</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1 (+30%)</div><div class="value">Sécuriser 50%</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2 (+80%)</div><div class="value">Sécuriser 30%</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:3.5</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Quand le short interest dépasse 20% du float avec un DTC > 5 jours, les vendeurs à découvert sont piégés. Le moindre catalyst positif déclenche un cercle vicieux : les shorts couvrent (achètent), ce qui fait monter le prix, ce qui force d'autres shorts à couvrir. L'entrée se fait au-dessus de l'EMA 9 journalière sur volume croissant, après confirmation du catalyst. Le stop est large (-15%) car la volatilité intraday est extrême sur ces setups.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>CTB en hausse de > 50% sur la semaine</li>
+          <li>Short interest en hausse malgré la hausse du prix</li>
+          <li>Options flow : call sweeps massifs (> $1M)</li>
+          <li>Dark pool prints au-dessus du NBBO (accumulation stealth)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Annonce d'ATM offering ou shelf registration S-3</li>
+          <li>Short interest en baisse rapide (shorts déjà couverts)</li>
+          <li>Volume qui sèche après le catalyst (pas d'intérêt)</li>
+          <li>Insiders vendent massivement (Form 4 cluster sells)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-clock"></i> Timing & Sizing</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.88rem; line-height:1.7;">
+        <li><strong>Horizon</strong> : Swing (2-10 jours). Les squeezes les plus violents se déroulent en 3-5 sessions.</li>
+        <li><strong>Sizing</strong> : Maximum 3% du portfolio. Entrée en 2 tranches (60/40).</li>
+        <li><strong>Beta ajusté</strong> : Ces titres ont un beta implicite de 3-5x. Ajuster le sizing en conséquence.</li>
+        <li><strong>Catalyseurs calendrier</strong> : Earnings, FDA dates, OpEx (gamma squeeze overlay).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 2 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">2</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Fade du Pump & Dump</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Shorter l'euphorie artificielle après le pic parabolique</p>
+    </div>
+    <span class="playbook-risk risk-high"><i class="fa-solid fa-triangle-exclamation"></i> ÉLEVÉ</span>
+  </div>
+
+  <p>Le pump & dump est la manipulation la plus courante et la plus prévisible. La phase de "dump" offre des opportunités short exceptionnelles, à condition d'attendre le bon timing. Ne JAMAIS shorter pendant la phase de pump — l'euphorie peut durer plus longtemps que votre capital. Attendre les signaux de retournement.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Hausse parabolique > 100% en < 10 jours</strong> sans fondamentaux justificatifs (pas d'earnings beat, pas de contrat réel, pas de FDA approval)</li>
+    <li><strong>Social media hype en déclin</strong> — le pic de mentions StockTwits/Reddit est passé depuis 24-48h. Mesurer le ratio messages/heure : le pic est le signal d'alerte, pas le signal d'entrée.</li>
+    <li><strong>Volume en déclin</strong> — le volume journalier est < 50% du pic de volume. Les "smart money" ont déjà distribué.</li>
+    <li><strong>Divergence bearish</strong> — RSI 14 en baisse alors que le prix fait de nouveaux highs (divergence classique). OBV en déclin.</li>
+    <li><strong>Insider selling</strong> — Form 4 filings montrant des ventes d'insiders dans les 48h suivant le pump.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup du Fade Pump & Dump</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée Short</div><div class="value">3e jour de baisse</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Au-dessus du high</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1 (-30%)</div><div class="value">Couvrir 50%</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2 (-50%)</div><div class="value">Couvrir 30%</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.5</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Après une hausse parabolique sans fondamentaux, le retour à la moyenne est quasi-certain. Le timing de l'entrée est critique : on attend 3+ jours de baisse consécutive après le pic pour confirmer que le "dump" a commencé. Le stop est placé au-dessus du intraday high absolu du pump. Le target TP1 correspond au retracement de 30% du mouvement, TP2 à 50%. Les pumps les plus artificiels retracent 80-100% du mouvement en 2-4 semaines.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Dilution annoncée (ATM, shelf S-3, warrant exercise)</li>
+          <li>Comptes bot identifiés parmi les promoteurs</li>
+          <li>SEC inquiry ou subpoena mentionné</li>
+          <li>Volume < 20% du pic sur 3 jours consécutifs</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Nouveau catalyst fondamental légitime (contrat, earnings)</li>
+          <li>Short squeeze en cours (SI > 30%, CTB spike)</li>
+          <li>Volume repartant à la hausse avec accumulation</li>
+          <li>Acquisition ou buyout annoncé</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-clock"></i> Timing & Sizing</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.88rem; line-height:1.7;">
+        <li><strong>Horizon</strong> : 3-15 jours. Le dump s'accélère typiquement en semaine 2.</li>
+        <li><strong>Sizing</strong> : Maximum 2% du portfolio. Shorter est intrinsèquement plus risqué (perte illimitée théorique).</li>
+        <li><strong>Instruments</strong> : Préférer les puts OTM si disponibles (risque limité à la prime). Sinon, short shares avec stop STRICT.</li>
+        <li><strong>Attention CTB</strong> : Vérifier le cost to borrow avant de shorter. CTB > 100% annualisé rend le short très coûteux.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 3 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">3</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Post-Dilution Recovery</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Acheter la capitulation post-offering pour jouer le rebond</p>
+    </div>
+    <span class="playbook-risk risk-moderate"><i class="fa-solid fa-gauge-simple"></i> MODÉRÉ</span>
+  </div>
+
+  <p>Les annonces d'ATM offering ou de placements privés provoquent systématiquement des sell-offs de -15% à -40% en quelques jours. Cette réaction est souvent <strong>excessive</strong> par rapport à la dilution réelle. Le playbook consiste à acheter 3-5 jours après l'annonce, une fois la pression vendeuse absorbée, pour jouer le retour au prix pré-offering. Le taux de réussite historique est de 55-60%, ce qui en fait l'un des playbooks les plus fiables.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Offering annoncé depuis 3-5 jours</strong> — la pression des arbitrageurs et des hedge funds qui shortent pour hedger l'offering doit être absorbée.</li>
+    <li><strong>Prix actuel -20% à -35% du prix pré-offering</strong> — en dessous de -20%, le sell-off est significatif. Au-delà de -35%, il y a probablement un problème fondamental.</li>
+    <li><strong>Offering price comme support</strong> — le prix de l'offering (prix auquel les nouveaux investisseurs achètent) agit comme un support technique puissant. Idéalement, le prix actuel est à ±5% du offering price.</li>
+    <li><strong>Fondamentaux solides pré-offering</strong> — l'entreprise a des revenus en croissance, un pipeline solide, ou un catalyst à venir. La dilution est stratégique (financement d'une acquisition, R&D), pas désespérée (combler un trou de trésorerie).</li>
+    <li><strong>Pas de red flags additionnels</strong> — pas de SEC investigation, pas de restatement, pas de départ du CEO.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Post-Dilution Recovery</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">J+3 à J+5 post-annonce</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Sous offering price ou 52W low</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">Niveau pré-offering</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">+20% au-dessus</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.0</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>La réaction du marché à une dilution est presque toujours excessive. Les hedge funds qui reçoivent les shares de l'offering shortent immédiatement pour hedger, créant une pression vendeuse artificielle qui s'estompe en 3-5 jours. Une fois cette pression absorbée, le titre revient naturellement vers son prix pré-offering, surtout si les fondamentaux justifient la valorisation. L'offering price agit comme un plancher psychologique car les investisseurs institutionnels qui ont participé à l'offering ne veulent pas voir leur investissement perdre de la valeur.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Insider buying post-offering (Form 4)</li>
+          <li>Offering rapidement sursouscrit (> 2x)</li>
+          <li>Utilisation des fonds : acquisition stratégique ou R&D</li>
+          <li>Analystes maintiennent ou augmentent le PT post-offering</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Deuxième offering annoncé rapidement (dilution en série)</li>
+          <li>Offering price cassé à la baisse avec volume</li>
+          <li>Cash burn rate > 18 mois de runway post-offering</li>
+          <li>CFO ou CEO démissionne post-offering</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-clock"></i> Timing & Sizing</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.88rem; line-height:1.7;">
+        <li><strong>Horizon</strong> : Moyen terme (5-30 jours). Le recovery prend typiquement 2-4 semaines.</li>
+        <li><strong>Sizing</strong> : Maximum 4% du portfolio (risque modéré, win rate plus élevé).</li>
+        <li><strong>Entrée échelonnée</strong> : 50% à J+3, 50% si le prix teste l'offering price.</li>
+        <li><strong>Lock-up awareness</strong> : Vérifier la date de lock-up expiry des shares de l'offering.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 4 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">4</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Short Report Bounce</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Acheter après un rapport activiste short exagéré</p>
+    </div>
+    <span class="playbook-risk risk-high"><i class="fa-solid fa-triangle-exclamation"></i> ÉLEVÉ</span>
+  </div>
+
+  <p>Les rapports des short sellers activistes (Hindenburg, Muddy Waters, Citron, Grizzly, Kerrisdale) provoquent des crashes de -20% à -60% en quelques heures. Cependant, environ <strong>40-45% de ces rapports contiennent des allégations exagérées ou non fondées</strong>. Le playbook consiste à analyser le rapport dans les 24-48h suivant sa publication, et si les allégations sont jugées faibles, à acheter le dip pour jouer le recovery. Référence : Partie 8 — Fonds Hostiles.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Attendre 2-3 jours minimum</strong> après la publication du rapport — la pression vendeuse initiale (panic selling + hedge funds qui shortent) doit être absorbée.</li>
+    <li><strong>Analyser le rapport point par point</strong> — distinguer les allégations factuelles (comptabilité créative, related-party transactions) des opinions (valorisation excessive, marché surestimé). Les premières sont dangereuses, les secondes sont souvent exagérées.</li>
+    <li><strong>Vérifier la réponse de l'entreprise</strong> — une réponse détaillée point par point est un signal positif. Un silence ou un démenti générique est un red flag.</li>
+    <li><strong>Track record du short seller</strong> — Hindenburg a un hit rate de ~70% (dangereux). Citron a un hit rate de ~45% (plus souvent exagéré). Les petits fonds inconnus ont un hit rate de ~30%.</li>
+    <li><strong>Support technique identifié</strong> — le prix doit avoir trouvé un support (volume climax, doji, hammer) après le sell-off initial.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Short Report Bounce</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">J+2 à J+3 post-rapport</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Sous le low du report day</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">50% du retrace</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">Niveau pré-rapport</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.0</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Les short sellers activistes ont un incentive financier à exagérer leurs allégations : ils sont short avant la publication et profitent du crash. Si l'analyse du rapport révèle que les allégations sont majoritairement des opinions plutôt que des faits, le sell-off est une opportunité d'achat. L'entrée se fait après confirmation d'un support technique (2-3 jours) pour éviter le "falling knife". Le stop est placé sous le low absolu du report day. Le TP1 vise 50% du retrace (prix pré-rapport - low) et le TP2 le retour complet au prix pré-rapport.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>L'entreprise publie une réponse détaillée avec des preuves</li>
+          <li>Insider buying dans les jours suivant le rapport</li>
+          <li>Auditeur externe confirme l'intégrité des comptes</li>
+          <li>Analystes sell-side maintiennent leurs recommandations</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>SEC ouvre une enquête formelle</li>
+          <li>Auditeur démissionne ou émet une réserve</li>
+          <li>Deuxième short seller publie un rapport confirmant</li>
+          <li>Board members démissionnent post-rapport</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 5 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">5</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Dark Pool Accumulation Play</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Détecter l'accumulation institutionnelle stealth</p>
+    </div>
+    <span class="playbook-risk risk-moderate"><i class="fa-solid fa-gauge-simple"></i> MODÉRÉ</span>
+  </div>
+
+  <p>Les institutions accumulent souvent des positions massives via les dark pools pour éviter d'impacter le prix. Ce playbook détecte ces accumulations stealth en analysant le <strong>ratio dark pool / lit exchange</strong>, les prints au-dessus du NBBO, et les anomalies OBV. Quand une institution accumule silencieusement, elle a des informations (ou une conviction) que le marché ne possède pas encore. Référence : Partie 3 — Dark Pools.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Dark pool volume > 50% du volume total</strong> sur 5 jours consécutifs (la norme est ~40%). Une anomalie persistante signale une accumulation délibérée.</li>
+    <li><strong>Dark pool prints au-dessus du NBBO</strong> — les transactions exécutées au-dessus du best offer signalent une urgence d'achat. L'acheteur accepte de payer plus cher pour ne pas montrer sa taille sur le lit book.</li>
+    <li><strong>Prix plat ou légèrement en baisse</strong> — c'est le paradoxe de l'accumulation stealth : le volume dark pool augmente mais le prix ne monte pas. L'accumulation est camouflée par des ventes concomitantes sur le lit market.</li>
+    <li><strong>OBV en hausse</strong> — l'On-Balance Volume diverge positivement du prix, signalant que plus de volume se fait sur les up-ticks que les down-ticks.</li>
+    <li><strong>Insider buying simultané</strong> — Form 4 montrant des achats d'insiders pendant la même période. Double confirmation de la conviction bullish.</li>
+    <li><strong>Call sweep orders</strong> — Options flow montrant des call sweeps > $500K en OTM, signalant que des "smart money" parient sur une hausse imminente.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Dark Pool Accumulation</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">Breakout du range</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Sous le bas du range</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">+15-20%</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">+30-40%</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.5</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>L'accumulation institutionnelle via dark pools précède généralement un mouvement haussier significatif. Les institutions n'accumulent pas des millions de shares par hasard : elles ont fait leur due diligence. L'entrée se fait sur le breakout du range de consolidation (confirmation que l'accumulation est terminée et que le mouvement commence). Le stop est placé sous le bas du range. Les targets sont ambitieux car les breakouts post-accumulation institutionnelle sont souvent puissants et soutenus.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>13F filing révélant un nouveau gros holder (> 5%)</li>
+          <li>Block trades hors-marché signalés par FINRA</li>
+          <li>Breakout sur volume > 3x la moyenne 20j</li>
+          <li>Catalyst fondamental imminent (earnings, FDA, contrat)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Dark pool volume revient à la normale (< 40%)</li>
+          <li>Le range est cassé à la baisse avec volume</li>
+          <li>Insider selling détecté (contradictoire)</li>
+          <li>Short interest en forte hausse (institutions shortent, pas accumulent)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 6 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">6</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Max Pain Pin Play</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Exploiter la gravité vers le Max Pain avant l'expiration</p>
+    </div>
+    <span class="playbook-risk risk-low"><i class="fa-solid fa-gauge-simple-high"></i> BAS-MODÉRÉ</span>
+  </div>
+
+  <p>Le Max Pain est le prix auquel la valeur totale des options (calls + puts) expirantes est minimisée — c'est le prix qui inflige le maximum de perte aux acheteurs d'options et le maximum de profit aux market makers. Statistiquement, les prix convergent vers le Max Pain dans les 2-3 jours précédant l'OpEx (options expiration) avec une fiabilité de 55-60%. Ce playbook est le plus conservateur de la série. Référence : Partie 4 — Options, Max Pain & Gamma Squeeze.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>2-3 jours avant OpEx</strong> — le pinning effect est maximal dans les 48-72h précédant l'expiration. Avant cela, d'autres forces dominent.</li>
+    <li><strong>Prix actuellement éloigné du Max Pain</strong> — le prix actuel est > 5% au-dessus ou en dessous du Max Pain. Plus l'écart est grand, plus le potentiel de convergence est important.</li>
+    <li><strong>Open Interest élevé</strong> — l'OI total sur les strikes proches du Max Pain doit être significatif (> 10K contracts). Sans OI, les market makers n'ont pas d'incentive à pinner le prix.</li>
+    <li><strong>Pas de catalyst majeur attendu</strong> — un earnings report, un FDA decision, ou une macro event (FOMC) pendant la période peut dominer le Max Pain effect.</li>
+    <li><strong>GEX cohérent</strong> — le Gamma Exposure profile doit être compatible avec la direction du pin (GEX positif = pin effect fort, le market maker hedge de manière à stabiliser le prix).</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Max Pain Pin</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">Direction vers Max Pain</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Si prix s'éloigne +3%</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP</div><div class="value">Max Pain level</div></div>
+      <div class="trade-level trade-tp"><div class="label">Exit</div><div class="value">Vendredi OpEx 15h30</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:1.5</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Les market makers qui ont vendu des options hedgent dynamiquement leur exposition gamma. À l'approche de l'expiration, cette activité de hedging crée une force gravitationnelle qui attire le prix vers le Max Pain. Si le prix est au-dessus du Max Pain, les market makers sont net short delta et vendent des actions pour hedger, poussant le prix vers le bas. Si le prix est en dessous, ils achètent. L'entrée se fait dans la direction du Max Pain (short si au-dessus, long si en dessous), avec une sortie planifiée le vendredi OpEx avant la clôture.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>GEX fortement positif (pinning effect maximal)</li>
+          <li>Max Pain stable depuis 3+ jours (pas de repositionnement)</li>
+          <li>Volume d'options en déclin (les traders attendent l'expiry)</li>
+          <li>Marché global calme (VIX < 20)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>GEX flip de positif à négatif (gamma squeeze possible)</li>
+          <li>Max Pain shift de > 5% en 24h (repositionnement massif)</li>
+          <li>News break majeure (M&A, earnings warning, FDA)</li>
+          <li>VIX spike > 30 (les forces macro dominent le Max Pain)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 7 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">7</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Gamma Squeeze Setup</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Le play le plus explosif — quand le gamma devient incontrôlable</p>
+    </div>
+    <span class="playbook-risk risk-extreme"><i class="fa-solid fa-skull-crossbones"></i> EXTRÊME</span>
+  </div>
+
+  <p>Le gamma squeeze est le phénomène le plus violent des marchés modernes. Il se produit quand les market makers sont forcés d'acheter massivement des actions pour hedger leur exposition gamma négative, créant un <strong>feedback loop auto-renforçant</strong> : le prix monte, les calls deviennent ITM, les market makers achètent plus, le prix monte encore plus. GME en janvier 2021 est l'archétype. C'est le play le plus rémunérateur (+500% à +2000%) mais aussi le plus risqué (win rate ~20-25%). Référence : Partie 4 — Options, Max Pain & Gamma Squeeze.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>GEX flip de positif à négatif</strong> — le Gamma Exposure des market makers passe de positif (stabilisant) à négatif (déstabilisant). C'est le trigger technique #1.</li>
+    <li><strong>OI concentré sur des strikes OTM proches</strong> — les calls OTM avec un OI massif à des strikes 10-20% au-dessus du prix actuel créent un "gamma wall" qui peut être franchi.</li>
+    <li><strong>Float faible (< 30M shares)</strong> — les gamma squeezes sont mécaniquement plus violents sur les micro-floats car le hedging des market makers représente un % significatif du float.</li>
+    <li><strong>Short interest > 15%</strong> — le gamma squeeze est amplifié par le short covering simultané (double squeeze : gamma + short).</li>
+    <li><strong>Catalyst ou social momentum</strong> — le déclencheur initial qui pousse le prix vers les premiers strikes OTM et démarre la chaîne de réaction.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Gamma Squeeze</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">OTM Calls 10-15% OTM</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">-50% de la prime</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">+200% (2x prime)</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">+500% (runner)</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:5.0+</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>L'instrument privilégié est les OTM calls (10-15% out of the money) car ils offrent un levier maximum sur le gamma squeeze. La perte est limitée à la prime payée (contrairement au short squeeze play en actions qui a un drawdown potentiel de -15%). L'entrée se fait quand le GEX flip est confirmé et qu'un catalyst déclenche le mouvement initial. La position est dimensionnée de façon à ce que la perte totale (prime entière) ne dépasse pas 1-2% du portfolio. Si le squeeze se déclenche, les gains sont asymétriques (5x à 20x).</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Prix franchit le premier "gamma wall" (strike avec OI max)</li>
+          <li>Volume intraday > 10x la moyenne</li>
+          <li>LULD halts multiples à la hausse (circuit breakers)</li>
+          <li>CTB spike > 100% en intraday (shorts en panique)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>ATM offering annoncé pendant le squeeze (dilution killer)</li>
+          <li>Trading halt > 1h (refroidit le momentum)</li>
+          <li>Broker restrictions (margin increase, PCO — position close only)</li>
+          <li>GEX revient en positif (market makers reprennent le contrôle)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 8 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">8</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Stop Hunt Recovery</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Acheter le wick de chasse aux stops pour un R:R optimal</p>
+    </div>
+    <span class="playbook-risk risk-moderate"><i class="fa-solid fa-gauge-simple"></i> MODÉRÉ</span>
+  </div>
+
+  <p>Le stop hunting est une pratique quotidienne où les market makers ou les algorithmes HFT poussent brièvement le prix sous un niveau de support évident pour déclencher les stop loss des retail traders, puis ramènent le prix immédiatement dans le range. Le résultat est un <strong>long wick sous le support avec un corps au-dessus</strong> — un "pin bar" ou "hammer". Ce playbook achète immédiatement après le wick pour capturer le rebond. Référence : Partie 5 — Volume & Price Action.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Wick sous un support évident</strong> — le support doit être "évident" : round number, moving average (EMA 50, EMA 200), previous low, ou trendline testée 3+ fois. Plus le support est visible, plus les stops sont concentrés en dessous.</li>
+    <li><strong>Wick > 3x le corps de la bougie</strong> — le ratio ombre/corps doit être significatif. Un petit wick est du bruit, un wick géant est un stop hunt.</li>
+    <li><strong>Recovery immédiate</strong> — le prix revient au-dessus du support dans la même bougie (15min ou 1H timeframe). Si le prix reste sous le support, ce n'est pas un stop hunt mais un vrai breakdown.</li>
+    <li><strong>Volume spike sur le wick</strong> — un pic de volume pendant le wick confirme l'exécution massive des stop loss. Le volume doit être > 3x la moyenne de la période.</li>
+    <li><strong>Contexte macro neutre ou positif</strong> — un stop hunt dans un marché en chute libre n'est pas un setup. Le macro doit être stable.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Stop Hunt Recovery</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée</div><div class="value">Au recovery du support</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Sous le wick low</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">Range high précédent</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">+1.5x le range</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.0</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Le stop hunt crée une situation où les weak hands ont été éjectées et les strong hands restent. Le prix a "nettoyé" les stops et peut maintenant remonter sans la pression vendeuse des stop loss. L'entrée se fait dès que le prix revient au-dessus du support. Le stop est serré : juste sous le wick low (qui ne devrait plus être revisité si le stop hunt est authentique). Le ratio R:R est excellent car le stop est très proche et les targets correspondent au range high et au-delà.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>RSI divergence haussière sur le timeframe du wick</li>
+          <li>Volume climax suivi d'un dry up (capitulation terminée)</li>
+          <li>OBV reste positif malgré le wick (accumulation)</li>
+          <li>Le wick coïncide avec un support Fibonacci (38.2%, 50%, 61.8%)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Le prix revient sous le support dans les 2 bougies suivantes</li>
+          <li>Volume reste élevé après le wick (selling pressure continue)</li>
+          <li>News negative break pendant le setup</li>
+          <li>Marché global en sell-off (corrélation sector-wide)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 9 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">9</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">Le Pre-Market Gap Fade</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Shorter les gaps d'ouverture artificiels sans news</p>
+    </div>
+    <span class="playbook-risk risk-high"><i class="fa-solid fa-triangle-exclamation"></i> ÉLEVÉ</span>
+  </div>
+
+  <p>Les gaps d'ouverture > 10% sans news fondamentale sont souvent le résultat de <strong>manipulations pre-market</strong> : bots de trading, wash trading en low-liquidity hours, ou social media pump orchestré pendant la nuit. Statistiquement, 60-70% des gaps "artificiels" (sans catalyst fondamental) se remplissent dans les premières 2 heures de trading. Ce playbook shorte ces gaps pour capturer le gap fill.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Gap up > 10% en pre-market</strong> — un gap de 3-5% est normal. Au-delà de 10% sans catalyst, c'est suspect.</li>
+    <li><strong>Aucune news fondamentale</strong> — pas d'earnings, pas de FDA, pas de contrat, pas d'acquisition. Vérifier SEC Edgar, PR Newswire, GlobeNewswire. Si une news légitime justifie le gap, NE PAS shorter.</li>
+    <li><strong>Volume pre-market faible</strong> — le gap s'est formé sur un volume < 10% du volume moyen journalier. Les mouvements en low-liquidity sont fragiles.</li>
+    <li><strong>Social media pump identifié</strong> — le gap coïncide avec un spike de mentions overnight sur Twitter/X, StockTwits, ou Discord/Telegram groups. Pattern classique de manipulation coordonnée.</li>
+    <li><strong>RSI > 80 sur le 15min pre-market</strong> — surachat technique extrême confirmant l'exagération du mouvement.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Pre-Market Gap Fade</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée Short</div><div class="value">À l'ouverture (9h30)</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">Au-dessus du PM high</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP</div><div class="value">Gap fill (close veille)</div></div>
+      <div class="trade-level trade-tp"><div class="label">Time Stop</div><div class="value">11h30 max</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:1.8</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Les gaps artificiels sont créés par des acteurs qui profitent de la faible liquidité pre-market pour manipuler le prix. À l'ouverture, la liquidité revient et le prix trouve son niveau d'équilibre, qui est généralement le prix de clôture de la veille (gap fill). L'entrée se fait à l'ouverture du marché (9h30 ET). Le stop est au-dessus du pre-market high. Le time stop est à 11h30 : si le gap ne s'est pas rempli en 2 heures, la thèse est invalide et on sort.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Volume des 5 premières minutes > pre-market total (selling)</li>
+          <li>Le prix casse le VWAP à la baisse dans les 15 premières min</li>
+          <li>Tape montre des gros sells at market (distribution)</li>
+          <li>Secteur/index plat ou en baisse (pas de rally sectoriel)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>News fondamentale découverte après l'open (M&A rumor confirmée)</li>
+          <li>Volume à l'open très élevé et prix tient le gap (real buying)</li>
+          <li>Le prix fait un nouveau high > PM high dans les 15 premières min</li>
+          <li>VWAP en hausse constante (momentum réel, pas artificiel)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBOOK 10 -->
+<div class="setup-card">
+  <div class="playbook-header">
+    <span class="playbook-number">10</span>
+    <div>
+      <h3 style="margin:0; font-size:1.3rem; color:#0f172a;">L'Anti-Bot Contrarian Play</h3>
+      <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#64748b;">Prendre le contrepied des campagnes de bots coordonnées</p>
+    </div>
+    <span class="playbook-risk risk-moderate"><i class="fa-solid fa-gauge-simple"></i> MODÉRÉ</span>
+  </div>
+
+  <p>Les campagnes de bots sur les réseaux sociaux financiers sont devenues omniprésentes. Des armées de faux comptes poussent des narratifs bullish ou bearish pour manipuler le sentiment retail. Ce playbook identifie ces campagnes et prend systématiquement la <strong>position contrariante</strong>. La logique est simple : si quelqu'un dépense de l'argent pour fabriquer un narratif, c'est qu'il a besoin de liquidité dans la direction opposée. Référence : Partie 7 — Social Media, Pump & Dump.</p>
+
+  <h4><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Critères d'entrée</h4>
+  <ul>
+    <li><strong>Campagne de bots identifiée</strong> — ratio comptes < 30 jours / comptes > 1 an > 40% dans les mentions du ticker. Comptes avec patterns de posting suspects (même format, même timing, même hashtags).</li>
+    <li><strong>Narratif homogène</strong> — tous les bots poussent le même message ("to the moon", "shorts are trapped", ou inversement "going to zero", "scam alert"). Un vrai consensus organique est plus nuancé.</li>
+    <li><strong>Divergence prix/sentiment</strong> — le prix ne suit pas le narratif des bots. Si les bots crient bullish mais le prix baisse, quelqu'un distribue en utilisant les bots comme couverture.</li>
+    <li><strong>Dark pool flow contradictoire</strong> — le dark pool flow va dans la direction opposée au narratif bot. Ex: bots bullish mais dark pool prints au-dessous du NBBO (distribution stealth).</li>
+    <li><strong>Insider activity contradictoire</strong> — les insiders font l'inverse du narratif bot. Bots bullish mais insiders vendent = signal short. Bots bearish mais insiders achètent = signal long.</li>
+  </ul>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Setup Anti-Bot Contrarian</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Direction</div><div class="value">Inverse des bots</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">-8% de l'entrée</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">+15%</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">+25%</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.0</div></div>
+    </div>
+
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse du trade</h4>
+      <p>Les campagnes de bots sont un coût pour celui qui les orchestre. Ce coût n'est justifié que si l'orchestrateur a une position significative et a besoin de liquidité dans la direction opposée au narratif. Si les bots poussent bullish, l'orchestrateur distribue (vend) à des prix élevés aux retail qui suivent le narratif. Si les bots poussent bearish, l'orchestrateur accumule à des prix bas pendant que les retail paniquent. Le trader expert identifie la campagne et prend la position opposée au narratif, aligné avec le flow réel (dark pool, insiders).</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem;">
+      <div style="background:#f0fdf4; border:1px solid #16a34a; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-check-circle"></i> Signaux de Renforcement</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Dark pool flow confirme la direction contrariante</li>
+          <li>Insider buying/selling aligne avec la position contrariante</li>
+          <li>Options flow (smart money) dans la direction contrariante</li>
+          <li>La campagne de bots s'intensifie (desperation = conviction)</li>
+        </ul>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #dc2626; border-radius:12px; padding:1.25rem;">
+        <h4 style="margin:0 0 0.75rem; font-size:0.85rem;"><i class="fa-solid fa-xmark-circle"></i> Signaux d'Annulation</h4>
+        <ul style="margin:0; padding-left:1.2rem; font-size:0.85rem; line-height:1.7;">
+          <li>Le flow réel s'aligne finalement avec le narratif bot (les bots avaient raison)</li>
+          <li>News fondamentale confirme le narratif bot</li>
+          <li>La campagne de bots s'arrête (l'orchestrateur a fini de positionner)</li>
+          <li>Volume sèche complètement (pas de contrepartie)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:450px; margin:2rem 0;" id="playbookChart"></div>
+
+<script>
+(function() {
+  var dom = document.getElementById('playbookChart');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    title: { text: 'Profil Risque/Rendement des 10 Playbooks', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'item', formatter: function(p) { return p.data[3] + '<br/>Win Rate: ' + p.data[2] + '%<br/>R:R: 1:' + p.data[0]; } },
+    xAxis: { name: 'Ratio Risque/Rendement (R:R)', nameLocation: 'middle', nameGap: 30, min: 1, max: 6, splitLine: { lineStyle: { type: 'dashed' } } },
+    yAxis: { name: 'Win Rate (%)', nameLocation: 'middle', nameGap: 40, min: 15, max: 65, splitLine: { lineStyle: { type: 'dashed' } } },
+    series: [{
+      type: 'scatter',
+      symbolSize: function(d) { return d[2] / 2; },
+      data: [
+        [3.5, 37, 37, '#1 Short Squeeze', '#dc2626'],
+        [2.5, 47, 47, '#2 Fade P&D', '#f59e0b'],
+        [2.0, 57, 57, '#3 Post-Dilution', '#3b82f6'],
+        [2.0, 42, 42, '#4 Short Report', '#f59e0b'],
+        [2.5, 52, 52, '#5 Dark Pool', '#3b82f6'],
+        [1.5, 57, 57, '#6 Max Pain', '#16a34a'],
+        [5.0, 22, 22, '#7 Gamma Squeeze', '#dc2626'],
+        [2.0, 57, 57, '#8 Stop Hunt', '#3b82f6'],
+        [1.8, 52, 52, '#9 Gap Fade', '#f59e0b'],
+        [2.0, 47, 47, '#10 Anti-Bot', '#3b82f6']
+      ],
+      itemStyle: { color: function(p) { return p.data[4]; } },
+      label: { show: true, formatter: function(p) { return p.data[3]; }, position: 'top', fontSize: 10, color: '#475569' }
+    }]
+  });
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : CAS PRATIQUES INTÉGRÉS                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cas-pratiques"><i class="fa-solid fa-flask" style="color:#dc2626;"></i> Cas Pratiques Intégrés — Analyse 360°</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#dc2626;"></i> L'Épreuve Finale — 4 Cas Réels Analysés avec les 9 Chapitres</h2>
+  <p>Ces quatre études de cas mobilisent <strong>l'intégralité des connaissances</strong> acquises dans les 9 chapitres précédents. Pour chaque ticker, nous appliquerons systématiquement : l'anatomie de la manipulation (Part 1), l'analyse du short selling (Part 2), les flux dark pools (Part 3), le positionnement options et le Max Pain (Part 4), le price action et le volume (Part 5), les risques de dilution (Part 6), le sentiment social media (Part 7), les fonds hostiles (Part 8), et le scanner de détection (Part 9). Enfin, nous sélectionnerons les playbooks applicables et construirons un trade setup complet.</p>
+</div>
+
+<!-- CAS PRATIQUE 1 : RZLV -->
+<div class="content-card">
+  <div class="case-study-hero">
+    <span class="case-ticker-badge"><i class="fa-solid fa-microchip"></i> RZLV</span>
+    <h3>Cas Pratique #1 — Rezolve AI Ltd</h3>
+    <p style="color:#cbd5e1; font-size:0.95rem; line-height:1.7;">Rezolve AI est une société britannique d'intelligence artificielle appliquée au commerce de détail, cotée au NASDAQ. Le titre illustre parfaitement le phénomène de <strong>hype AI manipulation</strong> : une valorisation déconnectée des fondamentaux, amplifiée par un marketing agressif sur les réseaux sociaux et un float relativement restreint.</p>
+
+    <div class="case-metrics">
+      <div class="case-metric"><div class="cm-label">Prix actuel</div><div class="cm-value" style="color:#f87171;">$2.33</div></div>
+      <div class="case-metric"><div class="cm-label">52W High</div><div class="cm-value" style="color:#34d399;">$8.45</div></div>
+      <div class="case-metric"><div class="cm-label">52W Low</div><div class="cm-value" style="color:#f87171;">$1.07</div></div>
+      <div class="case-metric"><div class="cm-label">Short Interest</div><div class="cm-value" style="color:#fbbf24;">11.5%</div></div>
+      <div class="case-metric"><div class="cm-label">CTB</div><div class="cm-value" style="color:#38bdf8;">1.42%</div></div>
+      <div class="case-metric"><div class="cm-label">Beta</div><div class="cm-value" style="color:#a78bfa;">-0.19</div></div>
+      <div class="case-metric"><div class="cm-label">Float</div><div class="cm-value" style="color:#94a3b8;">170M</div></div>
+      <div class="case-metric"><div class="cm-label">Outstanding</div><div class="cm-value" style="color:#94a3b8;">399M</div></div>
+    </div>
+  </div>
+
+  <h4><i class="fa-solid fa-search" style="color:#dc2626;"></i> Analyse Multi-Chapitre</h4>
+
+  <table class="compare-table">
+    <thead><tr><th>Chapitre</th><th>Analyse</th><th>Signal</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Part 1 — Anatomie</strong></td><td>RZLV présente les caractéristiques classiques d'un "concept stock" manipulé : revenus quasi-inexistants, valorisation basée sur des promesses futures, et un float que le ratio Outstanding/Float (399M/170M = 2.35x) rend suspect. Les 229M shares non-float sont probablement détenues par des insiders et lockés — mais pour combien de temps ?</td><td><span class="badge badge-red">Bearish</span></td></tr>
+      <tr><td><strong>Part 2 — Short Selling</strong></td><td>SI de 11.5% est modéré — insuffisant pour un short squeeze classique (seuil : 20%). Le CTB de 1.42% est extrêmement bas, signalant que les prêteurs de titres ne considèrent pas RZLV comme à risque de squeeze. Les shorts sont confortables et pas pressés de couvrir.</td><td><span class="badge badge-blue">Neutre</span></td></tr>
+      <tr><td><strong>Part 3 — Dark Pools</strong></td><td>Le ratio dark pool/lit est normal (~38-42%). Pas de signe d'accumulation institutionnelle stealth. Les prints dark pool sont alignés avec le NBBO — pas de premium d'urgence. Les institutions ne sont pas intéressées à ces niveaux.</td><td><span class="badge badge-blue">Neutre</span></td></tr>
+      <tr><td><strong>Part 4 — Options</strong></td><td>Options peu liquides sur RZLV. L'OI est concentré sur les puts $2 et $2.5, suggérant que les options traders s'attendent à une baisse. Max Pain généralement autour de $2-2.5 — le titre est déjà au Max Pain. Pas d'anomalie gamma.</td><td><span class="badge badge-red">Bearish</span></td></tr>
+      <tr><td><strong>Part 5 — Volume & PA</strong></td><td>Le volume est en déclin constant depuis le pic à $8.45 : pattern classique de distribution. L'OBV est en chute libre. Le prix forme des lower highs et lower lows — tendance baissière claire. Pas de signe de spoofing ou layering (trop illiquide pour les algos HFT).</td><td><span class="badge badge-red">Bearish</span></td></tr>
+      <tr><td><strong>Part 6 — Dilution</strong></td><td>Risque ÉLEVÉ. Avec 399M shares outstanding et un cash burn typique des startups AI, une dilution supplémentaire est quasi-certaine dans les 6-12 mois. Vérifier les shelf registrations (S-3) et les warrants en circulation. Le ratio Float/Outstanding de 42% laisse 58% de shares potentiellement liquidables.</td><td><span class="badge badge-red">Bearish</span></td></tr>
+      <tr><td><strong>Part 7 — Social Media</strong></td><td>RZLV a bénéficié de la vague "AI hype" sur les réseaux sociaux. Analyse des comptes promoteurs : plusieurs comptes < 60 jours avec un pattern de posting homogène ("next NVDA", "AI revolution"). Score de manipulation sociale : 7/10. La hype est en déclin depuis Q4 2025.</td><td><span class="badge badge-red">Bearish</span></td></tr>
+      <tr><td><strong>Part 8 — Fonds Hostiles</strong></td><td>Pas de short report publié par un fonds activiste. Cependant, le profil de RZLV (concept stock AI avec peu de revenus) est un candidat idéal pour Hindenburg, Kerrisdale, ou Grizzly Research. Risque de short report : Modéré (20-30% de probabilité sur 12 mois).</td><td><span class="badge badge-purple">À surveiller</span></td></tr>
+      <tr><td><strong>Part 9 — Scanner</strong></td><td>Score scanner composite : 35/100 (FAIBLE). Confluence technique insuffisante pour un play bullish. La configuration est davantage favorable à un fade (short) qu'à un long. Pas d'alerte squeeze ni d'accumulation détectée.</td><td><span class="badge badge-red">Bearish</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4><i class="fa-solid fa-tags" style="color:#dc2626;"></i> Playbooks Applicables</h4>
+  <div class="playbook-applicable">
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #2 Fade du P&D</span>
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #10 Anti-Bot Contrarian</span>
+    <span class="playbook-tag" style="background:rgba(148,163,184,0.1); color:#64748b; border-color:rgba(148,163,184,0.3);"><i class="fa-solid fa-circle-xmark"></i> #7 Gamma Squeeze (non applicable)</span>
+  </div>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Trade Setup RZLV — Fade / Short Bias</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée Short</div><div class="value">$2.40-2.60</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">$3.10</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">$1.80</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">$1.20</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.4</div></div>
+    </div>
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse synthétique</h4>
+      <p>RZLV est un <strong>concept stock AI en déclin structurel</strong>. Le SI modéré (11.5%) avec un CTB minuscule (1.42%) confirme que les shorts ne sont pas sous pression. L'absence d'accumulation institutionnelle, la tendance baissière du volume et du prix, le risque de dilution élevé, et la manipulation sociale en déclin pointent tous vers une continuation baissière. Le play optimal est un short entry sur rally technique vers $2.40-2.60 (résistance EMA 20) avec un stop au-dessus de $3.10. Le beta négatif (-0.19) est un avantage : RZLV sous-performe quand le marché monte, ce qui offre une protection en cas de rally général.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CAS PRATIQUE 2 : CLOV -->
+<div class="content-card">
+  <div class="case-study-hero">
+    <span class="case-ticker-badge"><i class="fa-solid fa-heart-pulse"></i> CLOV</span>
+    <h3>Cas Pratique #2 — Clover Health Investments</h3>
+    <p style="color:#cbd5e1; font-size:0.95rem; line-height:1.7;">Clover Health est une entreprise de technologie de santé (insurtech) qui a été introduite en bourse via SPAC en janvier 2021 avec Chamath Palihapitiya. Le titre a été la cible d'un <strong>rapport Hindenburg Research</strong> dévastateur, puis est devenu un <strong>meme stock</strong> pendant la frénésie de juin 2021. Un cas d'école de manipulation multi-couche.</p>
+
+    <div class="case-metrics">
+      <div class="case-metric"><div class="cm-label">Prix actuel</div><div class="cm-value" style="color:#f87171;">$2.09</div></div>
+      <div class="case-metric"><div class="cm-label">Short Interest</div><div class="cm-value" style="color:#fbbf24;">9.95%</div></div>
+      <div class="case-metric"><div class="cm-label">DTC</div><div class="cm-value" style="color:#f97316;">6.04</div></div>
+      <div class="case-metric"><div class="cm-label">Beta</div><div class="cm-value" style="color:#a78bfa;">1.85</div></div>
+      <div class="case-metric"><div class="cm-label">Statut</div><div class="cm-value" style="color:#94a3b8;">Ex-SPAC</div></div>
+      <div class="case-metric"><div class="cm-label">Hindenburg</div><div class="cm-value" style="color:#f87171;">Ciblé (2021)</div></div>
+    </div>
+  </div>
+
+  <h4><i class="fa-solid fa-search" style="color:#dc2626;"></i> Analyse Multi-Chapitre</h4>
+
+  <table class="compare-table">
+    <thead><tr><th>Chapitre</th><th>Analyse</th><th>Signal</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Part 1 — Anatomie</strong></td><td>CLOV est l'archétype du "SPAC manipulation" : introduction en bourse via véhicule spéculatif (Chamath's IPOC), valorisation pré-revenue exagérée, puis effondrement post-lock-up. Le titre a perdu ~95% depuis son ATH de $28.85 (juin 2021). La manipulation initiale était le SPAC lui-même, qui contourne les protections IPO traditionnelles.</td><td><span class="badge badge-red">Bearish historique</span></td></tr>
+      <tr><td><strong>Part 2 — Short Selling</strong></td><td>SI de 9.95% avec un DTC de 6.04 jours est intéressant. Le DTC élevé (> 5) signifie que les shorts auraient du mal à couvrir rapidement en cas de catalyst. Cependant, le SI est sous le seuil des 15% pour un squeeze classique. Le CTB est probablement bas (shares disponibles abondantes post-dilution SPAC).</td><td><span class="badge badge-purple">Potentiel squeeze limité</span></td></tr>
+      <tr><td><strong>Part 3 — Dark Pools</strong></td><td>CLOV a historiquement un ratio dark pool élevé (~50-55%), ce qui a alimenté les théories de manipulation dans la communauté retail. En réalité, ce ratio élevé reflète principalement l'activité des market makers et la fragmentation des ordres sur un titre très volatile à faible prix.</td><td><span class="badge badge-blue">Neutre</span></td></tr>
+      <tr><td><strong>Part 4 — Options</strong></td><td>L'OI options sur CLOV reste significatif grâce à l'héritage meme stock. Les puts $2 et $1.5 ont un OI massif. Le Max Pain oscille autour de $2-2.5. GEX globalement positif (stabilisant) — pas de setup gamma squeeze imminent.</td><td><span class="badge badge-blue">Neutre</span></td></tr>
+      <tr><td><strong>Part 5 — Volume & PA</strong></td><td>Après 4 ans de déclin, le titre forme une base potentielle autour de $1.80-2.30. Le volume est stabilisé (ni en hausse ni en baisse). L'OBV montre une légère divergence haussière sur le monthly — premier signe potentiel d'accumulation de fond. Les supports Fibonacci du mouvement $0.67 (low) à $28.85 (high) placent le 95.2% retracement à $2.13 — exactement le prix actuel.</td><td><span class="badge badge-green">Potentiel base formation</span></td></tr>
+      <tr><td><strong>Part 6 — Dilution</strong></td><td>CLOV a subi de multiples dilutions post-SPAC (warrants, earn-outs, stock-based compensation). Le risque de dilution future dépend du cash position actuel. Si le cash runway est > 18 mois sans dilution, c'est un facteur positif. Vérifier le dernier 10-Q.</td><td><span class="badge badge-purple">À vérifier</span></td></tr>
+      <tr><td><strong>Part 7 — Social</strong></td><td>CLOV conserve une communauté Reddit active (r/CLOV) mais le nombre de membres actifs a chuté de ~90% depuis le pic de 2021. Le sentiment est devenu neutre-à-bearish, ce qui est paradoxalement positif (les capitulants ont vendu, les mains faibles sont parties).</td><td><span class="badge badge-green">Capitulation complète</span></td></tr>
+      <tr><td><strong>Part 8 — Fonds Hostiles</strong></td><td>Le rapport Hindenburg de février 2021 ("Clover Health: How the 'King of SPACs' Duped Retail Investors") alléguait des liens non divulgués avec le DOJ et une enquête SEC. Quatre ans plus tard, CLOV est toujours cotée, n'a pas fait faillite, et a résolu la plupart des allégations. Le rapport était partiellement exagéré.</td><td><span class="badge badge-green">Post-report recovery pattern</span></td></tr>
+      <tr><td><strong>Part 9 — Scanner</strong></td><td>Score scanner : 52/100 (MODÉRÉ). Signaux mixtes. Le DTC de 6.04 est le facteur le plus intéressant. La base technique à $1.80-2.30 est prometteuse. Mais pas assez de confluence pour un score > 70.</td><td><span class="badge badge-blue">Watchlist</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4><i class="fa-solid fa-tags" style="color:#dc2626;"></i> Playbooks Applicables</h4>
+  <div class="playbook-applicable">
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #1 Short Squeeze (conditionnel — si SI monte > 15%)</span>
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #4 Short Report Bounce (long-term recovery post-Hindenburg)</span>
+  </div>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Trade Setup CLOV — Base Recovery / Speculative Long</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée Long</div><div class="value">$1.85-2.00</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">$1.60</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">$2.80</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">$3.50</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.8</div></div>
+    </div>
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse synthétique</h4>
+      <p>CLOV a survécu au rapport Hindenburg, à la débâcle SPAC, et à la capitulation meme stock. Quatre ans après, le titre forme une base technique à $1.80-2.30 avec un DTC de 6.04 jours qui maintient une tension latente. L'entrée se fait au bas de la base ($1.85-2.00) avec un stop sous le support à $1.60. Le TP1 à $2.80 correspond à la résistance haute du range de consolidation, le TP2 à $3.50 au gap fill partiel de 2023. Ce trade est spéculatif (conviction 55%) mais offre un R:R de 1:2.8 qui le rend mathématiquement attractif.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CAS PRATIQUE 3 : RXT -->
+<div class="content-card">
+  <div class="case-study-hero">
+    <span class="case-ticker-badge"><i class="fa-solid fa-server"></i> RXT</span>
+    <h3>Cas Pratique #3 — Rackspace Technology</h3>
+    <p style="color:#cbd5e1; font-size:0.95rem; line-height:1.7;">Rackspace Technology est un fournisseur de services cloud multi-plateforme en difficulté financière profonde. Avec une dette de $3.3 milliards, un CTB astronomique de 76.76%, et une volatilité extrême alimentée par des rumeurs de partenariat Palantir, RXT est un <strong>terrain de jeu pour manipulateurs</strong> de tous bords.</p>
+
+    <div class="case-metrics">
+      <div class="case-metric"><div class="cm-label">Prix actuel</div><div class="cm-value" style="color:#f87171;">$1.95</div></div>
+      <div class="case-metric"><div class="cm-label">CTB</div><div class="cm-value" style="color:#dc2626;">76.76%</div></div>
+      <div class="case-metric"><div class="cm-label">Dette</div><div class="cm-value" style="color:#dc2626;">$3.3B</div></div>
+      <div class="case-metric"><div class="cm-label">Partenariat</div><div class="cm-value" style="color:#fbbf24;">Palantir</div></div>
+      <div class="case-metric"><div class="cm-label">Risque</div><div class="cm-value" style="color:#dc2626;">Faillite</div></div>
+      <div class="case-metric"><div class="cm-label">Float</div><div class="cm-value" style="color:#94a3b8;">~215M</div></div>
+    </div>
+  </div>
+
+  <h4><i class="fa-solid fa-search" style="color:#dc2626;"></i> Analyse Multi-Chapitre</h4>
+
+  <table class="compare-table">
+    <thead><tr><th>Chapitre</th><th>Analyse</th><th>Signal</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Part 1 — Anatomie</strong></td><td>RXT est un cas de manipulation par "narrative injection" : le titre est fondamentalement en difficulté (dette massive, revenus en déclin) mais des pumps réguliers surviennent autour de rumeurs de partenariat avec Palantir. Chaque pump est suivi d'un dump — pattern répétitif exploité par des traders agiles.</td><td><span class="badge badge-red">Manipulation récurrente</span></td></tr>
+      <tr><td><strong>Part 2 — Short Selling</strong></td><td>Le CTB de 76.76% est EXCEPTIONNELLEMENT élevé — top 1% de tous les tickers US. Cela signifie que les shorts paient ~77% annualisé pour maintenir leur position. Ce coût crée une pression naturelle à couvrir (squeeze mécanique). Le SI doit être vérifié régulièrement car il évolue rapidement sur ce type de titre.</td><td><span class="badge badge-red">Squeeze tension maximale</span></td></tr>
+      <tr><td><strong>Part 3 — Dark Pools</strong></td><td>Dark pool activity élevée et erratique. Des prints massifs apparaissent sporadiquement — potentiellement des blocs de dette convertie en equity ou des transactions de restructuration. Ne pas interpréter comme de l'accumulation : c'est probablement de la liquidation.</td><td><span class="badge badge-red">Distribution probable</span></td></tr>
+      <tr><td><strong>Part 4 — Options</strong></td><td>Options illiquides (spread large, OI faible). Pas de setup gamma viable. Le Max Pain est généralement proche du prix actuel ($2). Utiliser les options avec extrême prudence — les fills seront mauvais.</td><td><span class="badge badge-blue">Non applicable</span></td></tr>
+      <tr><td><strong>Part 5 — Volume & PA</strong></td><td>Pattern de "pump spikes" récurrents : volume 5-10x la moyenne pendant 1-2 jours, suivi d'un retour au calme et d'un drift baissier. Les gaps up sont systématiquement remplis en 3-7 jours. Le titre est dans un canal baissier depuis 18 mois avec des spikes ponctuels.</td><td><span class="badge badge-red">Fade les spikes</span></td></tr>
+      <tr><td><strong>Part 6 — Dilution</strong></td><td>Risque CRITIQUE. Avec $3.3B de dette et des revenus en baisse, une restructuration de la dette (debt-to-equity swap) est probable, ce qui diluerait massivement les actionnaires existants. Chaque dollar de dette converti en equity crée des millions de nouvelles shares.</td><td><span class="badge badge-red">Risque existentiel</span></td></tr>
+      <tr><td><strong>Part 7 — Social</strong></td><td>RXT est périodiquement pompé sur Twitter/X et StockTwits par des comptes qui mentionnent systématiquement "Palantir partnership" et "AI infrastructure". Le pattern est classique : pump de 24-48h suivi d'un silence. Manipulation sociale score : 8/10.</td><td><span class="badge badge-red">Pump coordonné</span></td></tr>
+      <tr><td><strong>Part 8 — Fonds Hostiles</strong></td><td>Pas de short report publié, mais la situation fondamentale est tellement négative qu'un short report serait redondant. Les shorts n'ont pas besoin de rapport activiste — la gravité suffit.</td><td><span class="badge badge-blue">N/A</span></td></tr>
+      <tr><td><strong>Part 9 — Scanner</strong></td><td>Scanner score : 25/100 (TRÈS FAIBLE pour un long). Score 75/100 en mode short/fade. Le CTB de 77% est le seul facteur qui crée du risque pour les shorts (coût de portage). Tous les autres signaux sont bearish.</td><td><span class="badge badge-red">Short/Fade uniquement</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4><i class="fa-solid fa-tags" style="color:#dc2626;"></i> Playbooks Applicables</h4>
+  <div class="playbook-applicable">
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #2 Fade du P&D (sur chaque pump spike)</span>
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #9 Gap Fade (sur les gaps matinaux Palantir)</span>
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #5 Dark Pool (inversé — détecter la distribution)</span>
+  </div>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Trade Setup RXT — Fade les Pump Spikes</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée Short</div><div class="value">Sur spike > +20%</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">+10% au-dessus du spike</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">Gap fill (-15%)</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">Pré-spike level</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.0</div></div>
+    </div>
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse synthétique</h4>
+      <p>RXT est un <strong>"dead cat bouncing"</strong> chronique. Les pump spikes sont des opportunités short, pas des opportunités long. Le CTB de 77% rend le short coûteux ($0.21/share/mois au prix actuel) mais chaque pump de 20-30% offre un R:R suffisant pour absorber le coût. L'entrée se fait UNIQUEMENT sur un spike identifié (hausse > 20% en 1-2 jours sans news fondamentale), en utilisant des puts si disponibles (pour limiter le risque et éviter le CTB) ou en short shares avec un time stop de 5 jours maximum. AVERTISSEMENT : le risque de faillite rend le short à long terme dangereux (Chapter 11 = halt + squeeze potentiel).</p>
+    </div>
+  </div>
+</div>
+
+<!-- CAS PRATIQUE 4 : MVST -->
+<div class="content-card">
+  <div class="case-study-hero">
+    <span class="case-ticker-badge"><i class="fa-solid fa-battery-full"></i> MVST</span>
+    <h3>Cas Pratique #4 — Microvast Holdings</h3>
+    <p style="color:#cbd5e1; font-size:0.95rem; line-height:1.7;">Microvast Holdings est un fabricant de batteries lithium-ion pour véhicules commerciaux, introduit en bourse via SPAC en 2021. Le titre combine un <strong>short interest élevé (13.5%), un DTC massif (7.48), un beta extrême (3.37)</strong> et une dilution récente via 424B5. Un cocktail explosif qui peut aller dans les deux directions.</p>
+
+    <div class="case-metrics">
+      <div class="case-metric"><div class="cm-label">Prix actuel</div><div class="cm-value" style="color:#f87171;">$2.24</div></div>
+      <div class="case-metric"><div class="cm-label">Short Interest</div><div class="cm-value" style="color:#fbbf24;">13.5%</div></div>
+      <div class="case-metric"><div class="cm-label">DTC</div><div class="cm-value" style="color:#f97316;">7.48</div></div>
+      <div class="case-metric"><div class="cm-label">Beta</div><div class="cm-value" style="color:#dc2626;">3.37</div></div>
+      <div class="case-metric"><div class="cm-label">Dilution</div><div class="cm-value" style="color:#dc2626;">424B5</div></div>
+      <div class="case-metric"><div class="cm-label">Secteur</div><div class="cm-value" style="color:#38bdf8;">EV / Batteries</div></div>
+    </div>
+  </div>
+
+  <h4><i class="fa-solid fa-search" style="color:#dc2626;"></i> Analyse Multi-Chapitre</h4>
+
+  <table class="compare-table">
+    <thead><tr><th>Chapitre</th><th>Analyse</th><th>Signal</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Part 1 — Anatomie</strong></td><td>MVST est un cas classique de "SPAC-to-penny-stock" : introduction via SPAC en 2021 à des valorisations élevées, puis chute de ~90% alors que les revenus ne suivent pas les projections du SPAC deck. La manipulation ici n'est pas post-IPO mais pré-IPO : les projections de revenus du SPAC étaient agressivement optimistes.</td><td><span class="badge badge-red">SPAC manipulation historique</span></td></tr>
+      <tr><td><strong>Part 2 — Short Selling</strong></td><td>SI de 13.5% avec un DTC de 7.48 jours est la combinaison la plus intéressante de nos 4 cas. Le DTC > 7 signifie qu'en cas de catalyst, les shorts mettraient plus d'une semaine à couvrir au volume moyen. C'est un potentiel de squeeze significatif, même si le SI est sous les 20%. Le beta de 3.37 amplifierait tout mouvement.</td><td><span class="badge badge-green">Squeeze potentiel réel</span></td></tr>
+      <tr><td><strong>Part 3 — Dark Pools</strong></td><td>À surveiller activement. Avec le 424B5 filing récent, les dark pools vont être utilisés par les participants à l'offering pour distribuer les nouvelles shares. Pendant 2-3 semaines post-offering, le dark pool volume sera biaisé bearish (distribution). Après cette période, surveiller un éventuel retournement (accumulation).</td><td><span class="badge badge-purple">En transition</span></td></tr>
+      <tr><td><strong>Part 4 — Options</strong></td><td>Options modérément liquides. Le Max Pain autour de $2-2.5 est cohérent avec le prix actuel. L'OI calls $3 et $5 est significatif — si le prix devait atteindre ces niveaux, un gamma squeeze overlay serait possible (call wall + short squeeze simultanés).</td><td><span class="badge badge-green">Setup gamma latent</span></td></tr>
+      <tr><td><strong>Part 5 — Volume & PA</strong></td><td>Le beta de 3.37 signifie que MVST amplifie chaque mouvement du marché par un facteur 3.4x. En pratique : un jour où SPY fait +1%, MVST fait +3.4%. Inversement, SPY -1% = MVST -3.4%. L'OBV montre une stabilisation récente après 2 ans de déclin — possible bottom formation.</td><td><span class="badge badge-purple">Mixte — bottom possible</span></td></tr>
+      <tr><td><strong>Part 6 — Dilution</strong></td><td>Le filing 424B5 est un prospectus supplémentaire qui autorise la vente de nouvelles shares. C'est une dilution CONFIRMÉE. L'impact négatif est déjà partiellement dans le prix (sell-off post-filing). Le play #3 (Post-Dilution Recovery) est directement applicable ici.</td><td><span class="badge badge-red">Dilution active</span></td></tr>
+      <tr><td><strong>Part 7 — Social</strong></td><td>MVST a une communauté Reddit active (r/MVST). Le sentiment est divisé : les holders long-term sont frustrés mais convaincus par la technologie, les nouveaux entrants sont attirés par le squeeze potential. Score de manipulation sociale : 4/10 (relativement organique comparé aux autres cas).</td><td><span class="badge badge-blue">Sentiment organique</span></td></tr>
+      <tr><td><strong>Part 8 — Fonds Hostiles</strong></td><td>Pas de short report. Le profil de MVST (EV/batteries avec des revenus réels mais insuffisants) n'est pas le profil typique visé par Hindenburg ou Citron. Le risque de short report est faible (< 10%).</td><td><span class="badge badge-green">Risque faible</span></td></tr>
+      <tr><td><strong>Part 9 — Scanner</strong></td><td>Score scanner : 62/100 (CORRECT). Le DTC de 7.48, le beta de 3.37, et le setup post-dilution créent une triple confluence intéressante. Le score n'atteint pas 70 à cause de la dilution active et de l'absence de catalyst immédiat.</td><td><span class="badge badge-blue">Watchlist active</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4><i class="fa-solid fa-tags" style="color:#dc2626;"></i> Playbooks Applicables</h4>
+  <div class="playbook-applicable">
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #1 Short Squeeze (conditionnel — si catalyst apparaît)</span>
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #3 Post-Dilution Recovery (prioritaire)</span>
+    <span class="playbook-tag"><i class="fa-solid fa-circle-check"></i> #6 Max Pain Pin (OpEx trades)</span>
+  </div>
+
+  <div class="trade-box">
+    <h3><i class="fa-solid fa-crosshairs"></i> Trade Setup MVST — Post-Dilution Recovery + Squeeze Optionality</h3>
+    <div class="trade-levels">
+      <div class="trade-level trade-entry"><div class="label">Entrée Long</div><div class="value">$1.90-2.10</div></div>
+      <div class="trade-level trade-stop"><div class="label">Stop Loss</div><div class="value">$1.60</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP1</div><div class="value">$2.80</div></div>
+      <div class="trade-level trade-tp"><div class="label">TP2</div><div class="value">$3.50</div></div>
+      <div class="trade-level trade-rr"><div class="label">R:R</div><div class="value">1:2.6</div></div>
+    </div>
+    <div class="pedagogy-box" style="margin-top:1.5rem;">
+      <h4><i class="fa-solid fa-graduation-cap"></i> Thèse synthétique</h4>
+      <p>MVST est le cas le plus <strong>nuancé et potentiellement le plus rémunérateur</strong> des quatre. La dilution 424B5 crée une opportunité de type #3 (Post-Dilution Recovery) : acheter le washout post-offering à $1.90-2.10, avec un stop sous $1.60. Le facteur différenciant est le DTC de 7.48 et le beta de 3.37 qui ajoutent une "squeeze optionality" au trade : si un catalyst EV/batteries apparaît (contrat DOE, partenariat OEM, earnings beat), le squeeze peut amplifier le recovery par un facteur 3x. L'entrée en 3 tranches est recommandée : 33% immédiat, 33% si test de $1.80, 33% sur breakout au-dessus de $2.50.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Comparaison des 4 cas -->
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#dc2626;"></i> Comparaison des 4 Cas Pratiques</h2>
+
+  <div style="height:400px; margin:1rem 0;" id="casCompareChart"></div>
+
+  <table class="compare-table">
+    <thead><tr><th>Critère</th><th>RZLV</th><th>CLOV</th><th>RXT</th><th>MVST</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Direction</strong></td><td><span class="badge badge-red">Short</span></td><td><span class="badge badge-green">Long</span></td><td><span class="badge badge-red">Short (fade)</span></td><td><span class="badge badge-green">Long</span></td></tr>
+      <tr><td><strong>Conviction</strong></td><td>70%</td><td>55%</td><td>75%</td><td>60%</td></tr>
+      <tr><td><strong>R:R</strong></td><td>1:2.4</td><td>1:2.8</td><td>1:2.0</td><td>1:2.6</td></tr>
+      <tr><td><strong>Sizing max</strong></td><td>2%</td><td>3%</td><td>2%</td><td>3%</td></tr>
+      <tr><td><strong>Playbook principal</strong></td><td>#2 Fade</td><td>#4 Short Report Bounce</td><td>#9 Gap Fade</td><td>#3 Post-Dilution</td></tr>
+      <tr><td><strong>Risque principal</strong></td><td>AI catalyst surprise</td><td>Dilution / faillite</td><td>Faillite / Ch.11</td><td>Dilution continue</td></tr>
+      <tr><td><strong>Corrélation</strong></td><td>AI stocks</td><td>Ex-SPAC basket</td><td>Indépendant</td><td>EV sector</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Leçon clé — Corrélation et diversification</h4>
+    <p>Si vous prenez les 4 trades simultanément, votre exposition totale serait de 10% du portfolio (2+3+2+3%). C'est exactement la limite recommandée. Les 4 trades sont relativement décorrélés (AI, insurtech, cloud, EV batteries) ce qui est optimal. Prendre RZLV short + RXT short + un 3e short tech serait une erreur de corrélation (3 shorts dans le même thème macro).</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  var dom = document.getElementById('casCompareChart');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+  chart.setOption({
+    title: { text: 'Score Scanner par Chapitre — 4 Cas Pratiques', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['RZLV', 'CLOV', 'RXT', 'MVST'], bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '12%', top: '15%', containLabel: true },
+    xAxis: { type: 'category', data: ['Anatomie', 'Short\nSelling', 'Dark\nPools', 'Options', 'Volume\n& PA', 'Dilution', 'Social\nMedia', 'Fonds\nHostiles', 'Scanner'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: 'Score /100', max: 100 },
+    series: [
+      { name: 'RZLV', type: 'bar', data: [25, 40, 45, 30, 20, 20, 25, 50, 35], itemStyle: { color: '#dc2626' } },
+      { name: 'CLOV', type: 'bar', data: [30, 55, 45, 45, 55, 40, 60, 65, 52], itemStyle: { color: '#f59e0b' } },
+      { name: 'RXT', type: 'bar', data: [20, 70, 30, 25, 35, 15, 20, 40, 25], itemStyle: { color: '#6366f1' } },
+      { name: 'MVST', type: 'bar', data: [35, 65, 45, 55, 50, 35, 55, 70, 62], itemStyle: { color: '#16a34a' } }
+    ]
+  });
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

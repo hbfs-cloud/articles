@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 5/10 — Exécution & Market Microstructure | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Système d'exécution algorithmique : OMS, routage intelligent, slippage control, gestion multi-marchés (US/EU/APAC), TWAP/VWAP, et monitoring en temps réel des fills.">
+<meta property="og:title" content="Exécution & Market Microstructure — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 5 sur 10</div>
+<h1 class="hero-title">Exécution &amp; Market Microstructure</h1>
+<p class="hero-subtitle">Système d'exécution multi-marchés : OMS, routage intelligent, TWAP/VWAP, slippage control, gestion des horaires US/EU/APAC, et monitoring des fills en temps réel.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-bolt"></i> Smart Routing</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-clock"></i> Multi-Timezone</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-chart-line"></i> TWAP/VWAP</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-magnifying-glass-chart"></i> Fill Analysis</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part4-portfolio-construction/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step current"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">5/10</span><a href="/series/algo-million/part6-momentum-strategies/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#micro" class="fnav-item" data-section="micro"><i class="fa-solid fa-microscope"></i><span>Microstructure</span></a><a href="#oms" class="fnav-item" data-section="oms"><i class="fa-solid fa-server"></i><span>OMS</span></a><a href="#algos" class="fnav-item" data-section="algos"><i class="fa-solid fa-chart-line"></i><span>Algos Exec</span></a><a href="#multimkt" class="fnav-item" data-section="multimkt"><i class="fa-solid fa-globe"></i><span>Multi-Marchés</span></a><a href="#slippage" class="fnav-item" data-section="slippage"><i class="fa-solid fa-magnifying-glass-chart"></i><span>Slippage</span></a><a href="#monitoring" class="fnav-item" data-section="monitoring"><i class="fa-solid fa-desktop"></i><span>Monitoring</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="micro"><i class="fa-solid fa-microscope"></i> Market microstructure — Ce qui se passe vraiment</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-microscope"></i> Comprendre la microstructure pour mieux exécuter</h2>
+
+<p>La microstructure des marchés étudie <strong>comment les prix se forment tick par tick</strong>. Pour un trader algo, la comprendre est la différence entre perdre 0.5% par trade en slippage (catastrophique sur 1000 trades/an) et gagner 0.05% en execution alpha.</p>
+
+<h3>Le carnet d'ordres — L'anatomie d'un marché</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-book-open"></i> Spread, depth, et market impact</h4>
+<ul>
+<li><strong>Bid-Ask Spread</strong> : Coût minimum d'un aller-retour. Sur les large-caps US : 1-3 bps. Sur les small-caps EU : 20-50 bps.</li>
+<li><strong>Book Depth</strong> : Volume disponible aux 5 meilleurs niveaux. Détermine combien on peut acheter sans impacter le prix.</li>
+<li><strong>Market Impact</strong> : Le slippage causé par notre propre ordre. Modèle standard : Impact = σ × √(Q/V) où Q = taille de l'ordre, V = volume quotidien moyen.</li>
+<li><strong>Résilience</strong> : Vitesse à laquelle le carnet se regarnit après un trade. Les actions très liquides se regarnissent en secondes.</li>
+</ul>
+</div>
+
+<h3>Impact de marché par type d'actif</h3>
+
+<table class="data-table">
+<thead><tr><th>Type d'actif</th><th>ADV typique</th><th>Spread moyen</th><th>Impact pour $10K</th><th>Impact pour $50K</th><th>Fenêtre d'exécution</th></tr></thead>
+<tbody>
+<tr><td>US Large-Cap (AAPL, MSFT)</td><td>$5B+</td><td>1-2 bps</td><td>~0 bps</td><td>~0 bps</td><td>Market order OK</td></tr>
+<tr><td>US Mid-Cap ($5-30B)</td><td>$100-500M</td><td>3-8 bps</td><td>1-2 bps</td><td>3-5 bps</td><td>Limit order</td></tr>
+<tr><td>US Small-Cap ($1-5B)</td><td>$10-100M</td><td>10-30 bps</td><td>3-5 bps</td><td>10-20 bps</td><td>TWAP 30min</td></tr>
+<tr><td>EU Large-Cap (ASML, SAP)</td><td>€200M-1B</td><td>5-15 bps</td><td>2-5 bps</td><td>5-10 bps</td><td>Limit order</td></tr>
+<tr><td>EU Mid-Cap</td><td>€20-200M</td><td>15-40 bps</td><td>5-10 bps</td><td>15-30 bps</td><td>TWAP 1h</td></tr>
+<tr><td>APAC (TSE, HKEX)</td><td>Variable</td><td>10-30 bps</td><td>3-8 bps</td><td>10-25 bps</td><td>TWAP adaptatif</td></tr>
+<tr><td>ETF (SPY, QQQ)</td><td>$20B+</td><td>1 bps</td><td>~0 bps</td><td>~0 bps</td><td>Market order OK</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> La règle des 1% ADV</h4>
+<p>Ne <strong>jamais</strong> placer un ordre représentant plus de 1% du volume quotidien moyen (ADV) d'une action en un seul bloc. Au-delà de ce seuil, le market impact devient significatif et potentiellement détectable par les prédateurs HFT. Pour notre portefeuille de 100K€ démarrant, cette contrainte est rarement atteinte sur les large-caps mais critique sur les small-caps EU.</p>
+</div>
+</div>
+
+<div class="section-divider" id="oms"><i class="fa-solid fa-server"></i> Order Management System (OMS)</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-server"></i> OMS — Le système nerveux de l'exécution</h2>
+
+<p>L'OMS est le composant qui transforme les signaux du méta-allocateur en ordres réels envoyés au broker. Il gère le cycle de vie complet d'un ordre : création, validation, envoi, suivi, fill, et reporting.</p>
+
+<h3>Architecture de l'OMS</h3>
+
+<pre><code>claude -p "Implémente l'OMS dans execution/oms.py :
+
+from enum import Enum
+from dataclasses import dataclass
+from datetime import datetime
+import asyncio
+
+class OrderStatus(Enum):
+    PENDING = 'pending'          # Créé, en attente de validation
+    VALIDATED = 'validated'      # Passé les checks pre-trade
+    SUBMITTED = 'submitted'      # Envoyé au broker
+    PARTIAL_FILL = 'partial'     # Partiellement exécuté
+    FILLED = 'filled'            # Entièrement exécuté
+    CANCELLED = 'cancelled'      # Annulé (par nous ou par le broker)
+    REJECTED = 'rejected'        # Rejeté par le broker
+    EXPIRED = 'expired'          # TTL dépassé sans fill
+
+class OrderType(Enum):
+    MARKET = 'MKT'
+    LIMIT = 'LMT'
+    LIMIT_ON_CLOSE = 'LOC'       # Exécuté au prix de clôture
+    ADAPTIVE = 'IBALGO:Adaptive' # Algo IBKR natif (patient/urgent)
+    TWAP = 'TWAP'                # Notre implémentation
+    VWAP = 'VWAP'                # Notre implémentation
+
+@dataclass
+class Order:
+    id: str                      # UUID unique
+    symbol: str                  # e.g. 'AAPL' ou 'ASML-AMS'
+    side: str                    # 'BUY' ou 'SELL'
+    quantity: int                # Nombre d'actions
+    order_type: OrderType
+    limit_price: float | None    # None pour MARKET
+    strategy: str                # Stratégie source
+    urgency: str                 # 'low', 'medium', 'high', 'emergency'
+    ttl_minutes: int             # Time-to-live avant expiration
+    max_participation_rate: float # Max % du volume (ex: 0.05 = 5%)
+    created_at: datetime
+    status: OrderStatus = OrderStatus.PENDING
+    filled_qty: int = 0
+    avg_fill_price: float = 0.0
+    slippage_bps: float = 0.0
+
+class OrderManagementSystem:
+    '''Gestionnaire du cycle de vie des ordres.
+
+    Pre-trade checks (validate()):
+    1. Position finale respecte les contraintes de portefeuille ?
+    2. Taille de l'ordre < 1% de l'ADV ?
+    3. Marché ouvert pour ce symbole ?
+    4. Pas de duplication (même symbole+side dans les 5 dernières minutes) ?
+    5. Capital disponible suffisant (cash + sells en cours) ?
+    6. Pas de trading halt sur ce symbole ?
+
+    Routing logic (route()):
+    - Large-cap + urgence low: LIMIT au mid-price, TTL 2h
+    - Large-cap + urgence high: ADAPTIVE (IBKR algo)
+    - Small-cap: TWAP sur 30-60min
+    - Clôture (dernier 30min): LOC
+    - Emergency (circuit-breaker): MARKET immédiat
+
+    Fill management:
+    - Partial fills: relancer avec le residual
+    - Unfilled après TTL: annuler + alerter si > 20% unfilled
+    - Amélioration de prix: logger le positive slippage
+
+    Post-trade reporting:
+    - Slippage = (fill_price - decision_price) / decision_price × 10000 bps
+    - Stocker dans fills.parquet pour analyse
+    '''
+"</code></pre>
+
+<h3>Pre-trade Risk Checks — Les garde-fous en temps réel</h3>
+
+<table class="data-table">
+<thead><tr><th>Check</th><th>Condition</th><th>Action si échec</th><th>Severité</th></tr></thead>
+<tbody>
+<tr><td>Position max</td><td>Position résultante &gt; 10% NAV</td><td>Réduire la taille</td><td>Hard block</td></tr>
+<tr><td>ADV limit</td><td>Ordre &gt; 1% de l'ADV</td><td>Découper en TWAP</td><td>Auto-fix</td></tr>
+<tr><td>Marché ouvert</td><td>Bourse fermée ou pre/post-market</td><td>Queue pour prochaine ouverture</td><td>Soft delay</td></tr>
+<tr><td>Duplication</td><td>Même symbole+side en &lt; 5min</td><td>Rejeter + alerte</td><td>Hard block</td></tr>
+<tr><td>Capital</td><td>Cash insuffisant pour l'achat</td><td>Rejeter + alerte</td><td>Hard block</td></tr>
+<tr><td>Trading halt</td><td>Symbole en halt (SEC, LULD)</td><td>Queue pour reprise</td><td>Hard block</td></tr>
+<tr><td>Fat finger</td><td>Taille &gt; 5× la taille moyenne historique</td><td>Rejeter + alerte Discord</td><td>Hard block</td></tr>
+<tr><td>Prix aberrant</td><td>Limit price &gt; ±5% du mid-price</td><td>Rejeter + alerte</td><td>Hard block</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section-divider" id="algos"><i class="fa-solid fa-chart-line"></i> Algorithmes d'exécution</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-line"></i> TWAP, VWAP, et Adaptive — 3 algos pour 3 situations</h2>
+
+<h3>1. TWAP — Time-Weighted Average Price</h3>
+
+<p>Le TWAP découpe un gros ordre en tranches égales exécutées à intervalles réguliers. Idéal pour les actions moyennement liquides où on veut minimiser le market impact.</p>
+
+<pre><code>claude -p "Implémente un TWAPExecutor dans execution/algos/twap.py :
+
+class TWAPExecutor:
+    '''Exécution TWAP avec gestion des partial fills.
+
+    Paramètres:
+    - total_qty: quantité totale à exécuter
+    - duration_minutes: durée totale (ex: 30min, 60min)
+    - n_slices: nombre de tranches (ex: 10)
+    - order_type_per_slice: LIMIT au mid-price avec offset
+    - max_participation: max % du volume par tranche
+
+    Algorithme:
+    1. Calculer interval = duration / n_slices
+    2. slice_qty = total_qty / n_slices (arrondi)
+    3. Toutes les `interval` minutes:
+       a. Calculer le mid-price actuel
+       b. Placer un LIMIT à mid-price + offset (0 pour buy, -0 pour sell)
+       c. TTL = interval - 10sec (cancel avant prochaine tranche)
+       d. Si partial fill, accumuler le residual
+    4. Dernière tranche: envoyer tout le residual en ADAPTIVE
+
+    Anti-gaming:
+    - Ajouter un jitter aléatoire de ±20% sur l'interval
+    - Varier la taille des tranches (±30%) pour être moins prédictible
+    - Ne pas exécuter si le spread > 2× le spread médian (marché stressé)
+    '''
+"</code></pre>
+
+<h3>2. VWAP — Volume-Weighted Average Price</h3>
+
+<p>Le VWAP adapte la taille des tranches au profil de volume intraday. Plus de volume en open et close → plus grosses tranches à ces moments. Objectif : battre le VWAP du jour.</p>
+
+<pre><code>claude -p "Implémente un VWAPExecutor dans execution/algos/vwap.py :
+
+class VWAPExecutor:
+    '''Exécution VWAP basée sur le profil de volume historique.
+
+    1. Charger le profil de volume intraday moyen (30 jours)
+       → volume_pct[i] = volume_bucket_i / total_daily_volume
+    2. Pour chaque bucket de 5 minutes:
+       target_qty[i] = total_qty × volume_pct[i]
+    3. Placer les tranches proportionnellement
+    4. Tracking: calculer le VWAP réalisé vs VWAP marché
+
+    Le volume profile est typiquement en U:
+    - 9:30-10:00 (US): 15-20% du volume
+    - 10:00-15:30: 50-60% (réparti uniformément)
+    - 15:30-16:00: 20-25% du volume
+
+    Avantage vs TWAP: meilleur prix moyen en marché normal
+    Inconvénient: prédictible si quelqu'un connaît notre profil cible
+    '''
+"</code></pre>
+
+<h3>3. IBKR Adaptive Algo — Pour l'urgence</h3>
+
+<p>Interactive Brokers fournit un algorithme Adaptive natif qui ajuste dynamiquement entre passive (limit) et aggressive (market) selon les conditions. On l'utilise pour les ordres urgents.</p>
+
+<pre><code>claude -p "Implémente l'IBKRAdaptiveRouter dans execution/algos/adaptive.py :
+
+class IBKRAdaptiveRouter:
+    '''Wrapper pour l'algo Adaptive d'IBKR via ib_insync.
+
+    Modes:
+    - Patient: commence passif (limit au bid/ask), escalade si non-fill
+    - Normal: mix 50/50 passif/agressif
+    - Urgent: commence agressif, remplit au plus vite
+
+    Mapping urgence → mode IBKR:
+    - urgency='low' → Patient, TTL=4h
+    - urgency='medium' → Normal, TTL=1h
+    - urgency='high' → Urgent, TTL=15min
+    - urgency='emergency' → MARKET (pas d'algo)
+    '''
+
+    async def execute(self, order: Order) -> Fill:
+        from ib_insync import IB, Stock, LimitOrder, MarketOrder
+        # Créer le contrat IBKR
+        contract = Stock(order.symbol, exchange, currency)
+        # Qualifier le contrat
+        await self.ib.qualifyContractsAsync(contract)
+        # Créer l'ordre avec algo params
+        ib_order = LimitOrder(
+            order.side, order.quantity, order.limit_price,
+            algoStrategy='Adaptive',
+            algoParams=[TagValue('adaptivePriority', priority)]
+        )
+        trade = self.ib.placeOrder(contract, ib_order)
+        # Monitor fills...
+"</code></pre>
+
+<h3>Comparaison des algos d'exécution</h3>
+
+<div id="execChart" class="chart-container"></div>
+
+<table class="data-table">
+<thead><tr><th>Algo</th><th>Cas d'usage</th><th>Slippage typique</th><th>Fill rate</th><th>Prédictibilité</th></tr></thead>
+<tbody>
+<tr><td>Market Order</td><td>Emergency uniquement</td><td>5-50 bps</td><td>100%</td><td>N/A</td></tr>
+<tr><td>Limit Order</td><td>Large-caps, pas d'urgence</td><td>-2 à +5 bps</td><td>60-80%</td><td>Faible</td></tr>
+<tr><td>TWAP</td><td>Mid/small-caps, gros ordres</td><td>2-10 bps</td><td>90-95%</td><td>Moyenne</td></tr>
+<tr><td>VWAP</td><td>Large-caps, benchmark VWAP</td><td>1-5 bps</td><td>95%</td><td>Élevée</td></tr>
+<tr><td>IBKR Adaptive</td><td>Urgence moyenne à haute</td><td>3-15 bps</td><td>95-99%</td><td>Faible</td></tr>
+<tr><td>LOC (Limit on Close)</td><td>Rebalancement fin de journée</td><td>1-3 bps</td><td>99%</td><td>Aucune</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section-divider" id="multimkt"><i class="fa-solid fa-globe"></i> Exécution multi-marchés</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-globe"></i> Trading sur 3 fuseaux horaires — US, Europe, APAC</h2>
+
+<p>Notre univers couvre 3 régions, chacune avec ses horaires, ses conventions, et ses particularités. Le scheduler d'exécution doit orchestrer tout cela de manière fluide.</p>
+
+<h3>Horaires des marchés</h3>
+
+<table class="data-table">
+<thead><tr><th>Marché</th><th>Ouverture (UTC)</th><th>Fermeture (UTC)</th><th>Pre-market</th><th>Currency</th><th>Settlement</th></tr></thead>
+<tbody>
+<tr><td>NYSE / NASDAQ</td><td>14:30</td><td>21:00</td><td>10:00-14:30</td><td>USD</td><td>T+1</td></tr>
+<tr><td>Euronext Paris</td><td>08:00</td><td>16:30</td><td>07:15-08:00</td><td>EUR</td><td>T+2</td></tr>
+<tr><td>Xetra (Francfort)</td><td>08:00</td><td>16:30</td><td>07:30-08:00</td><td>EUR</td><td>T+2</td></tr>
+<tr><td>LSE (Londres)</td><td>08:00</td><td>16:30</td><td>—</td><td>GBP</td><td>T+1</td></tr>
+<tr><td>TSE (Tokyo)</td><td>00:00</td><td>06:00</td><td>—</td><td>JPY</td><td>T+2</td></tr>
+<tr><td>HKEX (Hong Kong)</td><td>01:30</td><td>08:00</td><td>01:00-01:30</td><td>HKD</td><td>T+2</td></tr>
+<tr><td>ASX (Sydney)</td><td>00:00</td><td>06:00</td><td>—</td><td>AUD</td><td>T+2</td></tr>
+</tbody>
+</table>
+
+<h3>Le scheduler d'exécution multi-marché</h3>
+
+<pre><code>claude -p "Implémente le MultiMarketScheduler dans execution/scheduler.py :
+
+class MultiMarketScheduler:
+    '''Orchestre l'exécution sur 3 fuseaux horaires.
+
+    Timeline quotidienne (UTC):
+    ─────────────────────────────────────────────
+    00:00  │ TSE/ASX ouvrent → Exécuter ordres APAC
+    01:30  │ HKEX ouvre → Exécuter ordres HK
+    06:00  │ TSE/ASX ferment → Réconcilier APAC
+    08:00  │ EU ouvre → Exécuter ordres Europe
+    14:30  │ US ouvre → Exécuter ordres US
+    16:30  │ EU ferme → Réconcilier Europe
+    20:00  │ Pipeline allocation (MetaAllocator)
+    21:00  │ US ferme → Réconcilier US
+    21:30  │ Post-trade reporting + Discord summary
+    ─────────────────────────────────────────────
+
+    Pour chaque marché:
+    1. Attendre l'ouverture
+    2. Attendre 15min (éviter la volatilité d'ouverture)
+    3. Exécuter les ordres par priorité (high → low)
+    4. Pour les gros ordres: TWAP sur la session
+    5. 30min avant la fermeture: convertir les unfilled en LOC
+    6. Réconcilier: vérifier fills, calculer slippage, logger
+
+    Gestion du FX:
+    - Comptes IBKR multi-devises (USD, EUR, GBP, JPY, HKD, AUD)
+    - Pas de conversion FX automatique (IBKR gère le margin)
+    - Si cash EUR insuffisant pour achat EU: alerter (pas de FX auto)
+    '''
+"</code></pre>
+
+<h3>Gestion des jours fériés et événements spéciaux</h3>
+
+<table class="data-table">
+<thead><tr><th>Événement</th><th>Impact</th><th>Action du scheduler</th></tr></thead>
+<tbody>
+<tr><td>Jour férié US</td><td>NYSE/NASDAQ fermés</td><td>Skip ordres US, exécuter EU/APAC normalement</td></tr>
+<tr><td>Jour férié EU</td><td>Euronext/Xetra fermés</td><td>Skip ordres EU, exécuter US/APAC normalement</td></tr>
+<tr><td>FOMC announcement</td><td>Volatilité extrême 14:00 UTC</td><td>Suspendre les ordres US 13:30-15:00 UTC</td></tr>
+<tr><td>NFP (premier vendredi)</td><td>Spike de volume 12:30 UTC</td><td>Réduire la participation rate de 50%</td></tr>
+<tr><td>Earnings du ticker</td><td>Gap potentiel</td><td>Ne pas exécuter avant l'annonce</td></tr>
+<tr><td>Triple witching</td><td>Volume anormal, spreads élargis</td><td>Basculer tout en TWAP, réduire taille</td></tr>
+<tr><td>Circuit breaker</td><td>Marché halt 15min</td><td>Pause automatique, reprise après halt</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section-divider" id="slippage"><i class="fa-solid fa-magnifying-glass-chart"></i> Slippage control &amp; Transaction Cost Analysis</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-magnifying-glass-chart"></i> Mesurer et réduire les coûts de transaction</h2>
+
+<p>Le slippage est l'ennemi silencieux du trader algo. Sur 1000 trades/an, même 5 bps de slippage par trade = <strong>5% de rendement perdu</strong>. La Transaction Cost Analysis (TCA) est le processus de mesure et d'optimisation continue.</p>
+
+<h3>Décomposition du coût total d'un trade</h3>
+
+<table class="data-table">
+<thead><tr><th>Composante</th><th>Typique US large-cap</th><th>Typique EU mid-cap</th><th>Typique APAC small-cap</th></tr></thead>
+<tbody>
+<tr><td>Commission broker</td><td>0.5 bps</td><td>1.0 bps</td><td>2.0 bps</td></tr>
+<tr><td>Half-spread</td><td>1.0 bps</td><td>8.0 bps</td><td>15.0 bps</td></tr>
+<tr><td>Market impact</td><td>0.5 bps</td><td>5.0 bps</td><td>12.0 bps</td></tr>
+<tr><td>Timing cost</td><td>2.0 bps</td><td>3.0 bps</td><td>5.0 bps</td></tr>
+<tr><td>Opportunity cost</td><td>1.0 bps</td><td>3.0 bps</td><td>5.0 bps</td></tr>
+<tr><td><strong>Total one-way</strong></td><td><strong>5.0 bps</strong></td><td><strong>20.0 bps</strong></td><td><strong>39.0 bps</strong></td></tr>
+<tr><td><strong>Total round-trip</strong></td><td><strong>10.0 bps</strong></td><td><strong>40.0 bps</strong></td><td><strong>78.0 bps</strong></td></tr>
+</tbody>
+</table>
+
+<h3>Implementation du TCA</h3>
+
+<pre><code>claude -p "Implémente un TransactionCostAnalyzer dans execution/tca.py :
+
+class TransactionCostAnalyzer:
+    '''Analyse post-trade de chaque fill.
+
+    Pour chaque fill, calculer:
+    1. Slippage vs decision_price (prix au moment du signal)
+    2. Slippage vs arrival_price (prix à la soumission de l'ordre)
+    3. Slippage vs VWAP (benchmark standard)
+    4. Implementation Shortfall = decision_price → fill_price (total cost)
+
+    Stockage: fills.parquet avec colonnes:
+    [timestamp, symbol, side, qty, fill_price, decision_price,
+     arrival_price, vwap_benchmark, slippage_bps, commission,
+     market_impact_estimate, algo_used, strategy, region]
+
+    Reporting hebdomadaire (dimanche):
+    - Slippage moyen par algo (TWAP vs VWAP vs Adaptive vs Market)
+    - Slippage moyen par région (US vs EU vs APAC)
+    - Slippage moyen par taille d'ordre (déciles)
+    - Top 10 fills les plus coûteux (investigation)
+    - Trend du slippage sur les 4 dernières semaines
+
+    Si slippage moyen > 2× la target:
+    → Alerte Discord + ajuster les algos automatiquement
+    '''
+"</code></pre>
+
+<div id="slippageChart" class="chart-container"></div>
+
+<h3>Optimisation continue du slippage</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-brain"></i> Feedback loop d'optimisation</h4>
+<p>Chaque semaine, le système analyse les fills de la semaine et ajuste automatiquement :</p>
+<ul>
+<li><strong>Seuil TWAP vs Limit</strong> : Si les limits sont souvent unfilled sur un ticker, basculer en TWAP</li>
+<li><strong>Durée TWAP</strong> : Si le slippage TWAP est élevé, allonger la durée (30min → 60min)</li>
+<li><strong>Participation rate</strong> : Réduire si le market impact est détectable</li>
+<li><strong>Timing</strong> : Éviter les premiers 15min pour les tickers à volatilité d'ouverture</li>
+<li><strong>Jours à éviter</strong> : Certains tickers ont un slippage anormal les lundis ou vendredis</li>
+</ul>
+</div>
+</div>
+
+<div class="section-divider" id="monitoring"><i class="fa-solid fa-desktop"></i> Monitoring temps réel de l'exécution</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-desktop"></i> Dashboard de monitoring et alertes Discord</h2>
+
+<p>L'exécution doit être monitorée en temps réel. Le dashboard couvre 3 dimensions : les ordres en cours, les positions résultantes, et la santé du système.</p>
+
+<h3>Alertes Discord pour l'exécution</h3>
+
+<table class="data-table">
+<thead><tr><th>Alerte</th><th>Trigger</th><th>Urgence</th><th>Action requise</th></tr></thead>
+<tbody>
+<tr><td>🔴 Ordre rejeté</td><td>Broker rejette l'ordre</td><td>Haute</td><td>Investiguer la raison</td></tr>
+<tr><td>🟡 Fill lent</td><td>&lt; 50% filled après 50% du TTL</td><td>Moyenne</td><td>Considérer escalade (ADAPTIVE)</td></tr>
+<tr><td>🔴 Slippage excessif</td><td>Slippage &gt; 20 bps sur un fill</td><td>Haute</td><td>Review le ticker/algo</td></tr>
+<tr><td>🟡 Connection perdue</td><td>Déconnexion IBKR &gt; 30sec</td><td>Haute</td><td>Auto-reconnect, vérifier ordres</td></tr>
+<tr><td>🔴 Position divergence</td><td>Position IBKR ≠ position interne</td><td>Critique</td><td>Stop trading, réconcilier</td></tr>
+<tr><td>🟢 Exécution complète</td><td>Tous les ordres du jour filled</td><td>Info</td><td>Aucune (confirmation)</td></tr>
+<tr><td>🟡 Unfilled significatif</td><td>&gt; 20% des ordres non exécutés</td><td>Moyenne</td><td>Ajuster les algos pour demain</td></tr>
+</tbody>
+</table>
+
+<pre><code>claude -p "Implémente les alertes Discord d'exécution dans execution/alerts.py :
+
+class ExecutionAlertManager:
+    '''Envoie des alertes Discord formatées pour chaque événement d'exécution.
+
+    Utilise discord.py webhook pour envoyer des embeds riches:
+
+    Embed fill:
+    ┌────────────────────────────────────────┐
+    │ ✅ FILL: AAPL BUY 150 @ $182.34      │
+    │ Slippage: +1.2 bps vs VWAP            │
+    │ Algo: TWAP (30min, 8 slices)          │
+    │ Stratégie: CS_Momentum                 │
+    │ Region: US │ Commission: $0.75         │
+    └────────────────────────────────────────┘
+
+    Embed daily summary (21:30 UTC):
+    ┌────────────────────────────────────────┐
+    │ 📊 EXECUTION SUMMARY - 2026-02-28     │
+    │ Orders: 24 submitted, 22 filled, 2 LOC│
+    │ Fill rate: 91.7%                       │
+    │ Avg slippage: 3.2 bps (target: 5 bps) │
+    │ Best: ASML -1.5 bps (saved €12)       │
+    │ Worst: 7203.T +18.2 bps (cost €45)    │
+    │ Total commission: $18.50               │
+    │ Net execution cost: $67.30 (4.1 bps)  │
+    └────────────────────────────────────────┘
+    '''
+"</code></pre>
+
+<h3>Réconciliation de position</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-shield-halved"></i> La réconciliation est non-négociable</h4>
+<p>Après chaque session de marché, le système compare les positions internes (notre base de données) avec les positions réelles chez IBKR. Toute divergence → <strong>arrêt immédiat du trading</strong> + alerte Discord critique. Les causes typiques :</p>
+<ul>
+<li><strong>Corporate action</strong> : split, merge, spin-off non détecté</li>
+<li><strong>Fill manqué</strong> : notre callback n'a pas reçu le fill (réseau)</li>
+<li><strong>Double submission</strong> : bug qui envoie le même ordre 2 fois</li>
+<li><strong>Annulation broker</strong> : IBKR annule un fill (très rare mais possible)</li>
+</ul>
+<p>La réconciliation automatique est lancée 3 fois par jour : après fermeture de chaque marché.</p>
+</div>
+</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrow-right"></i> Prochaine étape — Stratégies Momentum Cross-Region</h2>
+
+<p>L'infrastructure est maintenant complète : data pipeline, alpha factors, portfolio construction, et exécution. Il est temps de construire nos <strong>premières stratégies de production</strong>. La Partie 6 couvre les 4 stratégies momentum — le moteur principal du portefeuille en régime Risk-On.</p>
+
+<div class="takeaway-box">
+<h4>Points clés de cette partie</h4>
+<ul>
+<li><strong>Market impact modèle</strong> : Impact = σ × √(Q/V), ne jamais dépasser 1% ADV</li>
+<li><strong>OMS complet</strong> : 8 pre-trade checks, cycle de vie PENDING → FILLED</li>
+<li><strong>3 algos d'exécution</strong> : TWAP (mid-caps), VWAP (large-caps), Adaptive (urgent)</li>
+<li><strong>Multi-marchés</strong> : Scheduler UTC couvrant APAC → EU → US, gestion FX multi-devises</li>
+<li><strong>TCA systématique</strong> : Mesure du slippage sur 5 dimensions, feedback loop hebdomadaire</li>
+<li><strong>Monitoring temps réel</strong> : Alertes Discord granulaires + daily summary</li>
+<li><strong>Réconciliation</strong> : 3× par jour, toute divergence = stop trading immédiat</li>
+</ul>
+</div>
+
+<a href="/series/algo-million/part6-momentum-strategies/" class="next-cta">
+<span class="next-cta-label">Partie suivante</span>
+<span class="next-cta-title">Stratégies Momentum Cross-Region →</span>
+</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part4-portfolio-construction/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step current"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">5/10</span><a href="/series/algo-million/part6-momentum-strategies/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Execution algo comparison radar
+  var execChart = echarts.init(document.getElementById('execChart'));
+  execChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {},
+    legend: { data: ['TWAP','VWAP','Adaptive','Market Order'], bottom: 0 },
+    radar: {
+      indicator: [
+        { name: 'Fill Rate', max: 100 },
+        { name: 'Low Slippage', max: 100 },
+        { name: 'Low Predictability', max: 100 },
+        { name: 'Speed', max: 100 },
+        { name: 'Flexibility', max: 100 }
+      ]
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        { value: [92, 75, 60, 40, 80], name: 'TWAP', lineStyle: { color: '#059669' }, itemStyle: { color: '#059669' } },
+        { value: [95, 80, 30, 50, 60], name: 'VWAP', lineStyle: { color: '#6366f1' }, itemStyle: { color: '#6366f1' } },
+        { value: [97, 60, 80, 85, 70], name: 'Adaptive', lineStyle: { color: '#d97706' }, itemStyle: { color: '#d97706' } },
+        { value: [100, 20, 90, 100, 10], name: 'Market Order', lineStyle: { color: '#dc2626' }, itemStyle: { color: '#dc2626' } }
+      ]
+    }]
+  });
+
+  // Slippage analysis chart
+  var slippageChart = echarts.init(document.getElementById('slippageChart'));
+  slippageChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['US Large-Cap','EU Mid-Cap','APAC','ETF'], bottom: 0 },
+    grid: { top: 30, right: 20, bottom: 60, left: 60 },
+    xAxis: { type: 'category', data: ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'], name: 'Semaine' },
+    yAxis: { type: 'value', name: 'Slippage (bps)', min: 0 },
+    series: [
+      { name: 'US Large-Cap', type: 'line', data: [4.2,3.8,3.5,3.1,2.8,3.0,2.5,2.3,2.1,2.0,1.8,1.9], smooth: true, lineStyle: { color: '#059669' }, itemStyle: { color: '#059669' } },
+      { name: 'EU Mid-Cap', type: 'line', data: [18.5,16.2,14.8,13.5,12.0,11.5,10.2,9.8,9.0,8.5,8.2,7.8], smooth: true, lineStyle: { color: '#6366f1' }, itemStyle: { color: '#6366f1' } },
+      { name: 'APAC', type: 'line', data: [25.0,22.0,19.5,17.0,15.5,14.0,13.0,12.5,11.0,10.5,10.0,9.5], smooth: true, lineStyle: { color: '#d97706' }, itemStyle: { color: '#d97706' } },
+      { name: 'ETF', type: 'line', data: [1.5,1.2,1.0,0.8,0.7,0.8,0.6,0.5,0.5,0.4,0.4,0.3], smooth: true, lineStyle: { color: '#0ea5e9' }, itemStyle: { color: '#0ea5e9' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() { execChart.resize(); slippageChart.resize(); });
+});
+</script>
+</body>
+</html>

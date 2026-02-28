@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 10/10 — Production, Monitoring & Scale to 1M€ | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Mise en production complète : Infrastructure as Code (Terraform, Docker, Nomad), CI/CD GitHub Actions, VM hardening, intrusion detection, lifecycle management, monitoring Discord, et la route vers le million.">
+<meta property="og:title" content="Production, Monitoring & Scale to 1M€ — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.hero-badge-red{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 10 sur 10</div>
+<h1 class="hero-title">Production, Monitoring &amp; Scale to 1M€</h1>
+<p class="hero-subtitle">Infrastructure as Code complète, CI/CD, VM hardening, intrusion detection, lifecycle management automatisé, monitoring Discord sécurisé, et la route réaliste de 100K€ vers le million.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-docker"></i> Docker + Nomad</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-shield-halved"></i> Hardening</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-code-branch"></i> CI/CD</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-robot"></i> Claude Code</span>
+<span class="hero-badge hero-badge-red"><i class="fa-solid fa-lock"></i> Security</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part9-regime-adaptive/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step current"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">10/10</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#iac" class="fnav-item" data-section="iac"><i class="fa-solid fa-code"></i><span>IaC</span></a><a href="#hardening" class="fnav-item" data-section="hardening"><i class="fa-solid fa-shield-halved"></i><span>Hardening</span></a><a href="#cicd" class="fnav-item" data-section="cicd"><i class="fa-solid fa-code-branch"></i><span>CI/CD</span></a><a href="#lifecycle" class="fnav-item" data-section="lifecycle"><i class="fa-solid fa-arrows-rotate"></i><span>Lifecycle</span></a><a href="#monitoring" class="fnav-item" data-section="monitoring"><i class="fa-solid fa-desktop"></i><span>Monitoring</span></a><a href="#humain" class="fnav-item" data-section="humain"><i class="fa-solid fa-user"></i><span>Rôle Humain</span></a><a href="#road" class="fnav-item" data-section="road"><i class="fa-solid fa-road"></i><span>Road to 1M</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<!-- ============================================================== -->
+<!-- SECTION 1: INFRASTRUCTURE AS CODE                               -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="iac"><i class="fa-solid fa-code"></i> Infrastructure as Code — Tout dans Git</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-code"></i> Everything as Code — Le repo monolithique</h2>
+
+<p>L'intégralité du système de trading — infrastructure, données, stratégies, monitoring, secrets, déploiement — vit dans un <strong>seul dépôt Git</strong>. Rien n'est configuré manuellement. Tout est reproductible, auditable, et versionné.</p>
+
+<h3>Structure du repo</h3>
+
+<pre><code>algo-million/
+├── terraform/                    # Infrastructure provisioning
+│   ├── main.tf                  # Hetzner VM + DNS + firewall
+│   ├── tailscale.tf             # VPN mesh network
+│   ├── variables.tf             # Vars (region, instance type)
+│   ├── outputs.tf               # IPs, hostnames
+│   └── terraform.tfvars.enc     # Vars chiffrées (SOPS/age)
+├── nomad/                        # Orchestration de jobs
+│   ├── trading-engine.nomad.hcl # Job principal (8 stratégies)
+│   ├── data-pipeline.nomad.hcl  # Ingestion + feature engineering
+│   ├── ibkr-gateway.nomad.hcl   # IB Gateway container
+│   ├── monitoring.nomad.hcl     # Prometheus + Grafana
+│   └── discord-bot.nomad.hcl    # Alertes Discord
+├── consul/                       # Service discovery + KV store
+│   ├── services.hcl             # Enregistrement des services
+│   └── config/                  # Configurations par service
+│       ├── trading.json         # Params runtime des stratégies
+│       └── regime.json          # Thresholds des régimes
+├── vault/                        # Secrets management
+│   ├── policies/                # Policies Vault
+│   │   ├── trading.hcl          # Accès IBKR credentials
+│   │   └── discord.hcl          # Accès webhook Discord
+│   └── secrets.env.enc          # Secrets chiffrés (age/SOPS)
+├── docker/                       # Dockerfiles
+│   ├── Dockerfile.trading       # Image trading engine
+│   ├── Dockerfile.data          # Image data pipeline
+│   ├── Dockerfile.ibkr          # IB Gateway + IBC
+│   └── docker-compose.dev.yml   # Dev stack local
+├── ansible/                      # Configuration management
+│   ├── playbooks/
+│   │   ├── harden.yml           # Hardening VM complet
+│   │   ├── deploy.yml           # Déploiement Nomad/Consul/Vault
+│   │   └── rotate-secrets.yml   # Rotation des secrets
+│   └── roles/
+│       ├── hardening/           # Rôle hardening (CIS Benchmark)
+│       ├── tailscale/           # Installation Tailscale
+│       └── monitoring/          # Prometheus + exporters
+├── src/                          # Code Python des stratégies
+│   ├── strategies/              # 8+ stratégies
+│   ├── portfolio/               # Meta-allocateur, HRP, Kelly
+│   ├── execution/               # OMS, TWAP, VWAP
+│   ├── data/                    # Pipeline ingestion
+│   ├── monitoring/              # Discord alerts, health checks
+│   └── config/                  # Paramètres par stratégie
+├── tests/                        # Tests unitaires + intégration
+│   ├── unit/
+│   ├── integration/
+│   └── backtest/                # Tests de backtests
+├── notebooks/                    # Recherche + validation
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml               # Tests + lint + security scan
+│   │   ├── cd.yml               # Deploy to production
+│   │   ├── backtest.yml         # Weekly backtest validation
+│   │   └── security.yml         # SAST + dependency audit
+│   └── CODEOWNERS               # Review obligatoire
+├── scripts/
+│   ├── bootstrap.sh             # Setup initial de la VM
+│   └── disaster-recovery.sh     # Procédure de recovery
+├── docs/                         # Documentation
+│   ├── runbook.md               # Procédures opérationnelles
+│   ├── incident-response.md     # Playbook incidents
+│   └── strategies/              # Doc par stratégie
+├── CLAUDE.md                     # Instructions pour Claude Code
+└── Makefile                      # Commandes utilitaires
+</code></pre>
+
+<h3>Terraform — Provisionner la VM</h3>
+
+<pre><code>claude -p "Crée le fichier terraform/main.tf pour provisionner :
+1. Un serveur Hetzner CX41 (4 vCPU, 16GB RAM, 160GB SSD) à Helsinki
+2. Firewall: DENY ALL sauf ports Tailscale (41641/UDP) et ICMP
+   → Pas de SSH public, pas de HTTP, RIEN sauf Tailscale
+3. Volume attaché de 100GB pour les données historiques
+4. DNS record A pour trading.mydomain.com
+5. Cloud-init script qui:
+   a. Met à jour le système (apt update && apt upgrade -y)
+   b. Installe les dépendances (docker, nomad, consul, vault, tailscale)
+   c. Configure le firewall UFW
+   d. Exécute le bootstrap.sh
+
+Utilise le provider hcloud (Hetzner).
+Les credentials sont dans vault (pas en clair dans le repo)."</code></pre>
+
+<pre><code>claude -p "Crée terraform/tailscale.tf :
+1. Provision un device Tailscale pour la VM trading
+2. ACL: seul le device 'operator-laptop' peut se connecter à la VM
+3. MagicDNS activé: trading.tail12345.ts.net
+4. Exit node désactivé (la VM ne route pas le traffic)
+5. SSH via Tailscale uniquement (tssh)
+
+Le résultat: la VM est INVISIBLE sur Internet.
+Seul votre laptop (via Tailscale) peut y accéder."</code></pre>
+
+<h3>Docker — Containeriser chaque service</h3>
+
+<pre><code>claude -p "Crée docker/Dockerfile.trading :
+FROM python:3.12-slim
+
+# Security: non-root user
+RUN useradd -m -s /bin/bash trader
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libffi-dev && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ ./src/
+COPY config/ ./config/
+
+# Security: read-only filesystem
+USER trader
+ENV PYTHONPATH=/app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD python -c 'from src.monitoring.health import check; check()'
+
+ENTRYPOINT ['python', '-m', 'src.main']"</code></pre>
+
+<pre><code>claude -p "Crée nomad/trading-engine.nomad.hcl :
+job 'trading-engine' {
+  datacenters = ['helsinki']
+  type = 'service'
+
+  group 'trading' {
+    count = 1  # JAMAIS plus de 1 instance (risque de double-ordres)
+
+    constraint {
+      attribute = '\${meta.role}'
+      value = 'trading'
+    }
+
+    # Restart policy: restart max 3x en 30min, puis alerte Discord
+    restart {
+      attempts = 3
+      interval = '30m'
+      delay = '30s'
+      mode = 'fail'
+    }
+
+    task 'engine' {
+      driver = 'docker'
+
+      config {
+        image = 'ghcr.io/myorg/trading-engine:latest'
+        volumes = ['/data:/data:rw']
+      }
+
+      # Secrets via Vault
+      vault {
+        policies = ['trading']
+      }
+
+      template {
+        data = <<-EOF
+        IBKR_HOST={{ key 'trading/ibkr_host' }}
+        IBKR_PORT={{ key 'trading/ibkr_port' }}
+        DISCORD_WEBHOOK={{ with secret 'secret/discord' }}{{ .Data.data.webhook }}{{ end }}
+        IBKR_USERNAME={{ with secret 'secret/ibkr' }}{{ .Data.data.username }}{{ end }}
+        EOF
+        destination = 'secrets/env'
+        env = true
+      }
+
+      resources {
+        cpu = 2000    # 2 vCPU
+        memory = 8192 # 8GB RAM
+      }
+    }
+  }
+}"</code></pre>
+</div>
+
+<!-- ============================================================== -->
+<!-- SECTION 2: VM HARDENING                                         -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="hardening"><i class="fa-solid fa-shield-halved"></i> VM Hardening — Sécuriser la forteresse</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-shield-halved"></i> Hardening complet de la VM de production</h2>
+
+<p>La VM de trading gère votre argent réel. C'est une cible de haute valeur. Le hardening doit être <strong>paranoïaque</strong> mais <strong>automatisé</strong> — tout dans un playbook Ansible reproductible.</p>
+
+<h3>Stratégie de hardening en 7 couches</h3>
+
+<pre><code>claude -p "Crée ansible/playbooks/harden.yml — Playbook de hardening complet:
+
+# Couche 1: Réseau — Isolation totale
+- Firewall UFW: DENY ALL incoming sauf Tailscale (41641/UDP)
+- Pas de port SSH public (SSH via Tailscale uniquement: tssh trading)
+- Pas de port HTTP/HTTPS ouvert (monitoring via Tailscale)
+- iptables: bloquer tout traffic sortant sauf:
+  * IBKR API (*.interactivebrokers.com:4001-4002)
+  * Tailscale (100.64.0.0/10)
+  * DNS (1.1.1.1:53, 8.8.8.8:53)
+  * NTP (pool.ntp.org:123)
+  * GitHub Container Registry (ghcr.io, pour les pulls Docker)
+  * Discord webhook (discord.com:443, pour les alertes)
+  * Yahoo Finance API (query1.finance.yahoo.com:443, pour les données)
+- Fail2ban: même sur Tailscale, bannir après 3 tentatives SSH échouées
+
+# Couche 2: OS — Minimiser la surface d'attaque
+- Désinstaller tous les packages non essentiels (snap, avahi, cups, etc.)
+- Désactiver IPv6 (pas utilisé, réduit la surface)
+- Désactiver les services inutiles (bluetooth, printer, etc.)
+- Kernel hardening: sysctl.conf
+  net.ipv4.conf.all.rp_filter = 1
+  net.ipv4.conf.default.accept_redirects = 0
+  net.ipv4.conf.all.send_redirects = 0
+  kernel.randomize_va_space = 2
+  kernel.exec-shield = 1 (si disponible)
+  fs.suid_dumpable = 0
+- Limiter les capabilities Docker (no --privileged, drop ALL + add NET_BIND)
+
+# Couche 3: Accès — Zero Trust
+- SSH config: PermitRootLogin no, PasswordAuthentication no
+- SSH keys only (Ed25519), rotées tous les 90 jours
+- Sudo: require password + log toutes les commandes sudo
+- PAM: limiter les tentatives de login
+- Tailscale ACL: seul le device 'operator-laptop' autorisé
+- MFA via Tailscale (device doit être approuvé dans le dashboard)
+
+# Couche 4: Audit — Tout logger
+- auditd: logger tous les accès fichiers sensibles
+  -w /data -p rwxa -k data_access
+  -w /etc/shadow -p rwxa -k auth
+  -w /app/config -p rwxa -k config_change
+  -a always,exit -F arch=b64 -S execve -k command_exec
+- Journald: persist les logs (max 2GB, 90 jours)
+- Logrotate pour les logs applicatifs
+
+# Couche 5: Intrusion Detection
+- AIDE (Advanced Intrusion Detection Environment):
+  Baseline des fichiers système, vérification quotidienne
+  Alerte Discord si un fichier système a changé
+- rkhunter: scan hebdomadaire pour rootkits
+- ClamAV: scan anti-malware hebdomadaire
+- Processwatcher: alerter si un process inconnu est lancé
+  → Script custom qui compare ps aux contre une whitelist
+
+# Couche 6: Docker Security
+- Docker rootless mode (pas de daemon root)
+- Conteneurs en read-only filesystem (--read-only)
+- Seccomp profile: default (bloque les syscalls dangereux)
+- AppArmor profiles pour chaque conteneur
+- Pas de --privileged, pas de --net=host
+- Image scanning: Trivy dans le CI (bloquer si CVE critique)
+
+# Couche 7: Secrets
+- Vault pour tous les secrets (IBKR creds, Discord webhook, API keys)
+- Secrets jamais en clair sur disque (tmpfs ou Vault agent)
+- Rotation automatique des secrets tous les 30 jours
+- Les conteneurs accèdent aux secrets via Vault agent sidecar
+"</code></pre>
+
+<h3>Détection d'ordres non autorisés</h3>
+
+<pre><code>claude -p "Implémente un OrderAuditSystem dans src/monitoring/order_audit.py :
+
+class OrderAuditSystem:
+    '''Détecte les ordres et trades qui ne viennent pas de notre bot.
+
+    Vérifié toutes les 5 minutes pendant les heures de marché:
+
+    1. AUDIT DES ORDRES IBKR:
+       - Fetch tous les ordres actifs via IBKR API
+       - Comparer avec notre journal interne (orders.parquet)
+       - Si un ordre existe chez IBKR mais PAS dans notre journal:
+         → ALERTE CRITIQUE: ordre non autorisé détecté!
+         → Logger: symbole, quantité, prix, heure, OrderID
+         → ANNULER immédiatement l'ordre si possible
+         → Alerte Discord dans le canal #security
+
+    2. AUDIT DES POSITIONS:
+       - Comparer positions IBKR vs positions internes
+       - Si une position apparaît chez IBKR sans trade correspondant:
+         → ALERTE CRITIQUE: position fantôme!
+         → Possibles causes: accès non autorisé, bug, corporate action
+
+    3. AUDIT DES SESSIONS TWS:
+       - Vérifier le nombre de sessions TWS connectées
+       - Notre bot = 1 session. Si sessions > 1:
+         → ALERTE: session TWS supplémentaire détectée
+         → Possible accès humain non autorisé ou 2ème instance du bot
+
+    4. AUDIT DES API CALLS:
+       - Logger toutes les requêtes API avec timestamp et IP source
+       - Si une requête API vient d'une IP non-Tailscale:
+         → ALERTE CRITIQUE: accès API depuis IP inconnue
+
+    5. ALERTES:
+       - Canal Discord dédié #security (webhook séparé)
+       - Email de backup (via SES ou Mailgun)
+       - Si 3+ alertes critiques en 1h: EMERGENCY SHUTDOWN (kill all)
+    '''
+"</code></pre>
+
+<h3>Communication Discord sécurisée</h3>
+
+<pre><code>claude -p "Implémente SecureDiscordBot dans src/monitoring/discord_secure.py :
+
+class SecureDiscordBot:
+    '''Bot Discord avec sécurité renforcée pour les alertes trading.
+
+    Architecture:
+    - Webhook (outbound only) pour les alertes → pas de surface d'attaque
+    - Bot interactif (optionnel) sur un serveur Discord privé
+    - Channel permissions: seul le rôle @operator peut lire #trading
+    - Messages signés: chaque alerte contient un HMAC pour vérifier l'authenticité
+
+    Channels:
+    #trading    — Fills, P&L quotidien, rebalancement (normal)
+    #alerts     — Warnings et erreurs (urgent)
+    #security   — Ordres non autorisés, intrusion detection (critique)
+    #research   — Backtest results, new signals, lifecycle transitions
+
+    Rate limiting: max 60 messages/minute (éviter le spam en cas de bug)
+    Retry: 3 tentatives avec exponential backoff si Discord est down
+
+    Commandes interactives (si bot mode activé):
+    !status    — État du système (positions, P&L, dernière exécution)
+    !pause     — Pause le trading (requiert confirmation !pause CONFIRM)
+    !resume    — Resume le trading
+    !emergency — Liquidation de toutes les positions (requiert !emergency CONFIRM)
+    !positions — Liste les positions actuelles
+    !health    — Health check complet
+
+    Sécurité des commandes:
+    - Seul l'user Discord avec ID spécifié peut exécuter les commandes
+    - Les commandes destructrices (pause, emergency) nécessitent confirmation
+    - Cooldown de 30 secondes entre les commandes
+    - Log de toutes les commandes exécutées
+    '''
+"</code></pre>
+</div>
+
+<!-- ============================================================== -->
+<!-- SECTION 3: CI/CD GITHUB ACTIONS                                 -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="cicd"><i class="fa-solid fa-code-branch"></i> CI/CD — GitHub Actions pipeline</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-code-branch"></i> Pipeline CI/CD complet dans GitHub Actions</h2>
+
+<pre><code>claude -p "Crée .github/workflows/ci.yml :
+
+name: CI Pipeline
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install ruff mypy
+      - run: ruff check src/
+      - run: mypy src/ --strict
+
+  test-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt -r requirements-test.txt
+      - run: pytest tests/unit/ -v --cov=src --cov-report=xml
+      - uses: codecov/codecov-action@v4
+        with: { token: secrets.CODECOV_TOKEN }
+
+  test-integration:
+    runs-on: ubuntu-latest
+    needs: test-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt -r requirements-test.txt
+      - run: pytest tests/integration/ -v --timeout=120
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # SAST: Bandit pour Python
+      - run: pip install bandit && bandit -r src/ -f json -o bandit.json
+      # Dependency audit: pip-audit
+      - run: pip install pip-audit && pip-audit -r requirements.txt
+      # Docker image scan: Trivy
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail si CVE critique
+      # Secret scanning: detect-secrets
+      - run: pip install detect-secrets && detect-secrets scan --baseline .secrets.baseline
+
+  backtest-smoke:
+    runs-on: ubuntu-latest
+    needs: [test-unit, security-scan]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt
+      # Smoke test: backtest rapide (1 an) pour chaque stratégie
+      - run: python -m tests.backtest.smoke_test --period=1y --fast
+      # Vérifier que chaque stratégie a un Sharpe > 0 sur la dernière année
+      - run: python -m tests.backtest.validate_sharpe --min-sharpe=0.0
+
+  build-push:
+    runs-on: ubuntu-latest
+    needs: [test-integration, backtest-smoke, security-scan]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: github.actor, password: secrets.GITHUB_TOKEN }
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.trading
+          push: true
+          tags: ghcr.io/myorg/trading-engine:latest,ghcr.io/myorg/trading-engine:sha-github.sha
+"</code></pre>
+
+<pre><code>claude -p "Crée .github/workflows/cd.yml :
+
+name: CD Pipeline
+on:
+  workflow_run:
+    workflows: ['CI Pipeline']
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      # Connect to VM via Tailscale
+      - uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: secrets.TS_OAUTH_CLIENT_ID
+          oauth-secret: secrets.TS_OAUTH_SECRET
+          tags: tag:ci
+
+      # Deploy via Nomad
+      - name: Deploy trading engine
+        run: |
+          # Canary deployment: déployer avec 0 instances d'abord
+          nomad job run -address=http://trading.tail.ts.net:4646 \
+            -var='image_tag=sha-$GITHUB_SHA' \
+            nomad/trading-engine.nomad.hcl
+
+          # Health check: attendre 60s puis vérifier
+          sleep 60
+          HEALTH=$(curl -s http://trading.tail.ts.net:8080/health)
+          if [ '$HEALTH' != 'ok' ]; then
+            echo 'Health check failed, rolling back'
+            nomad job revert trading-engine 0
+            exit 1
+          fi
+
+      # Notify Discord
+      - name: Notify success
+        run: |
+          curl -H 'Content-Type: application/json' \
+            -d '{\"content\":\"✅ Deploy successful: trading-engine@sha-'$GITHUB_SHA'\"}' \
+            secrets.DISCORD_DEPLOY_WEBHOOK
+"</code></pre>
+
+<pre><code>claude -p "Crée .github/workflows/security.yml :
+
+name: Security Audit (Weekly)
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Lundi 6h UTC
+
+jobs:
+  full-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. SAST complet (pas juste le smoke test du CI)
+      - run: pip install bandit safety && bandit -r src/ -ll -ii
+
+      # 2. Dependency vulnerabilities
+      - run: pip install pip-audit && pip-audit -r requirements.txt --desc
+
+      # 3. Docker image CVE scan (toutes sévérités)
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/myorg/trading-engine:latest'
+          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+
+      # 4. Infrastructure scan (Terraform)
+      - uses: aquasecurity/tfsec-action@v1.0.0
+
+      # 5. Secret scanning
+      - run: pip install detect-secrets trufflehog
+      - run: trufflehog git file://. --only-verified
+
+      # 6. Report to Discord
+      - name: Report
+        if: failure()
+        run: |
+          curl -H 'Content-Type: application/json' \
+            -d '{\"content\":\"🔴 SECURITY AUDIT FAILED — Investigate immediately\"}' \
+            secrets.DISCORD_SECURITY_WEBHOOK
+"</code></pre>
+
+<pre><code>claude -p "Crée .github/workflows/backtest.yml :
+
+name: Weekly Backtest Validation
+on:
+  schedule:
+    - cron: '0 8 * * 0'  # Dimanche 8h UTC
+
+jobs:
+  full-backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt
+
+      # Backtest complet de chaque stratégie (5 ans)
+      - run: python -m tests.backtest.full_validation --period=5y
+
+      # Vérifier les critères de promotion/dégradation
+      - run: python -m src.portfolio.lifecycle --check-all --output=lifecycle_report.json
+
+      # Si une stratégie a dégradé: alerte
+      - name: Check degradations
+        run: |
+          DEGRADED=$(jq '.degradations | length' lifecycle_report.json)
+          if [ '$DEGRADED' -gt '0' ]; then
+            curl -H 'Content-Type: application/json' \
+              -d '{\"content\":\"⚠️ Backtest found degradation in '$DEGRADED' strategies. Review lifecycle_report.json\"}' \
+              secrets.DISCORD_ALERTS_WEBHOOK
+          fi
+"</code></pre>
+</div>
+
+<!-- ============================================================== -->
+<!-- SECTION 4: STRATEGY LIFECYCLE AS CODE                           -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="lifecycle"><i class="fa-solid fa-arrows-rotate"></i> Lifecycle Management — Promotion et désactivation as code</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrows-rotate"></i> Le lifecycle complet — De l'idée à la retraite, piloté par Claude Code</h2>
+
+<p>Le lifecycle d'une stratégie est <strong>entièrement codifié</strong> dans des fichiers YAML dans le repo. Chaque transition (promotion, dégradation, pause, retraite) est un <strong>commit Git</strong> avec une Pull Request et un review automatique.</p>
+
+<h3>Configuration d'une stratégie — YAML</h3>
+
+<pre><code>claude -p "Crée la structure de configuration d'une stratégie:
+
+# config/strategies/csm.yaml
+strategy:
+  name: CrossSectionMomentum
+  id: csm
+  version: 2.3.1
+  category: momentum
+  phase: PRODUCTION    # BACKTEST | PAPER | PILOT | RAMP_UP | PRODUCTION | PAUSED | RETIRED
+  phase_since: 2026-01-15
+  allocation:
+    kelly_fraction: 0.5
+    max_weight: 0.25
+    min_weight: 0.02
+    current_weight: 0.20
+
+  # Critères de promotion (vérifiés par le lifecycle manager)
+  promotion_criteria:
+    paper_to_pilot:
+      min_duration_days: 14
+      max_tracking_error: 0.05
+      min_sharpe: 0.5
+    pilot_to_rampup:
+      min_duration_days: 30
+      min_sharpe_live: 0.5
+      max_drawdown: -0.10
+    rampup_to_production:
+      min_duration_days: 30
+      min_sharpe_live: 0.6
+      max_drawdown: -0.12
+
+  # Critères de dégradation (vérifiés quotidiennement)
+  degradation_criteria:
+    production_to_paused:
+      rolling_sharpe_60d_below: 0.0
+      max_dd_recent_vs_historical: 2.0  # Si DD > 2× le DD historique
+    rampup_to_paused:
+      max_drawdown: -0.12
+      min_sharpe: 0.2
+    paused_to_retired:
+      max_pause_duration_days: 90
+
+  # Emergency (vérifié en temps réel)
+  emergency:
+    max_drawdown: -0.20  # → PAUSE immédiate + alerte Discord
+
+  # Paramètres de la stratégie
+  params:
+    lookback_months: 12
+    skip_last_month: true
+    n_positions: 30
+    rebalance_frequency: monthly
+    regions: [US, EU, APAC]
+    quality_filter:
+      min_roe: 0.05
+      max_debt_equity: 3.0
+      min_revenue_growth: -0.20
+
+  # Métriques historiques (mises à jour automatiquement)
+  metrics:
+    sharpe_is: 1.35
+    sharpe_oos: 1.12
+    sharpe_live: 1.28
+    max_dd_historical: -0.221
+    max_dd_live: -0.085
+    win_rate: 0.52
+    avg_win_loss_ratio: 1.8
+    total_trades: 847
+    months_live: 14
+    deflated_sharpe: 0.72
+"</code></pre>
+
+<h3>Le Lifecycle Manager — Le code qui décide</h3>
+
+<pre><code>claude -p "Implémente le StrategyLifecycleManager complet dans src/portfolio/lifecycle.py :
+
+import yaml
+from datetime import datetime, timedelta
+from pathlib import Path
+from dataclasses import dataclass
+from enum import Enum
+
+class Phase(Enum):
+    BACKTEST = 'BACKTEST'
+    PAPER = 'PAPER'
+    PILOT = 'PILOT'
+    RAMP_UP = 'RAMP_UP'
+    PRODUCTION = 'PRODUCTION'
+    PAUSED = 'PAUSED'
+    RETIRED = 'RETIRED'
+
+@dataclass
+class Transition:
+    strategy_id: str
+    from_phase: Phase
+    to_phase: Phase
+    reason: str
+    metrics: dict
+    timestamp: datetime
+    requires_human_approval: bool
+
+class StrategyLifecycleManager:
+    '''Gère les transitions de phase pour toutes les stratégies.
+
+    Méthodes principales:
+
+    1. check_promotions() — Vérifié chaque dimanche 18h
+       Pour chaque stratégie en PAPER/PILOT/RAMP_UP/PAUSED:
+       - Lire config/strategies/{id}.yaml
+       - Calculer les métriques live actuelles
+       - Comparer aux promotion_criteria de la phase courante
+       - Si tous les critères sont satisfaits → proposer la promotion
+       - Les promotions PILOT→RAMP_UP et RAMP_UP→PRODUCTION nécessitent
+         human_approval=True (revue humaine obligatoire)
+
+    2. check_degradations() — Vérifié chaque jour 21h
+       Pour chaque stratégie en PRODUCTION/RAMP_UP/PILOT:
+       - Calculer rolling_sharpe_60d, max_dd_recent
+       - Comparer aux degradation_criteria
+       - Si critère de dégradation atteint → PAUSER automatiquement
+       - Pas besoin d'approbation humaine (sécurité)
+
+    3. emergency_check() — Vérifié en continu (every 5 min)
+       Pour chaque stratégie active:
+       - Si DD > emergency.max_drawdown → PAUSE immédiate
+       - Alerte Discord #security
+       - Log détaillé de la cause
+
+    4. execute_transition(transition: Transition) — Applique la transition
+       a. Mettre à jour config/strategies/{id}.yaml (phase, phase_since, metrics)
+       b. Mettre à jour l'allocation dans le méta-allocateur
+       c. Si promotion: augmenter le poids progressivement (pas d'un coup)
+       d. Si dégradation: réduire le poids à 0 et clôturer les positions
+       e. Créer un commit Git avec le diff du YAML
+       f. Envoyer un résumé Discord
+
+    5. generate_report() — Rapport hebdomadaire de toutes les transitions
+       Format:
+       ┌──────────────────────────────────────────┐
+       │ 📊 LIFECYCLE REPORT — 2026-02-28         │
+       │                                           │
+       │ PRODUCTION (5): CSM ✓, TSMOM ✓, PEAD ✓, │
+       │   RSI_Bounce ✓, Dual_Mom ✓               │
+       │ RAMP_UP (1): Pairs_Trading (D+25)        │
+       │ PILOT (1): Sector_Rot (D+18)             │
+       │ PAPER (1): Bollinger_MR (D+5)            │
+       │ PAUSED (0)                                │
+       │ RETIRED (0)                               │
+       │                                           │
+       │ Transitions cette semaine:                │
+       │ ✅ Pairs_Trading: PILOT → RAMP_UP        │
+       │    Sharpe live: 0.68, DD: -4.2%          │
+       │ ⚠️ Aucune dégradation                    │
+       └──────────────────────────────────────────┘
+    '''
+"</code></pre>
+
+<h3>Prompts Claude Code pour le lifecycle</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-robot"></i> Claude Code gère le lifecycle au quotidien</h4>
+
+<p><strong>Créer une nouvelle stratégie :</strong></p>
+<pre><code>claude -p "Crée une nouvelle stratégie 'VolumeBreakout':
+1. Crée src/strategies/volume_breakout.py avec le squelette BaseStrategy
+2. Crée config/strategies/volume_breakout.yaml avec phase=BACKTEST
+3. Crée tests/unit/test_volume_breakout.py
+4. Crée notebooks/research/volume_breakout_exploration.ipynb
+5. Ajoute la stratégie au registry dans src/strategies/__init__.py
+6. Exécute le backtest initial: pytest tests/backtest/test_volume_breakout.py
+7. Si Sharpe OOS > 0.7 et DSR > 0.5: update le YAML à phase=PAPER
+8. Commit: 'feat: add VolumeBreakout strategy (phase: BACKTEST)'"</code></pre>
+
+<p><strong>Promouvoir une stratégie :</strong></p>
+<pre><code>claude -p "Exécute la promotion review hebdomadaire:
+1. Pour chaque stratégie en PAPER/PILOT/RAMP_UP:
+   a. Calculer les métriques live (sharpe, DD, tracking error)
+   b. Comparer aux critères dans config/strategies/{id}.yaml
+   c. Si éligible: créer une PR avec le diff YAML
+   d. Si requires_human_approval: ajouter le label 'needs-review'
+2. Pour chaque stratégie en PAUSED > 90 jours:
+   a. Proposer la transition vers RETIRED
+3. Générer le rapport hebdomadaire et l'envoyer sur Discord #research
+4. Commit: 'chore: lifecycle review 2026-02-28'"</code></pre>
+
+<p><strong>Optimiser les paramètres :</strong></p>
+<pre><code>claude -p "Optimise les paramètres de CSM strategy:
+1. Lire config/strategies/csm.yaml pour les params actuels
+2. Définir la grille de recherche:
+   lookback_months: [6, 9, 12, 15, 18]
+   n_positions: [20, 25, 30, 35, 40]
+   skip_last_month: [true, false]
+3. Walk-Forward avec 5 splits (4y IS, 1y OOS)
+4. Critère: maximiser Calmar ratio OOS
+5. Vérifier la sensibilité: le Sharpe ne doit pas varier >20% entre params voisins
+6. Si meilleurs params trouvés ET robustes:
+   a. Mettre à jour csm.yaml avec les nouveaux params
+   b. Ajouter un commentaire: 'Optimized on 2026-02-28, prev Calmar=1.1, new Calmar=1.3'
+   c. Commit: 'optimize: CSM params — Calmar 1.1 → 1.3'
+7. Si pas d'amélioration: ne rien changer (log 'no improvement found')"</code></pre>
+
+<p><strong>Data-driven désactivation :</strong></p>
+<pre><code>claude -p "Analyse la stratégie TSMOM qui sous-performe depuis 2 mois:
+1. Calculer les métriques rolling (30d, 60d, 90d): sharpe, DD, hit_rate
+2. Comparer avec les métriques historiques (p-value du changement)
+3. Identifier la cause probable:
+   a. Changement de régime? (comparer avec regime_detector output)
+   b. Corrélation avec les autres stratégies a changé?
+   c. Univers d'ETF a changé (nouveaux listés, délistés)?
+   d. Problème de data quality? (checker les gaps, les outliers)
+4. Recommandation:
+   - Si cause transitoire (régime): KEEP, réduire allocation de 30%
+   - Si cause structurelle (alpha decay): PAUSE + investigation approfondie
+   - Si cause technique (data): FIX la data, ne pas changer la stratégie
+5. Rédiger un rapport dans docs/incidents/tsmom_underperformance_2026_02.md
+6. Commit: 'investigate: TSMOM underperformance analysis'"</code></pre>
+</div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SECTION 5: MONITORING                                           -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="monitoring"><i class="fa-solid fa-desktop"></i> Monitoring — Le système nerveux</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-desktop"></i> Monitoring à 3 niveaux — Infrastructure, Trading, Business</h2>
+
+<h3>Niveau 1 — Infrastructure monitoring (Prometheus + Grafana)</h3>
+
+<pre><code>claude -p "Configure le monitoring infrastructure:
+
+Prometheus scrape targets:
+- node_exporter (CPU, RAM, disque, réseau)
+- docker_exporter (conteneurs, mémoire par conteneur)
+- process_exporter (trading engine process)
+
+Alertes infrastructure (AlertManager → Discord #alerts):
+- CPU > 80% pendant 5 minutes
+- RAM > 90%
+- Disque > 85%
+- Trading engine container restart
+- IBKR Gateway déconnecté > 30s
+- Nomad job failed/dead
+- Network latency vers IBKR > 200ms
+
+Grafana dashboards (accessibles via Tailscale uniquement):
+1. System Overview: CPU, RAM, disque, réseau
+2. Container Health: état de chaque conteneur, restarts, logs
+3. IBKR Connection: latence, drops, reconnections
+"</code></pre>
+
+<h3>Niveau 2 — Trading monitoring</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>Fréquence</th><th>Alerte si</th><th>Canal Discord</th></tr></thead>
+<tbody>
+<tr><td>P&amp;L quotidien</td><td>21:30 UTC</td><td>DD > -2% journalier</td><td>#trading</td></tr>
+<tr><td>P&amp;L cumulé</td><td>21:30 UTC</td><td>DD > -10% depuis HWM</td><td>#alerts</td></tr>
+<tr><td>Positions ouvertes</td><td>Continu</td><td>Position > 12% NAV</td><td>#alerts</td></tr>
+<tr><td>Nombre de positions</td><td>Continu</td><td>> 40 ou &lt; 8</td><td>#alerts</td></tr>
+<tr><td>Slippage moyen</td><td>Quotidien</td><td>> 10 bps (2× target)</td><td>#trading</td></tr>
+<tr><td>Fill rate</td><td>Quotidien</td><td>&lt; 80%</td><td>#alerts</td></tr>
+<tr><td>Sharpe rolling 30d</td><td>Hebdo</td><td>&lt; 0</td><td>#research</td></tr>
+<tr><td>Corrélation inter-strat</td><td>Hebdo</td><td>Max corr > 0.7 (risk concentration)</td><td>#research</td></tr>
+<tr><td>Turnover quotidien</td><td>Quotidien</td><td>> 15% NAV</td><td>#trading</td></tr>
+<tr><td>Cash level</td><td>Continu</td><td>&lt; 3% (trop peu de buffer)</td><td>#alerts</td></tr>
+</tbody>
+</table>
+
+<h3>Niveau 3 — Business monitoring</h3>
+
+<pre><code>claude -p "Implémente le dashboard Discord hebdomadaire dans src/monitoring/weekly_report.py :
+
+class WeeklyReport:
+    '''Rapport hebdomadaire envoyé chaque dimanche 19h.
+
+    Format Discord embed:
+    ┌───────────────────────────────────────────────────┐
+    │ 📊 WEEKLY REPORT — Semaine 9/2026                 │
+    │                                                    │
+    │ 💰 NAV: 142,350€ (+3,200€ / +2.3%)              │
+    │ 📈 Cumul YTD: +18.5% (target: +37.7%)           │
+    │ 📊 Sharpe 30d: 1.85                              │
+    │ 📉 Max DD live: -4.2% (limit: -25%)             │
+    │                                                    │
+    │ STRATÉGIES:                                        │
+    │  ✅ CSM: +1.8% (20.1% alloc)                     │
+    │  ✅ TSMOM: +0.5% (15.8% alloc)                   │
+    │  ✅ PEAD: +3.2% (14.5% alloc) ← earnings season  │
+    │  ⚠️ IndRot: -0.3% (13.2% alloc) ← rotation late │
+    │  ✅ RSI Bounce: +1.1% (7.8% alloc)               │
+    │  ✅ Pairs: +0.2% (6.5% alloc)                    │
+    │  ✅ Dual Mom: +0.8% (12.2% alloc) → equity mode  │
+    │  ✅ Sector Rot: +0.4% (7.5% alloc)               │
+    │  💵 Cash: 2.4%                                    │
+    │                                                    │
+    │ EXECUTION:                                         │
+    │  Orders: 156 | Fill rate: 94.2% | Avg slip: 3.1bp │
+    │  Best: NVDA +12.5% | Worst: SHOP -4.2%           │
+    │                                                    │
+    │ REGIME: Risk-On (VIX: 15.2, Credit: 3.5%)        │
+    │ NEXT WEEK: FOMC Wed, AAPL/MSFT earnings Thu       │
+    │                                                    │
+    │ LIFECYCLE:                                         │
+    │  Promotions: Pairs → RAMP_UP                      │
+    │  Degradations: none                                │
+    │  Pipeline: Bollinger_MR (PAPER D+12)              │
+    └───────────────────────────────────────────────────┘
+    '''
+"</code></pre>
+</div>
+
+<!-- ============================================================== -->
+<!-- SECTION 6: ROLE HUMAIN                                          -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="humain"><i class="fa-solid fa-user"></i> Le rôle de l'humain — Ce qu'on ne délègue JAMAIS</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-user"></i> L'humain dans la boucle — La fenêtre de contrôle</h2>
+
+<p>Le système est <strong>quasi-autonome</strong> mais certaines décisions sont trop importantes pour être automatisées. L'humain a un rôle précis et limité.</p>
+
+<h3>Décisions exclusivement humaines (non automatisables)</h3>
+
+<table class="data-table">
+<thead><tr><th>Décision</th><th>Fréquence</th><th>Outil</th><th>Pourquoi pas automatique</th></tr></thead>
+<tbody>
+<tr><td>Approuver RAMP_UP → PRODUCTION</td><td>~Mensuel</td><td>PR GitHub</td><td>Risque capital significatif</td></tr>
+<tr><td>Redémarrer après Emergency Stop</td><td>Rare</td><td>Discord !resume</td><td>Comprendre la cause avant</td></tr>
+<tr><td>Augmenter le Kelly fraction</td><td>~Trimestriel</td><td>YAML + PR</td><td>Impact direct sur le risque</td></tr>
+<tr><td>Ajouter une nouvelle classe d'actifs</td><td>~Annuel</td><td>Code review</td><td>Changement architectural</td></tr>
+<tr><td>Modifier les contraintes hard</td><td>~Semestriel</td><td>YAML + PR</td><td>Garde-fous de sécurité</td></tr>
+<tr><td>Décider de retirer un capital</td><td>Variable</td><td>Manuel</td><td>Décision personnelle</td></tr>
+<tr><td>Valider un backtest anomaliquement bon</td><td>Variable</td><td>Review</td><td>Risque d'overfitting</td></tr>
+</tbody>
+</table>
+
+<h3>Le rituel hebdomadaire — 30 minutes le dimanche</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-calendar-check"></i> Checklist du dimanche (19h-19h30)</h4>
+<ol>
+<li><strong>Lire le rapport hebdomadaire Discord</strong> (2 min)</li>
+<li><strong>Vérifier les PRs lifecycle</strong> : promotions/dégradations proposées (5 min)</li>
+<li><strong>Review les métriques de risque</strong> : DD, corrélations, concentration (3 min)</li>
+<li><strong>Vérifier les alertes security</strong> : intrusion, ordres non autorisés (2 min)</li>
+<li><strong>Lire les news macro de la semaine prochaine</strong> : FOMC, earnings, géopolitique (5 min)</li>
+<li><strong>Décision : ajuster le risk budget ?</strong> (ex: réduire avant FOMC) (5 min)</li>
+<li><strong>Valider ou annuler les transitions lifecycle</strong> (3 min)</li>
+<li><strong>OK → Le système tourne pour 1 semaine de plus</strong></li>
+</ol>
+<p>Total : <strong>30 minutes par semaine</strong>. Le reste est automatisé. C'est l'objectif : le minimum d'intervention humaine nécessaire pour garder le contrôle sans micro-manager.</p>
+</div>
+
+<h3>Procédure d'urgence — Le bouton rouge</h3>
+
+<pre><code># Via Discord:
+!emergency CONFIRM
+
+# Ou via CLI (si Discord down):
+tssh trading 'nomad job stop trading-engine && docker stop $(docker ps -q)'
+
+# Ce qui se passe:
+# 1. Toutes les positions sont liquidées au MARKET
+# 2. Le trading engine est arrêté
+# 3. Alerte email de backup envoyée
+# 4. Le système NE PEUT PAS redémarrer sans !resume CONFIRM
+# 5. Post-mortem obligatoire avant reprise</code></pre>
+</div>
+
+<!-- ============================================================== -->
+<!-- SECTION 7: ROAD TO 1M                                           -->
+<!-- ============================================================== -->
+
+<div class="section-divider" id="road"><i class="fa-solid fa-road"></i> La route vers le million</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-road"></i> Projection réaliste — 100K€ → 1M€</h2>
+
+<div id="projectionChart" class="chart-container"></div>
+
+<h3>3 scénarios de projection</h3>
+
+<table class="data-table">
+<thead><tr><th>Période</th><th>Conservateur (25% CAGR)</th><th>Base (38% CAGR)</th><th>Optimiste (55% CAGR)</th></tr></thead>
+<tbody>
+<tr><td>M0 (départ)</td><td>100 000€</td><td>100 000€</td><td>100 000€</td></tr>
+<tr><td>M6</td><td>111 800€</td><td>117 500€</td><td>124 500€</td></tr>
+<tr><td>M12</td><td>125 000€</td><td>138 000€</td><td>155 000€</td></tr>
+<tr><td>M18</td><td>139 700€</td><td>162 200€</td><td>193 000€</td></tr>
+<tr><td>M24 (2 ans)</td><td>156 300€</td><td>190 500€</td><td>240 000€</td></tr>
+<tr><td>M36 (3 ans)</td><td>195 300€</td><td>263 000€</td><td>373 000€</td></tr>
+<tr><td>M48 (4 ans)</td><td>244 100€</td><td>363 000€</td><td>579 000€</td></tr>
+<tr><td>M60 (5 ans)</td><td>305 200€</td><td>501 000€</td><td>900 000€</td></tr>
+<tr><td>M72 (6 ans)</td><td>381 500€</td><td>692 000€</td><td>1 400 000€</td></tr>
+<tr><td>M84 (7 ans)</td><td>476 800€</td><td>955 000€</td><td>—</td></tr>
+<tr><td><strong>Objectif 1M€</strong></td><td><strong>~10 ans</strong></td><td><strong>~7 ans</strong></td><td><strong>~5.5 ans</strong></td></tr>
+</tbody>
+</table>
+
+<h3>Les catalyseurs qui accélèrent (ou ralentissent)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-rocket"></i> Accélérateurs</h4>
+<ul>
+<li><strong>Ajout de nouvelles stratégies</strong> : Chaque stratégie décorrélée augmente le Sharpe combiné. Pipeline continu de recherche → 2-3 nouvelles stratégies/an</li>
+<li><strong>Apports de capital</strong> : Si vous ajoutez 2000€/mois, l'effet composé s'accélère massivement</li>
+<li><strong>Régimes favorables</strong> : Un bull run de 2-3 ans (comme 2020-2021) peut porter le CAGR à 50%+</li>
+<li><strong>Réduction du slippage</strong> : L'optimisation continue réduit les coûts de transaction → +0.5-1% CAGR</li>
+<li><strong>Confiance accrue</strong> : Après 12+ mois de track record, augmenter Kelly de 0.5 à 0.6 → +15% de croissance</li>
+</ul>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Freineurs</h4>
+<ul>
+<li><strong>Alpha decay</strong> : Les facteurs s'érodent avec le temps (crowding). La recherche continue est obligatoire.</li>
+<li><strong>Bear market prolongé</strong> : Un marché baissier de 2+ ans (2000-2002, 2008-2009) réduit le CAGR à 10-15%</li>
+<li><strong>Erreur humaine</strong> : Changer les règles pendant un drawdown est la cause #1 de destruction de valeur</li>
+<li><strong>Scaling effects</strong> : Au-delà de 500K€, le slippage augmente sur les mid/small-caps → réduire leur poids</li>
+<li><strong>Taxation</strong> : Les plus-values réduisent le rendement net. Privilégier un PEA/CTO avec enveloppe fiscale optimale</li>
+</ul>
+</div>
+
+<h3>Le plan en 4 phases</h3>
+
+<table class="data-table">
+<thead><tr><th>Phase</th><th>Capital</th><th>Durée</th><th>Focus</th><th>Stratégies actives</th></tr></thead>
+<tbody>
+<tr><td>🟡 Launch</td><td>100K → 150K€</td><td>12 mois</td><td>Valider le système live, ajuster</td><td>4-5 (momentum + MR)</td></tr>
+<tr><td>🟢 Ramp</td><td>150K → 300K€</td><td>18 mois</td><td>Ajouter des stratégies, optimiser</td><td>6-8 (+ cross-asset)</td></tr>
+<tr><td>🔵 Scale</td><td>300K → 600K€</td><td>24 mois</td><td>Scaling, gestion de la taille</td><td>8-10 (+ nouvelles)</td></tr>
+<tr><td>⚡ Cruise</td><td>600K → 1M€+</td><td>18 mois</td><td>Compounding, préserver le capital</td><td>10-12 (maturité)</td></tr>
+</tbody>
+</table>
+
+<h3>La leçon finale</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> Ce que 30 ans d'expérience vous ont appris</h4>
+<p>Le trading algorithmique n'est pas un sprint, c'est un <strong>marathon d'ingénierie</strong>. Le code est un moyen, pas une fin. Ce qui fait la différence :</p>
+<ul>
+<li><strong>La discipline</strong> : Ne pas modifier les règles en plein drawdown. Faire confiance au processus.</li>
+<li><strong>La recherche continue</strong> : Allouer 20% de votre temps à la recherche de nouvelles stratégies. Le pipeline ne s'arrête jamais.</li>
+<li><strong>L'humilité</strong> : Aucune stratégie ne fonctionne éternellement. Accepter de RETIRER une stratégie qui a fait sa vie.</li>
+<li><strong>La patience composée</strong> : 38% CAGR semble lent par rapport à l'objectif de 216%. Mais c'est un rendement <em>exceptionnel</em> — top 0.1% des gérants mondiaux. Laissez les intérêts composés faire le travail.</li>
+<li><strong>L'automatisation</strong> : Claude Code écrit 90% du code. Vous validez 10%. Votre temps est pour la stratégie, pas l'implémentation.</li>
+</ul>
+</div>
+</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-flag-checkered"></i> Récapitulatif complet de la série</h2>
+
+<div class="takeaway-box">
+<h4>Les 10 parties en un coup d'œil</h4>
+<ul>
+<li><strong>Part 1 — Infrastructure</strong> : VM Hetzner, IBKR, Python stack, Claude Code workflow</li>
+<li><strong>Part 2 — Data Pipeline</strong> : Ingestion multi-sources, feature engineering, qualité</li>
+<li><strong>Part 3 — Alpha Factors</strong> : 50+ facteurs, 6 familles, anti-overfitting</li>
+<li><strong>Part 4 — Portfolio</strong> : Kelly + HRP + risk budgeting + 4 niveaux de contraintes</li>
+<li><strong>Part 5 — Exécution</strong> : OMS, TWAP/VWAP, multi-marchés, slippage control</li>
+<li><strong>Part 6 — Momentum</strong> : CSM + TSMOM + PEAD + Industry Rotation (Sharpe combiné 1.62)</li>
+<li><strong>Part 7 — Mean Reversion</strong> : RSI Bounce + Pairs Trading (anti-crash, corrélation -0.15)</li>
+<li><strong>Part 8 — Cross-Asset</strong> : Dual Momentum + Sector Rotation + Tail Hedge (Calmar 4.44)</li>
+<li><strong>Part 9 — Régime ML</strong> : HMM, Gradient Boosting, allocation adaptative</li>
+<li><strong>Part 10 — Production</strong> : IaC, CI/CD, hardening, lifecycle, monitoring, road to 1M€</li>
+</ul>
+<p><strong>Résultat final</strong> : 8 stratégies en production, Sharpe 2.10, Max DD -8.5%, CAGR 37.7%, objectif 1M€ en ~7 ans.</p>
+</div>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part9-regime-adaptive/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step current"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">10/10</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Projection chart
+  var projectionChart = echarts.init(document.getElementById('projectionChart'));
+  var months = ['M0','M6','M12','M18','M24','M30','M36','M42','M48','M54','M60','M66','M72','M78','M84'];
+  projectionChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', formatter: function(p) { return p.map(function(s) { return s.seriesName + ': ' + Math.round(s.value/1000) + 'K€'; }).join('<br>'); } },
+    legend: { data: ['Conservateur (25%)','Base (38%)','Optimiste (55%)'], bottom: 0 },
+    grid: { top: 30, right: 20, bottom: 60, left: 60 },
+    xAxis: { type: 'category', data: months },
+    yAxis: { type: 'value', name: 'Capital (€)', axisLabel: { formatter: function(v) { return v >= 1000000 ? (v/1000000).toFixed(1)+'M' : Math.round(v/1000)+'K'; } } },
+    series: [
+      { name: 'Conservateur (25%)', type: 'line', data: [100000,111800,125000,139700,156300,175000,195300,218000,244100,272500,305200,340000,381500,425000,476800], smooth: true, lineStyle: { color: '#94a3b8', width: 2 }, itemStyle: { color: '#94a3b8' } },
+      { name: 'Base (38%)', type: 'line', data: [100000,117500,138000,162200,190500,224000,263000,309000,363000,427000,501000,590000,692000,815000,955000], smooth: true, lineStyle: { color: '#059669', width: 3 }, areaStyle: { color: 'rgba(5,150,105,0.1)' }, itemStyle: { color: '#059669' } },
+      { name: 'Optimiste (55%)', type: 'line', data: [100000,124500,155000,193000,240000,300000,373000,465000,579000,722000,900000,1120000,1400000,null,null], smooth: true, lineStyle: { color: '#d97706', width: 2, type: 'dashed' }, itemStyle: { color: '#d97706' } }
+    ],
+    markLine: { data: [{ yAxis: 1000000, label: { formatter: '1M€ TARGET', position: 'end' }, lineStyle: { color: '#dc2626', type: 'dashed' } }] }
+  });
+
+  window.addEventListener('resize', function() { projectionChart.resize(); });
+});
+</script>
+</body>
+</html>

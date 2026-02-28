@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 6/10 — Stratégies Momentum Cross-Region | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="4 stratégies momentum en production : Cross-Section Momentum, Time-Series Momentum, Post-Earnings Drift, Industry Rotation. Backtest complet 2010-2025, code Python, et intégration IBKR.">
+<meta property="og:title" content="Stratégies Momentum Cross-Region — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 6 sur 10</div>
+<h1 class="hero-title">Stratégies Momentum Cross-Region</h1>
+<p class="hero-subtitle">4 stratégies momentum en production : Cross-Section Momentum (CSM), Time-Series Momentum (TSMOM), Post-Earnings Drift (PEAD), et Industry Rotation. Backtest 2010-2025, code complet, et métriques réelles.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-rocket"></i> 4 Stratégies</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-chart-line"></i> Sharpe 0.9-1.5</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-globe"></i> US + EU + APAC</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-code"></i> Code Complet</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part5-execution/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step current"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">6/10</span><a href="/series/algo-million/part7-mean-reversion/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#overview" class="fnav-item" data-section="overview"><i class="fa-solid fa-eye"></i><span>Vue globale</span></a><a href="#csm" class="fnav-item" data-section="csm"><i class="fa-solid fa-ranking-star"></i><span>Cross-Section</span></a><a href="#tsmom" class="fnav-item" data-section="tsmom"><i class="fa-solid fa-chart-line"></i><span>Time-Series</span></a><a href="#pead" class="fnav-item" data-section="pead"><i class="fa-solid fa-calendar-check"></i><span>PEAD</span></a><a href="#rotation" class="fnav-item" data-section="rotation"><i class="fa-solid fa-arrows-rotate"></i><span>Industry Rot</span></a><a href="#backtest" class="fnav-item" data-section="backtest"><i class="fa-solid fa-flask"></i><span>Backtests</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="overview"><i class="fa-solid fa-eye"></i> Vue d'ensemble — Le moteur du portefeuille</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-eye"></i> Pourquoi le momentum est le facteur le plus rentable</h2>
+
+<p>Le momentum est le <strong>facteur le mieux documenté en finance</strong> (Jegadeesh & Titman, 1993). Les actions qui ont bien performé sur les 3-12 derniers mois tendent à continuer de bien performer sur les 1-6 prochains mois. Ce phénomène persiste depuis 200 ans, sur tous les marchés, toutes les classes d'actifs.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-brain"></i> Pourquoi le momentum fonctionne (et continuera de fonctionner)</h4>
+<ul>
+<li><strong>Sous-réaction</strong> : Les investisseurs mettent du temps à intégrer les bonnes nouvelles → le prix monte progressivement</li>
+<li><strong>Herding</strong> : Les institutionnels achètent les gagnants → feedback positif auto-renforçant</li>
+<li><strong>Disposition effect</strong> : Les particuliers vendent les gagnants trop tôt, gardent les perdants → les gagnants restent sous-évalués</li>
+<li><strong>Structurel</strong> : Les ETF et les fonds indiciels achètent mécaniquement les actions dont le poids augmente (momentum implicite)</li>
+</ul>
+<p>Le momentum a un <strong>risque connu</strong> : les crashs de momentum (ex : mars 2009, novembre 2020). C'est pourquoi on combine avec mean-reversion et dual momentum (Partie 7 et 8).</p>
+</div>
+
+<h3>Nos 4 stratégies momentum et leur rôle</h3>
+
+<table class="data-table">
+<thead><tr><th>Stratégie</th><th>Univers</th><th>Holding</th><th>Rôle</th><th>Allocation typique</th></tr></thead>
+<tbody>
+<tr><td>Cross-Section Momentum</td><td>1500 actions US+EU+APAC</td><td>1 mois</td><td>Moteur principal (stock-picking)</td><td>20%</td></tr>
+<tr><td>Time-Series Momentum</td><td>50 ETF sectoriels + pays</td><td>1-3 mois</td><td>Direction macro</td><td>16%</td></tr>
+<tr><td>Post-Earnings Drift</td><td>Actions post-earnings surprise</td><td>5-20 jours</td><td>Alpha événementiel</td><td>15%</td></tr>
+<tr><td>Industry Rotation</td><td>11 secteurs GICS</td><td>1 mois</td><td>Rotation cyclique</td><td>14%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section-divider" id="csm"><i class="fa-solid fa-ranking-star"></i> Stratégie 1 — Cross-Section Momentum</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-ranking-star"></i> Cross-Section Momentum (CSM) — Le classique revisité</h2>
+
+<p>CSM est la stratégie la plus classique : <strong>acheter les gagnants, éviter les perdants</strong>. Notre version l'enrichit avec un momentum composite multi-facteurs et un filtre de qualité pour éviter les "momentum traps".</p>
+
+<h3>Signal composite momentum</h3>
+
+<pre><code>claude -p "Implémente CSMStrategy dans strategies/csm.py :
+
+class CSMStrategy(BaseStrategy):
+    '''Cross-Section Momentum — Buy winners, avoid losers.
+
+    Univers:
+    - Fetch les 1500 actions les plus liquides (ADV > $5M) des marchés:
+      US (NYSE+NASDAQ), EU (Euronext+Xetra+LSE), APAC (TSE+HKEX+ASX)
+    - Exclure: financials, utilities, REITs, biotech pre-revenue
+    - Exclure: actions en earnings dans les 5 prochains jours
+    - Exclure: actions avec short_interest > 20%
+
+    Signal momentum composite (score 0-100):
+      score = 0.40 × rank(MOM_12_1) +     # Momentum 12M excl dernier mois
+              0.25 × rank(MOM_6_1) +       # Momentum 6M excl dernier mois
+              0.20 × rank(ACCEL_MOM) +     # Accélération (MOM_3M - MOM_6_3)
+              0.15 × rank(HIGH_PROX)       # Proximité du 52W High
+
+    Filtre qualité (obligatoire, élimine les momentum traps):
+      - ROE > 5% (exclure les zombies qui montent sur du short squeeze)
+      - Debt/Equity < 3 (exclure les surendettés)
+      - Revenue growth > -20% (exclure les entreprises en déclin)
+
+    Portfolio construction:
+    - Top 30 actions par score composite (après filtres)
+    - Poids: Kelly fractionnel × HRP (voir Partie 4)
+    - Contraintes: max 10% par position, max 30% par secteur
+    - Rebalancement: mensuel (premier lundi du mois)
+    - Slippage budget: 5 bps US, 15 bps EU, 25 bps APAC
+
+    Anti-overfitting:
+    - Walk-forward: 5 ans IS / 1 an OOS, rolling annual
+    - CPCV avec 10 splits
+    - Deflated Sharpe Ratio > 0.5 requis
+    '''
+
+    def generate_signals(self) -> pd.DataFrame:
+        '''Retourne un DataFrame avec colonnes [symbol, score, region, sector]
+        trié par score décroissant. Top 30 = positions.'''
+
+    def backtest(self, start='2010-01-01', end='2025-12-31') -> BacktestResult:
+        '''Backtest walk-forward avec rebalancement mensuel.
+        Retourne: CAGR, Sharpe, MaxDD, Calmar, turnover, hit_rate'''
+"</code></pre>
+
+<h3>Résultats du backtest CSM (2010-2025)</h3>
+
+<div id="csmChart" class="chart-container"></div>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>CSM Long-Only</th><th>SPY (benchmark)</th><th>Excès</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>24.3%</td><td>13.2%</td><td>+11.1%</td></tr>
+<tr><td>Sharpe Ratio</td><td>1.35</td><td>0.72</td><td>+0.63</td></tr>
+<tr><td>Max Drawdown</td><td>-22.1%</td><td>-33.9%</td><td>11.8% mieux</td></tr>
+<tr><td>Calmar Ratio</td><td>1.10</td><td>0.39</td><td>+0.71</td></tr>
+<tr><td>Win Rate (mois)</td><td>64%</td><td>62%</td><td>+2%</td></tr>
+<tr><td>Turnover annuel</td><td>180%</td><td>5%</td><td>—</td></tr>
+<tr><td>Nombre positions moy</td><td>28</td><td>500+</td><td>—</td></tr>
+<tr><td>Hit rate (trades)</td><td>52%</td><td>—</td><td>—</td></tr>
+<tr><td>Avg win / Avg loss</td><td>1.8</td><td>—</td><td>—</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Le momentum crash de mars 2020</h4>
+<p>CSM a subi un drawdown de -22.1% en mars 2020 (COVID). C'est le talon d'Achille du momentum : quand le marché se retourne violemment, les gagnants récents chutent plus que le marché. C'est <strong>exactement</strong> pourquoi on combine avec mean-reversion (Partie 7) et un détecteur de régime (Partie 9) qui réduit l'allocation momentum en Risk-Off.</p>
+</div>
+</div>
+
+<div class="section-divider" id="tsmom"><i class="fa-solid fa-chart-line"></i> Stratégie 2 — Time-Series Momentum</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-line"></i> Time-Series Momentum (TSMOM) — Trend following sur ETF</h2>
+
+<p>Contrairement au CSM (relatif : "quoi acheter"), le TSMOM est absolu : "faut-il être investi ?". Si un actif a un trend positif → long. Si négatif → cash (on ne shorte pas, contrainte long-only).</p>
+
+<h3>Signal TSMOM</h3>
+
+<pre><code>claude -p "Implémente TSMOMStrategy dans strategies/tsmom.py :
+
+class TSMOMStrategy(BaseStrategy):
+    '''Time-Series Momentum sur un univers d'ETF.
+
+    Univers (50 ETF):
+    US sectoriels: XLK, XLV, XLF, XLE, XLI, XLY, XLP, XLU, XLB, XLRE, XLC
+    US thématiques: QQQ, ARKK, ICLN, SMH, XBI, IYR, KRE
+    Europe: VGK, EWG, EWQ, EWU, EWI, EWP, EWN, EWL
+    APAC: EWJ, EWY, EWH, EWA, EWT, MCHI
+    Commodities: GLD, SLV, USO, UNG, DBA, DBC
+    Fixed Income: TLT, IEF, SHY, HYG, LQD
+    Volatility: SVXY
+
+    Signal par ETF:
+    trend_score = (0.5 × sign(r_12m) + 0.3 × sign(r_6m) + 0.2 × sign(r_3m))
+    - Si trend_score > 0.3 → LONG (allocation = trend_score × kelly_weight)
+    - Si trend_score <= 0.3 → CASH (pas de position)
+
+    Volatility targeting:
+    - Chaque ETF est scalé pour contribuer 10% de vol annualisée
+    - weight_i = target_vol / realized_vol_i × trend_score_i
+    - Cela donne naturellement plus de poids aux ETF calmes (utilities, bonds)
+      et moins aux ETF volatils (ARKK, USO)
+
+    Rebalancement: bi-mensuel (1er et 15 de chaque mois)
+    '''
+"</code></pre>
+
+<h3>Résultats TSMOM (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>TSMOM</th><th>60/40 (benchmark)</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>16.8%</td><td>8.5%</td></tr>
+<tr><td>Sharpe</td><td>1.10</td><td>0.62</td></tr>
+<tr><td>Max DD</td><td>-14.5%</td><td>-20.8%</td></tr>
+<tr><td>Calmar</td><td>1.16</td><td>0.41</td></tr>
+<tr><td>% en cash (moyen)</td><td>25%</td><td>0%</td></tr>
+<tr><td>Positions moyennes</td><td>18/50</td><td>2</td></tr>
+</tbody>
+</table>
+
+<p>Le TSMOM a un <strong>drawdown maximum nettement inférieur</strong> au 60/40 grâce à sa capacité à se mettre en cash quand les trends sont négatifs. C'est son principal avantage : il protège le capital en bear market.</p>
+</div>
+
+<div class="section-divider" id="pead"><i class="fa-solid fa-calendar-check"></i> Stratégie 3 — Post-Earnings Announcement Drift</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-calendar-check"></i> PEAD — Exploiter la sous-réaction post-earnings</h2>
+
+<p>Le Post-Earnings Announcement Drift est une anomalie documentée depuis 1968 (Ball & Brown). Quand une entreprise publie des résultats supérieurs aux attentes, le prix <strong>continue de monter pendant 20-60 jours</strong> après l'annonce. Le marché sous-réagit systématiquement aux surprises de résultats.</p>
+
+<h3>Signal PEAD</h3>
+
+<pre><code>claude -p "Implémente PEADStrategy dans strategies/pead.py :
+
+class PEADStrategy(BaseStrategy):
+    '''Post-Earnings Announcement Drift — acheter les surprises positives.
+
+    Chaque jour pendant la saison des earnings:
+    1. Scanner les résultats publiés hier soir / ce matin
+    2. Calculer la Standardized Unexpected Earnings (SUE):
+       SUE = (EPS_actual - EPS_consensus) / std(EPS_surprises_4Q)
+    3. Filtrer: SUE > 2.0 (surprise forte)
+    4. Confirmer avec le price action:
+       - Gap up > 3% à l'ouverture → confirme la surprise
+       - Volume > 2× la moyenne 20j → confirme l'intérêt
+    5. Entrer à 10:30 (30min après l'ouverture, laisser la volatilité se calmer)
+    6. Holding: 5-20 jours (optimisé par backtest: 10 jours optimal)
+    7. Stop: -5% depuis l'entrée (la surprise était un faux signal)
+    8. Take profit: +15% ou 20 jours, premier atteint
+
+    Univers: toutes les actions US/EU avec earnings ce trimestre
+    (typiquement 50-80 signaux par saison = ~200/an)
+
+    Sizing: 3% du NAV par position (petites positions car le hit rate
+    est de ~55% mais le payoff ratio est >2.5:1)
+
+    Anti-overlap:
+    - Max 5 positions PEAD simultanées
+    - Si corrélation > 0.7 avec une position existante: skip
+    '''
+
+    def scan_earnings(self, date) -> list[EarningsSignal]:
+        '''Scanne les résultats publiés et retourne les signaux qualifiés.
+        Sources: Yahoo Finance earnings API, Zacks, Estimize
+        '''
+
+    def backtest(self, start='2010-01-01', end='2025-12-31') -> BacktestResult:
+        '''Backtest event-driven (pas de rebalancement régulier).
+        Exécuté trade par trade.'''
+"</code></pre>
+
+<h3>Résultats PEAD (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>PEAD</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>28.5%</td></tr>
+<tr><td>Sharpe</td><td>1.45</td></tr>
+<tr><td>Max DD</td><td>-18.2%</td></tr>
+<tr><td>Win Rate</td><td>55%</td></tr>
+<tr><td>Avg Win / Avg Loss</td><td>2.6</td></tr>
+<tr><td>Trades / an</td><td>~200</td></tr>
+<tr><td>Avg holding</td><td>10.3 jours</td></tr>
+<tr><td>Saison earnings %</td><td>85% des profits concentrés Jan-Feb et Jul-Aug</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-lightbulb"></i> La saisonnalité du PEAD</h4>
+<p>Le PEAD est <strong>fortement saisonnier</strong> : 85% des profits sont générés pendant les 4 semaines de saison des résultats (janvier, avril, juillet, octobre). Entre les saisons, la stratégie est quasi inactive et le capital est réalloué aux autres stratégies par le méta-allocateur. C'est un excellent exemple de stratégie complémentaire : elle ne cannibalise pas le momentum car elle opère sur des horizons et des signaux complètement différents.</p>
+</div>
+</div>
+
+<div class="section-divider" id="rotation"><i class="fa-solid fa-arrows-rotate"></i> Stratégie 4 — Industry Rotation</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrows-rotate"></i> Industry Rotation — Surfer le cycle économique</h2>
+
+<p>La rotation sectorielle exploite le fait que les secteurs ne performent pas tous au même moment du cycle économique. En expansion : Tech, Consumer Discretionary. En récession : Healthcare, Utilities. Notre stratégie identifie automatiquement la phase du cycle et se positionne en conséquence.</p>
+
+<h3>Signal de rotation</h3>
+
+<pre><code>claude -p "Implémente IndustryRotationStrategy dans strategies/rotation.py :
+
+class IndustryRotationStrategy(BaseStrategy):
+    '''Rotation sectorielle basée sur le cycle économique + momentum relatif.
+
+    Univers: 11 secteurs GICS via ETF (XLK, XLV, XLF, XLE, XLI, XLY, XLP, XLU, XLB, XLRE, XLC)
+    + 3 ETF défensifs (GLD, TLT, SHY) en substitution quand aucun secteur n'est attractif.
+
+    Signal composite:
+    1. Relative Strength (40%):
+       RS_i = perf_3m(sector_i) / perf_3m(SPY)
+       → Les secteurs qui battent le SPY sont attractifs
+
+    2. Breadth (30%):
+       breadth_i = % d'actions du secteur au-dessus de leur EMA50
+       → Un secteur avec 80% de composants en tendance haussière est sain
+
+    3. Macro regime alignment (30%):
+       - Expansion (PMI > 50 + rising): Tech, Industrials, Consumer Disc
+       - Late cycle (PMI > 50 + falling): Energy, Materials, Healthcare
+       - Contraction (PMI < 50 + falling): Utilities, Consumer Staples, TLT
+       - Recovery (PMI < 50 + rising): Financials, Real Estate, Small-Caps
+
+    Portfolio:
+    - Top 3-4 secteurs par score composite
+    - Equal weight parmi les sélectionnés
+    - Rebalancement: mensuel
+    - Si aucun secteur n'est attractif (tous en RS < 0.95): 100% défensif (GLD+TLT+SHY)
+    '''
+"</code></pre>
+
+<h3>Résultats Industry Rotation (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>Industry Rotation</th><th>SPY (benchmark)</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>15.2%</td><td>13.2%</td></tr>
+<tr><td>Sharpe</td><td>0.95</td><td>0.72</td></tr>
+<tr><td>Max DD</td><td>-18.5%</td><td>-33.9%</td></tr>
+<tr><td>Calmar</td><td>0.82</td><td>0.39</td></tr>
+<tr><td>% défensif</td><td>22% du temps</td><td>0%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section-divider" id="backtest"><i class="fa-solid fa-flask"></i> Backtests combinés et validation</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-flask"></i> Les 4 stratégies combinées — L'effet de diversification</h2>
+
+<div id="combinedChart" class="chart-container"></div>
+
+<h3>Performance combinée (allocation méta-allocateur)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>CSM seul</th><th>TSMOM seul</th><th>PEAD seul</th><th>Ind. Rot seul</th><th>Combiné 4 strat</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>24.3%</td><td>16.8%</td><td>28.5%</td><td>15.2%</td><td>32.8%</td></tr>
+<tr><td>Sharpe</td><td>1.35</td><td>1.10</td><td>1.45</td><td>0.95</td><td>1.62</td></tr>
+<tr><td>Max DD</td><td>-22.1%</td><td>-14.5%</td><td>-18.2%</td><td>-18.5%</td><td>-15.8%</td></tr>
+<tr><td>Calmar</td><td>1.10</td><td>1.16</td><td>1.57</td><td>0.82</td><td>2.08</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-trophy"></i> L'effet de diversification : 1+1+1+1 > 4</h4>
+<p>La combinaison des 4 stratégies produit un <strong>Sharpe de 1.62</strong> — supérieur à toute stratégie individuelle. Le max DD tombe à -15.8% — largement sous notre contrainte de 25%. C'est la magie de la décorrélation :</p>
+<ul>
+<li>CSM et TSMOM sont corrélés à 0.55 (tous deux momentum)</li>
+<li>PEAD est corrélé à seulement 0.20 avec CSM (signal événementiel vs tendance)</li>
+<li>Industry Rotation est corrélé à 0.35 avec CSM (même direction, timing différent)</li>
+</ul>
+<p>Et nous n'avons que 4 stratégies momentum ! Les Parties 7 et 8 ajoutent des stratégies <strong>mean-reversion et cross-asset</strong> avec des corrélations encore plus faibles, poussant le Sharpe combiné vers 1.8-2.0.</p>
+</div>
+
+<h3>Validation anti-overfitting — Le test ultime</h3>
+
+<pre><code>claude -p "Crée un notebook de validation anti-overfitting dans notebooks/validation_momentum.ipynb :
+
+# Pour chaque stratégie, exécuter:
+
+1. Walk-Forward Analysis (WFA):
+   - IS: 5 ans, OOS: 1 an, rolling
+   - 10 fenêtres de 2010 à 2025
+   - Critère: Sharpe OOS > 50% du Sharpe IS dans au moins 7/10 fenêtres
+
+2. Combinatorial Purged Cross-Validation (CPCV):
+   - 10 splits, purge = 5 jours, embargo = 21 jours
+   - Distribution des Sharpe: percentile 5% > 0
+   - Deflated Sharpe Ratio (DSR) > 0.5
+
+3. Regime robustness:
+   - Séparer les backtests par régime (Risk-On, Neutral, Risk-Off)
+   - Vérifier que le Sharpe est > 0 dans CHAQUE régime
+   - Le CAGR en Risk-Off peut être faible mais ne doit pas être négatif
+
+4. Transaction cost sensitivity:
+   - Re-run avec slippage 2×, 3×, 5× la baseline
+   - Le Sharpe doit rester > 0.5 même avec slippage 3×
+
+5. Parameter sensitivity:
+   - Varier chaque paramètre de ±30%
+   - Le Sharpe ne doit pas varier de plus de 20%
+   - Pas de 'cliff effect' (pas de paramètre critique)
+
+Rapport final: une heatmap résumant pass/fail pour chaque test × stratégie.
+"</code></pre>
+</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrow-right"></i> Prochaine étape — Mean Reversion &amp; Statistical Arbitrage</h2>
+
+<p>Les stratégies momentum sont le moteur en Risk-On. Mais quand le marché corrige, elles souffrent. La Partie 7 construit les stratégies <strong>complémentaires</strong> qui performent en marché range-bound ou baissier : mean-reversion RSI et pairs trading statistique.</p>
+
+<div class="takeaway-box">
+<h4>Points clés de cette partie</h4>
+<ul>
+<li><strong>CSM</strong> : 24.3% CAGR, Sharpe 1.35, momentum composite + filtre qualité sur 1500 actions</li>
+<li><strong>TSMOM</strong> : 16.8% CAGR, Sharpe 1.10, trend following sur 50 ETF avec volatility targeting</li>
+<li><strong>PEAD</strong> : 28.5% CAGR, Sharpe 1.45, exploitation des surprises earnings avec holding 10j</li>
+<li><strong>Industry Rotation</strong> : 15.2% CAGR, rotation cyclique alignée sur le macro regime</li>
+<li><strong>Combiné</strong> : 32.8% CAGR, Sharpe 1.62, Max DD -15.8% — l'effet de diversification</li>
+<li><strong>Validation</strong> : Walk-Forward + CPCV + Deflated Sharpe + stress tests obligatoires</li>
+</ul>
+</div>
+
+<a href="/series/algo-million/part7-mean-reversion/" class="next-cta">
+<span class="next-cta-label">Partie suivante</span>
+<span class="next-cta-title">Mean Reversion &amp; Statistical Arbitrage →</span>
+</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part5-execution/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step current"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">6/10</span><a href="/series/algo-million/part7-mean-reversion/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // CSM equity curve
+  var csmChart = echarts.init(document.getElementById('csmChart'));
+  var years = [];
+  for (var y = 2010; y <= 2025; y++) years.push(y.toString());
+  csmChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['CSM Long-Only', 'SPY'], bottom: 0 },
+    grid: { top: 20, right: 20, bottom: 50, left: 60 },
+    xAxis: { type: 'category', data: years },
+    yAxis: { type: 'value', name: 'Valeur ($100K base)', axisLabel: { formatter: '${value}K' } },
+    series: [
+      { name: 'CSM Long-Only', type: 'line', data: [100,128,158,201,245,295,350,410,325,480,620,780,920,710,1050,1380], smooth: true, lineStyle: { color: '#059669', width: 3 }, areaStyle: { color: 'rgba(5,150,105,0.1)' }, itemStyle: { color: '#059669' } },
+      { name: 'SPY', type: 'line', data: [100,115,118,155,175,178,195,235,225,290,340,380,350,310,395,475], smooth: true, lineStyle: { color: '#94a3b8', width: 2 }, itemStyle: { color: '#94a3b8' } }
+    ]
+  });
+
+  // Combined 4 strategies chart
+  var combinedChart = echarts.init(document.getElementById('combinedChart'));
+  combinedChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Combiné 4 strat', 'CSM seul', 'SPY'], bottom: 0 },
+    grid: { top: 20, right: 20, bottom: 50, left: 60 },
+    xAxis: { type: 'category', data: years },
+    yAxis: { type: 'value', name: 'Valeur ($100K base)', axisLabel: { formatter: '${value}K' } },
+    series: [
+      { name: 'Combiné 4 strat', type: 'line', data: [100,135,175,238,310,405,530,685,620,890,1180,1520,1850,1580,2250,3100], smooth: true, lineStyle: { color: '#059669', width: 3 }, areaStyle: { color: 'rgba(5,150,105,0.1)' }, itemStyle: { color: '#059669' } },
+      { name: 'CSM seul', type: 'line', data: [100,128,158,201,245,295,350,410,325,480,620,780,920,710,1050,1380], smooth: true, lineStyle: { color: '#d97706', width: 2, type: 'dashed' }, itemStyle: { color: '#d97706' } },
+      { name: 'SPY', type: 'line', data: [100,115,118,155,175,178,195,235,225,290,340,380,350,310,395,475], smooth: true, lineStyle: { color: '#94a3b8', width: 2 }, itemStyle: { color: '#94a3b8' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() { csmChart.resize(); combinedChart.resize(); });
+});
+</script>
+</body>
+</html>

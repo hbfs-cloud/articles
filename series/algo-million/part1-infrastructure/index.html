@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 1/10 — Infrastructure & Stack Technique | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Setup complet d'une infrastructure de trading algorithmique : VM cloud, Interactive Brokers, Python stack, bases de données, monitoring. Guide expert pour profil quant/dev avec 30+ ans d'expérience.">
+<meta property="og:title" content="Infrastructure & Stack Technique — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 1 sur 10</div>
+<h1 class="hero-title">Infrastructure &amp; Stack Technique</h1>
+<p class="hero-subtitle">Setup complet de A à Z : VM cloud hardened, Interactive Brokers TWS/Gateway, Python stack production-grade, bases de données time-series, monitoring, sécurité, et comment faire 90% du travail avec Claude Code.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-server"></i> VM Cloud</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-building-columns"></i> Interactive Brokers</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-robot"></i> Claude Code</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-shield-halved"></i> Sécurité</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step current"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">1/10</span><a href="/series/algo-million/part2-data-pipeline/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#vision" class="fnav-item" data-section="vision"><i class="fa-solid fa-eye"></i><span>Vision</span></a><a href="#vm" class="fnav-item" data-section="vm"><i class="fa-solid fa-server"></i><span>VM Setup</span></a><a href="#ibkr" class="fnav-item" data-section="ibkr"><i class="fa-solid fa-building-columns"></i><span>IBKR Setup</span></a><a href="#stack" class="fnav-item" data-section="stack"><i class="fa-solid fa-layer-group"></i><span>Python Stack</span></a><a href="#claude" class="fnav-item" data-section="claude"><i class="fa-solid fa-robot"></i><span>Claude Code</span></a><a href="#securite" class="fnav-item" data-section="securite"><i class="fa-solid fa-shield-halved"></i><span>Sécurité</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="vision"><i class="fa-solid fa-eye"></i> Vision et objectifs</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-eye"></i> De 100K€ au Million — Le plan en 24 mois</h2>
+
+<p>Cette série est conçue pour un profil <strong>quant/dev/ops/data analyst/trader</strong> avec 30+ ans d'expérience en hedge fund. L'objectif est clair : transformer 100 000€ en 1 000 000€ en moins de 24 mois, sans levier, uniquement en positions longues sur actions et ETF multi-régions (US, EU, APAC), avec un drawdown maximum de 25%.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-calculator"></i> Les mathématiques de l'objectif</h4>
+<ul>
+<li><strong>Capital initial</strong> : 100 000€</li>
+<li><strong>Capital cible</strong> : 1 000 000€</li>
+<li><strong>Horizon</strong> : 24 mois</li>
+<li><strong>CAGR requis</strong> : (1M/100K)^(1/2) - 1 = <strong>216%</strong> (irréaliste en buy-and-hold, faisable en algo actif)</li>
+<li><strong>Return mensuel moyen requis</strong> : (10)^(1/24) - 1 ≈ <strong>10.4% par mois</strong></li>
+<li><strong>Contrainte DD</strong> : Max Drawdown ≤ 25%</li>
+<li><strong>Contrainte levier</strong> : Aucun (margin 1:1 uniquement)</li>
+<li><strong>Contrainte direction</strong> : Long only (pas de short selling)</li>
+</ul>
+<p>Pour atteindre cet objectif, il faut <strong>N stratégies complémentaires</strong> avec rotation adaptative selon le régime de marché. Aucune stratégie seule ne peut fournir un CAGR de 216%. C'est la <strong>combinaison et la gestion dynamique</strong> de 8-12 stratégies qui rend l'objectif atteignable.</p>
+</div>
+
+<h3>L'architecture cible en un coup d'œil</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Composant</th><th>Technologie</th><th>Rôle</th><th>Coût/mois</th></tr></thead>
+<tbody>
+<tr><td><strong>VM Cloud</strong></td><td>Hetzner CPX41 (AMD, 8 vCPU, 16 GB)</td><td>Exécution 24/7, backtest, data pipeline</td><td>~30€</td></tr>
+<tr><td><strong>Broker</strong></td><td>Interactive Brokers Pro</td><td>Exécution multi-marché, data feed gratuit</td><td>~10€ (market data)</td></tr>
+<tr><td><strong>Language</strong></td><td>Python 3.12 + Rust (extensions critiques)</td><td>Core framework, stratégies, ML</td><td>Gratuit</td></tr>
+<tr><td><strong>Database</strong></td><td>TimescaleDB (PostgreSQL) + DuckDB</td><td>Stockage bars/features, analytics</td><td>Gratuit (self-hosted)</td></tr>
+<tr><td><strong>Orchestration</strong></td><td>systemd + cron + healthcheck</td><td>Scheduling, monitoring, restart</td><td>Gratuit</td></tr>
+<tr><td><strong>AI Assistant</strong></td><td>Claude Code (claude -p)</td><td>Génération de code, debug, analyse</td><td>~$20 (API)</td></tr>
+<tr><td><strong>Alertes</strong></td><td>Discord webhooks + email SMTP</td><td>Notifications trades, erreurs, P&L</td><td>Gratuit</td></tr>
+<tr><td><strong>Versionning</strong></td><td>Git + GitHub (privé)</td><td>Code, configs, backtest results</td><td>Gratuit</td></tr>
+<tr><td><strong>Total</strong></td><td></td><td></td><td><strong>~60€/mois</strong></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section-divider" id="vm"><i class="fa-solid fa-server"></i> Setup de la VM Cloud</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-server"></i> VM Cloud — Pourquoi et comment</h2>
+
+<p>Une VM cloud plutôt qu'un ordinateur local pour plusieurs raisons critiques : <strong>uptime 99.99%</strong>, pas de coupure de courant/internet, latence réseau réduite (datacenters proches des exchanges), et isolation de l'environnement de production.</p>
+
+<h3>Comparatif des providers cloud pour le trading</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Provider</th><th>Config</th><th>Prix/mois</th><th>Datacenter</th><th>Latence NYSE</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td><strong>Hetzner</strong></td><td>CPX41 (8 vCPU, 16 GB, 240 GB NVMe)</td><td>~28€</td><td>Falkenstein/Nuremberg</td><td>~80ms</td><td>✅ Meilleur rapport qualité/prix</td></tr>
+<tr><td><strong>OVH</strong></td><td>B2-30 (8 vCPU, 30 GB, 200 GB)</td><td>~32€</td><td>Gravelines/Strasbourg</td><td>~85ms</td><td>✅ Bon pour EU, backup</td></tr>
+<tr><td><strong>AWS EC2</strong></td><td>c6a.2xlarge (8 vCPU, 16 GB)</td><td>~$200</td><td>us-east-1 (Virginia)</td><td>~5ms</td><td>⚠️ Cher mais latence minimale</td></tr>
+<tr><td><strong>DigitalOcean</strong></td><td>Premium (8 vCPU, 16 GB)</td><td>~$96</td><td>NYC/SFO</td><td>~10ms</td><td>⚠️ Bon mais cher pour ce qu'il offre</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-terminal"></i> Prompt Claude Code : Setup complet de la VM</h4>
+<pre><code># Prompt pour Claude Code :
+claude -p "Configure une VM Ubuntu 24.04 pour le trading algo:
+1. Hardening SSH (clé ED25519 only, no password, port 2222)
+2. UFW firewall (2222, 4001-4002 pour IBKR, 5432 PostgreSQL local only)
+3. fail2ban configuré pour SSH
+4. Python 3.12 avec pyenv + venv dédié 'algo'
+5. TimescaleDB (PostgreSQL 16 + extension timescale)
+6. DuckDB 1.0
+7. Redis pour le cache temps réel
+8. systemd service templates pour les stratégies
+9. Logrotate pour les logs trading
+10. Monitoring: node_exporter + custom health endpoint
+11. Cron job: daily backup DB vers S3-compatible (Hetzner Object Storage)
+12. unattended-upgrades pour les patches de sécurité
+Génère tous les scripts et configs, explique chaque étape."</code></pre>
+</div>
+</div>
+
+<div class="section-divider" id="ibkr"><i class="fa-solid fa-building-columns"></i> Interactive Brokers Setup</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-building-columns"></i> IBKR — Le broker de référence pour l'algo retail</h2>
+
+<p><strong>Interactive Brokers Pro</strong> est le seul broker qui offre simultanément : accès à 150+ marchés mondiaux, API complète (TWS API / ib_insync), commissions ultra-compétitives, market data gratuit avec $10K+ d'equity, et le Securities Lending Program pour revenus passifs.</p>
+
+<h3>Configuration IBKR pour l'algo trading</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Setting</th><th>Valeur</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td><strong>Account Type</strong></td><td>Individual Pro (pas Lite !)</td><td>Pro = routing direct vers les exchanges, pas d'internalisation PFOF</td></tr>
+<tr><td><strong>Base Currency</strong></td><td>EUR</td><td>Évite les frais de conversion pour les achats EU</td></tr>
+<tr><td><strong>Market Data</strong></td><td>US Securities Snapshot + NYSE/NASDAQ Level 1</td><td>Gratuit avec > $10K equity. Suffisant pour notre stratégie daily</td></tr>
+<tr><td><strong>API Connection</strong></td><td>IB Gateway (headless, pas TWS)</td><td>IB Gateway est plus stable et consomme moins de mémoire que TWS</td></tr>
+<tr><td><strong>API Port</strong></td><td>4001 (live) / 4002 (paper)</td><td>Standard IBKR. Configurer dans ibgateway.conf</td></tr>
+<tr><td><strong>Max Order Rate</strong></td><td>50 orders/second</td><td>Largement suffisant pour des stratégies daily/swing</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code># Prompt Claude Code : Setup ib_insync + IB Gateway
+claude -p "Crée un module Python pour la connexion IBKR:
+1. Classe IBKRConnection avec reconnexion automatique
+2. IB Gateway en mode headless sur VM Linux (Docker ou natif)
+3. Heartbeat monitoring (ping toutes les 30s, alerte Discord si down)
+4. Méthodes: get_positions(), place_order(), get_bars(), get_account_summary()
+5. Rate limiting intelligent (max 45 req/s avec backoff)
+6. Logging complet (chaque requête + réponse)
+7. Mode paper trading toggle (port 4001 vs 4002)
+8. Error handling: automatic reconnect, frozen market data, pacing violations
+Utilise ib_insync 0.9.x avec asyncio. Teste avec paper trading."</code></pre>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-money-bill"></i> Coûts de trading IBKR Pro — Modèle tiered vs fixed</h4>
+<ul>
+<li><strong>US Stocks (Tiered)</strong> : $0.0035/action (min $0.35/ordre). Pour un portefeuille de 100K€ avec turnover 100%/mois → ~$200/mois de commissions</li>
+<li><strong>EU Stocks</strong> : 0.05% de la valeur (min €1.25). Plus cher que US mais acceptable pour la diversification</li>
+<li><strong>ETF</strong> : Même tarif que les actions. Les ETF EU (UCITS) sont accessibles en EUR</li>
+<li><strong>FX Conversion</strong> : 0.00002 (2 pips) — négligeable si on garde les positions en devise locale</li>
+</ul>
+</div>
+</div>
+
+<div class="section-divider" id="stack"><i class="fa-solid fa-layer-group"></i> Python Stack Production</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-layer-group"></i> Le stack Python production-grade</h2>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Catégorie</th><th>Package</th><th>Version</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><strong>Broker API</strong></td><td>ib_insync</td><td>0.9.86</td><td>Interface IBKR asynchrone</td></tr>
+<tr><td><strong>Data</strong></td><td>pandas, polars</td><td>2.2, 1.x</td><td>DataFrames. Polars pour le backtest (10× plus rapide)</td></tr>
+<tr><td><strong>ML/Stats</strong></td><td>scikit-learn, xgboost, statsmodels</td><td>1.5, 2.1, 0.14</td><td>Régimes, facteurs, classification</td></tr>
+<tr><td><strong>Backtest</strong></td><td>vectorbt</td><td>0.26</td><td>Backtest vectorisé ultra-rapide (1000× plus rapide que event-driven)</td></tr>
+<tr><td><strong>Optimization</strong></td><td>scipy, cvxpy</td><td>1.14, 1.5</td><td>Portfolio optimization, risk budgeting</td></tr>
+<tr><td><strong>Database</strong></td><td>psycopg2, duckdb</td><td>2.9, 1.0</td><td>TimescaleDB + analytics locale</td></tr>
+<tr><td><strong>Monitoring</strong></td><td>prometheus_client, structlog</td><td>0.21, 24.x</td><td>Métriques + logging structuré JSON</td></tr>
+<tr><td><strong>Alertes</strong></td><td>discord-webhook, aiohttp</td><td>1.3, 3.9</td><td>Notifications Discord</td></tr>
+<tr><td><strong>Scheduling</strong></td><td>APScheduler</td><td>3.10</td><td>Cron-like scheduler en Python</td></tr>
+<tr><td><strong>Config</strong></td><td>pydantic-settings, tomllib</td><td>2.5, stdlib</td><td>Configuration typée et validée</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code># Prompt Claude Code : Scaffold du projet
+claude -p "Crée la structure d'un projet Python de trading algo:
+algo_trader/
+├── config/          # TOML configs (strategies, broker, alerts)
+├── core/            # Engine principal (scheduler, event bus, state)
+├── data/            # Data pipeline (fetchers, validators, stores)
+├── strategies/      # N stratégies (interface commune + implémentations)
+├── portfolio/       # Portfolio construction + risk management
+├── execution/       # Order management, IBKR interface
+├── monitoring/      # Health checks, Prometheus metrics, Discord
+├── backtest/        # Backtesting engine (vectorbt wrapper)
+├── ml/              # Machine learning models (regime, scoring)
+├── scripts/         # CLI scripts (run, backtest, report)
+└── tests/           # Unit + integration tests
+
+Chaque module a un __init__.py avec les exports publics.
+L'engine principal utilise un event bus asyncio pour découpler les composants.
+Toutes les stratégies héritent de BaseStrategy avec les méthodes:
+  generate_signals(), calculate_positions(), on_fill(), on_cancel()
+Génère le code complet avec typing strict et docstrings."</code></pre>
+</div>
+
+<div class="section-divider" id="claude"><i class="fa-solid fa-robot"></i> Workflow Claude Code</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-robot"></i> Faire 90% du travail avec Claude Code</h2>
+
+<p>Claude Code est l'arme secrète de cette série. En tant que quant/dev avec 30 ans d'expérience, vous savez <strong>quoi</strong> construire — Claude Code s'occupe du <strong>comment</strong>. Voici le workflow optimal :</p>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-lightbulb"></i></div>
+<h4>1. Design & Spec</h4>
+<p>VOUS : Définissez l'architecture, les contraintes, les métriques cibles. Claude ne comprend pas votre alpha — c'est votre valeur ajoutée unique</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-code"></i></div>
+<h4>2. Implémentation</h4>
+<p>CLAUDE : Écrit le code Python, les tests, les configs. Prompt détaillé → code production-grade. Itérez avec « corrige ceci, ajoute cela »</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-bug"></i></div>
+<h4>3. Debug & Optimisation</h4>
+<p>CLAUDE : Analyse les logs, identifie les bugs, optimise les performances. « Pourquoi ce backtest montre un Sharpe de 0.2 ? Analyse les trades perdants et propose des améliorations »</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-chart-line"></i></div>
+<h4>4. Analyse & Itération</h4>
+<p>VOUS : Validez les résultats, prenez les décisions stratégiques. Claude ne trade pas à votre place — il accélère votre boucle de développement ×10</p>
+</div>
+</div>
+
+<h3>Prompts Claude Code essentiels pour cette série</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Tâche</th><th>Prompt type</th></tr></thead>
+<tbody>
+<tr><td><strong>Nouvelle stratégie</strong></td><td><code>claude -p "Implémente une stratégie momentum cross-section sur US+EU+APAC stocks, rebalancement hebdomadaire, top 20 par momentum 12-1 mois, filtre volume > $5M/jour, filtre de volatilité. Hérite de BaseStrategy, avec backtest vectorbt sur 5 ans."</code></td></tr>
+<tr><td><strong>Backtest</strong></td><td><code>claude -p "Lance un walk-forward backtest de la stratégie momentum: train 252j, test 63j, 20 folds. Métriques: CAGR, Sharpe, MaxDD, Calmar, Win Rate, Avg Trade. Génère un rapport HTML avec charts."</code></td></tr>
+<tr><td><strong>Debug</strong></td><td><code>claude -p "Le dernier run a eu 3 trades rejected par IBKR avec code 201. Lis les logs dans /var/log/algo/execution.log et diagnostique. Propose un fix."</code></td></tr>
+<tr><td><strong>Monitoring</strong></td><td><code>claude -p "Crée un dashboard Discord qui poste chaque matin à 7h: P&L du jour/semaine/mois, positions ouvertes, drawdown actuel, prochains rebalancements, alertes si DD > 10%."</code></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section-divider" id="securite"><i class="fa-solid fa-shield-halved"></i> Sécurité de la VM</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-shield-halved"></i> Hardening de la VM de trading</h2>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Mesure</th><th>Implémentation</th><th>Criticité</th></tr></thead>
+<tbody>
+<tr><td><strong>SSH</strong></td><td>Clé ED25519 uniquement, port non standard, no password auth</td><td>🔴 Critique</td></tr>
+<tr><td><strong>Firewall</strong></td><td>UFW : seuls les ports nécessaires (SSH, IBKR 4001/4002)</td><td>🔴 Critique</td></tr>
+<tr><td><strong>fail2ban</strong></td><td>Ban après 3 tentatives, 24h de ban</td><td>🟡 Important</td></tr>
+<tr><td><strong>Secrets</strong></td><td>Variables d'environnement ou Vault (pas dans le code, pas dans git)</td><td>🔴 Critique</td></tr>
+<tr><td><strong>2FA IBKR</strong></td><td>IBKR Mobile Auth obligatoire (complique le headless, mais nécessaire)</td><td>🔴 Critique</td></tr>
+<tr><td><strong>Encryption</strong></td><td>LUKS full-disk encryption + TLS pour toutes les connexions DB</td><td>🟡 Important</td></tr>
+<tr><td><strong>Backups</strong></td><td>Daily backup chiffré de la DB + configs vers S3</td><td>🔴 Critique</td></tr>
+<tr><td><strong>Updates</strong></td><td>unattended-upgrades pour les patches de sécurité</td><td>🟡 Important</td></tr>
+<tr><td><strong>Monitoring</strong></td><td>Alerte Discord si le service tombe ou si CPU/RAM anomal</td><td>🟡 Important</td></tr>
+<tr><td><strong>Kill switch</strong></td><td>Script qui liquide TOUTES les positions en 1 commande si urgence</td><td>🔴 Critique</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Points clés de cette partie</h4>
+<ul>
+<li>Objectif : 100K€ → 1M€ en 24 mois, sans levier, long only, multi-région, DD max 25%</li>
+<li>CAGR requis de ~216% → nécessite 8-12 stratégies complémentaires avec rotation adaptative</li>
+<li>VM Hetzner CPX41 (~30€/mois) + IBKR Pro = infrastructure complète pour ~60€/mois</li>
+<li>Stack Python : ib_insync, polars, vectorbt, xgboost, TimescaleDB, Discord webhooks</li>
+<li>Claude Code accélère le développement ×10 : vous définissez le quoi, Claude fait le comment</li>
+<li>Sécurité non négociable : SSH hardened, firewall, 2FA IBKR, secrets en env vars, kill switch</li>
+</ul>
+</div>
+
+<div class="next-cta">
+<p><strong>Partie 2 →</strong> <a href="/series/algo-million/part2-data-pipeline/">Data Pipeline &amp; Feature Engineering</a> — Construction du pipeline de données multi-source avec 50+ features, validation de qualité, et feature store optimisé pour le backtest.</p>
+</div>
+</div>
+
+</div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

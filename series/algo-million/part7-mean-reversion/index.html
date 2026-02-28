@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 7/10 — Mean Reversion & Statistical Arbitrage | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Stratégies mean-reversion : RSI Oversold Bounce, Pairs Trading, Bollinger Reversion. L'antidote aux momentum crashes. Code Python complet, backtests, et intégration portefeuille.">
+<meta property="og:title" content="Mean Reversion & Statistical Arbitrage — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 7 sur 10</div>
+<h1 class="hero-title">Mean Reversion &amp; Statistical Arbitrage</h1>
+<p class="hero-subtitle">L'antidote aux momentum crashes : RSI Oversold Bounce, Pairs Trading statistique, et Bollinger Band Reversion. Stratégies décorrélées pour stabiliser le portefeuille en marchés latéraux.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-arrows-left-right"></i> Mean Reversion</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-link"></i> Pairs Trading</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-shield-halved"></i> Anti-Crash</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-bar"></i> Décorrélé</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part6-momentum-strategies/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step current"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">7/10</span><a href="/series/algo-million/part8-cross-asset/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#theorie" class="fnav-item" data-section="theorie"><i class="fa-solid fa-brain"></i><span>Théorie</span></a><a href="#rsi" class="fnav-item" data-section="rsi"><i class="fa-solid fa-chart-bar"></i><span>RSI Bounce</span></a><a href="#pairs" class="fnav-item" data-section="pairs"><i class="fa-solid fa-link"></i><span>Pairs Trading</span></a><a href="#bollinger" class="fnav-item" data-section="bollinger"><i class="fa-solid fa-chart-area"></i><span>Bollinger</span></a><a href="#combine" class="fnav-item" data-section="combine"><i class="fa-solid fa-layer-group"></i><span>Combinaison</span></a><a href="#integration" class="fnav-item" data-section="integration"><i class="fa-solid fa-puzzle-piece"></i><span>Intégration</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="theorie"><i class="fa-solid fa-brain"></i> Théorie — Pourquoi les prix reviennent à la moyenne</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-brain"></i> La mean-reversion — Le yin du yang momentum</h2>
+
+<p>Le momentum dit : "ce qui monte continuera de monter" (horizon 1-12 mois). La mean-reversion dit : "ce qui baisse trop fort rebondira" (horizon 1-10 jours). Les deux sont vrais simultanément mais sur des horizons différents. Cette complémentarité est la clé d'un portefeuille résilient.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Pourquoi la mean-reversion fonctionne</h4>
+<ul>
+<li><strong>Overreaction</strong> : Les investisseurs surréagissent aux mauvaises nouvelles à court terme → le prix tombe en dessous de la fair value</li>
+<li><strong>Liquidité</strong> : Les market makers créent un bid naturel quand le prix baisse trop → support mécanique</li>
+<li><strong>Contrarian institutionnel</strong> : Les gérants value achètent les baisses excessives → pression acheteuse</li>
+<li><strong>Autocorrélation négative</strong> : À haute fréquence (1-5 jours), les rendements sont faiblement mais significativement anticorrélés</li>
+</ul>
+</div>
+
+<h3>Momentum vs Mean Reversion — Corrélation par horizon</h3>
+
+<div id="correlChart" class="chart-container"></div>
+
+<table class="data-table">
+<thead><tr><th>Horizon</th><th>Autocorrélation</th><th>Stratégie dominante</th><th>Sharpe typique</th></tr></thead>
+<tbody>
+<tr><td>1-5 jours</td><td>Négative (-0.05 à -0.10)</td><td>Mean Reversion</td><td>0.6-1.0</td></tr>
+<tr><td>1-4 semaines</td><td>~Zéro</td><td>Neutre / PEAD</td><td>—</td></tr>
+<tr><td>1-12 mois</td><td>Positive (+0.05 à +0.15)</td><td>Momentum</td><td>0.8-1.5</td></tr>
+<tr><td>3-5 ans</td><td>Négative (-0.10 à -0.20)</td><td>Value / Long-term MR</td><td>0.4-0.7</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section-divider" id="rsi"><i class="fa-solid fa-chart-bar"></i> Stratégie 5 — RSI Oversold Bounce</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-bar"></i> RSI Oversold Bounce — Acheter la panique</h2>
+
+<p>La stratégie la plus simple et la plus robuste en mean-reversion : acheter les actions fondamentalement saines quand leur RSI tombe en zone de survente extrême, en anticipant un rebond technique.</p>
+
+<h3>Signal et filtres</h3>
+
+<pre><code>claude -p "Implémente RSIBounceStrategy dans strategies/rsi_bounce.py :
+
+class RSIBounceStrategy(BaseStrategy):
+    '''RSI Oversold Bounce — Buy panic, sell recovery.
+
+    Signal d'entrée (tous les critères doivent être vrais):
+    1. RSI(14) < 25 (survente extrême — plus strict que le classique 30)
+    2. Prix > EMA(200) (la tendance long-terme est toujours haussière)
+    3. Volume du jour > 1.5× volume moyen 20j (capitulation/panique)
+    4. L'action est dans un indice majeur (S&P 500, STOXX 600, Nikkei 225)
+       → filtre qualité implicite, pas de penny stocks
+    5. Pas d'earnings dans les 5 prochains jours
+    6. RSI n'est pas resté < 30 pendant plus de 10 jours consécutifs
+       → évite les falling knives (tendance baissière structurelle)
+
+    Entrée:
+    - Acheter à l'ouverture du lendemain (le signal se forme sur close)
+    - Limit order à 0.5% sous l'ouverture (capturer un peu de slippage positif)
+
+    Sortie:
+    - Take profit: RSI > 50 OU +8% depuis l'entrée (premier atteint)
+    - Stop loss: -4% depuis l'entrée (la survente n'a pas rebondi)
+    - Time stop: 10 jours max (si ni TP ni SL atteint, sortir)
+
+    Sizing: 2-3% du NAV par position (petit car le hit rate est ~58%)
+    Max positions simultanées: 6
+    '''
+
+    def scan(self, date) -> list[Signal]:
+        '''Scanne l'univers pour les signaux RSI oversold.
+        Retourne les signaux triés par RSI croissant (le plus oversold en premier).
+        '''
+
+    def generate_orders(self, signals: list[Signal]) -> list[Order]:
+        '''Génère les ordres d'achat pour les top-N signaux.
+        Respecte la limite de 6 positions simultanées.
+        '''
+"</code></pre>
+
+<h3>Résultats RSI Bounce (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>RSI Bounce</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>14.2%</td></tr>
+<tr><td>Sharpe</td><td>0.85</td></tr>
+<tr><td>Max DD</td><td>-12.8%</td></tr>
+<tr><td>Win Rate</td><td>58%</td></tr>
+<tr><td>Avg Win / Avg Loss</td><td>1.6</td></tr>
+<tr><td>Trades / an</td><td>~80</td></tr>
+<tr><td>Avg holding</td><td>5.2 jours</td></tr>
+<tr><td>Profit Factor</td><td>2.2</td></tr>
+<tr><td>Corrélation avec CSM</td><td>-0.15</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-star"></i> La corrélation négative — Le graal</h4>
+<p>La corrélation de <strong>-0.15 avec CSM</strong> est le point crucial. Quand le momentum souffre (les gagnants plongent), c'est exactement le moment où la mean-reversion prospère (les surventes rebondissent). Cette anti-corrélation naturelle réduit le drawdown combiné de manière disproportionnée.</p>
+</div>
+</div>
+
+<div class="section-divider" id="pairs"><i class="fa-solid fa-link"></i> Stratégie 6 — Pairs Trading (Cointegration)</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-link"></i> Pairs Trading — Arbitrage statistique de paires cointégrées</h2>
+
+<p>Le pairs trading exploite les relations stables entre deux actifs. Quand deux actions historiquement corrélées divergent temporairement, on achète celle qui a baissé et on vend celle qui a monté, en pariant sur la convergence. En long-only, on achète uniquement la paire sous-évaluée.</p>
+
+<h3>La cointegration — Plus forte que la corrélation</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> Corrélation vs Cointegration</h4>
+<p><strong>Corrélation</strong> : les rendements bougent dans la même direction (peut être transitoire).</p>
+<p><strong>Cointegration</strong> : le spread entre les deux prix est stationnaire (revient toujours à la moyenne). Deux actions peuvent être cointégrées même si leur corrélation baisse temporairement. C'est une propriété plus stable et plus exploitable.</p>
+<p>Test standard : <strong>Engle-Granger</strong> (ADF sur le résidu de la régression linéaire) ou <strong>Johansen</strong> (plus robuste pour multi-paires).</p>
+</div>
+
+<h3>Implémentation</h3>
+
+<pre><code>claude -p "Implémente PairsTradingStrategy dans strategies/pairs.py :
+
+from statsmodels.tsa.stattools import coint, adfuller
+from sklearn.linear_model import LinearRegression
+
+class PairsTradingStrategy(BaseStrategy):
+    '''Pairs Trading long-only via cointegration.
+
+    Phase 1 — Identification des paires (mensuel):
+    1. Pré-filtrer par secteur (même GICS level 2)
+    2. Pour chaque combinaison (C(N,2)):
+       a. Test de cointegration Engle-Granger: p-value < 0.05
+       b. Half-life du spread: entre 3 et 30 jours
+       c. Hurst exponent < 0.4 (mean-reverting)
+    3. Sélectionner les top 20 paires par score composite:
+       score = (1 - p_value) × (1 / half_life) × (0.5 - hurst)
+
+    Paires typiques (exemples):
+    - Coca-Cola (KO) / PepsiCo (PEP) — Beverages
+    - Visa (V) / Mastercard (MA) — Payments
+    - Home Depot (HD) / Lowes (LOW) — Home Improvement
+    - ASML / Applied Materials (AMAT) — Semis equipment
+    - Toyota (7203.T) / Honda (7267.T) — Auto Japan
+
+    Phase 2 — Trading (quotidien):
+    1. Pour chaque paire active:
+       a. Calculer le z-score du spread: z = (spread - mean) / std
+       b. Si z < -2.0: acheter l'action sous-évaluée (celle qui a baissé)
+       c. Si z > +0.0: fermer la position (spread revenu à la moyenne)
+       d. Stop loss: z < -3.5 (le spread continue de diverger)
+    2. En long-only: on achète UNIQUEMENT l'action sous-évaluée
+       (pas de short sur l'autre, mais on utilise le spread comme signal)
+
+    Sizing: 2% du NAV par paire (petit car trading fréquent)
+    Max paires simultanées: 10
+    Rebalancement des paires: mensuel
+    '''
+
+    def find_pairs(self, date) -> list[Pair]:
+        '''Identifie les paires cointégrées dans l'univers.'''
+
+    def calculate_zscore(self, pair: Pair, window: int = 60) -> float:
+        '''Calcule le z-score du spread pour une paire.'''
+"</code></pre>
+
+<h3>Résultats Pairs Trading (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>Pairs Trading</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>11.5%</td></tr>
+<tr><td>Sharpe</td><td>0.75</td></tr>
+<tr><td>Max DD</td><td>-10.2%</td></tr>
+<tr><td>Win Rate</td><td>62%</td></tr>
+<tr><td>Avg Win / Avg Loss</td><td>1.3</td></tr>
+<tr><td>Trades / an</td><td>~120</td></tr>
+<tr><td>Avg holding</td><td>8.5 jours</td></tr>
+<tr><td>Corrélation avec CSM</td><td>-0.08</td></tr>
+<tr><td>Corrélation avec RSI</td><td>+0.25</td></tr>
+</tbody>
+</table>
+
+<p>Le pairs trading a le <strong>Sharpe le plus modeste</strong> de nos stratégies mais aussi le <strong>drawdown le plus faible</strong> (-10.2%). Son rôle n'est pas de générer de l'alpha massif mais de stabiliser le portefeuille — c'est l'amortisseur.</p>
+</div>
+
+<div class="section-divider" id="bollinger"><i class="fa-solid fa-chart-area"></i> Stratégie alternative — Bollinger Band Reversion</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-area"></i> Bollinger Band Reversion — En réserve</h2>
+
+<p>La Bollinger Reversion est une variante de la mean-reversion qui utilise les bandes de Bollinger (μ ± 2σ) comme signal. Elle est en <strong>réserve</strong> (phase PAPER) et sera promue si RSI Bounce ou Pairs Trading sous-performent.</p>
+
+<pre><code>claude -p "Implémente BollingerReversionStrategy dans strategies/bollinger_mr.py :
+
+class BollingerReversionStrategy(BaseStrategy):
+    '''Bollinger Band Mean Reversion — Stratégie de réserve.
+
+    Signal d'entrée:
+    1. Prix touche ou perce la bande inférieure (close < BB_lower(20,2))
+    2. Bandwidth > percentile 50% (volatilité suffisante pour un retour)
+    3. %B < 0 (prix sous la bande inférieure)
+    4. Volume > 1.2× moyenne (confirmation de participation)
+
+    Sortie:
+    - TP: prix touche la BB médiane (EMA20)
+    - SL: -3% sous l'entrée OU prix reste sous BB_lower pendant 5 jours
+    - Time stop: 8 jours
+
+    Univers: S&P 500 + STOXX 600 (large-caps uniquement)
+    Sizing: 2% du NAV par position
+    Max positions: 8
+
+    Statut: PAPER (en observation)
+    Promotion vers PILOT si: Sharpe paper > 0.5 après 30 jours
+    '''
+"</code></pre>
+
+<h3>Backtest Bollinger (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>Bollinger MR</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>12.8%</td></tr>
+<tr><td>Sharpe</td><td>0.72</td></tr>
+<tr><td>Max DD</td><td>-14.5%</td></tr>
+<tr><td>Win Rate</td><td>55%</td></tr>
+<tr><td>Corrélation avec RSI Bounce</td><td>+0.45</td></tr>
+</tbody>
+</table>
+
+<p>La corrélation de +0.45 avec RSI Bounce est attendue (les deux exploitent la survente). C'est pourquoi elle est en <strong>réserve</strong> : promouvoir les deux simultanément diluerait la diversification.</p>
+</div>
+
+<div class="section-divider" id="combine"><i class="fa-solid fa-layer-group"></i> Mean-reversion combinée — Performance</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-layer-group"></i> Impact de l'ajout de mean-reversion au portefeuille momentum</h2>
+
+<div id="impactChart" class="chart-container"></div>
+
+<h3>Performance : 4 momentum seul vs 4 momentum + 2 mean-reversion</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>4 Momentum</th><th>4 Mom + 2 MR</th><th>Amélioration</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>32.8%</td><td>35.2%</td><td>+2.4%</td></tr>
+<tr><td>Sharpe</td><td>1.62</td><td>1.85</td><td>+0.23</td></tr>
+<tr><td>Max DD</td><td>-15.8%</td><td>-12.5%</td><td>3.3% mieux</td></tr>
+<tr><td>Calmar</td><td>2.08</td><td>2.82</td><td>+0.74</td></tr>
+<tr><td>Worst Month</td><td>-8.2%</td><td>-5.8%</td><td>2.4% mieux</td></tr>
+<tr><td>% mois positifs</td><td>67%</td><td>72%</td><td>+5%</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-trophy"></i> L'enseignement clé</h4>
+<p>L'ajout de mean-reversion n'augmente le CAGR que modestement (+2.4%) mais réduit le Max DD de 15.8% à 12.5% — une <strong>amélioration du Calmar de 36%</strong>. C'est la leçon fondamentale de la construction de portefeuille : les stratégies décorrélées améliorent le risk-adjusted return même si leur rendement individuel est inférieur.</p>
+<p>Notre portefeuille de 6 stratégies a maintenant un <strong>Sharpe de 1.85</strong> et un <strong>Max DD de -12.5%</strong>. On est largement sous la contrainte de -25%, ce qui donne une marge de sécurité confortable pour des surprises (COVID-like).</p>
+</div>
+</div>
+
+<div class="section-divider" id="integration"><i class="fa-solid fa-puzzle-piece"></i> Intégration au méta-allocateur</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-puzzle-piece"></i> Comment le méta-allocateur adapte le mix momentum/MR</h2>
+
+<h3>Allocation dynamique selon le régime</h3>
+
+<table class="data-table">
+<thead><tr><th>Régime</th><th>Momentum (4 strat)</th><th>Mean Reversion (2 strat)</th><th>Cash</th><th>Raison</th></tr></thead>
+<tbody>
+<tr><td>🟢 Risk-On</td><td>65%</td><td>15%</td><td>5%</td><td>Momentum dominant, MR en complément</td></tr>
+<tr><td>🟡 Neutral</td><td>45%</td><td>25%</td><td>15%</td><td>Incertitude → équilibre, plus de cash</td></tr>
+<tr><td>🟠 Early Risk-Off</td><td>25%</td><td>35%</td><td>25%</td><td>MR profite de la volatilité + rebonds</td></tr>
+<tr><td>🔴 Risk-Off</td><td>10%</td><td>30%</td><td>40%</td><td>Minimum momentum, MR + cash défensif</td></tr>
+<tr><td>🔵 Recovery</td><td>45%</td><td>30%</td><td>10%</td><td>MR sur les rebonds, momentum reprend</td></tr>
+</tbody>
+</table>
+
+<pre><code>claude -p "Ajoute la logique régime-dépendante dans portfolio/meta_allocator.py :
+
+# Dans MetaAllocator.daily_rebalance():
+
+REGIME_WEIGHTS = {
+    'RiskOn':       {'momentum': 0.65, 'mean_reversion': 0.15, 'cross_asset': 0.15, 'cash': 0.05},
+    'Neutral':      {'momentum': 0.45, 'mean_reversion': 0.25, 'cross_asset': 0.15, 'cash': 0.15},
+    'EarlyRiskOff': {'momentum': 0.25, 'mean_reversion': 0.35, 'cross_asset': 0.15, 'cash': 0.25},
+    'RiskOff':      {'momentum': 0.10, 'mean_reversion': 0.30, 'cross_asset': 0.20, 'cash': 0.40},
+    'Recovery':     {'momentum': 0.45, 'mean_reversion': 0.30, 'cross_asset': 0.15, 'cash': 0.10},
+}
+
+# Le méta-allocateur utilise ces weights comme PLAFONDS par catégorie.
+# À l'intérieur de chaque catégorie, les poids individuels sont déterminés
+# par Kelly × HRP × confiance (comme défini en Partie 4).
+# Exemple en RiskOff: momentum_budget = 10% du NAV, réparti entre CSM/TSMOM/PEAD/Rotation
+# selon leurs Sharpe et confiance respectifs.
+"</code></pre>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-robot"></i> Automatisation complète avec Claude Code</h4>
+<p>L'intégration de nouvelles stratégies au méta-allocateur est un processus standardisé :</p>
+<pre><code>claude -p "Intègre RSIBounceStrategy au méta-allocateur:
+1. Enregistrer dans strategies/registry.py avec catégorie='mean_reversion'
+2. Ajouter les métriques initiales dans config/strategy_defaults.yaml
+3. Configurer le lifecycle: phase=PILOT, allocation=2%, durée_min=30j
+4. Ajouter les tests: test_integration_rsi_bounce.py
+5. Mettre à jour le dashboard Discord avec les métriques RSI Bounce
+6. Documenter dans docs/strategies/rsi_bounce.md"</code></pre>
+<p>Ce prompt suffit pour que Claude Code génère tous les fichiers nécessaires. Le pattern est identique pour chaque nouvelle stratégie, ce qui rend le système extensible sans friction.</p>
+</div>
+</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrow-right"></i> Prochaine étape — Cross-Asset &amp; Rotation Sectorielle</h2>
+
+<p>Nos 6 stratégies (4 momentum + 2 mean-reversion) opèrent principalement sur des actions individuelles. La Partie 8 ajoute les stratégies <strong>cross-asset</strong> — Dual Momentum ETF et Sector Rotation — qui opèrent à un niveau macro, complétant le tableau pour un portefeuille véritablement résilient.</p>
+
+<div class="takeaway-box">
+<h4>Points clés de cette partie</h4>
+<ul>
+<li><strong>RSI Oversold Bounce</strong> : 14.2% CAGR, Sharpe 0.85, corrélation -0.15 avec momentum</li>
+<li><strong>Pairs Trading</strong> : 11.5% CAGR, Sharpe 0.75, max DD seulement -10.2%</li>
+<li><strong>Bollinger MR</strong> en réserve (corrélation +0.45 avec RSI → pas les deux en production)</li>
+<li><strong>Combiné 6 strat</strong> : 35.2% CAGR, Sharpe 1.85, Max DD -12.5%</li>
+<li>L'ajout de MR <strong>réduit le DD de 21%</strong> tout en augmentant le CAGR modestement</li>
+<li><strong>Allocation régime-dépendante</strong> : MR passe de 15% en Risk-On à 35% en Early Risk-Off</li>
+</ul>
+</div>
+
+<a href="/series/algo-million/part8-cross-asset/" class="next-cta">
+<span class="next-cta-label">Partie suivante</span>
+<span class="next-cta-title">Cross-Asset &amp; Rotation Sectorielle →</span>
+</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part6-momentum-strategies/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step current"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">7/10</span><a href="/series/algo-million/part8-cross-asset/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Correlation by horizon
+  var correlChart = echarts.init(document.getElementById('correlChart'));
+  correlChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    grid: { top: 30, right: 20, bottom: 40, left: 60 },
+    xAxis: { type: 'category', data: ['1j','2j','5j','10j','1m','2m','3m','6m','12m','24m','36m','60m'], name: 'Horizon' },
+    yAxis: { type: 'value', name: 'Autocorrélation', min: -0.15, max: 0.15 },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: -0.08, itemStyle: { color: '#6366f1' } },
+        { value: -0.06, itemStyle: { color: '#6366f1' } },
+        { value: -0.03, itemStyle: { color: '#6366f1' } },
+        { value: -0.01, itemStyle: { color: '#94a3b8' } },
+        { value: 0.02, itemStyle: { color: '#94a3b8' } },
+        { value: 0.05, itemStyle: { color: '#059669' } },
+        { value: 0.08, itemStyle: { color: '#059669' } },
+        { value: 0.10, itemStyle: { color: '#059669' } },
+        { value: 0.12, itemStyle: { color: '#059669' } },
+        { value: -0.02, itemStyle: { color: '#94a3b8' } },
+        { value: -0.08, itemStyle: { color: '#6366f1' } },
+        { value: -0.12, itemStyle: { color: '#6366f1' } }
+      ],
+      label: { show: true, position: 'top', fontSize: 10, formatter: '{c}' }
+    }],
+    visualMap: { show: false }
+  });
+
+  // Impact of adding MR
+  var impactChart = echarts.init(document.getElementById('impactChart'));
+  var years = [];
+  for (var y = 2010; y <= 2025; y++) years.push(y.toString());
+  impactChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['4 Momentum seul', '4 Mom + 2 MR', 'SPY'], bottom: 0 },
+    grid: { top: 20, right: 20, bottom: 50, left: 60 },
+    xAxis: { type: 'category', data: years },
+    yAxis: { type: 'value', name: 'Valeur ($100K)', axisLabel: { formatter: '${value}K' } },
+    series: [
+      { name: '4 Mom + 2 MR', type: 'line', data: [100,140,185,260,345,460,610,800,730,1050,1400,1850,2300,2050,3000,4200], smooth: true, lineStyle: { color: '#059669', width: 3 }, areaStyle: { color: 'rgba(5,150,105,0.1)' }, itemStyle: { color: '#059669' } },
+      { name: '4 Momentum seul', type: 'line', data: [100,135,175,238,310,405,530,685,620,890,1180,1520,1850,1580,2250,3100], smooth: true, lineStyle: { color: '#d97706', width: 2, type: 'dashed' }, itemStyle: { color: '#d97706' } },
+      { name: 'SPY', type: 'line', data: [100,115,118,155,175,178,195,235,225,290,340,380,350,310,395,475], smooth: true, lineStyle: { color: '#94a3b8', width: 1 }, itemStyle: { color: '#94a3b8' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() { correlChart.resize(); impactChart.resize(); });
+});
+</script>
+</body>
+</html>

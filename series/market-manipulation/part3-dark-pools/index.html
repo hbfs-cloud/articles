@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,speculative,formation,us" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 3/10 — Dark Pools & Flux Cachés | Manipulation de Marché | Market Watch</title>
+<meta name="description" content="Dark pools, ATS, internalisation PFOF, off-exchange trading. Comment les flux cachés sont utilisés pour manipuler les prix.">
+<meta property="og:title" content="Dark Pools & Flux Cachés — Le Guide Expert | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#fef2f2 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-crimson{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-mask"></i> Série Manipulation de Marché — Partie 3 sur 10</div>
+<h1 class="hero-title">Dark Pools &amp; Flux Cachés</h1>
+<p class="hero-subtitle">L'univers opaque du trading off-exchange : dark pools, ATS, internalisation PFOF, Citadel Connect. Comment 45% du volume US échappe aux bourses publiques et comment cela impacte la price discovery.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-crimson"><i class="fa-solid fa-eye-slash"></i> Dark Pools</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-building-columns"></i> ATS &amp; PFOF</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-magnifying-glass"></i> Détection</span>
+<span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-line"></i> Expert++</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/market-manipulation/part2-short-selling/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Manipulation de Marché</span><div class="series-steps"><a href="/series/market-manipulation/part1-anatomie/" class="series-step"><span class="series-num">1</span><span class="series-label">Anatomie</span></a><a href="/series/market-manipulation/part2-short-selling/" class="series-step"><span class="series-num">2</span><span class="series-label">Short Selling</span></a><a href="/series/market-manipulation/part3-dark-pools/" class="series-step current"><span class="series-num">3</span><span class="series-label">Dark Pools</span></a><a href="/series/market-manipulation/part4-options-max-pain/" class="series-step"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/market-manipulation/part5-volume-price-action/" class="series-step"><span class="series-num">5</span><span class="series-label">Volume</span></a><a href="/series/market-manipulation/part6-dilution-warrants/" class="series-step"><span class="series-num">6</span><span class="series-label">Dilution</span></a><a href="/series/market-manipulation/part7-social-media/" class="series-step"><span class="series-num">7</span><span class="series-label">Social Media</span></a><a href="/series/market-manipulation/part8-fonds-hostiles/" class="series-step"><span class="series-num">8</span><span class="series-label">Fonds Hostiles</span></a><a href="/series/market-manipulation/part9-scanner-detection/" class="series-step"><span class="series-num">9</span><span class="series-label">Scanner</span></a><a href="/series/market-manipulation/part10-strategies-trading/" class="series-step"><span class="series-num">10</span><span class="series-label">Stratégies</span></a></div><span class="series-counter">3/10</span><a href="/series/market-manipulation/part4-options-max-pain/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#architecture" class="fnav-item" data-section="architecture"><i class="fa-solid fa-network-wired"></i><span>Architecture</span></a><a href="#darkpools" class="fnav-item" data-section="darkpools"><i class="fa-solid fa-eye-slash"></i><span>Dark Pools</span></a><a href="#pfof" class="fnav-item" data-section="pfof"><i class="fa-solid fa-money-bill-transfer"></i><span>PFOF</span></a><a href="#detection" class="fnav-item" data-section="detection"><i class="fa-solid fa-magnifying-glass"></i><span>Détection</span></a><a href="#cas" class="fnav-item" data-section="cas"><i class="fa-solid fa-microscope"></i><span>Cas Pratiques</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fa-solid fa-shield-halved"></i><span>Stratégies</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="architecture"><i class="fa-solid fa-network-wired"></i> Architecture du marché US</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-network-wired"></i> Où vont réellement vos ordres ?</h2>
+
+<p>Quand un retail trader appuie sur « Acheter » depuis Robinhood, Webull, ou même IBKR, son ordre ne va pas directement à la Bourse de New York. En réalité, le parcours d'un ordre traverse un <strong>écosystème complexe de venues d'exécution</strong> dont la plupart sont opaques.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-sitemap"></i> Les 4 types de venues d'exécution</h4>
+<ol>
+<li><strong>Lit Exchanges</strong> (NYSE, NASDAQ, CBOE, IEX) — Bourses publiques avec carnet d'ordres visible. ~55% du volume US. Prix affichés en temps réel (NBBO)</li>
+<li><strong>Dark Pools / ATS</strong> (Crossfinder, SIGMA X, MS Pool) — Plateformes d'exécution privées. Ordres non affichés. ~14% du volume. Régulées par SEC mais opaques</li>
+<li><strong>Internaliseurs</strong> (Citadel Securities, Virtu, G1X) — Market makers qui exécutent les ordres retail en interne contre leur propre inventaire. ~30% du volume. PFOF</li>
+<li><strong>ECN/Wholesale</strong> (EDGX, EDGA, BYX) — Electronic Communication Networks, combinaison lit/dark</li>
+</ol>
+</div>
+
+<div id="venuesChart" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+<p>La répartition du volume entre ces venues a <strong>drastiquement changé</strong> en 20 ans. En 2000, plus de 80% du volume passait par NYSE et NASDAQ. En 2026, à peine 55% transite par les bourses publiques. Les 45% restants sont exécutés dans des venues opaques où la price discovery est limitée ou inexistante.</p>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Pourquoi c'est un problème pour les retail</h4>
+<p>Quand Citadel Securities internalise 40%+ des ordres retail, il voit votre flux <strong>avant</strong> le marché public. Ce flux retail est considéré comme « uninformed » (non informé), et il est massivement profitable pour l'internaliseur. Citadel génère ~$7B de revenus annuels principalement grâce à cette position d'intermédiaire. Les ordres d'achat retail sont exécutés hors-bourse, n'exercent pas de pression haussière sur le prix public, et les ordres de vente retail peuvent être routés vers le lit exchange pour exercer une pression baissière.</p>
+</div>
+</div>
+
+<div class="section-divider" id="darkpools"><i class="fa-solid fa-eye-slash"></i> Dark Pools — Le marché dans l'ombre</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-eye-slash"></i> Anatomie des Dark Pools</h2>
+
+<p>Un <strong>dark pool</strong> est un système alternatif de trading (ATS — Alternative Trading System) qui permet d'exécuter des ordres de grande taille sans révéler les intentions au marché public. Créés dans les années 2000 pour permettre aux institutionnels de négocier des blocs sans impact de marché, ils sont devenus un outil potentiel de manipulation.</p>
+
+<h3>Les 40 principaux Dark Pools actifs aux US (FINRA ATS Data)</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Dark Pool</th><th>Opérateur</th><th>Type</th><th>Part de marché</th><th>Spécificité</th></tr></thead>
+<tbody>
+<tr><td><strong>Citadel Connect</strong></td><td>Citadel Securities</td><td>Internaliseur (non-ATS)</td><td>~22%</td><td>Le plus grand. Pas techniquement un ATS → pas de reporting FINRA ATS</td></tr>
+<tr><td><strong>Crossfinder</strong></td><td>Credit Suisse (UBS)</td><td>ATS</td><td>~3.5%</td><td>Historiquement le plus grand ATS. Acquis par UBS après CS collapse</td></tr>
+<tr><td><strong>SIGMA X2</strong></td><td>Goldman Sachs</td><td>ATS</td><td>~2.8%</td><td>Amende SEC $800K en 2014 pour informations trompeuses sur le routing</td></tr>
+<tr><td><strong>MS Pool</strong></td><td>Morgan Stanley</td><td>ATS</td><td>~2.5%</td><td>MS a payé $13M d'amende en 2017 pour dark pool violations</td></tr>
+<tr><td><strong>Level ATS</strong></td><td>JPMorgan</td><td>ATS</td><td>~2.2%</td><td>Automatisé avec matching intelligent</td></tr>
+<tr><td><strong>UBS ATS</strong></td><td>UBS</td><td>ATS</td><td>~2.0%</td><td>Amende $14.4M en 2015 pour violations de prix</td></tr>
+<tr><td><strong>IEX</strong></td><td>IEX Group</td><td>Exchange (lit)</td><td>~3.0%</td><td>Le « speed bump » de 350 microsecondes. Protège contre le HFT</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Comment les dark pools peuvent être utilisés pour manipuler</h3>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-arrow-down-up-across-line"></i></div>
+<h4>Price Suppression</h4>
+<p>Router les ordres d'achat retail dans le dark pool (pas d'impact haussier sur le NBBO) tout en exécutant les ordres de vente sur le lit exchange (pression baissière visible). Résultat : le prix baisse malgré une demande nette positive</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-chart-pie"></i></div>
+<h4>Print Manipulation</h4>
+<p>Exécuter des transactions entre parties affiliées dans le dark pool à des prix inférieurs au NBBO, puis reporter ces prints qui influencent les algorithmes de pricing (TWAP, VWAP) vers le bas</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-eye"></i></div>
+<h4>Information Leakage</h4>
+<p>Les opérateurs de dark pools peuvent voir les ordres en attente et utiliser cette information pour prendre des positions contraires. Plusieurs dark pools ont été sanctionnés pour cette pratique (Barclays LX, $70M d'amende en 2016)</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-clock"></i></div>
+<h4>Latency Arbitrage</h4>
+<p>Les HFT co-localisés peuvent voir les ordres arriver dans le dark pool quelques microsecondes avant le retail et ajuster leurs quotes en conséquence (front-running légal via vitesse)</p>
+</div>
+</div>
+</div>
+
+<div class="section-divider" id="pfof"><i class="fa-solid fa-money-bill-transfer"></i> PFOF — Payment For Order Flow</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-money-bill-transfer"></i> PFOF — Le business model controversé</h2>
+
+<p>Le <strong>Payment for Order Flow</strong> est le modèle économique par lequel les brokers retail (Robinhood, Webull, Schwab, E*Trade) vendent le flux d'ordres de leurs clients à des market makers (Citadel Securities, Virtu Financial). Le market maker paie le broker pour le droit d'exécuter ces ordres, et profit de l'écart entre le prix d'exécution et le prix du marché.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Broker</th><th>PFOF reçu (2024)</th><th>Market Maker principal</th><th>% ordres internalisés</th></tr></thead>
+<tbody>
+<tr><td><strong>Robinhood</strong></td><td>$813M</td><td>Citadel (45%), Virtu (24%)</td><td>> 95%</td></tr>
+<tr><td><strong>Schwab/TD</strong></td><td>$1.3B</td><td>Citadel (40%), Virtu (20%)</td><td>~80%</td></tr>
+<tr><td><strong>E*Trade (MS)</strong></td><td>$451M</td><td>Citadel (35%), G1X (25%)</td><td>~85%</td></tr>
+<tr><td><strong>Webull</strong></td><td>$189M</td><td>Citadel (50%)</td><td>> 90%</td></tr>
+<tr><td><strong>Fidelity</strong></td><td>$0</td><td>Internalise en partie via FNF</td><td>~50%</td></tr>
+<tr><td><strong>IBKR Pro</strong></td><td>$0</td><td>Route vers les exchanges</td><td>< 10%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-scale-balanced"></i> Le débat PFOF : « price improvement » vs « price suppression »</h4>
+<p>Les défenseurs du PFOF (Citadel, FINRA, brokers) argumentent que les retail obtiennent un <strong>price improvement</strong> de $0.001-$0.003 par action par rapport au NBBO. Les critiques (IEX, Dave Lauer, SEC Commissioner Crenshaw) rétorquent que :</p>
+<ul>
+<li>Le spread du NBBO est déjà artificiellement élargi par les HFT qui <strong>savent</strong> que le retail sera routé vers eux</li>
+<li>L'absence de pression acheteuse sur le lit exchange supprime le prix naturel</li>
+<li>Le « price improvement » est calculé par rapport à un NBBO déjà manipulé — c'est un tour de passe-passe statistique</li>
+<li>L'UE a <strong>banni le PFOF</strong> (effectif 2026) pour ces raisons exactes</li>
+</ul>
+</div>
+
+<h3>Impact mesurable sur la price discovery</h3>
+
+<div id="pfofChart" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+<p>Les études académiques (Comerton-Forde et al., 2023; Hu et al., 2024) montrent que lorsque le dark pool volume dépasse <strong>40% du volume total</strong> sur un titre, la price discovery se dégrade significativement :</p>
+<ul>
+<li>Les spreads sur le lit exchange s'élargissent de 15-25%</li>
+<li>La volatilité réalisée augmente de 10-20%</li>
+<li>Les FTD augmentent de 30-50% (moins de livraisons effectives)</li>
+<li>Le titre devient plus vulnérable à la manipulation directionnelle</li>
+</ul>
+</div>
+
+<div class="section-divider" id="detection"><i class="fa-solid fa-magnifying-glass"></i> Détecter l'utilisation abusive des Dark Pools</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-magnifying-glass"></i> 10 signaux de manipulation via dark pools</h2>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>#</th><th>Signal</th><th>Seuil</th><th>Source</th><th>Interprétation</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>Dark Pool % > 50%</strong></td><td>> 50% du volume total</td><td>FINRA ATS, Chartexchange</td><td>Plus de la moitié du volume est caché. Price discovery compromise</td></tr>
+<tr><td>2</td><td><strong>Short Volume % > 60%</strong></td><td>> 60% du volume quotidien</td><td>FINRA Daily Short</td><td>Plus de 60% du volume est du short selling. Pression vendeuse extrême</td></tr>
+<tr><td>3</td><td><strong>Off-exchange divergence</strong></td><td>OTC achats ↑ mais prix ↓</td><td>Calculé</td><td>Les achats sont absorbés off-exchange, seules les ventes impactent le prix</td></tr>
+<tr><td>4</td><td><strong>Odd lot transactions</strong></td><td>> 30% du volume en lots < 100</td><td>TAQ data</td><td>Les ordres sont fractionnés pour éviter les seuils de reporting</td></tr>
+<tr><td>5</td><td><strong>NBBO spread widening</strong></td><td>Spread > 2× la moyenne 20j</td><td>Level 2</td><td>Les market makers élargissent les spreads pour profiter de l'opacité</td></tr>
+<tr><td>6</td><td><strong>IEX vs dark pool price</strong></td><td>Écart > 0.5%</td><td>IEX DEEP</td><td>IEX (protégé contre le HFT) montre un prix différent du dark pool</td></tr>
+<tr><td>7</td><td><strong>Print pattern anomalies</strong></td><td>Prints à des prix identiques répétés</td><td>Time & Sales</td><td>Wash trading possible entre comptes affiliés</td></tr>
+<tr><td>8</td><td><strong>FTD spike post-dark</strong></td><td>FTD > 0.1% float après forte activité DP</td><td>SEC EDGAR</td><td>Les transactions dark pool ne se règlent pas → potentiel naked shorting</td></tr>
+<tr><td>9</td><td><strong>Reg SHO exempt volume</strong></td><td>> 5% du volume</td><td>FINRA</td><td>Transactions exemptées de la Short Sale Rule → manipulation de la SSR</td></tr>
+<tr><td>10</td><td><strong>ATS N-MFP filing anomalies</strong></td><td>Volume déclaré ≠ volume observé</td><td>SEC EDGAR</td><td>L'ATS rapporte un volume différent de ce que les data vendors calculent</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section-divider" id="cas"><i class="fa-solid fa-microscope"></i> Cas pratiques — Dark Pool Abuse</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-microscope"></i> Cas : RXT — Le CTB de 76% et l'opacité des flux</h2>
+
+<p><strong>Rackspace Technology (RXT)</strong> présente un pattern classique de manipulation via dark pools. Avec un CTB de 76.76% (parmi les plus élevés du marché), une dette colossale de $3.3B, et un prix qui stagne à $1.95 malgré le short interest, les flux off-exchange jouent un rôle central.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Métrique</th><th>Valeur RXT</th><th>Seuil d'alerte</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Dark Pool %</td><td>~47%</td><td>> 40%</td><td>⚠️ Élevé — price discovery dégradée</td></tr>
+<tr><td>Short Volume %</td><td>~58%</td><td>> 50%</td><td>⚠️ Pression vendeuse dominante</td></tr>
+<tr><td>CTB</td><td>76.76%</td><td>> 20%</td><td>🔴 Critique — hard-to-borrow extrême</td></tr>
+<tr><td>DTC</td><td>6.94</td><td>> 5</td><td>⚠️ Presque 7 jours pour couvrir</td></tr>
+<tr><td>Book Value</td><td>-$4.874</td><td>> 0</td><td>🔴 Equity négative, insolvable techniquement</td></tr>
+<tr><td>Beta</td><td>2.20</td><td>< 2</td><td>⚠️ Très volatile, amplifie les mouvements</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-book"></i> Le paradoxe RXT : pourquoi le prix ne squeeze pas malgré un CTB de 77%</h4>
+<p>Normalement, un CTB de 77% devrait créer une pression insoutenable sur les shorts. Mais RXT présente un cas d'école où :</p>
+<ul>
+<li>Le <strong>SI absolu est faible</strong> (8.44%) — peu de positions à couvrir en volume</li>
+<li>La <strong>dette de $3.3B</strong> avec equity négative rend la thèse short quasi-certaine (le risque de faillite est réel)</li>
+<li>Les shorts sont <strong>en forte plus-value</strong> (RXT était à $25+ en 2021) — ils peuvent absorber le CTB pendant longtemps</li>
+<li>Le <strong>dark pool routing</strong> absorbe les achats retail sans impact sur le prix public</li>
+</ul>
+</div>
+
+<h3>Cas historique : Barclays LX — L'amende de $70M</h3>
+
+<p>En 2016, l'État de New York et la SEC ont sanctionné <strong>Barclays LX</strong>, le dark pool de Barclays, pour avoir :</p>
+<ul>
+<li>Menti à ses clients sur la présence de traders haute fréquence dans le pool</li>
+<li>Donné accès prioritaire à Tradebot Systems (HFT) qui front-runnait les ordres institutionnels</li>
+<li>Manipulé les statistiques de « price improvement » pour masquer l'avantage des HFT</li>
+<li>Résultat : Barclays a dû fermer LX et payer $70M d'amendes combinées</li>
+</ul>
+</div>
+
+<div class="section-divider" id="strategies"><i class="fa-solid fa-shield-halved"></i> Stratégies de protection</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-shield-halved"></i> Comment se protéger du routing toxique</h2>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-route"></i></div>
+<h4>Router vers IEX</h4>
+<p>IEX est le seul exchange avec un « speed bump » de 350µs qui neutralise le front-running HFT. Disponible via IBKR (IEX routing), Fidelity, et certains brokers DMA</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-ban"></i></div>
+<h4>Utiliser IBKR Pro / DMA</h4>
+<p>Interactive Brokers Pro permet le Direct Market Access : vous choisissez l'exchange d'exécution. Coût : $0.005/action mais vos ordres impactent le prix public</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-chart-line"></i></div>
+<h4>Monitorer le Dark Pool %</h4>
+<p>Utiliser Chartexchange.com, Fintel, ou notre scanner pour suivre le % dark pool quotidien. Un spike > 50% sur un titre où vous êtes long = alerte manipulation</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-file-signature"></i></div>
+<h4>Plainte SEC / FINRA</h4>
+<p>Documenter les anomalies et soumettre un TCR (Tips, Complaints and Referrals) à la SEC. Les whistleblowers peuvent recevoir 10-30% des amendes récupérées (> $1M)</p>
+</div>
+</div>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Points clés de cette partie</h4>
+<ul>
+<li>45% du volume US est exécuté hors des bourses publiques (dark pools + internaliseurs)</li>
+<li>Citadel Securities contrôle ~22% de l'exécution retail via Citadel Connect (non-ATS, pas de reporting)</li>
+<li>Le PFOF crée un conflit d'intérêts structurel : le broker est payé par le market maker, pas par le client</li>
+<li>Les dark pools peuvent être utilisés pour la price suppression, le print manipulation, et l'information leakage</li>
+<li>10 signaux mesurables permettent de détecter l'utilisation abusive des dark pools</li>
+<li>RXT illustre comment le dark pool routing peut empêcher un squeeze malgré un CTB extrême</li>
+<li>Solutions : IEX routing, IBKR Pro DMA, monitoring du dark pool %, plaintes SEC</li>
+</ul>
+</div>
+
+<div class="next-cta">
+<p><strong>Partie 4 →</strong> <a href="/series/market-manipulation/part4-options-max-pain/">Options, Max Pain &amp; Gamma Squeeze</a> — Comment les market makers utilisent le marché des options pour ancrer les prix au Max Pain, et comment un gamma squeeze peut se retourner contre eux.</p>
+</div>
+</div>
+
+</div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Répartition du volume par venue
+var venuesChart=echarts.init(document.getElementById('venuesChart'));
+venuesChart.setOption({title:{text:'Répartition du Volume US par Type de Venue (2026)',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'item',formatter:'{b}: {c}% ({d}%)'},series:[{type:'pie',radius:['40%','70%'],avoidLabelOverlap:true,itemStyle:{borderRadius:10,borderColor:'#fff',borderWidth:2},label:{show:true,formatter:'{b}\n{c}%'},data:[{value:55,name:'Lit Exchanges',itemStyle:{color:'#2563eb'}},{value:22,name:'Citadel Connect',itemStyle:{color:'#dc2626'}},{value:9,name:'Virtu / G1X',itemStyle:{color:'#f59e0b'}},{value:14,name:'Dark Pools ATS',itemStyle:{color:'#64748b'}}]}]});
+
+// PFOF revenus par broker
+var pfofChart=echarts.init(document.getElementById('pfofChart'));
+pfofChart.setOption({title:{text:'Revenus PFOF par Broker (2024, millions $)',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},grid:{left:'3%',right:'4%',bottom:'3%',containLabel:true},xAxis:{type:'category',data:['Schwab/TD','Robinhood','E*Trade','Webull','Fidelity','IBKR Pro']},yAxis:{type:'value',name:'Millions $'},series:[{type:'bar',data:[{value:1300,itemStyle:{color:'#dc2626'}},{value:813,itemStyle:{color:'#dc2626'}},{value:451,itemStyle:{color:'#f59e0b'}},{value:189,itemStyle:{color:'#f59e0b'}},{value:0,itemStyle:{color:'#10b981'}},{value:0,itemStyle:{color:'#10b981'}}],label:{show:true,position:'top',formatter:'{c}M'}}]});
+
+window.addEventListener('resize',function(){venuesChart.resize();pfofChart.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

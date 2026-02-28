@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,speculative,formation,us" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 5/10 — Volume & Price Action — Spoofing, Layering | Manipulation de Marché | Market Watch</title>
+<meta name="description" content="Spoofing, layering, wash trading, painting the tape. Techniques de manipulation du carnet d'ordres et du volume. Détection et stratégies défensives.">
+<meta property="og:title" content="Volume & Price Action — Spoofing, Layering | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#fef2f2 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-crimson{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-mask"></i> Série Manipulation de Marché — Partie 5 sur 10</div>
+<h1 class="hero-title">Volume &amp; Price Action — Spoofing, Layering</h1>
+<p class="hero-subtitle">Les techniques de manipulation directe du carnet d'ordres : spoofing, layering, wash trading, painting the tape, momentum ignition. Comment les détecter en temps réel et s'en protéger.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-crimson"><i class="fa-solid fa-layer-group"></i> Spoofing &amp; Layering</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-arrows-rotate"></i> Wash Trading</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-chart-line"></i> Expert++</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/market-manipulation/part4-options-max-pain/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Manipulation de Marché</span><div class="series-steps"><a href="/series/market-manipulation/part1-anatomie/" class="series-step"><span class="series-num">1</span><span class="series-label">Anatomie</span></a><a href="/series/market-manipulation/part2-short-selling/" class="series-step"><span class="series-num">2</span><span class="series-label">Short Selling</span></a><a href="/series/market-manipulation/part3-dark-pools/" class="series-step"><span class="series-num">3</span><span class="series-label">Dark Pools</span></a><a href="/series/market-manipulation/part4-options-max-pain/" class="series-step"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/market-manipulation/part5-volume-price-action/" class="series-step current"><span class="series-num">5</span><span class="series-label">Volume</span></a><a href="/series/market-manipulation/part6-dilution-warrants/" class="series-step"><span class="series-num">6</span><span class="series-label">Dilution</span></a><a href="/series/market-manipulation/part7-social-media/" class="series-step"><span class="series-num">7</span><span class="series-label">Social Media</span></a><a href="/series/market-manipulation/part8-fonds-hostiles/" class="series-step"><span class="series-num">8</span><span class="series-label">Fonds Hostiles</span></a><a href="/series/market-manipulation/part9-scanner-detection/" class="series-step"><span class="series-num">9</span><span class="series-label">Scanner</span></a><a href="/series/market-manipulation/part10-strategies-trading/" class="series-step"><span class="series-num">10</span><span class="series-label">Stratégies</span></a></div><span class="series-counter">5/10</span><a href="/series/market-manipulation/part6-dilution-warrants/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#spoofing" class="fnav-item" data-section="spoofing"><i class="fa-solid fa-ghost"></i><span>Spoofing</span></a><a href="#layering" class="fnav-item" data-section="layering"><i class="fa-solid fa-layer-group"></i><span>Layering</span></a><a href="#wash" class="fnav-item" data-section="wash"><i class="fa-solid fa-arrows-rotate"></i><span>Wash Trading</span></a><a href="#painting" class="fnav-item" data-section="painting"><i class="fa-solid fa-paintbrush"></i><span>Painting the Tape</span></a><a href="#detection" class="fnav-item" data-section="detection"><i class="fa-solid fa-magnifying-glass"></i><span>Détection</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fa-solid fa-shield-halved"></i><span>Stratégies</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="spoofing"><i class="fa-solid fa-ghost"></i> Spoofing — L'illusion du carnet d'ordres</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-ghost"></i> Spoofing — Placer des ordres sans intention d'exécution</h2>
+
+<p>Le <strong>spoofing</strong> consiste à placer un ou plusieurs ordres de grande taille sur le carnet d'ordres (order book) sans aucune intention de les exécuter, dans le but de créer une fausse impression de demande ou d'offre et d'influencer le prix dans la direction souhaitée. L'ordre fantôme est annulé avant d'être exécuté, et le spoofeur profite du mouvement de prix qu'il a provoqué.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> Mécanique du spoofing en 4 temps</h4>
+<ol>
+<li><strong>Ordre réel</strong> — Le spoofeur place discrètement un petit ordre d'achat au marché (side réel, caché dans le flux)</li>
+<li><strong>Spoof order</strong> — Il place un très gros ordre de vente au-dessus du prix actuel (ou d'achat en dessous). Cet ordre est visible dans le Level 2 et crée une impression de forte résistance (ou support)</li>
+<li><strong>Réaction du marché</strong> — Les algorithmes et les traders voient le gros ordre et ajustent leurs quotes. Le prix se déplace vers le côté du spoof (baisse si gros sell, hausse si gros buy)</li>
+<li><strong>Annulation</strong> — Le spoofeur annule le gros ordre fantôme dès que son ordre réel est exécuté au prix favorable. Durée typique du spoof : 0.1 à 2 secondes</li>
+</ol>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-gavel"></i> Le spoofing est un crime fédéral</h4>
+<p>Depuis le <strong>Dodd-Frank Act de 2010</strong> (Section 747), le spoofing est explicitement illégal aux États-Unis. La première condamnation criminelle fut celle de <strong>Michael Coscia</strong> en 2015 (Panther Energy, 2 ans de prison fédérale). Le cas le plus célèbre reste celui de <strong>Navinder Sarao</strong>, le trader britannique accusé d'avoir contribué au Flash Crash de mai 2010 depuis sa chambre à Londres — $13M d'amende et prison avec sursis.</p>
+</div>
+
+<h3>Cas historiques de spoofing sanctionné</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Cas</th><th>Marché</th><th>Méthode</th><th>Sanction</th><th>Profits illicites</th></tr></thead>
+<tbody>
+<tr><td><strong>Navinder Sarao</strong></td><td>E-mini S&P 500 futures</td><td>Ordres de 200-900 lots, annulés en < 1s. Contribué au Flash Crash 2010</td><td>Prison + $13M amende</td><td>$40M sur 5 ans</td></tr>
+<tr><td><strong>Michael Coscia</strong></td><td>CME commodities</td><td>Petit ordre réel + gros spoof sur le côté opposé. 400 épisodes documentés</td><td>3 ans prison fédérale</td><td>$1.6M</td></tr>
+<tr><td><strong>JPMorgan (Precious Metals)</strong></td><td>Or, argent, platine</td><td>8 traders spoofant les futures métaux précieux pendant 8 ans (2008-2016)</td><td>$920M d'amende + DPA</td><td>Non quantifié</td></tr>
+<tr><td><strong>Bank of America/Merrill</strong></td><td>US Treasuries</td><td>Spoofing systématique sur le marché obligataire</td><td>$25M amende CFTC</td><td>Non quantifié</td></tr>
+<tr><td><strong>Deutsche Bank</strong></td><td>Futures métaux</td><td>Coordiné avec autres banques pour manipuler le fixing de l'or</td><td>$30M + coopération DOJ</td><td>$100M+ estimé</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section-divider" id="layering"><i class="fa-solid fa-layer-group"></i> Layering — Le spoofing multi-niveaux</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-layer-group"></i> Layering — La version sophistiquée du spoofing</h2>
+
+<p>Le <strong>layering</strong> est une forme avancée de spoofing qui implique de placer plusieurs ordres à différents niveaux de prix (couches) du même côté du carnet d'ordres. Au lieu d'un seul gros ordre fantôme, le manipulateur crée une <strong>muraille artificielle</strong> de liquidité qui paraît naturelle aux algorithmes de surveillance.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Aspect</th><th>Spoofing simple</th><th>Layering</th></tr></thead>
+<tbody>
+<tr><td>Nombre d'ordres</td><td>1 gros ordre</td><td>5-20 ordres à des niveaux différents</td></tr>
+<tr><td>Apparence</td><td>Suspect — un seul gros ordre sort du lot</td><td>Naturel — ressemble à de la liquidité organique</td></tr>
+<tr><td>Détection</td><td>Relativement facile (seuil de taille)</td><td>Difficile — les ordres individuels ne sont pas anormaux</td></tr>
+<tr><td>Durée typique</td><td>0.1-2 secondes</td><td>5-60 secondes (ajustements progressifs)</td></tr>
+<tr><td>Sophistication</td><td>Peut être fait manuellement</td><td>Requiert un algorithme coordonné</td></tr>
+<tr><td>Immunité aux surveillance</td><td>Faible — facilement flaggé</td><td>Élevée — passe sous le radar de la plupart des systèmes</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-stairs"></i> Exemple de layering baissier</h4>
+<p>Un manipulateur veut acheter RZLV à $2.30 au lieu de $2.33. Il place les ordres fantômes suivants côté vente :</p>
+<ul>
+<li>5,000 actions à $2.35</li>
+<li>8,000 actions à $2.36</li>
+<li>12,000 actions à $2.37</li>
+<li>20,000 actions à $2.38</li>
+<li>15,000 actions à $2.39</li>
+</ul>
+<p>Les algorithmes voient une « muraille de vente » massive de 60,000 actions au-dessus du prix. Les acheteurs reculent, le prix descend vers $2.30. Le manipulateur achète au prix souhaité, puis annule toutes les couches. Durée totale : 20-40 secondes.</p>
+</div>
+</div>
+
+<div class="section-divider" id="wash"><i class="fa-solid fa-arrows-rotate"></i> Wash Trading</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrows-rotate"></i> Wash Trading — Le volume fantôme</h2>
+
+<p>Le <strong>wash trading</strong> consiste à acheter et vendre simultanément (ou quasi-simultanément) le même actif via des comptes affiliés ou des entités liées, créant un volume de trading artificiel sans changement réel de propriété. L'objectif est de créer l'<strong>illusion d'activité et de liquidité</strong>.</p>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-chart-bar"></i></div>
+<h4>Gonflement du volume</h4>
+<p>Un volume élevé attire les algorithmes momentum et les traders de breakout. Le wash trader crée un « buzz » artificiel qui attire les vrais participants, puis profite du mouvement organique déclenché</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+<h4>NFT & Crypto</h4>
+<p>Le wash trading est endémique dans les NFT (> 80% du volume selon Chainalysis) et les exchanges crypto non régulés. Binance, BitMEX, et OKX ont tous été accusés de tolérer le wash trading pour gonfler leurs volumes</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-stairs"></i></div>
+<h4>Short Ladder Attack</h4>
+<p>Deux entités affiliées (fonds A et fonds B) se vendent alternativement des petits lots d'actions à des prix décroissants, créant une cascade baissière artificielle visible dans le Time & Sales</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+<h4>Détection par clustering</h4>
+<p>Analyser les patterns temporels du Time & Sales : des transactions de taille identique à intervalles réguliers, alternant entre bid et ask, sont un signal fort de wash trading. Le ratio bid/ask volume est aussi révélateur</p>
+</div>
+</div>
+
+<h3>Signes de wash trading sur le Level 2 / Time & Sales</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Signal</th><th>Description</th><th>Seuil</th></tr></thead>
+<tbody>
+<tr><td><strong>Round lot patterns</strong></td><td>Transactions répétées de taille identique (100, 200, 500 lots)</td><td>> 10 occurrences identiques / heure</td></tr>
+<tr><td><strong>Ping-pong bid/ask</strong></td><td>Alternance régulière entre achats et ventes de même taille</td><td>> 5 alternances consécutives</td></tr>
+<tr><td><strong>Volume sans mouvement</strong></td><td>Volume > 3× la moyenne mais prix stable (< 0.5% de variation)</td><td>Rapport volume/variation anormal</td></tr>
+<tr><td><strong>Pre-market pumping</strong></td><td>Volume artificiel en pre-market pour créer un gap up à l'ouverture</td><td>Volume pre-market > 5× la moyenne</td></tr>
+<tr><td><strong>Timing régulier</strong></td><td>Transactions espacées à intervalles fixes (toutes les 30s, 1min)</td><td>Régularité temporelle > 80%</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section-divider" id="painting"><i class="fa-solid fa-paintbrush"></i> Painting the Tape &amp; Momentum Ignition</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-paintbrush"></i> Painting the Tape</h2>
+
+<p>Le <strong>painting the tape</strong> est une variante du wash trading où le manipulateur exécute une série de petites transactions à des prix progressivement plus élevés (ou plus bas) pour créer l'impression d'une tendance directionnelle. Le « tape » fait référence au ticker tape historique qui affichait les transactions en temps réel.</p>
+
+<h3>Momentum Ignition — Le catalyseur artificiel</h3>
+
+<p>Le <strong>momentum ignition</strong> est une technique HFT qui consiste à déclencher une cascade de stops ou de signaux algorithmiques en créant un mouvement de prix initial artificiel. L'objectif est de provoquer une réaction en chaîne :</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-fire"></i> Le cycle du momentum ignition</h4>
+<ol>
+<li><strong>Spark</strong> — Le HFT achète agressivement une petite quantité (lifting the offer), créant un micro-mouvement haussier de quelques cents</li>
+<li><strong>Stop hunt</strong> — Ce micro-mouvement déclenche les stop-loss des shorts (placés juste au-dessus de la résistance)</li>
+<li><strong>Algo cascade</strong> — Les algorithmes momentum détectent le breakout + le volume des stops → ils achètent aussi</li>
+<li><strong>FOMO retail</strong> — Les retail traders voient le mouvement et le volume → ils entrent en retard</li>
+<li><strong>Dump</strong> — Le HFT reverse sa position et vend dans la liquidité créée par les étapes 2-4. Profit typique : $0.05-$0.20/action × 100K+ actions = $5K-$20K par épisode. 50-100 épisodes par jour possible</li>
+</ol>
+</div>
+
+<div id="tapeChart" style="width:100%;height:400px;margin:2rem 0;"></div>
+</div>
+
+<div class="section-divider" id="detection"><i class="fa-solid fa-magnifying-glass"></i> Outils et méthodes de détection</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-magnifying-glass"></i> Kit de détection — Outils et indicateurs</h2>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Outil / Indicateur</th><th>Ce qu'il détecte</th><th>Comment l'utiliser</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td><strong>OBV (On-Balance Volume)</strong></td><td>Divergence prix/volume</td><td>Si le prix monte mais l'OBV baisse → le volume ne confirme pas le mouvement (potentiel painting)</td><td>Tout charting tool</td></tr>
+<tr><td><strong>VWAP</strong></td><td>Prix moyen pondéré par le volume</td><td>Des transactions répétées au même prix éloigné du VWAP → wash trading probable</td><td>IBKR, TradingView</td></tr>
+<tr><td><strong>Volume Profile</strong></td><td>Distribution du volume par prix</td><td>Des nœuds de volume isolés sans contexte technique → volume artificiel</td><td>TradingView, Sierra Chart</td></tr>
+<tr><td><strong>Delta Cumulé</strong></td><td>Pression acheteuse nette</td><td>Volume élevé mais delta ~0 → achats et ventes s'annulent (wash trading)</td><td>Bookmap, Sierra Chart</td></tr>
+<tr><td><strong>Order Flow / Footprint</strong></td><td>Détail bid/ask par bougie</td><td>Voir en temps réel les ordres passifs vs agressifs, identifier le spoofing</td><td>Bookmap ($60/mois)</td></tr>
+<tr><td><strong>Level 2 Depth</strong></td><td>Carnet d'ordres en temps réel</td><td>Grands ordres apparaissant/disparaissant en < 2s = spoofing</td><td>Webull, IBKR, DAS Trader</td></tr>
+<tr><td><strong>Time & Sales Tape</strong></td><td>Chaque transaction individuelle</td><td>Patterns répétitifs (taille, timing) = wash trading</td><td>Tout broker Level 2</td></tr>
+<tr><td><strong>Unusual Volume Scanner</strong></td><td>Volume > seuil vs moyenne</td><td>Volume > 5× sans catalyst = manipulation potentielle</td><td>Finviz, TradingView Scanner</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Points clés</h4>
+<ul>
+<li>Le spoofing est un crime fédéral depuis Dodd-Frank 2010 — JPMorgan a payé $920M d'amende</li>
+<li>Le layering est plus sophistiqué et plus difficile à détecter que le spoofing simple</li>
+<li>Le wash trading crée du volume artificiel — endémique en crypto (> 80% du volume NFT)</li>
+<li>Le momentum ignition exploite les stops et les algos pour créer des micro-tendances profitables</li>
+<li>Outils de détection : OBV, VWAP divergence, delta cumulé, Bookmap (order flow)</li>
+<li>Le Level 2 et le Time & Sales sont les premiers remparts de détection</li>
+</ul>
+</div>
+
+<div class="next-cta">
+<p><strong>Partie 6 →</strong> <a href="/series/market-manipulation/part6-dilution-warrants/">Dilution &amp; Warrants Toxiques</a> — Comment les entreprises et les investisseurs hostiles utilisent l'émission d'actions et les instruments dérivés pour détruire la valeur actionnariale.</p>
+</div>
+</div>
+
+</div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+var tapeChart=echarts.init(document.getElementById('tapeChart'));
+tapeChart.setOption({title:{text:'Momentum Ignition — Anatomie d\'un épisode (5 minutes)',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},legend:{data:['Prix','Volume'],top:30},grid:{left:'3%',right:'4%',bottom:'3%',top:'20%',containLabel:true},xAxis:{type:'category',data:['0:00','0:15','0:30','0:45','1:00','1:15','1:30','1:45','2:00','2:15','2:30','2:45','3:00','3:15','3:30','3:45','4:00','4:15','4:30','4:45','5:00']},yAxis:[{type:'value',name:'Prix $',min:2.28,max:2.42},{type:'value',name:'Volume'}],series:[{name:'Prix',type:'line',data:[2.33,2.33,2.34,2.35,2.36,2.37,2.38,2.39,2.40,2.41,2.40,2.39,2.38,2.36,2.35,2.34,2.33,2.32,2.31,2.30,2.30],smooth:true,lineStyle:{width:3,color:'#dc2626'},markArea:{data:[[{xAxis:'0:00',itemStyle:{color:'rgba(37,99,235,0.1)'},label:{formatter:'HFT Spark',position:'insideTop'}},{xAxis:'1:00'}],[{xAxis:'1:00',itemStyle:{color:'rgba(245,158,11,0.1)'},label:{formatter:'Stop Hunt',position:'insideTop'}},{xAxis:'2:30'}],[{xAxis:'2:30',itemStyle:{color:'rgba(220,38,38,0.1)'},label:{formatter:'Dump',position:'insideTop'}},{xAxis:'5:00'}]]}},{name:'Volume',type:'bar',yAxisIndex:1,data:[500,800,2000,5000,12000,18000,25000,30000,35000,28000,15000,8000,4000,3000,2000,1500,1000,800,600,500,400],itemStyle:{color:'rgba(148,163,184,0.4)'}}]});
+window.addEventListener('resize',function(){tapeChart.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

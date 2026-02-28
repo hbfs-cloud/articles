@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,speculative,formation,us" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 2/10 — Short Selling & Short Squeeze | Manipulation de Marché | Market Watch</title>
+<meta name="description" content="Mécanique du short selling, métriques SI%/CTB/DTC/FTD, short squeeze, naked shorting. Cas pratiques CLOV, MVST, GME.">
+<meta property="og:title" content="Short Selling & Short Squeeze — Le Guide Expert | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#fef2f2 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-crimson{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-mask"></i> Série Manipulation de Marché — Partie 2 sur 10</div>
+<h1 class="hero-title">Short Selling &amp; Short Squeeze</h1>
+<p class="hero-subtitle">Mécanique complète de la vente à découvert, métriques clés (SI%, CTB, DTC, FTD), naked shorting, short ladder attacks, et l'anatomie d'un short squeeze. Cas pratiques CLOV, MVST, GME.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-crimson"><i class="fa-solid fa-arrow-down-long"></i> Short Selling</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-chart-bar"></i> SI% · CTB · DTC</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-bolt"></i> Short Squeeze</span>
+<span class="hero-badge hero-badge-purple"><i class="fa-solid fa-microscope"></i> Cas Pratiques</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> Expert++</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/market-manipulation/part1-anatomie/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Manipulation de Marché</span><div class="series-steps"><a href="/series/market-manipulation/part1-anatomie/" class="series-step"><span class="series-num">1</span><span class="series-label">Anatomie</span></a><a href="/series/market-manipulation/part2-short-selling/" class="series-step current"><span class="series-num">2</span><span class="series-label">Short Selling</span></a><a href="/series/market-manipulation/part3-dark-pools/" class="series-step"><span class="series-num">3</span><span class="series-label">Dark Pools</span></a><a href="/series/market-manipulation/part4-options-max-pain/" class="series-step"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/market-manipulation/part5-volume-price-action/" class="series-step"><span class="series-num">5</span><span class="series-label">Volume</span></a><a href="/series/market-manipulation/part6-dilution-warrants/" class="series-step"><span class="series-num">6</span><span class="series-label">Dilution</span></a><a href="/series/market-manipulation/part7-social-media/" class="series-step"><span class="series-num">7</span><span class="series-label">Social Media</span></a><a href="/series/market-manipulation/part8-fonds-hostiles/" class="series-step"><span class="series-num">8</span><span class="series-label">Fonds Hostiles</span></a><a href="/series/market-manipulation/part9-scanner-detection/" class="series-step"><span class="series-num">9</span><span class="series-label">Scanner</span></a><a href="/series/market-manipulation/part10-strategies-trading/" class="series-step"><span class="series-num">10</span><span class="series-label">Stratégies</span></a></div><span class="series-counter">2/10</span><a href="/series/market-manipulation/part3-dark-pools/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#mecanique" class="fnav-item" data-section="mecanique"><i class="fa-solid fa-gears"></i><span>Mécanique Short</span></a><a href="#metriques" class="fnav-item" data-section="metriques"><i class="fa-solid fa-chart-bar"></i><span>Métriques Clés</span></a><a href="#naked" class="fnav-item" data-section="naked"><i class="fa-solid fa-skull"></i><span>Naked Shorting</span></a><a href="#squeeze" class="fnav-item" data-section="squeeze"><i class="fa-solid fa-bolt"></i><span>Short Squeeze</span></a><a href="#cas" class="fnav-item" data-section="cas"><i class="fa-solid fa-microscope"></i><span>Cas Pratiques</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fa-solid fa-crosshairs"></i><span>Stratégies</span></a><a href="#scanner" class="fnav-item" data-section="scanner"><i class="fa-solid fa-radar"></i><span>Scanner Setup</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : MÉCANIQUE DU SHORT SELLING                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="mecanique"><i class="fa-solid fa-gears"></i> Mécanique du Short Selling</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-gears"></i> Comment fonctionne la vente à découvert</h2>
+
+<p>La <strong>vente à découvert</strong> (short selling) est le mécanisme par lequel un trader emprunte des actions qu'il ne possède pas, les vend immédiatement sur le marché, puis espère les racheter plus tard à un prix inférieur pour les retourner au prêteur. La différence entre le prix de vente et le prix de rachat constitue le profit (ou la perte).</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> Le circuit d'un short en 6 étapes</h4>
+<ol>
+<li><strong>Locate</strong> — Le trader contacte son broker pour localiser des actions à emprunter (obligation Reg SHO Rule 203)</li>
+<li><strong>Borrow</strong> — Le broker prête les actions depuis les comptes margin de ses clients ou un pool institutionnel. Un taux de prêt (CTB) est facturé quotidiennement</li>
+<li><strong>Sell</strong> — Les actions empruntées sont vendues sur le marché ouvert. Le produit est crédité au compte du shorteur</li>
+<li><strong>Margin</strong> — Le shorteur doit maintenir un collatéral minimum (Reg T = 150% de la valeur short). Si le titre monte, margin call</li>
+<li><strong>Buy to Cover</strong> — Quand le shorteur décide de clôturer, il rachète les actions sur le marché</li>
+<li><strong>Return</strong> — Les actions sont retournées au prêteur. Profit = Prix de vente - Prix de rachat - Frais d'emprunt</li>
+</ol>
+</div>
+
+<p>Contrairement à une position longue où la perte maximale est limitée à l'investissement initial, une position short a un <strong>risque de perte théoriquement illimité</strong> — le titre pouvant monter indéfiniment. C'est cette asymétrie fondamentale qui rend le short selling si dangereux et qui crée les conditions d'un short squeeze.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Aspect</th><th>Position Longue</th><th>Position Short</th></tr></thead>
+<tbody>
+<tr><td>Direction du pari</td><td>Hausse du titre</td><td>Baisse du titre</td></tr>
+<tr><td>Perte maximale</td><td>100% de l'investissement</td><td>Illimitée (∞)</td></tr>
+<tr><td>Gain maximal</td><td>Illimité (∞)</td><td>100% (si le titre va à $0)</td></tr>
+<tr><td>Coût de portage</td><td>Aucun (hors margin)</td><td>CTB quotidien + dividendes</td></tr>
+<tr><td>Pression temporelle</td><td>Aucune (pas d'expiration)</td><td>Forte (CTB + margin calls)</td></tr>
+<tr><td>Exigence de margin</td><td>Reg T : 50%</td><td>Reg T : 150%</td></tr>
+<tr><td>Impact sur le prix</td><td>Pression acheteuse</td><td>Pression vendeuse à l'ouverture, acheteuse au rachat</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="didactic-box">
+<h4><i class="fa-solid fa-scale-balanced"></i> Short selling légitime vs manipulatoire</h4>
+<p>Le short selling légitime est <strong>essentiel au bon fonctionnement des marchés</strong> : il apporte de la liquidité, contribue à la price discovery, et agit comme un mécanisme de correction contre les surévaluations. La SEC reconnaît explicitement cette utilité. Ce qui est illégal, c'est l'utilisation du short selling combinée à :</p>
+<ul>
+<li><strong>Dissémination de fausses informations</strong> (short & distort)</li>
+<li><strong>Naked shorting</strong> (vente sans locate préalable en violation de Reg SHO)</li>
+<li><strong>Short ladder attacks</strong> (wash trades entre comptes affiliés pour faire baisser le prix artificiellement)</li>
+<li><strong>Coordination</strong> avec des rapports de recherche biaisés (Hindenburg, Muddy Waters, Citron)</li>
+</ul>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : MÉTRIQUES CLÉS                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="metriques"><i class="fa-solid fa-chart-bar"></i> Métriques clés du Short Interest</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-bar"></i> Les 8 métriques essentielles du Short Interest</h2>
+
+<p>Comprendre le short interest d'un titre nécessite de maîtriser un ensemble de métriques interconnectées. Aucune métrique seule ne suffit — c'est la <strong>confluence</strong> de ces signaux qui permet de détecter une situation de manipulation ou un setup de squeeze potentiel.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Métrique</th><th>Formule</th><th>Seuil d'alerte</th><th>Signification</th></tr></thead>
+<tbody>
+<tr><td><strong>Short Interest (SI)</strong></td><td>Nombre d'actions shortées</td><td>> 20% du float</td><td>Pression vendeuse brute. Publié bi-mensuellement par FINRA/exchanges</td></tr>
+<tr><td><strong>SI % of Float</strong></td><td>SI / Float × 100</td><td>> 20%</td><td>Proportion du float vendu à découvert. Plus fiable que le SI brut</td></tr>
+<tr><td><strong>SI % of Shares Out</strong></td><td>SI / Total Shares × 100</td><td>> 15%</td><td>Relativise par rapport à toutes les actions, incluant les insiders lock-up</td></tr>
+<tr><td><strong>Days to Cover (DTC)</strong></td><td>SI / Volume moyen 20j</td><td>> 5 jours</td><td>Nombre de jours nécessaires pour que tous les shorts couvrent au volume normal</td></tr>
+<tr><td><strong>Cost to Borrow (CTB)</strong></td><td>Taux annualisé</td><td>> 20%</td><td>Coût d'emprunt annualisé. > 50% = hard-to-borrow, > 100% = squeeze zone</td></tr>
+<tr><td><strong>Utilization Rate</strong></td><td>Shares on Loan / Shares Available × 100</td><td>> 90%</td><td>Pourcentage des actions disponibles au prêt déjà empruntées. 100% = dry pool</td></tr>
+<tr><td><strong>FTD (Failure to Deliver)</strong></td><td>Volume d'actions non livrées</td><td>> 1% du float</td><td>Indicateur de naked shorting potentiel. Publié bi-mensuellement par SEC</td></tr>
+<tr><td><strong>Short Exempt Volume</strong></td><td>Volume exempté de l'uptick rule</td><td>> 5% du volume total</td><td>Transactions exemptées de la règle SSR (Short Sale Rule / Circuit Breaker)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div id="metriquesChart" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-magnifying-glass"></i> Lecture avancée : la dynamique CTB / SI / DTC</h4>
+<p>La relation entre ces trois métriques révèle la <strong>tension</strong> dans un titre :</p>
+<ul>
+<li><strong>SI élevé + CTB faible + DTC court</strong> → Short bien géré, pas de stress. Les prêteurs sont satisfaits, le volume est suffisant pour absorber les rachats</li>
+<li><strong>SI élevé + CTB en hausse + DTC long</strong> → Tension croissante. Les prêteurs resserrent les conditions, les shorts sont coincés. Potentiel squeeze</li>
+<li><strong>SI stable + CTB explosif</strong> → Concentration des emprunts chez peu de prêteurs. Les gros shorts ont du mal à trouver des titres. Signal de stress extrême</li>
+<li><strong>SI en baisse rapide + volume en hausse</strong> → Short covering actif. Les shorts rachètent en urgence = mouvement haussier violent</li>
+</ul>
+</div>
+
+<h3><i class="fa-solid fa-database"></i> Sources de données Short Interest</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Source</th><th>Fréquence</th><th>Délai</th><th>Couverture</th><th>Coût</th></tr></thead>
+<tbody>
+<tr><td><strong>FINRA</strong></td><td>Bi-mensuel (15 & fin de mois)</td><td>T+10 jours</td><td>Toutes actions US</td><td>Gratuit</td></tr>
+<tr><td><strong>Ortex</strong></td><td>Intraday (estimé)</td><td>Temps réel</td><td>US + Europe</td><td>~$500/mois</td></tr>
+<tr><td><strong>S3 Partners</strong></td><td>Quotidien (estimé)</td><td>T+1</td><td>US + ADR</td><td>$1,500+/mois</td></tr>
+<tr><td><strong>Fintel</strong></td><td>Quotidien</td><td>T+1</td><td>US</td><td>$25-100/mois</td></tr>
+<tr><td><strong>SEC EDGAR FTD</strong></td><td>Bi-mensuel</td><td>T+30 jours</td><td>Toutes actions US</td><td>Gratuit</td></tr>
+<tr><td><strong>IBKR SLB</strong></td><td>Temps réel</td><td>Temps réel</td><td>Comptes IBKR</td><td>Inclus dans le compte</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : NAKED SHORTING & FTD                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="naked"><i class="fa-solid fa-skull"></i> Naked Shorting &amp; Failures to Deliver</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-skull"></i> Le Naked Shorting — L'arme interdite</h2>
+
+<p>Le <strong>naked short selling</strong> consiste à vendre des actions à découvert sans les avoir préalablement empruntées ni même localisées. C'est la forme la plus toxique de manipulation liée au short selling, et elle est <strong>illégale</strong> depuis la réforme de Reg SHO en 2008, renforcée après la crise financière.</p>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Pourquoi le naked shorting est-il si destructeur ?</h4>
+<p>En vendant des actions qui n'existent pas, le naked shorteur <strong>crée artificiellement de l'offre</strong> — ce qui dilue mécaniquement le prix du titre sans qu'aucune action réelle ne change de main. C'est l'équivalent boursier de la contrefaçon monétaire : on injecte des « faux titres » dans le marché.</p>
+</div>
+
+<h3>Comment détecter le naked shorting</h3>
+
+<p>Le naked shorting laisse des traces mesurables dans les données de marché. Voici les signaux à surveiller :</p>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-file-circle-exclamation"></i></div>
+<h4>FTD Spikes</h4>
+<p>Des pics de Failures to Deliver supérieurs à 0.5% du float sur plusieurs jours consécutifs. Les FTD sont publiées par la SEC avec 30 jours de retard — mais les patterns sont révélateurs</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-ghost"></i></div>
+<h4>Phantom Shares</h4>
+<p>Le nombre total d'actions en circulation (shares outstanding) ne change pas, mais le volume de trading dépasse largement le float pendant plusieurs semaines</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+<h4>T+35 Cycle</h4>
+<p>Les market makers ont 35 jours calendaires pour résoudre un FTD (T+35 rule). Cela crée des cycles prévisibles de couverture forcée, visibles sur les graphiques de prix</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-chart-simple"></i></div>
+<h4>Reg SHO Threshold List</h4>
+<p>La SEC publie quotidiennement la liste des titres ayant des FTD > 10,000 actions pendant 5+ jours consécutifs. Un titre sur cette liste est un red flag majeur de naked shorting</p>
+</div>
+</div>
+
+<h3>Le cycle FTD T+35 : le calendrier du naked shorteur</h3>
+
+<p>La <strong>Rule 204 de Reg SHO</strong> impose des délais de résolution des FTD qui créent des patterns prévisibles :</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Deadline</th><th>Qui</th><th>Obligation</th><th>Impact prix</th></tr></thead>
+<tbody>
+<tr><td><strong>T+2</strong></td><td>Settlement standard</td><td>Livraison normale des titres</td><td>Aucun si livraison OK</td></tr>
+<tr><td><strong>T+3</strong></td><td>Broker-dealer</td><td>Notification du FTD au CNS</td><td>Enregistrement du défaut</td></tr>
+<tr><td><strong>T+6</strong></td><td>Broker (Rule 204a)</td><td>Close-out obligatoire pour les shorts standards</td><td>Pression acheteuse légère</td></tr>
+<tr><td><strong>T+13</strong></td><td>Reg SHO Threshold</td><td>Inclusion sur la Threshold List si FTD persiste</td><td>Signal public de stress</td></tr>
+<tr><td><strong>T+35</strong></td><td>Market Maker (Rule 204b)</td><td>Close-out obligatoire, même pour les market makers</td><td>Pression acheteuse forte — fenêtre de squeeze</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Trading sur le cycle T+35</h4>
+<ul>
+<li>Identifier les pics de FTD sur SEC EDGAR (publication mensuelle)</li>
+<li>Calculer T+35 calendaire depuis la date du FTD</li>
+<li>Se positionner 2-3 jours avant la date T+35 anticipée</li>
+<li>Surveiller le volume : un volume anormalement élevé autour de T+35 confirme le forced buy-in</li>
+<li>Combiner avec SI% et CTB pour évaluer la probabilité de squeeze</li>
+</ul>
+</div>
+
+<h3>Cas historiques de naked shorting documenté</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Cas</th><th>Période</th><th>FTD Peak</th><th>Impact</th><th>Résolution</th></tr></thead>
+<tbody>
+<tr><td><strong>Overstock.com (OSTK)</strong></td><td>2005-2008</td><td>3.8M actions</td><td>Prix comprimé de $72 à $15</td><td>Procès SEC vs hedge funds, amende $5M</td></tr>
+<tr><td><strong>GameStop (GME)</strong></td><td>Jan 2021</td><td>1.2M actions, SI > 140%</td><td>Squeeze de $20 à $483</td><td>Congressional hearing, reform proposals</td></tr>
+<tr><td><strong>AMC Entertainment</strong></td><td>2021-2022</td><td>2.1M actions</td><td>Squeeze $5 → $72</td><td>Dilution massive par le management</td></tr>
+<tr><td><strong>Bed Bath & Beyond</strong></td><td>2022-2023</td><td>800K actions, SI > 50%</td><td>Squeeze $5 → $30, puis faillite</td><td>Chapter 11 bankruptcy</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : SHORT SQUEEZE — ANATOMIE                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="squeeze"><i class="fa-solid fa-bolt"></i> Anatomie d'un Short Squeeze</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-bolt"></i> Le Short Squeeze — Quand les shorts capitulent</h2>
+
+<p>Un <strong>short squeeze</strong> est un mouvement de prix violent et auto-renforçant qui se produit lorsque les vendeurs à découvert sont forcés de racheter simultanément leurs positions. Chaque rachat fait monter le prix, ce qui force davantage de shorts à couvrir — créant une boucle de rétroaction explosive.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-arrows-spin"></i> La boucle de rétroaction d'un squeeze</h4>
+<ol>
+<li><strong>Catalyseur</strong> → Nouvelle positive inattendue, volume retail massif, ou couverture forcée T+35</li>
+<li><strong>Prix monte</strong> → Les positions short perdent de la valeur, le margin requirement augmente</li>
+<li><strong>Margin calls</strong> → Les brokers exigent plus de collatéral. Les shorts qui ne peuvent pas payer sont liquidés</li>
+<li><strong>Forced buy-in</strong> → Le broker rachète les actions automatiquement au marché, quel que soit le prix</li>
+<li><strong>Volume explose</strong> → L'afflux d'ordres d'achat forcés crée une pénurie d'offre</li>
+<li><strong>Prix monte encore plus</strong> → Retour à l'étape 2 — la boucle se répète jusqu'à épuisement des shorts</li>
+</ol>
+</div>
+
+<h3>Les 5 conditions d'un squeeze réussi</h3>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-chart-line"></i></div>
+<h4>SI% > 20% du float</h4>
+<p>Une proportion significative du float est shortée, créant une masse critique de positions à couvrir. Les squeezes historiques avaient généralement > 30% SI</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-fire"></i></div>
+<h4>CTB > 50% annualisé</h4>
+<p>Le coût d'emprunt élevé met une pression financière constante sur les shorts. À > 100%, le carry cost devient insoutenable même pour les institutionnels</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+<h4>DTC > 5 jours</h4>
+<p>Il faut plus d'une semaine de volume normal pour que les shorts puissent couvrir. Plus le DTC est long, plus le squeeze sera violent et prolongé</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-users"></i></div>
+<h4>Free Float réduit</h4>
+<p>Insiders, institutions, et retail diamond-hands réduisent le float disponible. Moins d'actions disponibles = plus de pression sur les shorts qui cherchent à racheter</p>
+</div>
+</div>
+
+<div id="squeezeChart" style="width:100%;height:450px;margin:2rem 0;"></div>
+
+<h3>Phases temporelles d'un short squeeze</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Phase</th><th>Durée</th><th>Volume</th><th>Caractéristiques</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><strong>1. Accumulation</strong></td><td>Jours à semaines</td><td>Normal → légèrement élevé</td><td>Les smart money commencent à accumuler discrètement. SI reste élevé</td><td>Repérer le setup, préparer la position</td></tr>
+<tr><td><strong>2. Ignition</strong></td><td>1-2 jours</td><td>3-5× la moyenne</td><td>Catalyseur + premiers margin calls. Le prix casse les résistances clés</td><td>Entrer dès la confirmation du breakout</td></tr>
+<tr><td><strong>3. Squeeze vertical</strong></td><td>2-5 jours</td><td>10-50× la moyenne</td><td>Boucle de rétroaction maximale. Halts de trading fréquents. Volatilité extrême</td><td>Gérer la position avec trailing stops larges</td></tr>
+<tr><td><strong>4. Climax</strong></td><td>1 jour</td><td>Volume record</td><td>Gap up massif à l'ouverture, puis reversal intraday violent</td><td>Commencer à prendre des profits</td></tr>
+<tr><td><strong>5. Capitulation</strong></td><td>1-3 semaines</td><td>Diminue progressivement</td><td>Retour progressif vers la « fair value ». SI chute drastiquement</td><td>Solder la position, ne pas re-shorter</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : CAS PRATIQUES                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cas"><i class="fa-solid fa-microscope"></i> Cas pratiques — CLOV, MVST &amp; les leçons</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-microscope"></i> Étude de cas : CLOV — Le squeeze avorté</h2>
+
+<p><strong>Clover Health (CLOV)</strong> est l'un des cas les plus instructifs de short squeeze avorté. Malgré un SI% élevé et un engouement retail massif, le squeeze a échoué à se maintenir. Comprendre pourquoi est essentiel.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Métrique</th><th>Valeur actuelle</th><th>Pic squeeze (Juin 2021)</th><th>Analyse</th></tr></thead>
+<tbody>
+<tr><td>Prix</td><td>$2.09</td><td>$28.85</td><td>-92.7% depuis le pic. La compression post-squeeze a été dévastatrice</td></tr>
+<tr><td>SI % of Float</td><td>9.95%</td><td>~38%</td><td>Les shorts ont largement couvert. Le trade est terminé</td></tr>
+<tr><td>Days to Cover</td><td>6.04</td><td>~2.1</td><td>Volume en chute libre — même un SI réduit est plus difficile à couvrir</td></tr>
+<tr><td>Cost to Borrow</td><td>0.26%</td><td>> 200%</td><td>Plus aucune tension sur le prêt de titres</td></tr>
+<tr><td>Capitalisation</td><td>~$1.1B</td><td>~$6.5B</td><td>La dilution et la baisse du prix ont détruit la capitalisation</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-book"></i> Pourquoi le squeeze CLOV a échoué</h4>
+<ol>
+<li><strong>Hindenburg Research</strong> a publié un rapport dévastateur accusant CLOV de fraude (faux partenariats, manipulation des métriques cliniques) — cela a sapé la confiance des retail</li>
+<li><strong>Dilution</strong> — Le management a profité du prix élevé pour émettre de nouvelles actions (ATM offering), diluant les actionnaires et fournissant de la liquidité aux shorts</li>
+<li><strong>Fondamentaux faibles</strong> — L'entreprise perdait de l'argent avec un business model non prouvé. Pas de floor de valorisation pour soutenir le prix</li>
+<li><strong>Fractionnement retail</strong> — Le mouvement s'est fragmenté entre GME, AMC, BB, CLOV, WISH. Pas assez de pression concentrée</li>
+</ol>
+</div>
+
+<h2><i class="fa-solid fa-microscope"></i> Étude de cas : MVST — Le piège du high SI</h2>
+
+<p><strong>Microvast Holdings (MVST)</strong> illustre un pattern différent : un SI% chroniquement élevé qui ne mène jamais à un squeeze, parce que les shorts ont raison sur les fondamentaux.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Métrique</th><th>Valeur actuelle</th><th>Signification</th></tr></thead>
+<tbody>
+<tr><td>Prix</td><td>$2.24</td><td>-91% depuis SPAC merger à $25</td></tr>
+<tr><td>SI % of Float</td><td>13.5%</td><td>Élevé mais stable — pas de pression de couverture</td></tr>
+<tr><td>Days to Cover</td><td>7.48</td><td>Plus d'une semaine — mais les shorts sont en forte PnL positive, pas de stress</td></tr>
+<tr><td>Cost to Borrow</td><td>0.37%</td><td>Quasi-nul. Aucune pénurie d'actions à emprunter</td></tr>
+<tr><td>Beta</td><td>3.37</td><td>Extrêmement volatile, mais corrélé aux SPACs et non aux squeeze setups</td></tr>
+<tr><td>Book Value</td><td>$1.112</td><td>Le titre trade au-dessus du book value mais les fondamentaux se dégradent</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Leçon MVST : le piège du « high SI = squeeze imminent »</h4>
+<p>Un SI% élevé seul ne suffit <strong>jamais</strong> pour déclencher un squeeze. Les shorts sur MVST sont en forte plus-value, ont un CTB quasi-nul, et le titre fait régulièrement l'objet de <strong>dilutions 424B5</strong> (prospectus de vente de nouvelles actions) qui fournissent un approvisionnement constant de titres aux shorts. Le vrai signal n'est pas le SI% absolu, mais sa <strong>variation</strong> combinée avec le CTB et les FTD.</p>
+</div>
+
+<h3>Matrice de scoring — Probabilité de squeeze</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Signal</th><th>CLOV (2021)</th><th>MVST (2024)</th><th>GME (Jan 2021)</th><th>RXT</th></tr></thead>
+<tbody>
+<tr><td>SI > 20% du float</td><td>✅ ~38%</td><td>❌ 13.5%</td><td>✅ > 140%</td><td>❌ 8.44%</td></tr>
+<tr><td>CTB > 50%</td><td>✅ > 200%</td><td>❌ 0.37%</td><td>✅ > 80%</td><td>✅ 76.76%</td></tr>
+<tr><td>DTC > 5 jours</td><td>❌ ~2.1</td><td>✅ 7.48</td><td>✅ ~6</td><td>✅ 6.94</td></tr>
+<tr><td>Utilization > 90%</td><td>✅ ~95%</td><td>❌ ~40%</td><td>✅ 100%</td><td>✅ ~85%</td></tr>
+<tr><td>Catalyseur positif</td><td>❌ Hindenburg</td><td>❌ Dilution</td><td>✅ DFV/Reddit</td><td>❌ Debt load</td></tr>
+<tr><td><strong>Score squeeze</strong></td><td><strong>3/5</strong></td><td><strong>1/5</strong></td><td><strong>5/5</strong></td><td><strong>3/5</strong></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : STRATÉGIES DE TRADING                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="strategies"><i class="fa-solid fa-crosshairs"></i> Stratégies de trading liées au short interest</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-crosshairs"></i> 5 Stratégies actionables</h2>
+
+<h3>Stratégie 1 : Squeeze Sniper (Long)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-bullseye"></i> Setup du Squeeze Sniper</h4>
+<p><strong>Objectif</strong> : Capturer les 30-100% du mouvement initial d'un short squeeze.</p>
+<ul>
+<li><strong>Filtres d'entrée</strong> : SI > 25%, CTB > 30%, DTC > 4, Utilization > 85%, FTD récents en hausse</li>
+<li><strong>Trigger</strong> : Volume > 3× la moyenne + prix casse la résistance majeure sur volume</li>
+<li><strong>Entrée</strong> : Dès la confirmation du breakout (clôture > résistance)</li>
+<li><strong>Stop</strong> : Sous le plus bas de la bougie de breakout (-8 à -12%)</li>
+<li><strong>TP1</strong> : +30% (prendre 50% de la position)</li>
+<li><strong>TP2</strong> : Trailing stop 20% sous le plus haut (laisser courir le reste)</li>
+<li><strong>R/R minimum</strong> : 1:3</li>
+<li><strong>Taille position</strong> : 2-3% du portefeuille (risque très élevé)</li>
+</ul>
+</div>
+
+<h3>Stratégie 2 : FTD T+35 Cycle (Long)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-calendar-days"></i> Setup du FTD Cycle</h4>
+<p><strong>Objectif</strong> : Exploiter les forced buy-ins liés aux cycles T+35 de résolution des FTD.</p>
+<ul>
+<li><strong>Filtres</strong> : FTD > 100K actions (SEC EDGAR), titre sur Reg SHO Threshold List</li>
+<li><strong>Timing</strong> : Entrer 2-3 jours AVANT la date T+35 anticipée</li>
+<li><strong>Entrée</strong> : Au marché ou sur pullback intraday</li>
+<li><strong>Stop</strong> : Sous le support le plus proche (-5 à -8%)</li>
+<li><strong>TP</strong> : +10-15% ou vendre le jour de T+35</li>
+<li><strong>Win rate historique</strong> : ~55-60% (source : academic research on FTD cycles)</li>
+</ul>
+</div>
+
+<h3>Stratégie 3 : Short the Squeeze Fade (Short)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-arrow-down"></i> Setup du Squeeze Fade</h4>
+<p><strong>Objectif</strong> : Shorter le retour à la moyenne après un squeeze. Le trade le plus profitable si bien exécuté.</p>
+<ul>
+<li><strong>Condition préalable</strong> : Un squeeze s'est produit (volume > 10× la moyenne, prix > 100% en < 1 semaine)</li>
+<li><strong>Filtres d'entrée</strong> : RSI > 85, prix > 3 écarts-types de la EMA20, volume en déclin sur le 2e/3e jour</li>
+<li><strong>Trigger</strong> : Première bougie rouge significative après le climax (> -10% du top)</li>
+<li><strong>Stop</strong> : Au-dessus du plus haut absolu du squeeze (+5%)</li>
+<li><strong>TP</strong> : -40 à -60% depuis le top (retour vers le prix pré-squeeze)</li>
+<li><strong>⚠️ Risque</strong> : EXTRÊME. Un 2e leg up peut oblitérer la position short</li>
+</ul>
+</div>
+
+<h3>Stratégie 4 : CTB Divergence (Long Calls)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-money-bill-trend-up"></i> Setup CTB Divergence</h4>
+<p><strong>Objectif</strong> : Utiliser des options call pour capturer un squeeze avec un risque limité.</p>
+<ul>
+<li><strong>Filtres</strong> : CTB en hausse rapide (doublement en < 2 semaines) alors que le prix stagne ou baisse</li>
+<li><strong>Instrument</strong> : Calls OTM (+10-15%) expiration 30-45 jours</li>
+<li><strong>Sizing</strong> : 0.5-1% du portefeuille (achat spéculatif)</li>
+<li><strong>Avantage</strong> : Perte limitée à la prime payée, levier asymétrique en cas de squeeze</li>
+</ul>
+</div>
+
+<h3>Stratégie 5 : Anti-Manipulation Defensive (Pairs Trade)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-shield-halved"></i> Setup Defensif</h4>
+<p><strong>Objectif</strong> : Se protéger de la manipulation en cours sur un titre détenu.</p>
+<ul>
+<li><strong>Condition</strong> : Vous êtes long un titre qui montre des signes de manipulation baissière</li>
+<li><strong>Action 1</strong> : Acheter des puts ATM (protection du capital)</li>
+<li><strong>Action 2</strong> : Documenter les anomalies (FTD, short exempt volume, dark pool %) pour plainte SEC</li>
+<li><strong>Action 3</strong> : Si conviction forte, ajouter à la position sur les dips de manipulation (DCA dans la zone de panique artificielle)</li>
+</ul>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 : SCANNER SETUP                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scanner"><i class="fa-solid fa-magnifying-glass-chart"></i> Configuration du Scanner Short Squeeze</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-magnifying-glass-chart"></i> Scanner Short Squeeze — Configuration complète</h2>
+
+<p>Pour identifier les candidats au squeeze en temps réel, voici la configuration de scanner à mettre en place :</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Filtre</th><th>Seuil minimum</th><th>Seuil optimal</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Short Interest % of Float</td><td>> 15%</td><td>> 25%</td><td>Fintel, Ortex</td></tr>
+<tr><td>Cost to Borrow (annualisé)</td><td>> 20%</td><td>> 50%</td><td>IBKR SLB, Ortex</td></tr>
+<tr><td>Days to Cover</td><td>> 3</td><td>> 5</td><td>Calculé (SI / Volume 20d)</td></tr>
+<tr><td>Utilization Rate</td><td>> 80%</td><td>> 95%</td><td>Ortex, S3</td></tr>
+<tr><td>FTD Trend</td><td>En hausse</td><td>Spike > 0.5% float</td><td>SEC EDGAR</td></tr>
+<tr><td>RSI (14)</td><td>> 30 (pas oversold)</td><td>40-60 (consolidation)</td><td>Calculé</td></tr>
+<tr><td>Volume relatif</td><td>> 1.5×</td><td>> 3×</td><td>Calculé vs SMA 20</td></tr>
+<tr><td>Prix</td><td>> $2.00</td><td>> $5.00</td><td>Éviter les penny stocks</td></tr>
+<tr><td>Market Cap</td><td>> $200M</td><td>$500M - $5B</td><td>Sweet spot small/mid cap</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Points clés de cette partie</h4>
+<ul>
+<li>Le short selling est légitime et nécessaire — c'est l'abus qui est illégal</li>
+<li>Les 8 métriques clés (SI%, CTB, DTC, FTD, Utilization, etc.) doivent être lues en confluence</li>
+<li>Le naked shorting laisse des traces via les FTD et les cycles T+35</li>
+<li>Un squeeze nécessite 5 conditions : SI élevé, CTB élevé, DTC long, float réduit, catalyseur</li>
+<li>CLOV a échoué (Hindenburg + dilution), MVST n'a jamais démarré (shorts en profit), GME a réussi (confluence parfaite)</li>
+<li>5 stratégies opérationnelles : Squeeze Sniper, FTD Cycle, Squeeze Fade, CTB Divergence, Defensive</li>
+</ul>
+</div>
+
+<div class="next-cta">
+<p><strong>Partie 3 →</strong> <a href="/series/market-manipulation/part3-dark-pools/">Dark Pools &amp; Flux Cachés</a> — Où vont les ordres institutionnels ? Comment les dark pools, ATS, et l'internalisation PFOF sont utilisés pour masquer l'activité de manipulation.</p>
+</div>
+</div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Métriques Short Interest par ticker
+var metriquesChart=echarts.init(document.getElementById('metriquesChart'));
+metriquesChart.setOption({tooltip:{trigger:'axis'},legend:{data:['SI %','CTB %','DTC (jours)'],top:0},grid:{left:'3%',right:'4%',bottom:'3%',containLabel:true},xAxis:{type:'category',data:['GME (Jan 21)','CLOV (Jun 21)','AMC (Jun 21)','MVST (Now)','RXT (Now)','RZLV (Now)']},yAxis:[{type:'value',name:'Pourcentage',max:150},{type:'value',name:'Jours',max:10}],series:[{name:'SI %',type:'bar',data:[140,38,22,13.5,8.44,11.5],itemStyle:{color:'#dc2626'}},{name:'CTB %',type:'bar',data:[80,200,15,0.37,76.76,1.42],yAxisIndex:0,itemStyle:{color:'#f59e0b'}},{name:'DTC (jours)',type:'line',data:[6,2.1,1.5,7.48,6.94,3.2],yAxisIndex:1,itemStyle:{color:'#2563eb'},lineStyle:{width:3}}]});
+
+// Anatomie d'un squeeze (prix + volume)
+var squeezeChart=echarts.init(document.getElementById('squeezeChart'));
+squeezeChart.setOption({title:{text:'Anatomie d\'un Short Squeeze — GameStop Jan 2021',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},legend:{data:['Prix ($)','Volume (M)'],top:30},grid:{left:'3%',right:'4%',bottom:'3%',top:'20%',containLabel:true},xAxis:{type:'category',data:['11 Jan','12','13','14','15','19','20','21','22','25','26','27','28','29']},yAxis:[{type:'value',name:'Prix $',min:0,max:500},{type:'value',name:'Volume M',min:0,max:200}],series:[{name:'Prix ($)',type:'line',data:[19.94,19.95,31.4,39.91,35.5,39.36,39.12,43.03,65.01,76.79,147.98,347.51,483,325],smooth:true,lineStyle:{width:3,color:'#dc2626'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(220,38,38,0.3)'},{offset:1,color:'rgba(220,38,38,0)'}]}}},{name:'Volume (M)',type:'bar',yAxisIndex:1,data:[7.1,7.0,144.5,93.7,46.7,74.7,33.5,57.1,197.2,177.9,178.6,93.4,58.8,50.6],itemStyle:{color:function(params){return params.data>100?'#dc2626':'#94a3b8'}}}]});
+
+window.addEventListener('resize',function(){metriquesChart.resize();squeezeChart.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

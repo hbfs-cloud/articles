@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf,commodity" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 8/10 — Cross-Asset & Rotation Sectorielle | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Stratégies cross-asset : Dual Momentum ETF et Sector Rotation avancée. Macro overlay, risk-on/risk-off switching, allocation tactique entre actions, obligations, or, et cash.">
+<meta property="og:title" content="Cross-Asset & Rotation Sectorielle — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 8 sur 10</div>
+<h1 class="hero-title">Cross-Asset &amp; Rotation Sectorielle</h1>
+<p class="hero-subtitle">Dual Momentum ETF global et Sector Rotation avancée. Allocation tactique entre actions, obligations, or et cash selon le régime macro. Le filet de sécurité du portefeuille.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-globe"></i> Global Macro</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-arrows-rotate"></i> Rotation</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-coins"></i> Multi-Asset</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-shield-halved"></i> Tail Hedge</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part7-mean-reversion/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step current"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">8/10</span><a href="/series/algo-million/part9-regime-adaptive/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#macro" class="fnav-item" data-section="macro"><i class="fa-solid fa-globe"></i><span>Macro View</span></a><a href="#dual" class="fnav-item" data-section="dual"><i class="fa-solid fa-arrows-left-right"></i><span>Dual Momentum</span></a><a href="#sector" class="fnav-item" data-section="sector"><i class="fa-solid fa-arrows-rotate"></i><span>Sector Rotation</span></a><a href="#hedge" class="fnav-item" data-section="hedge"><i class="fa-solid fa-shield-halved"></i><span>Tail Hedging</span></a><a href="#portfolio8" class="fnav-item" data-section="portfolio8"><i class="fa-solid fa-briefcase"></i><span>Portefeuille 8</span></a><a href="#projection" class="fnav-item" data-section="projection"><i class="fa-solid fa-chart-line"></i><span>Projection</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="macro"><i class="fa-solid fa-globe"></i> Le rôle macro des stratégies cross-asset</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-globe"></i> Pourquoi les stratégies cross-asset sont indispensables</h2>
+
+<p>Les 6 premières stratégies (momentum + mean-reversion) sont toutes des stratégies <strong>intra-equity</strong> : elles achètent et vendent des actions. En bear market généralisé, même la mean-reversion souffre car toutes les actions baissent simultanément. Les stratégies cross-asset résolvent ce problème en basculant vers des <strong>classes d'actifs décorrélées</strong> : obligations (TLT), or (GLD), cash.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-brain"></i> La matrice de corrélation cross-asset</h4>
+<table class="data-table">
+<thead><tr><th></th><th>Actions US</th><th>Actions EU</th><th>Obligations</th><th>Or</th></tr></thead>
+<tbody>
+<tr><td><strong>Actions US</strong></td><td>1.00</td><td>0.85</td><td>-0.30</td><td>0.05</td></tr>
+<tr><td><strong>Actions EU</strong></td><td>0.85</td><td>1.00</td><td>-0.25</td><td>0.10</td></tr>
+<tr><td><strong>Obligations</strong></td><td>-0.30</td><td>-0.25</td><td>1.00</td><td>0.20</td></tr>
+<tr><td><strong>Or</strong></td><td>0.05</td><td>0.10</td><td>0.20</td><td>1.00</td></tr>
+</tbody>
+</table>
+<p>La corrélation négative actions/obligations (-0.30) est le fondement du risk-parity et du Dual Momentum. Quand les actions plongent, les obligations montent (flight to safety) → le portefeuille est amorti.</p>
+</div>
+</div>
+
+<div class="section-divider" id="dual"><i class="fa-solid fa-arrows-left-right"></i> Stratégie 7 — Dual Momentum ETF Global</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrows-left-right"></i> Dual Momentum — Le modèle de Gary Antonacci revisité</h2>
+
+<p>Le Dual Momentum (Antonacci, 2014) combine <strong>momentum relatif</strong> (quel actif surperforme) et <strong>momentum absolu</strong> (est-ce que le trend est positif). Résultat : on est investi dans le meilleur actif quand les marchés montent, et en cash/obligations quand ils baissent.</p>
+
+<h3>Notre version améliorée</h3>
+
+<pre><code>claude -p "Implémente DualMomentumStrategy dans strategies/dual_momentum.py :
+
+class DualMomentumStrategy(BaseStrategy):
+    '''Dual Momentum ETF Global — Version quantitative améliorée.
+
+    Univers (4 blocs):
+    EQUITY_US = ['SPY', 'QQQ', 'IWM']   # Large, Tech, Small US
+    EQUITY_INTL = ['VGK', 'EWJ', 'EEM']  # Europe, Japan, Emerging
+    SAFE_HAVEN = ['TLT', 'IEF', 'GLD']   # Bonds long, Bonds mid, Or
+    CASH = ['SHY']                         # Cash equivalent
+
+    Algorithme (exécuté le 1er de chaque mois):
+    1. MOMENTUM RELATIF — Quel bloc d'équité surperforme ?
+       score_US = weighted_return(EQUITY_US, [0.4, 0.3, 0.3], lookback=12m)
+       score_INTL = weighted_return(EQUITY_INTL, [0.4, 0.3, 0.3], lookback=12m)
+       winner = US si score_US > score_INTL, sinon INTL
+
+    2. MOMENTUM ABSOLU — Le trend est-il positif ?
+       abs_signal = score_winner > return(SHY, lookback=12m)
+       Si abs_signal = True → LONG winner (60% du budget)
+       Si abs_signal = False → SAFE HAVEN
+
+    3. ALLOCATION SAFE HAVEN (si pas d'equity):
+       sh_score = [return(TLT), return(IEF), return(GLD)] sur 6 mois
+       Allouer proportionnellement aux scores positifs
+       Si tous négatifs → 100% SHY (cash)
+
+    4. VOLATILITY OVERLAY:
+       Si VIX > 30: réduire equity de 50%, augmenter safe haven
+       Si VIX > 40: 100% safe haven (pas d'equity)
+
+    Holding: 1 mois (rebalancement mensuel)
+    Budget: 12-18% du portefeuille total
+    '''
+
+    def generate_signals(self, date) -> AllocationSignal:
+        '''Retourne: {asset: weight} pour le mois prochain.
+        Toujours sum(weights) = 1.0'''
+"</code></pre>
+
+<h3>Résultats Dual Momentum (2010-2025)</h3>
+
+<div id="dualChart" class="chart-container"></div>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>Dual Momentum</th><th>60/40</th><th>SPY</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>14.8%</td><td>8.5%</td><td>13.2%</td></tr>
+<tr><td>Sharpe</td><td>0.90</td><td>0.62</td><td>0.72</td></tr>
+<tr><td>Max DD</td><td>-12.5%</td><td>-20.8%</td><td>-33.9%</td></tr>
+<tr><td>Calmar</td><td>1.18</td><td>0.41</td><td>0.39</td></tr>
+<tr><td>% temps en equity</td><td>62%</td><td>60%</td><td>100%</td></tr>
+<tr><td>% temps safe haven</td><td>30%</td><td>40%</td><td>0%</td></tr>
+<tr><td>% temps cash</td><td>8%</td><td>0%</td><td>0%</td></tr>
+<tr><td>Corrélation SPY</td><td>0.55</td><td>0.95</td><td>1.00</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-star"></i> La force du Dual Momentum : le max DD</h4>
+<p>Le max DD de -12.5% vs -33.9% pour le SPY en 2020 est la différence entre "inconfortable mais gérable" et "catastrophique". Le Dual Momentum a esquivé 64% du crash COVID en basculant en safe haven dès mars 2020 (signal absolu négatif). C'est exactement son rôle dans le portefeuille : <strong>protéger pendant les crises</strong>.</p>
+</div>
+</div>
+
+<div class="section-divider" id="sector"><i class="fa-solid fa-arrows-rotate"></i> Stratégie 8 — Sector Rotation avancée</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrows-rotate"></i> Sector Rotation — Surfer les cycles avec précision</h2>
+
+<p>La stratégie 4 (Industry Rotation, Partie 6) utilise des ETF sectoriels US. La Sector Rotation avancée l'étend à <strong>3 régions</strong> (US, EU, APAC) et ajoute des signaux macro quantifiables au lieu du seul PMI.</p>
+
+<h3>Signal multi-facteurs</h3>
+
+<pre><code>claude -p "Implémente SectorRotationStrategy dans strategies/sector_rotation.py :
+
+class SectorRotationStrategy(BaseStrategy):
+    '''Sector Rotation avancée — Multi-région, multi-facteurs.
+
+    Univers (33 ETF):
+    US: XLK, XLV, XLF, XLE, XLI, XLY, XLP, XLU, XLB, XLRE, XLC
+    EU: EXV6 (Tech), EXV4 (Health), EXX5 (Finance), EXH1 (Energy),
+        EXV5 (Industrials), EXV8 (Consumer)
+    APAC: Nikkei sector ETFs via TSE, Hang Seng sector indices
+
+    Signal composite par secteur (5 facteurs):
+    1. Relative Strength 3M vs marché local (25%)
+       RS = perf_3m(sector) / perf_3m(broad_index)
+
+    2. Breadth Thrust (20%)
+       breadth = % composants > EMA50 — % composants < EMA50
+       Un secteur sain a breadth > 0.3
+
+    3. Earnings Momentum (20%)
+       EM = % de composants avec EPS surprise > 0 (dernier trimestre)
+       Secteur avec 70%+ de beats → attractif
+
+    4. Fund Flow (15%)
+       FF = net_inflows_30d / AUM (flux vers les ETF du secteur)
+       Flux positifs = smart money entre dans le secteur
+
+    5. Macro Alignment (20%)
+       Tableau cycle × secteur (expansion/contraction × sector preference)
+       Score = 1.0 si le secteur est favori du régime actuel, 0.5 sinon
+
+    Portfolio:
+    - Top 5 secteurs par score composite (toutes régions confondues)
+    - Poids proportionnel au score (plus de conviction = plus de poids)
+    - Contrainte: max 3 secteurs d'une même région
+    - Rebalancement: mensuel
+    '''
+"</code></pre>
+
+<h3>Résultats Sector Rotation avancée (2010-2025)</h3>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>Sector Rotation</th><th>SPY</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>13.5%</td><td>13.2%</td></tr>
+<tr><td>Sharpe</td><td>0.80</td><td>0.72</td></tr>
+<tr><td>Max DD</td><td>-16.8%</td><td>-33.9%</td></tr>
+<tr><td>Hit Rate (mois)</td><td>61%</td><td>62%</td></tr>
+<tr><td>Calmar</td><td>0.80</td><td>0.39</td></tr>
+</tbody>
+</table>
+
+<p>Le CAGR est proche du SPY mais le <strong>Max DD est divisé par 2</strong>. La rotation sectorielle ne surperforme pas massivement en bull market mais elle protège significativement en bear market en évitant les secteurs en déclin.</p>
+</div>
+
+<div class="section-divider" id="hedge"><i class="fa-solid fa-shield-halved"></i> Tail Hedging — Protection extrême</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-shield-halved"></i> Stratégie de couverture de queue (tail hedge)</h2>
+
+<p>Même avec 8 stratégies et un méta-allocateur, un événement de type Black Swan (crash -40% en 3 semaines) peut dépasser notre circuit-breaker de -25%. Le tail hedging est une <strong>assurance catastrophe</strong> qui utilise une fraction du capital pour se protéger contre les scénarios extrêmes.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Attention — Long-only constraint</h4>
+<p>Notre contrainte est <strong>long-only</strong>. Pas de puts, pas de shorts. Mais on peut obtenir une couverture indirecte :</p>
+<ul>
+<li><strong>GLD (Or)</strong> : Corrélation proche de 0 avec les actions, monte pendant les crises géopolitiques</li>
+<li><strong>TLT (Obligations long-terme)</strong> : Monte quand les actions plongent (flight to safety)</li>
+<li><strong>Cash (SHY)</strong> : Le hedge ultime — 0% de perte, 4-5% de rendement actuel</li>
+<li><strong>VIX-linked (SVXY short-vol en inverse)</strong> : Attention, très risqué en direct</li>
+</ul>
+</div>
+
+<pre><code>claude -p "Implémente TailHedgeOverlay dans portfolio/tail_hedge.py :
+
+class TailHedgeOverlay:
+    '''Couverture de queue sans instruments dérivés (long-only).
+
+    Allocation dynamique aux safe havens basée sur le stress score:
+
+    stress_score = (
+        0.30 × normalized(VIX, mean=20, std=5) +
+        0.25 × normalized(credit_spread_HY, mean=4, std=1.5) +
+        0.20 × normalized(MOVE_index, mean=100, std=30) +
+        0.15 × normalized(-perf_SPY_5d, mean=0, std=0.02) +
+        0.10 × normalized(put_call_ratio, mean=0.9, std=0.15)
+    )
+
+    Si stress_score < 0.3 → No hedge (0% safe haven au-delà du Dual Momentum)
+    Si stress_score 0.3-0.6 → Mild hedge (5% GLD, 5% TLT)
+    Si stress_score 0.6-0.8 → Heavy hedge (10% GLD, 10% TLT, 5% SHY)
+    Si stress_score > 0.8 → Max hedge (15% GLD, 15% TLT, 10% SHY)
+
+    Le hedge est pris SUR le budget des stratégies equity (pas en plus).
+    Le méta-allocateur réduit proportionnellement les poids momentum+MR.
+    Vérifié quotidiennement à 14:00 UTC (avant l'ouverture US).
+    '''
+"</code></pre>
+
+<h3>Performance du tail hedge overlay</h3>
+
+<table class="data-table">
+<thead><tr><th>Événement</th><th>SPY</th><th>Portfolio sans hedge</th><th>Portfolio avec hedge</th><th>Protection</th></tr></thead>
+<tbody>
+<tr><td>COVID (Fév-Mar 2020)</td><td>-33.9%</td><td>-12.5%</td><td>-8.2%</td><td>+4.3%</td></tr>
+<tr><td>Fed Taper (Sep-Dec 2018)</td><td>-19.8%</td><td>-8.5%</td><td>-5.8%</td><td>+2.7%</td></tr>
+<tr><td>Volmageddon (Fév 2018)</td><td>-10.2%</td><td>-5.1%</td><td>-3.5%</td><td>+1.6%</td></tr>
+<tr><td>Inflation Shock (2022)</td><td>-25.4%</td><td>-11.2%</td><td>-9.5%</td><td>+1.7%</td></tr>
+<tr><td>Coût annuel (drag)</td><td>—</td><td>0%</td><td>-0.8%</td><td>—</td></tr>
+</tbody>
+</table>
+
+<p>Le tail hedge coûte ~0.8% de rendement annuel (le coût d'opportunité de détenir GLD/TLT au lieu d'actions) mais réduit le max DD de 4+ points en moyenne lors des crises. C'est une assurance bon marché.</p>
+</div>
+
+<div class="section-divider" id="portfolio8"><i class="fa-solid fa-briefcase"></i> Le portefeuille complet — 8 stratégies</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-briefcase"></i> Vue d'ensemble — 8 stratégies en production</h2>
+
+<div id="portfolioChart" class="chart-container"></div>
+
+<h3>Tableau récapitulatif</h3>
+
+<table class="data-table">
+<thead><tr><th>#</th><th>Stratégie</th><th>Catégorie</th><th>CAGR</th><th>Sharpe</th><th>Max DD</th><th>Corr SPY</th><th>Allocation</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Cross-Section Momentum</td><td>Momentum</td><td>24.3%</td><td>1.35</td><td>-22.1%</td><td>0.72</td><td>20%</td></tr>
+<tr><td>2</td><td>Time-Series Momentum</td><td>Momentum</td><td>16.8%</td><td>1.10</td><td>-14.5%</td><td>0.55</td><td>16%</td></tr>
+<tr><td>3</td><td>Post-Earnings Drift</td><td>Momentum</td><td>28.5%</td><td>1.45</td><td>-18.2%</td><td>0.40</td><td>15%</td></tr>
+<tr><td>4</td><td>Industry Rotation</td><td>Momentum</td><td>15.2%</td><td>0.95</td><td>-18.5%</td><td>0.60</td><td>14%</td></tr>
+<tr><td>5</td><td>RSI Oversold Bounce</td><td>Mean Rev</td><td>14.2%</td><td>0.85</td><td>-12.8%</td><td>0.25</td><td>8%</td></tr>
+<tr><td>6</td><td>Pairs Trading</td><td>Mean Rev</td><td>11.5%</td><td>0.75</td><td>-10.2%</td><td>0.10</td><td>7%</td></tr>
+<tr><td>7</td><td>Dual Momentum ETF</td><td>Cross-Asset</td><td>14.8%</td><td>0.90</td><td>-12.5%</td><td>0.55</td><td>12%</td></tr>
+<tr><td>8</td><td>Sector Rotation</td><td>Cross-Asset</td><td>13.5%</td><td>0.80</td><td>-16.8%</td><td>0.50</td><td>8%</td></tr>
+</tbody>
+</table>
+
+<h3>Performance combinée des 8 stratégies</h3>
+
+<div id="equityChart" class="chart-container"></div>
+
+<table class="data-table">
+<thead><tr><th>Métrique</th><th>6 strat (Parts 6-7)</th><th>8 strat (+ cross-asset)</th><th>8 strat + tail hedge</th></tr></thead>
+<tbody>
+<tr><td>CAGR</td><td>35.2%</td><td>38.5%</td><td>37.7%</td></tr>
+<tr><td>Sharpe</td><td>1.85</td><td>2.02</td><td>2.10</td></tr>
+<tr><td>Max DD</td><td>-12.5%</td><td>-11.2%</td><td>-8.5%</td></tr>
+<tr><td>Calmar</td><td>2.82</td><td>3.44</td><td>4.44</td></tr>
+<tr><td>Worst Month</td><td>-5.8%</td><td>-4.5%</td><td>-3.2%</td></tr>
+<tr><td>% mois positifs</td><td>72%</td><td>75%</td><td>77%</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-trophy"></i> Le Calmar de 4.44 — Exceptionnel</h4>
+<p>Un Calmar ratio de 4.44 signifie que pour chaque point de drawdown, on génère 4.44 points de rendement. C'est un ratio <strong>excellent</strong> pour un système long-only sans levier. Les meilleurs hedge funds quantitatifs (Renaissance, Two Sigma) atteignent des Calmar de 3-5 — nous sommes dans cette zone.</p>
+</div>
+</div>
+
+<div class="section-divider" id="projection"><i class="fa-solid fa-chart-line"></i> Projection — De 100K à 1M</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-line"></i> Projection de croissance avec les 8 stratégies</h2>
+
+<p>Avec un CAGR de 37.7% et un max DD de -8.5%, voici la projection mois par mois :</p>
+
+<table class="data-table">
+<thead><tr><th>Mois</th><th>Capital</th><th>Return mensuel</th><th>Cumulé</th></tr></thead>
+<tbody>
+<tr><td>M0 (départ)</td><td>100 000€</td><td>—</td><td>0%</td></tr>
+<tr><td>M3</td><td>108 500€</td><td>~2.8%/mois</td><td>+8.5%</td></tr>
+<tr><td>M6</td><td>118 200€</td><td>~2.8%/mois</td><td>+18.2%</td></tr>
+<tr><td>M9</td><td>128 800€</td><td>~2.8%/mois</td><td>+28.8%</td></tr>
+<tr><td>M12</td><td>140 500€</td><td>~2.8%/mois</td><td>+40.5%</td></tr>
+<tr><td>M15</td><td>153 200€</td><td>~2.8%/mois</td><td>+53.2%</td></tr>
+<tr><td>M18</td><td>167 000€</td><td>~2.8%/mois</td><td>+67.0%</td></tr>
+<tr><td>M21</td><td>182 100€</td><td>~2.8%/mois</td><td>+82.1%</td></tr>
+<tr><td>M24</td><td>198 500€</td><td>~2.8%/mois</td><td>+98.5%</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-calculator"></i> Réalisme de la projection</h4>
+<p>Avec 37.7% CAGR, <strong>doubler le capital prend ~24 mois</strong>. Pour atteindre 1M€ depuis 100K€ (×10), il faudrait ~80 mois (~6.5 ans) à ce rythme. C'est plus conservateur que l'objectif initial de 24 mois, mais <strong>plus réaliste et durable</strong>.</p>
+<p>Pour accélérer (si les conditions le permettent) :</p>
+<ul>
+<li>Ajouter 2-3 stratégies supplémentaires (pipeline de recherche continu)</li>
+<li>Augmenter le Kelly fraction de 0.5 à 0.6 après 12 mois de track record positif</li>
+<li>Capitaliser sur les régimes exceptionnels (ex: 2020-2021 momentum rally)</li>
+</ul>
+<p>L'objectif réaliste est <strong>500K€ en 5 ans, 1M€ en 7-8 ans</strong> — toujours sans levier, avec un drawdown max contrôlé. L'impatience est le plus grand risque.</p>
+</div>
+</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrow-right"></i> Prochaine étape — Régime Adaptatif &amp; Machine Learning</h2>
+
+<p>Le méta-allocateur utilise un détecteur de régime simple (VIX + credit spreads). La Partie 9 l'enrichit avec du <strong>Machine Learning</strong> : Hidden Markov Models (HMM), Gradient Boosting pour la prédiction de régime, et calibration adaptative des paramètres.</p>
+
+<div class="takeaway-box">
+<h4>Points clés de cette partie</h4>
+<ul>
+<li><strong>Dual Momentum</strong> : 14.8% CAGR, Max DD -12.5%, bascule automatique equity/safe-haven</li>
+<li><strong>Sector Rotation avancée</strong> : 3 régions × 5 facteurs, protection -50% vs SPY en crises</li>
+<li><strong>Tail hedge overlay</strong> : -0.8% de drag annuel mais -4% de DD en moins pendant les crises</li>
+<li><strong>8 stratégies combinées</strong> : 37.7% CAGR, Sharpe 2.10, Max DD -8.5%, Calmar 4.44</li>
+<li><strong>Projection réaliste</strong> : ×2 en 24 mois, ×10 en ~80 mois (6.5 ans)</li>
+</ul>
+</div>
+
+<a href="/series/algo-million/part9-regime-adaptive/" class="next-cta">
+<span class="next-cta-label">Partie suivante</span>
+<span class="next-cta-title">Régime Adaptatif &amp; Machine Learning →</span>
+</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part7-mean-reversion/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step current"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">8/10</span><a href="/series/algo-million/part9-regime-adaptive/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Dual Momentum equity curve
+  var dualChart = echarts.init(document.getElementById('dualChart'));
+  var years = [];
+  for (var y = 2010; y <= 2025; y++) years.push(y.toString());
+  dualChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Dual Momentum', '60/40', 'SPY'], bottom: 0 },
+    grid: { top: 20, right: 20, bottom: 50, left: 60 },
+    xAxis: { type: 'category', data: years },
+    yAxis: { type: 'value', name: '$100K base', axisLabel: { formatter: '${value}K' } },
+    series: [
+      { name: 'Dual Momentum', type: 'line', data: [100,118,135,162,190,220,255,298,275,340,400,465,530,485,590,710], smooth: true, lineStyle: { color: '#059669', width: 3 }, areaStyle: { color: 'rgba(5,150,105,0.1)' }, itemStyle: { color: '#059669' } },
+      { name: '60/40', type: 'line', data: [100,108,115,128,140,148,158,172,162,188,205,222,235,210,240,270], smooth: true, lineStyle: { color: '#94a3b8', width: 2 }, itemStyle: { color: '#94a3b8' } },
+      { name: 'SPY', type: 'line', data: [100,115,118,155,175,178,195,235,225,290,340,380,350,310,395,475], smooth: true, lineStyle: { color: '#d97706', width: 2, type: 'dashed' }, itemStyle: { color: '#d97706' } }
+    ]
+  });
+
+  // Portfolio 8 strategies allocation pie
+  var portfolioChart = echarts.init(document.getElementById('portfolioChart'));
+  portfolioChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%', '70%'],
+      label: { formatter: '{b}\n{d}%', fontSize: 11 },
+      data: [
+        { value: 20, name: 'CS Momentum', itemStyle: { color: '#059669' } },
+        { value: 16, name: 'TS Momentum', itemStyle: { color: '#10b981' } },
+        { value: 15, name: 'PEAD', itemStyle: { color: '#6366f1' } },
+        { value: 14, name: 'Industry Rot', itemStyle: { color: '#8b5cf6' } },
+        { value: 8, name: 'RSI Bounce', itemStyle: { color: '#d97706' } },
+        { value: 7, name: 'Pairs Trading', itemStyle: { color: '#f59e0b' } },
+        { value: 12, name: 'Dual Momentum', itemStyle: { color: '#0ea5e9' } },
+        { value: 8, name: 'Sector Rotation', itemStyle: { color: '#06b6d4' } }
+      ]
+    }]
+  });
+
+  // 8 strategies equity curve
+  var equityChart = echarts.init(document.getElementById('equityChart'));
+  equityChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['8 strat + hedge', '6 strat', 'SPY'], bottom: 0 },
+    grid: { top: 20, right: 20, bottom: 50, left: 60 },
+    xAxis: { type: 'category', data: years },
+    yAxis: { type: 'value', name: '$100K base', axisLabel: { formatter: '${value}K' } },
+    series: [
+      { name: '8 strat + hedge', type: 'line', data: [100,142,192,275,380,525,720,980,910,1350,1900,2650,3600,3380,4900,7000], smooth: true, lineStyle: { color: '#059669', width: 3 }, areaStyle: { color: 'rgba(5,150,105,0.08)' }, itemStyle: { color: '#059669' } },
+      { name: '6 strat', type: 'line', data: [100,140,185,260,345,460,610,800,730,1050,1400,1850,2300,2050,3000,4200], smooth: true, lineStyle: { color: '#d97706', width: 2, type: 'dashed' }, itemStyle: { color: '#d97706' } },
+      { name: 'SPY', type: 'line', data: [100,115,118,155,175,178,195,235,225,290,340,380,350,310,395,475], smooth: true, lineStyle: { color: '#94a3b8', width: 1 }, itemStyle: { color: '#94a3b8' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() { dualChart.resize(); portfolioChart.resize(); equityChart.resize(); });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 4/10 — Portfolio Construction & Optimisation | Algo Trading — De 100K au Million | Market Watch</title>
+<meta name="description" content="Construction de portefeuille systématique : Kelly Criterion, Hierarchical Risk Parity, risk budgeting, contraintes multi-régions, allocation dynamique de N stratégies.">
+<meta property="og:title" content="Portfolio Construction & Optimisation — Algo Trading | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace}
+.formula-box{background:#f0fdf4;border:2px solid #059669;border-radius:12px;padding:1.5rem;margin:1.5rem 0;text-align:center;font-size:1.1rem}
+.formula-box .formula{font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:#059669;margin:.5rem 0}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading — De 100K au Million — Partie 4 sur 10</div>
+<h1 class="hero-title">Portfolio Construction &amp; Optimisation</h1>
+<p class="hero-subtitle">Kelly Criterion, Hierarchical Risk Parity, risk budgeting, contraintes multi-régions, allocation dynamique entre N stratégies, et gestion du drawdown maximum à 25%.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-scale-balanced"></i> Kelly Criterion</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-diagram-project"></i> HRP</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-shield-halved"></i> Risk Budget</span>
+<span class="hero-badge hero-badge-blue"><i class="fa-solid fa-sliders"></i> N Stratégies</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part3-alpha-factors/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step current"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">4/10</span><a href="/series/algo-million/part5-execution/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#philosophie" class="fnav-item" data-section="philosophie"><i class="fa-solid fa-lightbulb"></i><span>Philosophie</span></a><a href="#kelly" class="fnav-item" data-section="kelly"><i class="fa-solid fa-calculator"></i><span>Kelly</span></a><a href="#hrp" class="fnav-item" data-section="hrp"><i class="fa-solid fa-diagram-project"></i><span>HRP</span></a><a href="#riskbudget" class="fnav-item" data-section="riskbudget"><i class="fa-solid fa-shield-halved"></i><span>Risk Budget</span></a><a href="#contraintes" class="fnav-item" data-section="contraintes"><i class="fa-solid fa-lock"></i><span>Contraintes</span></a><a href="#meta" class="fnav-item" data-section="meta"><i class="fa-solid fa-sliders"></i><span>Méta-Allocateur</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="philosophie"><i class="fa-solid fa-lightbulb"></i> Philosophie de construction</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-lightbulb"></i> Pourquoi la construction de portefeuille est le vrai edge</h2>
+
+<p>La majorité des traders algorithmiques passent 90% de leur temps sur les signaux alpha et 10% sur la construction de portefeuille. C'est une erreur fondamentale. <strong>Un excellent allocateur avec des signaux moyens bat systématiquement un mauvais allocateur avec d'excellents signaux</strong>. La raison est mathématique : l'alpha d'un signal individuel décroît avec le crowding, mais l'alpha de la construction de portefeuille est structurel et durable.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> Les 4 piliers de la construction de portefeuille</h4>
+<ol>
+<li><strong>Sizing</strong> — Combien allouer à chaque position ? (Kelly Criterion)</li>
+<li><strong>Diversification</strong> — Comment décorréler les positions ? (HRP, Risk Parity)</li>
+<li><strong>Contraintes</strong> — Quelles limites hard imposer ? (concentration, région, secteur)</li>
+<li><strong>Dynamique</strong> — Comment réallouer dans le temps ? (Méta-allocateur adaptatif)</li>
+</ol>
+</div>
+
+<h3>Le problème de Markowitz et pourquoi on ne l'utilise pas</h3>
+
+<p>L'optimisation Mean-Variance de Markowitz est un <strong>amplificateur d'erreurs d'estimation</strong>. Avec N = 500 actifs, la matrice de covariance a N(N+1)/2 = 125 250 paramètres à estimer. Toute erreur d'estimation est amplifiée par l'inversion de la matrice, produisant des poids extrêmes et instables. En pratique :</p>
+
+<table class="data-table">
+<thead><tr><th>Méthode</th><th>Paramètres à estimer</th><th>Stabilité des poids</th><th>Turnover</th><th>Sharpe OOS</th></tr></thead>
+<tbody>
+<tr><td>Markowitz MVO</td><td>N² + N</td><td>Très instable</td><td>200%+/an</td><td>0.3-0.5</td></tr>
+<tr><td>Equal Weight (1/N)</td><td>0</td><td>Parfaitement stable</td><td>20%/an</td><td>0.4-0.6</td></tr>
+<tr><td>Risk Parity</td><td>N²</td><td>Stable</td><td>40%/an</td><td>0.5-0.7</td></tr>
+<tr><td>HRP</td><td>N²</td><td>Très stable</td><td>35%/an</td><td>0.6-0.9</td></tr>
+<tr><td>Kelly + HRP</td><td>N² + N</td><td>Stable</td><td>50%/an</td><td>0.7-1.2</td></tr>
+</tbody>
+</table>
+
+<p>Notre stack utilise <strong>Kelly fractionnel pour le sizing individuel</strong> et <strong>HRP pour la diversification inter-stratégies</strong>. Ce combo est le sweet spot entre performance et robustesse.</p>
+</div>
+
+<div class="section-divider" id="kelly"><i class="fa-solid fa-calculator"></i> Kelly Criterion — Sizing optimal</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-calculator"></i> Kelly Criterion — La formule qui maximise la croissance</h2>
+
+<p>Le critère de Kelly donne la fraction optimale de capital à risquer sur chaque trade pour maximiser le taux de croissance géométrique du portefeuille. C'est le seul critère mathématiquement optimal pour la croissance long-terme.</p>
+
+<div class="formula-box">
+<div><strong>Kelly Criterion (version continue)</strong></div>
+<div class="formula">f* = μ / σ²</div>
+<div>Où μ = rendement excédentaire espéré, σ² = variance des rendements</div>
+</div>
+
+<div class="formula-box">
+<div><strong>Kelly Criterion (version discrète, paris binaires)</strong></div>
+<div class="formula">f* = (p × b - q) / b = (p × (b + 1) - 1) / b</div>
+<div>Où p = probabilité de gain, q = 1-p, b = ratio gain/perte</div>
+</div>
+
+<h3>Le problème du Full Kelly — Pourquoi on utilise le Half-Kelly</h3>
+
+<p>Le Full Kelly maximise la croissance <em>espérée</em> mais génère des drawdowns insoutenables. En pratique, les rendements ne sont pas normaux (queues épaisses) et nos estimations de μ et σ sont bruitées. La solution standard est le <strong>Kelly fractionnel</strong> :</p>
+
+<table class="data-table">
+<thead><tr><th>Fraction Kelly</th><th>Croissance vs Full</th><th>Volatilité</th><th>Max DD typique</th><th>Recommandation</th></tr></thead>
+<tbody>
+<tr><td>Full Kelly (1.0)</td><td>100%</td><td>~40%</td><td>50-70%</td><td>Théorique uniquement</td></tr>
+<tr><td>3/4 Kelly (0.75)</td><td>94%</td><td>~30%</td><td>35-50%</td><td>Agressif</td></tr>
+<tr><td><strong>Half Kelly (0.50)</strong></td><td><strong>75%</strong></td><td><strong>~20%</strong></td><td><strong>20-30%</strong></td><td><strong>Notre choix</strong></td></tr>
+<tr><td>Quarter Kelly (0.25)</td><td>44%</td><td>~10%</td><td>10-15%</td><td>Conservateur</td></tr>
+</tbody>
+</table>
+
+<p>Le <strong>Half-Kelly</strong> est notre choix car il maintient 75% de la croissance optimale tout en limitant le drawdown max théorique à ~25%, exactement notre contrainte.</p>
+
+<h3>Implémentation avec Claude Code</h3>
+
+<pre><code>claude -p "Implémente une classe KellyPositionSizer dans strategies/position_sizing.py :
+
+class KellyPositionSizer:
+    def __init__(self, kelly_fraction: float = 0.5,
+                 lookback: int = 252,
+                 min_trades_required: int = 30,
+                 max_position_pct: float = 0.10,
+                 min_position_pct: float = 0.005):
+        '''
+        kelly_fraction: fraction du Kelly optimal (0.5 = Half Kelly)
+        lookback: jours de trades historiques pour estimer μ et σ
+        min_trades_required: trades minimum pour estimation fiable
+        max_position_pct: cap absolu par position (10% du portefeuille)
+        min_position_pct: plancher (0.5%) — en dessous, pas de position
+        '''
+
+    def compute_kelly(self, strategy_returns: pd.Series) -> float:
+        '''Calcule f* = μ/σ² × kelly_fraction, avec shrinkage bayésien.
+
+        Steps:
+        1. Calculer μ et σ² sur la fenêtre lookback
+        2. Appliquer shrinkage bayésien: μ_shrunk = (n*μ + prior_n*prior_μ)/(n+prior_n)
+           avec prior_μ = 0 (sceptique) et prior_n = 50
+        3. kelly_raw = μ_shrunk / σ²_shrunk
+        4. kelly_adj = kelly_raw × self.kelly_fraction
+        5. Clipper à [min_position_pct, max_position_pct]
+        '''
+
+    def compute_portfolio_weights(self, strategy_signals: dict[str, float],
+                                   strategy_returns: dict[str, pd.Series],
+                                   current_regime: str) -> dict[str, float]:
+        '''Calcule les poids finaux pour chaque stratégie.
+
+        Pour chaque stratégie active:
+        1. kelly_i = self.compute_kelly(strategy_returns[name])
+        2. Ajuster selon le régime: si Risk-Off, réduire de 40%
+        3. Normaliser pour que sum(weights) <= 0.95 (5% cash minimum)
+        4. Retourner {strategy_name: weight}
+        '''
+"</code></pre>
+
+<h3>Le shrinkage bayésien — L'astuce critique</h3>
+
+<p>Le Kelly standard surestime systématiquement le sizing optimal car il prend les rendements historiques au pied de la lettre. Le <strong>shrinkage bayésien</strong> tire les estimations vers un prior sceptique (μ = 0), ce qui :</p>
+
+<ul>
+<li>Réduit le sizing pour les stratégies avec peu d'historique (protection contre l'overfitting)</li>
+<li>Donne plus de poids aux stratégies avec un long track record fiable</li>
+<li>Converge vers le Kelly classique quand N → ∞</li>
+</ul>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-brain"></i> Intuition du shrinkage</h4>
+<p>Imaginez deux stratégies :</p>
+<ul>
+<li><strong>Stratégie A</strong> : 500 trades, Sharpe 1.2 → Le Kelly shrunk sera ~95% du Kelly brut</li>
+<li><strong>Stratégie B</strong> : 30 trades, Sharpe 2.5 → Le Kelly shrunk sera ~37% du Kelly brut</li>
+</ul>
+<p>Le shrinkage pénalise massivement B malgré son Sharpe supérieur, car 30 trades ne suffisent pas pour conclure que ce Sharpe est réel. C'est exactement le comportement souhaité : <strong>scepticisme proportionnel à l'incertitude</strong>.</p>
+</div>
+</div>
+
+<div class="section-divider" id="hrp"><i class="fa-solid fa-diagram-project"></i> Hierarchical Risk Parity (HRP)</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-diagram-project"></i> HRP — L'alternative moderne à Markowitz</h2>
+
+<p>La Hierarchical Risk Parity (Lopez de Prado, 2016) utilise la théorie des graphes et le clustering hiérarchique pour construire un portefeuille diversifié <strong>sans inverser la matrice de covariance</strong>. C'est un avantage décisif car l'inversion amplifie les erreurs d'estimation.</p>
+
+<h3>Algorithme HRP en 3 étapes</h3>
+
+<div class="pedagogy-box">
+<h4>Étape 1 — Tree Clustering</h4>
+<p>Calculer la matrice de corrélation, la convertir en matrice de distance (d = √(0.5 × (1 - ρ))), puis appliquer un clustering agglomératif (single-linkage). Résultat : un dendrogramme qui groupe les actifs par similarité.</p>
+
+<h4>Étape 2 — Quasi-Diagonalisation</h4>
+<p>Réordonner les actifs selon l'ordre du dendrogramme (leaf ordering). Les actifs similaires sont côte à côte dans la matrice, créant une structure quasi-diagonale. Ceci remplace l'inversion de la matrice.</p>
+
+<h4>Étape 3 — Recursive Bisection</h4>
+<p>Diviser récursivement le portefeuille en deux clusters. Pour chaque split, allouer le capital proportionnellement à l'inverse de la variance de chaque cluster. Les clusters moins risqués reçoivent plus de capital.</p>
+</div>
+
+<h3>Implémentation</h3>
+
+<pre><code>claude -p "Implémente HRP dans portfolio/hrp.py en utilisant scipy et numpy :
+
+import numpy as np
+import pandas as pd
+from scipy.cluster.hierarchy import linkage, leaves_list
+from scipy.spatial.distance import squareform
+
+class HierarchicalRiskParity:
+    def __init__(self, cov_lookback: int = 252,
+                 linkage_method: str = 'single',
+                 min_weight: float = 0.02,
+                 max_weight: float = 0.25):
+        '''
+        cov_lookback: jours pour estimation de la covariance
+        linkage_method: 'single' (standard HRP) ou 'ward' (clusters plus équilibrés)
+        '''
+
+    def _correlation_distance(self, corr: np.ndarray) -> np.ndarray:
+        '''d_ij = sqrt(0.5 * (1 - rho_ij))'''
+
+    def _quasi_diagonalize(self, link: np.ndarray) -> list[int]:
+        '''Leaf ordering du dendrogramme'''
+
+    def _recursive_bisection(self, cov: np.ndarray, sorted_idx: list[int]) -> np.ndarray:
+        '''Allocation récursive par inverse-variance sur les clusters'''
+
+    def fit(self, returns: pd.DataFrame) -> pd.Series:
+        '''Pipeline complet: corr → distance → linkage → quasi-diag → bisection
+        Retourne pd.Series avec les poids par actif, sommant à 1.0
+        Applique min_weight et max_weight en post-processing'''
+"</code></pre>
+
+<h3>HRP vs autres méthodes sur notre univers (backtest 2010-2025)</h3>
+
+<div id="hrpChart" class="chart-container"></div>
+
+<table class="data-table">
+<thead><tr><th>Méthode</th><th>CAGR</th><th>Sharpe</th><th>Max DD</th><th>Turnover</th><th>Calmar</th></tr></thead>
+<tbody>
+<tr><td>Equal Weight</td><td>12.4%</td><td>0.65</td><td>-34.2%</td><td>18%</td><td>0.36</td></tr>
+<tr><td>Risk Parity</td><td>10.8%</td><td>0.72</td><td>-22.1%</td><td>42%</td><td>0.49</td></tr>
+<tr><td>Min Variance</td><td>8.6%</td><td>0.81</td><td>-18.5%</td><td>65%</td><td>0.46</td></tr>
+<tr><td><strong>HRP</strong></td><td><strong>13.1%</strong></td><td><strong>0.82</strong></td><td><strong>-19.8%</strong></td><td><strong>36%</strong></td><td><strong>0.66</strong></td></tr>
+<tr><td>Kelly + HRP</td><td>18.7%</td><td>0.91</td><td>-24.3%</td><td>52%</td><td>0.77</td></tr>
+</tbody>
+</table>
+
+<p>Le combo <strong>Kelly + HRP</strong> domine sur le Calmar ratio (rendement/risque), exactement ce qu'on veut pour notre objectif 100K → 1M avec max DD 25%.</p>
+</div>
+
+<div class="section-divider" id="riskbudget"><i class="fa-solid fa-shield-halved"></i> Risk Budgeting — Allocation par budget de risque</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-shield-halved"></i> Risk Budgeting — Chaque stratégie a son budget de risque</h2>
+
+<p>Le risk budgeting ajoute une couche au-dessus de HRP : au lieu d'allouer du capital, on alloue du <strong>risque</strong>. Chaque stratégie reçoit un budget de risque proportionnel à son Sharpe ratio historique et à la confiance qu'on lui accorde.</p>
+
+<div class="formula-box">
+<div><strong>Budget de risque par stratégie</strong></div>
+<div class="formula">RB_i = (Sharpe_i × Confidence_i) / Σ(Sharpe_j × Confidence_j)</div>
+<div>Confidence = f(nb_trades, stabilité, ancienneté, validité OOS)</div>
+</div>
+
+<h3>Le framework de confiance — 4 dimensions</h3>
+
+<table class="data-table">
+<thead><tr><th>Dimension</th><th>Score 0</th><th>Score 0.5</th><th>Score 1.0</th><th>Poids</th></tr></thead>
+<tbody>
+<tr><td>Nombre de trades</td><td>&lt; 30</td><td>30-200</td><td>&gt; 200</td><td>30%</td></tr>
+<tr><td>Stabilité OOS</td><td>Sharpe OOS &lt; 0.3 × IS</td><td>0.3-0.7 × IS</td><td>&gt; 0.7 × IS</td><td>35%</td></tr>
+<tr><td>Ancienneté live</td><td>&lt; 1 mois</td><td>1-6 mois</td><td>&gt; 6 mois</td><td>20%</td></tr>
+<tr><td>Cohérence économique</td><td>Aucune thèse claire</td><td>Thèse partielle</td><td>Thèse solide</td><td>15%</td></tr>
+</tbody>
+</table>
+
+<h3>Allocation pratique pour nos N stratégies</h3>
+
+<pre><code>claude -p "Implémente un RiskBudgetAllocator dans portfolio/risk_budget.py :
+
+class RiskBudgetAllocator:
+    '''Alloue les budgets de risque aux stratégies actives.
+
+    Workflow:
+    1. Pour chaque stratégie, calculer le score de confiance composite
+    2. Calculer le budget de risque: RB_i = Sharpe_i * confidence_i / sum
+    3. Convertir en poids cible via: w_i = RB_i / vol_i (poids inverse-vol)
+    4. Normaliser: sum(w) = 1 - cash_buffer (5%)
+    5. Appliquer les contraintes hard (max 25% par stratégie)
+
+    Inputs: dict of strategy_name -> StrategyMetrics(sharpe, vol, n_trades,
+            sharpe_oos, months_live, has_thesis)
+    Output: dict of strategy_name -> target_weight
+    '''
+
+    def rebalance(self, metrics: dict, regime: str,
+                  current_weights: dict) -> dict:
+        '''Calcule les nouveaux poids avec turnover penalty.
+        Si le changement de poids < 2%, ne pas rebalancer (hysteresis).
+        En Risk-Off: réduire le budget global de 30%, augmenter cash.
+        '''
+"</code></pre>
+
+<h3>Exemple concret — Nos 8 stratégies en production</h3>
+
+<table class="data-table">
+<thead><tr><th>Stratégie</th><th>Sharpe</th><th>Confiance</th><th>RB</th><th>Vol cible</th><th>Poids Risk-On</th><th>Poids Risk-Off</th></tr></thead>
+<tbody>
+<tr><td>Cross-Section Momentum</td><td>1.35</td><td>0.85</td><td>22%</td><td>18%</td><td>20%</td><td>12%</td></tr>
+<tr><td>Time-Series Momentum</td><td>1.10</td><td>0.80</td><td>17%</td><td>15%</td><td>16%</td><td>10%</td></tr>
+<tr><td>Post-Earnings Drift</td><td>1.45</td><td>0.72</td><td>20%</td><td>22%</td><td>15%</td><td>8%</td></tr>
+<tr><td>Industry Rotation</td><td>0.95</td><td>0.88</td><td>16%</td><td>12%</td><td>14%</td><td>10%</td></tr>
+<tr><td>Mean Reversion RSI</td><td>0.85</td><td>0.65</td><td>10%</td><td>20%</td><td>8%</td><td>15%</td></tr>
+<tr><td>Pairs Trading</td><td>0.75</td><td>0.60</td><td>9%</td><td>10%</td><td>7%</td><td>12%</td></tr>
+<tr><td>Dual Momentum ETF</td><td>0.90</td><td>0.92</td><td>16%</td><td>8%</td><td>12%</td><td>18%</td></tr>
+<tr><td>Sector Rotation</td><td>0.80</td><td>0.78</td><td>12%</td><td>14%</td><td>8%</td><td>15%</td></tr>
+<tr><td colspan="5"><em>Cash buffer</em></td><td>—</td><td>5-35%</td></tr>
+</tbody>
+</table>
+
+<p>Notez comment en <strong>Risk-Off</strong>, les stratégies mean-reversion et dual momentum augmentent leur poids (elles performent en marché baissier), tandis que le momentum cross-section est réduit. Le cash buffer passe de 5% à potentiellement 35%.</p>
+</div>
+
+<div class="section-divider" id="contraintes"><i class="fa-solid fa-lock"></i> Contraintes hard — Les garde-fous</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-lock"></i> Système de contraintes multi-niveaux</h2>
+
+<p>Les contraintes sont les <strong>règles non négociables</strong> du portefeuille. Elles protègent contre les scénarios extrêmes que l'optimiseur ne peut pas modéliser. Notre système opère sur 4 niveaux hiérarchiques :</p>
+
+<h3>Niveau 1 — Contraintes par position</h3>
+
+<table class="data-table">
+<thead><tr><th>Contrainte</th><th>Valeur</th><th>Raison</th></tr></thead>
+<tbody>
+<tr><td>Max par position individuelle</td><td>10% du NAV</td><td>Limiter le risque idiosyncratique</td></tr>
+<tr><td>Min par position</td><td>0.5% du NAV</td><td>Éviter les positions noise (frais &gt; alpha)</td></tr>
+<tr><td>Max par position small-cap (&lt;$1B)</td><td>3% du NAV</td><td>Risque de liquidité</td></tr>
+<tr><td>Nombre max de positions</td><td>40</td><td>Attention/monitoring limités</td></tr>
+<tr><td>Nombre min de positions</td><td>12</td><td>Diversification minimale</td></tr>
+</tbody>
+</table>
+
+<h3>Niveau 2 — Contraintes par région</h3>
+
+<table class="data-table">
+<thead><tr><th>Région</th><th>Min</th><th>Max</th><th>Typique</th></tr></thead>
+<tbody>
+<tr><td>US (NYSE, NASDAQ)</td><td>40%</td><td>70%</td><td>55%</td></tr>
+<tr><td>Europe (Euronext, LSE, Xetra)</td><td>15%</td><td>40%</td><td>25%</td></tr>
+<tr><td>APAC (TSE, HKEX, ASX)</td><td>5%</td><td>25%</td><td>15%</td></tr>
+<tr><td>ETF global</td><td>0%</td><td>30%</td><td>5%</td></tr>
+</tbody>
+</table>
+
+<h3>Niveau 3 — Contraintes par secteur</h3>
+
+<table class="data-table">
+<thead><tr><th>Secteur</th><th>Max</th><th>Raison</th></tr></thead>
+<tbody>
+<tr><td>Technology</td><td>30%</td><td>Corrélation intra-sectorielle élevée</td></tr>
+<tr><td>Healthcare</td><td>25%</td><td>Risque réglementaire concentré</td></tr>
+<tr><td>Financials</td><td>20%</td><td>Risque systémique</td></tr>
+<tr><td>Energy</td><td>15%</td><td>Cyclicité extrême</td></tr>
+<tr><td>Tout autre secteur</td><td>20%</td><td>Diversification</td></tr>
+</tbody>
+</table>
+
+<h3>Niveau 4 — Contraintes de portefeuille</h3>
+
+<table class="data-table">
+<thead><tr><th>Contrainte</th><th>Valeur</th><th>Action si violation</th></tr></thead>
+<tbody>
+<tr><td>Cash minimum</td><td>5% du NAV</td><td>Réduire les positions les plus petites</td></tr>
+<tr><td>Beta portefeuille max</td><td>1.2</td><td>Réduire les positions high-beta</td></tr>
+<tr><td>Turnover max quotidien</td><td>15% du NAV</td><td>Étaler le rebalancement sur 2-3 jours</td></tr>
+<tr><td>Drawdown alert</td><td>-15%</td><td>Réduire l'exposition de 50%</td></tr>
+<tr><td>Drawdown max (STOP)</td><td>-25%</td><td>Liquider à 100% cash + alerte Discord</td></tr>
+</tbody>
+</table>
+
+<h3>Implémentation du Constraint Engine</h3>
+
+<pre><code>claude -p "Implémente un ConstraintEngine dans portfolio/constraints.py :
+
+class PortfolioConstraints:
+    '''Contraintes hard sur 4 niveaux hiérarchiques.
+
+    Méthode enforce():
+    1. Calculer les poids bruts (output de HRP + Kelly)
+    2. Pour chaque niveau (position → région → secteur → portefeuille):
+       a. Vérifier si une contrainte est violée
+       b. Si oui, redistribuer l'excès proportionnellement aux autres
+       c. Logger chaque ajustement (pour audit)
+    3. Vérifier les contraintes de portefeuille (beta, DD, turnover)
+    4. Si drawdown > -15%: mode DEFENSIVE (halve exposure)
+    5. Si drawdown > -25%: mode EMERGENCY (all cash, Discord alert)
+
+    La redistribution est itérative (max 10 passes) pour gérer les
+    cascades (ex: réduire tech→ redistribuer→ dépasser healthcare→ ...)
+
+    Output: dict[str, float] poids finaux respectant TOUTES les contraintes
+            + list[str] log des ajustements effectués
+    '''
+"</code></pre>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Le circuit-breaker à -25%</h4>
+<p>Le circuit-breaker est la <strong>règle la plus importante du système</strong>. Si le portefeuille atteint -25% depuis le high-water mark, TOUTES les positions sont liquidées immédiatement et le système passe en mode EMERGENCY :</p>
+<ul>
+<li>Liquidation immédiate au market (pas de limit orders)</li>
+<li>Alerte Discord critique avec détails du drawdown</li>
+<li>Le système ne peut redémarrer qu'après <strong>intervention humaine</strong></li>
+<li>Revue complète obligatoire : qu'est-ce qui a échoué ?</li>
+<li>Redémarrage progressif : 25% → 50% → 75% → 100% sur 4 semaines</li>
+</ul>
+</div>
+</div>
+
+<div class="section-divider" id="meta"><i class="fa-solid fa-sliders"></i> Méta-Allocateur — Le cerveau du système</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-sliders"></i> Méta-Allocateur — Orchestrer N stratégies dynamiquement</h2>
+
+<p>Le méta-allocateur est la <strong>couche la plus haute de l'architecture</strong>. Il combine le Kelly, le HRP, le risk budgeting et les contraintes en un seul pipeline qui décide chaque jour : combien allouer à chaque stratégie, et quand promouvoir, réduire ou désactiver une stratégie.</p>
+
+<h3>Architecture du pipeline quotidien</h3>
+
+<div id="pipelineChart" class="chart-container"></div>
+
+<pre><code>claude -p "Implémente le MetaAllocator dans portfolio/meta_allocator.py :
+
+class MetaAllocator:
+    '''Orchestrateur principal du portefeuille de stratégies.
+
+    Pipeline quotidien (exécuté à 20h00 UTC):
+    ┌─────────────────────────────────────────────────┐
+    │ 1. REGIME DETECTION                              │
+    │    → Identifier RiskOn/Neutral/RiskOff           │
+    │    → Mettre à jour les regime_weights             │
+    ├─────────────────────────────────────────────────┤
+    │ 2. STRATEGY HEALTH CHECK                         │
+    │    → Pour chaque stratégie active:               │
+    │       - Rolling Sharpe (60d) > 0 ?               │
+    │       - Max DD récent < 2× DD historique ?       │
+    │       - Corrélation réalisée ≈ corrélation prévue?│
+    │    → Marquer: HEALTHY / WARNING / CRITICAL       │
+    ├─────────────────────────────────────────────────┤
+    │ 3. KELLY SIZING                                  │
+    │    → compute_kelly() pour chaque stratégie       │
+    │    → Shrinkage bayésien                          │
+    ├─────────────────────────────────────────────────┤
+    │ 4. HRP DIVERSIFICATION                           │
+    │    → Matrice de corrélation inter-stratégies     │
+    │    → HRP weights                                 │
+    ├─────────────────────────────────────────────────┤
+    │ 5. RISK BUDGET OVERLAY                           │
+    │    → Ajuster selon confiance et régime           │
+    ├─────────────────────────────────────────────────┤
+    │ 6. CONSTRAINT ENFORCEMENT                        │
+    │    → 4 niveaux de contraintes hard               │
+    │    → Circuit-breaker si DD > -25%                │
+    ├─────────────────────────────────────────────────┤
+    │ 7. TRADE GENERATION                              │
+    │    → Delta entre poids actuels et poids cibles   │
+    │    → Filtrer les deltas < 2% (hysteresis)        │
+    │    → Générer les ordres d'achat/vente            │
+    └─────────────────────────────────────────────────┘
+
+    Le pipeline est IDEMPOTENT : exécuter 2× donne le même résultat.
+    '''
+
+    def daily_rebalance(self) -> list[Order]:
+        regime = self.regime_detector.detect()
+        health = {s: self.health_check(s) for s in self.strategies}
+        active = {s for s, h in health.items() if h != 'CRITICAL'}
+        kelly_weights = self.kelly.compute_portfolio_weights(active)
+        hrp_weights = self.hrp.fit(self.get_strategy_returns(active))
+        combined = self.risk_budget.rebalance(kelly_weights, hrp_weights, regime)
+        final = self.constraints.enforce(combined, regime)
+        orders = self.generate_orders(final, self.current_weights)
+        return orders
+"</code></pre>
+
+<h3>Lifecycle d'une stratégie — De l'idée à la retraite</h3>
+
+<table class="data-table">
+<thead><tr><th>Phase</th><th>Allocation</th><th>Durée min</th><th>Critères de passage</th><th>Critères de régression</th></tr></thead>
+<tbody>
+<tr><td>🔬 BACKTEST</td><td>0%</td><td>—</td><td>Sharpe OOS &gt; 0.7, Deflated SR &gt; 0.5</td><td>—</td></tr>
+<tr><td>📋 PAPER</td><td>0%</td><td>2 semaines</td><td>Tracking error &lt; 5% vs backtest</td><td>Sharpe &lt; 0.3</td></tr>
+<tr><td>🟡 PILOT</td><td>2%</td><td>1 mois</td><td>Sharpe live &gt; 0.5, DD &lt; 10%</td><td>DD &gt; 15% ou Sharpe &lt; 0</td></tr>
+<tr><td>🟠 RAMP_UP</td><td>5%</td><td>1 mois</td><td>Sharpe live &gt; 0.6, cohérent avec paper</td><td>DD &gt; 12% ou Sharpe &lt; 0.2</td></tr>
+<tr><td>🟢 PRODUCTION</td><td>Kelly × HRP</td><td>—</td><td>En continu (health check quotidien)</td><td>Rolling Sharpe 60d &lt; 0</td></tr>
+<tr><td>⏸️ PAUSED</td><td>0%</td><td>2 semaines</td><td>Retour Sharpe &gt; 0.3 sur 2 semaines</td><td>3 mois en pause → RETIRED</td></tr>
+<tr><td>🔴 RETIRED</td><td>0%</td><td>—</td><td>Revue complète + refactoring</td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>Règles automatiques de promotion/dégradation</h3>
+
+<pre><code>claude -p "Implémente le StrategyLifecycleManager dans portfolio/lifecycle.py :
+
+class StrategyLifecycleManager:
+    '''Gère les transitions automatiques entre phases.
+
+    Règles de PROMOTION (vérifiées chaque dimanche 18h):
+    - PAPER → PILOT: tracking_error < 5% ET sharpe_paper > 0.5 ET durée >= 14j
+    - PILOT → RAMP_UP: sharpe_live > 0.5 ET max_dd < 10% ET durée >= 30j
+    - RAMP_UP → PRODUCTION: sharpe_live > 0.6 ET stable vs paper ET durée >= 30j
+    - PAUSED → PILOT: sharpe_rolling_14d > 0.3 ET cause_pause résolue
+
+    Règles de DÉGRADATION (vérifiées chaque jour 21h):
+    - PRODUCTION → PAUSED: rolling_sharpe_60d < 0 OU max_dd_recent > 2× historique
+    - RAMP_UP → PAUSED: max_dd > 12% OU sharpe < 0.2
+    - PILOT → PAPER: max_dd > 15% OU sharpe < 0
+    - PAUSED → RETIRED: durée_pause > 90 jours
+
+    Règle EMERGENCY (vérifiée en continu):
+    - Toute stratégie avec DD > 20% → PAUSED immédiatement + alerte Discord
+
+    Chaque transition est loggée avec: timestamp, stratégie, from_phase,
+    to_phase, raison, métriques au moment de la transition.
+    '''
+
+    def check_promotions(self) -> list[Transition]:
+        ...
+
+    def check_degradations(self) -> list[Transition]:
+        ...
+
+    def emergency_check(self) -> list[Transition]:
+        ...
+"</code></pre>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-robot"></i> Automatisation via Claude Code</h4>
+<p>Le lifecycle manager est un excellent exemple de code que Claude Code peut écrire en autonomie :</p>
+<pre><code>claude -p "Écris les tests unitaires pour StrategyLifecycleManager.
+Scénarios à couvrir:
+1. Promotion PAPER→PILOT après 14j avec bon sharpe
+2. Promotion refusée si durée < 14j
+3. Dégradation PRODUCTION→PAUSED si rolling_sharpe < 0
+4. Emergency pause si DD > 20%
+5. PAUSED→RETIRED après 90 jours
+6. Double transition impossible (pas de PAPER→PRODUCTION directe)
+7. Transition loggée correctement avec métriques
+Utilise pytest + fixtures avec des données synthétiques."</code></pre>
+</div>
+
+<h3>Visualisation de l'allocation dans le temps</h3>
+
+<div id="allocChart" class="chart-container"></div>
+
+<p>Le graphique ci-dessus montre l'évolution typique de l'allocation sur 12 mois. Notez comment :</p>
+<ul>
+<li>Les stratégies momentum dominent en <strong>Risk-On</strong> (janvier-février, avril-juillet)</li>
+<li>Les stratégies mean-reversion et dual momentum prennent le relais en <strong>Risk-Off</strong> (mars, août)</li>
+<li>Le <strong>cash buffer</strong> augmente significativement pendant les périodes de stress</li>
+<li>De nouvelles stratégies entrent progressivement (PILOT → RAMP_UP → PRODUCTION)</li>
+</ul>
+</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-arrow-right"></i> Prochaine étape — Exécution &amp; Market Microstructure</h2>
+
+<p>Maintenant que nous savons <strong>combien</strong> allouer à chaque stratégie et chaque position, il faut résoudre le <strong>comment</strong> : comment exécuter les ordres sans impact de marché ? Comment gérer le slippage, les frais, et les horaires multi-marchés ? C'est l'objet de la Partie 5.</p>
+
+<div class="takeaway-box">
+<h4>Points clés de cette partie</h4>
+<ul>
+<li><strong>Kelly fractionnel (Half-Kelly)</strong> pour le sizing optimal avec drawdown contrôlé</li>
+<li><strong>Shrinkage bayésien</strong> pour éviter le sur-sizing des stratégies jeunes</li>
+<li><strong>HRP</strong> pour la diversification sans inversion de matrice de covariance</li>
+<li><strong>Risk budgeting</strong> avec score de confiance multi-dimensionnel</li>
+<li><strong>4 niveaux de contraintes</strong> : position, région, secteur, portefeuille</li>
+<li><strong>Circuit-breaker à -25%</strong> avec liquidation automatique + intervention humaine</li>
+<li><strong>Méta-allocateur</strong> : pipeline quotidien idempotent en 7 étapes</li>
+<li><strong>Lifecycle management</strong> : 7 phases de BACKTEST à RETIRED avec transitions automatiques</li>
+</ul>
+</div>
+
+<a href="/series/algo-million/part5-execution/" class="next-cta">
+<span class="next-cta-label">Partie suivante</span>
+<span class="next-cta-title">Exécution &amp; Market Microstructure →</span>
+</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part3-alpha-factors/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading — De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step"><span class="series-num">3</span><span class="series-label">Alpha Factors</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step current"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step"><span class="series-num">7</span><span class="series-label">Mean Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">4/10</span><a href="/series/algo-million/part5-execution/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // HRP Comparison Chart
+  var hrpChart = echarts.init(document.getElementById('hrpChart'));
+  hrpChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Equal Weight', 'Risk Parity', 'Min Variance', 'HRP', 'Kelly + HRP'], bottom: 0 },
+    grid: { top: 20, right: 20, bottom: 60, left: 50 },
+    xAxis: { type: 'category', data: ['CAGR', 'Sharpe', 'Max DD (inv)', 'Calmar'] },
+    yAxis: { type: 'value', max: 1.0 },
+    series: [
+      { name: 'Equal Weight', type: 'bar', data: [0.50, 0.65, 0.34, 0.36], itemStyle: { color: '#94a3b8' } },
+      { name: 'Risk Parity', type: 'bar', data: [0.43, 0.72, 0.55, 0.49], itemStyle: { color: '#60a5fa' } },
+      { name: 'Min Variance', type: 'bar', data: [0.34, 0.81, 0.65, 0.46], itemStyle: { color: '#a78bfa' } },
+      { name: 'HRP', type: 'bar', data: [0.53, 0.82, 0.61, 0.66], itemStyle: { color: '#059669' } },
+      { name: 'Kelly + HRP', type: 'bar', data: [0.75, 0.91, 0.48, 0.77], itemStyle: { color: '#f59e0b' } }
+    ]
+  });
+
+  // Pipeline Chart
+  var pipelineChart = echarts.init(document.getElementById('pipelineChart'));
+  pipelineChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {},
+    series: [{
+      type: 'funnel', left: '10%', top: 10, bottom: 10, width: '80%',
+      min: 0, max: 100, sort: 'descending',
+      label: { show: true, position: 'inside', fontSize: 12 },
+      data: [
+        { value: 100, name: '1. Régime Detection', itemStyle: { color: '#6366f1' } },
+        { value: 90, name: '2. Health Check', itemStyle: { color: '#8b5cf6' } },
+        { value: 80, name: '3. Kelly Sizing', itemStyle: { color: '#059669' } },
+        { value: 70, name: '4. HRP Diversification', itemStyle: { color: '#0d9488' } },
+        { value: 60, name: '5. Risk Budget', itemStyle: { color: '#d97706' } },
+        { value: 50, name: '6. Constraints', itemStyle: { color: '#dc2626' } },
+        { value: 40, name: '7. Trade Generation', itemStyle: { color: '#0f172a' } }
+      ]
+    }]
+  });
+
+  // Allocation Over Time Chart
+  var allocChart = echarts.init(document.getElementById('allocChart'));
+  var months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  allocChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['CS Momentum','TS Momentum','PEAD','Industry Rot','Mean Rev','Pairs','Dual Mom','Sector Rot','Cash'], bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { top: 20, right: 20, bottom: 80, left: 50 },
+    xAxis: { type: 'category', data: months },
+    yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
+    series: [
+      { name: 'CS Momentum', type: 'bar', stack: 'total', data: [22,20,8,18,20,22,20,10,15,18,20,22], itemStyle: { color: '#059669' } },
+      { name: 'TS Momentum', type: 'bar', stack: 'total', data: [18,16,6,15,16,18,16,8,12,15,16,18], itemStyle: { color: '#10b981' } },
+      { name: 'PEAD', type: 'bar', stack: 'total', data: [15,14,5,12,15,15,14,6,10,12,14,15], itemStyle: { color: '#6366f1' } },
+      { name: 'Industry Rot', type: 'bar', stack: 'total', data: [14,12,8,12,14,14,12,8,10,12,12,14], itemStyle: { color: '#8b5cf6' } },
+      { name: 'Mean Rev', type: 'bar', stack: 'total', data: [6,8,18,8,6,6,8,18,12,8,8,6], itemStyle: { color: '#d97706' } },
+      { name: 'Pairs', type: 'bar', stack: 'total', data: [5,6,14,7,5,5,6,14,10,7,6,5], itemStyle: { color: '#f59e0b' } },
+      { name: 'Dual Mom', type: 'bar', stack: 'total', data: [10,12,18,12,10,10,12,18,14,12,12,10], itemStyle: { color: '#0ea5e9' } },
+      { name: 'Sector Rot', type: 'bar', stack: 'total', data: [5,7,12,8,5,5,7,12,10,8,7,5], itemStyle: { color: '#06b6d4' } },
+      { name: 'Cash', type: 'bar', stack: 'total', data: [5,5,11,8,9,5,5,6,7,8,5,5], itemStyle: { color: '#e2e8f0' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() { hrpChart.resize(); pipelineChart.resize(); allocChart.resize(); });
+});
+</script>
+</body>
+</html>

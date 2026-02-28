@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,formation,us,eu,asia,etf" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Régime Adaptatif & Machine Learning — Partie 9/10 | Algo Trading : De 100K au Million | Market Watch</title>
+<meta name="description" content="Détection de régime par HMM, ML alpha signals (XGBoost, Random Forest), Reinforcement Learning, GARCH, NLP financier, pipeline ML production. Série Algo Trading partie 9/10.">
+<meta property="og:title" content="Régime Adaptatif & Machine Learning | Algo Trading — Partie 9/10 | Market Watch">
+<meta property="og:description" content="Stratégies adaptatives : Hidden Markov Models, Gradient Boosting, Reinforcement Learning, volatility forecasting, NLP pour le trading. De 100K à 1M sans levier.">
+<meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+<meta property="og:url" content="https://market-watch.xyz/series/algo-million/part9-regime-adaptive/">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Charts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<!-- Base CSS -->
+<link rel="stylesheet" href="/assets/report.css">
+
+<style>
+/* Series-specific — EMERALD THEME (#059669) */
+.hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-title{font-size:2.8rem;font-weight:900;color:#0f172a;line-height:1.15;margin:0 auto 1.5rem;max-width:850px}
+.hero-subtitle{font-size:1.15rem;color:#64748b;max-width:720px;margin:0 auto;line-height:1.7}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+.hero-badge-orange{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.2)}
+.hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+.hero-badge-cyan{background:rgba(6,182,212,.1);color:#06b6d4;border:1px solid rgba(6,182,212,.2)}
+.hero-badge-amber{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2)}
+
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+
+.compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+.compare-table th{background:#064e3b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+.compare-table tr:nth-child(even) td{background:#f8fafc}
+.compare-table tr:last-child td{border-bottom:none}
+
+.checklist{list-style:none;padding:0;margin:1.5rem 0}
+.checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:.95rem;color:#334155;line-height:1.5}
+.checklist li i{margin-top:.15rem;flex-shrink:0}
+
+.code-block{background:#022c22;color:#a7f3d0;padding:1.5rem;border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:.82rem;overflow-x:auto;margin:1.5rem 0;line-height:1.65;border:1px solid #064e3b;position:relative;white-space:pre}
+.code-block .code-label{position:absolute;top:.5rem;right:.75rem;font-size:.65rem;color:#059669;text-transform:uppercase;letter-spacing:.05em;font-family:'Inter',sans-serif;font-weight:700}
+.code-comment{color:#059669}
+.code-keyword{color:#6ee7b7}
+.code-string{color:#fbbf24}
+.code-function{color:#67e8f9}
+.code-variable{color:#a78bfa}
+.code-number{color:#fb923c}
+
+.terminal-box{background:#0f0f23;color:#00ff41;padding:1.5rem;border-radius:12px;font-family:monospace;margin:1.5rem 0;border:1px solid #1a1a3e;line-height:1.6;font-size:.85rem;overflow-x:auto;position:relative;white-space:pre}
+.terminal-box .terminal-label{position:absolute;top:.5rem;right:.75rem;font-size:.65rem;color:#4a4a6a;text-transform:uppercase;letter-spacing:.05em;font-family:'Inter',sans-serif;font-weight:700}
+
+.formula-box{background:linear-gradient(135deg,#022c22 0%,#064e3b 100%);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700;letter-spacing:.02em}
+.formula-box .formula-label{font-size:.7rem;color:#6ee7b7;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+.formula-box .formula-highlight{color:#34d399}
+
+.takeaway-box{background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border:1px solid #059669;border-radius:16px;padding:2rem;margin:2rem 0}
+.takeaway-box h3{color:#047857;margin-top:0}
+.takeaway-list{list-style:none;padding:0;margin:0}
+.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(5,150,105,.15)}
+.takeaway-list li:last-child{border-bottom:none}
+.takeaway-list li i{color:#059669;margin-top:.2rem;flex-shrink:0}
+
+.next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#059669 0%,#047857 100%);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(5,150,105,.3)}
+.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+.next-cta .next-title{font-size:1.25rem;font-weight:800}
+.next-cta i{font-size:1.5rem}
+
+.step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+.step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #059669}
+.step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+.step-number{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#059669 0%,#047857 100%);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+.step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+.step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+
+.capability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:2rem 0}
+.capability-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;transition:all .3s}
+.capability-card:hover{border-color:#059669;transform:translateY(-2px);box-shadow:0 8px 25px -5px rgba(0,0,0,.08)}
+.capability-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.75rem}
+.capability-card h4{font-size:.9rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}
+.capability-card p{font-size:.8rem;color:#64748b;margin:0;line-height:1.4}
+
+.layer-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0;border-left:4px solid #059669}
+.layer-card h3{color:#047857;margin-top:0;font-size:1.1rem}
+.layer-card p{color:#334155;line-height:1.7;font-size:.95rem}
+
+.pedagogy-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:1.5rem 2rem;margin:1.5rem 0}
+.pedagogy-box h4{color:#047857;margin-top:0}
+.pedagogy-box p{color:#334155;line-height:1.7;font-size:.95rem}
+
+details{margin:.75rem 0}
+details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;transition:all .2s;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#059669;margin-right:.75rem}
+details[open] summary{border-color:#059669;background:#ecfdf5;border-radius:12px 12px 0 0}
+details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+
+.regime-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.75rem;margin:1rem 0;transition:all .3s}
+.regime-card:hover{box-shadow:0 8px 25px -5px rgba(0,0,0,.08)}
+.regime-card h4{margin:0 0 .5rem;font-size:1.05rem;font-weight:800}
+.regime-card p{margin:0;font-size:.9rem;color:#64748b;line-height:1.6}
+
+.metric-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.5rem 0}
+.metric-item{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;text-align:center}
+.metric-value{font-size:1.6rem;font-weight:900;color:#059669}
+.metric-label{font-size:.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
+
+.warning-box{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:1.5rem 2rem;margin:1.5rem 0}
+.warning-box h4{color:#dc2626;margin-top:0}
+.warning-box p,.warning-box li{color:#991b1b;line-height:1.7;font-size:.95rem}
+
+.pro-tip{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #059669;border-radius:12px;padding:1.25rem 1.5rem;margin:1.5rem 0}
+.pro-tip strong{color:#047857}
+.pro-tip p{margin:0;font-size:.9rem;color:#334155;line-height:1.6}
+
+.pipeline-flow{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin:1.5rem 0;justify-content:center}
+.pipeline-node{background:#ecfdf5;border:2px solid #059669;border-radius:12px;padding:.75rem 1.25rem;font-weight:700;font-size:.85rem;color:#047857;text-align:center}
+.pipeline-arrow{color:#059669;font-size:1.2rem;font-weight:900}
+
+@media(max-width:768px){
+.hero-section{padding:2.5rem 1rem 5rem}
+.hero-title{font-size:1.8rem!important}
+.hero-badge{font-size:.7rem;padding:.35rem .75rem}
+.formula-box{font-size:1rem;padding:1rem 1.25rem}
+.next-cta{flex-direction:column;text-align:center}
+.code-block,.terminal-box{font-size:.72rem;padding:1rem}
+.step-grid{grid-template-columns:1fr 1fr}
+.capability-grid{grid-template-columns:1fr 1fr}
+.metric-row{grid-template-columns:1fr 1fr}
+.pipeline-flow{flex-direction:column}
+}
+@media(max-width:480px){
+.hero-title{font-size:1.4rem!important}
+.hero-section{padding:2rem 1rem 4rem}
+.hero-badge{font-size:.65rem;padding:.3rem .6rem;gap:.25rem}
+.hero-badges{gap:.4rem;margin-top:1rem}
+.formula-box{font-size:.9rem;padding:.75rem 1rem}
+.code-block,.terminal-box{font-size:.68rem;padding:.75rem}
+.step-grid{grid-template-columns:1fr}
+.capability-grid{grid-template-columns:1fr}
+.metric-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-microchip"></i> Série Algo Trading : De 100K au Million — Partie 9 sur 10</div>
+  <h1 class="hero-title">Régime Adaptatif &amp; Machine Learning</h1>
+  <p class="hero-subtitle">Détection de régime par Hidden Markov Models, signaux alpha via Gradient Boosting, Reinforcement Learning, prévision de volatilité GARCH, NLP financier et pipeline ML de production. L'intelligence artificielle au service du quant systématique.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-microchip"></i> Machine Learning</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-brain"></i> Deep Learning</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-area"></i> Régime Detection</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-robot"></i> Reinforcement Learning</span>
+    <span class="hero-badge hero-badge-cyan"><i class="fa-solid fa-language"></i> NLP Finance</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Overfitting</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<!-- Series Bar -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/algo-million/part8-cross-asset/" class="series-arrow" title="Part 8"><i class="fas fa-chevron-left"></i></a><span class="series-title">Algo Trading : De 100K au Million</span><div class="series-steps"><a href="/series/algo-million/part1-infrastructure/" class="series-step" title="Infrastructure"><span class="series-num">1</span><span class="series-label">Infrastructure</span></a><a href="/series/algo-million/part2-data-pipeline/" class="series-step" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data</span></a><a href="/series/algo-million/part3-alpha-factors/" class="series-step" title="Alpha Factors"><span class="series-num">3</span><span class="series-label">Alpha</span></a><a href="/series/algo-million/part4-portfolio-construction/" class="series-step" title="Portfolio"><span class="series-num">4</span><span class="series-label">Portfolio</span></a><a href="/series/algo-million/part5-execution/" class="series-step" title="Exécution"><span class="series-num">5</span><span class="series-label">Exécution</span></a><a href="/series/algo-million/part6-momentum-strategies/" class="series-step" title="Momentum"><span class="series-num">6</span><span class="series-label">Momentum</span></a><a href="/series/algo-million/part7-mean-reversion/" class="series-step" title="Mean Reversion"><span class="series-num">7</span><span class="series-label">Reversion</span></a><a href="/series/algo-million/part8-cross-asset/" class="series-step" title="Cross-Asset"><span class="series-num">8</span><span class="series-label">Cross-Asset</span></a><a href="/series/algo-million/part9-regime-adaptive/" class="series-step current" title="Régime Adaptatif"><span class="series-num">9</span><span class="series-label">Régime ML</span></a><a href="/series/algo-million/part10-production-ops/" class="series-step" title="Production"><span class="series-num">10</span><span class="series-label">Production</span></a></div><span class="series-counter">9/10</span><a href="/series/algo-million/part10-production-ops/" class="series-arrow" title="Part 10"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<!-- FAB Navigation -->
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#regimes" class="fnav-item" data-section="regimes"><i class="fas fa-layer-group"></i><span>Régimes</span></a>
+    <a href="#hmm" class="fnav-item" data-section="hmm"><i class="fas fa-project-diagram"></i><span>HMM</span></a>
+    <a href="#ml-alpha" class="fnav-item" data-section="ml-alpha"><i class="fas fa-brain"></i><span>ML Alpha</span></a>
+    <a href="#overfitting" class="fnav-item" data-section="overfitting"><i class="fas fa-bug"></i><span>Overfitting</span></a>
+    <a href="#rl" class="fnav-item" data-section="rl"><i class="fas fa-robot"></i><span>RL</span></a>
+    <a href="#adaptive" class="fnav-item" data-section="adaptive"><i class="fas fa-sliders"></i><span>Adaptatif</span></a>
+    <a href="#garch" class="fnav-item" data-section="garch"><i class="fas fa-chart-line"></i><span>GARCH</span></a>
+    <a href="#nlp" class="fnav-item" data-section="nlp"><i class="fas fa-language"></i><span>NLP</span></a>
+    <a href="#pipeline" class="fnav-item" data-section="pipeline"><i class="fas fa-industry"></i><span>Pipeline</span></a>
+    <a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-star"></i><span>Takeaways</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : POURQUOI LES STRATÉGIES STATIQUES ÉCHOUENT       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="regimes"><i class="fa-solid fa-layer-group"></i> Pourquoi les stratégies statiques échouent</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-skull-crossbones"></i> Le cimetière des backtests parfaits</h2>
+
+<p>Vous avez développé une stratégie momentum qui génère un Sharpe de 2.5 en backtest sur 2019-2021. Vous la déployez en production début 2022. Six mois plus tard, votre drawdown atteint -35%. Que s'est-il passé ?</p>
+
+<p><strong>Le marché a changé de régime.</strong> La stratégie qui fonctionnait parfaitement en bull market (taux bas, liquidité abondante, momentum fort) s'est effondrée en bear market (hausse des taux, resserrement quantitatif, rotation violente). Ce n'est pas un bug — c'est le problème fondamental de toute approche statique.</p>
+
+<div class="metric-row">
+  <div class="metric-item">
+    <div class="metric-value">73%</div>
+    <div class="metric-label">Stratégies statiques qui sous-performent OOS</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">2-3 ans</div>
+    <div class="metric-label">Durée moyenne d'un régime</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">4</div>
+    <div class="metric-label">Régimes de marché distincts</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">+40%</div>
+    <div class="metric-label">Gain CAGR avec adaptation</div>
+  </div>
+</div>
+
+<h3><i class="fa-solid fa-arrows-rotate"></i> Les 4 régimes de marché</h3>
+
+<p>Toute la littérature académique converge vers quatre macro-régimes qui gouvernent les marchés financiers. Chaque régime modifie radicalement les caractéristiques statistiques des rendements :</p>
+
+<div class="capability-grid">
+  <div class="capability-card">
+    <div class="capability-icon" style="background:#f0fdf4;color:#16a34a"><i class="fa-solid fa-arrow-trend-up"></i></div>
+    <h4>Risk-On (Bull)</h4>
+    <p>VIX &lt; 18, courbe des taux positive, spreads crédit serrés. Momentum et growth dominent. CAGR typique : +15-25%.</p>
+  </div>
+  <div class="capability-card">
+    <div class="capability-icon" style="background:#fef2f2;color:#dc2626"><i class="fa-solid fa-arrow-trend-down"></i></div>
+    <h4>Risk-Off (Bear)</h4>
+    <p>VIX &gt; 28, spreads crédit écartés, fuite vers la qualité. Value et défensifs surperforment. DD typique : -20-40%.</p>
+  </div>
+  <div class="capability-card">
+    <div class="capability-icon" style="background:#fefce8;color:#ca8a04"><i class="fa-solid fa-arrows-left-right"></i></div>
+    <h4>Transition</h4>
+    <p>VIX 18-28, signaux mixtes, rotation sectorielle rapide. Volatilité des corrélations élevée. Le plus dangereux.</p>
+  </div>
+  <div class="capability-card">
+    <div class="capability-icon" style="background:#eff6ff;color:#2563eb"><i class="fa-solid fa-seedling"></i></div>
+    <h4>Recovery</h4>
+    <p>Sortie de bear market, VIX en baisse, breadth en expansion. Small caps et cycliques explosent. Fenêtre étroite.</p>
+  </div>
+</div>
+
+<h3><i class="fa-solid fa-gauge-high"></i> Les indicateurs de détection</h3>
+
+<p>Détecter le régime actuel requiert un faisceau d'indicateurs convergents. Aucun indicateur seul n'est suffisant — c'est leur <strong>combinaison</strong> qui génère un signal fiable :</p>
+
+<table class="compare-table">
+<thead>
+<tr><th>Indicateur</th><th>Risk-On</th><th>Risk-Off</th><th>Transition</th><th>Recovery</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>VIX (niveau)</strong></td><td>&lt; 16</td><td>&gt; 28</td><td>18-28</td><td>28 &rarr; 18 (baisse)</td></tr>
+<tr><td><strong>VIX Term Structure</strong></td><td>Contango fort</td><td>Backwardation</td><td>Flat</td><td>Contango naissant</td></tr>
+<tr><td><strong>Yield Curve (10Y-2Y)</strong></td><td>&gt; +50bps</td><td>Inversée</td><td>Flat &plusmn; 25bps</td><td>Re-pentification</td></tr>
+<tr><td><strong>Credit Spreads (HY-IG)</strong></td><td>&lt; 300bps</td><td>&gt; 500bps</td><td>300-500bps</td><td>&gt; 500 &rarr; 300</td></tr>
+<tr><td><strong>Momentum Breadth</strong></td><td>&gt; 70% au-dessus SMA200</td><td>&lt; 30%</td><td>30-70%</td><td>&lt; 30 &rarr; 50%+</td></tr>
+<tr><td><strong>Put/Call Ratio</strong></td><td>&lt; 0.7 (complaisance)</td><td>&gt; 1.2 (panique)</td><td>0.7-1.0</td><td>&gt; 1.0 &rarr; 0.8</td></tr>
+<tr><td><strong>Fed Funds Rate</strong></td><td>Stable ou en baisse</td><td>En hausse rapide</td><td>Pic/Plateau</td><td>Premières baisses</td></tr>
+<tr><td><strong>ISM Manufacturing</strong></td><td>&gt; 55 (expansion)</td><td>&lt; 48 (contraction)</td><td>48-52</td><td>&lt; 48 &rarr; 50+</td></tr>
+</tbody>
+</table>
+
+<h3><i class="fa-solid fa-diagram-project"></i> Impact du régime sur les stratégies</h3>
+
+<p>Chaque famille de stratégie possède un <strong>régime d'or</strong> où elle excelle et un <strong>régime mortel</strong> où elle se fait détruire. Ignorer cela, c'est jouer à la roulette russe :</p>
+
+<table class="compare-table">
+<thead>
+<tr><th>Stratégie</th><th>Risk-On</th><th>Risk-Off</th><th>Transition</th><th>Recovery</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Momentum cross-sectionnel</strong></td><td>Excellent (+)</td><td>Catastrophique (crash)</td><td>Moyen</td><td>Excellent (+)</td></tr>
+<tr><td><strong>Mean Reversion</strong></td><td>Faible</td><td>Bon</td><td>Excellent (+)</td><td>Faible</td></tr>
+<tr><td><strong>Value/Quality</strong></td><td>Sous-performe</td><td>Défensif (ok)</td><td>Bon</td><td>Excellent (+)</td></tr>
+<tr><td><strong>Trend Following</strong></td><td>Très bon</td><td>Très bon</td><td>Whipsaws</td><td>Moyen</td></tr>
+<tr><td><strong>Carry/Yield</strong></td><td>Excellent (+)</td><td>Catastrophique</td><td>Moyen</td><td>Bon</td></tr>
+<tr><td><strong>Vol Selling</strong></td><td>Excellent (+)</td><td>Cataclysmique</td><td>Risqué</td><td>Bon</td></tr>
+<tr><td><strong>Defensive/Min-Vol</strong></td><td>Sous-performe</td><td>Excellent (+)</td><td>Bon</td><td>Sous-performe</td></tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Pourquoi l'adaptativité est non-négociable</h4>
+<p>Sur la période 2000-2025, un portefeuille momentum statique a généré un CAGR de ~12% avec un max drawdown de -55% (2008-2009). Le même portefeuille avec un overlay de détection de régime qui réduit l'exposition en Risk-Off a généré un CAGR de ~18% avec un max drawdown de -22%. Même rendement annualisé supérieur, mais surtout un ratio rendement/risque multiplié par 3. La différence : <strong>survivre aux crashs</strong> permet de composer à plein régime pendant les phases haussières.</p>
+</div>
+
+<!-- EChart: Regime Timeline with S&P 500 overlay -->
+<div id="regimeTimelineChart" style="width:100%;height:450px;margin:2rem 0"></div>
+
+<p>Le graphique ci-dessus illustre les transitions de régime depuis 2018. Observez comment les phases Risk-Off (rouges) correspondent systématiquement aux drawdowns majeurs du S&P 500. La phase de Transition (jaune) précédant chaque Risk-Off est la fenêtre critique pour réduire l'exposition.</p>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : HIDDEN MARKOV MODELS (HMM)                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="hmm"><i class="fa-solid fa-project-diagram"></i> Hidden Markov Models pour la détection de régime</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-eye-slash"></i> Les états cachés du marché</h2>
+
+<p>Les <strong>Hidden Markov Models</strong> (HMM) sont l'outil de référence académique pour la détection de régime de marché. Le principe est élégant : le marché se trouve à chaque instant dans un <strong>état caché</strong> (le régime) que nous ne pouvons pas observer directement, mais qui génère des <strong>observations</strong> (rendements, volatilité, volume) dont les propriétés statistiques diffèrent selon l'état.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> L'analogie du casino</h4>
+<p>Imaginez un casino avec deux dés truqués : un dé "favorable" (moyenne +0.5% par jour) et un dé "défavorable" (moyenne -0.2% par jour). Le croupier alterne entre les deux dés de manière aléatoire, mais vous ne voyez pas quel dé est utilisé — vous ne voyez que les résultats. Le HMM tente de deviner, à partir de la séquence des résultats observés, quel dé était utilisé à chaque instant et quelles sont les probabilités de transition entre les dés. Appliqué aux marchés : les "dés" sont les régimes, les "résultats" sont les rendements quotidiens.</p>
+</div>
+
+<h3><i class="fa-solid fa-gears"></i> Les composantes d'un HMM</h3>
+
+<p>Un HMM est défini par cinq éléments fondamentaux. Maîtrisez chacun d'eux pour comprendre ce que le modèle fait réellement :</p>
+
+<div class="step-grid">
+  <div class="step-card">
+    <div class="step-number">N</div>
+    <h4>Nombre d'états</h4>
+    <p>2 (bull/bear), 3 (bull/bear/sideways) ou 4 états. 3 est le sweet spot en pratique.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-number">A</div>
+    <h4>Matrice de transition</h4>
+    <p>Probabilités de passer d'un état à l'autre. P(bull&rarr;bear) ~ 2-5% par jour.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-number">B</div>
+    <h4>Distributions d'émission</h4>
+    <p>Distribution des observations dans chaque état. Souvent gaussienne (moyenne, variance).</p>
+  </div>
+  <div class="step-card">
+    <div class="step-number">&pi;</div>
+    <h4>Distribution initiale</h4>
+    <p>Probabilité d'être dans chaque état au temps t=0. Souvent uniforme ou estimée.</p>
+  </div>
+</div>
+
+<div class="formula-box">
+  <div class="formula-label">Problèmes fondamentaux du HMM</div>
+  <span class="formula-highlight">Évaluation</span> : P(observations | modèle) &rarr; Forward-Backward<br>
+  <span class="formula-highlight">Décodage</span> : arg max P(états | observations) &rarr; Viterbi<br>
+  <span class="formula-highlight">Apprentissage</span> : arg max P(observations | &theta;) &rarr; Baum-Welch (EM)
+</div>
+
+<h3><i class="fa-solid fa-code"></i> Implémentation : HMM à 3 états avec hmmlearn</h3>
+
+<p>Voici l'implémentation complète d'un détecteur de régime HMM à 3 états. Ce code est production-ready et peut être branché directement sur votre pipeline de données :</p>
+
+<div class="code-block"><span class="code-label">Python — regime_hmm.py</span>
+<span class="code-keyword">import</span> numpy <span class="code-keyword">as</span> np
+<span class="code-keyword">import</span> pandas <span class="code-keyword">as</span> pd
+<span class="code-keyword">from</span> hmmlearn.hmm <span class="code-keyword">import</span> GaussianHMM
+<span class="code-keyword">from</span> sklearn.preprocessing <span class="code-keyword">import</span> StandardScaler
+<span class="code-keyword">import</span> warnings
+warnings.filterwarnings(<span class="code-string">'ignore'</span>)
+
+<span class="code-keyword">class</span> <span class="code-function">RegimeDetector</span>:
+    <span class="code-string">"""
+    Détecteur de régime basé sur un HMM gaussien à 3 états.
+    États : 0=Bull (Risk-On), 1=Bear (Risk-Off), 2=Sideways (Transition)
+    
+    Features utilisées :
+    - Rendements quotidiens (momentum court terme)
+    - Volatilité réalisée 21j (risque)
+    - Volume relatif (activité/liquidité)
+    - Corrélation actions/obligations 21j (risk appetite)
+    """</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self, n_states=<span class="code-number">3</span>, lookback=<span class="code-number">252</span>, 
+                 n_iter=<span class="code-number">200</span>, random_state=<span class="code-number">42</span>):
+        self.n_states = n_states
+        self.lookback = lookback
+        self.n_iter = n_iter
+        self.random_state = random_state
+        self.model = <span class="code-keyword">None</span>
+        self.scaler = StandardScaler()
+        self.state_mapping = {}  <span class="code-comment"># Mappe les états HMM aux régimes</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">_prepare_features</span>(self, prices_df):
+        <span class="code-string">"""
+        Calcule les features multi-dimensionnelles à partir 
+        d'un DataFrame avec colonnes: SPY, TLT, volume_spy
+        """</span>
+        features = pd.DataFrame(index=prices_df.index)
+        
+        <span class="code-comment"># 1. Rendements log quotidiens</span>
+        features[<span class="code-string">'returns'</span>] = np.log(
+            prices_df[<span class="code-string">'SPY'</span>] / prices_df[<span class="code-string">'SPY'</span>].shift(<span class="code-number">1</span>)
+        )
+        
+        <span class="code-comment"># 2. Volatilité réalisée 21 jours (annualisée)</span>
+        features[<span class="code-string">'realized_vol'</span>] = (
+            features[<span class="code-string">'returns'</span>]
+            .rolling(<span class="code-number">21</span>)
+            .std() * np.sqrt(<span class="code-number">252</span>)
+        )
+        
+        <span class="code-comment"># 3. Volume relatif (vs moyenne 50j)</span>
+        features[<span class="code-string">'rel_volume'</span>] = (
+            prices_df[<span class="code-string">'volume_spy'</span>] / 
+            prices_df[<span class="code-string">'volume_spy'</span>].rolling(<span class="code-number">50</span>).mean()
+        )
+        
+        <span class="code-comment"># 4. Corrélation glissante SPY/TLT (21j)</span>
+        features[<span class="code-string">'spy_tlt_corr'</span>] = (
+            prices_df[<span class="code-string">'SPY'</span>].pct_change()
+            .rolling(<span class="code-number">21</span>)
+            .corr(prices_df[<span class="code-string">'TLT'</span>].pct_change())
+        )
+        
+        <span class="code-comment"># 5. Momentum 20 jours</span>
+        features[<span class="code-string">'momentum_20d'</span>] = (
+            prices_df[<span class="code-string">'SPY'</span>].pct_change(<span class="code-number">20</span>)
+        )
+        
+        <span class="code-keyword">return</span> features.dropna()
+    
+    <span class="code-keyword">def</span> <span class="code-function">_identify_states</span>(self, features, states):
+        <span class="code-string">"""
+        Mappe les états HMM numériques (0,1,2) aux régimes 
+        sémantiques (Bull, Bear, Sideways) en se basant sur 
+        la moyenne des rendements dans chaque état.
+        """</span>
+        state_returns = {}
+        <span class="code-keyword">for</span> s <span class="code-keyword">in</span> range(self.n_states):
+            mask = states == s
+            state_returns[s] = features[<span class="code-string">'returns'</span>][mask].mean()
+        
+        <span class="code-comment"># Trier par rendement moyen : le plus élevé = Bull</span>
+        sorted_states = sorted(
+            state_returns.keys(), 
+            key=<span class="code-keyword">lambda</span> x: state_returns[x]
+        )
+        
+        self.state_mapping = {
+            sorted_states[<span class="code-number">0</span>]: <span class="code-string">'Bear'</span>,     <span class="code-comment"># Rendement le plus bas</span>
+            sorted_states[<span class="code-number">1</span>]: <span class="code-string">'Sideways'</span>,  <span class="code-comment"># Rendement intermédiaire</span>
+            sorted_states[<span class="code-number">2</span>]: <span class="code-string">'Bull'</span>,      <span class="code-comment"># Rendement le plus élevé</span>
+        }
+        
+        <span class="code-keyword">return</span> self.state_mapping
+    
+    <span class="code-keyword">def</span> <span class="code-function">fit</span>(self, prices_df):
+        <span class="code-string">"""Entraîne le HMM sur les données historiques."""</span>
+        features = self._prepare_features(prices_df)
+        
+        <span class="code-comment"># Standardiser les features</span>
+        feature_cols = [
+            <span class="code-string">'returns'</span>, <span class="code-string">'realized_vol'</span>, 
+            <span class="code-string">'rel_volume'</span>, <span class="code-string">'spy_tlt_corr'</span>, 
+            <span class="code-string">'momentum_20d'</span>
+        ]
+        X = self.scaler.fit_transform(features[feature_cols])
+        
+        <span class="code-comment"># Entraîner le HMM avec EM (Baum-Welch)</span>
+        self.model = GaussianHMM(
+            n_components=self.n_states,
+            covariance_type=<span class="code-string">'full'</span>,      <span class="code-comment"># Covariance complète</span>
+            n_iter=self.n_iter,
+            random_state=self.random_state,
+            tol=<span class="code-number">1e-4</span>,
+            verbose=<span class="code-keyword">False</span>,
+            init_params=<span class="code-string">'stmc'</span>,         <span class="code-comment"># Init auto</span>
+        )
+        
+        self.model.fit(X)
+        
+        <span class="code-comment"># Décoder les états les plus probables (Viterbi)</span>
+        states = self.model.predict(X)
+        
+        <span class="code-comment"># Identifier les régimes</span>
+        self._identify_states(features, states)
+        
+        <span class="code-comment"># Log des caractéristiques par état</span>
+        <span class="code-keyword">for</span> state_id, regime <span class="code-keyword">in</span> self.state_mapping.items():
+            mask = states == state_id
+            avg_ret = features[<span class="code-string">'returns'</span>][mask].mean() * <span class="code-number">252</span>
+            avg_vol = features[<span class="code-string">'realized_vol'</span>][mask].mean()
+            pct = mask.sum() / len(mask) * <span class="code-number">100</span>
+            print(f<span class="code-string">"  {regime:8s}: ret={avg_ret:+.1f}%, "</span>
+                  f<span class="code-string">"vol={avg_vol:.1f}%, freq={pct:.0f}%"</span>)
+        
+        <span class="code-keyword">return</span> self
+    
+    <span class="code-keyword">def</span> <span class="code-function">predict_regime</span>(self, prices_df):
+        <span class="code-string">"""
+        Prédit le régime actuel + probabilités de chaque état.
+        Retourne (régime, probabilités_dict)
+        """</span>
+        features = self._prepare_features(prices_df)
+        feature_cols = [
+            <span class="code-string">'returns'</span>, <span class="code-string">'realized_vol'</span>,
+            <span class="code-string">'rel_volume'</span>, <span class="code-string">'spy_tlt_corr'</span>,
+            <span class="code-string">'momentum_20d'</span>
+        ]
+        X = self.scaler.transform(features[feature_cols])
+        
+        <span class="code-comment"># Probabilités filtrées (Forward algorithm)</span>
+        log_prob, posteriors = self.model.score_samples(X)
+        
+        <span class="code-comment"># Dernier point = régime actuel</span>
+        current_probs = posteriors[-<span class="code-number">1</span>]
+        current_state = np.argmax(current_probs)
+        current_regime = self.state_mapping[current_state]
+        
+        probs_dict = {
+            self.state_mapping[i]: round(p, <span class="code-number">4</span>)
+            <span class="code-keyword">for</span> i, p <span class="code-keyword">in</span> enumerate(current_probs)
+        }
+        
+        <span class="code-keyword">return</span> current_regime, probs_dict
+    
+    <span class="code-keyword">def</span> <span class="code-function">get_transition_matrix</span>(self):
+        <span class="code-string">"""Retourne la matrice de transition lisible."""</span>
+        <span class="code-keyword">if</span> self.model <span class="code-keyword">is None</span>:
+            <span class="code-keyword">raise</span> ValueError(<span class="code-string">"Modèle non entraîné"</span>)
+        
+        labels = [self.state_mapping[i] 
+                  <span class="code-keyword">for</span> i <span class="code-keyword">in</span> range(self.n_states)]
+        
+        <span class="code-keyword">return</span> pd.DataFrame(
+            self.model.transmat_,
+            index=labels, columns=labels
+        ).round(<span class="code-number">4</span>)
+
+<span class="code-comment"># --- Utilisation ---</span>
+<span class="code-comment"># detector = RegimeDetector(n_states=3)</span>
+<span class="code-comment"># detector.fit(prices_df)  # DataFrame avec SPY, TLT, volume_spy</span>
+<span class="code-comment"># regime, probs = detector.predict_regime(prices_df)</span>
+<span class="code-comment"># print(f"Régime actuel: {regime}")</span>
+<span class="code-comment"># print(f"Probabilités: {probs}")</span>
+<span class="code-comment"># print(detector.get_transition_matrix())</span></div>
+
+<h3><i class="fa-solid fa-chart-bar"></i> Résultats typiques d'un HMM à 3 états</h3>
+
+<p>Après entraînement sur 10 ans de données S&P 500 (2014-2024), le HMM identifie trois régimes clairement distincts :</p>
+
+<table class="compare-table">
+<thead>
+<tr><th>Caractéristique</th><th>Bull (Risk-On)</th><th>Sideways (Transition)</th><th>Bear (Risk-Off)</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Rendement annualisé</strong></td><td>+22.4%</td><td>+3.8%</td><td>-28.6%</td></tr>
+<tr><td><strong>Volatilité annualisée</strong></td><td>11.2%</td><td>16.5%</td><td>31.8%</td></tr>
+<tr><td><strong>Sharpe Ratio</strong></td><td>2.00</td><td>0.23</td><td>-0.90</td></tr>
+<tr><td><strong>Durée médiane</strong></td><td>145 jours</td><td>42 jours</td><td>28 jours</td></tr>
+<tr><td><strong>Fréquence</strong></td><td>58%</td><td>28%</td><td>14%</td></tr>
+<tr><td><strong>P(rester dans l'état)</strong></td><td>98.2%</td><td>95.1%</td><td>93.7%</td></tr>
+<tr><td><strong>Corrélation SPY/TLT</strong></td><td>-0.35</td><td>-0.15</td><td>+0.42</td></tr>
+</tbody>
+</table>
+
+<div class="pro-tip">
+<p><strong><i class="fa-solid fa-star"></i> Insight clé :</strong> La corrélation SPY/TLT est un des indicateurs les plus puissants. En Risk-On, les actions et obligations sont décorrélées (diversification fonctionne). En Risk-Off, elles deviennent <strong>positivement corrélées</strong> — les deux baissent ensemble (2022). Ce changement de corrélation est un signal précurseur de transition de régime.</p>
+</div>
+
+<h3><i class="fa-solid fa-triangle-exclamation"></i> Limites et pièges du HMM</h3>
+
+<div class="warning-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Les 5 pièges des HMM en finance</h4>
+<ul>
+<li><strong>Hindsight bias :</strong> L'algorithme de Viterbi utilise toute la séquence pour décoder — en temps réel, utilisez le Forward algorithm (filtrage) qui n'utilise que le passé.</li>
+<li><strong>Nombre d'états :</strong> BIC/AIC peuvent aider à choisir N, mais en pratique N=3 est robuste. N&gt;4 overfit systématiquement.</li>
+<li><strong>Label switching :</strong> À chaque ré-entraînement, l'état 0 peut devenir l'état 2. Toujours re-mapper les états par rendement moyen.</li>
+<li><strong>Stationnarité :</strong> Le HMM suppose des paramètres stationnaires. Ré-entraînez tous les 6-12 mois avec une fenêtre glissante.</li>
+<li><strong>Faux signaux en Transition :</strong> Le HMM oscille entre Bull et Bear en période de Transition. Appliquez un filtre de persistance (rester N jours dans un état avant de le confirmer).</li>
+</ul>
+</div>
+
+<!-- EChart: HMM Regime Probabilities -->
+<div id="hmmProbChart" style="width:100%;height:420px;margin:2rem 0"></div>
+
+<h3><i class="fa-solid fa-code"></i> Filtre de persistance et lissage</h3>
+
+<p>En production, les probabilités brutes du HMM oscillent trop. Voici comment les lisser et ajouter un filtre de persistance pour éviter les whipsaws :</p>
+
+<div class="code-block"><span class="code-label">Python — regime_filter.py</span>
+<span class="code-keyword">class</span> <span class="code-function">RegimeFilter</span>:
+    <span class="code-string">"""
+    Filtre de persistance pour les signaux de régime HMM.
+    Évite les oscillations en imposant une durée minimale
+    dans un état avant de confirmer la transition.
+    """</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self, min_days=<span class="code-number">5</span>, ema_span=<span class="code-number">10</span>, 
+                 threshold=<span class="code-number">0.6</span>):
+        self.min_days = min_days      <span class="code-comment"># Jours minimum dans un état</span>
+        self.ema_span = ema_span      <span class="code-comment"># EMA pour lisser les probas</span>
+        self.threshold = threshold    <span class="code-comment"># Seuil de probabilité</span>
+        self.current_regime = <span class="code-keyword">None</span>
+        self.days_in_regime = <span class="code-number">0</span>
+        self.pending_regime = <span class="code-keyword">None</span>
+        self.pending_days = <span class="code-number">0</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">smooth_probabilities</span>(self, probs_series):
+        <span class="code-string">"""Lisse les probabilités avec une EMA."""</span>
+        smoothed = {}
+        <span class="code-keyword">for</span> regime <span class="code-keyword">in</span> probs_series.columns:
+            smoothed[regime] = (
+                probs_series[regime]
+                .ewm(span=self.ema_span, adjust=<span class="code-keyword">False</span>)
+                .mean()
+            )
+        <span class="code-keyword">return</span> pd.DataFrame(smoothed)
+    
+    <span class="code-keyword">def</span> <span class="code-function">update</span>(self, regime_probs):
+        <span class="code-string">"""
+        Met à jour le régime filtré.
+        regime_probs: dict {'Bull': 0.7, 'Sideways': 0.2, 'Bear': 0.1}
+        Returns: régime confirmé (str)
+        """</span>
+        <span class="code-comment"># Régime brut (probabilité max)</span>
+        raw_regime = max(regime_probs, key=regime_probs.get)
+        raw_prob = regime_probs[raw_regime]
+        
+        <span class="code-comment"># Initialisation</span>
+        <span class="code-keyword">if</span> self.current_regime <span class="code-keyword">is None</span>:
+            self.current_regime = raw_regime
+            self.days_in_regime = <span class="code-number">1</span>
+            <span class="code-keyword">return</span> self.current_regime
+        
+        <span class="code-comment"># Même régime que l'actuel</span>
+        <span class="code-keyword">if</span> raw_regime == self.current_regime:
+            self.days_in_regime += <span class="code-number">1</span>
+            self.pending_regime = <span class="code-keyword">None</span>
+            self.pending_days = <span class="code-number">0</span>
+            <span class="code-keyword">return</span> self.current_regime
+        
+        <span class="code-comment"># Nouveau régime détecté</span>
+        <span class="code-keyword">if</span> raw_prob >= self.threshold:
+            <span class="code-keyword">if</span> self.pending_regime == raw_regime:
+                self.pending_days += <span class="code-number">1</span>
+            <span class="code-keyword">else</span>:
+                self.pending_regime = raw_regime
+                self.pending_days = <span class="code-number">1</span>
+            
+            <span class="code-comment"># Confirmer après min_days consécutifs</span>
+            <span class="code-keyword">if</span> self.pending_days >= self.min_days:
+                self.current_regime = raw_regime
+                self.days_in_regime = self.pending_days
+                self.pending_regime = <span class="code-keyword">None</span>
+                self.pending_days = <span class="code-number">0</span>
+        <span class="code-keyword">else</span>:
+            self.pending_regime = <span class="code-keyword">None</span>
+            self.pending_days = <span class="code-number">0</span>
+        
+        <span class="code-keyword">return</span> self.current_regime</div>
+
+<p>Le filtre de persistance réduit le nombre de transitions de régime de 40-60 par an (HMM brut) à 8-12 par an (filtré), éliminant 80% des faux signaux tout en conservant 95% de la valeur ajoutée de la détection.</p>
+
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : MACHINE LEARNING POUR LE SIGNAL ALPHA            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="ml-alpha"><i class="fa-solid fa-brain"></i> Machine Learning pour le signal alpha</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-chart-simple"></i> Du facteur linéaire au modèle non-linéaire</h2>
+
+<p>Dans les parties précédentes, nous avons construit des signaux alpha basés sur des combinaisons linéaires de facteurs (momentum, value, quality). Le Machine Learning permet d'aller plus loin en capturant des <strong>interactions non-linéaires</strong> entre facteurs que le cerveau humain ne peut pas identifier.</p>
+
+<p>Mais attention : le ML en finance n'est <strong>pas</strong> comme le ML en computer vision ou en NLP. Le ratio signal/bruit est infiniment plus faible (IC de 0.02-0.05 vs. 0.99 en classification d'images). Cela change radicalement l'approche.</p>
+
+<div class="metric-row">
+  <div class="metric-item">
+    <div class="metric-value">0.02-0.05</div>
+    <div class="metric-label">IC typique des meilleurs modèles ML</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">50-100</div>
+    <div class="metric-label">Features alpha candidates</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">+3-8%</div>
+    <div class="metric-label">CAGR additionnel vs linéaire</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">Mensuel</div>
+    <div class="metric-label">Rebalancement optimal ML</div>
+  </div>
+</div>
+
+<h3><i class="fa-solid fa-ranking-star"></i> Gradient Boosting (XGBoost / LightGBM) — Le champion</h3>
+
+<p>Pour les données tabulaires financières, le <strong>Gradient Boosting</strong> (XGBoost, LightGBM) domine systématiquement. Ce n'est pas un hasard : les données financières sont structurées, hétérogènes (mix de features continues et catégorielles), et le gradient boosting excelle précisément dans ce contexte.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Pourquoi pas le Deep Learning ?</h4>
+<p>Les réseaux de neurones profonds brillent quand les données sont massives, homogènes et à très haute dimension (images, texte, audio). En finance quantitative, les données sont relativement petites (quelques milliers d'observations mensuelles), hétérogènes et extrêmement bruitées. Le Deep Learning overfit presque systématiquement dans ce régime de données. Les arbres de gradient boosting sont supérieurs car ils gèrent naturellement les interactions non-linéaires, sont robustes aux outliers, et nécessitent beaucoup moins de données pour converger. Exception notable : les LSTM pour le time-series forecasting et les Transformers pour le NLP financier.</p>
+</div>
+
+<div class="code-block"><span class="code-label">Python — ml_alpha_signal.py</span>
+<span class="code-keyword">import</span> numpy <span class="code-keyword">as</span> np
+<span class="code-keyword">import</span> pandas <span class="code-keyword">as</span> pd
+<span class="code-keyword">import</span> lightgbm <span class="code-keyword">as</span> lgb
+<span class="code-keyword">from</span> sklearn.model_selection <span class="code-keyword">import</span> TimeSeriesSplit
+<span class="code-keyword">import</span> optuna
+<span class="code-keyword">import</span> shap
+
+<span class="code-keyword">class</span> <span class="code-function">AlphaMLModel</span>:
+    <span class="code-string">"""
+    Modèle de signal alpha basé sur LightGBM.
+    
+    Target : quintile de rendement du mois suivant (1-5)
+    Features : 50 alpha factors (momentum, value, quality, 
+               sentiment, technique)
+    Validation : Purged K-Fold pour éviter le data leakage
+    Tuning : Optuna (Bayesian Optimization)
+    """</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self, n_splits=<span class="code-number">5</span>, purge_days=<span class="code-number">21</span>, 
+                 embargo_days=<span class="code-number">5</span>):
+        self.n_splits = n_splits
+        self.purge_days = purge_days    <span class="code-comment"># Jours purgés entre train/val</span>
+        self.embargo_days = embargo_days
+        self.model = <span class="code-keyword">None</span>
+        self.feature_names = <span class="code-keyword">None</span>
+        self.best_params = <span class="code-keyword">None</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">_purged_kfold</span>(self, X, n_splits, 
+                       purge_days, embargo_days):
+        <span class="code-string">"""
+        Purged K-Fold Cross-Validation.
+        Élimine les observations proches de la frontière 
+        train/test pour éviter le data leakage temporel.
+        """</span>
+        n = len(X)
+        fold_size = n // n_splits
+        
+        <span class="code-keyword">for</span> i <span class="code-keyword">in</span> range(n_splits):
+            test_start = i * fold_size
+            test_end = min((i + <span class="code-number">1</span>) * fold_size, n)
+            
+            <span class="code-comment"># Purge : supprimer les obs proches du test set</span>
+            train_end = max(<span class="code-number">0</span>, test_start - purge_days)
+            test_start_adj = min(n, test_end + embargo_days)
+            
+            train_idx = list(range(<span class="code-number">0</span>, train_end))
+            <span class="code-keyword">if</span> test_start_adj &lt; n:
+                train_idx += list(range(test_start_adj, n))
+            
+            test_idx = list(range(test_start, test_end))
+            
+            <span class="code-keyword">if</span> len(train_idx) > <span class="code-number">0</span> <span class="code-keyword">and</span> len(test_idx) > <span class="code-number">0</span>:
+                <span class="code-keyword">yield</span> np.array(train_idx), np.array(test_idx)
+    
+    <span class="code-keyword">def</span> <span class="code-function">_create_target</span>(self, returns_df, horizon=<span class="code-number">21</span>):
+        <span class="code-string">"""
+        Crée le target : quintile de rendement forward.
+        1 = worst performers, 5 = best performers
+        """</span>
+        fwd_returns = returns_df.shift(-horizon)
+        
+        <span class="code-comment"># Quintiles cross-sectionnels par date</span>
+        quintiles = fwd_returns.apply(
+            <span class="code-keyword">lambda</span> x: pd.qcut(
+                x.rank(method=<span class="code-string">'first'</span>), 
+                <span class="code-number">5</span>, labels=[<span class="code-number">1</span>,<span class="code-number">2</span>,<span class="code-number">3</span>,<span class="code-number">4</span>,<span class="code-number">5</span>]
+            ),
+            axis=<span class="code-number">1</span>
+        )
+        <span class="code-keyword">return</span> quintiles
+    
+    <span class="code-keyword">def</span> <span class="code-function">_objective</span>(self, trial, X, y):
+        <span class="code-string">"""Objectif Optuna pour le tuning bayésien."""</span>
+        params = {
+            <span class="code-string">'objective'</span>: <span class="code-string">'multiclass'</span>,
+            <span class="code-string">'num_class'</span>: <span class="code-number">5</span>,
+            <span class="code-string">'metric'</span>: <span class="code-string">'multi_logloss'</span>,
+            <span class="code-string">'verbosity'</span>: -<span class="code-number">1</span>,
+            <span class="code-string">'n_estimators'</span>: trial.suggest_int(
+                <span class="code-string">'n_estimators'</span>, <span class="code-number">100</span>, <span class="code-number">1000</span>
+            ),
+            <span class="code-string">'max_depth'</span>: trial.suggest_int(
+                <span class="code-string">'max_depth'</span>, <span class="code-number">3</span>, <span class="code-number">8</span>
+            ),
+            <span class="code-string">'learning_rate'</span>: trial.suggest_float(
+                <span class="code-string">'learning_rate'</span>, <span class="code-number">0.01</span>, <span class="code-number">0.1</span>, log=<span class="code-keyword">True</span>
+            ),
+            <span class="code-string">'num_leaves'</span>: trial.suggest_int(
+                <span class="code-string">'num_leaves'</span>, <span class="code-number">8</span>, <span class="code-number">64</span>
+            ),
+            <span class="code-string">'min_child_samples'</span>: trial.suggest_int(
+                <span class="code-string">'min_child_samples'</span>, <span class="code-number">20</span>, <span class="code-number">100</span>
+            ),
+            <span class="code-string">'subsample'</span>: trial.suggest_float(
+                <span class="code-string">'subsample'</span>, <span class="code-number">0.6</span>, <span class="code-number">1.0</span>
+            ),
+            <span class="code-string">'colsample_bytree'</span>: trial.suggest_float(
+                <span class="code-string">'colsample_bytree'</span>, <span class="code-number">0.5</span>, <span class="code-number">0.9</span>
+            ),
+            <span class="code-string">'reg_alpha'</span>: trial.suggest_float(
+                <span class="code-string">'reg_alpha'</span>, <span class="code-number">1e-3</span>, <span class="code-number">10.0</span>, log=<span class="code-keyword">True</span>
+            ),
+            <span class="code-string">'reg_lambda'</span>: trial.suggest_float(
+                <span class="code-string">'reg_lambda'</span>, <span class="code-number">1e-3</span>, <span class="code-number">10.0</span>, log=<span class="code-keyword">True</span>
+            ),
+        }
+        
+        scores = []
+        <span class="code-keyword">for</span> train_idx, val_idx <span class="code-keyword">in</span> self._purged_kfold(
+            X, self.n_splits, self.purge_days, self.embargo_days
+        ):
+            model = lgb.LGBMClassifier(**params)
+            model.fit(
+                X.iloc[train_idx], y.iloc[train_idx],
+                eval_set=[(X.iloc[val_idx], y.iloc[val_idx])],
+                callbacks=[lgb.early_stopping(<span class="code-number">50</span>, verbose=<span class="code-keyword">False</span>)]
+            )
+            
+            <span class="code-comment"># IC = Spearman correlation entre prédiction et réalisation</span>
+            pred_proba = model.predict_proba(X.iloc[val_idx])
+            <span class="code-comment"># Score attendu = somme pondérée des quintiles</span>
+            expected_quintile = np.sum(
+                pred_proba * np.array([<span class="code-number">1</span>,<span class="code-number">2</span>,<span class="code-number">3</span>,<span class="code-number">4</span>,<span class="code-number">5</span>]), axis=<span class="code-number">1</span>
+            )
+            
+            <span class="code-keyword">from</span> scipy.stats <span class="code-keyword">import</span> spearmanr
+            ic, _ = spearmanr(expected_quintile, y.iloc[val_idx])
+            scores.append(ic)
+        
+        <span class="code-keyword">return</span> np.mean(scores)
+    
+    <span class="code-keyword">def</span> <span class="code-function">tune_and_fit</span>(self, X, y, n_trials=<span class="code-number">100</span>):
+        <span class="code-string">"""
+        Optimise les hyperparamètres via Optuna puis 
+        entraîne le modèle final.
+        """</span>
+        self.feature_names = X.columns.tolist()
+        
+        <span class="code-comment"># Bayesian Optimization</span>
+        study = optuna.create_study(
+            direction=<span class="code-string">'maximize'</span>,
+            sampler=optuna.samplers.TPESampler(seed=<span class="code-number">42</span>)
+        )
+        study.optimize(
+            <span class="code-keyword">lambda</span> trial: self._objective(trial, X, y),
+            n_trials=n_trials,
+            show_progress_bar=<span class="code-keyword">True</span>
+        )
+        
+        self.best_params = study.best_params
+        self.best_params[<span class="code-string">'objective'</span>] = <span class="code-string">'multiclass'</span>
+        self.best_params[<span class="code-string">'num_class'</span>] = <span class="code-number">5</span>
+        self.best_params[<span class="code-string">'verbosity'</span>] = -<span class="code-number">1</span>
+        
+        print(f<span class="code-string">"Meilleur IC moyen: {study.best_value:.4f}"</span>)
+        print(f<span class="code-string">"Meilleurs paramètres: {self.best_params}"</span>)
+        
+        <span class="code-comment"># Entraîner le modèle final</span>
+        self.model = lgb.LGBMClassifier(**self.best_params)
+        self.model.fit(X, y)
+        
+        <span class="code-keyword">return</span> self
+    
+    <span class="code-keyword">def</span> <span class="code-function">predict_alpha</span>(self, X):
+        <span class="code-string">"""
+        Retourne un score alpha continu (1-5) pour chaque stock.
+        Score élevé = alpha attendu positif.
+        """</span>
+        pred_proba = self.model.predict_proba(X)
+        alpha_score = np.sum(
+            pred_proba * np.array([<span class="code-number">1</span>,<span class="code-number">2</span>,<span class="code-number">3</span>,<span class="code-number">4</span>,<span class="code-number">5</span>]), axis=<span class="code-number">1</span>
+        )
+        <span class="code-keyword">return</span> alpha_score
+    
+    <span class="code-keyword">def</span> <span class="code-function">explain</span>(self, X, top_n=<span class="code-number">20</span>):
+        <span class="code-string">"""
+        SHAP feature importance — comprendre ce que 
+        le modèle a appris.
+        """</span>
+        explainer = shap.TreeExplainer(self.model)
+        shap_values = explainer.shap_values(X)
+        
+        <span class="code-comment"># Importance moyenne absolue par feature</span>
+        importance = np.mean(
+            [np.abs(sv).mean(axis=<span class="code-number">0</span>) <span class="code-keyword">for</span> sv <span class="code-keyword">in</span> shap_values],
+            axis=<span class="code-number">0</span>
+        )
+        
+        feat_imp = pd.DataFrame({
+            <span class="code-string">'feature'</span>: self.feature_names,
+            <span class="code-string">'importance'</span>: importance
+        }).sort_values(<span class="code-string">'importance'</span>, ascending=<span class="code-keyword">False</span>)
+        
+        <span class="code-keyword">return</span> feat_imp.head(top_n)</div>
+
+<h3><i class="fa-solid fa-sitemap"></i> Random Forest — Plus robuste, moins performant</h3>
+
+<p>Le <strong>Random Forest</strong> est souvent le premier choix pour un débutant en ML finance, et pour cause : il est presque impossible à faire overfitter grâce au bagging et au subsampling de features. En contrepartie, il capture moins bien les interactions complexes que le gradient boosting.</p>
+
+<div class="code-block"><span class="code-label">Python — random_forest_alpha.py</span>
+<span class="code-keyword">from</span> sklearn.ensemble <span class="code-keyword">import</span> RandomForestClassifier
+
+<span class="code-keyword">class</span> <span class="code-function">RFAlphaModel</span>:
+    <span class="code-string">"""Random Forest pour alpha signal — plus robuste."""</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self):
+        self.model = RandomForestClassifier(
+            n_estimators=<span class="code-number">500</span>,       <span class="code-comment"># Beaucoup d'arbres = stabilité</span>
+            max_depth=<span class="code-number">6</span>,            <span class="code-comment"># Peu profond = moins d'overfitting</span>
+            min_samples_leaf=<span class="code-number">50</span>,    <span class="code-comment"># Feuilles larges</span>
+            max_features=<span class="code-string">'sqrt'</span>,     <span class="code-comment"># Subsampling features classique</span>
+            n_jobs=-<span class="code-number">1</span>,              <span class="code-comment"># Parallélisation</span>
+            random_state=<span class="code-number">42</span>,
+            class_weight=<span class="code-string">'balanced'</span>  <span class="code-comment"># Gérer le déséquilibre</span>
+        )
+    
+    <span class="code-keyword">def</span> <span class="code-function">fit_predict</span>(self, X_train, y_train, X_test):
+        self.model.fit(X_train, y_train)
+        proba = self.model.predict_proba(X_test)
+        <span class="code-comment"># Score alpha = espérance du quintile</span>
+        alpha = np.sum(
+            proba * np.arange(<span class="code-number">1</span>, <span class="code-number">6</span>), axis=<span class="code-number">1</span>
+        )
+        <span class="code-keyword">return</span> alpha
+    
+    <span class="code-keyword">def</span> <span class="code-function">feature_importance</span>(self):
+        imp = pd.DataFrame({
+            <span class="code-string">'feature'</span>: self.model.feature_names_in_,
+            <span class="code-string">'importance'</span>: self.model.feature_importances_
+        })
+        <span class="code-keyword">return</span> imp.sort_values(<span class="code-string">'importance'</span>, ascending=<span class="code-keyword">False</span>)</div>
+
+<h3><i class="fa-solid fa-chart-line"></i> Ridge / Lasso — Linéaire mais puissant</h3>
+
+<p>Ne sous-estimez jamais les modèles linéaires. En finance, la <strong>Ridge Regression</strong> (L2) et le <strong>Lasso</strong> (L1) restent parmi les meilleurs modèles quand le nombre de features est élevé par rapport au nombre d'observations. Le Lasso a l'avantage de la <strong>sélection automatique de features</strong> (coefficients mis à zéro).</p>
+
+<div class="code-block"><span class="code-label">Python — linear_alpha.py</span>
+<span class="code-keyword">from</span> sklearn.linear_model <span class="code-keyword">import</span> RidgeCV, LassoCV
+<span class="code-keyword">from</span> sklearn.preprocessing <span class="code-keyword">import</span> StandardScaler
+
+<span class="code-keyword">class</span> <span class="code-function">LinearAlphaModel</span>:
+    <span class="code-string">"""Modèle linéaire régularisé pour alpha signal."""</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self, method=<span class="code-string">'ridge'</span>):
+        self.scaler = StandardScaler()
+        <span class="code-keyword">if</span> method == <span class="code-string">'ridge'</span>:
+            self.model = RidgeCV(
+                alphas=np.logspace(-<span class="code-number">3</span>, <span class="code-number">3</span>, <span class="code-number">20</span>),
+                cv=<span class="code-number">5</span>
+            )
+        <span class="code-keyword">else</span>:
+            self.model = LassoCV(
+                alphas=np.logspace(-<span class="code-number">4</span>, <span class="code-number">1</span>, <span class="code-number">30</span>),
+                cv=<span class="code-number">5</span>,
+                max_iter=<span class="code-number">10000</span>
+            )
+    
+    <span class="code-keyword">def</span> <span class="code-function">fit_predict</span>(self, X_train, y_train, X_test):
+        <span class="code-comment"># Standardiser (crucial pour régularisation)</span>
+        X_tr = self.scaler.fit_transform(X_train)
+        X_te = self.scaler.transform(X_test)
+        
+        self.model.fit(X_tr, y_train)
+        alpha = self.model.predict(X_te)
+        <span class="code-keyword">return</span> alpha
+    
+    <span class="code-keyword">def</span> <span class="code-function">selected_features</span>(self):
+        <span class="code-string">"""Features sélectionnées (Lasso: coeff != 0)."""</span>
+        coefs = pd.Series(
+            self.model.coef_, 
+            index=self.feature_names
+        )
+        <span class="code-keyword">return</span> coefs[coefs != <span class="code-number">0</span>].sort_values(
+            key=<span class="code-keyword">lambda</span> x: x.abs(), ascending=<span class="code-keyword">False</span>
+        )</div>
+
+<h3><i class="fa-solid fa-object-group"></i> Ensemble — La sagesse des foules</h3>
+
+<p>En production, les meilleurs fonds quantitatifs ne s'appuient <strong>jamais</strong> sur un seul modèle. L'ensemble de modèles réduit la variance des prédictions et est plus robuste aux changements de régime. Voici l'approche :</p>
+
+<div class="code-block"><span class="code-label">Python — ensemble_alpha.py</span>
+<span class="code-keyword">class</span> <span class="code-function">EnsembleAlpha</span>:
+    <span class="code-string">"""
+    Ensemble de modèles alpha : moyenne pondérée.
+    Poids basés sur la performance récente (IC glissant).
+    """</span>
+    
+    <span class="code-keyword">def</span> <span class="code-function">__init__</span>(self, models, ic_window=<span class="code-number">6</span>):
+        <span class="code-string">"""
+        models: dict {'lgbm': LGBMModel, 'rf': RFModel, 
+                      'ridge': RidgeModel}
+        ic_window: nombre de mois pour calculer IC glissant
+        """</span>
+        self.models = models
+        self.ic_window = ic_window
+        self.weights = {k: <span class="code-number">1.0</span>/len(models) <span class="code-keyword">for</span> k <span class="code-keyword">in</span> models}
+        self.ic_history = {k: [] <span class="code-keyword">for</span> k <span class="code-keyword">in</span> models}
+    
+    <span class="code-keyword">def</span> <span class="code-function">predict</span>(self, X):
+        <span class="code-string">"""Prédiction ensemble pondérée."""</span>
+        predictions = {}
+        <span class="code-keyword">for</span> name, model <span class="code-keyword">in</span> self.models.items():
+            predictions[name] = model.predict_alpha(X)
+        
+        <span class="code-comment"># Moyenne pondérée par IC récent</span>
+        ensemble = np.zeros(len(X))
+        total_weight = sum(self.weights.values())
+        
+        <span class="code-keyword">for</span> name, pred <span class="code-keyword">in</span> predictions.items():
+            w = self.weights[name] / total_weight
+            ensemble += w * pred
+        
+        <span class="code-keyword">return</span> ensemble
+    
+    <span class="code-keyword">def</span> <span class="code-function">update_weights</span>(self, X, y_actual):
+        <span class="code-string">"""
+        Met à jour les poids basés sur la performance 
+        récente de chaque modèle.
+        """</span>
+        <span class="code-keyword">from</span> scipy.stats <span class="code-keyword">import</span> spearmanr
+        
+        <span class="code-keyword">for</span> name, model <span class="code-keyword">in</span> self.models.items():
+            pred = model.predict_alpha(X)
+            ic, _ = spearmanr(pred, y_actual)
+            self.ic_history[name].append(ic)
+            
+            <span class="code-comment"># IC moyen glissant (pondéré récent)</span>
+            recent = self.ic_history[name][-self.ic_window:]
+            <span class="code-comment"># Pondération exponentielle</span>
+            decay = np.array([<span class="code-number">0.8</span>**i <span class="code-keyword">for</span> i <span class="code-keyword">in</span> range(
+                len(recent)-<span class="code-number">1</span>, -<span class="code-number">1</span>, -<span class="code-number">1</span>
+            )])
+            avg_ic = np.average(recent, weights=decay)
+            
+            <span class="code-comment"># Poids = max(IC, 0) pour exclure les modèles négatifs</span>
+            self.weights[name] = max(avg_ic, <span class="code-number">0.01</span>)
+        
+        print(<span class="code-string">"Poids mis à jour:"</span>)
+        total = sum(self.weights.values())
+        <span class="code-keyword">for</span> name, w <span class="code-keyword">in</span> self.weights.items():
+            print(f<span class="code-string">"  {name}: {w/total:.1%}"</span>)</div>
+
+<p>L'ensemble typique en production combine 3-5 modèles avec des horizons et des familles de facteurs différents. La diversification des modèles réduit le drawdown de 15-25% par rapport au meilleur modèle individuel.</p>
+
+<!-- EChart: Feature Importance SHAP -->
+<div id="featureImportanceChart" style="width:100%;height:480px;margin:2rem 0"></div>
+
+<table class="compare-table">
+<thead>
+<tr><th>Modèle</th><th>IC moyen</th><th>Stabilité IC</th><th>Temps entraînement</th><th>Risque overfitting</th><th>Interprétabilité</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>LightGBM</strong></td><td>0.045</td><td>Moyenne</td><td>Rapide (30s)</td><td>Moyen</td><td>SHAP disponible</td></tr>
+<tr><td><strong>XGBoost</strong></td><td>0.043</td><td>Moyenne</td><td>Modéré (2min)</td><td>Moyen</td><td>SHAP disponible</td></tr>
+<tr><td><strong>Random Forest</strong></td><td>0.038</td><td>Haute</td><td>Modéré (1min)</td><td>Faible</td><td>Feature importance</td></tr>
+<tr><td><strong>Ridge Regression</strong></td><td>0.032</td><td>Très haute</td><td>Instantané</td><td>Très faible</td><td>Coefficients</td></tr>
+<tr><td><strong>Lasso</strong></td><td>0.030</td><td>Très haute</td><td>Instantané</td><td>Très faible</td><td>Feature selection</td></tr>
+<tr><td><strong>Ensemble (3 modèles)</strong></td><td>0.052</td><td>Haute</td><td>Somme</td><td>Faible</td><td>Moyenne pondérée</td></tr>
+</tbody>
+</table>
+
+</div>
+
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,options,formation,us" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partie 4/10 — Options, Max Pain & Gamma Squeeze | Manipulation de Marché | Market Watch</title>
+<meta name="description" content="Max Pain theory, delta hedging, gamma exposure (GEX), pinning, gamma squeeze. Comment les market makers utilisent les options pour ancrer les prix.">
+<meta property="og:title" content="Options, Max Pain & Gamma Squeeze | Market Watch">
+<meta property="og:type" content="article">
+<link rel="icon" href="https://market-watch.xyz/favicon.ico">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="/assets/report.css">
+<style>
+.hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#fef2f2 0%,#f8fafc 100%);text-align:center}
+.hero-date{font-size:.85rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.hero-badge-crimson{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.hero-badge-dark{background:rgba(15,23,42,.08);color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+<div class="hero-date"><i class="fa-solid fa-mask"></i> Série Manipulation de Marché — Partie 4 sur 10</div>
+<h1 class="hero-title">Options, Max Pain &amp; Gamma Squeeze</h1>
+<p class="hero-subtitle">Comment les market makers utilisent le delta hedging pour ancrer les prix au Max Pain, l'impact du Gamma Exposure (GEX) sur la volatilité, et comment un gamma squeeze peut se retourner contre les dealers.</p>
+<div class="hero-badges">
+<span class="hero-badge hero-badge-crimson"><i class="fa-solid fa-bullseye"></i> Max Pain</span>
+<span class="hero-badge hero-badge-dark"><i class="fa-solid fa-wave-square"></i> Gamma Exposure</span>
+<span class="hero-badge hero-badge-amber"><i class="fa-solid fa-rocket"></i> Gamma Squeeze</span>
+<span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-line"></i> Expert++</span>
+</div>
+<div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/market-manipulation/part3-dark-pools/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">Manipulation de Marché</span><div class="series-steps"><a href="/series/market-manipulation/part1-anatomie/" class="series-step"><span class="series-num">1</span><span class="series-label">Anatomie</span></a><a href="/series/market-manipulation/part2-short-selling/" class="series-step"><span class="series-num">2</span><span class="series-label">Short Selling</span></a><a href="/series/market-manipulation/part3-dark-pools/" class="series-step"><span class="series-num">3</span><span class="series-label">Dark Pools</span></a><a href="/series/market-manipulation/part4-options-max-pain/" class="series-step current"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/market-manipulation/part5-volume-price-action/" class="series-step"><span class="series-num">5</span><span class="series-label">Volume</span></a><a href="/series/market-manipulation/part6-dilution-warrants/" class="series-step"><span class="series-num">6</span><span class="series-label">Dilution</span></a><a href="/series/market-manipulation/part7-social-media/" class="series-step"><span class="series-num">7</span><span class="series-label">Social Media</span></a><a href="/series/market-manipulation/part8-fonds-hostiles/" class="series-step"><span class="series-num">8</span><span class="series-label">Fonds Hostiles</span></a><a href="/series/market-manipulation/part9-scanner-detection/" class="series-step"><span class="series-num">9</span><span class="series-label">Scanner</span></a><a href="/series/market-manipulation/part10-strategies-trading/" class="series-step"><span class="series-num">10</span><span class="series-label">Stratégies</span></a></div><span class="series-counter">4/10</span><a href="/series/market-manipulation/part5-volume-price-action/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#greeks" class="fnav-item" data-section="greeks"><i class="fa-solid fa-calculator"></i><span>Greeks Essentiels</span></a><a href="#maxpain" class="fnav-item" data-section="maxpain"><i class="fa-solid fa-bullseye"></i><span>Max Pain</span></a><a href="#gex" class="fnav-item" data-section="gex"><i class="fa-solid fa-wave-square"></i><span>Gamma Exposure</span></a><a href="#gamma-squeeze" class="fnav-item" data-section="gamma-squeeze"><i class="fa-solid fa-rocket"></i><span>Gamma Squeeze</span></a><a href="#cas" class="fnav-item" data-section="cas"><i class="fa-solid fa-microscope"></i><span>Cas Pratiques</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fa-solid fa-crosshairs"></i><span>Stratégies</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container">
+
+<div class="section-divider" id="greeks"><i class="fa-solid fa-calculator"></i> Les Greeks au cœur de la manipulation</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-calculator"></i> Delta, Gamma et le hedging des market makers</h2>
+
+<p>Pour comprendre comment les options sont utilisées pour manipuler les prix des actions sous-jacentes, il faut d'abord maîtriser les <strong>Greeks</strong> — les sensibilités d'un contrat d'option — et surtout comment les <strong>market makers</strong> (dealers) les utilisent pour hedger leurs positions.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-graduation-cap"></i> Les 4 Greeks essentiels pour la détection de manipulation</h4>
+<ul>
+<li><strong>Delta (Δ)</strong> — Sensibilité du prix de l'option au mouvement du sous-jacent. Un call ATM a un delta ~0.50 : si l'action monte de $1, le call gagne $0.50. Le dealer qui vend ce call doit acheter 50 actions pour hedger → c'est le <strong>delta hedging</strong></li>
+<li><strong>Gamma (Γ)</strong> — Vitesse de variation du delta. Le gamma est maximum pour les options ATM proches de l'expiration. C'est le gamma qui crée les mouvements explosifs : quand le prix bouge, le delta change, forçant le dealer à hedger davantage → boucle de rétroaction</li>
+<li><strong>Theta (Θ)</strong> — Érosion temporelle. Les options perdent de la valeur chaque jour. Les derniers jours avant l'expiration, le theta s'accélère dramatiquement — c'est pourquoi l'OPEX (Options Expiration) est le jour le plus manipulé de chaque mois</li>
+<li><strong>Vega (ν)</strong> — Sensibilité à la volatilité implicite. Quand la vol implicite monte, toutes les options gagnent de la valeur. Les dealers peuvent manipuler le prix en vendant massivement de la vol (vol crush) ou en l'achetant (vol explosion)</li>
+</ul>
+</div>
+
+<h3>Le delta hedging — Le mécanisme fondamental</h3>
+
+<p>Quand un retail trader achète un call, le market maker est maintenant <strong>short gamma</strong> — il a vendu le droit d'acheter l'action. Pour rester delta-neutral, il doit acheter des actions du sous-jacent proportionnellement au delta du call vendu. Ce processus s'appelle le <strong>delta hedging</strong>.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Action du Retail</th><th>Position du Dealer</th><th>Hedging requis</th><th>Impact sur le prix</th></tr></thead>
+<tbody>
+<tr><td>Achète Calls</td><td>Short Calls (short gamma)</td><td>Acheter des actions</td><td>Haussier → achats forcés</td></tr>
+<tr><td>Achète Puts</td><td>Short Puts (short gamma)</td><td>Vendre des actions (short)</td><td>Baissier → ventes forcées</td></tr>
+<tr><td>Vend Calls</td><td>Long Calls (long gamma)</td><td>Vendre des actions</td><td>Baissier (libère le hedge)</td></tr>
+<tr><td>Vend Puts</td><td>Long Puts (long gamma)</td><td>Acheter des actions</td><td>Haussier (libère le hedge)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Pourquoi c'est crucial pour la manipulation</h4>
+<p>Le dealer <strong>n'a pas le choix</strong> de hedger ou non — c'est une obligation réglementaire et de risk management. Cela signifie que quiconque peut influencer massivement le flux d'options peut <strong>forcer</strong> les dealers à acheter ou vendre des actions, créant des mouvements de prix artificiels mais bien réels.</p>
+</div>
+</div>
+
+<div class="section-divider" id="maxpain"><i class="fa-solid fa-bullseye"></i> Max Pain Theory</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-bullseye"></i> Max Pain — L'ancrage magnétique de l'expiration</h2>
+
+<p>Le <strong>Max Pain</strong> est le prix de strike auquel le montant total des options (calls + puts) expirant sans valeur est maximisé. C'est le prix où les <strong>acheteurs d'options perdent le plus d'argent</strong> et les <strong>vendeurs d'options (dealers) gagnent le plus</strong>.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-magnet"></i> Calcul du Max Pain</h4>
+<p>Pour chaque strike de la chaîne d'options :</p>
+<ol>
+<li>Calculer la valeur intrinsèque de tous les calls ouverts à ce prix</li>
+<li>Calculer la valeur intrinsèque de tous les puts ouverts à ce prix</li>
+<li>Additionner les deux = perte totale des acheteurs d'options</li>
+<li>Le strike où cette somme est maximale = <strong>Max Pain</strong></li>
+</ol>
+<p>Statistiquement, les actions clôturent à moins de 5% du Max Pain dans <strong>70-80% des cas</strong> le vendredi d'expiration (OPEX). Ce n'est pas une coïncidence.</p>
+</div>
+
+<div id="maxpainChart" style="width:100%;height:450px;margin:2rem 0;"></div>
+
+<h3>Pourquoi le prix converge vers le Max Pain</h3>
+
+<div class="bias-grid">
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-gears"></i></div>
+<h4>Delta Hedging Mécanique</h4>
+<p>Les dealers ajustent leur hedge en continu. Comme ils sont short gamma autour des strikes à fort OI, le hedging crée naturellement une force de rappel vers le Max Pain</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+<h4>Incentive Financier</h4>
+<p>Les dealers ont collecté ~$5-10B de primes par mois sur les marchés US. Chaque dollar que le sous-jacent s'éloigne du Max Pain leur coûte des millions en payouts. Ils ont un incentive direct à ancrer le prix</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-arrows-to-dot"></i></div>
+<h4>Pinning Effect</h4>
+<p>Le « pinning » est le phénomène où le prix oscille autour d'un strike à fort OI dans les dernières heures avant l'expiration. C'est le résultat direct du gamma hedging qui crée des forces contraires autour du strike</p>
+</div>
+<div class="bias-card">
+<div class="bias-icon"><i class="fa-solid fa-calendar-day"></i></div>
+<h4>OPEX Calendar</h4>
+<p>Monthly OPEX (3e vendredi) : 40-60% de l'OI expire. Quad Witching (mars, juin, sept, déc) : options sur actions + indices + futures expirent = manipulation maximale</p>
+</div>
+</div>
+
+<h3>Dates OPEX clés 2026</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Type</th><th>Dates</th><th>Impact</th><th>Vol attendue</th></tr></thead>
+<tbody>
+<tr><td><strong>Monthly OPEX</strong></td><td>Chaque 3e vendredi</td><td>Fort — 40-60% de l'OI expire</td><td>+15-25%</td></tr>
+<tr><td><strong>Quad Witching</strong></td><td>20 Mar, 19 Jun, 18 Sep, 18 Dec</td><td>Extrême — actions + indices + futures</td><td>+40-60%</td></tr>
+<tr><td><strong>0DTE</strong></td><td>Chaque jour (SPX, QQQ, SPY)</td><td>Croissant — 40%+ du volume options SPX</td><td>Variable</td></tr>
+<tr><td><strong>Weekly OPEX</strong></td><td>Chaque vendredi (titres majeurs)</td><td>Modéré</td><td>+5-10%</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section-divider" id="gex"><i class="fa-solid fa-wave-square"></i> Gamma Exposure (GEX)</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-wave-square"></i> GEX — Le baromètre de la volatilité forcée</h2>
+
+<p>Le <strong>Gamma Exposure (GEX)</strong> mesure l'exposition nette au gamma de tous les dealers sur un titre donné. C'est l'indicateur le plus puissant pour prédire la volatilité future, car il quantifie combien d'actions les dealers devront acheter ou vendre pour chaque mouvement de $1 du sous-jacent.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Régime GEX</th><th>Comportement du prix</th><th>Vol implicite</th><th>Stratégie</th></tr></thead>
+<tbody>
+<tr><td><strong>GEX très positif</strong></td><td>Prix comprimé, faible volatilité</td><td>En baisse (vol crush)</td><td>Vendre de la vol (iron condors, credit spreads)</td></tr>
+<tr><td><strong>GEX légèrement positif</strong></td><td>Tendance douce, pullbacks limités</td><td>Normale</td><td>Trend following avec positions directionnelles</td></tr>
+<tr><td><strong>GEX neutre (~0)</strong></td><td>Normal, dealer neutre</td><td>Normale</td><td>Pas de biais, analyser d'autres facteurs</td></tr>
+<tr><td><strong>GEX négatif</strong></td><td>Mouvements amplifiés, vol explosive</td><td>En hausse (vol expansion)</td><td>Acheter de la vol (straddles, strangles)</td></tr>
+<tr><td><strong>GEX très négatif</strong></td><td>Crash risk, cascade de ventes</td><td>Spike (VIX > 30)</td><td>Hedger avec des puts OTM, réduire l'exposition</td></tr>
+</tbody>
+</table>
+</div>
+
+<div id="gexChart" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-book"></i> GEX positif vs négatif : la mécanique invisible</h4>
+<p><strong>GEX positif</strong> = les dealers sont net short gamma (call OI > put OI). Quand le prix monte, ils doivent <strong>vendre des actions</strong> (hedging les calls), ce qui freine la hausse. Quand le prix baisse, ils doivent <strong>acheter des actions</strong> (de-hedging les calls), ce qui freine la baisse → <strong>effet amortisseur</strong>, volatilité comprimée.</p>
+<p><strong>GEX négatif</strong> = les dealers sont net long gamma (put OI > call OI). Quand le prix baisse, ils doivent <strong>vendre des actions</strong> (hedging les puts), ce qui accélère la baisse. Quand le prix monte, ils doivent <strong>acheter des actions</strong> (de-hedging les puts), ce qui accélère la hausse → <strong>effet amplificateur</strong>, volatilité explosive.</p>
+</div>
+</div>
+
+<div class="section-divider" id="gamma-squeeze"><i class="fa-solid fa-rocket"></i> Gamma Squeeze — L'explosion</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-rocket"></i> Gamma Squeeze — Quand le hedging devient la tendance</h2>
+
+<p>Un <strong>gamma squeeze</strong> se produit lorsque l'achat massif de calls OTM force les market makers à acheter des quantités croissantes d'actions du sous-jacent pour hedger leur exposition gamma croissante. Ce hedging forcé fait monter le prix, ce qui rend les calls OTM ATM, augmentant encore le gamma et forçant encore plus d'achats → boucle de rétroaction explosive.</p>
+
+<h3>Anatomie d'un gamma squeeze en 5 phases</h3>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Phase</th><th>Action</th><th>Impact gamma</th><th>Impact prix</th></tr></thead>
+<tbody>
+<tr><td><strong>1. Accumulation</strong></td><td>Achats massifs de calls OTM à faible delta (0.05-0.15)</td><td>Gamma total augmente marginalement</td><td>Faible — les calls OTM ont peu de delta à hedger</td></tr>
+<tr><td><strong>2. Ignition</strong></td><td>Le sous-jacent monte de 5-10% (catalyseur ou momentum)</td><td>Les calls OTM deviennent ATM → gamma explose</td><td>Accélération — le delta passe de 0.15 à 0.50</td></tr>
+<tr><td><strong>3. Cascade</strong></td><td>Le dealer doit acheter massivement pour hedger les calls devenus ITM</td><td>Gamma au maximum (ATM, proche expiration)</td><td>Vertical — +20-50% en quelques heures</td></tr>
+<tr><td><strong>4. Extension</strong></td><td>Nouveaux calls OTM achetés à des strikes encore plus hauts</td><td>La chaîne de gamma s'étend vers le haut</td><td>Parabolique — le prix dépasse tous les strikes</td></tr>
+<tr><td><strong>5. Collapse</strong></td><td>L'OI diminue (expiration, prises de profits), le gamma chute</td><td>Le dealer de-hedge en vendant massivement</td><td>Crash rapide vers le prix pré-squeeze</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> La différence entre gamma squeeze et short squeeze</h4>
+<p>Un <strong>gamma squeeze</strong> est déclenché par le flux d'options (achat de calls → delta hedging forcé). Un <strong>short squeeze</strong> est déclenché par la couverture des positions short (buy-to-cover). Les deux peuvent se combiner — c'est ce qui s'est passé avec GME en janvier 2021 : gamma squeeze + short squeeze simultané → le mouvement le plus violent de l'histoire boursière moderne ($20 → $483 en 15 jours de trading).</p>
+</div>
+</div>
+
+<div class="section-divider" id="cas"><i class="fa-solid fa-microscope"></i> Cas pratiques</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-microscope"></i> Cas : RZLV — Le Max Pain comme ancre</h2>
+
+<p><strong>Rezolve AI (RZLV)</strong> est un cas intéressant pour l'analyse du Max Pain. Avec un prix autour de $2.33 et une volatilité élevée (beta de -0.19 mais mouvements intraday de 5-15%), les options jouent un rôle central dans la price action.</p>
+
+<div class="compare-table">
+<table>
+<thead><tr><th>Métrique</th><th>Valeur RZLV</th><th>Implication pour les options</th></tr></thead>
+<tbody>
+<tr><td>Prix</td><td>$2.33</td><td>Options peu liquides sur les small caps — spreads larges, manipulation facile</td></tr>
+<tr><td>Float</td><td>170M / 399M total</td><td>57% lock-up → le float réduit amplifie l'impact du delta hedging</td></tr>
+<tr><td>SI %</td><td>11.5%</td><td>Modéré — les shorts pourraient utiliser les options comme véhicule indirect</td></tr>
+<tr><td>Beta</td><td>-0.19</td><td>Corrélation inversée au marché → comportement atypique autour de l'OPEX</td></tr>
+<tr><td>EV/Revenue</td><td>118.7×</td><td>Valorisation spéculative → le Max Pain est un ancrage plus fort que les fondamentaux</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Cas historique : GME Gamma Squeeze — Janvier 2021</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-gamepad"></i> Le gamma squeeze parfait de GameStop</h4>
+<p>GameStop en janvier 2021 est l'exemple canonique d'un gamma squeeze combiné à un short squeeze :</p>
+<ol>
+<li><strong>Setup</strong> : SI > 140%, calls $20-60 massivement achetés par WallStreetBets, OI call/put ratio > 3:1</li>
+<li><strong>Ignition</strong> (11-14 Jan) : Prix passe de $20 à $40. Les calls $30 deviennent ITM → delta hedging massif</li>
+<li><strong>Cascade</strong> (22-26 Jan) : Prix explose de $40 à $150. Les calls $50-100 traversent. Volume options > 2M contracts/jour</li>
+<li><strong>Climax</strong> (27 Jan) : $380 intraday. Le GEX négatif amplifie chaque mouvement. Les halts de trading se multiplient</li>
+<li><strong>Intervention</strong> (28 Jan) : Robinhood désactive l'achat de calls/actions GME → le gamma squeeze est coupé artificiellement</li>
+<li><strong>Aftermath</strong> : Le prix chute à $90, puis rebondit à $483 dans un short squeeze final le 28 Jan après-midi</li>
+</ol>
+</div>
+</div>
+
+<div class="section-divider" id="strategies"><i class="fa-solid fa-crosshairs"></i> Stratégies de trading options-aware</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-crosshairs"></i> Stratégies opérationnelles</h2>
+
+<h3>Stratégie 1 : Max Pain Pinning (OPEX Week)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-bullseye"></i> Setup</h4>
+<ul>
+<li><strong>Quand</strong> : Lundi-Mercredi de la semaine d'OPEX (3e semaine du mois)</li>
+<li><strong>Calcul</strong> : Identifier le Max Pain via options chain (OI calls + puts par strike)</li>
+<li><strong>Entrée</strong> : Si le prix est significativement au-dessus du Max Pain → ouvrir des puts (le prix sera attiré vers le bas). Si en dessous → ouvrir des calls</li>
+<li><strong>Expiration</strong> : Utiliser des options de la semaine d'OPEX elle-même (haute gamma)</li>
+<li><strong>Stop</strong> : -50% de la prime payée</li>
+<li><strong>Win rate historique</strong> : ~65% (le prix clôture dans ±5% du Max Pain dans 70-80% des cas)</li>
+</ul>
+</div>
+
+<h3>Stratégie 2 : GEX Volatility (Gamma flip)</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-wave-square"></i> Setup</h4>
+<ul>
+<li><strong>Signal</strong> : Le GEX net passe de positif à négatif (gamma flip)</li>
+<li><strong>Action</strong> : Acheter des straddles ATM sur SPY/QQQ (la vol va exploser)</li>
+<li><strong>Timing</strong> : Le gamma flip est souvent visible 24-48h avant l'explosion de vol</li>
+<li><strong>Sizing</strong> : 1-2% du portefeuille, expiration 7-14 jours</li>
+<li><strong>Source GEX</strong> : SpotGamma, Squeezemetrics, ou calcul maison via options chain</li>
+</ul>
+</div>
+
+<h3>Stratégie 3 : Gamma Squeeze Early Entry</h3>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-rocket"></i> Setup</h4>
+<ul>
+<li><strong>Filtres</strong> : Titre avec SI > 20%, OI call/put ratio > 2:1 sur les strikes OTM proches, volume calls OTM en forte hausse (> 3× la moyenne)</li>
+<li><strong>Trigger</strong> : Le prix franchit le premier strike à fort OI avec du volume</li>
+<li><strong>Instrument</strong> : Calls légèrement OTM (+5-10% du prix), expiration 2-4 semaines</li>
+<li><strong>Stop</strong> : -40% de la prime</li>
+<li><strong>TP</strong> : Vendre 50% quand la position a doublé, trailing stop -30% sur le reste</li>
+</ul>
+</div>
+
+<div class="takeaway-box">
+<h4><i class="fa-solid fa-lightbulb"></i> Points clés de cette partie</h4>
+<ul>
+<li>Le delta hedging des market makers crée des mouvements de prix forcés et prévisibles</li>
+<li>Le Max Pain attire le prix dans 70-80% des OPEX — exploitable via options directionnelles</li>
+<li>Le GEX positif = volatilité comprimée ; GEX négatif = volatilité amplifiée</li>
+<li>Un gamma squeeze amplifie les achats de calls OTM via le delta hedging forcé</li>
+<li>GME (Jan 2021) = confluence parfaite gamma squeeze + short squeeze</li>
+<li>3 stratégies opérationnelles : Max Pain Pinning, GEX Volatility, Gamma Squeeze Entry</li>
+</ul>
+</div>
+
+<div class="next-cta">
+<p><strong>Partie 5 →</strong> <a href="/series/market-manipulation/part5-volume-price-action/">Volume &amp; Price Action — Spoofing, Layering, Wash Trading</a> — Les techniques de manipulation directe du carnet d'ordres et du volume.</p>
+</div>
+</div>
+
+</div>
+
+<footer class="article-footer">
+&copy; 2026 Market Watch. Données via MarketWatch Gateway.
+Ceci n'est pas un conseil financier.
+<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Max Pain chart
+var maxpainChart=echarts.init(document.getElementById('maxpainChart'));
+maxpainChart.setOption({title:{text:'Max Pain — Distribution OI par Strike (Exemple SPY)',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},legend:{data:['Put OI','Call OI','Pain Total'],top:30},grid:{top:'20%',left:'3%',right:'4%',bottom:'3%',containLabel:true},xAxis:{type:'category',name:'Strike',data:['$570','$575','$580','$585','$590','$595','$600','$605','$610','$615','$620']},yAxis:{type:'value',name:'Open Interest (K)'},series:[{name:'Put OI',type:'bar',stack:'oi',data:[45,52,68,85,110,95,75,48,35,22,15],itemStyle:{color:'#dc2626'}},{name:'Call OI',type:'bar',stack:'oi',data:[12,18,25,40,65,90,120,95,72,55,42],itemStyle:{color:'#2563eb'}},{name:'Pain Total',type:'line',data:[180,210,280,350,420,480,510,460,380,290,220],smooth:true,lineStyle:{width:3,color:'#f59e0b'},markPoint:{data:[{type:'max',name:'Max Pain',symbolSize:60,label:{formatter:'MAX PAIN'}}]}}]});
+
+// GEX chart
+var gexChart=echarts.init(document.getElementById('gexChart'));
+gexChart.setOption({title:{text:'Gamma Exposure Net (GEX) — SPX Historique',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},grid:{left:'3%',right:'4%',bottom:'3%',containLabel:true},xAxis:{type:'category',data:['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']},yAxis:{type:'value',name:'GEX ($B)',splitLine:{lineStyle:{type:'dashed'}}},visualMap:{show:false,pieces:[{gt:0,color:'#10b981'},{lte:0,color:'#dc2626'}]},series:[{type:'bar',data:[2.1,1.8,-0.5,3.2,2.8,1.1,-1.2,-0.8,0.3,-2.5,1.5,2.0],markLine:{data:[{yAxis:0,label:{formatter:'Gamma Flip'},lineStyle:{color:'#f59e0b',type:'dashed',width:2}}]}}]});
+
+window.addEventListener('resize',function(){maxpainChart.resize();gexChart.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
