@@ -275,32 +275,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "",
-    "desc": "Scaling au-delà du million : analyse de capacité, infrastructure multi-VM Nomad, nouvelles stratégies post-million, licensing, family office mono-personne, et stratégies de sortie. Chapitre final de la série.",
-    "tags": "technique,formation,us,eu,asia,etf",
-    "grade": "",
-    "href": "/series/algo-million/part12-scaling-exit/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "",
-    "desc": "Se rémunérer sans tuer la machine : stratégie de retrait adaptative, fiscalité optimisée (Flat Tax, PEA, holding), guardrails anti-ruine, cash flow automatisé, et budget du million-rentier.",
-    "tags": "technique,formation,us,eu,asia,etf",
-    "grade": "",
-    "href": "/series/algo-million/part11-vivre-de-son-algo/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "CDIO",
     "exchange": "NASDAQ • Healthcare • Diagnostics",
     "name": "CDIO — Cardio Diagnostics : L'IA au chevet de votre cœur",
@@ -2481,6 +2455,32 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "scanner/20260215/",
     "date": "15 Février 2026"
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Les Axiomes et Théorèmes de la Finance : Les Lois Universelles des Marchés",
+    "desc": "Guide complet des axiomes et théorèmes fondamentaux de la finance : efficience des marchés, CAPM, Markowitz, Black-Scholes, valeur temporelle de l'argent et plus encore.",
+    "tags": "formation,macro,technique,education",
+    "grade": "",
+    "href": "/tech/axiomes-finance/",
+    "date": "28 février 2026"
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Claude Code : Le Guide Avancé — MCP, Hooks, Scripting & Optimisation",
+    "desc": "Guide expert Claude Code : MCP servers, hooks, skills personnalisées, scripting headless, subagents, optimisation budget, patterns avancés et cas d'usage concrets.",
+    "tags": "ai,tech,architecture,education",
+    "grade": "",
+    "href": "/tech/claude-code-avance/",
+    "date": "28 février 2026"
   },
   {
     "type": "tech",

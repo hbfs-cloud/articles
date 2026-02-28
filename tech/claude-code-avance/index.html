@@ -1,0 +1,2879 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="ai,tech,architecture,education" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code : Le Guide Avancé — MCP, Hooks, Scripting & Optimisation | Market Watch</title>
+    <meta name="description" content="Guide expert Claude Code : MCP servers, hooks, skills personnalisées, scripting headless, subagents, optimisation budget, patterns avancés et cas d'usage concrets.">
+    <meta property="og:title" content="Claude Code : Le Guide Avancé">
+    <meta property="og:description" content="Maîtrisez Claude Code en profondeur : MCP, hooks, skills, scripting, subagents et optimisation budget.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.market-watch.xyz/tech/claude-code-avance/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section { padding: 5rem 2rem 8rem; background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%); text-align: center; border-bottom: 1px solid #a7f3d0; }
+        .hero-date { font-size: 0.85rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem; }
+        .hero-badges { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .container { max-width: 900px; margin: -5rem auto 0; padding: 0 1rem; position: relative; z-index: 10; }
+        .content-card { background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 3rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
+        h2 { font-size: 1.8rem; font-weight: 900; color: #0f172a; margin: 1.5rem 0; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.75rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; }
+        h3 { font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 2rem 0 1rem; }
+        h4 { font-size: 1.1rem; font-weight: 700; color: #334155; margin: 1.5rem 0 0.75rem; }
+        p { font-size: 1.1rem; line-height: 1.7; color: #334155; margin-bottom: 1.25rem; }
+        .metric-label { font-size: 0.85rem; text-transform: none; letter-spacing: normal; line-height: 1.5; color: #475569; text-align: left; }
+        .metric-card { padding: 1.5rem; text-align: left; }
+        .metric-value { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .metric-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        pre { background: #1e293b; color: #e2e8f0; padding: 1.5rem; border-radius: 12px; overflow-x: auto; font-size: 0.9rem; line-height: 1.6; margin: 1.5rem 0; }
+        code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        pre code { color: #e2e8f0; }
+        .code-label { display: inline-block; background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 6px 6px 0 0; font-size: 0.75rem; font-weight: 700; margin-bottom: -1px; }
+        ul, ol { font-size: 1.05rem; line-height: 1.7; color: #334155; margin-bottom: 1.25rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        @media (max-width: 768px) { .content-card { padding: 1.5rem; } .hero-section { padding: 3rem 1rem 6rem; } .metric-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; } }
+        @media (max-width: 480px) { .metric-label { font-size: 0.8rem !important; } }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">MarketWatch</span>
+      </a>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE EXPERT</div>
+        <h1 style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Claude Code : Le Guide Avancé
+        </h1>
+        <p style="font-size:1.2rem; color:#475569; max-width:750px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            MCP, Hooks, Skills, Scripting headless, Subagents, Worktrees, Optimisation budget et patterns avancés.
+            Le guide de référence pour les développeurs qui veulent maîtriser Claude Code en profondeur.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-terminal"></i> Claude Code</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 45 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Expert</div>
+            <div class="hero-badge"><i class="fa-solid fa-code"></i> 20+ exemples</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+    </header>
+
+    <div class="container">
+
+<!-- ============================================== -->
+<!-- SECTION 1 : INTRODUCTION                       -->
+<!-- ============================================== -->
+<div id="intro" class="content-card">
+    <h2><i class="fa-solid fa-bolt" style="color:#10b981;"></i> Pourquoi Claude Code Change la Donne</h2>
+    <p><strong>Claude Code</strong> n'est pas un simple copilote de code. C'est un <strong>agent de développement autonome</strong> qui opère directement dans votre terminal, comprend l'intégralité de votre codebase, exécute des commandes, édite des fichiers, et orchestre des workflows complexes — le tout sans jamais quitter la ligne de commande.</p>
+
+    <p>Là où GitHub Copilot suggère des lignes, où Cursor propose des éditions dans un IDE, Claude Code <strong>agit</strong>. Il lit votre projet, comprend l'architecture, planifie les modifications, les exécute, lance les tests, et itère jusqu'à ce que tout fonctionne. C'est la différence fondamentale entre un <em>assistant</em> et un <em>agent</em>.</p>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value">200K</div>
+            <div class="metric-label">Tokens de contexte — Claude Code peut ingérer des centaines de fichiers simultanément</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">15+</div>
+            <div class="metric-label">Outils natifs : Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, Notebook...</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">Agentic</div>
+            <div class="metric-label">Boucle plan-execute-observe autonome avec subagents et parallélisme</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">MCP</div>
+            <div class="metric-label">Protocole ouvert pour connecter n'importe quel outil externe (DB, API, services)</div>
+        </div>
+    </div>
+
+    <h3>Claude Code vs. la concurrence</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Critère</th>
+                    <th>Claude Code</th>
+                    <th>GitHub Copilot</th>
+                    <th>Cursor</th>
+                    <th>Aider</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Environnement</strong></td>
+                    <td>Terminal (agnostique)</td>
+                    <td>VS Code / JetBrains</td>
+                    <td>Cursor IDE (fork VS Code)</td>
+                    <td>Terminal</td>
+                </tr>
+                <tr>
+                    <td><strong>Mode opératoire</strong></td>
+                    <td>Agent autonome</td>
+                    <td>Autocomplétion + Chat</td>
+                    <td>Chat + Composer + Agent</td>
+                    <td>Chat terminal</td>
+                </tr>
+                <tr>
+                    <td><strong>Contexte max</strong></td>
+                    <td>200K tokens</td>
+                    <td>~8K tokens</td>
+                    <td>~128K tokens</td>
+                    <td>Variable (repo map)</td>
+                </tr>
+                <tr>
+                    <td><strong>Exécution de commandes</strong></td>
+                    <td>Oui (Bash natif)</td>
+                    <td>Non</td>
+                    <td>Limité</td>
+                    <td>Oui (limité)</td>
+                </tr>
+                <tr>
+                    <td><strong>MCP</strong></td>
+                    <td>Natif (4 transports)</td>
+                    <td>Non</td>
+                    <td>Oui (basique)</td>
+                    <td>Non</td>
+                </tr>
+                <tr>
+                    <td><strong>Subagents</strong></td>
+                    <td>Oui (parallèles)</td>
+                    <td>Non</td>
+                    <td>Non</td>
+                    <td>Non</td>
+                </tr>
+                <tr>
+                    <td><strong>Hooks</strong></td>
+                    <td>Oui (4 types)</td>
+                    <td>Non</td>
+                    <td>Non</td>
+                    <td>Non</td>
+                </tr>
+                <tr>
+                    <td><strong>Headless / CI</strong></td>
+                    <td>Oui (<code>claude -p</code>)</td>
+                    <td>Non</td>
+                    <td>Non</td>
+                    <td>Oui (basique)</td>
+                </tr>
+                <tr>
+                    <td><strong>Modèle</strong></td>
+                    <td>Claude Opus 4 / Sonnet 4</td>
+                    <td>GPT-4o / Claude</td>
+                    <td>Multi-modèle</td>
+                    <td>Multi-modèle</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> L'analogie du chef d'orchestre</h4>
+        <p>Copilot est un <strong>musicien</strong> qui joue la note suivante. Cursor est un <strong>chef de section</strong> qui gère quelques instruments. Claude Code est le <strong>chef d'orchestre</strong> : il lit la partition complète, coordonne tous les instruments (fichiers, tests, commandes, APIs), et peut même composer de nouveaux mouvements à la volée.</p>
+    </div>
+
+    <h3>Installation en 30 secondes</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># Installation globale via npm
+npm install -g @anthropic-ai/claude-code
+
+# Vérifier l'installation
+claude --version
+
+# Lancer dans un projet
+cd mon-projet/
+claude
+
+# Première utilisation : authentification
+# Claude Code ouvrira un navigateur pour l'auth OAuth</code></pre>
+
+    <div class="alert-box">
+        <h4><i class="fa-solid fa-triangle-exclamation"></i> Prérequis</h4>
+        <p>Claude Code nécessite <strong>Node.js 18+</strong> et un abonnement <strong>Claude Pro</strong> (20$/mois), <strong>Max</strong> (100$/200$), ou un accès API Anthropic. Le plan Pro inclut un usage limité ; pour un usage intensif, préférez Max ou l'API directe.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 2 : ARCHITECTURE & CONFIGURATION       -->
+<!-- ============================================== -->
+<div id="architecture" class="content-card">
+    <h2><i class="fa-solid fa-folder-tree" style="color:#3b82f6;"></i> Architecture &amp; Configuration</h2>
+
+    <p>Claude Code stocke toute sa configuration dans un répertoire <code>.claude/</code> à la racine de votre projet. Comprendre cette structure est essentiel pour tirer parti de toutes les fonctionnalités avancées.</p>
+
+    <h3>Structure du répertoire .claude/</h3>
+    <div class="code-label">Arborescence</div>
+    <pre><code>mon-projet/
+├── .claude/
+│   ├── settings.json          # Config locale du projet
+│   ├── rules/                 # Règles modulaires (*.md)
+│   │   ├── testing.md         # Règles spécifiques aux tests
+│   │   ├── security.md        # Règles de sécurité
+│   │   └── api-design.md      # Conventions d'API
+│   └── worktrees/             # Worktrees Git isolés
+├── .mcp.json                  # Serveurs MCP du projet
+├── CLAUDE.md                  # Instructions globales du projet
+└── src/
+    └── CLAUDE.md              # Instructions spécifiques à src/</code></pre>
+
+    <h3>Les 4 scopes de configuration</h3>
+    <p>Claude Code résout la configuration par ordre de priorité décroissante. Chaque scope peut définir des permissions, des paramètres MCP, et des préférences :</p>
+
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Scope</th>
+                    <th>Fichier</th>
+                    <th>Portée</th>
+                    <th>Versionné (git)</th>
+                    <th>Priorité</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Enterprise (Managed)</strong></td>
+                    <td>Politique système</td>
+                    <td>Toute l'organisation</td>
+                    <td>N/A</td>
+                    <td>1 (max)</td>
+                </tr>
+                <tr>
+                    <td><strong>User</strong></td>
+                    <td><code>~/.claude/settings.json</code></td>
+                    <td>Tous vos projets</td>
+                    <td>Non</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td><strong>Project</strong></td>
+                    <td><code>.claude/settings.json</code></td>
+                    <td>Ce projet (partagé)</td>
+                    <td>Oui</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td><strong>Local</strong></td>
+                    <td><code>.claude/settings.local.json</code></td>
+                    <td>Ce projet (personnel)</td>
+                    <td>Non (.gitignore)</td>
+                    <td>4 (min)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Logique de fusion</h4>
+        <p>Les scopes sont <strong>fusionnés</strong>, pas remplacés. Si votre scope User autorise <code>Bash(*)</code> mais que le scope Project l'interdit via <code>deny</code>, c'est le <code>deny</code> qui gagne. Les <strong>deny</strong> sont toujours prioritaires sur les <strong>allow</strong>, quel que soit le scope. Et le scope Enterprise est irrévocable — il ne peut pas être contourné par les scopes inférieurs.</p>
+    </div>
+
+    <h3>Exemple complet de settings.json</h3>
+    <div class="code-label">.claude/settings.json (scope Project)</div>
+    <pre><code>{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash(npm run *)",
+      "Bash(node *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "mcp__github__*",
+      "mcp__postgres__query"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(curl*|*sh)",
+      "mcp__postgres__execute"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16000",
+    "ENABLE_TOOL_SEARCH": "true"
+  }
+}</code></pre>
+
+    <h3>Le système de permissions en détail</h3>
+    <p>Chaque outil de Claude Code est soumis à un système de permissions granulaire. Vous pouvez autoriser ou bloquer des outils spécifiques, et même utiliser des <strong>glob patterns</strong> pour un contrôle fin :</p>
+
+    <div class="code-label">Patterns de permission</div>
+    <pre><code># Syntaxe des permissions
+"Bash(pattern)"              # Commande bash spécifique
+"Bash(npm run *)"            # Toute commande npm run
+"Bash(git *)"                # Toutes les commandes git
+"mcp__serveur__outil"        # Outil MCP spécifique
+"mcp__serveur__*"            # Tous les outils d'un serveur MCP
+"Read(*.env)"                # Lecture de fichiers .env (à deny !)
+"Write(src/**)"              # Écriture dans src/ uniquement</code></pre>
+
+    <div class="alert-box">
+        <h4><i class="fa-solid fa-shield-halved"></i> Bonne pratique de sécurité</h4>
+        <p>Commencez toujours par un scope restrictif et ajoutez des permissions au besoin. Bloquez explicitement les commandes destructrices (<code>rm -rf</code>, <code>git push --force</code>, <code>DROP TABLE</code>) dans le scope Project pour protéger tous les contributeurs.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 3 : CLAUDE.md                          -->
+<!-- ============================================== -->
+<div id="claude-md" class="content-card">
+    <h2><i class="fa-solid fa-brain" style="color:#8b5cf6;"></i> CLAUDE.md : Le Cerveau du Projet</h2>
+
+    <p>Le fichier <code>CLAUDE.md</code> est la pièce maîtresse de Claude Code. C'est un fichier Markdown lu automatiquement au démarrage de chaque session. Il contient les instructions, conventions, et contexte que Claude utilisera pour <strong>toutes</strong> ses interactions avec votre projet.</p>
+
+    <h3>Emplacements et priorité de chargement</h3>
+    <p>Claude Code recherche les fichiers CLAUDE.md à plusieurs endroits, chargés dans cet ordre :</p>
+
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Emplacement</th>
+                    <th>Portée</th>
+                    <th>Quand chargé</th>
+                    <th>Exemple d'usage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>~/CLAUDE.md</code></td>
+                    <td>Globale (tous projets)</td>
+                    <td>Toujours</td>
+                    <td>Préférences personnelles, style de code</td>
+                </tr>
+                <tr>
+                    <td><code>./CLAUDE.md</code> (racine)</td>
+                    <td>Projet</td>
+                    <td>Toujours</td>
+                    <td>Architecture, conventions, commandes</td>
+                </tr>
+                <tr>
+                    <td><code>./src/CLAUDE.md</code></td>
+                    <td>Sous-répertoire</td>
+                    <td>Quand Claude travaille dans <code>src/</code></td>
+                    <td>Conventions spécifiques au code source</td>
+                </tr>
+                <tr>
+                    <td><code>.claude/rules/*.md</code></td>
+                    <td>Règles modulaires</td>
+                    <td>Selon le frontmatter</td>
+                    <td>Règles par domaine (test, sécurité, API)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Imports avec la syntaxe @</h3>
+    <p>Pour éviter un CLAUDE.md monolithique, utilisez les imports :</p>
+    <div class="code-label">CLAUDE.md</div>
+    <pre><code># Mon Projet
+
+## Architecture
+@docs/architecture.md
+
+## Conventions API
+@docs/api-conventions.md
+
+## Déploiement
+@docs/deployment.md</code></pre>
+
+    <p>Chaque fichier référencé par <code>@</code> est injecté dans le contexte comme s'il faisait partie du CLAUDE.md principal. C'est idéal pour les gros projets avec beaucoup de documentation.</p>
+
+    <h3>Règles modulaires avec .claude/rules/</h3>
+    <p>Les fichiers dans <code>.claude/rules/</code> offrent un contrôle plus fin grâce au <strong>frontmatter YAML</strong> :</p>
+
+    <div class="code-label">.claude/rules/testing.md</div>
+    <pre><code>---
+description: "Conventions de test pour le projet"
+globs: ["**/*.test.ts", "**/*.spec.ts", "tests/**"]
+---
+
+# Règles de Test
+
+- Utiliser Vitest (pas Jest)
+- Chaque fichier test doit avoir un `describe` par fonction exportée
+- Préférer `it.each` pour les cas paramétriques
+- Mocker les appels réseau avec `msw`
+- Coverage minimum : 80% sur les branches</code></pre>
+
+    <div class="code-label">.claude/rules/security.md</div>
+    <pre><code>---
+description: "Règles de sécurité obligatoires"
+globs: ["src/api/**", "src/auth/**", "src/middleware/**"]
+---
+
+# Sécurité
+
+- JAMAIS de secrets en dur dans le code
+- Valider TOUS les inputs avec Zod
+- Utiliser des requêtes paramétrées (jamais de concaténation SQL)
+- Rate limiting sur tous les endpoints publics
+- CORS strict : whitelist explicite des origines</code></pre>
+
+    <p>Le champ <code>globs</code> est la clé : la règle n'est chargée que lorsque Claude travaille sur des fichiers qui matchent le pattern. Cela réduit le contexte inutile et améliore la pertinence.</p>
+
+    <h3>Le système Auto Memory</h3>
+    <p>Claude Code maintient automatiquement une <strong>mémoire persistante</strong> entre les sessions, stockée dans <code>~/.claude/projects/{project-hash}/memory/MEMORY.md</code>. Cette mémoire capture :</p>
+
+    <ul>
+        <li>Les décisions techniques importantes</li>
+        <li>Les patterns validés et les anti-patterns identifiés</li>
+        <li>Les préférences de l'utilisateur</li>
+        <li>L'historique des sessions récentes</li>
+    </ul>
+
+    <p>Vous pouvez écrire directement dans la mémoire en disant "souviens-toi que..." ou en utilisant <code>/memory</code>.</p>
+
+    <h3>Exemple d'un CLAUDE.md bien structuré</h3>
+    <div class="code-label">CLAUDE.md (moins de 200 lignes)</div>
+    <pre><code># Mon API SaaS
+
+## Stack
+- Runtime: Node.js 22, TypeScript 5.7
+- Framework: Fastify 5 + @fastify/type-provider-typebox
+- DB: PostgreSQL 16 via Drizzle ORM
+- Queue: BullMQ + Redis 7
+- Tests: Vitest + MSW + Testcontainers
+- Deploy: Docker → Fly.io
+
+## Commandes
+- `npm run dev` — serveur local (port 3000)
+- `npm run test` — tests unitaires
+- `npm run test:e2e` — tests E2E (nécessite Docker)
+- `npm run db:migrate` — migrations Drizzle
+- `npm run db:generate` — générer les migrations
+- `npm run lint` — ESLint + Prettier check
+
+## Architecture
+@docs/architecture.md
+
+## Conventions
+- Pas de classes, que des fonctions et modules
+- Chaque route dans son propre fichier: src/routes/{resource}/{method}.ts
+- Schémas Typebox co-localisés avec les routes
+- Erreurs via throw new AppError(code, message, statusCode)
+- Logs structurés JSON via pino
+
+## Patterns obligatoires
+- Tout endpoint DOIT avoir un schéma de validation input/output
+- Tout accès DB DOIT passer par le repository pattern (src/repos/)
+- Les jobs BullMQ DOIVENT être idempotents
+- Les tests E2E utilisent des containers PostgreSQL jetables
+
+## Ce qu'il ne faut PAS faire
+- NE PAS utiliser `any` — toujours typer explicitement
+- NE PAS commiter de .env ou secrets
+- NE PAS utiliser de raw SQL (passer par Drizzle)
+- NE PAS modifier les migrations existantes (en créer de nouvelles)</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> La règle des 200 lignes</h4>
+        <p>Un CLAUDE.md efficace fait <strong>moins de 200 lignes</strong>. Au-delà, le ratio signal/bruit diminue et Claude consomme des tokens de contexte inutilement. Déportez les détails dans des fichiers <code>@imports</code> ou dans <code>.claude/rules/</code> avec des globs ciblés. Privilégiez les listes à puces aux paragraphes longs. Chaque ligne doit être une instruction actionnable.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 4 : MCP                                -->
+<!-- ============================================== -->
+<div id="mcp" class="content-card">
+    <h2><i class="fa-solid fa-plug" style="color:#f59e0b;"></i> MCP : Model Context Protocol</h2>
+
+    <p>Le <strong>Model Context Protocol</strong> (MCP) est le système d'extension de Claude Code. Il permet de connecter n'importe quel service externe — base de données, API, outil interne — comme un outil natif que Claude peut appeler directement. C'est ce qui transforme Claude Code d'un simple agent de code en une <strong>plateforme d'automatisation universelle</strong>.</p>
+
+    <h3>Les 4 types de transport</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Transport</th>
+                    <th>Protocole</th>
+                    <th>Usage</th>
+                    <th>Exemple</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>stdio</strong></td>
+                    <td>stdin/stdout</td>
+                    <td>Serveurs locaux (le plus courant)</td>
+                    <td>Serveurs npm, scripts Python</td>
+                </tr>
+                <tr>
+                    <td><strong>http</strong></td>
+                    <td>HTTP Streamable</td>
+                    <td>Serveurs distants modernes</td>
+                    <td>APIs cloud, services hébergés</td>
+                </tr>
+                <tr>
+                    <td><strong>sse</strong></td>
+                    <td>Server-Sent Events</td>
+                    <td>Serveurs distants (legacy)</td>
+                    <td>Anciens serveurs MCP</td>
+                </tr>
+                <tr>
+                    <td><strong>json</strong></td>
+                    <td>JSON-RPC direct</td>
+                    <td>Appels ponctuels</td>
+                    <td>Scripts one-shot</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Installation d'un serveur MCP</h3>
+    <p>Trois méthodes pour ajouter un serveur MCP :</p>
+
+    <div class="code-label">Méthode 1 : CLI interactive</div>
+    <pre><code># Ajouter un serveur depuis le registre
+claude mcp add github --scope project
+
+# Ajouter un serveur npm personnalisé
+claude mcp add postgres -- npx @mcp/postgres --connection-string "$DATABASE_URL"
+
+# Ajouter un serveur distant (HTTP)
+claude mcp add notion --url https://mcp.notion.so/v1 --scope user
+
+# Lister les serveurs configurés
+claude mcp list
+
+# Tester un serveur
+claude mcp test postgres</code></pre>
+
+    <div class="code-label">Méthode 2 : Fichier .mcp.json (recommandé pour les équipes)</div>
+    <pre><code>{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@mcp/postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/data"]
+    },
+    "custom-api": {
+      "type": "http",
+      "url": "https://mcp.mon-service.com/v1",
+      "headers": {
+        "Authorization": "Bearer ${API_KEY}"
+      }
+    }
+  }
+}</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Expansion des variables d'environnement</h4>
+        <p>La syntaxe <code>${VAR_NAME}</code> dans <code>.mcp.json</code> est automatiquement remplacée par la valeur de la variable d'environnement correspondante. Cela permet de <strong>versionner le fichier .mcp.json</strong> dans git sans exposer de secrets. Chaque développeur configure ses propres tokens dans son shell ou dans un fichier <code>.env</code>.</p>
+    </div>
+
+    <div class="code-label">Méthode 3 : Scope User (configuration personnelle)</div>
+    <pre><code># Les serveurs ajoutés avec --scope user sont dans ~/.claude/settings.json
+# Ils sont disponibles dans TOUS vos projets
+
+claude mcp add slack --scope user -- npx @mcp/slack --token "$SLACK_TOKEN"
+claude mcp add linear --scope user --url https://mcp.linear.app/sse</code></pre>
+
+    <h3>Les 3 scopes MCP</h3>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-user"></i></div>
+            <div class="metric-label"><strong>User</strong> — <code>~/.claude/settings.json</code><br>Disponible partout. Idéal pour Slack, Linear, outils personnels.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-folder"></i></div>
+            <div class="metric-label"><strong>Project</strong> — <code>.mcp.json</code><br>Partagé via git. Idéal pour la DB du projet, APIs métier.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-laptop"></i></div>
+            <div class="metric-label"><strong>Local</strong> — <code>.claude/settings.local.json</code><br>Personnel, non versionné. Idéal pour les overrides locaux.</div>
+        </div>
+    </div>
+
+    <h3>Optimiser avec ENABLE_TOOL_SEARCH</h3>
+    <p>Quand vous avez beaucoup de serveurs MCP (10+), chaque outil consomme des tokens de contexte. La variable <code>ENABLE_TOOL_SEARCH</code> active un mode intelligent où Claude ne charge que les outils pertinents pour la tâche en cours :</p>
+
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "env": {
+    "ENABLE_TOOL_SEARCH": "true"
+  }
+}</code></pre>
+
+    <p>Avec cette option, au lieu de charger les 50+ descriptions d'outils dans le contexte, Claude effectue une recherche sémantique et ne charge que les 5-10 outils les plus pertinents. Économie typique : <strong>30-50% des tokens de contexte MCP</strong>.</p>
+
+    <h3>Top 10 des serveurs MCP les plus utiles</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Serveur</th>
+                    <th>Fonction</th>
+                    <th>Installation</th>
+                    <th>Usage clé</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>GitHub</strong></td>
+                    <td>Issues, PRs, repos</td>
+                    <td><code>claude mcp add github</code></td>
+                    <td>Créer des PRs, lire les issues, reviewer</td>
+                </tr>
+                <tr>
+                    <td><strong>PostgreSQL</strong></td>
+                    <td>Requêtes SQL</td>
+                    <td><code>npx @mcp/postgres</code></td>
+                    <td>Explorer le schéma, débugger les queries</td>
+                </tr>
+                <tr>
+                    <td><strong>Filesystem</strong></td>
+                    <td>Accès fichiers étendu</td>
+                    <td><code>npx @mcp/filesystem</code></td>
+                    <td>Lire des fichiers hors du projet</td>
+                </tr>
+                <tr>
+                    <td><strong>Notion</strong></td>
+                    <td>Pages, bases, docs</td>
+                    <td>URL MCP Notion</td>
+                    <td>Lire les specs, mettre à jour la doc</td>
+                </tr>
+                <tr>
+                    <td><strong>Slack</strong></td>
+                    <td>Messages, channels</td>
+                    <td><code>npx @mcp/slack</code></td>
+                    <td>Notifications de fin de tâche</td>
+                </tr>
+                <tr>
+                    <td><strong>Linear</strong></td>
+                    <td>Tickets, projets</td>
+                    <td>URL MCP Linear</td>
+                    <td>Lire les tickets, mettre à jour le status</td>
+                </tr>
+                <tr>
+                    <td><strong>Sentry</strong></td>
+                    <td>Erreurs, traces</td>
+                    <td><code>npx @mcp/sentry</code></td>
+                    <td>Diagnostiquer les erreurs en production</td>
+                </tr>
+                <tr>
+                    <td><strong>Puppeteer</strong></td>
+                    <td>Navigation web</td>
+                    <td><code>npx @mcp/puppeteer</code></td>
+                    <td>Tests E2E, scraping, captures d'écran</td>
+                </tr>
+                <tr>
+                    <td><strong>Memory</strong></td>
+                    <td>Mémoire persistante</td>
+                    <td><code>npx @mcp/memory</code></td>
+                    <td>Stocker des faits entre sessions</td>
+                </tr>
+                <tr>
+                    <td><strong>Brave Search</strong></td>
+                    <td>Recherche web</td>
+                    <td><code>npx @mcp/brave-search</code></td>
+                    <td>Rechercher de la documentation récente</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Exemple concret : setup GitHub + PostgreSQL + Custom API</h3>
+    <div class="code-label">.mcp.json — Configuration complète d'équipe</div>
+    <pre><code>{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+    },
+    "db-production": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@mcp/postgres", "--readonly"],
+      "env": { "DATABASE_URL": "${PROD_DB_READ_URL}" }
+    },
+    "db-staging": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@mcp/postgres"],
+      "env": { "DATABASE_URL": "${STAGING_DB_URL}" }
+    },
+    "internal-api": {
+      "type": "http",
+      "url": "https://mcp-gateway.internal.company.com",
+      "headers": {
+        "Authorization": "Bearer ${INTERNAL_API_TOKEN}"
+      }
+    }
+  }
+}</code></pre>
+
+    <div class="alert-box">
+        <h4><i class="fa-solid fa-database"></i> Sécurité des bases de données</h4>
+        <p>Pour la production, utilisez <strong>toujours</strong> un accès en lecture seule (<code>--readonly</code> ou un utilisateur DB avec <code>SELECT</code> uniquement). Bloquez les outils d'écriture MCP dans <code>settings.json</code> avec <code>"deny": ["mcp__db-production__execute"]</code>. Réservez l'écriture à la base staging.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 5 : HOOKS                              -->
+<!-- ============================================== -->
+<div id="hooks" class="content-card">
+    <h2><i class="fa-solid fa-gear" style="color:#ef4444;"></i> Hooks : Automatisation &amp; Garde-fous</h2>
+
+    <p>Les <strong>hooks</strong> sont des scripts qui s'exécutent automatiquement à des moments clés du cycle de vie de Claude Code. Ils permettent d'ajouter des garde-fous, d'automatiser des tâches récurrentes, et d'intégrer Claude Code dans vos workflows existants.</p>
+
+    <h3>Les événements de hook</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Événement</th>
+                    <th>Déclencheur</th>
+                    <th>Cas d'usage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>PreToolUse</strong></td>
+                    <td>Avant chaque appel d'outil</td>
+                    <td>Bloquer des commandes, valider des inputs</td>
+                </tr>
+                <tr>
+                    <td><strong>PostToolUse</strong></td>
+                    <td>Après chaque appel d'outil</td>
+                    <td>Auto-formater, lancer des tests, notifier</td>
+                </tr>
+                <tr>
+                    <td><strong>Notification</strong></td>
+                    <td>Quand Claude attend une réponse</td>
+                    <td>Alertes Slack, notifications bureau</td>
+                </tr>
+                <tr>
+                    <td><strong>Stop</strong></td>
+                    <td>Fin de la réponse de Claude</td>
+                    <td>Rapport de session, cleanup, commit auto</td>
+                </tr>
+                <tr>
+                    <td><strong>SubagentStop</strong></td>
+                    <td>Fin d'exécution d'un subagent</td>
+                    <td>Agréger les résultats, post-traitement</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Les 4 types de hooks</h3>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-terminal"></i></div>
+            <div class="metric-label"><strong>command</strong><br>Exécute un script shell. Le plus courant. Reçoit le contexte via stdin JSON.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-globe"></i></div>
+            <div class="metric-label"><strong>http</strong><br>Envoie une requête HTTP. Idéal pour les webhooks (Slack, Discord, API interne).</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-message"></i></div>
+            <div class="metric-label"><strong>prompt</strong><br>Injecte un message système supplémentaire dans le contexte de Claude.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-robot"></i></div>
+            <div class="metric-label"><strong>agent</strong><br>Lance un sous-agent Claude pour traitement complexe (ex: review de code automatique).</div>
+        </div>
+    </div>
+
+    <h3>Codes de sortie et contrôle</h3>
+    <p>Pour les hooks <code>PreToolUse</code>, le code de sortie détermine si l'opération continue :</p>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Exit Code</th>
+                    <th>Effet</th>
+                    <th>Message stdout</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>0</code></td>
+                    <td>Autorise l'opération</td>
+                    <td>Optionnel — affiché comme info</td>
+                </tr>
+                <tr>
+                    <td><code>2</code></td>
+                    <td>Bloque l'opération</td>
+                    <td>Affiché comme raison du blocage</td>
+                </tr>
+                <tr>
+                    <td>Autre</td>
+                    <td>Erreur de hook (opération continue)</td>
+                    <td>Log d'erreur</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Format JSON avancé</h3>
+    <p>Un hook peut retourner du JSON sur stdout pour un contrôle plus fin :</p>
+    <div class="code-label">Sortie JSON d'un hook PreToolUse</div>
+    <pre><code>{
+  "decision": "block",
+  "reason": "Ce fichier est protégé par la politique de sécurité",
+  "suppressOutput": false
+}</code></pre>
+
+    <h3>Exemples concrets</h3>
+
+    <h4>1. Auto-format après chaque édition de fichier</h4>
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <h4>2. Bloquer la modification de fichiers protégés</h4>
+    <div class="code-label">scripts/guard-protected.sh</div>
+    <pre><code>#!/bin/bash
+# Hook PreToolUse : bloque l'écriture dans les fichiers critiques
+INPUT=$(cat)
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+
+PROTECTED_PATTERNS=(
+  "*/migrations/*.sql"
+  ".env*"
+  "docker-compose.prod.yml"
+  "*/secrets/*"
+)
+
+for pattern in "${PROTECTED_PATTERNS[@]}"; do
+  if [[ "$FILE" == $pattern ]]; then
+    echo "BLOQUÉ : $FILE est un fichier protégé"
+    exit 2
+  fi
+done
+
+exit 0</code></pre>
+
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/guard-protected.sh"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <h4>3. Notification Slack à la fin de chaque tâche</h4>
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://hooks.slack.com/services/T00/B00/xxxxx",
+            "method": "POST",
+            "headers": { "Content-Type": "application/json" },
+            "body": {
+              "text": "Claude Code a terminé une tâche dans ${PROJECT_NAME}"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <h4>4. Lancer les tests après chaque modification de code</h4>
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '[[ \"$CLAUDE_FILE_PATH\" == *.ts ]] && npx vitest run --reporter=dot 2>&1 | tail -5 || true'"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <h4>5. Injecter du contexte dynamique avant chaque opération</h4>
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "RAPPEL : Tu es en environnement de STAGING. Ne jamais exécuter de commandes destructrices. Vérifier 2x avant tout DROP, DELETE, ou rm."
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Matcher : le filtre intelligent</h4>
+        <p>Le champ <code>matcher</code> est une regex appliquée sur le <strong>nom de l'outil</strong>. <code>"Write|Edit"</code> matche les outils Write et Edit. <code>"Bash"</code> matche toute commande Bash. <code>"mcp__postgres__.*"</code> matche tous les outils du serveur MCP PostgreSQL. Sans matcher, le hook s'applique à tous les outils.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 6 : SKILLS                             -->
+<!-- ============================================== -->
+<div id="skills" class="content-card">
+    <h2><i class="fa-solid fa-wand-magic-sparkles" style="color:#a855f7;"></i> Skills &amp; Commandes Personnalisées</h2>
+
+    <p>Les <strong>skills</strong> (compétences) sont des commandes personnalisées que vous pouvez invoquer avec <code>/nom-de-la-skill</code>. Elles encapsulent un workflow complet — instructions, outils autorisés, modèle à utiliser, et contexte — dans un fichier Markdown réutilisable.</p>
+
+    <h3>Anatomie d'une skill</h3>
+    <p>Chaque skill est un fichier <code>SKILL.md</code> dans un répertoire dédié :</p>
+
+    <div class="code-label">Structure</div>
+    <pre><code>.claude/
+└── skills/
+    ├── deploy/
+    │   └── SKILL.md
+    ├── review-pr/
+    │   └── SKILL.md
+    └── migrate-component/
+        └── SKILL.md</code></pre>
+
+    <h3>Frontmatter et options</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Champ</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>string</td>
+                    <td>Nom affiché (défaut : nom du dossier)</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>string</td>
+                    <td>Description courte pour la recherche</td>
+                </tr>
+                <tr>
+                    <td><code>tools</code></td>
+                    <td>string[]</td>
+                    <td>Outils autorisés pour cette skill</td>
+                </tr>
+                <tr>
+                    <td><code>model</code></td>
+                    <td>string</td>
+                    <td>Modèle à utiliser (opus, sonnet, haiku)</td>
+                </tr>
+                <tr>
+                    <td><code>context</code></td>
+                    <td>string[]</td>
+                    <td>Fichiers de contexte à charger</td>
+                </tr>
+                <tr>
+                    <td><code>agent</code></td>
+                    <td>boolean</td>
+                    <td>Exécuter comme sous-agent isolé</td>
+                </tr>
+                <tr>
+                    <td><code>allowedTools</code></td>
+                    <td>string[]</td>
+                    <td>Liste blanche d'outils (plus restrictif que tools)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Contexte dynamique avec backticks</h3>
+    <p>Les skills supportent l'injection de contexte dynamique via des commandes entre backticks :</p>
+    <div class="code-label">SKILL.md avec contexte dynamique</div>
+    <pre><code>---
+name: review-pr
+description: Review une PR GitHub en profondeur
+model: opus
+---
+
+# Review PR
+
+Contexte du projet :
+`cat package.json | jq '{name, version, dependencies}'`
+
+Derniers commits :
+`git log --oneline -10`
+
+Branche actuelle :
+`git branch --show-current`
+
+## Instructions
+Analyse le diff de la PR $ARGUMENTS et fournis :
+1. Un résumé des changements
+2. Les problèmes potentiels (bugs, sécurité, perf)
+3. Les suggestions d'amélioration
+4. Un verdict : APPROVE, REQUEST_CHANGES, ou COMMENT</code></pre>
+
+    <h3>Substitution d'arguments</h3>
+    <p>Les arguments passés après le nom de la skill sont accessibles via des variables :</p>
+    <ul>
+        <li><code>$ARGUMENTS</code> — tous les arguments en une chaîne</li>
+        <li><code>$0</code> — premier argument</li>
+        <li><code>$1</code> — deuxième argument</li>
+        <li><code>$2</code> — troisième argument, etc.</li>
+    </ul>
+
+    <div class="code-label">Usage</div>
+    <pre><code># Dans Claude Code :
+/review-pr 42
+# → $ARGUMENTS = "42", $0 = "42"
+
+/deploy staging v2.1.0
+# → $ARGUMENTS = "staging v2.1.0", $0 = "staging", $1 = "v2.1.0"</code></pre>
+
+    <h3>Exemple 1 : Skill de déploiement</h3>
+    <div class="code-label">.claude/skills/deploy/SKILL.md</div>
+    <pre><code>---
+name: deploy
+description: Déployer l'application sur un environnement
+tools: ["Bash", "Read", "Grep"]
+---
+
+# Déploiement sur $0
+
+## Pré-vérifications
+1. Vérifier que la branche est `main` : `git branch --show-current`
+2. Vérifier qu'il n'y a pas de changements non commités : `git status --porcelain`
+3. Vérifier que les tests passent : `npm run test`
+
+## Déploiement
+- Si `$0` = "staging" → `fly deploy --config fly.staging.toml`
+- Si `$0` = "production" → demander CONFIRMATION explicite puis `fly deploy --config fly.production.toml`
+
+## Post-déploiement
+1. Vérifier le health check : `curl -s https://$0.mon-app.com/health`
+2. Afficher les logs récents : `fly logs -a mon-app-$0 -n 20`
+3. Résumer le statut du déploiement</code></pre>
+
+    <h3>Exemple 2 : Skill de migration de composant</h3>
+    <div class="code-label">.claude/skills/migrate-component/SKILL.md</div>
+    <pre><code>---
+name: migrate-component
+description: Migrer un composant React class vers un composant fonctionnel
+model: sonnet
+agent: true
+---
+
+# Migration Class → Functional Component
+
+Fichier cible : $ARGUMENTS
+
+## Étapes
+1. Lire le composant class actuel
+2. Identifier : state, lifecycle methods, refs, context
+3. Convertir en composant fonctionnel avec hooks :
+   - `this.state` → `useState`
+   - `componentDidMount` → `useEffect(..., [])`
+   - `componentDidUpdate` → `useEffect`
+   - `componentWillUnmount` → return dans `useEffect`
+   - `this.refs` → `useRef`
+   - `static contextType` → `useContext`
+4. Préserver TOUS les types TypeScript
+5. Lancer les tests existants pour vérifier la non-régression
+6. Formater avec Prettier</code></pre>
+
+    <h3>Exemple 3 : Skill de génération de documentation API</h3>
+    <div class="code-label">.claude/skills/doc-api/SKILL.md</div>
+    <pre><code>---
+name: doc-api
+description: Générer la documentation OpenAPI d'une route
+model: haiku
+context: ["src/routes/**", "src/schemas/**"]
+---
+
+# Documentation API
+
+Route cible : $ARGUMENTS
+
+## Instructions
+1. Lire le fichier de route et ses schémas associés
+2. Générer un bloc OpenAPI 3.1 YAML avec :
+   - Summary et description
+   - Parameters (path, query, header)
+   - Request body avec schéma JSON
+   - Responses (200, 400, 401, 404, 500)
+   - Exemples concrets pour chaque réponse
+3. Écrire le résultat dans `docs/api/{route-name}.yaml`</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Skills vs. CLAUDE.md</h4>
+        <p>Le <code>CLAUDE.md</code> contient les instructions <strong>permanentes</strong> du projet (conventions, architecture, commandes). Les <strong>skills</strong> sont des <strong>workflows ponctuels</strong> que vous invoquez explicitement. Pensez au CLAUDE.md comme la culture d'entreprise, et aux skills comme des procédures opérationnelles spécifiques.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 7 : SCRIPTING & MODE HEADLESS          -->
+<!-- ============================================== -->
+<div id="scripting" class="content-card">
+    <h2><i class="fa-solid fa-code" style="color:#06b6d4;"></i> Scripting &amp; Mode Headless</h2>
+
+    <p>Le mode headless (<code>claude -p</code>) est ce qui fait de Claude Code un outil d'<strong>automatisation</strong>, pas seulement un outil interactif. Il permet d'intégrer Claude dans des scripts, des pipelines CI/CD, des cron jobs, et des bots.</p>
+
+    <h3>Usage de base</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># Exécution one-shot (le plus simple)
+claude -p "Explique ce que fait ce projet"
+
+# Avec un prompt depuis un fichier
+claude -p "$(cat prompts/review.md)"
+
+# Pipe depuis stdin
+echo "Ajoute des tests pour src/auth.ts" | claude -p
+
+# Avec un format de sortie spécifique
+claude -p "Liste les TODO dans le code" --output-format json
+
+# Mode streaming (pour les longues tâches)
+claude -p "Refactor le module auth" --output-format stream-json</code></pre>
+
+    <h3>Flags essentiels</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Flag</th>
+                    <th>Description</th>
+                    <th>Exemple</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>-p, --print</code></td>
+                    <td>Mode headless (non-interactif)</td>
+                    <td><code>claude -p "prompt"</code></td>
+                </tr>
+                <tr>
+                    <td><code>--output-format</code></td>
+                    <td>Format de sortie : text, json, stream-json</td>
+                    <td><code>--output-format json</code></td>
+                </tr>
+                <tr>
+                    <td><code>--json-schema</code></td>
+                    <td>Forcer une sortie JSON structurée</td>
+                    <td><code>--json-schema '{"type":"object"}'</code></td>
+                </tr>
+                <tr>
+                    <td><code>--allowedTools</code></td>
+                    <td>Restreindre les outils disponibles</td>
+                    <td><code>--allowedTools Read,Grep,Glob</code></td>
+                </tr>
+                <tr>
+                    <td><code>--model</code></td>
+                    <td>Choisir le modèle</td>
+                    <td><code>--model sonnet</code></td>
+                </tr>
+                <tr>
+                    <td><code>--max-turns</code></td>
+                    <td>Limiter les itérations</td>
+                    <td><code>--max-turns 5</code></td>
+                </tr>
+                <tr>
+                    <td><code>--continue</code></td>
+                    <td>Reprendre la dernière session</td>
+                    <td><code>claude --continue -p "suite"</code></td>
+                </tr>
+                <tr>
+                    <td><code>--resume</code></td>
+                    <td>Reprendre une session spécifique</td>
+                    <td><code>claude --resume abc123 -p "suite"</code></td>
+                </tr>
+                <tr>
+                    <td><code>--permission-mode</code></td>
+                    <td>Mode de permissions</td>
+                    <td><code>--permission-mode accept-all</code></td>
+                </tr>
+                <tr>
+                    <td><code>--verbose</code></td>
+                    <td>Logs détaillés</td>
+                    <td><code>--verbose</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Sortie JSON structurée</h3>
+    <p>Pour intégrer Claude dans un pipeline, utilisez <code>--json-schema</code> pour forcer une structure de sortie précise :</p>
+
+    <div class="code-label">Script : analyse de code automatisée</div>
+    <pre><code>#!/bin/bash
+SCHEMA='{
+  "type": "object",
+  "properties": {
+    "score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": { "type": "string", "enum": ["critical","high","medium","low"] },
+          "file": { "type": "string" },
+          "line": { "type": "number" },
+          "message": { "type": "string" }
+        },
+        "required": ["severity", "file", "message"]
+      }
+    },
+    "summary": { "type": "string" }
+  },
+  "required": ["score", "issues", "summary"]
+}'
+
+RESULT=$(claude -p "Analyse la qualité du code dans src/" \
+  --output-format json \
+  --json-schema "$SCHEMA" \
+  --allowedTools Read,Grep,Glob \
+  --model sonnet)
+
+SCORE=$(echo "$RESULT" | jq -r '.result.score')
+ISSUES=$(echo "$RESULT" | jq -r '.result.issues | length')
+
+echo "Score: $SCORE/100 — $ISSUES issues trouvées"
+
+# Échouer le CI si le score est trop bas
+if [ "$SCORE" -lt 70 ]; then
+  echo "::error::Code quality score below threshold: $SCORE/100"
+  exit 1
+fi</code></pre>
+
+    <h3>Streaming JSON pour les tâches longues</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># Chaque ligne est un objet JSON (NDJSON)
+claude -p "Migre tous les composants class" --output-format stream-json | while read -r line; do
+  TYPE=$(echo "$line" | jq -r '.type')
+  case "$TYPE" in
+    "assistant")
+      echo "[Claude] $(echo "$line" | jq -r '.message.content[0].text')"
+      ;;
+    "tool_use")
+      echo "[Tool] $(echo "$line" | jq -r '.name'): $(echo "$line" | jq -r '.input | tostring')"
+      ;;
+    "result")
+      echo "[Done] $(echo "$line" | jq -r '.result')"
+      ;;
+  esac
+done</code></pre>
+
+    <h3>Gestion des sessions</h3>
+    <div class="code-label">Sessions multi-étapes</div>
+    <pre><code># Étape 1 : analyse (sauvegarder le session ID)
+SESSION_ID=$(claude -p "Analyse l'architecture du projet et identifie les problèmes" \
+  --output-format json | jq -r '.session_id')
+
+echo "Session: $SESSION_ID"
+
+# Étape 2 : correction (reprendre la même session)
+claude --resume "$SESSION_ID" -p "Corrige les 3 problèmes les plus critiques que tu as identifiés"
+
+# Étape 3 : vérification
+claude --resume "$SESSION_ID" -p "Lance les tests et confirme que tout passe"</code></pre>
+
+    <h3>Intégration CI/CD : GitHub Actions</h3>
+    <div class="code-label">.github/workflows/claude-review.yml</div>
+    <pre><code>name: Claude Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Review PR
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          DIFF=$(git diff origin/main...HEAD)
+          REVIEW=$(claude -p "Review ce diff et identifie les problèmes potentiels :
+
+          $DIFF
+
+          Format ta review comme un commentaire de PR GitHub." \
+            --model sonnet \
+            --max-turns 3 \
+            --allowedTools Read,Grep,Glob \
+            --permission-mode accept-all)
+
+          # Poster le commentaire sur la PR
+          gh pr comment ${{ github.event.pull_request.number }} --body "$REVIEW"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+    <h3>Pipeline batch : traitement de fichiers</h3>
+    <div class="code-label">batch-process.sh</div>
+    <pre><code>#!/bin/bash
+# Traiter tous les fichiers Markdown en parallèle
+find docs/ -name "*.md" | while read -r file; do
+  echo "Traitement: $file"
+  claude -p "Corrige la grammaire et améliore la clarté de ce fichier : $file. 
+             Ne change pas le sens, seulement la forme." \
+    --model haiku \
+    --max-turns 2 \
+    --allowedTools Read,Edit \
+    --permission-mode accept-all &
+done
+
+wait
+echo "Tous les fichiers traités"</code></pre>
+
+    <div class="alert-box">
+        <h4><i class="fa-solid fa-triangle-exclamation"></i> --permission-mode accept-all</h4>
+        <p>Le flag <code>--permission-mode accept-all</code> est <strong>nécessaire</strong> en CI/CD car il n'y a personne pour approuver les actions. Mais il signifie que Claude peut exécuter <strong>n'importe quelle commande</strong>. Combinez-le toujours avec <code>--allowedTools</code> pour restreindre les outils disponibles, et utilisez les <code>deny</code> dans <code>settings.json</code> comme filet de sécurité.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 8 : SUBAGENTS                          -->
+<!-- ============================================== -->
+<div id="subagents" class="content-card">
+    <h2><i class="fa-solid fa-users-gear" style="color:#ec4899;"></i> Subagents &amp; Exécution Parallèle</h2>
+
+    <p>Les <strong>subagents</strong> sont des instances Claude indépendantes lancées par l'agent principal pour exécuter des tâches en parallèle. Chaque subagent a son propre contexte, ses propres outils, et s'exécute de manière isolée — comme un développeur junior à qui vous déléguez une sous-tâche.</p>
+
+    <h3>Types de subagents natifs</h3>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="metric-label"><strong>Explore</strong><br>Recherche dans le codebase. Outils : Read, Grep, Glob. Ne modifie rien. Idéal pour l'analyse.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-map"></i></div>
+            <div class="metric-label"><strong>Plan</strong><br>Planification architecturale. Explore + réflexion. Produit un plan d'action structuré.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-robot"></i></div>
+            <div class="metric-label"><strong>General</strong><br>Agent complet avec tous les outils. Peut lire, écrire, exécuter. Pour les tâches autonomes.</div>
+        </div>
+    </div>
+
+    <h3>Configuration d'un subagent personnalisé</h3>
+    <div class="code-label">Paramètres de subagent</div>
+    <pre><code>{
+  "model": "sonnet",           // Modèle (opus|sonnet|haiku)
+  "tools": ["Read", "Grep", "Glob", "Bash"],  // Outils autorisés
+  "permissionMode": "accept-all",  // Pas d'interaction humaine
+  "maxTurns": 10,              // Limite d'itérations
+  "context": "...",            // Instructions spécifiques
+  "worktree": true             // Isolation Git (optionnel)
+}</code></pre>
+
+    <h3>Pattern : recherche parallèle</h3>
+    <p>L'un des usages les plus puissants est la recherche simultanée dans différentes parties du codebase :</p>
+
+    <div class="code-label">Prompt pour déclencher 3 subagents</div>
+    <pre><code># Ce prompt dans Claude Code va automatiquement créer 3 subagents :
+
+"J'ai besoin de comprendre comment fonctionne l'authentification dans ce projet.
+Lance 3 recherches en parallèle :
+1. Agent 1 : Cherche tous les fichiers liés à l'auth (middleware, routes, schemas)
+2. Agent 2 : Cherche les tests d'authentification et les cas couverts
+3. Agent 3 : Cherche la configuration (env vars, secrets, providers OAuth)
+
+Synthétise les résultats des 3 agents dans un rapport structuré."</code></pre>
+
+    <p>Claude va automatiquement dispatcher ces 3 tâches à des subagents Explore qui s'exécutent simultanément, puis agréger les résultats.</p>
+
+    <h3>Pattern : modifications isolées avec worktrees</h3>
+    <div class="code-label">Subagents avec isolation Git</div>
+    <pre><code># Chaque subagent travaille dans son propre worktree Git
+# Pas de conflit entre les modifications parallèles
+
+"Refactore ces 3 modules en parallèle :
+1. Agent 1 : Refactore src/auth/ (worktree isolé)
+2. Agent 2 : Refactore src/billing/ (worktree isolé)  
+3. Agent 3 : Refactore src/notifications/ (worktree isolé)
+
+Chaque agent doit :
+- Créer un worktree Git isolé
+- Faire ses modifications
+- Lancer les tests du module
+- Commiter si les tests passent
+
+Je ferai le merge manuellement après review."</code></pre>
+
+    <h3>Limites et bonnes pratiques</h3>
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Quand utiliser des subagents</h4>
+        <p><strong>Utilisez des subagents</strong> quand les tâches sont indépendantes (recherche, analyse de modules séparés, génération de fichiers distincts). <strong>N'utilisez PAS de subagents</strong> pour des tâches séquentielles ou interdépendantes — le coût de coordination dépasse le gain de parallélisme. Un bon indicateur : si le résultat d'un agent influence le travail d'un autre, faites-le séquentiellement.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 9 : CONTEXTE & MÉMOIRE                -->
+<!-- ============================================== -->
+<div id="contexte" class="content-card">
+    <h2><i class="fa-solid fa-database" style="color:#14b8a6;"></i> Gestion du Contexte &amp; Mémoire</h2>
+
+    <p>Le <strong>contexte</strong> est la ressource la plus précieuse de Claude Code. Chaque token de contexte consommé par les instructions, les fichiers lus, et les résultats d'outils réduit l'espace disponible pour le raisonnement. Gérer efficacement le contexte est la compétence #1 d'un utilisateur avancé.</p>
+
+    <h3>Anatomie de la fenêtre de contexte</h3>
+    <div id="chartContext" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+    <h3>Commandes de gestion du contexte</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Commande</th>
+                    <th>Action</th>
+                    <th>Quand l'utiliser</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>/context</code></td>
+                    <td>Affiche l'usage actuel du contexte</td>
+                    <td>Pour monitorer avant une tâche complexe</td>
+                </tr>
+                <tr>
+                    <td><code>/compact</code></td>
+                    <td>Compresse l'historique de conversation</td>
+                    <td>Quand le contexte dépasse 60%</td>
+                </tr>
+                <tr>
+                    <td><code>/compact [instructions]</code></td>
+                    <td>Compresse avec des instructions de focus</td>
+                    <td>Pour garder seulement le pertinent</td>
+                </tr>
+                <tr>
+                    <td><code>/clear</code></td>
+                    <td>Vide toute la conversation</td>
+                    <td>Entre deux tâches indépendantes</td>
+                </tr>
+                <tr>
+                    <td><code>/rewind</code></td>
+                    <td>Revient au checkpoint précédent</td>
+                    <td>Annuler une direction qui ne marche pas</td>
+                </tr>
+                <tr>
+                    <td><code>/resume</code></td>
+                    <td>Reprend une session passée</td>
+                    <td>Continuer le travail d'hier</td>
+                </tr>
+                <tr>
+                    <td><code>/memory</code></td>
+                    <td>Voir/éditer la mémoire persistante</td>
+                    <td>Stocker une décision importante</td>
+                </tr>
+                <tr>
+                    <td><code>/cost</code></td>
+                    <td>Affiche le coût de la session</td>
+                    <td>Suivre le budget en temps réel</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Auto-compaction à 95%</h3>
+    <p>Quand le contexte atteint <strong>95%</strong> de sa capacité, Claude déclenche automatiquement une compaction. Le problème : cette compaction automatique peut perdre du contexte important car Claude choisit seul ce qu'il résume. La solution : compacter <strong>proactivement</strong> avec des instructions :</p>
+
+    <div class="code-label">Compaction ciblée</div>
+    <pre><code># Mauvais : compaction automatique (perte de contrôle)
+# Le contexte atteint 95% → Claude résume tout
+
+# Bon : compaction proactive avec focus
+/compact Garde uniquement : l'architecture du module auth, 
+         les 3 bugs trouvés, et le plan de migration.
+         Oublie les explorations de fichiers et les tentatives échouées.</code></pre>
+
+    <h3>Session checkpointing avec /rewind</h3>
+    <p>Claude crée automatiquement des <strong>checkpoints</strong> à chaque tour de conversation. Vous pouvez revenir en arrière si une direction ne fonctionne pas :</p>
+
+    <div class="code-label">Workflow avec rewind</div>
+    <pre><code># Tour 1 : "Refactore le module auth en utilisant JWT"
+# Tour 2 : Claude modifie 5 fichiers...
+# Tour 3 : "En fait, utilise plutôt des sessions avec Redis"
+
+# Au lieu de perdre le contexte et recommencer :
+/rewind
+# → Revient au Tour 1, avant les modifications JWT
+
+# Maintenant :
+"Refactore le module auth en utilisant des sessions Redis"
+# → Claude repart dans la bonne direction</code></pre>
+
+    <h3>Reprendre une session précédente</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># Lister les sessions récentes
+claude sessions list
+
+# Reprendre la dernière session
+claude --continue
+
+# Reprendre une session spécifique par ID
+claude --resume abc123def456
+
+# Reprendre en mode headless (scripting)
+claude --continue -p "Continue le refactoring du module auth"</code></pre>
+
+    <h3>Le système de mémoire</h3>
+    <p>La mémoire persistante est stockée dans <code>~/.claude/projects/{hash}/memory/MEMORY.md</code>. Elle survit entre les sessions et est automatiquement chargée au démarrage :</p>
+
+    <div class="code-label">Exemples d'écriture en mémoire</div>
+    <pre><code># Dans Claude Code (interactif) :
+
+"Souviens-toi que ce projet utilise Drizzle ORM, pas Prisma.
+ Ne propose jamais de migration Prisma."
+
+"Retiens que le déploiement sur staging nécessite un VPN.
+ La commande est : vpn-connect staging && fly deploy"
+
+"Note : le fichier config/secrets.ts ne doit JAMAIS être modifié 
+ par Claude Code. Il contient les clés de chiffrement."</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> 7 astuces pour garder un contexte lean</h4>
+        <ol>
+            <li><strong>/clear entre les tâches</strong> — ne traînez pas le contexte d'une tâche dans la suivante</li>
+            <li><strong>/compact proactif</strong> — compactez dès 50-60% avec des instructions précises</li>
+            <li><strong>CLAUDE.md court</strong> — moins de 200 lignes, imports pour le reste</li>
+            <li><strong>Règles avec globs</strong> — les rules ne chargent que quand nécessaire</li>
+            <li><strong>ENABLE_TOOL_SEARCH</strong> — réduit les descriptions d'outils MCP inutiles</li>
+            <li><strong>Subagents pour l'exploration</strong> — l'exploration lourde dans un subagent ne pollue pas le contexte principal</li>
+            <li><strong>Fichiers ciblés</strong> — demandez "lis la fonction X dans le fichier Y" plutôt que "lis le fichier Y"</li>
+        </ol>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 10 : BUDGET & COÛTS                    -->
+<!-- ============================================== -->
+<div id="budget" class="content-card">
+    <h2><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> Optimisation Budget &amp; Coûts</h2>
+
+    <p>Claude Code consomme des tokens à chaque interaction. Sans optimisation, une journée de travail intensif peut coûter <strong>50-200$</strong> en tokens API. Avec les bonnes pratiques, vous pouvez réduire ce coût de <strong>60-80%</strong> sans sacrifier la qualité.</p>
+
+    <h3>Tarification par modèle</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Modèle</th>
+                    <th>Input (1M tokens)</th>
+                    <th>Output (1M tokens)</th>
+                    <th>Contexte</th>
+                    <th>Usage recommandé</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Claude Opus 4</strong></td>
+                    <td>15$</td>
+                    <td>75$</td>
+                    <td>200K</td>
+                    <td>Architecture, décisions complexes, code critique</td>
+                </tr>
+                <tr>
+                    <td><strong>Claude Sonnet 4</strong></td>
+                    <td>3$</td>
+                    <td>15$</td>
+                    <td>200K</td>
+                    <td>Développement quotidien, refactoring, tests</td>
+                </tr>
+                <tr>
+                    <td><strong>Claude Haiku 3.5</strong></td>
+                    <td>0.80$</td>
+                    <td>4$</td>
+                    <td>200K</td>
+                    <td>Tâches simples, formatage, traductions, doc</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Où vont les tokens ?</h3>
+    <div id="chartBudget" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+    <h3>10 stratégies concrètes pour réduire les coûts</h3>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value">1</div>
+            <div class="metric-label"><strong>/clear entre les tâches</strong><br>Chaque nouveau sujet démarre avec un contexte vierge. Économie : 40-60% sur les tokens input.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">2</div>
+            <div class="metric-label"><strong>Choisir le bon modèle</strong><br>Haiku pour la doc et le formatage, Sonnet pour le dev quotidien, Opus uniquement pour l'architecture critique.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">3</div>
+            <div class="metric-label"><strong>Réduire l'overhead MCP</strong><br>Chaque serveur MCP ajoute ~500-2000 tokens de descriptions. Désactivez ceux que vous n'utilisez pas.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">4</div>
+            <div class="metric-label"><strong>ENABLE_TOOL_SEARCH</strong><br>Charge uniquement les outils pertinents au lieu de tous les décrire. Économie : 30-50% des tokens MCP.</div>
+        </div>
+    </div>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value">5</div>
+            <div class="metric-label"><strong>Déléguer à Haiku</strong><br>Utilisez des subagents Haiku pour les tâches simples : formatage, renommage, génération de boilerplate.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">6</div>
+            <div class="metric-label"><strong>Hooks de prétraitement</strong><br>Un hook qui lint/formate avant l'exécution évite que Claude ne corrige des erreurs triviales.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">7</div>
+            <div class="metric-label"><strong>Thinking tokens</strong><br>Le mode "extended thinking" consomme des tokens supplémentaires. Désactivez-le pour les tâches simples.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">8</div>
+            <div class="metric-label"><strong>CLAUDE.md &lt; 200 lignes</strong><br>Un CLAUDE.md trop long est chargé à chaque requête. 200 lignes = ~1500 tokens = ~0.005$ par requête.</div>
+        </div>
+    </div>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value">9</div>
+            <div class="metric-label"><strong>/compact proactif</strong><br>Compactez à 50-60% au lieu d'attendre l'auto-compaction à 95%. Meilleur résumé car vous guidez le focus.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">10</div>
+            <div class="metric-label"><strong>Batch les opérations</strong><br>"Renomme les 10 fichiers suivants" est plus économique que 10 requêtes séparées.</div>
+        </div>
+    </div>
+
+    <h3>Coût estimé par type de tâche</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tâche</th>
+                    <th>Modèle</th>
+                    <th>Tokens (~)</th>
+                    <th>Coût (~)</th>
+                    <th>Durée (~)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Question simple sur le code</td>
+                    <td>Sonnet</td>
+                    <td>5K in + 1K out</td>
+                    <td>0.03$</td>
+                    <td>5s</td>
+                </tr>
+                <tr>
+                    <td>Écrire un test unitaire</td>
+                    <td>Sonnet</td>
+                    <td>15K in + 3K out</td>
+                    <td>0.09$</td>
+                    <td>15s</td>
+                </tr>
+                <tr>
+                    <td>Refactorer un module (5 fichiers)</td>
+                    <td>Sonnet</td>
+                    <td>50K in + 10K out</td>
+                    <td>0.30$</td>
+                    <td>2min</td>
+                </tr>
+                <tr>
+                    <td>Review de PR (diff 500 lignes)</td>
+                    <td>Opus</td>
+                    <td>30K in + 5K out</td>
+                    <td>0.82$</td>
+                    <td>30s</td>
+                </tr>
+                <tr>
+                    <td>Migration architecturale</td>
+                    <td>Opus</td>
+                    <td>150K in + 30K out</td>
+                    <td>4.50$</td>
+                    <td>10min</td>
+                </tr>
+                <tr>
+                    <td>Formatage/traduction (batch)</td>
+                    <td>Haiku</td>
+                    <td>10K in + 5K out</td>
+                    <td>0.03$</td>
+                    <td>10s</td>
+                </tr>
+                <tr>
+                    <td>Génération d'un article complet</td>
+                    <td>Opus</td>
+                    <td>100K in + 50K out</td>
+                    <td>5.25$</td>
+                    <td>15min</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-label">Monitoring en temps réel</div>
+    <pre><code># Dans Claude Code (interactif) :
+/cost       # Coût de la session actuelle
+/stats      # Statistiques détaillées (tokens, outils, durée)
+
+# En mode headless :
+claude -p "tâche" --output-format json | jq '{
+  input_tokens: .usage.input_tokens,
+  output_tokens: .usage.output_tokens,
+  cost_estimate: (.usage.input_tokens * 0.000003 + .usage.output_tokens * 0.000015)
+}'</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Règle du 80/20 pour le budget</h4>
+        <p>En pratique, <strong>80% de vos tâches</strong> peuvent être faites avec Sonnet ou Haiku. Réservez Opus pour les <strong>20% critiques</strong> : décisions d'architecture, debug de problèmes complexes, review de code sensible. Un développeur discipliné dépense en moyenne <strong>5-15$/jour</strong> au lieu de 50-200$.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 11 : PERMISSIONS & SÉCURITÉ            -->
+<!-- ============================================== -->
+<div id="permissions" class="content-card">
+    <h2><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> Permissions &amp; Sécurité</h2>
+
+    <p>La sécurité est le point le plus critique de l'utilisation d'un agent autonome. Claude Code peut exécuter des commandes shell, modifier des fichiers, et interagir avec des services externes. Un système de permissions robuste est <strong>non négociable</strong>.</p>
+
+    <h3>Les 3 modes de permission</h3>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-hand"></i></div>
+            <div class="metric-label"><strong>default (ask)</strong><br>Claude demande la permission pour chaque action non autorisée. Mode recommandé en interactif.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-check-double"></i></div>
+            <div class="metric-label"><strong>accept-all</strong><br>Toutes les actions sont autorisées sans demande. Requis en CI/CD. Combiner avec allowedTools.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-lock"></i></div>
+            <div class="metric-label"><strong>deny-all</strong><br>Seuls les outils explicitement autorisés dans allow sont disponibles. Mode le plus restrictif.</div>
+        </div>
+    </div>
+
+    <h3>Syntaxe des règles allow/deny</h3>
+    <div class="code-label">Exemples de règles granulaires</div>
+    <pre><code>{
+  "permissions": {
+    "allow": [
+      // Outils de base (lecture seule)
+      "Read",
+      "Glob",
+      "Grep",
+      
+      // Écriture restreinte à certains dossiers
+      "Write(src/**)",
+      "Write(tests/**)",
+      "Edit(src/**)",
+      "Edit(tests/**)",
+      
+      // Commandes shell spécifiques
+      "Bash(npm run *)",
+      "Bash(npx vitest*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add src/* tests/*)",
+      "Bash(git commit -m *)",
+      
+      // MCP : lecture seule sur la DB prod
+      "mcp__db-prod__query",
+      
+      // MCP : accès complet sur staging
+      "mcp__db-staging__*",
+      
+      // GitHub : tout sauf delete
+      "mcp__github__create_pull_request",
+      "mcp__github__list_issues",
+      "mcp__github__add_comment"
+    ],
+    "deny": [
+      // Commandes destructrices
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git checkout -- *)",
+      "Bash(DROP *)",
+      "Bash(DELETE FROM *)",
+      "Bash(curl * | *sh)",
+      "Bash(wget * && *sh)",
+      
+      // Fichiers sensibles
+      "Write(.env*)",
+      "Write(**/secrets/**)",
+      "Write(**/credentials/**)",
+      "Read(.env.production)",
+      
+      // MCP : écriture sur prod
+      "mcp__db-prod__execute",
+      "mcp__db-prod__insert",
+      "mcp__db-prod__update",
+      "mcp__db-prod__delete"
+    ]
+  }
+}</code></pre>
+
+    <h3>Sandbox : isolation système</h3>
+    <p>Claude Code inclut un mécanisme de <strong>sandbox</strong> qui restreint l'accès au système de fichiers et au réseau :</p>
+
+    <div class="code-label">Configuration sandbox</div>
+    <pre><code>{
+  "sandbox": {
+    "filesystem": {
+      "allowedPaths": [
+        "/Users/dev/projects/mon-app",
+        "/tmp/claude-*"
+      ],
+      "deniedPaths": [
+        "/etc",
+        "/var",
+        "~/.ssh",
+        "~/.aws"
+      ]
+    },
+    "network": {
+      "allowedHosts": [
+        "github.com",
+        "api.anthropic.com",
+        "registry.npmjs.org",
+        "*.mon-domaine.com"
+      ],
+      "deniedHosts": [
+        "*.internal.corp.com"
+      ]
+    }
+  }
+}</code></pre>
+
+    <h3>Managed policies (Entreprise)</h3>
+    <p>Pour les organisations, le scope <strong>managed</strong> permet d'imposer des politiques irrévocables :</p>
+
+    <div class="code-label">Politique d'entreprise</div>
+    <pre><code>// Politique poussée par l'admin — impossible à contourner par les devs
+{
+  "managedPolicy": {
+    "permissions": {
+      "deny": [
+        "Bash(rm -rf /)",
+        "Bash(curl * | bash)",
+        "Write(.env.production)",
+        "mcp__*__execute(DROP *)",
+        "mcp__*__execute(TRUNCATE *)"
+      ]
+    },
+    "requiredHooks": {
+      "PreToolUse": [
+        {
+          "matcher": "Bash",
+          "hooks": [{
+            "type": "command",
+            "command": "/opt/security/audit-command.sh"
+          }]
+        }
+      ]
+    },
+    "maxCostPerSession": 50.00,
+    "allowedModels": ["sonnet", "haiku"]
+  }
+}</code></pre>
+
+    <div class="alert-box">
+        <h4><i class="fa-solid fa-shield-halved"></i> Checklist de sécurité pour les équipes</h4>
+        <ul>
+            <li>Deny explicite sur toutes les commandes destructrices dans le scope Project</li>
+            <li>Accès DB production en lecture seule uniquement</li>
+            <li>Secrets JAMAIS dans le code — utiliser les variables d'environnement</li>
+            <li>Hook d'audit sur toutes les commandes Bash en CI/CD</li>
+            <li>Review du <code>.mcp.json</code> et <code>settings.json</code> dans les PRs</li>
+            <li>Rotation régulière des tokens MCP et API keys</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 12 : INTÉGRATIONS IDE                  -->
+<!-- ============================================== -->
+<div id="ide" class="content-card">
+    <h2><i class="fa-solid fa-window-maximize" style="color:#3b82f6;"></i> Intégrations IDE</h2>
+
+    <p>Bien que Claude Code soit un outil <strong>terminal-first</strong>, il s'intègre parfaitement avec les IDEs modernes. Vous pouvez l'utiliser en parallèle de votre éditeur, ou directement à l'intérieur.</p>
+
+    <h3>VS Code — Extension officielle</h3>
+    <p>L'extension <strong>Claude Code for VS Code</strong> transforme votre éditeur en environnement agent complet :</p>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-terminal"></i></div>
+            <div class="metric-label"><strong>Terminal intégré</strong><br>Claude Code tourne dans le terminal VS Code avec accès au workspace. Les fichiers ouverts sont automatiquement ajoutés au contexte.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-eye"></i></div>
+            <div class="metric-label"><strong>Diff viewer</strong><br>Quand Claude modifie un fichier, le diff s'affiche dans l'éditeur VS Code pour review avant acceptation.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-palette"></i></div>
+            <div class="metric-label"><strong>Status bar</strong><br>Indicateur d'état (idle, thinking, editing) et raccourci clavier pour ouvrir Claude Code (Cmd+Shift+P).</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-share-nodes"></i></div>
+            <div class="metric-label"><strong>Sélection contextuelle</strong><br>Sélectionnez du code → clic droit → "Ask Claude" pour poser une question sur la sélection.</div>
+        </div>
+    </div>
+
+    <div class="code-label">Installation VS Code</div>
+    <pre><code># Via la ligne de commande VS Code
+code --install-extension anthropic.claude-code
+
+# Ou depuis le marketplace VS Code :
+# Chercher "Claude Code" dans les extensions
+
+# Configuration dans settings.json (VS Code) :
+{
+  "claudeCode.terminalProfile": "default",
+  "claudeCode.autoStart": false,
+  "claudeCode.showDiffOnEdit": true
+}</code></pre>
+
+    <h3>JetBrains — Plugin officiel</h3>
+    <p>Le plugin JetBrains (IntelliJ, WebStorm, PyCharm, GoLand) offre une intégration similaire :</p>
+
+    <div class="code-label">Installation JetBrains</div>
+    <pre><code># Depuis l'IDE :
+# Settings → Plugins → Marketplace → "Claude Code"
+
+# Ou via la CLI JetBrains :
+# jetbrains-cli install-plugin claude-code
+
+# Raccourci : Alt+C pour ouvrir le panneau Claude Code
+# Le plugin détecte automatiquement le fichier ouvert comme contexte</code></pre>
+
+    <h3>Terminal pur — Configuration avancée</h3>
+    <p>Pour les adeptes du terminal, quelques configurations pour améliorer l'expérience :</p>
+
+    <div class="code-label">~/.zshrc ou ~/.bashrc</div>
+    <pre><code># Alias utiles
+alias cc="claude"
+alias ccp="claude -p"
+alias ccr="claude --continue"
+alias ccs="claude --resume"
+
+# Fonction pour lancer Claude dans un projet spécifique
+ccproject() {
+  cd "$1" && claude
+}
+
+# Auto-complétion (zsh)
+eval "$(claude completion zsh)"
+
+# Variables d'environnement
+export ANTHROPIC_API_KEY="sk-ant-..."
+export CLAUDE_CODE_DEFAULT_MODEL="sonnet"
+export CLAUDE_CODE_MAX_TURNS="50"</code></pre>
+
+    <h3>Développement distant (SSH/Container)</h3>
+    <p>Claude Code fonctionne dans les environnements distants :</p>
+
+    <div class="code-label">Cas d'usage distants</div>
+    <pre><code># SSH vers un serveur de dev
+ssh dev-server "cd /app && claude -p 'Lance les tests et corrige les échecs'"
+
+# Dans un container Docker
+docker exec -it my-app claude -p "Analyse les logs et identifie le problème"
+
+# GitHub Codespaces
+# Claude Code est pré-installé dans les devcontainers Anthropic
+
+# VS Code Remote (SSH/WSL/Container)
+# L'extension Claude Code fonctionne en mode Remote automatiquement</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Terminal vs. IDE : quelle approche choisir ?</h4>
+        <p><strong>Terminal pur</strong> : meilleur pour les tâches agentic lourdes (migration, refactoring, CI/CD). Claude a le contrôle total. <strong>IDE intégré</strong> : meilleur pour le développement quotidien où vous alternez entre coder vous-même et demander à Claude. Les deux approches sont complémentaires — utilisez le terminal pour les grosses tâches et l'IDE pour les micro-interactions.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 13 : GIT WORKTREES                     -->
+<!-- ============================================== -->
+<div id="worktrees" class="content-card">
+    <h2><i class="fa-solid fa-code-branch" style="color:#10b981;"></i> Git Worktrees &amp; Sessions Parallèles</h2>
+
+    <p>Les <strong>worktrees Git</strong> sont la solution de Claude Code pour l'isolation. Chaque worktree est un répertoire de travail séparé qui partage le même dépôt Git mais opère sur une branche différente. C'est essentiel pour le travail parallèle et les subagents qui modifient des fichiers.</p>
+
+    <h3>Pourquoi les worktrees sont importants</h3>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="metric-label"><strong>Isolation</strong><br>Chaque worktree a son propre espace de travail. Les modifications d'un subagent ne perturbent pas votre branche principale.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-bolt"></i></div>
+            <div class="metric-label"><strong>Parallélisme</strong><br>Plusieurs agents peuvent modifier des fichiers simultanément sans conflits Git.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value"><i class="fa-solid fa-rotate-left"></i></div>
+            <div class="metric-label"><strong>Réversibilité</strong><br>Si une tentative échoue, vous supprimez le worktree sans impact sur votre branche de travail.</div>
+        </div>
+    </div>
+
+    <h3>Créer un worktree</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># Dans Claude Code interactif :
+# Dites simplement "Travaille dans un worktree"
+# Claude crée automatiquement .claude/worktrees/{nom}/
+
+# Via le flag CLI :
+claude --worktree
+
+# Avec un nom personnalisé :
+claude --worktree --worktree-name "refactor-auth"
+
+# Le worktree est créé dans :
+# .claude/worktrees/refactor-auth/
+# Branche : claude/refactor-auth-{hash}
+# Base : HEAD de la branche courante</code></pre>
+
+    <h3>Workflow avec subagents et worktrees</h3>
+    <div class="code-label">Exemple : 3 refactorings parallèles</div>
+    <pre><code># Prompt dans Claude Code :
+"Lance 3 subagents dans des worktrees séparés :
+
+Agent 1 (worktree: refactor-auth) :
+- Migre src/auth/ de Express middleware vers Fastify hooks
+- Lance les tests auth
+
+Agent 2 (worktree: refactor-db) :
+- Migre src/db/ de Knex vers Drizzle ORM  
+- Régénère les types
+
+Agent 3 (worktree: refactor-api) :
+- Migre les routes src/routes/ vers le nouveau format Fastify
+- Met à jour les schémas de validation
+
+Quand les 3 ont terminé, montre-moi un résumé des changements."
+
+# Résultat :
+# .claude/worktrees/refactor-auth/   → branche claude/refactor-auth-abc
+# .claude/worktrees/refactor-db/     → branche claude/refactor-db-def
+# .claude/worktrees/refactor-api/    → branche claude/refactor-api-ghi
+
+# Merge manuel après review :
+git merge claude/refactor-auth-abc
+git merge claude/refactor-db-def
+git merge claude/refactor-api-ghi</code></pre>
+
+    <h3>Hooks de worktree</h3>
+    <p>Vous pouvez configurer des hooks <code>WorktreeCreate</code> et <code>WorktreeRemove</code> pour automatiser des actions :</p>
+
+    <div class="code-label">.claude/settings.json</div>
+    <pre><code>{
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm install && npm run build"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Worktree supprimé : $WORKTREE_PATH'"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <h3>Nettoyage des worktrees</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># À la fin de la session Claude Code, un prompt demande :
+# "Voulez-vous garder ou supprimer le worktree ?"
+
+# Nettoyage manuel :
+git worktree list                    # Voir tous les worktrees
+git worktree remove .claude/worktrees/refactor-auth  # Supprimer
+git worktree prune                   # Nettoyer les entrées orphelines
+
+# Supprimer tous les worktrees Claude :
+rm -rf .claude/worktrees/
+git worktree prune</code></pre>
+
+    <div class="alert-box">
+        <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention aux worktrees et au stockage</h4>
+        <p>Chaque worktree crée une copie de travail complète du projet (sans le .git). Pour un projet de 500 Mo, 3 worktrees = 1.5 Go supplémentaires. Nettoyez les worktrees après usage. Claude ne les supprime pas automatiquement si vous quittez la session brutalement (Ctrl+C).</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 14 : PATTERNS AVANCÉS                  -->
+<!-- ============================================== -->
+<div id="patterns" class="content-card">
+    <h2><i class="fa-solid fa-puzzle-piece" style="color:#8b5cf6;"></i> Patterns Avancés &amp; Cas d'Usage</h2>
+
+    <p>Cette section présente 6 patterns architecturaux pour tirer le maximum de Claude Code. Chaque pattern est un workflow complet avec des exemples de code prêts à l'emploi.</p>
+
+    <h3>Pattern 1 : Pipeline multi-modèle (Haiku → Sonnet → Opus)</h3>
+    <p>Utilisez le modèle le moins cher possible pour chaque étape, en escaladant vers Opus uniquement quand nécessaire :</p>
+
+    <div class="code-label">pipeline-multi-model.sh</div>
+    <pre><code>#!/bin/bash
+# Étape 1 : Haiku collecte les données (pas cher)
+FILES=$(claude -p "Liste tous les fichiers TypeScript qui importent 'express'" \
+  --model haiku \
+  --allowedTools Grep,Glob \
+  --output-format json \
+  --permission-mode accept-all | jq -r '.result')
+
+echo "Fichiers trouvés : $FILES"
+
+# Étape 2 : Sonnet analyse et planifie (rapport qualité/prix)
+PLAN=$(claude -p "Voici les fichiers Express à migrer vers Fastify :
+$FILES
+
+Crée un plan de migration détaillé avec l'ordre des fichiers, 
+les dépendances entre eux, et les risques." \
+  --model sonnet \
+  --allowedTools Read,Grep \
+  --output-format json \
+  --permission-mode accept-all | jq -r '.result')
+
+echo "Plan de migration :"
+echo "$PLAN"
+
+# Étape 3 : Opus exécute la migration (complexe, besoin du meilleur)
+claude -p "Exécute ce plan de migration Express → Fastify :
+
+$PLAN
+
+Migre chaque fichier, adapte les tests, et vérifie que tout compile." \
+  --model opus \
+  --max-turns 30 \
+  --permission-mode accept-all</code></pre>
+
+    <h3>Pattern 2 : Code review automatisée en CI/CD</h3>
+    <div class="code-label">.github/workflows/claude-review.yml</div>
+    <pre><code>name: Claude Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: npm install -g @anthropic-ai/claude-code
+
+      - name: Generate Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Obtenir le diff
+          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD)
+          
+          # Obtenir la description de la PR
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q '.body')
+          
+          # Lancer la review
+          REVIEW=$(claude -p "Tu es un senior code reviewer. Review cette PR.
+
+          ## Description de la PR
+          $PR_BODY
+
+          ## Diff
+          \`\`\`diff
+          $DIFF
+          \`\`\`
+
+          Fournis :
+          1. Résumé (2-3 phrases)
+          2. Points positifs
+          3. Problèmes (classés par sévérité)
+          4. Suggestions d'amélioration
+          5. Verdict : APPROVE / REQUEST_CHANGES / COMMENT
+          
+          Format en Markdown." \
+            --model sonnet \
+            --max-turns 3 \
+            --allowedTools Read,Grep,Glob \
+            --permission-mode accept-all)
+          
+          # Poster le commentaire
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "## Claude Code Review
+
+          $REVIEW
+          
+          ---
+          *Review automatique par Claude Code (Sonnet)*"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+    <h3>Pattern 3 : Automatisation planifiée avec bot Discord</h3>
+    <div class="code-label">Architecture d'automatisation</div>
+    <pre><code># Architecture :
+# Discord Bot → Schedule → tmux → claude -p → git push → GitHub Pages
+#
+# Le bot Discord maintient un scheduler qui exécute :
+# - Briefing quotidien à 7h00
+# - Scanner de marché à 23h00 (Lun-Ven)
+# - Rétrospective hebdomadaire le vendredi 23h00
+# - Rapport weekly le dimanche 18h00
+
+# Commande Discord :
+# every day at 07:00 articles analyse daily
+
+# Ce que le bot exécute :
+cd /path/to/articles
+claude -p "Génère le briefing quotidien du jour" \
+  --permission-mode accept-all \
+  --max-turns 50
+
+# Claude Code va :
+# 1. Lire le CLAUDE.md pour comprendre le format
+# 2. Appeler les MCP servers pour les données marché
+# 3. Faire des WebSearch pour les actualités
+# 4. Générer le HTML complet
+# 5. Indexer l'article (node tools/add_card.js)
+# 6. Commiter et pusher sur GitHub
+# 7. GitHub Pages déploie automatiquement</code></pre>
+
+    <h3>Pattern 4 : Workflow structuré Plan → Code → Test → Review</h3>
+    <div class="code-label">structured-workflow.sh</div>
+    <pre><code>#!/bin/bash
+TASK="$1"  # ex: "Ajouter l'authentification OAuth2 Google"
+
+echo "=== PHASE 1 : PLANIFICATION (Opus) ==="
+PLAN=$(claude -p "PHASE PLAN UNIQUEMENT. Ne code rien.
+
+Tâche : $TASK
+
+Produis un plan technique détaillé :
+1. Fichiers à créer/modifier
+2. Dépendances à installer
+3. Schéma de la base de données
+4. Endpoints API
+5. Tests à écrire
+6. Risques et edge cases" \
+  --model opus \
+  --max-turns 5 \
+  --allowedTools Read,Grep,Glob \
+  --output-format json \
+  --permission-mode accept-all | jq -r '.result')
+
+echo "$PLAN"
+echo ""
+echo "=== PHASE 2 : IMPLÉMENTATION (Sonnet) ==="
+claude -p "Implémente ce plan EXACTEMENT comme décrit. Ne dévie pas.
+
+$PLAN
+
+Crée tous les fichiers, installe les dépendances, et vérifie que ça compile." \
+  --model sonnet \
+  --max-turns 20 \
+  --permission-mode accept-all
+
+echo ""
+echo "=== PHASE 3 : TESTS (Sonnet) ==="
+claude --continue -p "Écris les tests unitaires et d'intégration pour tout ce que tu viens d'implémenter.
+Lance-les et corrige les échecs." \
+  --model sonnet \
+  --max-turns 15
+
+echo ""
+echo "=== PHASE 4 : REVIEW (Opus) ==="
+claude --continue -p "Review critique de tout le code que tu as écrit :
+- Bugs potentiels
+- Failles de sécurité
+- Problèmes de performance
+- Manques dans les tests
+- Conformité avec le plan initial
+
+Corrige les problèmes trouvés." \
+  --model opus \
+  --max-turns 10</code></pre>
+
+    <h3>Pattern 5 : Knowledge base avec MCP + CLAUDE.md + Skills</h3>
+    <div class="code-label">Architecture de connaissance</div>
+    <pre><code># Structure d'un projet avec knowledge base complète :
+mon-projet/
+├── CLAUDE.md                    # Conventions + architecture
+├── .claude/
+│   ├── settings.json            # Permissions + hooks
+│   ├── rules/
+│   │   ├── api-design.md        # Conventions API (globs: src/routes/**)
+│   │   ├── db-patterns.md       # Patterns DB (globs: src/repos/**)
+│   │   ├── testing.md           # Conventions test (globs: **/*.test.*)
+│   │   └── security.md          # Règles sécu (globs: src/auth/**)
+│   └── skills/
+│       ├── deploy/SKILL.md      # /deploy staging|production
+│       ├── review-pr/SKILL.md   # /review-pr {number}
+│       ├── new-route/SKILL.md   # /new-route {resource}
+│       └── debug/SKILL.md       # /debug {error-message}
+├── .mcp.json                    # GitHub, PostgreSQL, Sentry
+├── docs/
+│   ├── architecture.md          # @import dans CLAUDE.md
+│   ├── api-spec.md              # Spec OpenAPI
+│   └── runbook.md               # Procédures opérationnelles
+└── src/
+    └── CLAUDE.md                # Conventions src/ spécifiques
+
+# Résultat : Claude comprend TOUT le projet
+# - Architecture globale (CLAUDE.md + imports)
+# - Conventions par domaine (rules/ avec globs)
+# - Procédures opérationnelles (skills/)
+# - Accès aux données (MCP servers)
+# - Historique (Auto Memory)
+# - Sécurité (permissions + hooks)</code></pre>
+
+    <h3>Pattern 6 : Déploiement sécurisé avec hooks</h3>
+    <div class="code-label">.claude/settings.json — Workflow de déploiement</div>
+    <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/pre-deploy-check.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/post-deploy-notify.sh"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+    <div class="code-label">scripts/pre-deploy-check.sh</div>
+    <pre><code>#!/bin/bash
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+
+# Bloquer les déploiements si les tests ne passent pas
+if echo "$COMMAND" | grep -q "fly deploy\|docker push\|kubectl apply"; then
+  echo "Déploiement détecté. Vérification des prérequis..."
+  
+  # Vérifier la branche
+  BRANCH=$(git branch --show-current)
+  if [ "$BRANCH" != "main" ]; then
+    echo "BLOQUÉ : Déploiement uniquement depuis main (actuellement sur $BRANCH)"
+    exit 2
+  fi
+  
+  # Vérifier les tests
+  if ! npm run test --silent 2>/dev/null; then
+    echo "BLOQUÉ : Les tests ne passent pas"
+    exit 2
+  fi
+  
+  # Vérifier le linting
+  if ! npm run lint --silent 2>/dev/null; then
+    echo "BLOQUÉ : Erreurs de lint détectées"
+    exit 2
+  fi
+  
+  echo "Tous les checks passent. Déploiement autorisé."
+fi
+
+exit 0</code></pre>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Choisir le bon pattern</h4>
+        <p><strong>Pattern 1</strong> (multi-modèle) : quand le coût est une contrainte majeure. <strong>Pattern 2</strong> (CI review) : pour toutes les équipes qui font des PRs. <strong>Pattern 3</strong> (automatisation) : pour les tâches récurrentes (rapports, monitoring). <strong>Pattern 4</strong> (Plan→Code→Test→Review) : pour les features complexes. <strong>Pattern 5</strong> (knowledge base) : pour les projets matures avec beaucoup de conventions. <strong>Pattern 6</strong> (déploiement sécurisé) : pour tout environnement de production.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 15 : CONCLUSION                        -->
+<!-- ============================================== -->
+<div id="conclusion" class="content-card">
+    <h2><i class="fa-solid fa-flag-checkered" style="color:#10b981;"></i> Récapitulatif &amp; Ressources</h2>
+
+    <p>Ce guide a couvert l'ensemble des fonctionnalités avancées de Claude Code. Voici un récapitulatif de toutes les capacités et les ressources pour aller plus loin.</p>
+
+    <h3>Tableau récapitulatif des fonctionnalités</h3>
+    <div id="chartRadar" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fonctionnalité</th>
+                    <th>Difficulté</th>
+                    <th>Impact</th>
+                    <th>Section</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>CLAUDE.md</strong></td>
+                    <td>Facile</td>
+                    <td>Très élevé</td>
+                    <td><a href="#claude-md">Section 3</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Settings &amp; Permissions</strong></td>
+                    <td>Facile</td>
+                    <td>Élevé</td>
+                    <td><a href="#architecture">Section 2</a></td>
+                </tr>
+                <tr>
+                    <td><strong>MCP Servers</strong></td>
+                    <td>Moyen</td>
+                    <td>Très élevé</td>
+                    <td><a href="#mcp">Section 4</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Hooks</strong></td>
+                    <td>Moyen</td>
+                    <td>Élevé</td>
+                    <td><a href="#hooks">Section 5</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Skills</strong></td>
+                    <td>Moyen</td>
+                    <td>Moyen-élevé</td>
+                    <td><a href="#skills">Section 6</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Scripting headless</strong></td>
+                    <td>Facile</td>
+                    <td>Très élevé</td>
+                    <td><a href="#scripting">Section 7</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Subagents</strong></td>
+                    <td>Avancé</td>
+                    <td>Élevé</td>
+                    <td><a href="#subagents">Section 8</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Gestion contexte</strong></td>
+                    <td>Moyen</td>
+                    <td>Très élevé</td>
+                    <td><a href="#contexte">Section 9</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Optimisation budget</strong></td>
+                    <td>Facile</td>
+                    <td>Élevé</td>
+                    <td><a href="#budget">Section 10</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Sécurité avancée</strong></td>
+                    <td>Moyen</td>
+                    <td>Critique</td>
+                    <td><a href="#permissions">Section 11</a></td>
+                </tr>
+                <tr>
+                    <td><strong>IDE Integration</strong></td>
+                    <td>Facile</td>
+                    <td>Moyen</td>
+                    <td><a href="#ide">Section 12</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Git Worktrees</strong></td>
+                    <td>Avancé</td>
+                    <td>Moyen</td>
+                    <td><a href="#worktrees">Section 13</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Patterns avancés</strong></td>
+                    <td>Avancé</td>
+                    <td>Très élevé</td>
+                    <td><a href="#patterns">Section 14</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Parcours d'apprentissage recommandé</h3>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value">Semaine 1</div>
+            <div class="metric-label"><strong>Les fondamentaux</strong><br>Installer Claude Code, créer un CLAUDE.md, configurer les permissions de base, utiliser /compact et /clear efficacement.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">Semaine 2</div>
+            <div class="metric-label"><strong>Extensibilité</strong><br>Ajouter 2-3 serveurs MCP (GitHub, DB, Slack), créer vos premières skills, configurer les règles modulaires.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">Semaine 3</div>
+            <div class="metric-label"><strong>Automatisation</strong><br>Créer un pipeline CI/CD avec claude -p, configurer les hooks de sécurité et de formatage, optimiser le budget.</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">Semaine 4</div>
+            <div class="metric-label"><strong>Maîtrise</strong><br>Utiliser les subagents et worktrees, implémenter les patterns avancés, déployer un workflow complet Plan→Code→Test→Review.</div>
+        </div>
+    </div>
+
+    <h3>Ressources essentielles</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ressource</th>
+                    <th>Type</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Documentation officielle</strong></td>
+                    <td>Docs</td>
+                    <td><a href="https://docs.anthropic.com/en/docs/claude-code" target="_blank">docs.anthropic.com/claude-code</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Claude Code GitHub</strong></td>
+                    <td>Code</td>
+                    <td><a href="https://github.com/anthropics/claude-code" target="_blank">github.com/anthropics/claude-code</a></td>
+                </tr>
+                <tr>
+                    <td><strong>MCP Specification</strong></td>
+                    <td>Spec</td>
+                    <td><a href="https://spec.modelcontextprotocol.io" target="_blank">spec.modelcontextprotocol.io</a></td>
+                </tr>
+                <tr>
+                    <td><strong>MCP Servers Registry</strong></td>
+                    <td>Registry</td>
+                    <td><a href="https://github.com/modelcontextprotocol/servers" target="_blank">github.com/mcp/servers</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Anthropic Cookbook</strong></td>
+                    <td>Exemples</td>
+                    <td><a href="https://github.com/anthropics/anthropic-cookbook" target="_blank">github.com/anthropics/cookbook</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Claude Code Discord</strong></td>
+                    <td>Communauté</td>
+                    <td><a href="https://discord.gg/anthropic" target="_blank">discord.gg/anthropic</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pedagogy-box">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Le conseil final</h4>
+        <p>Claude Code n'est pas un outil à utiliser passivement. C'est un <strong>multiplicateur de compétences</strong>. Plus vous investissez dans la configuration (CLAUDE.md, rules, hooks, skills, MCP), plus le retour sur investissement est élevé. Un projet bien configuré avec Claude Code peut multiplier la productivité d'un développeur senior par <strong>3 à 5x</strong> sur les tâches d'ingénierie. La clé : traitez votre configuration Claude Code comme du code — versionnez-la, itérez dessus, et partagez-la avec votre équipe.</p>
+    </div>
+</div>
+
+    </div><!-- /container -->
+
+    <!-- Footer -->
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- ECHARTS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Chart 1 : Répartition des tokens (Pie chart)
+            var budgetDom = document.getElementById('chartBudget');
+            if (budgetDom) {
+                var budgetChart = echarts.init(budgetDom);
+                budgetChart.setOption({
+                    title: { text: "Où vont vos tokens ?", subtext: "Répartition typique d'une session Claude Code", left: 'center', textStyle: { fontSize: 14, color: '#0f172a' }, subtextStyle: { fontSize: 12, color: '#64748b' } },
+                    tooltip: { trigger: 'item', formatter: '{b}: {c}% ({d}%)' },
+                    legend: { orient: 'horizontal', bottom: 0, textStyle: { fontSize: 12 } },
+                    series: [{
+                        name: 'Tokens',
+                        type: 'pie',
+                        radius: ['35%', '65%'],
+                        center: ['50%', '45%'],
+                        avoidLabelOverlap: true,
+                        itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                        label: { show: true, formatter: '{b}\n{c}%', fontSize: 12 },
+                        emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                        data: [
+                            { value: 35, name: 'Contexte (CLAUDE.md, rules, MCP)', itemStyle: { color: '#10b981' } },
+                            { value: 25, name: 'Fichiers lus (Read, Grep)', itemStyle: { color: '#3b82f6' } },
+                            { value: 20, name: 'Sortie (code généré)', itemStyle: { color: '#8b5cf6' } },
+                            { value: 12, name: 'Thinking (raisonnement)', itemStyle: { color: '#f59e0b' } },
+                            { value: 8, name: 'Outils (Bash, MCP calls)', itemStyle: { color: '#ef4444' } }
+                        ]
+                    }]
+                });
+                window.addEventListener('resize', function () { budgetChart.resize(); });
+            }
+
+            // Chart 2 : Radar des fonctionnalités
+            var radarDom = document.getElementById('chartRadar');
+            if (radarDom) {
+                var radarChart = echarts.init(radarDom);
+                radarChart.setOption({
+                    title: { text: "Comparaison des agents de développement", left: 'center', textStyle: { fontSize: 14, color: '#0f172a' } },
+                    tooltip: { trigger: 'item' },
+                    legend: { bottom: 0, data: ['Claude Code', 'Cursor', 'GitHub Copilot', 'Aider'] },
+                    radar: {
+                        indicator: [
+                            { name: 'Contexte', max: 10 },
+                            { name: 'Autonomie', max: 10 },
+                            { name: 'Extensibilité\n(MCP)', max: 10 },
+                            { name: 'CI/CD\nIntégration', max: 10 },
+                            { name: 'Sécurité\n(Permissions)', max: 10 },
+                            { name: 'IDE\nIntégration', max: 10 },
+                            { name: 'Coût\nEfficacité', max: 10 },
+                            { name: 'Multi-modèle', max: 10 }
+                        ],
+                        center: ['50%', '50%'],
+                        radius: '60%'
+                    },
+                    series: [{
+                        type: 'radar',
+                        data: [
+                            { value: [10, 10, 10, 9, 10, 7, 6, 5], name: 'Claude Code', itemStyle: { color: '#10b981' }, areaStyle: { color: 'rgba(16,185,129,0.15)' } },
+                            { value: [8, 7, 5, 3, 5, 10, 7, 9], name: 'Cursor', itemStyle: { color: '#3b82f6' }, areaStyle: { color: 'rgba(59,130,246,0.08)' } },
+                            { value: [4, 3, 2, 4, 4, 9, 8, 4], name: 'GitHub Copilot', itemStyle: { color: '#f59e0b' }, areaStyle: { color: 'rgba(245,158,11,0.08)' } },
+                            { value: [6, 6, 2, 5, 3, 3, 7, 10], name: 'Aider', itemStyle: { color: '#8b5cf6' }, areaStyle: { color: 'rgba(139,92,246,0.08)' } }
+                        ]
+                    }]
+                });
+                window.addEventListener('resize', function () { radarChart.resize(); });
+            }
+
+            // Chart 3 : Anatomie du contexte (Pie)
+            var contextDom = document.getElementById('chartContext');
+            if (contextDom) {
+                var contextChart = echarts.init(contextDom);
+                contextChart.setOption({
+                    title: { text: 'Anatomie de la fenêtre de contexte (200K tokens)', left: 'center', textStyle: { fontSize: 14, color: '#0f172a' } },
+                    tooltip: { trigger: 'item', formatter: '{b}: ~{c}K tokens' },
+                    series: [{
+                        type: 'pie',
+                        radius: ['0%', '65%'],
+                        center: ['50%', '55%'],
+                        roseType: 'area',
+                        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+                        label: { fontSize: 11, formatter: '{b}\n~{c}K tokens' },
+                        data: [
+                            { value: 5, name: 'Système (instructions internes)', itemStyle: { color: '#94a3b8' } },
+                            { value: 8, name: 'CLAUDE.md + rules', itemStyle: { color: '#10b981' } },
+                            { value: 12, name: 'Descriptions MCP', itemStyle: { color: '#f59e0b' } },
+                            { value: 50, name: 'Historique conversation', itemStyle: { color: '#3b82f6' } },
+                            { value: 40, name: 'Fichiers lus', itemStyle: { color: '#8b5cf6' } },
+                            { value: 25, name: 'Résultats d\'outils', itemStyle: { color: '#ec4899' } },
+                            { value: 60, name: 'Disponible pour\nraisonnement', itemStyle: { color: '#e2e8f0' } }
+                        ]
+                    }]
+                });
+                window.addEventListener('resize', function () { contextChart.resize(); });
+            }
+        });
+    </script>
+
+    <script src="/assets/core.js"></script>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bolt"></i><span>Pourquoi Claude Code</span></a>
+            <a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-folder-tree"></i><span>Architecture</span></a>
+            <a href="#claude-md" class="fnav-item" data-section="claude-md"><i class="fas fa-brain"></i><span>CLAUDE.md</span></a>
+            <a href="#mcp" class="fnav-item" data-section="mcp"><i class="fas fa-plug"></i><span>MCP Protocol</span></a>
+            <a href="#hooks" class="fnav-item" data-section="hooks"><i class="fas fa-gear"></i><span>Hooks</span></a>
+            <a href="#skills" class="fnav-item" data-section="skills"><i class="fas fa-wand-magic-sparkles"></i><span>Skills</span></a>
+            <a href="#scripting" class="fnav-item" data-section="scripting"><i class="fas fa-code"></i><span>Scripting Headless</span></a>
+            <a href="#subagents" class="fnav-item" data-section="subagents"><i class="fas fa-users-gear"></i><span>Subagents</span></a>
+            <a href="#contexte" class="fnav-item" data-section="contexte"><i class="fas fa-database"></i><span>Contexte &amp; Mémoire</span></a>
+            <a href="#budget" class="fnav-item" data-section="budget"><i class="fas fa-coins"></i><span>Budget &amp; Coûts</span></a>
+            <a href="#permissions" class="fnav-item" data-section="permissions"><i class="fas fa-shield-halved"></i><span>Permissions</span></a>
+            <a href="#ide" class="fnav-item" data-section="ide"><i class="fas fa-window-maximize"></i><span>Intégrations IDE</span></a>
+            <a href="#worktrees" class="fnav-item" data-section="worktrees"><i class="fas fa-code-branch"></i><span>Git Worktrees</span></a>
+            <a href="#patterns" class="fnav-item" data-section="patterns"><i class="fas fa-puzzle-piece"></i><span>Patterns Avancés</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-flag-checkered"></i><span>Conclusion</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <script>
+    (function() {
+      var fab = document.getElementById('fnavBtn');
+      var menu = document.getElementById('fnavMenu');
+      var icon = document.getElementById('fnavIcon');
+      var label = document.getElementById('fnavLabel');
+      if (!fab || !menu) return;
+      var items = menu.querySelectorAll('.fnav-item');
+      var sections = [];
+      var isOpen = false;
+
+      items.forEach(function(item) {
+        var id = item.getAttribute('data-section');
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, item: item });
+      });
+
+      function toggle() {
+        isOpen = !isOpen;
+        menu.classList.toggle('open', isOpen);
+        fab.classList.toggle('open', isOpen);
+        icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+      }
+
+      fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+      document.addEventListener('click', function(e) {
+        if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+      });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+      items.forEach(function(item) {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          var id = this.getAttribute('data-section');
+          var target = document.getElementById(id);
+          if (target) {
+            var brandBar = document.querySelector('.brand-bar');
+            var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+            window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+          }
+          if (isOpen) toggle();
+        });
+      });
+
+      var currentActive = null;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var match = sections.find(function(s) { return s.el === entry.target; });
+            if (match) {
+              if (currentActive) currentActive.item.classList.remove('active');
+              match.item.classList.add('active');
+              currentActive = match;
+              label.textContent = match.item.querySelector('span').textContent;
+            }
+          }
+        });
+      }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+
+      sections.forEach(function(s) { observer.observe(s.el); });
+      if (sections.length > 0) {
+        sections[0].item.classList.add('active');
+        currentActive = sections[0];
+        label.textContent = sections[0].item.querySelector('span').textContent;
+      }
+    })();
+    </script>
+
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>
