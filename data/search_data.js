@@ -2319,12 +2319,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-ON (mixte) — XOM, LMT, ABBV, PFE, MRVL, TTE, VGK, EWY, SLV, XLE",
-    "desc": "Suite à la rétrospective du 20/02 (note C+, hit rate 62,5%), trois correctifs majeurs sont maintenus : (1) Validation Prix P0 — rejet de tout ticker dont l'entrée dépasse 10% du prix spot actuel (10/10 setups validés ce scan) ; (2) Filtre anti-doublon renforcé — 100% de nouveaux tickers vs le scan d...",
-    "tags": "us,eu,asia,etf,technique,trade-idea,macro,energy,healthcare,semis,defense",
+    "title": "Rétrospective Scanner Hebdomadaire",
+    "desc": "Meilleure stratégie de la période. Portée par des mouvements explosifs sur ACMR (+147%), JNJ (+63%) et VGK (+6%). Les setups sur métaux précieux (GLD) et indices européens ont particulièrement bien fonctionné en régime Early Risk-Off.",
+    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
     "grade": "",
-    "href": "/scanner/20260227/",
-    "date": "27 Février 2026"
+    "href": "/scanner/retrospective/",
+    "date": "28 février 2026"
   },
   {
     "type": "scanner",
@@ -2332,12 +2332,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Rétrospective Scanner Hebdomadaire",
-    "desc": "Meilleure stratégie de la période. Portée par des mouvements explosifs sur ACMR (+147%), JNJ (+63%) et VGK (+6%). Les setups sur métaux précieux (GLD) et indices européens ont particulièrement bien fonctionné en régime Early Risk-Off.",
-    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
+    "title": "Top 10 A+ RISK-ON (mixte) — XOM, LMT, ABBV, PFE, MRVL, TTE, VGK, EWY, SLV, XLE",
+    "desc": "Suite à la rétrospective du 20/02 (note C+, hit rate 62,5%), trois correctifs majeurs sont maintenus : (1) Validation Prix P0 — rejet de tout ticker dont l'entrée dépasse 10% du prix spot actuel (10/10 setups validés ce scan) ; (2) Filtre anti-doublon renforcé — 100% de nouveaux tickers vs le scan d...",
+    "tags": "us,eu,asia,etf,technique,trade-idea,macro,energy,healthcare,semis,defense",
     "grade": "",
-    "href": "/scanner/retrospective/",
-    "date": "27 février 2026"
+    "href": "/scanner/20260227/",
+    "date": "27 Février 2026"
   },
   {
     "type": "scanner",

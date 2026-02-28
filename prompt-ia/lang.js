@@ -237,40 +237,40 @@ var LANG = {
   chips: {
     intent: {
       fr: [
-        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Analyser' },
-        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'Acheter' },
-        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'Vendre' },
-        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Earnings' },
-        { value:'dividend', icon:'fa-solid fa-coins', label:'Dividende' },
-        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Shorter' },
-        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Hedger' },
-        { value:'scan', icon:'fa-solid fa-binoculars', label:'Scanner' },
-        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'Apprendre' },
-        { value:'macro', icon:'fa-solid fa-globe', label:'Macro' }
+        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Analyse complète bull & bear' },
+        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'Dois-je acheter maintenant ?' },
+        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'Est-ce le moment de vendre ?' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Préparer les earnings' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'Évaluer le dividende' },
+        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Opportunité de short ?' },
+        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Protéger mon portefeuille' },
+        { value:'scan', icon:'fa-solid fa-binoculars', label:'Trouver les meilleurs setups' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'M\'expliquer comme un pro' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'Vue macro du marché' }
       ],
       en: [
-        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Analyze' },
-        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'Buy' },
-        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'Sell' },
-        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Earnings' },
-        { value:'dividend', icon:'fa-solid fa-coins', label:'Dividend' },
-        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Short' },
-        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Hedge' },
-        { value:'scan', icon:'fa-solid fa-binoculars', label:'Scan' },
-        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'Learn' },
-        { value:'macro', icon:'fa-solid fa-globe', label:'Macro' }
+        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Full bull & bear analysis' },
+        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'Should I buy now?' },
+        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'Is it time to sell?' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Prepare for earnings' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'Evaluate the dividend' },
+        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Short opportunity?' },
+        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Protect my portfolio' },
+        { value:'scan', icon:'fa-solid fa-binoculars', label:'Find the best setups' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'Teach me like a pro' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'Market macro overview' }
       ],
       ar: [
-        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'\u0627\u0644\u0628\u062d\u062b' },
-        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'\u0634\u0631\u0627\u0621' },
-        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'\u0628\u064a\u0639' },
-        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'\u0623\u0631\u0628\u0627\u062d' },
-        { value:'dividend', icon:'fa-solid fa-coins', label:'\u062a\u0648\u0632\u064a\u0639\u0627\u062a' },
-        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'Short' },
-        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'\u062a\u062d\u0648\u0651\u0637' },
-        { value:'scan', icon:'fa-solid fa-binoculars', label:'\u0645\u0633\u062d' },
-        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'\u062a\u0639\u0644\u0651\u0645' },
-        { value:'macro', icon:'fa-solid fa-globe', label:'\u0645\u0627\u0643\u0631\u0648' }
+        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'تحليل كامل صعودي وهبوطي' },
+        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'هل يجب أن أشتري الآن؟' },
+        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'هل حان وقت البيع؟' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'الاستعداد للأرباح' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'تقييم التوزيعات' },
+        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'فرصة بيع على المكشوف؟' },
+        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'حماية محفظتي' },
+        { value:'scan', icon:'fa-solid fa-binoculars', label:'أفضل الفرص اليوم' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'علّمني كالمحترفين' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'نظرة ماكرو على السوق' }
       ]
     },
     asset: {
@@ -313,7 +313,7 @@ var LANG = {
       ],
       en: [
         { value:'beginner', icon:'fa-solid fa-seedling', label:'Beginner' },
-        { value:'intermediate', icon:'fa-solid fa-chart-simple', label:'Inter.', selected:true },
+        { value:'intermediate', icon:'fa-solid fa-chart-simple', label:'Intermediate', selected:true },
         { value:'expert', icon:'fa-solid fa-brain', label:'Expert' }
       ],
       ar: [
@@ -488,12 +488,18 @@ var LANG = {
   },
   catalystTemplates: {
     fr: [
-      { icon:'fa-chart-bar', label:'Earnings', text:'Earnings \u00e0 venir (date estim\u00e9e)' },
-      { icon:'fa-flask', label:'FDA / R\u00e9sultats cliniques', text:'D\u00e9cision FDA / r\u00e9sultats Phase III attendus' },
+      { icon:'fa-chart-bar', label:'Earnings', text:'Earnings à venir (date estimée)' },
+      { icon:'fa-flask', label:'FDA / Résultats cliniques', text:'Décision FDA / résultats Phase III attendus' },
       { icon:'fa-handshake', label:'Rachat / M&A', text:'Rumeur de rachat / offre d\'acquisition potentielle' },
       { icon:'fa-rocket', label:'Lancement produit', text:'Lancement d\'un nouveau produit / service majeur' },
-      { icon:'fa-gavel', label:'R\u00e9gulation', text:'Changement r\u00e9glementaire / d\u00e9cision judiciaire attendue' },
-      { icon:'fa-landmark', label:'FOMC / Fed', text:'R\u00e9union FOMC / d\u00e9cision de taux directeur' }
+      { icon:'fa-gavel', label:'Régulation', text:'Changement réglementaire / décision judiciaire attendue' },
+      { icon:'fa-landmark', label:'FOMC / Fed', text:'Réunion FOMC / décision de taux directeur' },
+      { icon:'fa-building', label:'Partenariat stratégique', text:'Partenariat annoncé avec une grande entreprise (GAFAM, Fortune 500, etc.)' },
+      { icon:'fa-file-contract', label:'Commande d\'État / Contrat', text:'Grosse commande gouvernementale / contrat institutionnel majeur' },
+      { icon:'fa-scissors', label:'Stock split', text:'Stock split annoncé ou à venir' },
+      { icon:'fa-user-tie', label:'Achat d\'insiders', text:'Achat significatif par un dirigeant ou membre du board' },
+      { icon:'fa-arrow-right-arrow-left', label:'Rotation sectorielle', text:'Rotation de capitaux vers ce secteur (flux ETF, breadth)' },
+      { icon:'fa-earth-americas', label:'Géopolitique', text:'Événement géopolitique impactant le titre (tarifs, sanctions, guerre, élections)' }
     ],
     en: [
       { icon:'fa-chart-bar', label:'Earnings', text:'Upcoming earnings (estimated date)' },
@@ -501,15 +507,27 @@ var LANG = {
       { icon:'fa-handshake', label:'Buyout / M&A', text:'Buyout rumor / potential acquisition offer' },
       { icon:'fa-rocket', label:'Product launch', text:'Major new product / service launch' },
       { icon:'fa-gavel', label:'Regulation', text:'Regulatory change / court decision expected' },
-      { icon:'fa-landmark', label:'FOMC / Fed', text:'FOMC meeting / interest rate decision' }
+      { icon:'fa-landmark', label:'FOMC / Fed', text:'FOMC meeting / interest rate decision' },
+      { icon:'fa-building', label:'Strategic partnership', text:'Partnership announced with a major company (GAFAM, Fortune 500, etc.)' },
+      { icon:'fa-file-contract', label:'Government contract', text:'Major government order / institutional contract' },
+      { icon:'fa-scissors', label:'Stock split', text:'Stock split announced or upcoming' },
+      { icon:'fa-user-tie', label:'Insider buying', text:'Significant purchase by executive or board member' },
+      { icon:'fa-arrow-right-arrow-left', label:'Sector rotation', text:'Capital rotation into this sector (ETF flows, breadth)' },
+      { icon:'fa-earth-americas', label:'Geopolitics', text:'Geopolitical event impacting the stock (tariffs, sanctions, war, elections)' }
     ],
     ar: [
-      { icon:'fa-chart-bar', label:'\u0623\u0631\u0628\u0627\u062d', text:'\u0623\u0631\u0628\u0627\u062d \u0642\u0627\u062f\u0645\u0629 (\u062a\u0627\u0631\u064a\u062e \u062a\u0642\u062f\u064a\u0631\u064a)' },
-      { icon:'fa-flask', label:'FDA / \u0646\u062a\u0627\u0626\u062c \u0633\u0631\u064a\u0631\u064a\u0629', text:'\u0642\u0631\u0627\u0631 FDA / \u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062b\u0627\u0644\u062b\u0629 \u0627\u0644\u0645\u062a\u0648\u0642\u0639\u0629' },
-      { icon:'fa-handshake', label:'\u0627\u0633\u062a\u062d\u0648\u0627\u0630 / M&A', text:'\u0634\u0627\u0626\u0639\u0629 \u0627\u0633\u062a\u062d\u0648\u0627\u0630 / \u0639\u0631\u0636 \u0627\u0633\u062a\u062d\u0648\u0627\u0630 \u0645\u062d\u062a\u0645\u0644' },
-      { icon:'fa-rocket', label:'\u0625\u0637\u0644\u0627\u0642 \u0645\u0646\u062a\u062c', text:'\u0625\u0637\u0644\u0627\u0642 \u0645\u0646\u062a\u062c / \u062e\u062f\u0645\u0629 \u062c\u062f\u064a\u062f\u0629 \u0631\u0626\u064a\u0633\u064a\u0629' },
-      { icon:'fa-gavel', label:'\u062a\u0646\u0638\u064a\u0645', text:'\u062a\u063a\u064a\u064a\u0631 \u062a\u0646\u0638\u064a\u0645\u064a / \u0642\u0631\u0627\u0631 \u0642\u0636\u0627\u0626\u064a \u0645\u062a\u0648\u0642\u0639' },
-      { icon:'fa-landmark', label:'FOMC / Fed', text:'\u0627\u062c\u062a\u0645\u0627\u0639 FOMC / \u0642\u0631\u0627\u0631 \u0633\u0639\u0631 \u0627\u0644\u0641\u0627\u0626\u062f\u0629' }
+      { icon:'fa-chart-bar', label:'أرباح', text:'أرباح قادمة (تاريخ تقديري)' },
+      { icon:'fa-flask', label:'FDA / نتائج سريرية', text:'قرار FDA / نتائج المرحلة الثالثة المتوقعة' },
+      { icon:'fa-handshake', label:'استحواذ / M&A', text:'شائعة استحواذ / عرض استحواذ محتمل' },
+      { icon:'fa-rocket', label:'إطلاق منتج', text:'إطلاق منتج / خدمة جديدة رئيسية' },
+      { icon:'fa-gavel', label:'تنظيم', text:'تغيير تنظيمي / قرار قضائي متوقع' },
+      { icon:'fa-landmark', label:'FOMC / Fed', text:'اجتماع FOMC / قرار سعر الفائدة' },
+      { icon:'fa-building', label:'شراكة استراتيجية', text:'شراكة مع شركة كبرى (GAFAM، Fortune 500، إلخ)' },
+      { icon:'fa-file-contract', label:'عقد حكومي', text:'طلبية حكومية كبرى / عقد مؤسسي' },
+      { icon:'fa-scissors', label:'تقسيم سهم', text:'تقسيم سهم مُعلن أو قادم' },
+      { icon:'fa-user-tie', label:'شراء المطلعين', text:'شراء كبير من مسؤول تنفيذي أو عضو مجلس إدارة' },
+      { icon:'fa-arrow-right-arrow-left', label:'دوران قطاعي', text:'دوران رأس المال نحو هذا القطاع (تدفقات ETF)' },
+      { icon:'fa-earth-americas', label:'جيوسياسية', text:'حدث جيوسياسي يؤثر على السهم (تعريفات، عقوبات، حرب، انتخابات)' }
     ]
   }
 };

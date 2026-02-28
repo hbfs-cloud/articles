@@ -116,7 +116,6 @@
     var c = LANG.chips;
     renderSelect('intentSelect', c.intent[CURRENT_LANG]);
     renderSelect('assetSelect', c.asset[CURRENT_LANG]);
-    renderSelect('assetSelectAdv', c.asset[CURRENT_LANG]);
     renderSelect('aiSelect', c.ai);
     renderSelect('levelSelect', c.level[CURRENT_LANG]);
     renderSelect('formatSelect', c.format[CURRENT_LANG]);
@@ -169,9 +168,7 @@
   // Auto-suggest asset type on ticker input
   function syncAsset(val) {
     var sel = document.getElementById('assetSelect');
-    var adv = document.getElementById('assetSelectAdv');
     if (sel) sel.value = val;
-    if (adv) adv.value = val;
   }
   document.getElementById('tickerInput').addEventListener('input', function() {
     this.value = this.value.toUpperCase();
@@ -183,12 +180,11 @@
     }
     updateAssetBadge(detected);
   });
-  // Sync adv asset select → hidden asset select
-  var assetAdv = document.getElementById('assetSelectAdv');
-  if (assetAdv) {
-    assetAdv.addEventListener('change', function() {
-      var sel = document.getElementById('assetSelect');
-      if (sel) sel.value = this.value;
+  // Sync main asset select with auto-detection
+  var assetSel = document.getElementById('assetSelect');
+  if (assetSel) {
+    assetSel.addEventListener('change', function() {
+      updateAssetBadge(this.value);
     });
   }
 
@@ -1107,21 +1103,40 @@
   }
 
   window.openCompInAi = function(btn) {
-    var encoded = btn.getAttribute('data-prompt');
-    var prompt = decodeURIComponent(escape(atob(encoded)));
-    var ai = btn.getAttribute('data-ai');
-    openInAi(ai, prompt);
+    try {
+      var encoded = btn.getAttribute('data-prompt');
+      var prompt = decodeURIComponent(escape(atob(encoded)));
+      var ai = btn.getAttribute('data-ai');
+      openInAi(ai, prompt);
+    } catch(e) {
+      // Fallback: just copy to clipboard
+      clipCopy(btn.getAttribute('data-prompt') || '', function() {
+        showCopySuccess('AI');
+      });
+    }
   };
 
   window.copyCompPrompt = function(btn) {
-    var encoded = btn.getAttribute('data-prompt');
-    var prompt = decodeURIComponent(escape(atob(encoded)));
-    var aiName = btn.parentElement.querySelector('.comp-ai-badge').textContent;
-    clipCopy(prompt, function() {
+    try {
+      var encoded = btn.getAttribute('data-prompt');
+      var prompt = decodeURIComponent(escape(atob(encoded)));
+      var card = btn.closest('.comp-card');
+      var aiName = card ? card.querySelector('.comp-ai-badge').textContent : '';
+      clipCopy(prompt, function() {
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + L.copied;
+        showCopySuccess(aiName);
+        setTimeout(function() { btn.innerHTML = '<i class="fa-solid fa-copy"></i> ' + L.copy; }, 2000);
+      });
+    } catch(e) {
+      // Fallback: decode and copy raw
+      var t = document.createElement('textarea');
+      t.value = btn.getAttribute('data-prompt');
+      t.style.position = 'fixed'; t.style.left = '-9999px';
+      document.body.appendChild(t); t.select(); document.execCommand('copy');
+      document.body.removeChild(t);
       btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + L.copied;
-      showCopySuccess(aiName);
       setTimeout(function() { btn.innerHTML = '<i class="fa-solid fa-copy"></i> ' + L.copy; }, 2000);
-    });
+    }
   };
 
   document.getElementById('copyBtn').addEventListener('click', function() {

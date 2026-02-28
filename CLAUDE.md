@@ -285,6 +285,22 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
    - Bouton Historique pour naviguer les versions précédentes
 6. Lancer `node tools/add_card.js scanner/retrospective/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 7. Voir scanner/CLAUDE.md pour le template complet
+8. **OBLIGATOIRE — Mettre à jour le dashboard "Performance du Scanner" dans `index.html`** :
+   Le bloc "Performance du Scanner" (entre les commentaires `===== SCANNER PERFORMANCE DASHBOARD =====`) dans `index.html` est **hardcodé** et doit être mis à jour manuellement après chaque rétrospective. Mettre à jour :
+   - **Date** : "Mis à jour : DD Mois YYYY — Période : DD-DD Mois YYYY"
+   - **Note** : La lettre dans le badge grade (ex: `B+`) et la couleur du gradient (`#3b82f6` pour B+, `#f59e0b` pour C+, `#10b981` pour A/A+, `#ef4444` pour D/F)
+   - **5 KPIs** : Hit Rate (%), Meilleur Pick (+X% / TICKER), Scans (N / N setups), Pire Pick (-X% / TICKER), Régime dominant
+   - **3 ECharts** dans le `<script>` `initScannerCharts()` :
+     1. `scannerTopChart` (Top Picks P&L) : liste des tickers dans `yAxis.data` + valeurs P&L dans `series[0].data` (triés du pire au meilleur, avec couleurs `#ef4444` négatif, `#10b981` positif, `#06b6d4` outlier)
+     2. `scannerResultsChart` (Résultats par Scan) : dates dans `xAxis.data` + 3 séries stacked bar (TP1 Hit, Stop Hit, En cours) avec données par scan
+     3. `scannerScoreChart` (Score Moyen) : dates dans `xAxis.data` + scores moyens dans `series[0].data` (line) + tickers uniques dans `series[1].data` (bar)
+9. **OBLIGATOIRE — Commit & Push** : Après toutes les étapes ci-dessus, faire :
+   ```bash
+   git add scanner/retrospective/ data/scanner.json data/search_data.js index.html
+   git commit -m "feat: rétrospective scanner DD-DD mois YYYY — Note X, Y% HR, TICKER +Z%"
+   git push origin main
+   ```
+   Vérifier que le fichier HTML fait > 10KB et que `add_card.js` a réussi avant de push.
 
 ### Landing Page (index.html) — Tabs
 5 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
