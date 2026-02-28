@@ -258,12 +258,14 @@ Les "Formation du Jour" suivent un cursus progressif :
 - Puis cycle recommence avec des sujets plus avancés
 
 ### "Scanner" / "Scan du jour"
-1. **Lire la dernière rétrospective** (le dossier `scanner/retrospective/YYYYMMDD/` le plus récent) :
-   - Extraire la note globale, hit rates par stratégie, top/flop setups
-   - Identifier les stratégies qui sous-performent → réduire leur poids
-   - Identifier les secteurs à faux signaux → les éviter ou filtrer plus strict
-   - Lister les tickers récemment floppés → les exclure
-   - Ajuster les stops si la rétro signale des stops trop serrés/larges
+1. **Lire TOUTES les rétrospectives existantes** (tous les dossiers `scanner/retrospective/YYYYMMDD/`) :
+   - Lister tous les dossiers datés dans `scanner/retrospective/` et lire chaque `index.html`
+   - Pour chaque rétro : extraire la note globale, hit rates par stratégie, top/flop setups
+   - **Cumuler les enseignements** : une stratégie qui sous-performe dans 2+ rétros consécutives doit être fortement réduite
+   - Identifier les secteurs à faux signaux récurrents → les éviter ou filtrer plus strict
+   - Lister les tickers qui ont floppé dans les rétros récentes → les exclure
+   - Ajuster les stops si plusieurs rétros signalent des stops trop serrés/larges
+   - **Priorité** : la rétro la plus récente a le plus de poids, mais les patterns récurrents des rétros antérieures sont tout aussi importants
 2. **Lire le scan précédent** (`scanner/YYYYMMDD/` le plus récent) :
    - Extraire les 10 tickers pour le filtre anti-doublon (min 70% nouveaux tickers)
 3. **Collecter via MCP** :
@@ -278,7 +280,7 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Score composite ≥ 85/100, confluence technique ≥ 3 signaux
    - **Diversification géographique obligatoire** : min 5 US + 2 EU + 1 APAC + 2 ETFs
    - En régime Risk-Off/Early Risk-Off : min 20% de setups short ou hedges (GLD, TLT, SH, SQQQ)
-   - Pondérer les stratégies selon le hit rate de la dernière rétrospective
+   - Pondérer les stratégies selon le hit rate cumulé de toutes les rétrospectives
 5. **WebSearch** pour catalyseurs récents de chaque ticker retenu
 6. **Créer `scanner/YYYYMMDD/index.html`** (thème light) :
    - Mentionner en intro : "Suite à la rétrospective du DD/MM (note X, hit rate Y%), nous avons ajusté [Z]"

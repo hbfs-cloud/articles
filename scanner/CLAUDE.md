@@ -274,13 +274,16 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
 - **Niveaux Clés OBLIGATOIRES** dans chaque setup card (Entry, Stop, TP1, TP2, R/R, Horizon)
 - **Confirmations/Invalidations OBLIGATOIRES** avec fond coloré (vert/rouge) dans chaque setup card
 - Ajouter la carte dans le tab Scanner via `node tools/add_card.js scanner/YYYYMMDD/index.html`
-- **OBLIGATOIRE — Feedback rétrospective** : Avant de générer un nouveau scan, **toujours lire la dernière rétrospective** (le dossier `scanner/retrospective/YYYYMMDD/` le plus récent) pour :
-  - Identifier les stratégies qui sous-performent et réduire leur poids
-  - Identifier les secteurs qui génèrent trop de faux signaux
-  - Ajuster les seuils ATR (stops trop serrés/larges)
-  - Mentionner en introduction du scan : "Suite à la rétrospective du DD/MM, nous avons ajusté [X]"
-  - Éviter de recommander des tickers qui ont récemment été des flops dans les rétrospectives
-  - Favoriser les stratégies et patterns qui ont montré le meilleur hit rate
+- **OBLIGATOIRE — Feedback rétrospective** : Avant de générer un nouveau scan, **lire TOUTES les rétrospectives existantes** (tous les dossiers `scanner/retrospective/YYYYMMDD/`) pour :
+  - Lister tous les dossiers datés dans `scanner/retrospective/` et lire chaque `index.html`
+  - Pour chaque rétro : extraire la note globale, hit rates par stratégie, top/flop setups
+  - **Cumuler les enseignements** : une stratégie qui sous-performe dans 2+ rétros consécutives doit être fortement réduite
+  - **Priorité** : la rétro la plus récente a le plus de poids, mais les patterns récurrents des rétros antérieures sont tout aussi importants
+  - Identifier les secteurs qui génèrent trop de faux signaux (pattern récurrent across rétros)
+  - Ajuster les seuils ATR (stops trop serrés/larges — vérifier si le problème persiste entre rétros)
+  - Mentionner en introduction du scan : "Suite aux rétrospectives (notes X, Y, Z), nous avons ajusté [...]"
+  - Éviter de recommander des tickers qui ont été des flops dans les rétrospectives récentes
+  - Favoriser les stratégies et patterns qui montrent le meilleur hit rate cumulé sur l'ensemble des rétros
 
 ---
 
