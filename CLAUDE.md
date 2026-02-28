@@ -123,6 +123,12 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 5. Créer index.html avec toutes les sections (voir weekly/CLAUDE.md)
 6. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 7. Langue: Français, ton institutionnel mais accessible
+8. **OBLIGATOIRE — Commit & Push** :
+   ```bash
+   git add weekly/YYYYMMDD/ data/weekly.json data/search_data.js
+   git commit -m "feat: weekly YYYYMMDD — {titre court}"
+   git push origin main
+   ```
 
 ### "Analyse [TICKER]" (ex: "Analyse BMNR", "Analyse BTC")
 Par défaut, génère **toutes les 6 variantes** (expert + beginner) × (fr + en + ar).
@@ -184,6 +190,12 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
    - **Non pertinent pour** : indices (STOXX600, KOSPI), thématiques (STABLECOINS), devises (EURUSD) sauf si trade FX explicite
 9. Lancer `node tools/update_history.js analyses/{TICKER}/index.html` pour auto-générer la modale Historique à partir des versions archivées dans `archive/`
 10. Lancer `node tools/add_card.js analyses/{TICKER}/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+11. **OBLIGATOIRE — Commit & Push** :
+    ```bash
+    git add analyses/{TICKER}/ data/analyses.json data/search_data.js
+    git commit -m "feat: analyse {TICKER} — {titre court}"
+    git push origin main
+    ```
 
 ### "Analyse Daily" / "Briefing du jour"
 Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Crypto. Le weekend, focus crypto et géopolitique.
@@ -213,6 +225,12 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
    - Sources & Disclaimer
 4. **Utiliser le css light**: `<link rel="stylesheet" href="/assets/report.css">`
 5. Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+6. **OBLIGATOIRE — Commit & Push** :
+   ```bash
+   git add daily/YYYYMMDD/ data/daily.json data/search_data.js
+   git commit -m "feat: briefing quotidien DD mois YYYY — {titre court}"
+   git push origin main
+   ```
 
 #### Spécificités Samedi (post-séance vendredi)
 Le briefing du samedi est un **briefing complet** qui couvre la séance de vendredi :
@@ -240,7 +258,7 @@ Les "Formation du Jour" suivent un cursus progressif :
 - Puis cycle recommence avec des sujets plus avancés
 
 ### "Scanner" / "Scan du jour"
-1. **Lire la dernière rétrospective** (`scanner/retrospective/index.html`) :
+1. **Lire la dernière rétrospective** (le dossier `scanner/retrospective/YYYYMMDD/` le plus récent) :
    - Extraire la note globale, hit rates par stratégie, top/flop setups
    - Identifier les stratégies qui sous-performent → réduire leur poids
    - Identifier les secteurs à faux signaux → les éviter ou filtrer plus strict
@@ -268,6 +286,12 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
 7. Créer les variantes multilangue/multiniveau
 8. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+9. **OBLIGATOIRE — Commit & Push** :
+   ```bash
+   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js
+   git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
+   git push origin main
+   ```
 
 ### "Rétrospective Scanner" / "Rétro scanner"
 Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note le scanner.
@@ -277,13 +301,18 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 3. **Collecter les prix actuels** via MCP :
    - `QueryData` types=quote,bars_daily symbols={tous les tickers}
    - Calculer : hit rate TP1, hit rate TP2, stop rate, P&L moyen
-4. **Archiver la version précédente** (si existante) :
-   - Déplacer `scanner/retrospective/index.html` → `scanner/retrospective/archive/YYYYMMDD/`
-5. **Créer `scanner/retrospective/index.html`** avec :
+4. **Créer `scanner/retrospective/YYYYMMDD/index.html`** (dossier daté = date de publication) avec :
    - Note globale (A+ à F), dashboard rapide, tableau de tous les setups
    - Analyse par stratégie, top 3 / flop 3, leçons & améliorations
-   - Bouton Historique pour naviguer les versions précédentes
-6. Lancer `node tools/add_card.js scanner/retrospective/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+   - **IMPORTANT** : Chaque rétrospective a son propre dossier daté, on ne remplace JAMAIS les précédentes
+5. **Mettre à jour le redirect** `scanner/retrospective/index.html` pour pointer vers la nouvelle :
+   ```html
+   <meta http-equiv="refresh" content="0;url=/scanner/retrospective/YYYYMMDD/">
+   ```
+6. Lancer `node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html` pour l'ajouter à l'index JSON.
+   - La carte DOIT avoir le style rétrospective : bordure colorée, badges RÉTROSPECTIVE + NOTE, bouton gradient
+   - Chaque retro a une carte unique dans `scanner.json` avec son href daté (`/scanner/retrospective/YYYYMMDD/`)
+   - Toutes les retros sont conservées dans l'index et triées par date avec les scans
 7. Voir scanner/CLAUDE.md pour le template complet
 8. **OBLIGATOIRE — Mettre à jour le dashboard "Performance du Scanner" dans `index.html`** :
    Le bloc "Performance du Scanner" (entre les commentaires `===== SCANNER PERFORMANCE DASHBOARD =====`) dans `index.html` est **hardcodé** et doit être mis à jour manuellement après chaque rétrospective. Mettre à jour :
@@ -296,7 +325,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
      3. `scannerScoreChart` (Score Moyen) : dates dans `xAxis.data` + scores moyens dans `series[0].data` (line) + tickers uniques dans `series[1].data` (bar)
 9. **OBLIGATOIRE — Commit & Push** : Après toutes les étapes ci-dessus, faire :
    ```bash
-   git add scanner/retrospective/ data/scanner.json data/search_data.js index.html
+   git add scanner/retrospective/YYYYMMDD/ scanner/retrospective/index.html data/scanner.json data/search_data.js index.html
    git commit -m "feat: rétrospective scanner DD-DD mois YYYY — Note X, Y% HR, TICKER +Z%"
    git push origin main
    ```

@@ -274,7 +274,7 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
 - **Niveaux Clés OBLIGATOIRES** dans chaque setup card (Entry, Stop, TP1, TP2, R/R, Horizon)
 - **Confirmations/Invalidations OBLIGATOIRES** avec fond coloré (vert/rouge) dans chaque setup card
 - Ajouter la carte dans le tab Scanner via `node tools/add_card.js scanner/YYYYMMDD/index.html`
-- **OBLIGATOIRE — Feedback rétrospective** : Avant de générer un nouveau scan, **toujours lire la dernière rétrospective** (`scanner/retrospective/index.html`) pour :
+- **OBLIGATOIRE — Feedback rétrospective** : Avant de générer un nouveau scan, **toujours lire la dernière rétrospective** (le dossier `scanner/retrospective/YYYYMMDD/` le plus récent) pour :
   - Identifier les stratégies qui sous-performent et réduire leur poids
   - Identifier les secteurs qui génèrent trop de faux signaux
   - Ajuster les seuils ATR (stops trop serrés/larges)
@@ -294,12 +294,14 @@ Article de rétrospective publié chaque vendredi soir (23h) qui passe en revue 
 ```
 scanner/
 ├── retrospective/
-│   ├── index.html                # Latest = dernier article de rétrospective
-│   ├── variants.json             # Manifest (incluant archive)
-│   └── archive/
-│       └── YYYYMMDD/             # Versions précédentes
-│           └── index.html
+│   ├── index.html                # Redirect → dernier YYYYMMDD/
+│   ├── variants.json
+│   ├── YYYYMMDD/                 # Chaque rétro a son dossier daté
+│   │   └── index.html
+│   └── YYYYMMDD/                 # Toutes les rétros sont conservées
+│       └── index.html
 ```
+**IMPORTANT** : On ne remplace JAMAIS une rétrospective précédente. Chaque rétro a son propre dossier daté (date de publication). Le `index.html` racine est un simple redirect vers la plus récente.
 
 **IMPORTANT** : Pas de dossier `assets/` local. Utiliser `/assets/report.css`.
 
@@ -373,12 +375,14 @@ La rétrospective utilise le **même template HTML** que le scanner (brand-bar, 
 | **F** | < 20% | < -3% | Échec |
 
 ### Gestion des Versions
-- `scanner/retrospective/index.html` = toujours la **dernière** rétrospective
+- Chaque rétrospective est dans `scanner/retrospective/YYYYMMDD/index.html` (date de publication)
+- `scanner/retrospective/index.html` = redirect HTTP vers la **dernière** rétrospective
 - Lors de la création d'une nouvelle rétrospective :
-  1. Déplacer l'actuelle dans `scanner/retrospective/archive/YYYYMMDD/`
-  2. Créer la nouvelle en `scanner/retrospective/index.html`
-  3. Le bouton Historique dans le header permet de naviguer entre les versions
-- Mettre à jour `variants.json` avec la liste des archives
+  1. Créer `scanner/retrospective/YYYYMMDD/index.html`
+  2. Mettre à jour le redirect dans `scanner/retrospective/index.html` (`<meta http-equiv="refresh" content="0;url=/scanner/retrospective/YYYYMMDD/">`)
+  3. Lancer `node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html` — la carte aura un href unique, les anciennes rétros restent dans l'index
+  4. La carte dans `scanner.json` DOIT avoir le style rétrospective : bordure colorée selon la note, badges RÉTROSPECTIVE + NOTE, bouton gradient
+- **NE PAS** supprimer les anciennes rétrospectives — elles restent dans l'index `scanner.json` triées par date avec les scans
 
 ### Feedback Loop
 Les leçons de chaque rétrospective sont utilisées pour affiner les scans suivants :

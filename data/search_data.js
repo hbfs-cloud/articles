@@ -122,12 +122,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Géopolitique & Macro",
-    "desc": "$68.1Mds de revenus (+73% YoY), EPS $1.62 (vs $1.53 attendu), guidance $78Mds — tout bat les attentes. Mais le marché veut plus. Le phénomène \"sell-the-news\" frappe NVIDIA et entraîne tout le Nasdaq dans sa chute. Le S&P 500 termine à 6 909.",
+    "title": "NVIDIA −5.5% Malgré des Records : Wall Street Punit la Perfection",
+    "desc": "NVIDIA chute de 5.5% malgré $68.1Mds de revenus (+73% YoY). Le Nasdaq plonge de -1.18%, le S&P 500 perd -0.56%. Trump relève les tarifs à 15%. Or +0.86% (ATH). PPI attendu ce matin. 10 sections : US, Europe, Asie, Crypto, Géopolitique, Formation, Trades.",
     "tags": "macro,tech,earnings,geopolitique,crypto,trade-idea,formation",
     "grade": "",
     "href": "/daily/20260227/",
-    "date": "27 février 2026"
+    "date": "27 Février 2026 — Vendredi PPI Day"
   },
   {
     "type": "daily",
@@ -2319,12 +2319,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Rétrospective Scanner Hebdomadaire",
-    "desc": "Meilleure stratégie de la période. Portée par des mouvements explosifs sur ACMR (+147%), JNJ (+63%) et VGK (+6%). Les setups sur métaux précieux (GLD) et indices européens ont particulièrement bien fonctionné en régime Early Risk-Off.",
+    "title": "Rétrospective Scanner — 15-27 Février 2026",
+    "desc": "7 scans analysés, 70 setups évalués. 50% hit rate sur scans matures. Mouvements explosifs sur ACMR (+147%), JNJ (+63%) et VGK (+6%). Les setups sur métaux précieux (GLD) et indices européens ont particulièrement bien fonctionné en régime Early Risk-Off.",
     "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
     "grade": "",
-    "href": "/scanner/retrospective/",
-    "date": "28 février 2026"
+    "href": "/scanner/retrospective/20260228/",
+    "date": "28 Février 2026"
   },
   {
     "type": "scanner",
@@ -2388,7 +2388,7 @@ window.searchDataPrebuilt = [
     "desc": "4 scans analysés, 40 setups évalués. Hit rate 62.5% (setups\n            valides). Problème critique : 25% d'entrées avec prix obsolètes.\n            Top : ACMR +184%, AA +53%. Flop : ACHC -42%. Duplication 60% entre\n            scans consécutifs.",
     "tags": "us,retrospective,technique",
     "grade": "",
-    "href": "scanner/retrospective/",
+    "href": "/scanner/retrospective/20260220/",
     "date": "20 Février 2026"
   },
   {
