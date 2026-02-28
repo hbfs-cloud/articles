@@ -122,9 +122,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "NVIDIA −5.5% Malgré des Records : Wall Street Punit la Perfection",
-    "desc": "NVIDIA chute de 5.5% malgré $68.1Mds de revenus (+73% YoY). Le Nasdaq plonge de -1.18%, le S&P 500 perd -0.56%. Trump relève les tarifs à 15%. Or +0.86% (ATH). PPI attendu ce matin. 10 sections : US, Europe, Asie, Crypto, Géopolitique, Formation, Trades.",
-    "tags": "macro,tech,earnings,geopolitique,crypto,trade-idea,formation",
+    "title": "PPI Brûlant, NVIDIA en Contagion, Wall Street Joue la Défense",
+    "desc": "PPI +0.5% (vs +0.3% attendu) ravive les craintes d'inflation. NVIDIA -4.2% en contagion post-earnings. Rotation massive vers Healthcare (+1.8%), Utilities (+1.2%), Or (+1.3%). Pétrole +2.7% sur tensions Iran. BTC sous $66K. 10 sections : US, Europe, Asie, Crypto, Géopolitique, Formation PPI, 2 Trades.",
+    "tags": "us,eu,asia,crypto,macro,tech,earnings,geopolitique,energy,trade-idea,formation",
     "grade": "",
     "href": "/daily/20260227/",
     "date": "27 Février 2026 — Vendredi PPI Day"
