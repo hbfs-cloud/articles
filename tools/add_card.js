@@ -61,10 +61,16 @@ if (tab === 'scanner') {
         }
     }
 } else if (tab === 'daily' || tab === 'weekly') {
-    const h2s = Array.from(doc.querySelectorAll('h2'));
-    const betterTitle = h2s.find(h => /Top 10|Briefing|Synthèse|Hebdo|Macro/i.test(h.textContent));
-    if (betterTitle) {
-        title = betterTitle.textContent.trim();
+    // Prefer hero-title (h1) which is the real article title
+    const heroTitle = doc.querySelector('.hero-title, h1.hero-title');
+    if (heroTitle) {
+        title = heroTitle.textContent.trim();
+    } else {
+        const h2s = Array.from(doc.querySelectorAll('h2'));
+        const betterTitle = h2s.find(h => /Top 10|Briefing|Hebdo|Macro/i.test(h.textContent));
+        if (betterTitle) {
+            title = betterTitle.textContent.trim();
+        }
     }
 }
 

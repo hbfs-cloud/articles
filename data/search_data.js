@@ -5,12 +5,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Synthèse Exécutive",
-    "desc": "Le 28 février 2026, les États-Unis et Israël ont lancé des frappes conjointes sur l'Iran. L'ayatollah Khamenei a été tué dans une frappe israélienne sur Téhéran. L'Iran a riposté contre Israël, l'Arabie Saoudite, les EAU, le Qatar, Bahreïn et le Koweït. 3 soldats américains tués, 201+ morts en Iran....",
+    "title": "Iran, NFP & Or $5,248 : La Semaine du Chaos",
+    "desc": "Frappes US-Israël sur l'Iran, Khamenei éliminé. Pétrole +12%, Or $5,248.\n            NFP vendredi, ISM Services lundi. NVIDIA $68Mds (+3.4%). BTC rebond $72K.\n            S&P 500 -1.0% post-choc. Risque d'escalade Moyen-Orient.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260302/",
-    "date": "1 mars 2026"
+    "date": "2 - 6 Mars 2026"
   },
   {
     "type": "hebdo",
