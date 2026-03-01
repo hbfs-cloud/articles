@@ -1,7 +1,10 @@
 # CLAUDE.md - Market Watch Articles Project
 
 ## Project Overview
-Site de publication d'analyses financières institutionnelles hebdomadaires et ponctuelles, hébergé sur GitHub Pages à market-watch.xyz.
+Site de publication d'analyses financières institutionnelles hebdomadaires et ponctuelles, hébergé sur GitHub Pages.
+- **URL des articles** : `https://articles.market-watch.xyz/` (CNAME = `articles.market-watch.xyz`)
+- **Landing marketing** : `https://market-watch.xyz/` (site séparé, ne sert PAS les articles)
+- **IMPORTANT** : Toujours utiliser `articles.market-watch.xyz` pour les URLs d'articles, jamais `market-watch.xyz`
 
 ## Structure du Projet
 ```
@@ -112,18 +115,37 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 ## Commandes Utilisateur
 
 ### "Nouvelle analyse weekly" / "Update l'article pour next week"
-1. Lire le dernier article weekly pour référence (structure HTML + CSS)
+
+#### Étape 0 — Calcul de la date et anti-doublon (CRITIQUE)
+Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dossier est **le lundi de la semaine couverte**.
+- Si publié **dimanche 1er mars** → couvre **semaine du 2-6 mars** → dossier `weekly/20260302/`
+- Si publié **samedi 28 fév** → couvre **semaine du 2-6 mars** → dossier `weekly/20260302/`
+- **JAMAIS** créer un dossier avec une date passée qui chevauche un weekly déjà publié
+- **Vérification anti-doublon** : Lister `ls weekly/` et vérifier qu'aucun dossier existant ne couvre la même semaine. Si doublon détecté → STOP et demander confirmation à l'utilisateur.
+- **Convention de nommage** : `weekly/YYYYMMDD/` où YYYYMMDD = **lundi** de la semaine couverte (jamais mardi, mercredi, etc.)
+
+#### Étape 1 — Référence et collecte
+1. Lire **`weekly/20260223/index.html`** (article de référence) pour reproduire exactement le même layout, structure HTML et style visuel
 2. Collecter les données via MCP Gateway:
    - `GetMarketOverview` (deep) pour snapshot global
    - `QueryData` types: quote, bars_daily pour SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD
    - `QueryData` types: quote pour les cryptos (SOL-USD, XRP-USD, DOGE-USD)
    - WebSearch pour: CPI/inflation, earnings calendar semaine prochaine, géopolitique (Ukraine, Venezuela, Chine), sector rotation, Fed/FOMC
+
+#### Étape 2 — Génération
 3. Créer le dossier `weekly/YYYYMMDD/` (date du lundi de la semaine couverte)
 4. Utiliser impérativement le CSS global: `<link rel="stylesheet" href="/assets/report.css">`
-5. Créer index.html avec toutes les sections (voir weekly/CLAUDE.md)
-6. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+5. Créer index.html avec **TOUTES** les sections obligatoires (voir weekly/CLAUDE.md — 18 sections)
+6. **Contraintes layout CRITIQUES** :
+   - **PAS de FAB (fnav)** : Le weekly n'utilise PAS la navigation flottante FAB. Utiliser le Navigation Grid intégré uniquement.
+   - **PAS de `hero-brand-link` / `hero-brand-logo`** dans le hero : Le hero contient uniquement `hero-title`, `hero-subtitle`, `hero-badges`, `article-clickable-tags` et le bouton historique.
+   - **Taille minimum** : L'article doit faire **> 100KB**. Si < 100KB, il manque probablement des sections.
+   - **Toutes les 18 sections** de weekly/CLAUDE.md doivent être présentes (Hero, Nav Grid, Alerte, Calendrier, Synthèse, Bilan S-1, Macro, Métaux, Crypto, Earnings, Géopolitique, Rotation, Risques, Allocation, Trades, Leaders, Outlook, Sources)
+
+#### Étape 3 — Indexation et publication
 7. Langue: Français, ton institutionnel mais accessible
-8. **OBLIGATOIRE — Commit & Push** :
+8. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+9. **OBLIGATOIRE — Commit & Push** :
    ```bash
    git add weekly/YYYYMMDD/ data/weekly.json data/search_data.js
    git commit -m "feat: weekly YYYYMMDD — {titre court}"

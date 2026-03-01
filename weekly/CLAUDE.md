@@ -4,6 +4,26 @@
 
 **`weekly/20260223/index.html`** est la référence pour le format, la structure HTML, et le style visuel. Tout nouveau weekly DOIT suivre ce modèle.
 
+## GARDE-FOUS CRITIQUES (lire AVANT de générer)
+
+### Date et Dossier
+- Le weekly couvre **la semaine À VENIR** (lundi→vendredi), pas la semaine passée
+- Dossier = `weekly/YYYYMMDD/` où YYYYMMDD = **lundi** de la semaine couverte
+- Exemple : publié dimanche 1er mars → semaine couverte 2-6 mars → dossier `weekly/20260302/`
+- **JAMAIS** créer un doublon qui chevauche une semaine déjà couverte
+- **Vérifier `ls weekly/`** avant de créer le dossier
+
+### Layout Interdit
+- **PAS de FAB (fnav)** : Le weekly n'utilise PAS la navigation flottante. Navigation Grid uniquement.
+- **PAS de `hero-brand-link` / `hero-brand-logo`** dans le hero
+- **PAS de `<a>` ni `<img>` dans le `hero-section`** (sauf le bouton historique)
+- Reproduire EXACTEMENT le layout de `weekly/20260223/index.html`
+
+### Qualité minimum
+- Taille HTML > **100KB** (si < 100KB → sections manquantes)
+- **18 sections obligatoires** toutes présentes (voir liste ci-dessous)
+- Données à jour via MCP Gateway (pas de données inventées)
+
 ## 1. RAPPORT HEBDOMADAIRE (Weekly Report)
 
 
