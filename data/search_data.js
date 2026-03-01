@@ -6,10 +6,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Synthèse Exécutive",
-    "desc": "Vendredi 28 février, frappes conjointes US-Israël sur Téhéran. Le Guide suprême Ali Khamenei est confirmé mort. L'Iran décrète 40 jours de deuil et promet des représailles. La Russie et la Chine condamnent. Pétrole en hausse de +2.8%, or +1%, marchés en risk-off partiel.",
+    "desc": "Le 28 février 2026, les États-Unis et Israël ont lancé des frappes conjointes sur l'Iran. L'ayatollah Khamenei a été tué dans une frappe israélienne sur Téhéran. L'Iran a riposté contre Israël, l'Arabie Saoudite, les EAU, le Qatar, Bahreïn et le Koweït. 3 soldats américains tués, 201+ morts en Iran....",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
-    "href": "/weekly/20260224/",
+    "href": "/weekly/20260302/",
     "date": "1 mars 2026"
   },
   {
