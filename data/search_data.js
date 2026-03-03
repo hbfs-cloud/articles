@@ -314,13 +314,13 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "",
+    "ticker": "APLD",
     "exchange": "",
     "name": "",
     "title": "",
-    "desc": "",
-    "tags": "us,tech,ai,hpc,blockchain,cloud-computing,data-centers,semiconductors,infrastructure,trade-idea,long-term",
-    "grade": "B+",
+    "desc": "Applied Digital is building critical AI infrastructure. But with high debt, extreme volatility, and a recent NVIDIA divestment – is it a future leader or a risky bet? A beginner's guide.",
+    "tags": "us,tech,ai,hpc,cloud-computing,data-centers,blockchain,trade-idea,speculative",
+    "grade": "",
     "href": "/analyses/APLD/",
     "date": ""
   },
