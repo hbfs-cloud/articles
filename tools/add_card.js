@@ -3,6 +3,17 @@ const path = require('path');
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
+function getGradeColor(grade) {
+    switch (grade) {
+        case 'A+': case 'A': case 'A-': return '#059669'; // Green
+        case 'B+': case 'B': case 'B-': return '#0d9488'; // Teal
+        case 'C+': case 'C': case 'C-': return '#f59e0b'; // Amber
+        case 'D+': case 'D': case 'D-': return '#ef4444'; // Red
+        case 'F': return '#7f1d1d'; // Dark Red
+        default: return '#64748b'; // Gray
+    }
+}
+
 const argPath = process.argv[2];
 if (!argPath) {
     console.error("Usage: node add_card_to_index.js <path/to/article/index.html>");
@@ -92,35 +103,73 @@ if (tab === 'scanner' || tab === 'daily' || tab === 'weekly') {
 
 // For daily/scanner/weekly, we have dates
 let date = "";
-const tickerNameEl = doc.querySelector('.ticker-name');
-if (tickerNameEl && tickerNameEl.textContent.includes('—')) {
-    date = tickerNameEl.textContent.split('—')[1].trim();
-} else if (tickerNameEl) {
-    // maybe Daily / 26 Février 2026
-    if (tickerNameEl.textContent.includes('—')) {
-        date = tickerNameEl.textContent.split('—')[1].trim();
-    } else {
-        date = tickerNameEl.textContent.trim();
-    }
-} else {
-    // fallback
-    date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-}
 
 // For analyses, we have ticker logic
 let ticker = "";
-let exchange = "";
+let companyName = ""; // New variable for company name
+let exchangeAndSector = ""; // New variable for exchange and sector
 if (tab === 'analyses') {
     const symbolEl = doc.querySelector('.ticker-symbol');
     if (symbolEl) ticker = symbolEl.textContent.trim();
-    const exchEl = doc.querySelector('.ticker-exchange');
-    if (exchEl) exchange = exchEl.textContent.trim();
+
+    const companyNameEl = doc.querySelector('.ticker-name'); // e.g. "Applied Digital Corporation — AI Infrastructure & HPC"
+    if (companyNameEl) {
+        const textContent = companyNameEl.textContent.trim();
+        const companyNameMatch = textContent.match(/^(.*?)\s*&mdash;/); // Extract up to "—"
+        if (companyNameMatch && companyNameMatch[1]) {
+            companyName = companyNameMatch[1].trim();
+        } else {
+            companyName = textContent; // Fallback to full content if "—" not found
+        }
+    }
+
+    const exchangeEl = doc.querySelector('.ticker-exchange'); // e.g. "NASDAQ • Technology / Data Centers"
+    if (exchangeEl) {
+        exchangeAndSector = exchangeEl.textContent.trim();
+    } else {
+        // Fallback: if ticker-exchange not found, try to extract from ticker-name after "—"
+        const tickerNameFull = doc.querySelector('.ticker-name');
+        if (tickerNameFull && tickerNameFull.textContent.includes('—')) {
+            const exchangeMatch = tickerNameFull.textContent.match(/&mdash;\s*(.*)/);
+            if (exchangeMatch && exchangeMatch[1]) {
+                exchangeAndSector = exchangeMatch[1].replace(/&amp;/g, '&').trim();
+            }
+        }
+        // Extract date for analyses cards
+    // Assuming date is in a div with text "March 3, 2026 • Beginner Analysis"
+    const dateEl = doc.querySelector('div[style*="font-size:0.8rem;"][style*="margin-top:0.75rem;"]');
+    if (dateEl) {
+        const dateMatch = dateEl.textContent.match(/^(.*?)\s*•/);
+        if (dateMatch && dateMatch[1]) {
+            date = dateMatch[1].trim(); // "March 3, 2026"
+        } else {
+            // Fallback to og:article:published_time if no specific div is found
+            const ogPublishedTime = doc.querySelector('meta[property="article:published_time"]');
+            if (ogPublishedTime) {
+                date = new Date(ogPublishedTime.getAttribute('content')).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+        }
+    }
+}
 }
 
 let href = argPath.replace(/\\/g, '/');
 if (href.endsWith('index.html')) href = href.replace('index.html', '');
 if (!href.startsWith('/')) href = '/' + href;
 if (href.startsWith('//')) href = href.substring(1);
+
+// Date extraction for non-analyses tabs
+if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
+    const tickerNameEl = doc.querySelector('.ticker-name'); // This is usually in the hero-title or similar
+    if (tickerNameEl && tickerNameEl.textContent.includes('—')) {
+        date = tickerNameEl.textContent.split('—')[1].trim();
+    } else if (tickerNameEl) {
+        date = tickerNameEl.textContent.trim();
+    } else {
+        // fallback
+        date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+}
 
 let badgeHtml = '';
 if (tab === 'scanner' && html.includes('RÉTROSPECTIVE')) {
@@ -144,18 +193,37 @@ if (tab === 'analyses') {
     cardHtml = `
 <div class="report-card" data-grade="${finalGrade}" data-tags="${tags}">
     <div class="ticker-card-header">
-    <div class="ticker-logo"><img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="ticker-fallback" style="display:none">${ticker.substring(0, 2)}</div>
+        <div class="ticker-logo"><img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="ticker-fallback" style="display:none">${ticker.substring(0, 2)}</div>
+        </div>
+        <div class="ticker-info">
+            <div>
+                <div class="ticker-symbol">${ticker}</div>
+                <div class="ticker-exchange">${exchangeAndSector}</div>
+            </div>
+        </div>
+        <button onclick="openChart('${ticker}', '${companyName}')" style="
+                  margin-left: auto;
+                  background: none;
+                  border: 1px solid #e2e8f0;
+                  color: var(--text-muted);
+                  cursor: pointer;
+                  padding: 4px 8px;
+                  border-radius: 6px;
+                  font-size: 0.7rem;
+                " title="View chart">
+              <i class="fa-solid fa-chart-line"></i>
+            </button>
+        <div class="ticker-grade-badge grade-${finalGrade ? finalGrade[0].toLowerCase() : 'u'}">${finalGrade || '?'}</div>
     </div>
-    <div class="ticker-info">
-        <div class="ticker-symbol">${ticker} <span class="ticker-exchange">${exchange}</span></div>
-        <div class="ticker-name">${title}</div>
+    <div class="report-card-meta">
+        ${date}
+        <span class="grade-badge" style="background: ${getGradeColor(finalGrade)}; color: #fff">${finalGrade}</span>
     </div>
-    <div class="ticker-grade-badge grade-${finalGrade ? finalGrade[0].toLowerCase() : 'u'}">${finalGrade || '?'}</div>
-    </div>
+    <h2 style="font-size: 1.5rem; margin: 0.5rem 0 1rem">${title}</h2>
     <p style="font-size: 0.85rem; color: var(--text-muted)">${desc}</p>
     <div class="actions">
-    <a href="${href}" class="btn-read-primary">Analyser</a>
+        <a href="${href}" class="btn-read-primary" style="width: 100%">Read Analysis</a>
     </div>
 </div>
 `;
