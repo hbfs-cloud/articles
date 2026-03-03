@@ -314,6 +314,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "",
+    "desc": "",
+    "tags": "us,tech,ai,hpc,blockchain,cloud-computing,data-centers,semiconductors,infrastructure,trade-idea,long-term",
+    "grade": "B+",
+    "href": "/analyses/APLD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CDIO",
     "exchange": "NASDAQ • Healthcare • Diagnostics",
     "name": "CDIO — Cardio Diagnostics : L'IA au chevet de votre cœur",

@@ -157,9 +157,9 @@ Par défaut, génère **toutes les 6 variantes** (expert + beginner) × (fr + en
 L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` ou `analyse AAPL beginner en`.
 
 1. **Parser les paramètres** :
-   - `level` : beginner, expert (défaut: **beginner**)
-   - `langs` : en, fr, ar (défaut: **en**)
-   - Combinaisons par défaut = 6 variantes : expert/fr, expert/en, expert/ar, beginner/fr, beginner/en, beginner/ar
+   - `level` : beginner (défaut: **beginner**)
+   - `langs` : en (défaut: **en**)
+   - **IMPORTANT** : Pour les analyses détaillées futures, **SEULEMENT** la variante `beginner/en` sera générée par défaut.
 2. **Si l'analyse existe déjà** : archiver l'ancienne version
    - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
    - Déplacer l'ancien `index.html` dans l'archive
@@ -173,15 +173,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
    - Utiliser ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
    - **OBLIGATOIRE** : Inclure une section **Trade Idea** quand c'est pertinent (voir ci-dessous)
    - **OBLIGATOIRE** : Inclure une section **Social Radar** avec analyse du sentiment (StockTwits, Reddit) et un `socialChart` ECharts, comme dans l'article TARA.
-6. **Générer les 5 autres variantes** en parallèle (via agents) :
-   - `analyses/{TICKER}/expert/en/index.html` — traduction anglaise expert
-   - `analyses/{TICKER}/expert/ar/index.html` — traduction arabe expert (dir="rtl")
-   - `analyses/{TICKER}/beginner/fr/index.html` — version simplifiée FR
-   - `analyses/{TICKER}/beginner/en/index.html` — version simplifiée EN
-   - `analyses/{TICKER}/beginner/ar/index.html` — version simplifiée AR (dir="rtl")
-   - Adapter le contenu selon le niveau (beginner = plus pédagogique, moins de jargon)
-   - Adapter la langue (traduire tout le contenu)
-   - Chaque variante inclut le switcher pour naviguer entre les versions
+
 7. **Créer/mettre à jour `variants.json`** dans le dossier ticker :
    ```json
    {
