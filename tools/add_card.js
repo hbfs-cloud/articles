@@ -211,7 +211,7 @@ if (tab === 'analyses') {
     <div class="ticker-card-header">
         <div class="ticker-logo">
             <img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="ticker-logo-fallback" style="display:none; background: linear-gradient(135deg, var(--accent), #7c3aed); color: white; font-weight: 800; font-size: 0.8rem; width: 100%; height: 100%; align-items: center; justify-content: center; border-radius: 12px;">${ticker.substring(0, 4)}</div>
+            <div class="ticker-logo-fallback" style="display:none; background: linear-gradient(135deg, var(--accent), #7c3aed); color: white; font-weight: 800; font-size: 0.8rem; width: 100%; height: 100%; align-items: center; justify-content: center; border-radius: 10px;">${ticker.substring(0, 4)}</div>
         </div>
         <div>
             <div class="ticker-symbol">${ticker}</div>

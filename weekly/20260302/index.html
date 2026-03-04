@@ -287,27 +287,20 @@
     <!-- ==================== MAIN CONTENT ==================== -->
     <div class="container">
 
-        <!-- ==================== NAVIGATION GRID ==================== -->
-        <div class="content-card" id="navigation">
-            <h2><i class="fa-solid fa-compass" style="color:#3b82f6;"></i> Navigation Rapide</h2>
-            <div class="nav-grid">
-                <a href="#alertes" class="nav-grid-item"><i class="fas fa-triangle-exclamation"></i> Alertes</a>
-                <a href="#calendrier" class="nav-grid-item"><i class="fas fa-calendar-days"></i> Calendrier</a>
-                <a href="#synthese" class="nav-grid-item"><i class="fas fa-chart-pie"></i> Synthèse</a>
-                <a href="#compte-rendu" class="nav-grid-item"><i class="fas fa-clipboard-check"></i> Bilan S-1</a>
-                <a href="#marches" class="nav-grid-item"><i class="fas fa-chart-line"></i> Marchés</a>
-                <a href="#metaux" class="nav-grid-item"><i class="fas fa-coins"></i> Métaux</a>
-                <a href="#crypto" class="nav-grid-item"><i class="fab fa-bitcoin"></i> Crypto</a>
-                <a href="#earnings" class="nav-grid-item"><i class="fas fa-chart-bar"></i> Earnings</a>
-                <a href="#geopolitique" class="nav-grid-item"><i class="fas fa-globe"></i> Géopolitique</a>
-                <a href="#rotation" class="nav-grid-item"><i class="fas fa-arrows-rotate"></i> Rotation</a>
-                <a href="#risques" class="nav-grid-item"><i class="fas fa-shield-halved"></i> Risques</a>
-                <a href="#allocation" class="nav-grid-item"><i class="fas fa-wallet"></i> Allocation</a>
-                <a href="#trades" class="nav-grid-item"><i class="fas fa-crosshairs"></i> Trades</a>
-                <a href="#leaders" class="nav-grid-item"><i class="fas fa-trophy"></i> Leaders</a>
-                <a href="#outlook" class="nav-grid-item"><i class="fas fa-binoculars"></i> Outlook</a>
-                <a href="#sources" class="nav-grid-item"><i class="fas fa-link"></i> Sources</a>
+        <!-- Floating FAB Navigation -->
+        <div class="fnav" id="floatingNav">
+            <div class="fnav-menu" id="fnavMenu">
+                <a href="#alertes" class="fnav-item" data-section="alertes"><i class="fas fa-triangle-exclamation"></i><span>Alertes</span></a>
+                <a href="#marches" class="fnav-item" data-section="marches"><i class="fas fa-chart-line"></i><span>Marchés</span></a>
+                <a href="#metaux" class="fnav-item" data-section="metaux"><i class="fas fa-coins"></i><span>Métaux & Crypto</span></a>
+                <a href="#allocation" class="fnav-item" data-section="allocation"><i class="fas fa-wallet"></i><span>Allocation & Trades</span></a>
+                <a href="#outlook" class="fnav-item" data-section="outlook"><i class="fas fa-binoculars"></i><span>Outlook</span></a>
+                <a href="#sources" class="fnav-item" data-section="sources"><i class="fas fa-link"></i><span>Sources</span></a>
             </div>
+            <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+                <i class="fas fa-bars" id="fnavIcon"></i>
+                <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+            </button>
         </div>
 
         <!-- ==================== 1. ALERTES ==================== -->
@@ -1531,7 +1524,30 @@
 
     <script src="/assets/core.js"></script>
     <script src="/assets/tag-renderer.js"></script>
+    <script>
+    // FAB Navigation Toggle
+    (function(){
+        const btn = document.getElementById('fnavBtn');
+        const menu = document.getElementById('fnavMenu');
+        const icon = document.getElementById('fnavIcon');
+        const label = document.getElementById('fnavLabel');
+        if(!btn || !menu) return;
 
+        btn.addEventListener('click', () => {
+            const open = menu.classList.toggle('active');
+            icon.className = open ? 'fas fa-times' : 'fas fa-bars';
+            label.textContent = open ? 'Fermer' : 'Menu';
+        });
+
+        document.querySelectorAll('.fnav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                menu.classList.remove('active');
+                icon.className = 'fas fa-bars';
+                label.textContent = 'Menu';
+            });
+        });
+    })();
+    </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
 
