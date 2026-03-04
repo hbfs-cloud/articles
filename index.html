@@ -2371,12 +2371,13 @@
         var timeMatch = true;
         var dateEl = card.querySelector(".report-card-meta");
         if (dateEl) {
-          var dateText = dateEl.textContent.split('\n')[0].trim(); // Get "4 Mars 2026"
+          // Use first child node to get only the date text (ignore the grade badge span)
+          var dateText = dateEl.childNodes[0].textContent.trim();
           var cardDate = parseMWDate(dateText);
           if (cardDate) {
             var diffTime = Math.abs(now - cardDate);
-            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            timeMatch = diffDays <= maxDays;
+            var diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            timeMatch = diffDays < maxDays;
           }
         }
 
@@ -2427,11 +2428,28 @@
     // Helper to parse dates like "4 Mars 2026" or "25 Février 2026"
     function parseMWDate(str) {
       if (!str) return null;
+      // Normalize: remove accents and extra spaces
+      var norm = str.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .trim();
+
       var months = {
-        "janvier": 0, "février": 1, "mars": 2, "avril": 3, "mai": 4, "juin": 5,
-        "juillet": 6, "août": 7, "septembre": 8, "octobre": 9, "novembre": 10, "décembre": 11
+        "janvier": 0, "janv": 0,
+        "fevrier": 1, "fev": 1,
+        "mars": 2,
+        "avril": 3, "avr": 3,
+        "mai": 4,
+        "juin": 5,
+        "juillet": 6, "juil": 6,
+        "aout": 7,
+        "septembre": 8, "sept": 8,
+        "octobre": 9, "oct": 9,
+        "novembre": 10, "nov": 10,
+        "decembre": 11, "dec": 11
       };
-      var parts = str.toLowerCase().split(' ');
+
+      var parts = norm.split(/\s+/).filter(Boolean);
       if (parts.length >= 3) {
         var day = parseInt(parts[0]);
         var month = months[parts[1]];
