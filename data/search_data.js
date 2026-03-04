@@ -2397,7 +2397,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Quotidien",
+    "title": "Top 10 A+ EARLY RISK-OFF — AXTI, IBRX, AAOI, XLE, XLV, SAP, VGK, EWY, GLD, TLT",
     "desc": "Suite aux deux rétrospectives récentes — 20/02 (note C+, hit rate 62,5%) et 28/02 (note B+, hit rate 50%, P&L agrégé +8,8%) — les correctifs suivants sont appliqués à ce scan :",
     "tags": "us,eu,asia,etf,energy,tech,semis,healthcare,commodity,geopolitique,trade-idea,macro",
     "grade": "",
