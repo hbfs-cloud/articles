@@ -331,9 +331,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "Market Watch Expert",
     "title": "Market Watch Expert",
-    "desc": "Analyse institutionnelle de TMD Energy Limited (TMDE) : Manipulation intraday (Volume 8x float), structure du capital (Contrôle à 85%) et buzz social Discord/StockTwits.",
-    "tags": "us,energy,speculative,asia,trade-idea",
-    "grade": "B-",
+    "desc": "Analyse institutionnelle de TMD Energy (TMDE) : explosion volumétrique de 27M, catalyseurs géopolitiques Venezuela/Yémen, structure du capital (85% insider) et risques de manipulation.",
+    "tags": "us,energy,speculative,trade-idea,asia",
+    "grade": "",
     "href": "/analyses/TMDE/",
     "date": ""
   },
