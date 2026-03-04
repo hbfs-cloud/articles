@@ -327,6 +327,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "Analyse Iovance Biotherapeutics (IOVA) - Thérapeutiques Cellulaires",
+    "title": "Analyse Iovance Biotherapeutics (IOVA) - Thérapeutiques Cellulaires",
+    "desc": "",
+    "tags": "biotech,healthcare,small-cap,growth,cancer_treatment",
+    "grade": "B+",
+    "href": "/analyses/IOVA/beginner/fr/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "TMDE",
     "exchange": "NYSE American • Energy • Oil & Gas Midstream",
     "name": "TMDE — TMD Energy: Volume Explosion & Manipulation Analysis",
