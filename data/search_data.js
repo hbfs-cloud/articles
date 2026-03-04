@@ -327,7 +327,7 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "",
+    "ticker": "IOVA",
     "exchange": "",
     "name": "Analyse Iovance Biotherapeutics (IOVA) - Thérapeutiques Cellulaires",
     "title": "Analyse Iovance Biotherapeutics (IOVA) - Thérapeutiques Cellulaires",
