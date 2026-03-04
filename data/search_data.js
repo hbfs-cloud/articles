@@ -327,6 +327,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TMDE",
+    "exchange": "",
+    "name": "Market Watch Expert",
+    "title": "Market Watch Expert",
+    "desc": "Analyse approfondie de TMD Energy Limited (TMDE) : explosion volumétrique de 27M, catalyseurs géopolitiques Venezuela/Yémen et dynamique de carnet d'ordres sur penny stock.",
+    "tags": "us,energy,speculative,trade-idea,asia",
+    "grade": "B-",
+    "href": "/analyses/TMDE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "APLD",
     "exchange": "NASDAQ • Technology / Data Centers",
     "name": "APLD — Applied Digital: AI Infrastructure, High Volatility",
