@@ -2402,7 +2402,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,energy,tech,semis,healthcare,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260303/",
-    "date": "Lundi 3 Mars 2026"
+    "date": "Mardi 3 Mars 2026"
   },
   {
     "type": "scanner",
