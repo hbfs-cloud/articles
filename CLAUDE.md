@@ -485,14 +485,16 @@ Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bo
 
 Après chaque tâche schedulée (daily, scanner, rétrospective, weekly) qui se termine **avec succès** (fichier HTML généré + indexé), Claude **DOIT** automatiquement :
 
-1. **`git add`** les fichiers créés/modifiés (dossier article + `data/*.json` + `data/search_data.js`)
-2. **`git commit`** avec un message descriptif au format : `feat: {type} {date} — {titre court}`
-   - Exemples : `feat: briefing quotidien 27 février 2026 — NVIDIA selloff`, `feat: scanner 20260227 — Risk-Off, 10 setups A+`
-3. **`git push origin main`** pour déclencher le déploiement GitHub Pages
+1.  **Exécuter `node tools/add_card.js chemin/vers/index.html`** pour indexer l'article.
+    *   **Vérification immédiate**: Après cette étape, vérifier `git status`. Vous devriez voir `data/{type}.json` (ex: `data/scanner.json`) et `data/search_data.js` comme modifiés. Si ce n'est pas le cas, l'indexation a échoué.
+2.  **`git add`** les fichiers créés/modifiés (dossier article, `data/{type}.json` et `data/search_data.js`).
+3.  **`git commit`** avec un message descriptif au format : `feat: {type} {date} — {titre court}`
+    *   Exemples : `feat: briefing quotidien 27 février 2026 — NVIDIA selloff`, `feat: scanner 20260227 — Risk-Off, 10 setups A+`
+4.  **`git push origin main`** pour déclencher le déploiement GitHub Pages
 
 **Ne PAS push si** :
 - La génération a échoué ou est incomplète
 - Le fichier HTML fait moins de 10KB (probablement tronqué)
-- `node tools/add_card.js` a échoué (article non indexé)
+- `node tools/add_card.js` a échoué (l'article n'est pas indexé, confirmé par `git status` qui ne montre pas les fichiers `data/*.json` modifiés).
 
 **Vérification post-push** : Attendre 60s puis vérifier que le GitHub Actions deploy a bien démarré via `gh run list --limit 1`.
