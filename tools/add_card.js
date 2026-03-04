@@ -135,19 +135,35 @@ if (tab === 'analyses') {
                 exchangeAndSector = exchangeMatch[1].replace(/&amp;/g, '&').trim();
             }
         }
-        // Extract date for analyses cards
-    // Assuming date is in a div with text "March 3, 2026 • Beginner Analysis"
-    const dateEl = doc.querySelector('div[style*="font-size:0.8rem;"][style*="margin-top:0.75rem;"]');
+    // Extract date for analyses cards
+    // Look for various date patterns or common containers
+    let dateEl = doc.querySelector('.ticker-date') || doc.querySelector('.hero-section div[style*="font-size:0.8rem"], .hero-section div[style*="font-size: 0.8rem"], div[style*="margin-top:0.75rem"]');
+    if (!dateEl) {
+        // Broad search for anything that looks like a date container in hero
+        const divs = Array.from(doc.querySelectorAll('.hero-section div'));
+        dateEl = divs.find(d => d.textContent.includes('2026') || d.textContent.includes('2025'));
+    }
+
     if (dateEl) {
-        const dateMatch = dateEl.textContent.match(/^(.*?)\s*•/);
-        if (dateMatch && dateMatch[1]) {
-            date = dateMatch[1].trim(); // "March 3, 2026"
+        const text = dateEl.textContent.trim();
+        // Match "4 Mars 2026" or "March 4, 2026"
+        const dateMatch = text.match(/([0-9]+\s+[A-Za-zÀ-ÿ]+\s+[0-9]{4})/i) || text.match(/([A-Za-z]+\s+[0-9]+\s*,\s*[0-9]{4})/i);
+        if (dateMatch) {
+            date = dateMatch[1].trim();
         } else {
-            // Fallback to og:article:published_time if no specific div is found
-            const ogPublishedTime = doc.querySelector('meta[property="article:published_time"]');
-            if (ogPublishedTime) {
-                date = new Date(ogPublishedTime.getAttribute('content')).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+            // Fallback: try splitting by bullet
+            const parts = text.split(/[•·]|&bull;/);
+            if (parts.length > 0 && parts[0].trim().length > 5) {
+                date = parts[0].trim();
             }
+        }
+    }
+    
+    if (!date) {
+        // Fallback to og:article:published_time if no specific div is found
+        const ogPublishedTime = doc.querySelector('meta[property="article:published_time"]');
+        if (ogPublishedTime) {
+            date = new Date(ogPublishedTime.getAttribute('content')).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
         }
     }
 }
@@ -193,14 +209,13 @@ if (tab === 'analyses') {
     cardHtml = `
 <div class="report-card" data-grade="${finalGrade}" data-tags="${tags}">
     <div class="ticker-card-header">
-        <div class="ticker-logo"><img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <div class="ticker-fallback" style="display:none">${ticker.substring(0, 2)}</div>
+        <div class="ticker-logo">
+            <img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="ticker-logo-fallback" style="display:none; background: linear-gradient(135deg, var(--accent), #7c3aed); color: white; font-weight: 800; font-size: 0.8rem; width: 100%; height: 100%; align-items: center; justify-content: center; border-radius: 12px;">${ticker.substring(0, 4)}</div>
         </div>
-        <div class="ticker-info">
-            <div>
-                <div class="ticker-symbol">${ticker}</div>
-                <div class="ticker-exchange">${exchangeAndSector}</div>
-            </div>
+        <div>
+            <div class="ticker-symbol">${ticker}</div>
+            <div class="ticker-exchange">${exchangeAndSector}</div>
         </div>
         <button onclick="openChart('${ticker}', '${companyName}')" style="
                   margin-left: auto;
