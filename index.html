@@ -1149,6 +1149,60 @@
       color: #cbd5e1;
     }
 
+    /* ===== SCANNER PERFORMANCE DASHBOARD (COLLAPSIBLE) ===== */
+    .scanner-perf-card {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      border-radius: 20px;
+      margin: 1rem 0 1.5rem;
+      color: #e2e8f0;
+      overflow: hidden;
+      border: 1px solid #334155;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .scanner-perf-header {
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .scanner-perf-header:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .scanner-perf-content {
+      max-height: 0;
+      overflow: hidden;
+      padding: 0 1.5rem;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .scanner-perf-card.expanded .scanner-perf-content {
+      max-height: 1200px;
+      padding-bottom: 1.5rem;
+      opacity: 1;
+    }
+
+    .scanner-perf-card .toggle-icon {
+      transition: transform 0.3s;
+      color: #94a3b8;
+      margin-left: 10px;
+    }
+
+    .scanner-perf-card.expanded .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .scanner-perf-card.expanded {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border-color: #3b82f6;
+    }
+
     /* ===== QUICK TAG CHIPS (analyses tab) ===== */
     .quick-tags {
       display: flex;
@@ -1690,163 +1744,193 @@
         </p>
       </div>
 
-      <!-- ===== SCANNER PERFORMANCE DASHBOARD ===== -->
-      <div style="
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            border-radius: 20px;
-            padding: 1.5rem;
-            margin: 1rem 0 1.5rem;
-            color: #e2e8f0;
-          ">
-        <div style="
-              display: flex;
-              align-items: center;
-              gap: 0.75rem;
-              margin-bottom: 1.25rem;
-            ">
+      <!-- ===== SCANNER PERFORMANCE DASHBOARD (COLLAPSIBLE) ===== -->
+      <div class="scanner-perf-card" id="scannerPerfCard">
+        <div class="scanner-perf-header" onclick="toggleScannerDashboard()">
           <div style="
-                width: 40px;
-                height: 40px;
+                width: 36px;
+                height: 36px;
                 border-radius: 10px;
                 background: linear-gradient(135deg, #2563eb, #7c3aed);
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                flex-shrink: 0;
               ">
-            <i class="fa-solid fa-chart-pie" style="color: #fff; font-size: 1rem"></i>
+            <i class="fa-solid fa-chart-pie" style="color: #fff; font-size: 0.9rem"></i>
           </div>
-          <div>
-            <div style="font-weight: 800; font-size: 1.1rem; color: #fff">
+          <div style="flex-grow: 1;">
+            <div style="font-weight: 800; font-size: 1rem; color: #fff; line-height: 1.2;">
               Performance du Scanner
             </div>
-            <div style="font-size: 0.72rem; color: #94a3b8">
+            <div style="font-size: 0.68rem; color: #94a3b8">
               Mis à jour : 27 Fév 2026 — Période : 15-27 Février 2026
             </div>
           </div>
           <div style="
-                margin-left: auto;
                 background: linear-gradient(135deg, #3b82f6, #2563eb);
-                padding: 6px 14px;
-                border-radius: 10px;
+                padding: 4px 12px;
+                border-radius: 8px;
                 font-weight: 900;
-                font-size: 1.1rem;
+                font-size: 1rem;
                 color: #fff;
+                margin-right: 5px;
               ">
             B+
           </div>
+          <i class="fa-solid fa-chevron-down toggle-icon"></i>
         </div>
 
-        <!-- KPI Row -->
-        <div style="
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-              gap: 0.6rem;
-              margin-bottom: 1.25rem;
-            ">
+        <div class="scanner-perf-content">
+          <!-- KPI Row -->
           <div style="
-                background: rgba(255, 255, 255, 0.06);
-                border-radius: 10px;
-                padding: 0.6rem;
-                text-align: center;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 0.6rem;
+                margin-bottom: 1.25rem;
               ">
             <div style="
-                  font-size: 0.6rem;
-                  color: #94a3b8;
-                  text-transform: uppercase;
-                  font-weight: 700;
-                  letter-spacing: 0.05em;
+                  background: rgba(255, 255, 255, 0.06);
+                  border-radius: 10px;
+                  padding: 0.6rem;
+                  text-align: center;
                 ">
-              Hit Rate
+              <div style="
+                    font-size: 0.6rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                  ">
+                Hit Rate
+              </div>
+              <div style="font-size: 1.5rem; font-weight: 900; color: #10b981">
+                50%
+              </div>
+              <div style="font-size: 0.6rem; color: #64748b">scans matures</div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #10b981">
-              50%
-            </div>
-            <div style="font-size: 0.6rem; color: #64748b">scans matures</div>
-          </div>
-          <div style="
-                background: rgba(255, 255, 255, 0.06);
-                border-radius: 10px;
-                padding: 0.6rem;
-                text-align: center;
-              ">
             <div style="
-                  font-size: 0.6rem;
-                  color: #94a3b8;
-                  text-transform: uppercase;
-                  font-weight: 700;
-                  letter-spacing: 0.05em;
+                  background: rgba(255, 255, 255, 0.06);
+                  border-radius: 10px;
+                  padding: 0.6rem;
+                  text-align: center;
                 ">
-              Meilleur Pick
+              <div style="
+                    font-size: 0.6rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                  ">
+                Meilleur Pick
+              </div>
+              <div style="font-size: 1.5rem; font-weight: 900; color: #10b981">
+                +147%
+              </div>
+              <div style="font-size: 0.6rem; color: #64748b">ACMR</div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #10b981">
-              +147%
-            </div>
-            <div style="font-size: 0.6rem; color: #64748b">ACMR</div>
-          </div>
-          <div style="
-                background: rgba(255, 255, 255, 0.06);
-                border-radius: 10px;
-                padding: 0.6rem;
-                text-align: center;
-              ">
             <div style="
-                  font-size: 0.6rem;
-                  color: #94a3b8;
-                  text-transform: uppercase;
-                  font-weight: 700;
-                  letter-spacing: 0.05em;
+                  background: rgba(255, 255, 255, 0.06);
+                  border-radius: 10px;
+                  padding: 0.6rem;
+                  text-align: center;
                 ">
-              Scans
+              <div style="
+                    font-size: 0.6rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                  ">
+                Scans
+              </div>
+              <div style="font-size: 1.5rem; font-weight: 900; color: #fff">
+                7
+              </div>
+              <div style="font-size: 0.6rem; color: #64748b">70 setups</div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #fff">
-              7
-            </div>
-            <div style="font-size: 0.6rem; color: #64748b">70 setups</div>
-          </div>
-          <div style="
-                background: rgba(255, 255, 255, 0.06);
-                border-radius: 10px;
-                padding: 0.6rem;
-                text-align: center;
-              ">
             <div style="
-                  font-size: 0.6rem;
-                  color: #94a3b8;
-                  text-transform: uppercase;
-                  font-weight: 700;
-                  letter-spacing: 0.05em;
+                  background: rgba(255, 255, 255, 0.06);
+                  border-radius: 10px;
+                  padding: 0.6rem;
+                  text-align: center;
                 ">
-              Pire Pick
+              <div style="
+                    font-size: 0.6rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                  ">
+                Pire Pick
+              </div>
+              <div style="font-size: 1.5rem; font-weight: 900; color: #ef4444">
+                -10.7%
+              </div>
+              <div style="font-size: 0.6rem; color: #64748b">ACHC</div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #ef4444">
-              -10.7%
-            </div>
-            <div style="font-size: 0.6rem; color: #64748b">ACHC</div>
-          </div>
-          <div style="
-                background: rgba(255, 255, 255, 0.06);
-                border-radius: 10px;
-                padding: 0.6rem;
-                text-align: center;
-              ">
             <div style="
-                  font-size: 0.6rem;
-                  color: #94a3b8;
-                  text-transform: uppercase;
-                  font-weight: 700;
-                  letter-spacing: 0.05em;
+                  background: rgba(255, 255, 255, 0.06);
+                  border-radius: 10px;
+                  padding: 0.6rem;
+                  text-align: center;
                 ">
-              Régime
-            </div>
-            <div style="font-size: 1.1rem; font-weight: 900; color: #f59e0b">
-              Early<br>Risk-Off / Mixed
+              <div style="
+                    font-size: 0.6rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                  ">
+                Régime
+              </div>
+              <div style="font-size: 1.1rem; font-weight: 900; color: #f59e0b">
+                Early<br>Risk-Off / Mixed
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Charts Row -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <!-- Charts Row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+            <div style="
+                  background: rgba(255, 255, 255, 0.04);
+                  border-radius: 12px;
+                  padding: 0.75rem;
+                ">
+              <div style="
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    color: #94a3b8;
+                    margin-bottom: 0.5rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                  ">
+                <i class="fa-solid fa-trophy" style="margin-right: 4px; color: #f59e0b"></i>Top Picks — P&amp;L (%)
+              </div>
+              <div id="scannerTopChart" style="width: 100%; height: 180px"></div>
+            </div>
+            <div style="
+                  background: rgba(255, 255, 255, 0.04);
+                  border-radius: 12px;
+                  padding: 0.75rem;
+                ">
+              <div style="
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    color: #94a3b8;
+                    margin-bottom: 0.5rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                  ">
+                <i class="fa-solid fa-bullseye" style="margin-right: 4px; color: #10b981"></i>Résultats par Scan
+              </div>
+              <div id="scannerResultsChart" style="width: 100%; height: 180px"></div>
+            </div>
+          </div>
+
+          <!-- Score by Scan -->
           <div style="
+                margin-top: 1rem;
                 background: rgba(255, 255, 255, 0.04);
                 border-radius: 12px;
                 padding: 0.75rem;
@@ -1859,73 +1943,36 @@
                   text-transform: uppercase;
                   letter-spacing: 0.04em;
                 ">
-              <i class="fa-solid fa-trophy" style="margin-right: 4px; color: #f59e0b"></i>Top Picks — P&amp;L (%)
+              <i class="fa-solid fa-gauge-high" style="margin-right: 4px; color: #2563eb"></i>Score Moyen &amp; Qualité
+              par
+              Scan
             </div>
-            <div id="scannerTopChart" style="width: 100%; height: 180px"></div>
+            <div id="scannerScoreChart" style="width: 100%; height: 160px"></div>
           </div>
-          <div style="
-                background: rgba(255, 255, 255, 0.04);
-                border-radius: 12px;
-                padding: 0.75rem;
-              ">
-            <div style="
-                  font-size: 0.72rem;
-                  font-weight: 700;
+
+          <div style="text-align: center; margin-top: 1rem">
+            <a href="/scanner/retrospective/20260228/" style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
                   color: #94a3b8;
-                  margin-bottom: 0.5rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.04em;
+                  font-size: 0.8rem;
+                  text-decoration: none;
+                  padding: 8px 16px;
+                  border: 1px solid #334155;
+                  border-radius: 8px;
+                  transition: 0.2s;
+                " onmouseover="
+                  this.style.borderColor = '#2563eb';
+                  this.style.color = '#60a5fa';
+                " onmouseout="
+                  this.style.borderColor = '#334155';
+                  this.style.color = '#94a3b8';
                 ">
-              <i class="fa-solid fa-bullseye" style="margin-right: 4px; color: #10b981"></i>Résultats par Scan
-            </div>
-            <div id="scannerResultsChart" style="width: 100%; height: 180px"></div>
+              <i class="fa-solid fa-arrow-right"></i> Voir la rétrospective
+              complète
+            </a>
           </div>
-        </div>
-
-        <!-- Score by Scan -->
-        <div style="
-              margin-top: 1rem;
-              background: rgba(255, 255, 255, 0.04);
-              border-radius: 12px;
-              padding: 0.75rem;
-            ">
-          <div style="
-                font-size: 0.72rem;
-                font-weight: 700;
-                color: #94a3b8;
-                margin-bottom: 0.5rem;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-              ">
-            <i class="fa-solid fa-gauge-high" style="margin-right: 4px; color: #2563eb"></i>Score Moyen &amp; Qualité
-            par
-            Scan
-          </div>
-          <div id="scannerScoreChart" style="width: 100%; height: 160px"></div>
-        </div>
-
-        <div style="text-align: center; margin-top: 1rem">
-          <a href="/scanner/retrospective/20260228/" style="
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                color: #94a3b8;
-                font-size: 0.8rem;
-                text-decoration: none;
-                padding: 8px 16px;
-                border: 1px solid #334155;
-                border-radius: 8px;
-                transition: 0.2s;
-              " onmouseover="
-                this.style.borderColor = '#2563eb';
-                this.style.color = '#60a5fa';
-              " onmouseout="
-                this.style.borderColor = '#334155';
-                this.style.color = '#94a3b8';
-              ">
-            <i class="fa-solid fa-arrow-right"></i> Voir la rétrospective
-            complète
-          </a>
         </div>
       </div>
       <!-- ===== END SCANNER PERFORMANCE DASHBOARD ===== -->
@@ -2991,15 +3038,13 @@
     var origSwitchTab = switchTab;
     switchTab = function (tab) {
       origSwitchTab(tab);
-      if (tab === "scanner") {
-        setTimeout(initScannerCharts, 100);
-      }
+      // Removed automatic initScannerCharts here to support collapsible lazy-loading
     };
     // Also init if scanner is default tab from URL
     if (
       new URLSearchParams(window.location.search).get("tab") === "scanner"
     ) {
-      setTimeout(initScannerCharts, 200);
+      // Still allow deep-link init if needed, but the toggle handles it better
     }
   </script>
 
@@ -3081,6 +3126,32 @@
           }
         })
         .catch(e => console.error("Failed to load tab data", e));
+    }
+
+    // ===================================================================
+    // SCANNER DASHBOARD TOGGLE
+    // ===================================================================
+    function toggleScannerDashboard() {
+      var card = document.getElementById("scannerPerfCard");
+      card.classList.toggle("expanded");
+
+      // If expanding, give a small delay for the animation then resize charts
+      if (card.classList.contains("expanded")) {
+        setTimeout(function () {
+          if (typeof initScannerCharts === "function") {
+            initScannerCharts();
+          }
+          // Force resize if already inited
+          var chartIds = ["scannerTopChart", "scannerResultsChart", "scannerScoreChart"];
+          chartIds.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+              var instance = echarts.getInstanceByDom(el);
+              if (instance) instance.resize();
+            }
+          });
+        }, 350);
+      }
     }
 
     // Intercept existing switchTab function
