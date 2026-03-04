@@ -1084,6 +1084,71 @@
       font-weight: 600;
     }
 
+    /* ===== NEW FILTERS: RELIABILITY & TIME RANGE ===== */
+    .advanced-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #f1f5f9;
+      align-items: flex-end;
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .filter-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .range-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 200px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .range-value {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 45px;
+    }
+
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      background: #f8fafc;
+      border: 2px dashed #e2e8f0;
+      border-radius: 20px;
+      color: #64748b;
+    }
+
+    .no-results i {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      color: #cbd5e1;
+    }
+
     /* ===== QUICK TAG CHIPS (analyses tab) ===== */
     .quick-tags {
       display: flex;
@@ -1570,9 +1635,40 @@
             <i class="fa-solid fa-microchip" style="margin-right: 3px"></i>Semis
           </button>
         </div>
+
+        <!-- Advanced Filters: Confidence & Time Range -->
+        <div class="advanced-filters">
+          <div class="filter-item">
+            <span class="filter-label"><i class="fa-solid fa-shield-check"></i> Fiabilité</span>
+            <div class="filter-chips" id="confidenceFilter">
+              <button class="filter-chip active" data-conf="all">Toutes</button>
+              <button class="filter-chip" data-conf="High" style="--chip-color: #059669">Haute</button>
+              <button class="filter-chip" data-conf="Medium" style="--chip-color: #f59e0b">Moyenne</button>
+              <button class="filter-chip" data-conf="Low" style="--chip-color: #ef4444">Faible</button>
+            </div>
+          </div>
+
+          <div class="filter-item">
+            <span class="filter-label"><i class="fa-solid fa-clock-rotate-left"></i> Fraîcheur : <span id="daysValue"
+                class="range-value">30 jours</span></span>
+            <div class="range-control">
+              <span style="font-size: 0.7rem; color: #94a3b8;">1j</span>
+              <input type="range" id="daysSlider" min="1" max="90" value="30">
+              <span style="font-size: 0.7rem; color: #94a3b8;">90j</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="grid-cards"></div>
+      <div class="grid-cards">
+        <!-- No Results Placeholder -->
+        <div id="noAnalyses" class="no-results" style="display: none;">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <h3 style="margin: 0; color: #1e293b;">Aucune analyse trouvée</h3>
+          <p style="margin: 0.5rem 0 0; font-size: 0.9rem;">Essayez d'ajuster vos filtres de grade, fiabilité ou de
+            temps.</p>
+        </div>
+      </div>
     </div>
     <!-- /tab-analyses -->
 
@@ -2187,36 +2283,67 @@
     }
 
     // ===================================================================
-    // UNIFIED FILTER: grade + tags (analyses tab)
+    // UNIFIED FILTER: grade + tags + confidence + time (analyses tab)
     // ===================================================================
     function applyAllFilters() {
-      // Grade filter (analyses only)
-      var gradeBtn = document.querySelector(
-        "#gradeFilter .filter-chip.active",
-      );
+      // Grade filter
+      var gradeBtn = document.querySelector("#gradeFilter .filter-chip.active");
       var gradeFilter = gradeBtn ? gradeBtn.dataset.grade : "all";
-      var count = 0;
 
-      document
-        .querySelectorAll(
-          "#tab-analyses .grid-cards .report-card[data-grade]",
-        )
-        .forEach(function (card) {
-          var grade = card.dataset.grade;
-          var gradeMatch =
-            gradeFilter === "all" ||
-            grade.charAt(0) === gradeFilter ||
-            grade === gradeFilter;
-          var tagMatch = true;
-          if (activeTags.length) {
-            var cardTags = (card.dataset.tags || "").split(",");
-            tagMatch = activeTags.every(function (t) {
-              return cardTags.indexOf(t) !== -1;
-            });
+      // Confidence filter
+      var confBtn = document.querySelector("#confidenceFilter .filter-chip.active");
+      var confFilter = confBtn ? confBtn.dataset.conf : "all";
+
+      // Time range filter
+      var daysSlider = document.getElementById("daysSlider");
+      var maxDays = daysSlider ? parseInt(daysSlider.value) : 30;
+      var now = new Date();
+
+      var count = 0;
+      var analysesCards = document.querySelectorAll("#tab-analyses .grid-cards .report-card");
+
+      analysesCards.forEach(function (card) {
+        // Grade Match
+        var grade = card.dataset.grade || "";
+        var gradeMatch = gradeFilter === "all" || grade.charAt(0) === gradeFilter || grade === gradeFilter;
+
+        // Tag Match
+        var tagMatch = true;
+        if (activeTags.length) {
+          var cardTags = (card.dataset.tags || "").split(",");
+          tagMatch = activeTags.every(function (t) {
+            return cardTags.indexOf(t) !== -1;
+          });
+        }
+
+        // Confidence Match
+        var conf = card.dataset.conf || "Medium"; // Default to Medium if missing
+        var confMatch = confFilter === "all" || conf === confFilter;
+
+        // Time Match
+        var timeMatch = true;
+        var dateEl = card.querySelector(".report-card-meta");
+        if (dateEl) {
+          var dateText = dateEl.textContent.split('\n')[0].trim(); // Get "4 Mars 2026"
+          var cardDate = parseMWDate(dateText);
+          if (cardDate) {
+            var diffTime = Math.abs(now - cardDate);
+            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            timeMatch = diffDays <= maxDays;
           }
-          card.style.display = gradeMatch && tagMatch ? "" : "none";
-          if (gradeMatch && tagMatch) count++;
-        });
+        }
+
+        var isVisible = gradeMatch && tagMatch && confMatch && timeMatch;
+        card.style.display = isVisible ? "" : "none";
+        if (isVisible) count++;
+      });
+
+      // Show/Hide No Results
+      var noRes = document.getElementById("noAnalyses");
+      if (noRes) {
+        noRes.style.display = (count === 0 && analysesCards.length > 0) ? "block" : "none";
+      }
+
       var el = document.getElementById("filterCount");
       if (el) el.textContent = count + " analyse" + (count > 1 ? "s" : "");
 
@@ -2248,6 +2375,47 @@
       }
 
       updateContextBar();
+    }
+
+    // Helper to parse dates like "4 Mars 2026" or "25 Février 2026"
+    function parseMWDate(str) {
+      if (!str) return null;
+      var months = {
+        "janvier": 0, "février": 1, "mars": 2, "avril": 3, "mai": 4, "juin": 5,
+        "juillet": 6, "août": 7, "septembre": 8, "octobre": 9, "novembre": 10, "décembre": 11
+      };
+      var parts = str.toLowerCase().split(' ');
+      if (parts.length >= 3) {
+        var day = parseInt(parts[0]);
+        var month = months[parts[1]];
+        var year = parseInt(parts[2]);
+        if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+          return new Date(year, month, day);
+        }
+      }
+      return null;
+    }
+
+    // Event Listeners for Confidence Filter
+    document.querySelectorAll("#confidenceFilter .filter-chip").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll("#confidenceFilter .filter-chip").forEach(function (b) {
+          b.classList.remove("active");
+        });
+        this.classList.add("active");
+        applyAllFilters();
+      });
+    });
+
+    // Event Listener for Days Slider
+    var daysSlider = document.getElementById("daysSlider");
+    if (daysSlider) {
+      daysSlider.addEventListener("input", function () {
+        var val = this.value;
+        document.getElementById("daysValue").textContent = val + (val > 1 ? " jours" : " jour");
+        applyAllFilters();
+      });
+    }
     }
 
     // ===================================================================

@@ -47,6 +47,7 @@ const tags = doc.documentElement.getAttribute('data-tags') || "";
 const grade = doc.documentElement.getAttribute('data-level') || ""; // "expert" or "beginner", etc. 
 // analyses have actual grades. Let me use data-grade if it exists on html?
 let finalGrade = doc.documentElement.getAttribute('data-grade') || "";
+let reliability = doc.documentElement.getAttribute('data-reliability') || "Medium";
 
 // Extract title and description
 // Usually title is in <title> or h1
@@ -207,7 +208,7 @@ let cardHtml = `
 if (tab === 'analyses') {
     // Custom HTML for analyses
     cardHtml = `
-<div class="report-card" data-grade="${finalGrade}" data-tags="${tags}">
+<div class="report-card" data-grade="${finalGrade}" data-tags="${tags}" data-conf="${reliability}">
     <div class="ticker-card-header">
         <div class="ticker-logo">
             <img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
