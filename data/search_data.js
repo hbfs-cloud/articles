@@ -2436,9 +2436,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — LITE, COHR, CF, SH, EWU, JD, GLNG, ICLN, AYI, EWH",
-    "desc": "Suite aux deux rétrospectives récentes — 20/02 (note C+, hit rate 62,5%) et 28/02 (note B+, hit rate 50%, P&L agrégé +8,8%) — les correctifs suivants sont appliqués à ce scan :",
-    "tags": "us,eu,asia,etf,energy,tech,semis,materials,consumer,geopolitique,trade-idea,macro",
+    "title": "Top 10 A+ EARLY RISK-OFF — CF, CHRD, AMPX, MEOH, PAA, TTE, EWG, EWJ, XLE, GLD",
+    "desc": "Suite aux deux rétrospectives — 20/02 (note C+, hit rate 62,5%) et 28/02 (note B+, hit rate 50%, P&L +8,8%) — les ajustements suivants sont appliqués :",
+    "tags": "us,eu,asia,etf,energy,tech,commodity,geopolitique,trade-idea,macro,materials,industrials",
     "grade": "",
     "href": "/scanner/20260305/",
     "date": "Mercredi 5 Mars 2026"
