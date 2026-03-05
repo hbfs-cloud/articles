@@ -2605,12 +2605,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Claude Code Entreprise — La Trilogie Complète",
-    "desc": "3 parties — Guide Avancé (MCP, Hooks, Scripting), Société Autonome (comptabilité, prospection, reporting), et Marketing & Intelligence Opérationnelle (veille, YouTube, chatbot, pricing).",
+    "title": "Claude Code Entreprise — La Trilogie",
+    "desc": "MCP, Hooks, Scripting headless, automatisation entreprise (comptabilité, prospection, reporting), marketing autonome, veille IA, chatbot, pricing dynamique et aide à la décision.",
     "tags": "ai,tech,architecture,education",
     "grade": "",
     "href": "/tech/claude-code-avance/",
-    "date": "28 février 2026"
+    "date": ""
   },
   {
     "type": "tech",
@@ -2619,11 +2619,11 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Data Science 101 : Le Guide Complet pour le Trading",
-    "desc": "Du Data Lake au Semantic Layer — Maîtrisez la Data Science pour le trading retail. Architecture Medallion, Star Schema, Modern Data Stack, profils data et best practices.",
+    "desc": "Du Data Lake au Semantic Layer — Architecture Medallion, Star Schema, Modern Data Stack, profils data et best practices pour le trading retail.",
     "tags": "tech,data,architecture,trading,education",
     "grade": "",
     "href": "/tech/data-science-101/",
-    "date": "27 février 2026"
+    "date": ""
   },
   {
     "type": "tech",
@@ -2632,11 +2632,11 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Monitoring Trading Stack — Le Guide Complet",
-    "desc": "3 parties — Post-Mortems de Wall Street (Knight Capital, LTCM, Flash Crash), Architecture de Monitoring (circuit breakers, kill switch), et Tooling du Retail Trader (Docker, Grafana, Discord).",
+    "desc": "Knight Capital, LTCM, Flash Crash — les catastrophes qui ont façonné le monitoring. Circuit breakers, kill switch, et tooling pratique (Docker, Grafana, Discord).",
     "tags": "tech,technique,formation,education",
     "grade": "",
     "href": "/tech/monitoring-trading-stack/",
-    "date": "27 février 2026"
+    "date": ""
   },
   {
     "type": "tech",
