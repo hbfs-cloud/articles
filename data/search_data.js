@@ -340,6 +340,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALT",
+    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Obésité / MASH / GLP-1",
+    "name": "ALT — pemvidutide FDA Breakthrough MASH, Phase 3 2026, cash $340M, target analystes $18.81 — ...",
+    "title": "ALT — pemvidutide FDA Breakthrough MASH, Phase 3 2026, cash $340M, target analystes $18.81 — ...",
+    "desc": "Analyse experte Altimmune : pemvidutide GLP-1/glucagon dual agonist, FDA Breakthrough MASH, Phase 3 à venir, cash $340M, SI 20%. Biotech obésité/MASH pré-revenue.",
+    "tags": "us,healthcare,biotech,trade-idea,speculative",
+    "grade": "B",
+    "href": "/analyses/ALT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "INDO",
     "exchange": "NYSE American • Energy • Oil & Gas E&P",
     "name": "INDO — Proxy pétrolier géopolitique Iran. Kruh Block Indonésie, 580 bpd, MCap $68M. Float <10M...",
@@ -2017,19 +2030,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "ALT",
-    "exchange": "NASDAQ • Healthcare",
-    "name": "Altimmune Inc",
-    "title": "Altimmune Inc",
-    "desc": "Analyse complete d'Altimmune Inc (ALT) - Biotech MASH/Obesite avec\n            pemvidutide en Phase 3. Target $17.67, potentiel +287%. Score D+\n            (Speculatif).",
-    "tags": "us,healthcare,speculative,trade-idea",
-    "grade": "D+",
-    "href": "analyses/ALT",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "AQMS",
     "exchange": "NASDAQ • Industrials",
     "name": "Aqua Metals",
@@ -2814,7 +2814,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Quick Start — Trader en 30 Minutes",
-    "desc": "Le condensé ultime pour débuter en trading : marchés, graphiques, earnings, ETF, brokers, pièges et premier trade. 30 minutes pour poser les bases.",
+    "desc": "Le condensé ultime pour débuter : marchés, graphiques, earnings, ETF, brokers, pièges et premier trade. Tout le parcours débutant en 30 minutes.",
     "tags": "us,eu,formation,technique,macro",
     "grade": "",
     "href": "/series/quick-start/",
