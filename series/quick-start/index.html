@@ -33,15 +33,33 @@
 
  <style>
 /* EMERALD THEME for Quick Start */
-.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+.hero-section { padding:4rem 2rem 3rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #d1fae5 40%, #f8fafc 100%); text-align:center; position:relative; overflow:hidden; }
+.hero-section::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%); border-radius:50%; }
+.hero-section::after { content:''; position:absolute; bottom:-40px; left:-40px; width:160px; height:160px; background:radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%); border-radius:50%; }
 .hero-date { font-size:0.85rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
-.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-emoji { font-size:3.5rem; margin-bottom:1rem; animation:bounce 2s ease-in-out infinite; }
+@keyframes bounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+.hero-tagline { display:inline-block; background:linear-gradient(135deg, #10b981, #06b6d4); color:white; padding:0.4rem 1.2rem; border-radius:99px; font-size:0.8rem; font-weight:700; letter-spacing:0.05em; margin-bottom:1.5rem; text-transform:uppercase; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem; }
 .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
 .hero-badge-emerald { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
 .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
 .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
 .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
 .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+.hero-progress { max-width:500px; margin:2rem auto 0; }
+.hero-progress-bar { height:8px; background:#e2e8f0; border-radius:99px; overflow:hidden; }
+.hero-progress-fill { height:100%; width:0; background:linear-gradient(90deg, #10b981, #06b6d4); border-radius:99px; transition:width 1.5s ease-out; }
+.hero-progress-labels { display:flex; justify-content:space-between; margin-top:0.5rem; font-size:0.75rem; color:#94a3b8; font-weight:600; }
+
+.hero-nav-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; max-width:700px; margin:2.5rem auto 0; }
+.hero-nav-item { display:flex; flex-direction:column; align-items:center; gap:0.4rem; padding:0.75rem 0.5rem; background:white; border:1px solid #e2e8f0; border-radius:12px; text-decoration:none; color:#334155; font-size:0.75rem; font-weight:600; transition:all 0.2s; }
+.hero-nav-item:hover { border-color:#10b981; transform:translateY(-2px); box-shadow:0 4px 12px rgba(16,185,129,0.15); }
+.hero-nav-item i { font-size:1.1rem; color:#10b981; }
+.hero-nav-item span { line-height:1.2; text-align:center; }
+
+.hero-tags-wrapper { margin-top:1.5rem; }
 
 .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
 .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
@@ -115,9 +133,13 @@
 .candle-red .candle-label { color:#ef4444; }
 
 @media (max-width:768px) {
-  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section { padding:2.5rem 1rem 2rem; }
   .hero-section h1 { font-size:1.8rem !important; }
+  .hero-emoji { font-size:2.5rem; }
   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .hero-nav-grid { grid-template-columns:repeat(4, 1fr); gap:0.5rem; }
+  .hero-nav-item { padding:0.5rem 0.25rem; font-size:0.65rem; }
+  .hero-nav-item i { font-size:0.9rem; }
   .next-cta { flex-direction:column; text-align:center; }
   .danger-grid { grid-template-columns:1fr; }
   .step-grid { grid-template-columns:1fr 1fr; }
@@ -129,6 +151,8 @@
 @media (max-width:480px) {
   .step-grid { grid-template-columns:1fr; }
   .candle-demo { flex-direction:column; gap:1rem; }
+  .hero-nav-grid { grid-template-columns:repeat(4, 1fr); gap:0.4rem; }
+  .hero-nav-item { font-size:0.6rem; padding:0.4rem 0.2rem; border-radius:8px; }
 }
  </style>
 </head>
@@ -152,16 +176,38 @@
 
 <!-- Hero -->
 <section class="hero-section">
-  <div class="hero-date"><i class="fa-solid fa-bolt"></i> Quick Start — Guide Express</div>
+  <div class="hero-emoji">&#9889;</div>
+  <div class="hero-tagline">Guide Express — Zéro prérequis</div>
   <h1 class="hero-title" style="font-size:2.8rem; line-height:1.15;">Trader en 30 Minutes</h1>
-  <p class="hero-subtitle">Tout ce qu'il faut savoir pour poser les bases du trading. Le condensé de 7 séries complètes en un seul article. Zéro jargon, 100% concret.</p>
+  <p class="hero-subtitle">Vous partez de zéro ? Parfait. En 30 minutes, vous aurez compris comment fonctionnent les marchés, lu votre premier graphique, et placé (virtuellement) votre premier trade. Pas de blabla, pas de jargon — juste l'essentiel pour démarrer.</p>
   <div class="hero-badges">
-    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-bolt"></i> 30 min de lecture</span>
-    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-graduation-cap"></i> Niveau débutant</span>
-    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-layer-group"></i> 8 sections</span>
-    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-route"></i> Parcours complet</span>
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-bolt"></i> 30 min chrono</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-graduation-cap"></i> 100% débutant</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-layer-group"></i> 8 étapes clés</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-fire"></i> Le condensé de 6h</span>
   </div>
-  <div id="article-clickable-tags" class="card-tags"></div>
+
+  <!-- Progress bar -->
+  <div class="hero-progress">
+    <div class="hero-progress-bar"><div class="hero-progress-fill" id="heroProgress"></div></div>
+    <div class="hero-progress-labels"><span>Début</span><span>Vous êtes ici</span><span>Pro</span></div>
+  </div>
+
+  <!-- Quick nav grid -->
+  <div class="hero-nav-grid">
+    <a href="#marche" class="hero-nav-item"><i class="fa-solid fa-globe"></i><span>Le Marché</span></a>
+    <a href="#graphique" class="hero-nav-item"><i class="fa-solid fa-chart-line"></i><span>Graphiques</span></a>
+    <a href="#earnings" class="hero-nav-item"><i class="fa-solid fa-calendar-check"></i><span>Earnings</span></a>
+    <a href="#etf" class="hero-nav-item"><i class="fa-solid fa-boxes-stacked"></i><span>ETF</span></a>
+    <a href="#broker" class="hero-nav-item"><i class="fa-solid fa-building-columns"></i><span>Broker</span></a>
+    <a href="#pieges" class="hero-nav-item"><i class="fa-solid fa-skull-crossbones"></i><span>Pièges</span></a>
+    <a href="#premier-trade" class="hero-nav-item"><i class="fa-solid fa-rocket"></i><span>1er Trade</span></a>
+    <a href="#suite" class="hero-nav-item"><i class="fa-solid fa-road"></i><span>La Suite</span></a>
+  </div>
+
+  <div class="hero-tags-wrapper">
+    <div id="article-clickable-tags" class="card-tags"></div>
+  </div>
 </section>
 
 <!-- FAB Navigation -->
@@ -193,7 +239,7 @@
 <div id="marche" class="content-card">
   <h2><i class="fa-solid fa-globe" style="color:#10b981"></i> Le marché en 3 minutes</h2>
 
-  <p>Un marché financier, c'est un lieu (aujourd'hui 100% électronique) où <strong>acheteurs et vendeurs</strong> se rencontrent pour échanger des actifs : actions, obligations, matières premières, devises, cryptomonnaies. Le prix d'un actif est déterminé par l'offre et la demande — si plus de gens veulent acheter que vendre, le prix monte. C'est aussi simple que ça.</p>
+  <p>Bienvenue dans le game. Un marché financier, c'est un lieu (aujourd'hui 100% électronique) où <strong>acheteurs et vendeurs</strong> se rencontrent pour échanger des actifs : actions, obligations, matières premières, devises, cryptomonnaies. Le prix d'un actif est déterminé par l'offre et la demande — si plus de gens veulent acheter que vendre, le prix monte. C'est aussi simple que ça. Et oui, <strong>vous pouvez y participer</strong> dès aujourd'hui.</p>
 
   <h3>Qui sont les acteurs ?</h3>
   <p>Deux grandes catégories :</p>
@@ -257,7 +303,7 @@
 <div id="graphique" class="content-card">
   <h2><i class="fa-solid fa-chart-line" style="color:#10b981"></i> Lire un graphique</h2>
 
-  <p>Un graphique boursier raconte l'histoire d'un actif dans le temps. Savoir le lire, c'est comme savoir lire une carte routière — ça vous dit où vous êtes et ça vous donne des indices sur la direction. Vous n'avez pas besoin de devenir chartiste professionnel. Comprendre 3 concepts suffit pour commencer.</p>
+  <p>Bonne nouvelle : vous n'avez pas besoin d'un doctorat pour lire un graphique boursier. C'est une histoire visuelle — elle vous dit où un actif est allé et donne des indices sur la direction. Comme une carte routière, mais pour votre argent. <strong>3 concepts</strong> suffisent pour comprendre 80% de ce qui se passe. Let's go.</p>
 
   <h3>Les chandeliers japonais</h3>
   <p>Chaque "bougie" sur un graphique représente une période (1 jour, 1 heure, 5 minutes…). Elle vous dit 4 choses : le prix d'<strong>ouverture</strong>, le prix de <strong>clôture</strong>, le plus <strong>haut</strong> et le plus <strong>bas</strong> de la période.</p>
@@ -347,7 +393,7 @@
 <div id="earnings" class="content-card">
   <h2><i class="fa-solid fa-calendar-check" style="color:#10b981"></i> Les earnings en 5 minutes</h2>
 
-  <p>Quatre fois par an, chaque entreprise cotée publie ses résultats financiers — les <strong>earnings</strong>. C'est le moment de vérité : le marché compare ce qui était attendu à ce qui a été livré. Un écart de quelques centimes sur le bénéfice par action peut faire bouger une action de 10, 20, voire 30% en quelques minutes.</p>
+  <p>C'est le Super Bowl de la bourse. Quatre fois par an, chaque entreprise cotée publie ses résultats financiers — les <strong>earnings</strong>. Le marché compare ce qui était attendu à ce qui a été livré. Un écart de quelques centimes sur le bénéfice par action peut faire bouger une action de 10, 20, voire 30% en quelques minutes. C'est spectaculaire — et dangereux si vous ne savez pas ce que vous regardez.</p>
 
   <h3>Les 3 chiffres qui comptent</h3>
   <table class="compare-table">
@@ -415,7 +461,7 @@
 <div id="etf" class="content-card">
   <h2><i class="fa-solid fa-boxes-stacked" style="color:#10b981"></i> ETF ou actions ?</h2>
 
-  <p>Quand vous débutez, la question n'est pas <em>"quelle action acheter ?"</em> mais <strong>"dois-je acheter des actions individuelles ou des ETF ?"</strong>. La réponse courte : <strong>commencez par les ETF</strong>.</p>
+  <p>C'est LA question que tout débutant se pose. Et la réponse va peut-être vous surprendre : <strong>commencez par les ETF</strong>. Oui, c'est moins sexy que de choisir la prochaine Tesla. Mais c'est infiniment plus intelligent — et voici pourquoi.</p>
 
   <h3>C'est quoi un ETF ?</h3>
   <p>Un <strong>ETF</strong> (Exchange-Traded Fund) est un fonds qui réplique un indice, un secteur, ou un thème. Quand vous achetez 1 part de SPY, vous achetez instantanément une fraction des 500 plus grandes entreprises américaines. Un seul achat = diversification immédiate.</p>
@@ -550,7 +596,7 @@
 <div id="pieges" class="content-card">
   <h2><i class="fa-solid fa-skull-crossbones" style="color:#ef4444"></i> Les 10 pièges mortels du débutant</h2>
 
-  <p>La majorité des débutants perdent de l'argent dans leurs 6 premiers mois — pas parce que le trading est impossible, mais parce qu'ils tombent dans les mêmes pièges, encore et encore. Voici les 10 erreurs les plus courantes et comment les éviter.</p>
+  <p>OK, moment sérieux. Cette section peut littéralement vous faire économiser des milliers d'euros. La majorité des débutants perdent de l'argent dans leurs 6 premiers mois — pas parce que le trading est impossible, mais parce qu'ils tombent dans <strong>les mêmes pièges, encore et encore</strong>. Lisez cette section deux fois si nécessaire.</p>
 
   <div class="danger-grid">
     <div class="danger-card">
@@ -630,7 +676,7 @@
 <div id="premier-trade" class="content-card">
   <h2><i class="fa-solid fa-rocket" style="color:#10b981"></i> Votre premier trade — pas à pas</h2>
 
-  <p>Vous avez lu les 6 sections précédentes. Vous connaissez les bases. Voici maintenant le guide concret, étape par étape, pour placer votre tout premier trade. On va acheter 1 part de SPY — l'ETF S&P 500. C'est le trade le plus sûr et le plus logique pour un débutant.</p>
+  <p>C'est le moment. Vous avez compris le marché, lu un graphique, appris les earnings, choisi entre ETF et actions, comparé les brokers, et mémorisé les 10 pièges. Il est temps de <strong>passer à l'action</strong>. Voici votre feuille de route pour placer votre tout premier trade — on va acheter 1 part de SPY, l'ETF S&P 500. Simple, sûr, et c'est un vrai trade.</p>
 
   <h3>Les 7 étapes</h3>
 
@@ -714,7 +760,7 @@
 <div id="suite" class="content-card">
   <h2><i class="fa-solid fa-road" style="color:#10b981"></i> La suite du parcours</h2>
 
-  <p>Vous venez de lire le condensé de 30 minutes. Vous avez les bases. Mais ce n'est que <strong>10% du parcours complet</strong>. Chaque section que vous venez de lire correspond à une série détaillée de 3 à 6 parties. Voici la roadmap complète :</p>
+  <p>Bravo, vous avez terminé le Quick Start ! Vous en savez déjà plus que 90% des gens qui "veulent investir un jour". Mais on ne va pas se mentir : c'est <strong>10% du parcours complet</strong>. Chaque section que vous venez de lire correspond à une série détaillée de 3 à 6 parties. La bonne nouvelle ? Vous avez maintenant la vision d'ensemble pour savoir exactement quoi approfondir.</p>
 
   <div class="roadmap-grid">
     <a href="/series/comprendre-le-marche/" class="roadmap-card">
@@ -767,15 +813,17 @@
   </div>
 
   <div class="takeaway-box">
-    <h3><i class="fa-solid fa-trophy"></i> Félicitations !</h3>
+    <h3><i class="fa-solid fa-trophy"></i> Ce que vous avez accompli en 30 minutes</h3>
     <ul class="takeaway-list">
-      <li><i class="fa-solid fa-check"></i> Vous connaissez les bases du fonctionnement des marchés.</li>
-      <li><i class="fa-solid fa-check"></i> Vous savez lire un graphique et les 3 indicateurs clés.</li>
-      <li><i class="fa-solid fa-check"></i> Vous comprenez les earnings et pourquoi le marché réagit.</li>
-      <li><i class="fa-solid fa-check"></i> Vous savez que les ETF sont le meilleur point de départ.</li>
-      <li><i class="fa-solid fa-check"></i> Vous avez un plan concret pour votre premier trade.</li>
-      <li><i class="fa-solid fa-check"></i> Vous connaissez les 10 pièges à éviter absolument.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Marché</strong> — Vous savez comment ça fonctionne, qui sont les acteurs, et quand ça ouvre.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Graphiques</strong> — Chandeliers, supports/résistances, RSI, EMA, MACD : vous lisez un chart.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Earnings</strong> — EPS, Revenue, Guidance : vous décryptez les résultats trimestriels.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>ETF</strong> — Vous savez pourquoi commencer par SPY/VT bat 90% des pros.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Broker</strong> — Vous avez un comparatif et savez quoi choisir.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Pièges</strong> — Les 10 erreurs fatales sont gravées dans votre mémoire.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Premier trade</strong> — Vous avez une checklist concrète, pas à pas.</li>
     </ul>
+    <p style="text-align:center; margin-top:1.5rem; font-size:1.1rem; font-weight:700; color:#059669;">Vous n'êtes plus un "débutant qui ne sait pas par où commencer".<br>Vous êtes un débutant <em>avec un plan</em>. C'est toute la différence.</p>
   </div>
 
   <a href="/?tab=series" class="next-cta">
@@ -801,6 +849,21 @@
 <script src="/assets/tag-renderer.js"></script>
 
 <script>
+// ── Progress bar animation ──
+document.addEventListener('DOMContentLoaded', function() {
+  var progressFill = document.getElementById('heroProgress');
+  if (progressFill) setTimeout(function() { progressFill.style.width = '10%'; }, 400);
+
+  // Reading progress — update progress bar as user scrolls
+  window.addEventListener('scroll', function() {
+    if (!progressFill) return;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var scrolled = window.scrollY / docHeight;
+    var pct = Math.max(10, Math.min(100, Math.round(scrolled * 100)));
+    progressFill.style.width = pct + '%';
+  });
+});
+
 // ── FAB Navigation ──
 document.addEventListener('DOMContentLoaded', function() {
   const fnavBtn = document.getElementById('fnavBtn');
