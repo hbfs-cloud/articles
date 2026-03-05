@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="us,eu,formation,technique,macro" data-tab="series">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Quick Start — Trader en 30 Minutes | Market Watch</title>
+ <meta name="description" content="Le condensé ultime pour débuter en trading : marchés, graphiques, earnings, ETF, brokers, pièges et premier trade. 30 minutes pour poser les bases.">
+ <meta property="og:title" content="Quick Start — Trader en 30 Minutes | Market Watch">
+ <meta property="og:description" content="Tout ce qu'il faut savoir pour commencer à trader, condensé en 30 minutes de lecture. Le guide express du parcours débutant.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/quick-start/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+/* EMERALD THEME for Quick Start */
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-emerald { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+.hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+.takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border:1px solid #10b981; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#059669; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(16,185,129,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#10b981; margin-top:0.2rem; flex-shrink:0; }
+
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(16,185,129,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+
+.danger-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin:2rem 0; }
+.danger-card { background:white; border:1px solid #fecaca; border-radius:16px; padding:1.5rem; border-left:4px solid #ef4444; transition:transform 0.2s; }
+.danger-card:hover { transform:translateY(-2px); box-shadow:0 8px 20px -5px rgba(0,0,0,0.08); }
+.danger-card h4 { color:#dc2626; margin:0 0 0.5rem; font-size:0.95rem; }
+.danger-card p { color:#64748b; font-size:0.85rem; line-height:1.5; margin:0; }
+
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #10b981; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+.roadmap-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin:2rem 0; }
+.roadmap-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; transition:all 0.3s; text-decoration:none; color:inherit; }
+.roadmap-card:hover { border-color:#10b981; transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.1); }
+.roadmap-num { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg, #10b981, #059669); color:white; font-weight:800; font-size:0.85rem; margin-bottom:0.75rem; }
+.roadmap-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.35rem; }
+.roadmap-card .roadmap-desc { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0 0 0.75rem; }
+.roadmap-card .roadmap-meta { font-size:0.75rem; color:#94a3b8; font-weight:600; }
+
+.pedagogy-box { background:#f0fdf4; border:1px solid #86efac; border-radius:16px; padding:1.5rem 2rem; margin:1.5rem 0; }
+.pedagogy-box h4 { color:#166534; margin:0 0 0.75rem; font-size:1rem; }
+.pedagogy-box p { color:#334155; font-size:0.95rem; line-height:1.7; margin:0 0 0.75rem; }
+.pedagogy-box p:last-child { margin-bottom:0; }
+
+.alert-box { background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; padding:1.5rem 2rem; margin:1.5rem 0; }
+.alert-box h4 { color:#dc2626; margin:0 0 0.75rem; font-size:1rem; }
+.alert-box p { color:#334155; font-size:0.95rem; line-height:1.7; margin:0 0 0.75rem; }
+.alert-box p:last-child { margin-bottom:0; }
+
+.candle-demo { display:flex; align-items:center; justify-content:center; gap:3rem; margin:2rem 0; padding:2rem; background:#f8fafc; border-radius:16px; border:1px solid #e2e8f0; }
+.candle { display:flex; flex-direction:column; align-items:center; gap:0.5rem; }
+.candle-body { width:30px; height:60px; border-radius:4px; position:relative; }
+.candle-body::before, .candle-body::after { content:''; position:absolute; left:50%; transform:translateX(-50%); width:2px; }
+.candle-body::before { top:-15px; height:15px; }
+.candle-body::after { bottom:-15px; height:15px; }
+.candle-green .candle-body { background:#10b981; }
+.candle-green .candle-body::before, .candle-green .candle-body::after { background:#10b981; }
+.candle-red .candle-body { background:#ef4444; }
+.candle-red .candle-body::before, .candle-red .candle-body::after { background:#ef4444; }
+.candle-label { font-size:0.8rem; font-weight:700; }
+.candle-green .candle-label { color:#10b981; }
+.candle-red .candle-label { color:#ef4444; }
+
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .next-cta { flex-direction:column; text-align:center; }
+  .danger-grid { grid-template-columns:1fr; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+  .roadmap-grid { grid-template-columns:1fr; }
+  .candle-demo { gap:1.5rem; padding:1.5rem 1rem; }
+  .compare-table { font-size:0.8rem; }
+  .compare-table th, .compare-table td { padding:0.6rem 0.5rem; }
+}
+@media (max-width:480px) {
+  .step-grid { grid-template-columns:1fr; }
+  .candle-demo { flex-direction:column; gap:1rem; }
+}
+ </style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-bolt"></i> Quick Start — Guide Express</div>
+  <h1 class="hero-title" style="font-size:2.8rem; line-height:1.15;">Trader en 30 Minutes</h1>
+  <p class="hero-subtitle">Tout ce qu'il faut savoir pour poser les bases du trading. Le condensé de 7 séries complètes en un seul article. Zéro jargon, 100% concret.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-bolt"></i> 30 min de lecture</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-graduation-cap"></i> Niveau débutant</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-layer-group"></i> 8 sections</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-route"></i> Parcours complet</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<!-- FAB Navigation -->
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#marche" class="fnav-item" data-section="marche"><i class="fas fa-globe"></i><span>Le Marché</span></a>
+    <a href="#graphique" class="fnav-item" data-section="graphique"><i class="fas fa-chart-line"></i><span>Graphiques</span></a>
+    <a href="#earnings" class="fnav-item" data-section="earnings"><i class="fas fa-calendar-check"></i><span>Earnings</span></a>
+    <a href="#etf" class="fnav-item" data-section="etf"><i class="fas fa-boxes-stacked"></i><span>ETF</span></a>
+    <a href="#broker" class="fnav-item" data-section="broker"><i class="fas fa-building-columns"></i><span>Broker</span></a>
+    <a href="#pieges" class="fnav-item" data-section="pieges"><i class="fas fa-skull-crossbones"></i><span>Pièges</span></a>
+    <a href="#premier-trade" class="fnav-item" data-section="premier-trade"><i class="fas fa-rocket"></i><span>1er Trade</span></a>
+    <a href="#suite" class="fnav-item" data-section="suite"><i class="fas fa-road"></i><span>La Suite</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+
+<!-- Main Content -->
+<main class="container">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 1 : LE MARCHÉ EN 3 MINUTES     -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-globe"></i> Section 1 sur 8</div>
+
+<div id="marche" class="content-card">
+  <h2><i class="fa-solid fa-globe" style="color:#10b981"></i> Le marché en 3 minutes</h2>
+
+  <p>Un marché financier, c'est un lieu (aujourd'hui 100% électronique) où <strong>acheteurs et vendeurs</strong> se rencontrent pour échanger des actifs : actions, obligations, matières premières, devises, cryptomonnaies. Le prix d'un actif est déterminé par l'offre et la demande — si plus de gens veulent acheter que vendre, le prix monte. C'est aussi simple que ça.</p>
+
+  <h3>Qui sont les acteurs ?</h3>
+  <p>Deux grandes catégories :</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-user" style="color:#10b981"></i> <strong>Les particuliers (retail)</strong> — Vous, moi, quelqu'un avec un compte chez un broker en ligne. On représente environ 20-25% du volume sur les marchés US. Notre avantage : la flexibilité. On peut attendre, choisir nos moments.</li>
+    <li><i class="fa-solid fa-building" style="color:#2563eb"></i> <strong>Les institutionnels</strong> — Fonds de pension, hedge funds, banques d'investissement, assureurs. Ils gèrent des milliards et font 75-80% du volume. Ils ont des algorithmes, des analystes, des données que nous n'avons pas. Mais ils ont aussi des contraintes : mandats, benchmarks, taille de positions.</li>
+  </ul>
+
+  <h3>Quand ça se passe ?</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Marché</th><th>Horaires (heure de Paris)</th><th>Actifs phares</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>🇺🇸 Wall Street (NYSE/Nasdaq)</strong></td><td>15h30 – 22h00</td><td>AAPL, MSFT, TSLA, SPY</td></tr>
+      <tr><td><strong>🇪🇺 Euronext (Paris, Amsterdam)</strong></td><td>09h00 – 17h30</td><td>LVMH, TotalEnergies, ASML</td></tr>
+      <tr><td><strong>🇬🇧 Londres (LSE)</strong></td><td>09h00 – 17h30</td><td>Shell, HSBC, AstraZeneca</td></tr>
+      <tr><td><strong>🇯🇵 Tokyo (TSE)</strong></td><td>01h00 – 07h00</td><td>Toyota, Sony, SoftBank</td></tr>
+      <tr><td><strong>₿ Crypto</strong></td><td>24h/24, 7j/7</td><td>BTC, ETH, SOL</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Le spread : le coût invisible</h3>
+  <p>Quand vous achetez une action, vous ne payez pas exactement le "prix du marché". Il y a deux prix :</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrow-up" style="color:#ef4444"></i> Le <strong>Ask</strong> (prix demandé par le vendeur) — c'est le prix auquel vous achetez.</li>
+    <li><i class="fa-solid fa-arrow-down" style="color:#10b981"></i> Le <strong>Bid</strong> (prix offert par l'acheteur) — c'est le prix auquel vous vendez.</li>
+  </ul>
+  <p>La différence entre les deux s'appelle le <strong>spread</strong>. Sur Apple, il est souvent de 0,01$. Sur une petite crypto obscure, il peut être de 5%. Le spread est un coût caché à chaque transaction — plus il est petit, mieux c'est.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Analogie</h4>
+    <p>Le marché, c'est comme un souk géant. Chaque stand (entreprise) a un prix affiché. Mais le vrai prix se négocie entre acheteurs et vendeurs en temps réel. Les gros commerçants (institutionnels) font plus de bruit et influencent les prix. Les petits (retail) peuvent se faufiler et trouver des opportunités que les gros ignorent.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Le prix = offre et demande. Rien d'autre.</li>
+      <li><i class="fa-solid fa-check"></i> Les institutionnels dominent le volume mais ont des contraintes que vous n'avez pas.</li>
+      <li><i class="fa-solid fa-check"></i> Le spread est votre premier coût — privilégiez les actifs liquides.</li>
+      <li><i class="fa-solid fa-check"></i> Wall Street ouvre à 15h30 heure de Paris. Les cryptos ne dorment jamais.</li>
+    </ul>
+  </div>
+
+  <a href="/series/comprendre-le-marche/" class="next-cta">
+    <div>
+      <div class="next-label">Approfondir →</div>
+      <div class="next-title">Comprendre le Marché — Série complète (6 parties)</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 2 : LIRE UN GRAPHIQUE          -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-chart-line"></i> Section 2 sur 8</div>
+
+<div id="graphique" class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#10b981"></i> Lire un graphique</h2>
+
+  <p>Un graphique boursier raconte l'histoire d'un actif dans le temps. Savoir le lire, c'est comme savoir lire une carte routière — ça vous dit où vous êtes et ça vous donne des indices sur la direction. Vous n'avez pas besoin de devenir chartiste professionnel. Comprendre 3 concepts suffit pour commencer.</p>
+
+  <h3>Les chandeliers japonais</h3>
+  <p>Chaque "bougie" sur un graphique représente une période (1 jour, 1 heure, 5 minutes…). Elle vous dit 4 choses : le prix d'<strong>ouverture</strong>, le prix de <strong>clôture</strong>, le plus <strong>haut</strong> et le plus <strong>bas</strong> de la période.</p>
+
+  <div class="candle-demo">
+    <div class="candle candle-green">
+      <div style="font-size:0.7rem; color:#94a3b8;">Plus haut ↑</div>
+      <div class="candle-body"></div>
+      <div style="font-size:0.7rem; color:#94a3b8;">Plus bas ↓</div>
+      <div class="candle-label"><i class="fa-solid fa-arrow-up"></i> Haussière</div>
+      <div style="font-size:0.75rem; color:#64748b;">Clôture > Ouverture</div>
+    </div>
+    <div class="candle candle-red">
+      <div style="font-size:0.7rem; color:#94a3b8;">Plus haut ↑</div>
+      <div class="candle-body"></div>
+      <div style="font-size:0.7rem; color:#94a3b8;">Plus bas ↓</div>
+      <div class="candle-label"><i class="fa-solid fa-arrow-down"></i> Baissière</div>
+      <div style="font-size:0.75rem; color:#64748b;">Clôture < Ouverture</div>
+    </div>
+  </div>
+
+  <h3>Supports et résistances</h3>
+  <p>Imaginez un sol et un plafond :</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-shield-halved" style="color:#10b981"></i> <strong>Support</strong> — Un niveau de prix où les acheteurs interviennent régulièrement. Le prix "rebondit" dessus. C'est le sol.</li>
+    <li><i class="fa-solid fa-hand" style="color:#ef4444"></i> <strong>Résistance</strong> — Un niveau de prix où les vendeurs prennent le dessus. Le prix bute dessus. C'est le plafond.</li>
+  </ul>
+  <p>Quand un support casse, il devient souvent une résistance (et inversement). C'est l'un des principes les plus fiables de l'analyse technique.</p>
+
+  <h3>Les 3 indicateurs indispensables</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Indicateur</th><th>Ce qu'il mesure</th><th>Signal clé</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>RSI (14)</strong></td>
+        <td>La force du mouvement récent (0-100)</td>
+        <td>< 30 = survendu (potentiel rebond)<br>> 70 = suracheté (potentiel repli)</td>
+      </tr>
+      <tr>
+        <td><strong>EMA 200</strong></td>
+        <td>La tendance de fond sur ~10 mois</td>
+        <td>Prix au-dessus = tendance haussière<br>Prix en dessous = tendance baissière</td>
+      </tr>
+      <tr>
+        <td><strong>MACD</strong></td>
+        <td>Les changements de momentum</td>
+        <td>Croisement haussier = le momentum s'accélère<br>Croisement baissier = il ralentit</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le piège du débutant</h4>
+    <p>N'empilez pas 15 indicateurs sur votre graphique. Trois suffisent. L'excès d'indicateurs crée de la <strong>paralysie par l'analyse</strong> — vous attendez que tout soit aligné et vous ne tradez jamais, ou pire, les indicateurs se contredisent et vous perdez confiance. Un RSI, une EMA 200 et le MACD couvrent 80% des besoins d'un swing trader.</p>
+  </div>
+
+  <!-- Chart ECharts : Mini-chart annoté -->
+  <div id="miniChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Une bougie verte = clôture au-dessus de l'ouverture. Rouge = en dessous.</li>
+      <li><i class="fa-solid fa-check"></i> Support = sol (acheteurs). Résistance = plafond (vendeurs).</li>
+      <li><i class="fa-solid fa-check"></i> RSI < 30, EMA 200 en support, MACD haussier = signal d'achat classique.</li>
+      <li><i class="fa-solid fa-check"></i> Trois indicateurs maximum. La simplicité bat la complexité.</li>
+    </ul>
+  </div>
+
+  <a href="/series/lire-un-chart/" class="next-cta">
+    <div>
+      <div class="next-label">Approfondir →</div>
+      <div class="next-title">Savoir Lire un Chart — Série complète (6 parties)</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 3 : LES EARNINGS               -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-calendar-check"></i> Section 3 sur 8</div>
+
+<div id="earnings" class="content-card">
+  <h2><i class="fa-solid fa-calendar-check" style="color:#10b981"></i> Les earnings en 5 minutes</h2>
+
+  <p>Quatre fois par an, chaque entreprise cotée publie ses résultats financiers — les <strong>earnings</strong>. C'est le moment de vérité : le marché compare ce qui était attendu à ce qui a été livré. Un écart de quelques centimes sur le bénéfice par action peut faire bouger une action de 10, 20, voire 30% en quelques minutes.</p>
+
+  <h3>Les 3 chiffres qui comptent</h3>
+  <table class="compare-table">
+    <thead>
+      <tr><th>Métrique</th><th>C'est quoi</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>EPS (Earnings Per Share)</strong></td>
+        <td>Bénéfice net divisé par le nombre d'actions. Le chiffre star.</td>
+        <td>Attendu : 1,50$ → Réalisé : 1,62$ = <span style="color:#10b981; font-weight:700;">Beat +8%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Revenue (Chiffre d'affaires)</strong></td>
+        <td>Combien l'entreprise a encaissé au total. Mesure la croissance.</td>
+        <td>Attendu : 90Mds → Réalisé : 92Mds = <span style="color:#10b981; font-weight:700;">Beat +2,2%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Guidance</strong></td>
+        <td>Les prévisions de l'entreprise pour le prochain trimestre. Souvent plus important que les résultats eux-mêmes.</td>
+        <td>Guidance relevée = très bullish<br>Guidance abaissée = red flag</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Pourquoi ça bouge autant ?</h3>
+  <p>Parce que le marché <strong>price</strong> (intègre dans le prix) les attentes avant la publication. Si tout le monde attend un bon trimestre et qu'il est juste "correct", l'action peut chuter — c'est le fameux <strong>"buy the rumor, sell the news"</strong>. Inversement, des résultats médiocres sur une action déjà massacrée peuvent déclencher un rebond violent.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Comment lire les earnings en 2 minutes</h4>
+    <p><strong>Étape 1 :</strong> Cherchez "EPS beat" ou "EPS miss" dans le titre de l'article. C'est le verdict immédiat.</p>
+    <p><strong>Étape 2 :</strong> Regardez la guidance. C'est elle qui détermine le mouvement des jours suivants.</p>
+    <p><strong>Étape 3 :</strong> Observez la réaction du marché dans les 30 premières minutes. Un gap up qui tient = les institutionnels valident. Un gap up qui se retourne = piège.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Danger : trader les earnings</h4>
+    <p>Acheter juste avant une publication de résultats en espérant un beat, c'est du <strong>gambling déguisé</strong>. Même avec les meilleurs chiffres du monde, si le marché s'attendait à encore mieux, l'action chute. Pour un débutant : <strong>observez les 2-3 premiers earnings cycles sans trader</strong>. Comprenez la mécanique avant de risquer votre argent.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> EPS, Revenue, Guidance — les 3 métriques à surveiller.</li>
+      <li><i class="fa-solid fa-check"></i> La guidance compte plus que les résultats passés.</li>
+      <li><i class="fa-solid fa-check"></i> "Buy the rumor, sell the news" — le marché anticipe toujours.</li>
+      <li><i class="fa-solid fa-check"></i> Ne tradez pas les earnings au début. Observez d'abord.</li>
+    </ul>
+  </div>
+
+  <a href="/series/maitriser-les-earnings/" class="next-cta">
+    <div>
+      <div class="next-label">Approfondir →</div>
+      <div class="next-title">Maîtriser les Earnings — Série complète (3 parties)</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 4 : ETF OU ACTIONS ?           -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-boxes-stacked"></i> Section 4 sur 8</div>
+
+<div id="etf" class="content-card">
+  <h2><i class="fa-solid fa-boxes-stacked" style="color:#10b981"></i> ETF ou actions ?</h2>
+
+  <p>Quand vous débutez, la question n'est pas <em>"quelle action acheter ?"</em> mais <strong>"dois-je acheter des actions individuelles ou des ETF ?"</strong>. La réponse courte : <strong>commencez par les ETF</strong>.</p>
+
+  <h3>C'est quoi un ETF ?</h3>
+  <p>Un <strong>ETF</strong> (Exchange-Traded Fund) est un fonds qui réplique un indice, un secteur, ou un thème. Quand vous achetez 1 part de SPY, vous achetez instantanément une fraction des 500 plus grandes entreprises américaines. Un seul achat = diversification immédiate.</p>
+
+  <h3>Pourquoi commencer par les ETF</h3>
+  <table class="compare-table">
+    <thead>
+      <tr><th>Critère</th><th>Action individuelle</th><th>ETF</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Risque</strong></td><td>Élevé — une entreprise peut faire faillite</td><td>Faible — un indice ne fait jamais faillite</td></tr>
+      <tr><td><strong>Diversification</strong></td><td>1 entreprise = concentration</td><td>50-500 entreprises en 1 achat</td></tr>
+      <tr><td><strong>Recherche nécessaire</strong></td><td>Bilans, earnings, concurrence…</td><td>Minimale — choisir l'indice suffit</td></tr>
+      <tr><td><strong>Performance</strong></td><td>Variable — 90% des pros ne battent pas l'indice</td><td>Rendement marché (~10%/an historique sur S&P 500)</td></tr>
+      <tr><td><strong>Frais</strong></td><td>Commission par trade</td><td>0,03% à 0,20%/an (quasi gratuit)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Les 5 ETF pour commencer</h3>
+  <table class="compare-table">
+    <thead>
+      <tr><th>ETF</th><th>Quoi</th><th>Frais annuels</th><th>Pour qui</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>SPY</strong></td><td>S&P 500 (500 plus grosses US)</td><td>0,09%</td><td>Tout le monde</td></tr>
+      <tr><td><strong>QQQ</strong></td><td>Nasdaq-100 (tech US)</td><td>0,20%</td><td>Fan de tech/croissance</td></tr>
+      <tr><td><strong>VT</strong></td><td>Actions monde entier</td><td>0,07%</td><td>Diversification totale</td></tr>
+      <tr><td><strong>GLD</strong></td><td>Or physique</td><td>0,40%</td><td>Protection inflation</td></tr>
+      <tr><td><strong>TLT</strong></td><td>Obligations US long terme</td><td>0,15%</td><td>Stabilité/contrepoids actions</td></tr>
+    </tbody>
+  </table>
+
+  <h3>La stratégie DCA</h3>
+  <p>Le <strong>DCA</strong> (Dollar-Cost Averaging) consiste à investir un montant fixe à intervalle régulier — par exemple, 200€ dans SPY chaque mois, quoi qu'il arrive. Quand le marché baisse, vous achetez plus de parts. Quand il monte, vous achetez moins. Sur le long terme, ça lisse votre prix d'entrée et supprime le stress du "timing".</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le chiffre qui dit tout</h4>
+    <p><strong>90% des gestionnaires de fonds professionnels ne battent pas le S&P 500 sur 15 ans.</strong> Si les meilleurs experts de Wall Street, avec leurs armées d'analystes et leurs algorithmes, n'y arrivent pas, pourquoi un débutant ferait-il mieux en stock picking ? Commencez par le marché (SPY/VT), apprenez, puis spécialisez-vous progressivement.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> ETF = diversification en un clic. Action = concentration = risque.</li>
+      <li><i class="fa-solid fa-check"></i> SPY (S&P 500) et VT (monde) sont les deux incontournables.</li>
+      <li><i class="fa-solid fa-check"></i> DCA mensuel : investir régulièrement sans se soucier du timing.</li>
+      <li><i class="fa-solid fa-check"></i> 90% des pros ne battent pas l'indice. Pas de honte à acheter le marché.</li>
+    </ul>
+  </div>
+
+  <a href="/series/trader-etf/" class="next-cta">
+    <div>
+      <div class="next-label">Approfondir →</div>
+      <div class="next-title">Trader les ETF — Série complète (6 parties)</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 5 : CHOISIR SON BROKER         -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-building-columns"></i> Section 5 sur 8</div>
+
+<div id="broker" class="content-card">
+  <h2><i class="fa-solid fa-building-columns" style="color:#10b981"></i> Choisir son broker</h2>
+
+  <p>Le broker est votre intermédiaire pour accéder aux marchés. C'est le premier choix concret que vous allez faire. Pas besoin de passer 3 jours à comparer — voici les 3 critères qui comptent vraiment et un comparatif des principales options.</p>
+
+  <h3>Les 3 critères essentiels</h3>
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Frais</h4>
+      <p>Commission par ordre, spread, frais de change, frais d'inactivité. Les "0% commission" cachent parfois un spread plus large.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Facilité</h4>
+      <p>Interface intuitive, appli mobile, ouverture de compte rapide, support en français. Si c'est compliqué, vous n'utiliserez pas.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Instruments</h4>
+      <p>Actions US + EU, ETF, crypto ? Options ? CFD ? Vérifiez que le broker propose ce que vous voulez trader.</p>
+    </div>
+  </div>
+
+  <h3>Comparatif express 2026</h3>
+  <table class="compare-table">
+    <thead>
+      <tr><th>Broker</th><th>Frais actions US</th><th>ETF</th><th>Crypto</th><th>Pour qui</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Interactive Brokers</strong></td><td>0,005$/action</td><td>✅ 13 000+</td><td>✅</td><td>Traders sérieux, accès mondial</td></tr>
+      <tr><td><strong>Trade Republic</strong></td><td>1€ / ordre</td><td>✅ 2 000+</td><td>✅</td><td>Débutants EU, DCA automatisé</td></tr>
+      <tr><td><strong>DEGIRO</strong></td><td>1-2€ / ordre</td><td>✅ Sélection gratuite</td><td>❌</td><td>ETF Europe, frais bas</td></tr>
+      <tr><td><strong>eToro</strong></td><td>0% (spread)</td><td>✅ Limité</td><td>✅</td><td>Débutants, social trading</td></tr>
+      <tr><td><strong>Saxo Bank</strong></td><td>1$ min</td><td>✅ 7 000+</td><td>❌</td><td>Multi-actifs, accès complet</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Mon conseil pour débuter</h4>
+    <p><strong>Commencez avec Trade Republic ou DEGIRO</strong> si vous êtes en Europe. Interface simple, frais très bas, parfait pour le DCA sur ETF. <strong>Interactive Brokers</strong> si vous voulez un accès complet (options US, marchés exotiques, données pro) — l'interface est plus complexe mais c'est le standard de l'industrie. N'ouvrez pas 5 comptes partout : <strong>un seul broker pour commencer</strong>, vous changerez plus tard si besoin.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> 3 critères : frais, facilité d'usage, instruments disponibles.</li>
+      <li><i class="fa-solid fa-check"></i> Commencez avec un seul broker. Évitez d'ouvrir des comptes partout.</li>
+      <li><i class="fa-solid fa-check"></i> "0% commission" ≠ gratuit. Vérifiez le spread et les frais de change.</li>
+      <li><i class="fa-solid fa-check"></i> Régulation obligatoire : vérifiez que votre broker est régulé (AMF, FCA, BaFin, SEC).</li>
+    </ul>
+  </div>
+
+  <a href="/series/choisir-son-broker/" class="next-cta">
+    <div>
+      <div class="next-label">Approfondir →</div>
+      <div class="next-title">Choisir son Broker — Le Guide Complet (6 parties)</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 6 : LES 10 PIÈGES MORTELS     -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-skull-crossbones"></i> Section 6 sur 8</div>
+
+<div id="pieges" class="content-card">
+  <h2><i class="fa-solid fa-skull-crossbones" style="color:#ef4444"></i> Les 10 pièges mortels du débutant</h2>
+
+  <p>La majorité des débutants perdent de l'argent dans leurs 6 premiers mois — pas parce que le trading est impossible, mais parce qu'ils tombent dans les mêmes pièges, encore et encore. Voici les 10 erreurs les plus courantes et comment les éviter.</p>
+
+  <div class="danger-grid">
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-fire"></i> 1. Le FOMO</h4>
+      <p><strong>Fear Of Missing Out.</strong> Vous voyez une action monter de 30% et vous achetez au sommet. Résultat : vous payez le prix maximum et le mouvement se retourne. Règle : si c'est dans les news grand public, c'est <strong>déjà trop tard</strong>.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-rotate-left"></i> 2. Le Revenge Trading</h4>
+      <p>Vous venez de perdre et vous voulez "vous refaire" immédiatement. Vous doublez la mise sur le prochain trade. C'est le début de la spirale. <strong>Après une perte, arrêtez-vous</strong>. Revenez le lendemain.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-bomb"></i> 3. Le levier excessif</h4>
+      <p>Le levier x5, x10, x20 multiplie vos gains… et vos pertes. Un mouvement de -5% avec un levier x10 = -50% de votre capital. <strong>Pas de levier au-delà de x2 pour un débutant.</strong> Idéalement, aucun.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-shield-halved"></i> 4. Pas de stop loss</h4>
+      <p>"Ça va remonter" est la phrase la plus chère du trading. Un stop loss est un ordre automatique qui coupe votre perte à un niveau prédéfini. <strong>Chaque trade doit avoir un stop.</strong> Toujours.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-coins"></i> 5. Le all-in</h4>
+      <p>Mettre tout votre capital sur un seul trade, c'est jouer à la roulette. Règle : <strong>jamais plus de 5% de votre capital par position</strong>. Même si vous êtes "sûr", vous pouvez avoir tort.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-user-secret"></i> 6. Les "gourous"</h4>
+      <p>Quelqu'un sur Twitter, YouTube ou Telegram vous promet 10%/semaine ? C'est une arnaque. Les vrais traders ne vendent pas de signaux à 49€/mois. Ils tradent. <strong>Méfiez-vous de quiconque promet des rendements garantis.</strong></p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-receipt"></i> 7. Les frais cachés</h4>
+      <p>Frais overnight sur les CFD, spread élargi en basse liquidité, frais de change EUR/USD. Sur 50 trades/mois, 1% de frais par trade = <strong>50% de performance mangée</strong>. Calculez vos coûts réels.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-newspaper"></i> 8. Trader les news</h4>
+      <p>Vous lisez "CPI en hausse" et vous shortez le marché. Le problème : les algos l'ont vu 50 millisecondes avant vous et ont déjà bougé le prix. <strong>Ne tradez pas les réactions aux news</strong> — tradez les configurations techniques après la tempête.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-bolt-lightning"></i> 9. Ignorer les gaps</h4>
+      <p>Votre stop loss est à -5% mais l'action ouvre à -15% le lundi matin à cause d'une mauvaise nouvelle le weekend. C'est un <strong>gap</strong>. Votre stop n'est pas exécuté au prix prévu. Solution : ne gardez pas de grosses positions sur les earnings et le weekend.</p>
+    </div>
+    <div class="danger-card">
+      <h4><i class="fa-solid fa-dice"></i> 10. Confondre trading et gambling</h4>
+      <p>Le trading est un métier de probabilités et de gestion du risque. Si vous n'avez pas de plan avant d'entrer en position (entry, stop, target), <strong>vous ne tradez pas, vous pariez</strong>. Un plan écrit avant chaque trade élimine 80% des erreurs émotionnelles.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Statistique brutale</h4>
+    <p><strong>70-80% des comptes retail CFD perdent de l'argent.</strong> Ce chiffre est obligatoirement affiché par les brokers. Ce n'est pas pour décourager, c'est pour vous rappeler que le trading demande préparation, discipline et gestion du risque. Les 20-30% qui gagnent ne sont pas plus intelligents — ils sont plus disciplinés.</p>
+  </div>
+
+  <!-- Chart : Radar Profil Débutant -->
+  <div id="radarChart" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> FOMO = ennemi #1. Si c'est dans les news, c'est trop tard.</li>
+      <li><i class="fa-solid fa-check"></i> Stop loss obligatoire. Max 5% du capital par position.</li>
+      <li><i class="fa-solid fa-check"></i> Pas de levier au début. Pas de "gourous". Pas de trading émotionnel.</li>
+      <li><i class="fa-solid fa-check"></i> Le trading est un marathon, pas un sprint. La discipline bat l'intelligence.</li>
+    </ul>
+  </div>
+
+  <a href="/series/risque-de-gap/" class="next-cta">
+    <div>
+      <div class="next-label">Approfondir →</div>
+      <div class="next-title">Gérer le Risque de Gap — Série complète (5 parties)</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 7 : VOTRE PREMIER TRADE        -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-rocket"></i> Section 7 sur 8</div>
+
+<div id="premier-trade" class="content-card">
+  <h2><i class="fa-solid fa-rocket" style="color:#10b981"></i> Votre premier trade — pas à pas</h2>
+
+  <p>Vous avez lu les 6 sections précédentes. Vous connaissez les bases. Voici maintenant le guide concret, étape par étape, pour placer votre tout premier trade. On va acheter 1 part de SPY — l'ETF S&P 500. C'est le trade le plus sûr et le plus logique pour un débutant.</p>
+
+  <h3>Les 7 étapes</h3>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Ouvrir un compte</h4>
+      <p>Choisissez un broker (Trade Republic, DEGIRO, Interactive Brokers). Inscription en ligne, 10 min, pièce d'identité requise.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Déposer un montant</h4>
+      <p>Commencez avec un montant que vous pouvez vous permettre de perdre. 500€ à 2000€ est une bonne fourchette pour débuter.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Chercher SPY</h4>
+      <p>Dans la barre de recherche, tapez "SPY" (ou "CSPX" pour la version UCITS en Europe). C'est le S&P 500.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Vérifier le graphique</h4>
+      <p>Prix au-dessus de l'EMA 200 ? RSI pas en suracheté (< 70) ? Si oui, le timing est correct. Sinon, attendez quelques jours.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">5</div>
+      <h4>Passer un ordre limit</h4>
+      <p>Pas un ordre "market". Un ordre <strong>limit</strong> au prix actuel ou légèrement en dessous. Ça vous protège contre un spread inattendu.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">6</div>
+      <h4>Placer votre stop loss</h4>
+      <p>Immédiatement après l'achat, placez un stop loss à -5% sous votre prix d'entrée. C'est non négociable.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">7</div>
+      <h4>Tenir le plan</h4>
+      <p>Ne regardez pas le cours toutes les 5 minutes. Vérifiez une fois par jour. Le DCA, c'est la patience. Laissez le temps travailler.</p>
+    </div>
+  </div>
+
+  <h3>Checklist avant chaque trade</h3>
+  <table class="compare-table">
+    <thead>
+      <tr><th>✅ Question</th><th>Réponse requise</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>J'ai un stop loss défini avant d'entrer ?</td><td><strong>Oui</strong> — sinon, pas de trade</td></tr>
+      <tr><td>Je risque max 5% de mon capital ?</td><td><strong>Oui</strong> — ajuster la taille si nécessaire</td></tr>
+      <tr><td>Je connais ma raison d'entrée ?</td><td><strong>Oui</strong> — technique, fondamentale, ou les deux</td></tr>
+      <tr><td>J'ai un objectif de sortie (target) ?</td><td><strong>Oui</strong> — au minimum un R:R de 1:2</td></tr>
+      <tr><td>Je ne trade pas sous l'émotion ?</td><td><strong>Oui</strong> — pas de revenge, pas de FOMO</td></tr>
+      <tr><td>Y a-t-il un earnings/event cette semaine ?</td><td>Si oui, <strong>réduire la taille</strong> ou attendre</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Le paper trading : s'entraîner sans risquer</h4>
+    <p>Si vous n'êtes pas prêt à risquer de l'argent réel, utilisez le <strong>paper trading</strong> (compte démo). La plupart des brokers en proposent. C'est exactement comme le trading réel, mais avec de l'argent fictif. Faites 20-30 trades en paper trading, analysez vos résultats, puis passez en réel avec confiance.</p>
+  </div>
+
+  <!-- Chart : Gauge Progression -->
+  <div id="gaugeChart" style="width:100%; height:320px; margin:2rem 0;"></div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle"></i> À retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Premier trade = SPY (ou CSPX en Europe). Simple, sûr, diversifié.</li>
+      <li><i class="fa-solid fa-check"></i> Ordre limit, jamais market. Stop loss immédiat.</li>
+      <li><i class="fa-solid fa-check"></i> Checklist avant chaque trade. Si une case n'est pas cochée, on ne trade pas.</li>
+      <li><i class="fa-solid fa-check"></i> Paper trading pour s'entraîner sans risque.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION 8 : LA SUITE DU PARCOURS      -->
+<!-- ═══════════════════════════════════════ -->
+<div class="section-divider"><i class="fa-solid fa-road"></i> Section 8 sur 8</div>
+
+<div id="suite" class="content-card">
+  <h2><i class="fa-solid fa-road" style="color:#10b981"></i> La suite du parcours</h2>
+
+  <p>Vous venez de lire le condensé de 30 minutes. Vous avez les bases. Mais ce n'est que <strong>10% du parcours complet</strong>. Chaque section que vous venez de lire correspond à une série détaillée de 3 à 6 parties. Voici la roadmap complète :</p>
+
+  <div class="roadmap-grid">
+    <a href="/series/comprendre-le-marche/" class="roadmap-card">
+      <span class="roadmap-num">1</span>
+      <h4>Comprendre le Marché</h4>
+      <p class="roadmap-desc">Acteurs, manipulations, signaux, dark pools, market makers. La mécanique profonde des marchés financiers.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 6 parties · ~50 min</span>
+    </a>
+    <a href="/series/lire-un-chart/" class="roadmap-card">
+      <span class="roadmap-num">2</span>
+      <h4>Savoir Lire un Chart</h4>
+      <p class="roadmap-desc">Chandeliers avancés, figures chartistes, Fibonacci, Ichimoku, volume profile. L'arsenal complet du chartiste.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 6 parties · ~55 min</span>
+    </a>
+    <a href="/series/maitriser-les-earnings/" class="roadmap-card">
+      <span class="roadmap-num">3</span>
+      <h4>Maîtriser les Earnings</h4>
+      <p class="roadmap-desc">Lire un rapport financier, decoder les conference calls, analyser les réactions post-earnings.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 3 parties · ~30 min</span>
+    </a>
+    <a href="/series/bon-pere-de-famille/" class="roadmap-card">
+      <span class="roadmap-num">4</span>
+      <h4>Investir en Bon Père de Famille</h4>
+      <p class="roadmap-desc">Allocation long terme, DCA optimisé, portefeuille lazy, rebalancing, fiscalité.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 5 parties · ~45 min</span>
+    </a>
+    <a href="/series/trader-etf/" class="roadmap-card">
+      <span class="roadmap-num">5</span>
+      <h4>Trader les ETF</h4>
+      <p class="roadmap-desc">Sélection avancée, ETF sectoriels, leveraged, inverse, rotation sectorielle, smart beta.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 6 parties · ~50 min</span>
+    </a>
+    <a href="/series/choisir-son-broker/" class="roadmap-card">
+      <span class="roadmap-num">6</span>
+      <h4>Choisir son Broker</h4>
+      <p class="roadmap-desc">Comparatif détaillé 2026, frais cachés, régulation, PEA vs CTO, plateforme pro vs simplifiée.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 6 parties · ~50 min</span>
+    </a>
+    <a href="/series/risque-de-gap/" class="roadmap-card">
+      <span class="roadmap-num">7</span>
+      <h4>Gérer le Risque de Gap</h4>
+      <p class="roadmap-desc">Types de gaps, protection overnight, hedging, sizing ajusté, événements binaires.</p>
+      <span class="roadmap-meta"><i class="fa-solid fa-book"></i> 5 parties · ~45 min</span>
+    </a>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Comment avancer</h4>
+    <p><strong>Ne lisez pas tout d'un coup.</strong> Prenez une série par semaine. Lisez, pratiquez en paper trading, puis passez à la suivante. En 7 semaines, vous aurez une base solide couvrant tous les aspects du trading. L'ordre est pensé pour être progressif : on commence par comprendre, puis on lit, puis on analyse, puis on investit, puis on trade.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-trophy"></i> Félicitations !</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Vous connaissez les bases du fonctionnement des marchés.</li>
+      <li><i class="fa-solid fa-check"></i> Vous savez lire un graphique et les 3 indicateurs clés.</li>
+      <li><i class="fa-solid fa-check"></i> Vous comprenez les earnings et pourquoi le marché réagit.</li>
+      <li><i class="fa-solid fa-check"></i> Vous savez que les ETF sont le meilleur point de départ.</li>
+      <li><i class="fa-solid fa-check"></i> Vous avez un plan concret pour votre premier trade.</li>
+      <li><i class="fa-solid fa-check"></i> Vous connaissez les 10 pièges à éviter absolument.</li>
+    </ul>
+  </div>
+
+  <a href="/?tab=series" class="next-cta">
+    <div>
+      <div class="next-label">Explorer toutes les séries →</div>
+      <div class="next-title">Parcours complets — Débutant, Intermédiaire, Expert</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+</main>
+
+<!-- Footer -->
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- Scripts -->
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<script>
+// ── FAB Navigation ──
+document.addEventListener('DOMContentLoaded', function() {
+  const fnavBtn = document.getElementById('fnavBtn');
+  const fnavMenu = document.getElementById('fnavMenu');
+  const fnavIcon = document.getElementById('fnavIcon');
+  const fnavLabel = document.getElementById('fnavLabel');
+  let fnavOpen = false;
+
+  if (fnavBtn) {
+    fnavBtn.addEventListener('click', function() {
+      fnavOpen = !fnavOpen;
+      fnavMenu.classList.toggle('open', fnavOpen);
+      fnavIcon.className = fnavOpen ? 'fas fa-times' : 'fas fa-bars';
+      fnavLabel.textContent = fnavOpen ? 'Fermer' : 'Menu';
+    });
+  }
+
+  document.querySelectorAll('.fnav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      fnavOpen = false;
+      fnavMenu.classList.remove('open');
+      fnavIcon.className = 'fas fa-bars';
+      fnavLabel.textContent = 'Menu';
+    });
+  });
+
+  // ── ECharts : Mini Chart Annoté ──
+  var miniChartEl = document.getElementById('miniChart');
+  if (miniChartEl) {
+    var miniChart = echarts.init(miniChartEl);
+    var dates = [];
+    var prices = [];
+    var basePrice = 100;
+
+    // Générer 60 jours de données simulées
+    for (var i = 0; i < 60; i++) {
+      var d = new Date(2026, 0, 6 + i);
+      dates.push((d.getMonth()+1) + '/' + d.getDate());
+      basePrice += (Math.random() - 0.47) * 3;
+      if (basePrice < 85) basePrice = 85 + Math.random() * 2;
+      if (basePrice > 120) basePrice = 120 - Math.random() * 2;
+      prices.push(Math.round(basePrice * 100) / 100);
+    }
+
+    // Trouver le support et la résistance
+    var support = Math.min.apply(null, prices.slice(10, 50));
+    var resistance = Math.max.apply(null, prices.slice(10, 50));
+
+    miniChart.setOption({
+      title: { text: 'Exemple : Support & Résistance', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+      tooltip: { trigger: 'axis' },
+      grid: { left: 60, right: 20, top: 50, bottom: 40 },
+      xAxis: { type: 'category', data: dates, axisLabel: { interval: 9, fontSize: 11 } },
+      yAxis: { type: 'value', min: Math.floor(support - 5), max: Math.ceil(resistance + 5), axisLabel: { fontSize: 11 } },
+      series: [
+        { name: 'Prix', type: 'line', data: prices, smooth: true, lineStyle: { color: '#10b981', width: 2 }, itemStyle: { color: '#10b981' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(16,185,129,0.2)' }, { offset: 1, color: 'rgba(16,185,129,0)' }] } }, symbol: 'none' },
+        { name: 'Support', type: 'line', data: prices.map(function() { return Math.round(support * 100) / 100; }), lineStyle: { color: '#10b981', type: 'dashed', width: 2 }, symbol: 'none', label: { show: false } },
+        { name: 'Résistance', type: 'line', data: prices.map(function() { return Math.round(resistance * 100) / 100; }), lineStyle: { color: '#ef4444', type: 'dashed', width: 2 }, symbol: 'none', label: { show: false } }
+      ]
+    });
+
+    window.addEventListener('resize', function() { miniChart.resize(); });
+  }
+
+  // ── ECharts : Radar Profil Débutant ──
+  var radarEl = document.getElementById('radarChart');
+  if (radarEl) {
+    var radarChart = echarts.init(radarEl);
+    radarChart.setOption({
+      title: { text: 'Profil Type du Débutant vs Trader Rentable', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+      legend: { data: ['Débutant', 'Trader rentable'], bottom: 0 },
+      radar: {
+        indicator: [
+          { name: 'Patience', max: 10 },
+          { name: 'Discipline', max: 10 },
+          { name: 'Capital', max: 10 },
+          { name: 'Temps\nd\'écran', max: 10 },
+          { name: 'Connaissance', max: 10 },
+          { name: 'Gestion\ndu risque', max: 10 }
+        ],
+        radius: '60%',
+        axisName: { fontSize: 11, color: '#64748b' }
+      },
+      series: [{
+        type: 'radar',
+        data: [
+          { value: [3, 2, 4, 8, 2, 1], name: 'Débutant', lineStyle: { color: '#ef4444' }, areaStyle: { color: 'rgba(239,68,68,0.15)' }, itemStyle: { color: '#ef4444' } },
+          { value: [9, 9, 6, 4, 8, 9], name: 'Trader rentable', lineStyle: { color: '#10b981' }, areaStyle: { color: 'rgba(16,185,129,0.15)' }, itemStyle: { color: '#10b981' } }
+        ]
+      }]
+    });
+
+    window.addEventListener('resize', function() { radarChart.resize(); });
+  }
+
+  // ── ECharts : Gauge Progression ──
+  var gaugeEl = document.getElementById('gaugeChart');
+  if (gaugeEl) {
+    var gaugeChart = echarts.init(gaugeEl);
+    gaugeChart.setOption({
+      title: { text: 'Votre progression', left: 'center', textStyle: { fontSize: 14, fontWeight: 700 } },
+      series: [{
+        type: 'gauge',
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 100,
+        splitNumber: 10,
+        radius: '75%',
+        center: ['50%', '55%'],
+        axisLine: {
+          lineStyle: {
+            width: 20,
+            color: [
+              [0.1, '#10b981'],
+              [0.3, '#6ee7b7'],
+              [0.6, '#fbbf24'],
+              [0.8, '#f97316'],
+              [1, '#ef4444']
+            ]
+          }
+        },
+        pointer: { itemStyle: { color: '#10b981' }, width: 5 },
+        axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1 } },
+        splitLine: { distance: -25, length: 20, lineStyle: { color: '#fff', width: 2 } },
+        axisLabel: { color: '#64748b', distance: 30, fontSize: 11 },
+        detail: { valueAnimation: true, formatter: '{value}%', color: '#10b981', fontSize: 28, fontWeight: 800, offsetCenter: [0, '30%'] },
+        data: [{ value: 10, name: 'Quick Start = 10% du parcours', title: { offsetCenter: [0, '50%'], fontSize: 12, color: '#94a3b8' } }]
+      }]
+    });
+
+    window.addEventListener('resize', function() { gaugeChart.resize(); });
+  }
+});
+</script>
+
+</body>
+</html>
