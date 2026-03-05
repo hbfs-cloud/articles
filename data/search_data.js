@@ -327,6 +327,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "INDO",
+    "exchange": "NYSE American • Energy • Oil & Gas E&P",
+    "name": "INDO — Proxy pétrolier géopolitique Iran. Kruh Block Indonésie, 580 bpd, MCap $68M. Float <10M...",
+    "title": "INDO — Proxy pétrolier géopolitique Iran. Kruh Block Indonésie, 580 bpd, MCap $68M. Float <10M...",
+    "desc": "INDO : Micro-cap pétrolière proxy des tensions Iran/Détroit d'Ormuz. Float ultra-thin, +300% en 2022 sur Ukraine. Scénarios pétrole $75-$130 → INDO $2.50-$50+. Trade spéculatif pur.",
+    "tags": "us,energy,geopolitique,trade-idea,speculative",
+    "grade": "C+",
+    "href": "/analyses/INDO/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IOVA",
     "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
     "name": "IOVA — AMTAGVI revenue $264M, +30% QoQ en Q4, Fast Track NSCLC, 35% SI — setup squeeze ou piège ?",
@@ -2155,19 +2168,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,speculative",
     "grade": "D+",
     "href": "analyses/INBX",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "INDO",
-    "exchange": "NYSE American • Energy",
-    "name": "Indonesia Energy Corporation",
-    "title": "Indonesia Energy Corporation",
-    "desc": "Analyse complete d'Indonesia Energy Corporation (INDO) :\n            exploration petroliere en Indonesie, forage Kruh Block, tensions\n            géopolitiques Iran, short interest et catalyseurs.",
-    "tags": "us,energy,speculative,geopolitique,trade-idea",
-    "grade": "D+",
-    "href": "analyses/INDO",
     "date": ""
   },
   {
