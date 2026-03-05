@@ -50,11 +50,38 @@ let finalGrade = doc.documentElement.getAttribute('data-grade') || "";
 let reliability = doc.documentElement.getAttribute('data-reliability') || "Medium";
 
 // Extract title and description
-// Usually title is in <title> or h1
 let title = doc.querySelector('title') ? doc.querySelector('title').textContent.split('|')[0].trim() : "";
 
-// Try to grab a better title (e.g. the first h2 inside a content-card, or the main title)
-if (tab === 'scanner') {
+// For analyses: build a better title from ticker + og:title or description
+if (tab === 'analyses') {
+    // Try og:title first (often has "Market Watch — Analyse TICKER Expert")
+    const ogTitle = doc.querySelector('meta[property="og:title"]');
+    const ogDesc = doc.querySelector('meta[property="og:description"]');
+    const tickerSym = doc.querySelector('.ticker-symbol');
+    const sym = tickerSym ? tickerSym.textContent.trim() : '';
+
+    if (ogDesc && sym) {
+        // Build: "TICKER — <short description from og:description>"
+        let shortDesc = ogDesc.getAttribute('content');
+        // Remove leading "TICKER :" or "TICKER —" if already present to avoid "IOVA — IOVA : ..."
+        shortDesc = shortDesc.replace(new RegExp(`^${sym}\\s*[:—–-]\\s*`, 'i'), '');
+        // Truncate to ~80 chars for card title
+        if (shortDesc.length > 90) shortDesc = shortDesc.substring(0, 87) + '...';
+        title = `${sym} — ${shortDesc}`;
+    } else if (ogTitle && sym) {
+        title = ogTitle.getAttribute('content').replace(/Market Watch\s*[—–-]\s*/i, '').trim();
+        if (!title.includes(sym)) title = `${sym} — ${title}`;
+    }
+    // Fallback: if title is still generic like "Market Watch Expert", use ticker + company
+    if (/^Market Watch/i.test(title) && sym) {
+        const nameEl = doc.querySelector('.ticker-name');
+        if (nameEl) {
+            const dashIdx = nameEl.textContent.indexOf('—');
+            const shortName = dashIdx !== -1 ? nameEl.textContent.substring(0, dashIdx).trim() : nameEl.textContent.trim();
+            title = `${sym} — ${shortName}`;
+        }
+    }
+} else if (tab === 'scanner') {
     // For scanner: build a rich title from og:description (has regime + tickers)
     // e.g. "Top 10 setups A+ — Régime EARLY RISK-OFF — 5 US + 2 EU + 1 APAC + 2 ETFs"
     const ogDesc = doc.querySelector('meta[property="og:description"]');
@@ -107,67 +134,79 @@ let date = "";
 
 // For analyses, we have ticker logic
 let ticker = "";
-let companyName = ""; // New variable for company name
-let exchangeAndSector = ""; // New variable for exchange and sector
+let companyName = "";
+let exchangeAndSector = "";
 if (tab === 'analyses') {
     const symbolEl = doc.querySelector('.ticker-symbol');
     if (symbolEl) ticker = symbolEl.textContent.trim();
 
-    const companyNameEl = doc.querySelector('.ticker-name'); // e.g. "Applied Digital Corporation — AI Infrastructure & HPC"
+    // Extract company name from .ticker-name — text before the first "—" (rendered from &mdash;)
+    const companyNameEl = doc.querySelector('.ticker-name');
     if (companyNameEl) {
         const textContent = companyNameEl.textContent.trim();
-        const companyNameMatch = textContent.match(/^(.*?)\s*&mdash;/); // Extract up to "—"
-        if (companyNameMatch && companyNameMatch[1]) {
-            companyName = companyNameMatch[1].trim();
+        // JSDOM renders &mdash; as actual — character, not &mdash; entity
+        const dashIdx = textContent.indexOf('—');
+        if (dashIdx !== -1) {
+            companyName = textContent.substring(0, dashIdx).trim();
         } else {
-            companyName = textContent; // Fallback to full content if "—" not found
+            companyName = textContent;
         }
     }
 
-    const exchangeEl = doc.querySelector('.ticker-exchange'); // e.g. "NASDAQ • Technology / Data Centers"
+    // Extract exchange/sector — first try .ticker-exchange, then parse from .ticker-name after "—"
+    const exchangeEl = doc.querySelector('.ticker-exchange');
     if (exchangeEl) {
         exchangeAndSector = exchangeEl.textContent.trim();
-    } else {
-        // Fallback: if ticker-exchange not found, try to extract from ticker-name after "—"
-        const tickerNameFull = doc.querySelector('.ticker-name');
-        if (tickerNameFull && tickerNameFull.textContent.includes('—')) {
-            const exchangeMatch = tickerNameFull.textContent.match(/&mdash;\s*(.*)/);
-            if (exchangeMatch && exchangeMatch[1]) {
-                exchangeAndSector = exchangeMatch[1].replace(/&amp;/g, '&').trim();
-            }
+    } else if (companyNameEl) {
+        const textContent = companyNameEl.textContent.trim();
+        const dashIdx = textContent.indexOf('—');
+        if (dashIdx !== -1) {
+            exchangeAndSector = textContent.substring(dashIdx + 1).trim();
+            // Clean up: remove leading/trailing bullets and whitespace
+            exchangeAndSector = exchangeAndSector.replace(/^[•·\s]+/, '').replace(/[•·\s]+$/, '');
         }
-    // Extract date for analyses cards
-    // Look for various date patterns or common containers
-    let dateEl = doc.querySelector('.ticker-date') || doc.querySelector('.hero-section div[style*="font-size:0.8rem"], .hero-section div[style*="font-size: 0.8rem"], div[style*="margin-top:0.75rem"]');
-    if (!dateEl) {
-        // Broad search for anything that looks like a date container in hero
-        const divs = Array.from(doc.querySelectorAll('.hero-section div'));
-        dateEl = divs.find(d => d.textContent.includes('2026') || d.textContent.includes('2025'));
     }
 
-    if (dateEl) {
-        const text = dateEl.textContent.trim();
-        // Match "4 Mars 2026" or "March 4, 2026"
-        const dateMatch = text.match(/([0-9]+\s+[A-Za-zÀ-ÿ]+\s+[0-9]{4})/i) || text.match(/([A-Za-z]+\s+[0-9]+\s*,\s*[0-9]{4})/i);
-        if (dateMatch) {
-            date = dateMatch[1].trim();
-        } else {
-            // Fallback: try splitting by bullet
-            const parts = text.split(/[•·]|&bull;/);
-            if (parts.length > 0 && parts[0].trim().length > 5) {
-                date = parts[0].trim();
+    // Extract date for analyses cards
+    // 1. Try <title> tag — often contains "DD Mois YYYY" or "Month DD, YYYY"
+    const titleText = doc.querySelector('title') ? doc.querySelector('title').textContent : '';
+    const titleDateMatch = titleText.match(/(\d{1,2}\s+[A-Za-zÀ-ÿ]+\s+\d{4})/i)
+        || titleText.match(/([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i);
+    if (titleDateMatch) {
+        date = titleDateMatch[1].trim();
+    }
+
+    // 2. Try og:article:published_time
+    if (!date) {
+        const ogPublishedTime = doc.querySelector('meta[property="article:published_time"]');
+        if (ogPublishedTime) {
+            const d = new Date(ogPublishedTime.getAttribute('content'));
+            if (!isNaN(d)) {
+                const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                date = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
             }
         }
     }
-    
+
+    // 3. Try extracting date from the folder path (analyses/TICKER/ created date or weekly/YYYYMMDD/)
     if (!date) {
-        // Fallback to og:article:published_time if no specific div is found
-        const ogPublishedTime = doc.querySelector('meta[property="article:published_time"]');
-        if (ogPublishedTime) {
-            date = new Date(ogPublishedTime.getAttribute('content')).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        const folderMatch = argPath.match(/(\d{8})/);
+        if (folderMatch) {
+            const ds = folderMatch[1];
+            const d = new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`);
+            if (!isNaN(d)) {
+                const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                date = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            }
         }
     }
-}
+
+    // 4. Last fallback: today's date
+    if (!date) {
+        const now = new Date();
+        const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        date = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
 }
 
 let href = argPath.replace(/\\/g, '/');
@@ -259,18 +298,33 @@ if (tab === 'daily') {
     cards.unshift(cardHtml.trim());
 
 } else if (tab === 'analyses') {
-    // Analyses: archive the old card before replacing
-    const oldIndex = cards.findIndex(c => c.includes(hrefPattern));
-    if (oldIndex !== -1) {
+    // Analyses: dedup by ticker symbol (not exact href — handles path changes like beginner/fr/ → root)
+    // Match any card that has the same ticker in ticker-symbol div or in the href path
+    const tickerForDedup = ticker || '';
+    let removedCount = 0;
+    if (tickerForDedup) {
         const archiveFile = path.resolve(__dirname, '../data/analyses_archive.json');
         let archive = [];
         if (fs.existsSync(archiveFile)) {
             archive = JSON.parse(fs.readFileSync(archiveFile, 'utf8'));
         }
-        archive.unshift({ date: new Date().toISOString().slice(0, 10), card: cards[oldIndex] });
-        fs.writeFileSync(archiveFile, JSON.stringify(archive, null, 2));
-        cards.splice(oldIndex, 1);
-        console.log(`Analyses: archived old card for ${href} → analyses_archive.json`);
+        const newCards = [];
+        for (const c of cards) {
+            // Match by: ticker-symbol content, or href containing /analyses/TICKER/
+            const tickerPattern = new RegExp(`analyses/${tickerForDedup}[/"\\s]`, 'i');
+            const symbolPattern = new RegExp(`ticker-symbol">${tickerForDedup}<`, 'i');
+            if (tickerPattern.test(c) || symbolPattern.test(c)) {
+                archive.unshift({ date: new Date().toISOString().slice(0, 10), card: c });
+                removedCount++;
+            } else {
+                newCards.push(c);
+            }
+        }
+        cards = newCards;
+        if (removedCount > 0) {
+            fs.writeFileSync(archiveFile, JSON.stringify(archive, null, 2));
+            console.log(`Analyses: archived ${removedCount} old card(s) for ${tickerForDedup} → analyses_archive.json`);
+        }
     }
     cards.unshift(cardHtml.trim());
 
