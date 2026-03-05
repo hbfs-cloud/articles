@@ -2748,12 +2748,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Les Axiomes et Théorèmes de la Finance : Les Lois Universelles des Marchés",
-    "desc": "Guide complet des axiomes et théorèmes fondamentaux de la finance : efficience des marchés, CAPM, Markowitz, Black-Scholes, valeur temporelle de l'argent et plus encore.",
+    "title": "Les Axiomes et Théorèmes de la Finance",
+    "desc": "Efficience des marchés, CAPM, Markowitz, Black-Scholes, valeur temporelle de l'argent, théorème de Modigliani-Miller et plus encore.",
     "tags": "formation,macro,technique,education",
     "grade": "",
     "href": "/series/axiomes-finance/",
-    "date": "28 février 2026"
+    "date": ""
   },
   {
     "type": "série",
