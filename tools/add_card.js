@@ -44,10 +44,38 @@ if (!tab) {
 }
 
 const tags = doc.documentElement.getAttribute('data-tags') || "";
-const grade = doc.documentElement.getAttribute('data-level') || ""; // "expert" or "beginner", etc. 
+const grade = doc.documentElement.getAttribute('data-level') || ""; // "expert" or "beginner", etc.
 // analyses have actual grades. Let me use data-grade if it exists on html?
 let finalGrade = doc.documentElement.getAttribute('data-grade') || "";
 let reliability = doc.documentElement.getAttribute('data-reliability') || "Medium";
+
+// Detect available languages for this article
+function detectArticleLangs(articleDir) {
+    const langs = new Set();
+    // 1. Check variants.json
+    const variantsPath = path.join(articleDir, 'variants.json');
+    if (fs.existsSync(variantsPath)) {
+        try {
+            const variants = JSON.parse(fs.readFileSync(variantsPath, 'utf8'));
+            if (variants.variants) variants.variants.forEach(v => { if (v.lang) langs.add(v.lang); });
+            if (langs.size > 0) return Array.from(langs).sort().join(',');
+        } catch (e) { /* ignore */ }
+    }
+    // 2. Check <html lang="...">
+    const mainLang = doc.documentElement.getAttribute('lang');
+    if (mainLang) langs.add(mainLang);
+    // 3. Check language subdirectories
+    for (const lang of ['en', 'fr', 'ar', 'es', 'zh']) {
+        if (fs.existsSync(path.join(articleDir, lang, 'index.html'))) langs.add(lang);
+        for (const level of ['beginner', 'expert']) {
+            if (fs.existsSync(path.join(articleDir, level, lang, 'index.html'))) langs.add(lang);
+        }
+    }
+    if (langs.size === 0) langs.add('fr');
+    return Array.from(langs).sort().join(',');
+}
+const articleDir = path.dirname(fullPath);
+const dataLang = detectArticleLangs(articleDir);
 
 // Extract title and description
 let title = doc.querySelector('title') ? doc.querySelector('title').textContent.split('|')[0].trim() : "";
@@ -233,7 +261,7 @@ if (tab === 'scanner' && html.includes('RÉTROSPECTIVE')) {
 }
 
 let cardHtml = `
-<div class="report-card" data-tags="${tags}" ${finalGrade ? `data-grade="${finalGrade}"` : ''}>
+<div class="report-card" data-lang="${dataLang}" data-tags="${tags}" ${finalGrade ? `data-grade="${finalGrade}"` : ''}>
     ${badgeHtml}
     ${date ? `<div class="report-card-meta">${date}</div>` : ''}
     <h2 style="font-size: 1.3rem; margin: 0.5rem 0 0.75rem">${title}</h2>
@@ -247,7 +275,7 @@ let cardHtml = `
 if (tab === 'analyses') {
     // Custom HTML for analyses
     cardHtml = `
-<div class="report-card" data-grade="${finalGrade}" data-tags="${tags}" data-conf="${reliability}">
+<div class="report-card" data-lang="${dataLang}" data-grade="${finalGrade}" data-tags="${tags}" data-conf="${reliability}">
     <div class="ticker-card-header">
         <div class="ticker-logo">
             <img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
