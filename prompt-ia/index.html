@@ -38,7 +38,7 @@
     .lang-row a.active{color:#fff;background:#6366f1;border-color:#6366f1}
 
     /* ── MAIN WRAPPER ── */
-    .prompt-wrap{max-width:740px;margin:-1.25rem auto 0;padding:0 1rem 2rem;position:relative;z-index:2}
+    .prompt-wrap{max-width:920px;margin:-1.25rem auto 0;padding:0 1rem 2rem;position:relative;z-index:2}
 
     /* ── FORM CARD ── */
     .prompt-card{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;padding:1.5rem;box-shadow:0 8px 30px -8px rgba(0,0,0,.07);animation:slideUp .4s ease both}
@@ -102,16 +102,26 @@
     .mode-panel.active{display:block}
 
     /* ── CUSTOMIZE divider ── */
-    .adv-divider{display:flex;align-items:center;gap:10px;margin:.85rem 0 .25rem}
+    .adv-divider{display:flex;align-items:center;gap:10px;margin:.85rem 0 .25rem;cursor:pointer;transition:opacity .2s;user-select:none}
+    .adv-divider:hover{opacity:.75}
     .adv-divider-line{flex:1;height:1px;background:#e2e8f0}
     .adv-divider-label{font-size:.72rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;display:flex;align-items:center;gap:5px}
     .adv-divider-label i{font-size:.7rem}
+    .adv-divider-chevron{font-size:.6rem;color:#6366f1;transition:transform .25s}
+    .adv-divider.open .adv-divider-chevron{transform:rotate(180deg)}
 
     /* ── COLLAPSIBLE ── */
     .collapse{display:none}
     .collapse.open{display:block;animation:slideUp .3s ease both}
-    .collapse.always-open{display:block}
-    .adv-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.15rem;margin-top:.6rem}
+    .adv-panel{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1.15rem;margin-top:.6rem}
+
+    /* ── FOCUS CHIPS ── */
+    .focus-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .focus-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.72rem;font-weight:600;color:#475569;background:#fff;cursor:pointer;transition:all .2s;user-select:none;font-family:'Inter',sans-serif}
+    .focus-chip:hover{border-color:#a5b4fc;color:#6366f1;background:#f5f3ff}
+    .focus-chip.active{border-color:#6366f1;color:#fff;background:#6366f1;box-shadow:0 2px 8px rgba(99,102,241,.2)}
+    .focus-chip.active:hover{background:#4f46e5;border-color:#4f46e5}
+    .focus-chip i{font-size:.68rem}
 
     /* ── LIB COUNT BADGE ── */
     .lib-count-badge{font-size:.62rem;font-weight:700;color:#8b5cf6;background:#f5f3ff;padding:1px 7px;border-radius:8px;margin-left:2px}
@@ -266,6 +276,8 @@
       .open-ai-dropdown{left:auto;right:0}
       .mode-btn{padding:12px 8px}
       .mode-btn-icon{width:34px;height:34px;font-size:.95rem}
+      .focus-chips{gap:4px}
+      .focus-chip{padding:4px 9px;font-size:.68rem}
     }
   </style>
 </head>
@@ -333,58 +345,59 @@
           <div class="fl"><i class="fa-solid fa-compass"></i> <span id="intentLabel">Intent</span></div>
           <select class="fi" id="intentSelect"></select>
         </div>
-        <button class="gen-btn" id="generateBtn" type="button">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="generateLabel">Generate Prompt</span>
-        </button>
-        <div class="adv-divider">
+        <div class="adv-divider" id="advToggle" onclick="toggleAdvPanel()">
           <span class="adv-divider-line"></span>
-          <span class="adv-divider-label" id="advToggleLabel"><i class="fa-solid fa-sliders"></i> Customize</span>
+          <span class="adv-divider-label" id="advToggleLabel">🎛️ <span id="advToggleText">Customize</span> <i class="fa-solid fa-chevron-down adv-divider-chevron"></i></span>
           <span class="adv-divider-line"></span>
         </div>
-      </div>
 
-      <!-- ═══ ADVANCED PANEL ═══ -->
-      <div class="collapse always-open adv-panel" id="advSection">
-        <div class="frow">
-          <div class="fg">
-            <div class="fl"><i class="fa-solid fa-graduation-cap"></i> <span id="levelLabel">Level</span></div>
-            <select class="fi" id="levelSelect"></select>
+        <!-- ═══ ADVANCED PANEL ═══ -->
+        <div class="collapse adv-panel" id="advSection">
+          <div class="frow">
+            <div class="fg">
+              <div class="fl"><i class="fa-solid fa-graduation-cap"></i> <span id="levelLabel">Level</span></div>
+              <select class="fi" id="levelSelect"></select>
+            </div>
+            <div class="fg">
+              <div class="fl"><i class="fa-solid fa-robot"></i> <span id="aiLabel">Target AI</span></div>
+              <select class="fi" id="aiSelect"></select>
+              <div class="hint" id="aiHint">Auto = best AI for this context</div>
+            </div>
           </div>
-          <div class="fg">
-            <div class="fl"><i class="fa-solid fa-robot"></i> <span id="aiLabel">Target AI</span></div>
-            <select class="fi" id="aiSelect"></select>
-            <div class="hint" id="aiHint">Auto = best AI for this context</div>
-          </div>
-        </div>
-        <div class="frow3">
-          <div class="fg">
-            <div class="fl"><i class="fa-solid fa-file-lines"></i> <span id="formatLabel">Format</span></div>
-            <select class="fi" id="formatSelect"></select>
-          </div>
-          <div class="fg">
-            <div class="fl"><i class="fa-solid fa-language"></i> <span id="reportLangLabel">Lang</span></div>
-            <select class="fi" id="langSelect"></select>
+          <div class="frow">
+            <div class="fg">
+              <div class="fl"><i class="fa-solid fa-file-lines"></i> <span id="formatLabel">Format</span></div>
+              <select class="fi" id="formatSelect"></select>
+            </div>
+            <div class="fg">
+              <div class="fl"><i class="fa-solid fa-language"></i> <span id="reportLangLabel">Lang</span></div>
+              <select class="fi" id="langSelect"></select>
+            </div>
           </div>
           <div class="fg">
             <div class="fl"><i class="fa-solid fa-crosshairs"></i> <span id="focusLabel">Focus</span></div>
-            <select class="fi" id="focusSelect" multiple></select>
+            <div class="focus-chips" id="focusChips"></div>
+          </div>
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-lightbulb"></i> <span id="thesisLabel">Thesis</span> <span class="opt" id="thesisOpt">optional</span></div>
+            <select class="fi tpl" id="thesisTemplateSelect"></select>
+            <textarea class="fi" id="thesisInput" rows="2" placeholder=""></textarea>
+          </div>
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-bolt"></i> <span id="catalystLabel">Catalysts</span> <span class="opt" id="catalystOpt">optional</span></div>
+            <select class="fi tpl" id="catalystTemplateSelect"></select>
+            <input type="text" class="fi" id="catalystInput" placeholder="" autocomplete="off">
+          </div>
+          <div class="fg">
+            <div class="fl"><i class="fa-solid fa-clock"></i> <span id="scheduleLabel">Auto-run</span> <span class="opt" id="scheduleOpt">optional</span></div>
+            <select class="fi" id="scheduleSelect"></select>
+            <div class="hint" id="scheduleHint">The AI will be instructed to repeat this analysis at the chosen frequency</div>
           </div>
         </div>
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-lightbulb"></i> <span id="thesisLabel">Thesis</span> <span class="opt" id="thesisOpt">optional</span></div>
-          <select class="fi tpl" id="thesisTemplateSelect"></select>
-          <textarea class="fi" id="thesisInput" rows="2" placeholder=""></textarea>
-        </div>
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-bolt"></i> <span id="catalystLabel">Catalysts</span> <span class="opt" id="catalystOpt">optional</span></div>
-          <select class="fi tpl" id="catalystTemplateSelect"></select>
-          <input type="text" class="fi" id="catalystInput" placeholder="" autocomplete="off">
-        </div>
-        <div class="fg">
-          <div class="fl"><i class="fa-solid fa-clock"></i> <span id="scheduleLabel">Auto-run</span> <span class="opt" id="scheduleOpt">optional</span></div>
-          <select class="fi" id="scheduleSelect"></select>
-          <div class="hint" id="scheduleHint">The AI will be instructed to repeat this analysis at the chosen frequency</div>
-        </div>
+
+        <button class="gen-btn" id="generateBtn" type="button">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="generateLabel">Generate Prompt</span>
+        </button>
       </div>
 
       <!-- ═══ OUTPUT ═══ -->
@@ -447,10 +460,18 @@
     <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
   </footer>
 
+  <script>
+    function toggleAdvPanel() {
+      var sec = document.getElementById('advSection');
+      var tog = document.getElementById('advToggle');
+      sec.classList.toggle('open');
+      tog.classList.toggle('open');
+    }
+  </script>
   <script src="/assets/core.js"></script>
-  <script src="/prompt-ia/lang.js?v=13"></script>
-  <script src="/prompt-ia/library.js?v=13"></script>
-  <script src="/prompt-ia/app.js?v=13"></script>
+  <script src="/prompt-ia/lang.js?v=14"></script>
+  <script src="/prompt-ia/library.js?v=14"></script>
+  <script src="/prompt-ia/app.js?v=14"></script>
 <script src="/assets/tag-renderer.js"></script>
 </body>
 </html>

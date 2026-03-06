@@ -49,7 +49,7 @@
     setText('copyLabel', L.copy);
     setText('resetLabel', L.newBtn);
     setText('copiedText', L.copiedMsg);
-    setText('advToggleLabel', L.advToggle);
+    setText('advToggleText', L.advToggle);
     setText('modeCustomLabel', L.modeCustomLabel);
     setText('modeCustomSub', L.modeCustomSub);
     setText('modeLibLabel', L.modeLibLabel);
@@ -120,8 +120,45 @@
     renderSelect('levelSelect', c.level[CURRENT_LANG] || c.level.en);
     renderSelect('formatSelect', c.format[CURRENT_LANG] || c.format.en);
     renderSelect('langSelect', c.reportLang[CURRENT_LANG] || c.reportLang.en);
-    renderSelect('focusSelect', c.focus[CURRENT_LANG] || c.focus.en);
+    renderFocusChips(c.focus[CURRENT_LANG] || c.focus.en);
     renderSelect('scheduleSelect', c.schedule[CURRENT_LANG] || c.schedule.en);
+  }
+
+  // ── FOCUS CHIPS ──
+  function renderFocusChips(options) {
+    var container = document.getElementById('focusChips');
+    if (!container) return;
+    container.innerHTML = '';
+    options.forEach(function(o) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'focus-chip' + (o.selected ? ' active' : '');
+      chip.dataset.value = o.value;
+      chip.innerHTML = '<i class="' + (o.icon || '') + '"></i> ' + o.label;
+      chip.addEventListener('click', function() {
+        if (o.value === 'all') {
+          // "All" deselects everything else, selects itself
+          container.querySelectorAll('.focus-chip').forEach(function(c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+        } else {
+          // Deselect "All" if clicking a specific focus
+          var allChip = container.querySelector('.focus-chip[data-value="all"]');
+          if (allChip) allChip.classList.remove('active');
+          chip.classList.toggle('active');
+          // If nothing selected, re-activate "All"
+          var anyActive = container.querySelector('.focus-chip.active');
+          if (!anyActive && allChip) allChip.classList.add('active');
+        }
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function getSelectedFocus() {
+    var container = document.getElementById('focusChips');
+    if (!container) return ['all'];
+    var active = container.querySelectorAll('.focus-chip.active');
+    return Array.from(active).map(function(c) { return c.dataset.value; });
   }
 
   // ── GET VALUES ──
@@ -219,7 +256,7 @@
       this.classList.toggle('open', isOpen);
     });
   }
-  togglePanel('advToggle', 'advSection');
+  // toggleAdvPanel() is defined inline in index.html
 
   // ── MODE SWITCHER ──
   function switchMode(mode) {
@@ -876,7 +913,7 @@
     var lang = getSelected('langSelect') || CURRENT_LANG;
     var level = getSelected('levelSelect') || 'intermediate';
     var format = getSelected('formatSelect') || 'detailed';
-    var focus = getAllSelected('focusSelect');
+    var focus = getSelectedFocus();
     var intent = getSelected('intentSelect') || 'inform';
     var ML = promptMiscLabels[lang] || promptMiscLabels.en;
     var assetLabel = promptAssetLabels[lang] || promptAssetLabels.en;
