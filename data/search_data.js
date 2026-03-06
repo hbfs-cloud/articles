@@ -135,6 +135,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "NFP Jour J : 25 000 Jobs AttendusIran Ormuz J7 · Gold $5 125 · AVGO +5% AH",
+    "desc": "Broadcom a sorti des résultats records hier soir. L'action a bondi de +5% en after-hours et devrait ouvrir en forte hausse. Le signal est fort pour tout l'écosystème AI semiconducteurs : Marvell (MRVL), NVIDIA, AMD.",
+    "tags": "us,eu,asia,crypto,geopolitique,macro,energy,semis,earnings,formation,trade-idea",
+    "grade": "",
+    "href": "/daily/20260306/",
+    "date": "6 mars 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "AVGO Pulvérise : $100B AI VisionNasdaq +1,5% · Brent $84 · Ormuz Jour 5",
     "desc": "Rebond technique après 3 jours de selloff. Wall Street a repris des couleurs mercredi, porté par la tech (+1,5% QQQ) et l'énergie (+3% sur le Brent). Le S&P 500 reprend +0,78% à 6 870 — encore 1,8% sous son record historique de 6 998. Le Nasdaq (+1,29%) mène grâce à l'anticipation des résultats AVGO...",
     "tags": "us,eu,asia,crypto,geopolitique,macro,energy,semis,earnings,formation,trade-idea",
@@ -2436,12 +2449,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Quotidien",
-    "desc": "L'Iran a frappé un pétrolier au missile dans le détroit d'Hormuz (20% de l'offre mondiale). WTI +8% à $81/bbl, plus haut depuis juillet 2024. Le Pentagone confirme un renforcement militaire dans la région. Le Dow chute de 784 points (-1,61%). Tarifs Trump 15% globaux confirmés pour cette semaine. Br...",
+    "title": "Top 10 A+ EARLY RISK-OFF — CVX, DVN, MPC, ABBV, LMT, USO, SH, SAP, EWH, NEM",
+    "desc": "Suite aux rétrospectives — 20/02 (note C+, hit rate 62,5%) et 28/02 (note B+, hit rate 50%, P&L +8,8%) — scan centré énergie + défense + hedges. WTI $81/bbl (+8%), Iran/Hormuz, Dow -784 pts. Score moyen 89,2/100. 100% nouveaux tickers.",
     "tags": "us,eu,asia,etf,energy,defense,healthcare,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260305/",
-    "date": "6 mars 2026"
+    "date": "Jeudi 5 Mars 2026"
   },
   {
     "type": "scanner",
