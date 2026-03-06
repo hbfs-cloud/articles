@@ -9,12 +9,13 @@
 
 ### Objectif
 Article quotidien généré par le scanner algorithmique. Détecte automatiquement les meilleurs setups du jour en fonction du régime de marché (Risk-On, Neutral, Early Risk-Off, Risk-Off, Recovery). Supporte le multilangue et multi-niveau comme les analyses individuelles.
+**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
 ### Structure URL
 ```
 scanner/
 ├── YYYYMMDD/
-│   ├── index.html                # Default = expert/fr
+│   ├── index.html                # Default = intermediate/en
 │   ├── variants.json             # Manifest des variantes
 │   ├── expert/
 │   │   ├── en/index.html
@@ -110,7 +111,7 @@ Chaque scanner DOIT suivre exactement cette structure HTML. Référence : `scann
 
 #### Balise `<html>` — Attributs Obligatoires
 ```html
-<html lang="fr" data-tags="us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare" data-tab="scanner">
+<html lang="en" data-tags="us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare" data-tab="scanner">
 ```
 - `lang` : langue de l'article (fr, en, ar)
 - `data-tags` : tags pertinents (voir taxonomie dans CLAUDE.md racine)

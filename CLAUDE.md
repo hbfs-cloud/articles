@@ -115,6 +115,7 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 ## Commandes Utilisateur
 
 ### "Nouvelle analyse weekly" / "Update l'article pour next week"
+**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
 #### Étape 0 — Calcul de la date et anti-doublon (CRITIQUE)
 Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dossier est **le lundi de la semaine couverte**.
@@ -143,7 +144,7 @@ Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dos
    - **Toutes les 18 sections** de weekly/CLAUDE.md doivent être présentes (Hero, Nav Grid, Alerte, Calendrier, Synthèse, Bilan S-1, Macro, Métaux, Crypto, Earnings, Géopolitique, Rotation, Risques, Allocation, Trades, Leaders, Outlook, Sources)
 
 #### Étape 3 — Indexation et publication
-7. Langue: Français, ton institutionnel mais accessible
+7. Langue: Anglais, niveau intermédiaire, ton institutionnel mais accessible
 8. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 9. **OBLIGATOIRE — Commit & Push** :
    ```bash
@@ -153,13 +154,13 @@ Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dos
    ```
 
 ### "Analyse [TICKER]" (ex: "Analyse BMNR", "Analyse BTC")
-Par défaut, génère **toutes les 6 variantes** (expert + beginner) × (fr + en + ar).
-L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` ou `analyse AAPL beginner en`.
+Par défaut, génère **une seule variante** : `intermediate/en`.
+L'utilisateur peut restreindre ou étendre avec des paramètres : `analyse AAPL expert fr` ou `analyse AAPL beginner en`.
 
 1. **Parser les paramètres** :
-   - `level` : beginner (défaut: **beginner**)
+   - `level` : intermediate (défaut: **intermediate**)
    - `langs` : en (défaut: **en**)
-   - **IMPORTANT** : Pour les analyses détaillées futures, **SEULEMENT** la variante `beginner/en` sera générée par défaut.
+   - **IMPORTANT** : Sauf demande contraire, **SEULEMENT** la variante `intermediate/en` est générée.
 2. **Si l'analyse existe déjà** : archiver l'ancienne version
    - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
    - Déplacer l'ancien `index.html` dans l'archive
@@ -213,6 +214,7 @@ L'utilisateur peut restreindre avec des paramètres : `analyse AAPL expert fr` o
 
 ### "Analyse Daily" / "Briefing du jour"
 Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Crypto. Le weekend, focus crypto et géopolitique.
+**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
 1. **Collecter via MCP** :
    - `GetMarketOverview` (deep) pour snapshot global (indices, commodities, crypto, rates, regime, sentiment, news)
@@ -272,6 +274,8 @@ Les "Formation du Jour" suivent un cursus progressif :
 - Puis cycle recommence avec des sujets plus avancés
 
 ### "Scanner" / "Scan du jour"
+**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+
 1. **Lire TOUTES les rétrospectives existantes** (tous les dossiers `scanner/retrospective/YYYYMMDD/`) :
    - Lister tous les dossiers datés dans `scanner/retrospective/` et lire chaque `index.html`
    - Pour chaque rétro : extraire la note globale, hit rates par stratégie, top/flop setups
@@ -311,6 +315,7 @@ Les "Formation du Jour" suivent un cursus progressif :
 
 ### "Rétrospective Scanner" / "Rétro scanner"
 Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note le scanner.
+**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
 1. **Lister les scans récents** : Lire tous les `scanner/YYYYMMDD/index.html` des 10 derniers jours
 2. **Extraire les setups** : Pour chaque scan, extraire les 10 tickers avec entry/stop/TP/stratégie
@@ -365,7 +370,7 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
 - **Charts**: ECharts (préféré pour tous les types). ApexCharts acceptable en complément mais **ne pas mélanger** les deux dans un même article.
 - **Responsive**: Mobile-first, breakpoints 768px et 480px
 - **Données**: Toujours citer les sources, disclaimer en bas
-- **Langue**: Anglais beginner par défaut, multilingue optionnel (fr, en, ar, de, es, zh, ja)
+- **Langue**: Anglais intermediate par défaut, multilingue optionnel (en, fr, ar, es, zh) — mêmes langues que market-watch.xyz
 
 ### Structure HTML Commune (OBLIGATOIRE pour TOUS les types d'articles)
 
@@ -431,10 +436,8 @@ Placé dans le hero de chaque article. Peuplé automatiquement par `/assets/tag-
 ```html
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
-<script src="/assets/lang-banner.js"></script>
 <script src="/assets/echarts-responsive.js"></script>
 ```
-- `lang-banner.js` : Affiche un bandeau informatif si la langue de l'article ne correspond pas à la préférence utilisateur (stockée dans `localStorage` via le switcher FR/EN de la landing page).
 - `echarts-responsive.js` : Patch automatique des instances ECharts pour mobile (réduction des fontSize, ajustement des grilles, tooltip confiné). Inclure uniquement sur les pages avec des ECharts.
 
 ### Autres Conventions

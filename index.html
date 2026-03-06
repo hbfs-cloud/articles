@@ -140,78 +140,41 @@
       background: #1d4ed8;
     }
 
-    /* ===== LANGUAGE SWITCHER ===== */
-    .lang-switcher {
+    /* ===== LANGUAGE SELECT (same style as market-watch.xyz) ===== */
+    .lang-select-wrap {
       display: inline-flex;
       align-items: center;
-      gap: 0;
-      background: rgba(15, 23, 42, 0.06);
-      border-radius: 10px;
-      padding: 3px;
-      margin-top: 1rem;
-      border: 1px solid rgba(15, 23, 42, 0.08);
-    }
-
-    .lang-switcher-btn {
-      padding: 6px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: transparent;
-      color: var(--text-muted);
-      font-family: "Inter", sans-serif;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      letter-spacing: 0.01em;
-    }
-
-    .lang-switcher-btn:hover {
-      color: var(--text-primary);
-    }
-
-    .lang-switcher-btn.active {
-      background: white;
-      color: var(--text-primary);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .lang-switcher-btn .lang-flag {
-      font-size: 1rem;
-      line-height: 1;
-    }
-
-    /* Language banner on articles */
-    .lang-banner {
-      display: none;
-      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-      border: 1px solid #bfdbfe;
-      border-radius: 10px;
-      padding: 10px 16px;
-      margin: 1rem 0;
-      font-size: 0.85rem;
-      color: #1e40af;
-      align-items: center;
       gap: 8px;
+      margin-top: 1rem;
     }
 
-    .lang-banner.visible {
-      display: flex;
-    }
-
-    .lang-banner i {
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-
-    .lang-banner a {
-      color: #1d4ed8;
+    .lang-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(15, 23, 42, 0.05);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 8px;
+      padding: 6px 32px 6px 12px;
+      font-size: 0.85rem;
       font-weight: 600;
-      text-decoration: underline;
-      text-underline-offset: 2px;
+      font-family: "Inter", sans-serif;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .lang-select:hover {
+      border-color: var(--accent);
+      background-color: rgba(37, 99, 235, 0.04);
+    }
+
+    .lang-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
 
     .report-card-meta {
@@ -911,13 +874,13 @@
         padding: 0 1rem;
       }
 
-      .lang-switcher {
-        margin-top: 0.75rem;
+      .lang-select-wrap {
+        margin-top: 0.5rem;
       }
 
-      .lang-switcher-btn {
-        padding: 5px 12px;
-        font-size: 0.75rem;
+      .lang-select {
+        font-size: 0.8rem;
+        padding: 5px 28px 5px 10px;
       }
 
       .report-card {
@@ -1578,7 +1541,7 @@
   <!-- Search Trigger -->
   <button class="search-trigger" onclick="openSearch()">
     <i class="fa-solid fa-magnifying-glass"></i>
-    Rechercher...
+    <span data-i18n="search.trigger">Rechercher...</span>
     <kbd>⌘K</kbd>
   </button>
 
@@ -1597,18 +1560,19 @@
       MARKET WATCH
     </a>
     <div class="container">
-      <h1 class="hero-title" id="heroTitle">Intelligence Institutionnelle.</h1>
-      <p class="hero-subtitle" id="heroSubtitle">
+      <h1 class="hero-title" data-i18n="hero.title">Intelligence Institutionnelle.</h1>
+      <p class="hero-subtitle" data-i18n="hero.sub">
         Analyses hebdomadaires approfondies sur la Macro, les Actions, Métaux
         et Cryptos. Clair, actionnable, sans bruit.
       </p>
-      <div class="lang-switcher" id="langSwitcher">
-        <button class="lang-switcher-btn active" data-lang="fr" onclick="setLang('fr')">
-          <span class="lang-flag">FR</span>
-        </button>
-        <button class="lang-switcher-btn" data-lang="en" onclick="setLang('en')">
-          <span class="lang-flag">EN</span>
-        </button>
+      <div class="lang-select-wrap">
+        <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+          <option value="en">🇺🇸 English</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="ar">🇸🇦 العربية</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="zh">🇨🇳 中文</option>
+        </select>
       </div>
     </div>
   </div>
@@ -1618,18 +1582,18 @@
     <a href="/prompt-ia/" class="promo-banner promo-banner-indigo" id="promoBannerPrompt">
       <div class="promo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
       <div class="promo-text">
-        <div class="promo-title">Prompt IA — Générez vos analyses en un clic</div>
-        <div class="promo-sub">Utilisez nos prompts optimisés pour analyser n'importe quel ticker avec Claude ou ChatGPT.</div>
+        <div class="promo-title" data-i18n="promo.prompt.title">Prompt IA — Générez vos analyses en un clic</div>
+        <div class="promo-sub" data-i18n="promo.prompt.sub">Utilisez nos prompts optimisés pour analyser n'importe quel ticker avec Claude ou ChatGPT.</div>
       </div>
-      <span class="promo-badge">NOUVEAU</span>
+      <span class="promo-badge" data-i18n="promo.badge">NOUVEAU</span>
       <span class="promo-arrow"><i class="fa-solid fa-arrow-right"></i></span>
       <button class="promo-close" aria-label="Fermer" onclick="event.preventDefault();event.stopPropagation();this.closest('.promo-banner').style.display='none';localStorage.setItem('promo-prompt-hide','1');"><i class="fa-solid fa-xmark"></i></button>
     </a>
     <a href="/series/quick-start/" class="promo-banner promo-banner-emerald" id="promoBannerQS">
       <div class="promo-icon">&#9889;</div>
       <div class="promo-text">
-        <div class="promo-title">Nouveau ici ? Commencez par le Quick Start</div>
-        <div class="promo-sub">Tout ce qu'il faut savoir pour trader, condensé en 30 minutes. Zéro prérequis.</div>
+        <div class="promo-title" data-i18n="promo.qs.title">Nouveau ici ? Commencez par le Quick Start</div>
+        <div class="promo-sub" data-i18n="promo.qs.sub">Tout ce qu'il faut savoir pour trader, condensé en 30 minutes. Zéro prérequis.</div>
       </div>
       <span class="promo-arrow"><i class="fa-solid fa-arrow-right"></i></span>
       <button class="promo-close" aria-label="Fermer" onclick="event.preventDefault();event.stopPropagation();this.closest('.promo-banner').style.display='none';localStorage.setItem('promo-qs-hide','1');"><i class="fa-solid fa-xmark"></i></button>
@@ -1645,43 +1609,43 @@
     <div class="main-tabs">
       <button class="main-tab active" data-tab="weekly">
         <i class="fa-solid fa-calendar-week tab-icon"></i>
-        <span class="tab-label">Hebdo</span>
+        <span class="tab-label" data-i18n="tab.weekly">Hebdo</span>
         <span class="tab-count" id="weeklyCount">10</span>
       </button>
       <button class="main-tab" data-tab="daily">
         <i class="fa-solid fa-sun tab-icon"></i>
-        <span class="tab-label">Daily</span>
+        <span class="tab-label" data-i18n="tab.daily">Daily</span>
         <span class="tab-count" id="dailyCount">16</span>
       </button>
       <button class="main-tab" data-tab="analyses">
         <i class="fa-solid fa-chart-column tab-icon"></i>
-        <span class="tab-label">Analyses</span>
+        <span class="tab-label" data-i18n="tab.analyses">Analyses</span>
         <span class="tab-count" id="analysesCount"></span>
       </button>
       <button class="main-tab" data-tab="scanner">
         <i class="fa-solid fa-satellite-dish tab-icon"></i>
-        <span class="tab-label">Scanner</span>
+        <span class="tab-label" data-i18n="tab.scanner">Scanner</span>
         <span class="tab-count" id="scannerCount">14</span>
       </button>
       <button class="main-tab" data-tab="tech">
         <i class="fa-solid fa-microchip tab-icon"></i>
-        <span class="tab-label">Tech</span>
+        <span class="tab-label" data-i18n="tab.tech">Tech</span>
         <span class="tab-count" id="techCount">12</span>
       </button>
       <button class="main-tab" data-tab="series">
         <i class="fa-solid fa-graduation-cap tab-icon"></i>
-        <span class="tab-label">Séries</span>
+        <span class="tab-label" data-i18n="tab.series">Séries</span>
         <span class="tab-count" id="seriesCount">28</span>
       </button>
     </div>
 
     <!-- TAG FILTER BAR (shown when tags are active) -->
     <div class="tag-filter-bar" id="tagFilterBar">
-      <span class="tag-filter-label"><i class="fa-solid fa-filter" style="margin-right: 4px"></i>Filtres
+      <span class="tag-filter-label"><i class="fa-solid fa-filter" style="margin-right: 4px"></i><span data-i18n="filter.label">Filtres</span>
         :</span>
       <div id="activeTagsContainer"></div>
       <button class="clear-tags" onclick="clearAllTags()">
-        <i class="fa-solid fa-xmark" style="margin-right: 2px"></i>Effacer
+        <i class="fa-solid fa-xmark" style="margin-right: 2px"></i><span data-i18n="filter.clear">Effacer</span>
       </button>
     </div>
 
@@ -1694,13 +1658,13 @@
     <div class="tab-panel active" id="tab-weekly">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-calendar-week" style="color: #2563eb; margin-right: 8px"></i>Rapports Hebdomadaires
+          <i class="fa-solid fa-calendar-week" style="color: #2563eb; margin-right: 8px"></i><span data-i18n="panel.weekly.title">Rapports Hebdomadaires</span>
         </h2>
         <p style="
               color: var(--text-muted);
               margin: 0.5rem 0 0;
               font-size: 0.95rem;
-            ">
+            " data-i18n="panel.weekly.sub">
           Analyse macro institutionnelle chaque dimanche — Marchés, secteurs,
           crypto, métaux et géopolitique
         </p>
@@ -1714,13 +1678,13 @@
     <div class="tab-panel" id="tab-daily">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-sun" style="color: #f59e0b; margin-right: 8px"></i>Briefing Quotidien
+          <i class="fa-solid fa-sun" style="color: #f59e0b; margin-right: 8px"></i><span data-i18n="panel.daily.title">Briefing Quotidien</span>
         </h2>
         <p style="
               color: var(--text-muted);
               margin: 0.5rem 0 0;
               font-size: 0.95rem;
-            ">
+            " data-i18n="panel.daily.sub">
           Synthèse matinale des marchés US, Europe, Asie-Pacifique et Crypto —
           7h00 chaque jour
         </p>
@@ -1735,10 +1699,10 @@
             font-size: 0.85rem;
           ">
         <p>
-          <i class="fa-solid fa-circle-info" style="margin-right: 4px"></i> Le
+          <i class="fa-solid fa-circle-info" style="margin-right: 4px"></i><span data-i18n="daily.info"> Le
           briefing quotidien est publié chaque matin à 7h00. Il couvre les 4
           grandes zones (US, EU, AP, Crypto), les événements du jour, et
-          propose une formation et des idées de trading.
+          propose une formation et des idées de trading.</span>
         </p>
       </div>
     </div>
@@ -1750,13 +1714,13 @@
     <div class="tab-panel" id="tab-analyses">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-microscope" style="color: #10b981; margin-right: 8px"></i>Analyses Individuelles
+          <i class="fa-solid fa-microscope" style="color: #10b981; margin-right: 8px"></i><span data-i18n="panel.analyses.title">Analyses Individuelles</span>
         </h2>
         <p style="
               color: var(--text-muted);
               margin: 0.5rem 0 0;
               font-size: 0.95rem;
-            ">
+            " data-i18n="panel.analyses.sub">
           Analyse fondamentale et technique approfondie par ticker — Grade A+
           à F, multilingue, multi-niveau
         </p>
@@ -1765,7 +1729,7 @@
       <div class="filter-bar">
         <div class="filter-group">
           <div class="filter-chips" id="gradeFilter">
-            <button class="filter-chip active" data-grade="all">Tous</button>
+            <button class="filter-chip active" data-grade="all" data-i18n="filter.all">Tous</button>
             <button class="filter-chip" data-grade="A" style="--chip-color: #059669">
               A
             </button>
@@ -1817,7 +1781,7 @@
         <!-- Advanced Filters: Confidence & Time Range -->
         <div class="advanced-filters">
           <div class="filter-item">
-            <span class="filter-label"><i class="fa-solid fa-shield-check"></i> Fiabilité</span>
+            <span class="filter-label"><i class="fa-solid fa-shield-check"></i> <span data-i18n="filter.confidence">Fiabilité</span></span>
             <div class="filter-chips" id="confidenceFilter">
               <button class="filter-chip active" data-conf="all">Toutes</button>
               <button class="filter-chip" data-conf="High" style="--chip-color: #059669">Haute</button>
@@ -1827,7 +1791,7 @@
           </div>
 
           <div class="filter-item">
-            <span class="filter-label"><i class="fa-solid fa-clock-rotate-left"></i> Fraîcheur : <span id="daysValue"
+            <span class="filter-label"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="filter.freshness">Fraîcheur</span> : <span id="daysValue"
                 class="range-value">30 jours</span></span>
             <div class="range-control">
               <span style="font-size: 0.7rem; color: #94a3b8;">1j</span>
@@ -1842,8 +1806,8 @@
         <!-- No Results Placeholder -->
         <div id="noAnalyses" class="no-results" style="display: none;">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <h3 style="margin: 0; color: #1e293b;">Aucune analyse trouvée</h3>
-          <p style="margin: 0.5rem 0 0; font-size: 0.9rem;">Essayez d'ajuster vos filtres de grade, fiabilité ou de
+          <h3 style="margin: 0; color: #1e293b;" data-i18n="analyses.noResults">Aucune analyse trouvée</h3>
+          <p style="margin: 0.5rem 0 0; font-size: 0.9rem;" data-i18n="analyses.noResultsSub">Essayez d'ajuster vos filtres de grade, fiabilité ou de
             temps.</p>
         </div>
       </div>
@@ -1856,13 +1820,13 @@
     <div class="tab-panel" id="tab-scanner">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-radar" style="color: var(--accent); margin-right: 8px"></i>Scanner Quotidien
+          <i class="fa-solid fa-radar" style="color: var(--accent); margin-right: 8px"></i><span data-i18n="panel.scanner.title">Scanner Quotidien</span>
         </h2>
         <p style="
               color: var(--text-muted);
               margin: 0.5rem 0 0;
               font-size: 0.95rem;
-            ">
+            " data-i18n="panel.scanner.sub">
           Détection algorithmique des meilleurs setups du jour — Analyse
           multi-stratégie avec régime de marché
         </p>
@@ -2110,10 +2074,10 @@
             font-size: 0.85rem;
           ">
         <p>
-          <i class="fa-solid fa-circle-info" style="margin-right: 4px"></i> Le
+          <i class="fa-solid fa-circle-info" style="margin-right: 4px"></i><span data-i18n="scanner.info"> Le
           scanner est exécuté quotidiennement. Les setups sont classés par
           score composite intégrant RSI, volume, supports/résistances et
-          signaux techniques.
+          signaux techniques.</span>
         </p>
       </div>
     </div>
@@ -2125,14 +2089,14 @@
     <div class="tab-panel" id="tab-tech">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-microchip" style="color: #0d9488; margin-right: 8px"></i>Tech — Data Engineering
-          &amp; Quantitative Infrastructure
+          <i class="fa-solid fa-microchip" style="color: #0d9488; margin-right: 8px"></i><span data-i18n="panel.tech.title">Tech — Data Engineering
+          &amp; Quantitative Infrastructure</span>
         </h2>
         <p style="
               color: var(--text-muted);
               margin: 0.5rem 0 0;
               font-size: 0.95rem;
-            ">
+            " data-i18n="panel.tech.sub">
           Build reliable financial data pipelines, backtest engines, and
           trading systems.
         </p>
@@ -2147,14 +2111,14 @@
     <div class="tab-panel" id="tab-series">
       <div class="series-tab-header">
         <h2 class="series-tab-title">
-          <i class="fa-solid fa-graduation-cap"></i>Séries Éducatives
+          <i class="fa-solid fa-graduation-cap"></i><span data-i18n="panel.series.title">Séries Éducatives</span>
         </h2>
-        <p class="series-tab-sub">Guides complets pour apprendre à investir — Du débutant au confirmé</p>
+        <p class="series-tab-sub" data-i18n="panel.series.sub">Guides complets pour apprendre à investir — Du débutant au confirmé</p>
       </div>
 
       <!-- ===== PARCOURS GUIDÉS ===== -->
       <div class="parcours-section">
-        <h3><i class="fa-solid fa-route"></i> Parcours guidés</h3>
+        <h3><i class="fa-solid fa-route"></i> <span data-i18n="series.parcours">Parcours guidés</span></h3>
 
         <!-- Parcours 1: Bien Débuter -->
         <details class="parcours-item">
@@ -2346,7 +2310,7 @@
       <a href="/series/quick-start/" class="footer-link footer-link-emerald"><i class="fa-solid fa-bolt"></i> Quick Start — 30 min</a>
       <a href="/prompt-ia/" class="footer-link footer-link-indigo"><i class="fa-solid fa-wand-magic-sparkles"></i> Prompt IA</a>
     </div>
-    <p>© 2026 Market Watch. Tous droits réservés.</p>
+    <p data-i18n="footer.copy">© 2026 Market Watch. Tous droits réservés.</p>
   </footer>
 
   <script>
@@ -2385,7 +2349,7 @@
     <div class="search-dialog">
       <div class="search-input-wrap">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input id="searchInput" class="search-input" type="text" placeholder="Rechercher ticker, titre, sujet, tag..."
+        <input id="searchInput" class="search-input" type="text" data-i18n-placeholder="search.placeholder" placeholder="Rechercher ticker, titre, sujet, tag..."
           autocomplete="off">
         <kbd style="
               background: #f1f5f9;
@@ -2762,7 +2726,10 @@
     if (daysSlider) {
       daysSlider.addEventListener("input", function () {
         var val = this.value;
-        document.getElementById("daysValue").textContent = val + (val > 1 ? " jours" : " jour");
+        var lang = document.documentElement.lang || 'en';
+        var dayWords = { fr: [' jour', ' jours'], en: [' day', ' days'], ar: [' يوم', ' أيام'], es: [' día', ' días'], zh: [' 天', ' 天'] };
+        var w = dayWords[lang] || dayWords.en;
+        document.getElementById("daysValue").textContent = val + (val > 1 ? w[1] : w[0]);
         applyAllFilters();
       });
     }
@@ -2785,14 +2752,11 @@
     // ===================================================================
     // CONTEXT BAR
     // ===================================================================
-    var tabNames = {
-      weekly: "Hebdo",
-      daily: "Daily",
-      analyses: "Analyses",
-      scanner: "Scanner",
-      tech: "Tech",
-      series: "Séries",
-    };
+    function getTabName(tab) {
+      var lang = document.documentElement.lang || 'en';
+      var key = 'tab.' + tab;
+      return resolve(lang, key) || tab;
+    }
     function updateContextBar() {
       var bar = document.getElementById("contextBar");
       if (!activeTags.length) {
@@ -2815,7 +2779,7 @@
         })
         .join(", ");
       bar.innerHTML =
-        (tabNames[currentTab] || currentTab) +
+        (getTabName(currentTab)) +
         " › <span>" +
         tagLabels +
         "</span> (" +
@@ -3472,83 +3436,262 @@
     });
   </script>
 
-  <!-- Language Switcher Logic -->
+  <!-- Language Switcher Logic (data-i18n resolution, like market-watch.xyz) -->
   <script>
-    var langStrings = {
+    var translations = {
       fr: {
-        heroTitle: 'Intelligence Institutionnelle.',
-        heroSub: 'Analyses hebdomadaires approfondies sur la Macro, les Actions, M\u00e9taux et Cryptos. Clair, actionnable, sans bruit.',
-        search: 'Rechercher...',
-        weeklyTitle: 'Rapports Hebdomadaires',
-        weeklySub: 'Analyse macro institutionnelle chaque dimanche \u2014 March\u00e9s, secteurs, crypto, m\u00e9taux et g\u00e9opolitique',
-        dailyTitle: 'Briefing Quotidien',
-        dailySub: 'March\u00e9s US, Europe, Asie-Pacifique et Crypto \u2014 Chaque matin \u00e0 7h00',
-        tabWeekly: 'Hebdo', tabDaily: 'Daily', tabAnalyses: 'Analyses',
-        tabScanner: 'Scanner', tabTech: 'Tech', tabSeries: 'S\u00e9ries',
-        noResults: 'Aucun r\u00e9sultat'
+        'hero.title': 'Intelligence Institutionnelle.',
+        'hero.sub': 'Analyses hebdomadaires approfondies sur la Macro, les Actions, Métaux et Cryptos. Clair, actionnable, sans bruit.',
+        'tab.weekly': 'Hebdo',
+        'tab.daily': 'Daily',
+        'tab.analyses': 'Analyses',
+        'tab.scanner': 'Scanner',
+        'tab.tech': 'Tech',
+        'tab.series': 'Séries',
+        'panel.weekly.title': 'Rapports Hebdomadaires',
+        'panel.weekly.sub': 'Analyse macro institutionnelle chaque dimanche — Marchés, secteurs, crypto, métaux et géopolitique',
+        'panel.daily.title': 'Briefing Quotidien',
+        'panel.daily.sub': 'Synthèse matinale des marchés US, Europe, Asie-Pacifique et Crypto — 7h00 chaque jour',
+        'panel.analyses.title': 'Analyses Individuelles',
+        'panel.analyses.sub': 'Analyse fondamentale et technique approfondie par ticker — Grade A+ à F, multilingue, multi-niveau',
+        'panel.scanner.title': 'Scanner Quotidien',
+        'panel.scanner.sub': 'Détection algorithmique des meilleurs setups du jour — Analyse multi-stratégie avec régime de marché',
+        'panel.tech.title': 'Tech — Data Engineering & Quantitative Infrastructure',
+        'panel.tech.sub': 'Pipelines de données financières, moteurs de backtest et systèmes de trading.',
+        'panel.series.title': 'Séries Éducatives',
+        'panel.series.sub': 'Guides complets pour apprendre à investir — Du débutant au confirmé',
+        'daily.info': ' Le briefing quotidien est publié chaque matin à 7h00. Il couvre les 4 grandes zones (US, EU, AP, Crypto), les événements du jour, et propose une formation et des idées de trading.',
+        'scanner.info': ' Le scanner est exécuté quotidiennement. Les setups sont classés par score composite intégrant RSI, volume, supports/résistances et signaux techniques.',
+        'promo.prompt.title': 'Prompt IA — Générez vos analyses en un clic',
+        'promo.prompt.sub': 'Utilisez nos prompts optimisés pour analyser n\'importe quel ticker avec Claude ou ChatGPT.',
+        'promo.qs.title': 'Nouveau ici ? Commencez par le Quick Start',
+        'promo.qs.sub': 'Tout ce qu\'il faut savoir pour trader, condensé en 30 minutes. Zéro prérequis.',
+        'promo.badge': 'NOUVEAU',
+        'filter.all': 'Tous',
+        'filter.label': 'Filtres',
+        'filter.clear': 'Effacer',
+        'filter.confidence': 'Fiabilité',
+        'filter.freshness': 'Fraîcheur',
+        'search.trigger': 'Rechercher...',
+        'search.placeholder': 'Rechercher ticker, titre, sujet, tag...',
+        'footer.copy': '© 2026 Market Watch. Tous droits réservés.',
+        'series.parcours': 'Parcours guidés',
+        'analyses.noResults': 'Aucune analyse trouvée',
+        'analyses.noResultsSub': 'Essayez d\'ajuster vos filtres de grade, fiabilité ou de temps.'
       },
       en: {
-        heroTitle: 'Institutional Intelligence.',
-        heroSub: 'In-depth weekly analysis on Macro, Equities, Precious Metals and Crypto. Clear, actionable, noise-free.',
-        search: 'Search...',
-        weeklyTitle: 'Weekly Reports',
-        weeklySub: 'Institutional macro analysis every Sunday \u2014 Markets, sectors, crypto, metals and geopolitics',
-        dailyTitle: 'Daily Briefing',
-        dailySub: 'US, Europe, Asia-Pacific and Crypto markets \u2014 Every morning at 7:00 AM',
-        tabWeekly: 'Weekly', tabDaily: 'Daily', tabAnalyses: 'Analyses',
-        tabScanner: 'Scanner', tabTech: 'Tech', tabSeries: 'Series',
-        noResults: 'No results'
+        'hero.title': 'Institutional Intelligence.',
+        'hero.sub': 'In-depth weekly analysis on Macro, Equities, Precious Metals and Crypto. Clear, actionable, noise-free.',
+        'tab.weekly': 'Weekly',
+        'tab.daily': 'Daily',
+        'tab.analyses': 'Analyses',
+        'tab.scanner': 'Scanner',
+        'tab.tech': 'Tech',
+        'tab.series': 'Series',
+        'panel.weekly.title': 'Weekly Reports',
+        'panel.weekly.sub': 'Institutional macro analysis every Sunday — Markets, sectors, crypto, metals and geopolitics',
+        'panel.daily.title': 'Daily Briefing',
+        'panel.daily.sub': 'Morning synthesis of US, Europe, Asia-Pacific and Crypto markets — Every day at 7:00 AM',
+        'panel.analyses.title': 'Individual Analyses',
+        'panel.analyses.sub': 'In-depth fundamental and technical analysis per ticker — Grade A+ to F, multilingual, multi-level',
+        'panel.scanner.title': 'Daily Scanner',
+        'panel.scanner.sub': 'Algorithmic detection of the best daily setups — Multi-strategy analysis with market regime',
+        'panel.tech.title': 'Tech — Data Engineering & Quantitative Infrastructure',
+        'panel.tech.sub': 'Build reliable financial data pipelines, backtest engines, and trading systems.',
+        'panel.series.title': 'Educational Series',
+        'panel.series.sub': 'Complete guides to learn investing — From beginner to advanced',
+        'daily.info': ' The daily briefing is published every morning at 7:00 AM. It covers 4 major zones (US, EU, AP, Crypto), daily events, and offers a training lesson and trading ideas.',
+        'scanner.info': ' The scanner runs daily. Setups are ranked by composite score including RSI, volume, support/resistance and technical signals.',
+        'promo.prompt.title': 'AI Prompt — Generate your analyses in one click',
+        'promo.prompt.sub': 'Use our optimized prompts to analyze any ticker with Claude or ChatGPT.',
+        'promo.qs.title': 'New here? Start with the Quick Start',
+        'promo.qs.sub': 'Everything you need to know to trade, in 30 minutes. Zero prerequisites.',
+        'promo.badge': 'NEW',
+        'filter.all': 'All',
+        'filter.label': 'Filters',
+        'filter.clear': 'Clear',
+        'filter.confidence': 'Confidence',
+        'filter.freshness': 'Freshness',
+        'search.trigger': 'Search...',
+        'search.placeholder': 'Search ticker, title, topic, tag...',
+        'footer.copy': '© 2026 Market Watch. All rights reserved.',
+        'series.parcours': 'Guided paths',
+        'analyses.noResults': 'No analyses found',
+        'analyses.noResultsSub': 'Try adjusting your grade, confidence or time filters.'
+      },
+      ar: {
+        'hero.title': 'ذكاء مؤسسي.',
+        'hero.sub': 'تحليلات أسبوعية معمّقة حول الاقتصاد الكلي والأسهم والمعادن الثمينة والعملات المشفرة. واضحة وقابلة للتنفيذ وبدون ضوضاء.',
+        'tab.weekly': 'أسبوعي',
+        'tab.daily': 'يومي',
+        'tab.analyses': 'تحليلات',
+        'tab.scanner': 'الماسح',
+        'tab.tech': 'تقنية',
+        'tab.series': 'سلسلة',
+        'panel.weekly.title': 'التقارير الأسبوعية',
+        'panel.weekly.sub': 'تحليل ماكرو مؤسسي كل أحد — الأسواق والقطاعات والعملات المشفرة والمعادن والجيوسياسة',
+        'panel.daily.title': 'الإحاطة اليومية',
+        'panel.daily.sub': 'ملخص صباحي لأسواق الولايات المتحدة وأوروبا وآسيا والمحيط الهادئ والعملات المشفرة — كل يوم الساعة 7:00',
+        'panel.analyses.title': 'تحليلات فردية',
+        'panel.analyses.sub': 'تحليل أساسي وتقني معمّق لكل سهم — درجة A+ إلى F، متعدد اللغات',
+        'panel.scanner.title': 'الماسح اليومي',
+        'panel.scanner.sub': 'كشف خوارزمي لأفضل الإعدادات اليومية — تحليل متعدد الاستراتيجيات',
+        'panel.tech.title': 'تقنية — هندسة البيانات والبنية الكمية',
+        'panel.tech.sub': 'بناء خطوط بيانات مالية وأنظمة تداول موثوقة.',
+        'panel.series.title': 'سلسلة تعليمية',
+        'panel.series.sub': 'أدلة كاملة لتعلم الاستثمار — من المبتدئ إلى المتقدم',
+        'daily.info': ' يُنشر الإحاطة اليومية كل صباح الساعة 7:00. تغطي 4 مناطق رئيسية (الولايات المتحدة وأوروبا وآسيا والعملات المشفرة).',
+        'scanner.info': ' يعمل الماسح يومياً. تُرتب الإعدادات حسب النتيجة المركبة.',
+        'promo.prompt.title': 'موجه الذكاء الاصطناعي — أنشئ تحليلاتك بنقرة واحدة',
+        'promo.prompt.sub': 'استخدم موجهاتنا المحسّنة لتحليل أي سهم باستخدام Claude أو ChatGPT.',
+        'promo.qs.title': 'جديد هنا؟ ابدأ بالبدء السريع',
+        'promo.qs.sub': 'كل ما تحتاج معرفته للتداول في 30 دقيقة. بدون متطلبات مسبقة.',
+        'promo.badge': 'جديد',
+        'filter.all': 'الكل',
+        'filter.label': 'تصفية',
+        'filter.clear': 'مسح',
+        'filter.confidence': 'الموثوقية',
+        'filter.freshness': 'الحداثة',
+        'search.trigger': 'بحث...',
+        'search.placeholder': 'بحث عن سهم، عنوان، موضوع...',
+        'footer.copy': '© 2026 Market Watch. جميع الحقوق محفوظة.',
+        'series.parcours': 'مسارات موجّهة',
+        'analyses.noResults': 'لم يتم العثور على تحليلات',
+        'analyses.noResultsSub': 'حاول تعديل فلاتر الدرجة أو الموثوقية أو الوقت.'
+      },
+      es: {
+        'hero.title': 'Inteligencia Institucional.',
+        'hero.sub': 'Análisis semanal en profundidad sobre Macro, Acciones, Metales Preciosos y Cripto. Claro, accionable, sin ruido.',
+        'tab.weekly': 'Semanal',
+        'tab.daily': 'Diario',
+        'tab.analyses': 'Análisis',
+        'tab.scanner': 'Escáner',
+        'tab.tech': 'Tech',
+        'tab.series': 'Series',
+        'panel.weekly.title': 'Informes Semanales',
+        'panel.weekly.sub': 'Análisis macro institucional cada domingo — Mercados, sectores, cripto, metales y geopolítica',
+        'panel.daily.title': 'Briefing Diario',
+        'panel.daily.sub': 'Síntesis matutina de mercados US, Europa, Asia-Pacífico y Cripto — Cada día a las 7:00',
+        'panel.analyses.title': 'Análisis Individuales',
+        'panel.analyses.sub': 'Análisis fundamental y técnico en profundidad por ticker — Grado A+ a F, multilingüe',
+        'panel.scanner.title': 'Escáner Diario',
+        'panel.scanner.sub': 'Detección algorítmica de los mejores setups del día — Análisis multi-estrategia',
+        'panel.tech.title': 'Tech — Ingeniería de Datos e Infraestructura Cuantitativa',
+        'panel.tech.sub': 'Pipelines de datos financieros, motores de backtesting y sistemas de trading.',
+        'panel.series.title': 'Series Educativas',
+        'panel.series.sub': 'Guías completas para aprender a invertir — De principiante a avanzado',
+        'daily.info': ' El briefing diario se publica cada mañana a las 7:00. Cubre 4 zonas principales (US, EU, AP, Cripto).',
+        'scanner.info': ' El escáner se ejecuta diariamente. Los setups se clasifican por puntuación compuesta.',
+        'promo.prompt.title': 'Prompt IA — Genera tus análisis en un clic',
+        'promo.prompt.sub': 'Usa nuestros prompts optimizados para analizar cualquier ticker con Claude o ChatGPT.',
+        'promo.qs.title': '¿Nuevo aquí? Empieza con el Quick Start',
+        'promo.qs.sub': 'Todo lo que necesitas saber para operar, en 30 minutos. Sin prerequisitos.',
+        'promo.badge': 'NUEVO',
+        'filter.all': 'Todos',
+        'filter.label': 'Filtros',
+        'filter.clear': 'Borrar',
+        'filter.confidence': 'Confianza',
+        'filter.freshness': 'Frescura',
+        'search.trigger': 'Buscar...',
+        'search.placeholder': 'Buscar ticker, título, tema, etiqueta...',
+        'footer.copy': '© 2026 Market Watch. Todos los derechos reservados.',
+        'series.parcours': 'Rutas guiadas',
+        'analyses.noResults': 'No se encontraron análisis',
+        'analyses.noResultsSub': 'Intenta ajustar tus filtros de grado, confianza o tiempo.'
+      },
+      zh: {
+        'hero.title': '机构级情报。',
+        'hero.sub': '深度每周分析：宏观经济、股票、贵金属与加密货币。清晰、可操作、无噪声。',
+        'tab.weekly': '周报',
+        'tab.daily': '日报',
+        'tab.analyses': '分析',
+        'tab.scanner': '扫描器',
+        'tab.tech': '技术',
+        'tab.series': '系列',
+        'panel.weekly.title': '每周报告',
+        'panel.weekly.sub': '每周日机构级宏观分析 — 市场、行业、加密货币、金属与地缘政治',
+        'panel.daily.title': '每日简报',
+        'panel.daily.sub': '美国、欧洲、亚太及加密货币市场每日晨间概要 — 每天7:00',
+        'panel.analyses.title': '个股分析',
+        'panel.analyses.sub': '逐只深度基本面与技术分析 — A+到F级评分，多语言',
+        'panel.scanner.title': '每日扫描',
+        'panel.scanner.sub': '算法检测当日最佳交易机会 — 多策略分析与市场环境识别',
+        'panel.tech.title': '技术 — 数据工程与量化基础设施',
+        'panel.tech.sub': '构建可靠的金融数据管道、回测引擎和交易系统。',
+        'panel.series.title': '教育系列',
+        'panel.series.sub': '从入门到精通的投资完整指南',
+        'daily.info': ' 每日简报每天上午7:00发布，覆盖四大区域（美国、欧洲、亚太、加密货币）。',
+        'scanner.info': ' 扫描器每日运行，按综合评分对交易机会进行排序。',
+        'promo.prompt.title': 'AI提示词 — 一键生成分析',
+        'promo.prompt.sub': '使用我们的优化提示词，用Claude或ChatGPT分析任何股票。',
+        'promo.qs.title': '新手？从快速入门开始',
+        'promo.qs.sub': '30分钟掌握交易基础。零门槛。',
+        'promo.badge': '新',
+        'filter.all': '全部',
+        'filter.label': '筛选',
+        'filter.clear': '清除',
+        'filter.confidence': '可信度',
+        'filter.freshness': '时效性',
+        'search.trigger': '搜索...',
+        'search.placeholder': '搜索股票代码、标题、主题、标签...',
+        'footer.copy': '© 2026 Market Watch. 保留所有权利。',
+        'series.parcours': '学习路径',
+        'analyses.noResults': '未找到分析',
+        'analyses.noResultsSub': '请尝试调整评级、可信度或时间筛选条件。'
       }
     };
 
+    var defaultLang = 'en';
+
+    function resolve(lang, key) {
+      var table = translations[lang] || translations[defaultLang];
+      if (table && table.hasOwnProperty(key)) return table[key];
+      return (translations[defaultLang] || {})[key] || '';
+    }
+
     function setLang(lang) {
+      if (!translations[lang]) lang = defaultLang;
       localStorage.setItem('mw-lang', lang);
-      document.querySelectorAll('.lang-switcher-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.lang === lang);
-      });
-      var s = langStrings[lang];
-      if (!s) return;
-      var title = document.getElementById('heroTitle');
-      var sub = document.getElementById('heroSubtitle');
-      if (title) title.textContent = s.heroTitle;
-      if (sub) title && (sub.textContent = s.heroSub);
-
-      // Update tab labels
-      var tabMap = { weekly: 'tabWeekly', daily: 'tabDaily', analyses: 'tabAnalyses',
-        scanner: 'tabScanner', tech: 'tabTech', series: 'tabSeries' };
-      document.querySelectorAll('.main-tab').forEach(function(btn) {
-        var key = tabMap[btn.dataset.tab];
-        var label = btn.querySelector('.tab-label');
-        if (key && label && s[key]) label.textContent = s[key];
-      });
-
-      // Update search placeholder
-      var si = document.getElementById('searchInput');
-      if (si) si.placeholder = s.search;
-
-      // Update tab panel headings
-      var weeklyH = document.querySelector('#tab-weekly h2');
-      var weeklyP = document.querySelector('#tab-weekly p');
-      if (weeklyH) weeklyH.innerHTML = '<i class="fa-solid fa-calendar-week" style="color:#2563eb;margin-right:8px"></i>' + s.weeklyTitle;
-      if (weeklyP) weeklyP.textContent = s.weeklySub;
-      var dailyH = document.querySelector('#tab-daily h2');
-      var dailyP = document.querySelector('#tab-daily p');
-      if (dailyH) dailyH.innerHTML = '<i class="fa-solid fa-sun" style="color:#f59e0b;margin-right:8px"></i>' + s.dailyTitle;
-      if (dailyP) dailyP.textContent = s.dailySub;
-
       document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+      // Update select value
+      var sel = document.getElementById('langSelect');
+      if (sel) sel.value = lang;
+
+      // Apply translations to all data-i18n elements
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n');
+        var val = resolve(lang, key);
+        if (val) el.textContent = val;
+      });
+
+      // Apply placeholder translations
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n-placeholder');
+        var val = resolve(lang, key);
+        if (val) el.placeholder = val;
+      });
+
+      // Update search results empty state
+      var style = document.getElementById('langDynamicCSS');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'langDynamicCSS';
+        document.head.appendChild(style);
+      }
+      var noResultsTexts = { fr: 'Aucun résultat', en: 'No results', ar: 'لا توجد نتائج', es: 'Sin resultados', zh: '无结果' };
+      var noResultsText = noResultsTexts[lang] || noResultsTexts.en;
+      style.textContent = '.search-results:empty::after { content: "' + noResultsText + '"; }';
     }
 
     // Init from stored preference or browser language
     (function() {
-      var stored = localStorage.getItem('mw-lang');
-      if (!stored) {
-        var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
-        stored = nav.startsWith('fr') ? 'fr' : 'en';
-      }
+      var stored = localStorage.getItem('mw-lang') || 'en';
       setLang(stored);
     })();
   </script>
+<script src="/assets/tag-renderer.js"></script>
 </body>
 
 </html>

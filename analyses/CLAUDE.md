@@ -5,18 +5,19 @@
 
 ### Référence
 **L'analyse TARA (`analyses/TARA/`) et CDIO (`analyses/CDIO/`)** sont les références pour la charte graphique, la structure HTML, les classes CSS, les ECharts, le switcher langue/niveau, et les 6 variantes. Toute nouvelle analyse doit suivre ce modèle en termes de qualité, longueur (~1000-1600+ lignes pour expert/fr), structure des sections, et style visuel.
+**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
 ### Template HTML Obligatoire (CRITIQUE)
 
 #### Balise `<html>` — Attributs Obligatoires
 ```html
-<html lang="fr" data-tags="us,tech,ai,trade-idea,speculative" data-tab="analyses" data-grade="A+" data-level="expert">
+<html lang="en" data-tags="us,tech,ai,trade-idea,speculative" data-tab="analyses" data-grade="A+" data-level="intermediate">
 ```
 - `lang` : langue (fr, en, ar)
 - `data-tags` : tags pertinents (voir taxonomie CLAUDE.md racine)
 - `data-tab="analyses"` : toujours "analyses"
 - `data-grade` : note globale (A+, A, B+, B, C, D)
-- `data-level` : "expert" ou "beginner"
+- `data-level` : "intermediate" (par défaut), "expert" ou "beginner"
 
 #### CSS — Thème Light (`report.css`)
 ```html
