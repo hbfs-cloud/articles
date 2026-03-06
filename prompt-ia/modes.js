@@ -13,6 +13,7 @@
       factoryIntro: 'Build smart alerts visually. Download a ready-to-run project.',
       agentBtn: 'Agent', agentBtnSub: 'AI workflows + MCP',
       factoryBtn: 'Alerts', factoryBtnSub: 'Smart alert builder',
+      aiTool: 'AI Tool',
       dataSource: 'Data Source',
       srcCustom: 'My Watchlist', srcScanner: 'Scanner A+ Picks', srcAuto: 'Auto-Screener',
       watchlistPh: 'AAPL, NVDA, BTC-USD...',
@@ -24,13 +25,20 @@
       howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code> (MCP server auto-detected via .mcp.json)',
       howToStep2Factory: '<code>claude</code> (MCP auto-detected)',
       howToStep3Agent: '<strong>Cursor:</strong> Open folder in Cursor (.cursorrules auto-detected)',
-      howToStep3Factory: '"Start monitoring my alerts"'
+      howToStep3Factory: '"Start monitoring my alerts"',
+      helpTitle: 'How does this work?',
+      helpAgentTitle: 'Agent Mode — AI Workflows',
+      helpAgentBody: '<p>Agent mode generates a <strong>complete project folder</strong> that transforms your AI into a specialized financial assistant.</p><h4>What you get:</h4><ul><li><strong>CLAUDE.md</strong> — A detailed instruction file that tells the AI exactly what to do: scan markets, analyze picks, monitor risks, generate alerts</li><li><strong>MCP Server</strong> — A local server that connects your AI to <strong>live Market Watch data</strong> (today\'s A+ picks, market regime, VIX, articles). Updated daily.</li><li><strong>.mcp.json</strong> — Auto-configuration file. Claude Code detects it instantly.</li></ul><h4>What it unlocks:</h4><ul><li>Morning scan: the AI fetches today\'s best setups and briefs you</li><li>Real-time monitoring: price alerts, volume spikes, regime changes</li><li>EOD reports: automated end-of-day P&L review</li><li>Deep analysis: multi-source research on any ticker</li></ul><h4>Compatible tools:</h4><p><strong>Claude Code</strong> (full MCP support), <strong>Cursor</strong> (.cursorrules), <strong>Gemini CLI</strong>, <strong>Codex CLI</strong>, <strong>Windsurf</strong>. For ChatGPT/Gemini web, copy CLAUDE.md as system prompt.</p>',
+      helpFactoryTitle: 'Alert Mode — Smart Alert Builder',
+      helpFactoryBody: '<p>Alert mode lets you <strong>visually build</strong> a custom alert system. Pick conditions, choose actions, download a ready-to-run project.</p><h4>How it works:</h4><ol><li><strong>Choose data source</strong> — your watchlist, today\'s scanner picks, or auto-screener</li><li><strong>Pick conditions</strong> — RSI oversold, MACD cross, VIX spike, insider buy, earnings proximity...</li><li><strong>Choose actions</strong> — Telegram alert, Discord webhook, full analysis, trade plan, save report</li></ol><h4>The AI will:</h4><ul><li>Monitor your conditions continuously during market hours</li><li>Fetch live data via the included MCP server</li><li>Trigger smart alerts with escalation (info → warning → critical)</li><li>Generate actionable analysis when conditions are met</li></ul><p>Think of it as building a <strong>Bloomberg Terminal alert system</strong> — but powered by AI and free.</p>',
+      helpClose: 'Got it'
     },
     fr: {
       agentIntro: 'Choisis un workflow. Obtiens un projet IA complet, auto-configuré.',
       factoryIntro: 'Crée des alertes visuellement. Télécharge un projet prêt à l\'emploi.',
       agentBtn: 'Agent', agentBtnSub: 'Workflows IA + MCP',
       factoryBtn: 'Alertes', factoryBtnSub: 'Créateur d\'alertes',
+      aiTool: 'Outil IA',
       dataSource: 'Source de données',
       srcCustom: 'Ma Watchlist', srcScanner: 'Picks A+ Scanner', srcAuto: 'Auto-Screener',
       watchlistPh: 'AAPL, NVDA, BTC-USD...',
@@ -42,7 +50,13 @@
       howToStep2Agent: '<strong>Claude Code :</strong> <code>claude</code> (le MCP server est auto-détecté via .mcp.json)',
       howToStep2Factory: '<code>claude</code> (MCP auto-détecté)',
       howToStep3Agent: '<strong>Cursor :</strong> Ouvre le dossier dans Cursor (.cursorrules auto-détecté)',
-      howToStep3Factory: '"Start monitoring my alerts"'
+      howToStep3Factory: '"Start monitoring my alerts"',
+      helpTitle: 'Comment ça marche ?',
+      helpAgentTitle: 'Mode Agent — Workflows IA',
+      helpAgentBody: '<p>Le mode Agent génère un <strong>dossier projet complet</strong> qui transforme ton IA en assistant financier spécialisé.</p><h4>Ce que tu obtiens :</h4><ul><li><strong>CLAUDE.md</strong> — Un fichier d\'instructions détaillé qui dit à l\'IA exactement quoi faire : scanner les marchés, analyser les picks, surveiller les risques, générer des alertes</li><li><strong>Serveur MCP</strong> — Un serveur local qui connecte ton IA aux <strong>données live Market Watch</strong> (picks A+ du jour, régime de marché, VIX, articles). Mis à jour quotidiennement.</li><li><strong>.mcp.json</strong> — Fichier d\'auto-configuration. Claude Code le détecte instantanément.</li></ul><h4>Ce que ça débloque :</h4><ul><li>Scan matinal : l\'IA fetch les meilleurs setups du jour et te brief</li><li>Surveillance temps réel : alertes de prix, pics de volume, changements de régime</li><li>Rapports EOD : revue P&L automatique en fin de journée</li><li>Analyse approfondie : recherche multi-source sur n\'importe quel ticker</li></ul><h4>Outils compatibles :</h4><p><strong>Claude Code</strong> (support MCP complet), <strong>Cursor</strong> (.cursorrules), <strong>Gemini CLI</strong>, <strong>Codex CLI</strong>, <strong>Windsurf</strong>. Pour ChatGPT/Gemini web, copie le CLAUDE.md comme prompt système.</p>',
+      helpFactoryTitle: 'Mode Alertes — Créateur d\'alertes intelligentes',
+      helpFactoryBody: '<p>Le mode Alertes te permet de <strong>construire visuellement</strong> un système d\'alertes personnalisé. Choisis les conditions, les actions, télécharge un projet prêt à l\'emploi.</p><h4>Comment ça fonctionne :</h4><ol><li><strong>Choisis la source</strong> — ta watchlist, les picks A+ du scanner, ou l\'auto-screener</li><li><strong>Sélectionne les conditions</strong> — RSI survendu, croisement MACD, pic VIX, achat insider, proximité earnings...</li><li><strong>Choisis les actions</strong> — Alerte Telegram, webhook Discord, analyse complète, plan de trade, sauvegarde</li></ol><h4>L\'IA va :</h4><ul><li>Surveiller tes conditions en continu pendant les heures de marché</li><li>Fetch les données live via le serveur MCP inclus</li><li>Déclencher des alertes intelligentes avec escalade (info → warning → critique)</li><li>Générer des analyses actionnables quand les conditions sont remplies</li></ul><p>C\'est comme construire un <strong>système d\'alertes Bloomberg Terminal</strong> — mais propulsé par l\'IA et gratuit.</p>',
+      helpClose: 'Compris'
     },
     ar: {
       agentIntro: '\u0627\u062e\u062a\u0631 \u0633\u064a\u0631 \u0639\u0645\u0644. \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u0645\u0634\u0631\u0648\u0639 \u0648\u0643\u064a\u0644 \u0630\u0643\u0627\u0621 \u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0643\u0627\u0645\u0644.',
@@ -60,7 +74,9 @@
       howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code> (\u064a\u062a\u0645 \u0627\u0643\u062a\u0634\u0627\u0641 MCP \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b)',
       howToStep2Factory: '<code>claude</code> (\u0627\u0643\u062a\u0634\u0627\u0641 MCP \u062a\u0644\u0642\u0627\u0626\u064a)',
       howToStep3Agent: '<strong>Cursor:</strong> \u0627\u0641\u062a\u062d \u0627\u0644\u0645\u062c\u0644\u062f \u0641\u064a Cursor',
-      howToStep3Factory: '"Start monitoring my alerts"'
+      howToStep3Factory: '"Start monitoring my alerts"',
+      aiTool: '\u0623\u062f\u0627\u0629 \u0627\u0644\u0630\u0643\u0627\u0621',
+      helpTitle: '\u0643\u064a\u0641 \u064a\u0639\u0645\u0644\u061f', helpClose: '\u0641\u0647\u0645\u062a'
     },
     es: {
       agentIntro: 'Elige un flujo de trabajo. Obtén un proyecto de agente IA completo.',
@@ -78,7 +94,9 @@
       howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code> (MCP auto-detectado via .mcp.json)',
       howToStep2Factory: '<code>claude</code> (MCP auto-detectado)',
       howToStep3Agent: '<strong>Cursor:</strong> Abre la carpeta en Cursor (.cursorrules auto-detectado)',
-      howToStep3Factory: '"Start monitoring my alerts"'
+      howToStep3Factory: '"Start monitoring my alerts"',
+      aiTool: 'Herramienta IA',
+      helpTitle: '¿Cómo funciona?', helpClose: 'Entendido'
     },
     zh: {
       agentIntro: '\u9009\u62e9\u5de5\u4f5c\u6d41\u3002\u83b7\u53d6\u5b8c\u6574\u7684\u81ea\u914d\u7f6e AI \u4ee3\u7406\u9879\u76ee\u3002',
@@ -96,7 +114,9 @@
       howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code>\uff08\u901a\u8fc7 .mcp.json \u81ea\u52a8\u68c0\u6d4b MCP\uff09',
       howToStep2Factory: '<code>claude</code>\uff08\u81ea\u52a8\u68c0\u6d4b MCP\uff09',
       howToStep3Agent: '<strong>Cursor:</strong> \u5728 Cursor \u4e2d\u6253\u5f00\u6587\u4ef6\u5939\uff08.cursorrules \u81ea\u52a8\u68c0\u6d4b\uff09',
-      howToStep3Factory: '"Start monitoring my alerts"'
+      howToStep3Factory: '"Start monitoring my alerts"',
+      aiTool: 'AI \u5de5\u5177',
+      helpTitle: '\u8fd9\u662f\u5982\u4f55\u5de5\u4f5c\u7684\uff1f', helpClose: '\u660e\u767d\u4e86'
     }
   };
   var L = UI[LANG_CODE] || UI.en;
@@ -753,19 +773,33 @@ https://articles.market-watch.xyz
   // ═══════════════════════════════════════
   // ZIP GENERATION (using JSZip-like approach with Blob)
   // ═══════════════════════════════════════
-  function generateZip(workflow, tickers) {
+  function generateZip(workflow, tickers, aiTool) {
     var wf = WORKFLOWS.find(function(w) { return w.id === workflow; });
     var claudeMd = TEMPLATE_MAP[workflow](tickers);
     var readme = generateReadme(workflow, tickers);
+    aiTool = aiTool || 'claude-code';
 
     var files = [
       { name: 'CLAUDE.md', content: claudeMd },
-      { name: '.cursorrules', content: claudeMd },
       { name: '.mcp.json', content: MCP_DOT_JSON('./mcp-server/index.js') },
       { name: 'mcp-server/index.js', content: MCP_SERVER_INDEX },
       { name: 'mcp-server/package.json', content: MCP_SERVER_PKG },
       { name: 'README.md', content: readme }
     ];
+
+    // Add tool-specific config files
+    if (aiTool === 'cursor' || aiTool === 'claude-code') {
+      files.push({ name: '.cursorrules', content: claudeMd });
+    }
+    if (aiTool === 'windsurf') {
+      files.push({ name: '.windsurfrules', content: claudeMd });
+    }
+    if (aiTool === 'gemini-cli') {
+      files.push({ name: 'GEMINI.md', content: claudeMd });
+    }
+    if (aiTool === 'codex') {
+      files.push({ name: 'AGENTS.md', content: claudeMd });
+    }
 
     if (workflow === 'portfolio-sentinel') {
       files.push({
@@ -815,8 +849,8 @@ https://articles.market-watch.xyz
   // Simple TAR-like download (individual files in a folder)
   // We use a multi-file download approach with a single combined .md for simplicity,
   // or JSZip if available. Fallback: download CLAUDE.md directly.
-  function downloadProject(workflow, tickers) {
-    var files = generateZip(workflow, tickers);
+  function downloadProject(workflow, tickers, aiTool) {
+    var files = generateZip(workflow, tickers, aiTool);
 
     // Try using JSZip if loaded
     if (typeof JSZip !== 'undefined') {
@@ -849,13 +883,90 @@ https://articles.market-watch.xyz
   }
 
   // ═══════════════════════════════════════
+  // AI TOOLS
+  // ═══════════════════════════════════════
+  var AI_TOOLS = [
+    { id: 'claude-code', label: 'Claude Code', color: '#d97706', config: '.mcp.json + CLAUDE.md', desc: 'Full MCP support, auto-detects .mcp.json' },
+    { id: 'cursor', label: 'Cursor', color: '#6366f1', config: '.cursorrules', desc: 'Auto-detects .cursorrules file' },
+    { id: 'gemini-cli', label: 'Gemini CLI', color: '#10b981', config: 'GEMINI.md', desc: 'Google Gemini CLI agent' },
+    { id: 'codex', label: 'Codex CLI', color: '#0ea5e9', config: 'AGENTS.md', desc: 'OpenAI Codex CLI agent' },
+    { id: 'windsurf', label: 'Windsurf', color: '#8b5cf6', config: '.windsurfrules', desc: 'Codeium Windsurf IDE' },
+    { id: 'claude-cowork', label: 'Claude Cowork', color: '#f59e0b', config: 'CLAUDE.md', desc: 'Claude multi-agent collaboration' }
+  ];
+
+  function renderAiToolSelector(idPrefix) {
+    var html = '<div class="ai-tools" id="' + idPrefix + 'AiTools">';
+    AI_TOOLS.forEach(function(tool) {
+      html += '<button type="button" class="ai-tool-btn' + (tool.id === 'claude-code' ? ' active' : '') + '" data-tool="' + tool.id + '">';
+      html += '<span class="ai-dot" style="background:' + tool.color + '"></span>';
+      html += tool.label + '</button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function initAiToolSelector(idPrefix) {
+    var container = document.getElementById(idPrefix + 'AiTools');
+    if (!container) return;
+    container.querySelectorAll('.ai-tool-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        container.querySelectorAll('.ai-tool-btn').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+  }
+
+  function getSelectedAiTool(idPrefix) {
+    var container = document.getElementById(idPrefix + 'AiTools');
+    var active = container ? container.querySelector('.ai-tool-btn.active') : null;
+    return active ? active.dataset.tool : 'claude-code';
+  }
+
+  // ═══════════════════════════════════════
+  // HELP MODAL
+  // ═══════════════════════════════════════
+  function showHelpModal(mode) {
+    var agentTitle = L.helpAgentTitle || UI.en.helpAgentTitle;
+    var agentBody = L.helpAgentBody || UI.en.helpAgentBody;
+    var factoryTitle = L.helpFactoryTitle || UI.en.helpFactoryTitle;
+    var factoryBody = L.helpFactoryBody || UI.en.helpFactoryBody;
+
+    var html = '<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)window._closeHelp()">';
+    html += '<div class="help-dialog">';
+    html += '<div class="help-dialog-header"><h3><i class="fa-solid fa-circle-question"></i> ' + (L.helpTitle || UI.en.helpTitle) + '</h3>';
+    html += '<button class="help-dialog-close" onclick="window._closeHelp()" type="button"><i class="fa-solid fa-xmark"></i></button></div>';
+
+    html += '<div class="help-section">';
+    html += '<div class="help-section-title"><span class="help-icon agent"><i class="fa-solid fa-robot"></i></span> ' + agentTitle + '</div>';
+    html += '<div class="help-dialog-body">' + agentBody + '</div></div>';
+
+    html += '<div class="help-section">';
+    html += '<div class="help-section-title"><span class="help-icon factory"><i class="fa-solid fa-bolt"></i></span> ' + factoryTitle + '</div>';
+    html += '<div class="help-dialog-body">' + factoryBody + '</div></div>';
+
+    html += '<div class="help-dialog-footer"><button onclick="window._closeHelp()">' + (L.helpClose || UI.en.helpClose) + '</button></div>';
+    html += '</div></div>';
+
+    document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  window._closeHelp = function() {
+    var overlay = document.getElementById('helpOverlay');
+    if (overlay) overlay.remove();
+  };
+
+  window._showHelp = function() {
+    showHelpModal();
+  };
+
+  // ═══════════════════════════════════════
   // RENDER AGENT PANEL
   // ═══════════════════════════════════════
   function renderAgentPanel() {
     var panel = document.getElementById('panelAgent');
     if (!panel) return;
 
-    var html = '<p class="lib-intro">' + L.agentIntro + '</p>';
+    var html = '<p class="lib-intro">' + L.agentIntro + ' <button class="help-btn" type="button" onclick="window._showHelp()" title="?">?</button></p>';
     html += '<div class="wf-grid">';
     WORKFLOWS.forEach(function(wf) {
       html += '<button class="wf-card" data-wf="' + wf.id + '" type="button">';
@@ -872,6 +983,11 @@ https://articles.market-watch.xyz
     html += '<span class="wf-config-icon" id="wfConfigIcon"></span>';
     html += '<div><div class="wf-config-title" id="wfConfigTitle"></div>';
     html += '<div class="wf-config-desc" id="wfConfigDesc"></div></div>';
+    html += '</div>';
+
+    // AI Tool selector
+    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-microchip"></i> ' + L.aiTool + '</div>';
+    html += renderAiToolSelector('wf');
     html += '</div>';
 
     html += '<div class="fg"><div class="fl"><i class="fa-solid fa-database"></i> ' + L.dataSource + '</div>';
@@ -913,8 +1029,9 @@ https://articles.market-watch.xyz
       });
     });
 
-    // Source switch logic
+    // Source switch + AI tool logic
     initSrcSwitch('wfSrcSwitch', 'wfTickers');
+    initAiToolSelector('wf');
   }
 
   // ── Source switch logic ──
@@ -1001,7 +1118,8 @@ https://articles.market-watch.xyz
   window._downloadAgent = function() {
     if (!selectedWorkflow) return;
     var tickers = getSourceTickers('wfSrcSwitch', 'wfTickers');
-    downloadProject(selectedWorkflow, tickers);
+    var aiTool = getSelectedAiTool('wf');
+    downloadProject(selectedWorkflow, tickers, aiTool);
   };
 
   // ═══════════════════════════════════════
@@ -1040,8 +1158,13 @@ https://articles.market-watch.xyz
     var panel = document.getElementById('panelFactory');
     if (!panel) return;
 
-    var html = '<p class="lib-intro">' + L.factoryIntro + '</p>';
+    var html = '<p class="lib-intro">' + L.factoryIntro + ' <button class="help-btn" type="button" onclick="window._showHelp()" title="?">?</button></p>';
     html += '<div class="prompt-card">';
+
+    // AI Tool selector
+    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-microchip"></i> ' + L.aiTool + '</div>';
+    html += renderAiToolSelector('factory');
+    html += '</div>';
 
     // Step 1: Target
     html += '<div class="factory-step">';
@@ -1108,8 +1231,9 @@ https://articles.market-watch.xyz
       chip.addEventListener('click', function() { this.classList.toggle('active'); });
     });
 
-    // Source switch logic
+    // Source switch + AI tool logic
     initSrcSwitch('factorySrcSwitch', 'factoryTickers');
+    initAiToolSelector('factory');
   }
 
   function generateAlertCLAUDEmd(tickers, conditions, actions) {
@@ -1210,6 +1334,7 @@ Say: "Start monitoring" or "Check conditions now"
 
   window._downloadFactory = function() {
     var tickers = getSourceTickers('factorySrcSwitch', 'factoryTickers');
+    var aiTool = getSelectedAiTool('factory');
     var conditions = [];
     document.querySelectorAll('#factoryConditions .focus-chip.active').forEach(function(c) {
       conditions.push(c.dataset.cond);
@@ -1222,13 +1347,12 @@ Say: "Start monitoring" or "Check conditions now"
     var claudeMd = generateAlertCLAUDEmd(tickers, conditions, actions);
     var readme = '# 🔔 Alert System — Market Watch AI Agent\n\n' +
       'Custom alert monitoring system powered by Market Watch data.\n\n' +
-      '## Quick Start\n```bash\ncd alert-system\nclaude\n# Say: "Start monitoring"\n```\n\n' +
-      '## Files\n- `CLAUDE.md` — AI agent configuration\n- `.cursorrules` — Same config for Cursor\n- `alerts-config.json` — Alert rules (editable)\n\n' +
+      '## Quick Start\n```bash\ncd mcp-server && npm install && cd ..\nclaude\n# Say: "Start monitoring"\n```\n\n' +
+      '## Files\n- `CLAUDE.md` — AI agent configuration\n- `.mcp.json` — MCP server config\n- `mcp-server/` — Live data server\n- `alerts-config.json` — Alert rules (editable)\n\n' +
       '---\n*This is not financial advice.*\n';
 
     var files = [
       { name: 'CLAUDE.md', content: claudeMd },
-      { name: '.cursorrules', content: claudeMd },
       { name: '.mcp.json', content: MCP_DOT_JSON('./mcp-server/index.js') },
       { name: 'mcp-server/index.js', content: MCP_SERVER_INDEX },
       { name: 'mcp-server/package.json', content: MCP_SERVER_PKG },
@@ -1240,6 +1364,12 @@ Say: "Start monitoring" or "Check conditions now"
         actions: actions
       }, null, 2) }
     ];
+
+    // Add tool-specific config
+    if (aiTool === 'cursor' || aiTool === 'claude-code') files.push({ name: '.cursorrules', content: claudeMd });
+    if (aiTool === 'windsurf') files.push({ name: '.windsurfrules', content: claudeMd });
+    if (aiTool === 'gemini-cli') files.push({ name: 'GEMINI.md', content: claudeMd });
+    if (aiTool === 'codex') files.push({ name: 'AGENTS.md', content: claudeMd });
 
     // Download
     if (typeof JSZip !== 'undefined') {
