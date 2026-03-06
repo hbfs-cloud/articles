@@ -2436,12 +2436,25 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Scanner Quotidien",
+    "desc": "L'Iran a frappé un pétrolier au missile dans le détroit d'Hormuz (20% de l'offre mondiale). WTI +8% à $81/bbl, plus haut depuis juillet 2024. Le Pentagone confirme un renforcement militaire dans la région. Le Dow chute de 784 points (-1,61%). Tarifs Trump 15% globaux confirmés pour cette semaine. Br...",
+    "tags": "us,eu,asia,etf,energy,defense,healthcare,commodity,geopolitique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260305/",
+    "date": "6 mars 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Top 10 A+ EARLY RISK-OFF — CF, CHRD, AMPX, MEOH, PAA, TTE, EWG, EWJ, XLE, GLD",
     "desc": "Suite aux deux rétrospectives — 20/02 (note C+, hit rate 62,5%) et 28/02 (note B+, hit rate 50%, P&L +8,8%) — les ajustements suivants sont appliqués :",
     "tags": "us,eu,asia,etf,energy,tech,commodity,geopolitique,trade-idea,macro,materials,industrials",
     "grade": "",
-    "href": "/scanner/20260305/",
-    "date": "Mercredi 5 Mars 2026"
+    "href": "/scanner/20260304/",
+    "date": "Mercredi 4 Mars 2026"
   },
   {
     "type": "scanner",
@@ -2518,7 +2531,7 @@ window.searchDataPrebuilt = [
     "desc": "Sélection heuristique adaptée au régime Early Risk-Off. Données\n            limitées (quotes et bars_daily uniquement). Zéro overlap avec le\n            scan précédent. Priorité aux défensifs, hedges, secteurs\n            résilients et diversification géographique. Prix P0 validés.\n            Post-rétrospective C+.",
     "tags": "us,eu,asia,etf,commodity,energy,healthcare,materials,trade-idea,tech",
     "grade": "",
-    "href": "scanner/20260224/",
+    "href": "/scanner/20260224/",
     "date": "24 Février 2026"
   },
   {
@@ -2531,7 +2544,7 @@ window.searchDataPrebuilt = [
     "desc": "Tarifs 15% globaux (post-SCOTUS). Dow -822 pts. Or ATH $5,192/oz\n            (+2.7%), argent breakout $88 (+5.2%). NVDA earnings mercredi AMC\n            ($65.7B). Stagflation (GDP 1.4%, PCE 3.0%). Iran/Hormuz tensions.\n            0% overlap scan précédent. 20% hedges métaux précieux. Prix P0\n            validés. Post-rétrospective C+. 10 setups analysés : ABBV, AAOI,\n            AA, AAL, AAPL (US), VGK, EWQ (Europe), EWY (Asie), GLD, SLV.",
     "tags": "us,eu,asia,etf,commodity,energy,healthcare,materials,trade-idea",
     "grade": "",
-    "href": "scanner/20260223/",
+    "href": "/scanner/20260223/",
     "date": "23 Février 2026"
   },
   {
@@ -2557,7 +2570,7 @@ window.searchDataPrebuilt = [
     "desc": "SCOTUS 6-3 invalide les tarifs IEEPA, relief rally SPY +0.72%. AG\n            +11.18% (52W high silver), ETSY +8.39% (Depop $1.2B), FIX +6.46%\n            (52W high infra), NICE +5.50%, LITE +5.05% (AI infra). GEV -0.51%,\n            CAT -0.10% consolident. Régime Early Risk-Off. VIX 19.28. NVDA\n            earnings 26 fév.",
     "tags": "us,commodity,materials,industrials,trade-idea",
     "grade": "",
-    "href": "scanner/20260220/",
+    "href": "/scanner/20260220/",
     "date": "20 Février 2026"
   },
   {
@@ -2570,7 +2583,7 @@ window.searchDataPrebuilt = [
     "desc": "4 Earnings Breakouts (COLD +15.75%, OMC +15.36%, NICE +13.25%, DE\n            +11.58%) + 3 Géopolitique/Énergie (AG, OXY, XLE — Iran/pétrole) +\n            Analyst Wave ADI (16+ upgrades) + Défensifs (JNJ 52W High, ETSY\n            oversold bounce). Régime Early Risk-Off. Fed Minutes hawkish. VIX\n            20.23.",
     "tags": "us,energy,earnings,geopolitique,trade-idea",
     "grade": "",
-    "href": "scanner/20260219/",
+    "href": "/scanner/20260219/",
     "date": "19 Février 2026"
   },
   {
@@ -2583,7 +2596,7 @@ window.searchDataPrebuilt = [
     "desc": "5 US défensifs (JNJ AAA, PG, ABBV, ABT, XLV) + 5 refuges/leaders\n            (GLD, TLT, TSM, ASML, VGK). Tous mega caps, dividendes, beta\n            <1.0. Score moyen 91.5/100.",
     "tags": "us,eu,commodity,etf,trade-idea",
     "grade": "",
-    "href": "scanner/20260217/",
+    "href": "/scanner/20260217/",
     "date": "17 Février 2026"
   },
   {
@@ -2596,8 +2609,21 @@ window.searchDataPrebuilt = [
     "desc": "Régime Early Risk-Off détecté. Stratégies short squeeze (40%) et\n            pre-squeeze (35%) favorisées. 10 setups analysés : ADBE, ADP,\n            ABBV, AA, ACAD, AAP, ACM, ACHC, ACMR, AAON.",
     "tags": "us,trade-idea,technique",
     "grade": "",
-    "href": "scanner/20260215/",
+    "href": "/scanner/20260215/",
     "date": "15 Février 2026"
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "The Automated Trading Stack",
+    "desc": "Build a fully automated trading pipeline: MCP Gateway, 6-layer scoring engine, programmable alert DSL, Discord bot, scanner automation, and feedback loops.",
+    "tags": "ai,tech,trading,automation,education",
+    "grade": "",
+    "href": "/tech/automated-trading/",
+    "date": ""
   },
   {
     "type": "tech",
@@ -2748,76 +2774,11 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Le Terrain de Jeu — Où en Sont les Marchés",
-    "desc": "Série Perspectives 2026 — Partie 1/6 : état des lieux complet des marchés mondiaux. Actions, obligations, crypto, or, dollar.",
-    "tags": "macro,us,eu,asia,crypto,commodity,formation",
+    "title": "Perspectives 2026 — Marchés, Macro & Stratégie",
+    "desc": "De l'état des lieux des marchés à la stratégie pour battre le S&P 500 : terrain de jeu, poudrière américaine, révolution crypto, géopolitique, risques et allocation tactique.",
+    "tags": "macro,us,eu,asia,crypto,commodity,geopolitique,formation",
     "grade": "",
-    "href": "/series/perspectives-2026/part1-terrain-de-jeu/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Perspectives 2026 — 2/6 : La Poudrière Américaine",
-    "desc": "36 500 milliards de dette, Kevin Warsh à la Fed, dollar en chute libre. L'Amérique joue avec le feu.",
-    "tags": "macro,us,formation",
-    "grade": "",
-    "href": "/series/perspectives-2026/part2-poudriere-americaine/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Perspectives 2026 — 3/6 : La Révolution Crypto",
-    "desc": "BTC réserve stratégique, ETF institutionnels, stablecoins, DeFi. La crypto reshape la finance mondiale.",
-    "tags": "crypto,formation,us",
-    "grade": "",
-    "href": "/series/perspectives-2026/part3-revolution-crypto/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Perspectives 2026 — 4/6 : Un Monde qui Bouge",
-    "desc": "L'Europe se réarme, la Chine se restructure, l'Inde accélère. La multipolarité des marchés en 2026.",
-    "tags": "eu,asia,macro,formation",
-    "grade": "",
-    "href": "/series/perspectives-2026/part4-monde-qui-bouge/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Perspectives 2026 — 5/6 : Les Risques Géopolitiques",
-    "desc": "Guerre commerciale US-Chine, conflit Ukraine, tensions Moyen-Orient, risque de récession. Le panorama complet des risques 2026.",
-    "tags": "geopolitique,macro,formation",
-    "grade": "",
-    "href": "/series/perspectives-2026/part5-risques-geopolitiques/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Perspectives 2026 — 6/6 : La Stratégie 2026",
-    "desc": "Allocation Core/Satellite/Alpha, secteurs gagnants, calendrier tactique et trades concrets pour viser 2-3x la performance du S&P 500.",
-    "tags": "formation,technique,us,eu,crypto,macro",
-    "grade": "",
-    "href": "/series/perspectives-2026/part6-strategie-2026/",
+    "href": "/series/perspectives-2026/",
     "date": ""
   },
   {

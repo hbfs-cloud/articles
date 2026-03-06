@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="ai,tech,trading,automation,education" data-tab="tech">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The AI Analysis Engine — Multi-Layer Scoring for A++ Setups | Automated Trading 3/6 | Market Watch</title>
+    <meta name="description" content="Part 3/6 — Build a 6-layer scoring engine: technical, fundamental, social, sector, macro, and AI conviction. Identify A++ setups that check every box.">
+    <meta property="og:title" content="The AI Analysis Engine — Multi-Layer Scoring for A++ Setups">
+    <meta property="og:description" content="6-layer scoring: technical + fundamental + social + sector + macro + AI conviction = A++ setups.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.market-watch.xyz/tech/automated-trading/part3-analysis-engine/">
+    <meta property="og:type" content="article">
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .hero-section{padding:5rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#d1fae5 100%);text-align:center;border-bottom:1px solid #a7f3d0}
+        .hero-date{font-size:.85rem;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+        .hero-title{font-size:2.8rem;font-weight:900;color:#064e3b;margin:.5rem 0;letter-spacing:-.03em}
+        .hero-subtitle{font-size:1.15rem;color:#065f46;max-width:750px;margin:1rem auto 0;line-height:1.7}
+        .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+        .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.75rem;font-weight:700;background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+        .container{max-width:900px;margin:0 auto;padding:0 1rem;position:relative}
+        .content-card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0}
+        h2{font-size:1.8rem;font-weight:900;color:#0f172a;margin:1.5rem 0;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem}
+        h3{font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem}
+        h4{font-size:1.1rem;font-weight:700;color:#334155;margin:1.5rem 0 .75rem}
+        p{font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem}
+        pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+        code{font-family:'JetBrains Mono','Fira Code',monospace}
+        pre code{color:#e2e8f0}
+        .code-label{display:inline-block;background:#10b981;color:white;padding:.25rem .75rem;border-radius:6px 6px 0 0;font-size:.75rem;font-weight:700;margin-bottom:-1px}
+        ul,ol{font-size:1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;padding-left:1.5rem}
+        li{margin-bottom:.5rem}
+        .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+        .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(16,185,129,.3)}
+        .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+        .next-cta .next-title{font-size:1.25rem;font-weight:800}
+        .next-cta i{font-size:1.5rem}
+        .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0}
+        .metric-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;text-align:center}
+        .metric-value{font-size:1.5rem;font-weight:800;color:#0f172a;margin-bottom:.25rem}
+        .metric-label{font-size:.85rem;color:#64748b}
+        .layer-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;margin:1rem 0;border-left:4px solid}
+        .layer-card h4{margin-top:0}
+        .score-example{background:#0f172a;border-radius:12px;padding:1.5rem;margin:1rem 0;color:#e2e8f0}
+        .score-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid #334155}
+        .score-row:last-child{border-bottom:none}
+        .score-label{color:#94a3b8;font-size:.9rem}
+        .score-bar{background:#1e293b;border-radius:4px;height:8px;flex:1;margin:0 1rem;position:relative;overflow:hidden}
+        .score-fill{height:100%;border-radius:4px}
+        .score-val{color:#10b981;font-weight:800;font-size:.9rem;min-width:40px;text-align:right}
+        @media(max-width:768px){.content-card{padding:1.5rem}.hero-section{padding:3rem 1rem 6rem}.hero-title{font-size:2rem}}
+    </style>
+</head>
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+    <header class="hero-section">
+        <div class="hero-date">Automated Trading with Claude Code &mdash; Part 3/6</div>
+        <h1 class="hero-title">The AI Analysis Engine</h1>
+        <p class="hero-subtitle">Multi-layer scoring across 6 dimensions &mdash; technical, fundamental, social, sector, macro, and AI conviction &mdash; to identify A++ setups that check every box.</p>
+        <div class="hero-badges">
+            <span class="hero-badge"><i class="fa-solid fa-layer-group"></i> 6 Scoring Layers</span>
+            <span class="hero-badge"><i class="fa-solid fa-star"></i> A++ Threshold: 92+</span>
+            <span class="hero-badge"><i class="fa-solid fa-brain"></i> AI Conviction</span>
+            <span class="hero-badge"><i class="fa-solid fa-code"></i> Claude Code Skill</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="series-bar"><div class="series-bar-inner">
+        <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+        <span class="series-title">Automated Trading with Claude Code</span>
+        <div class="series-steps">
+            <a href="/tech/automated-trading/" class="series-step"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+            <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step current"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+            <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+            <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+            <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+        </div>
+        <span class="series-counter">3/6</span>
+        <a href="/tech/automated-trading/part4-alert-dsl/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+    </div></div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#framework" class="fnav-item" data-section="framework"><i class="fas fa-layer-group"></i><span>Framework</span></a>
+            <a href="#technical" class="fnav-item" data-section="technical"><i class="fas fa-chart-line"></i><span>Technical</span></a>
+            <a href="#fundamental" class="fnav-item" data-section="fundamental"><i class="fas fa-building-columns"></i><span>Fundamental</span></a>
+            <a href="#social" class="fnav-item" data-section="social"><i class="fas fa-users"></i><span>Social</span></a>
+            <a href="#sector" class="fnav-item" data-section="sector"><i class="fas fa-industry"></i><span>Sector</span></a>
+            <a href="#macro" class="fnav-item" data-section="macro"><i class="fas fa-globe"></i><span>Macro</span></a>
+            <a href="#ai-conviction" class="fnav-item" data-section="ai-conviction"><i class="fas fa-brain"></i><span>AI Layer</span></a>
+            <a href="#composite" class="fnav-item" data-section="composite"><i class="fas fa-star"></i><span>Composite</span></a>
+            <a href="#skill" class="fnav-item" data-section="skill"><i class="fas fa-wand-magic-sparkles"></i><span>Skill File</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button>
+    </div>
+
+    <div class="container" style="margin-top:-4rem;">
+
+        <!-- Framework Overview -->
+        <div id="framework" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#10b981"></i> The 6-Layer Scoring Framework</h2>
+            <p>Every setup candidate passes through 6 independent scoring layers. Each layer produces a score from 0 to 100. The composite score is a weighted average. For A++ classification, <strong>all 6 layers must pass</strong> their minimum thresholds.</p>
+
+            <div class="layer-card" style="border-left-color:#3b82f6">
+                <h4><i class="fa-solid fa-chart-line" style="color:#3b82f6"></i> Layer 1: Technical Analysis &mdash; 30% weight</h4>
+                <p>RSI, MACD, moving averages, volume, support/resistance, pattern recognition. Confluence count determines the score. Minimum threshold: 70.</p>
+            </div>
+            <div class="layer-card" style="border-left-color:#10b981">
+                <h4><i class="fa-solid fa-building-columns" style="color:#10b981"></i> Layer 2: Fundamental Quality &mdash; 20% weight</h4>
+                <p>Revenue growth, margin trajectory, cash flow quality, balance sheet health, valuation vs peers. Minimum threshold: 65.</p>
+            </div>
+            <div class="layer-card" style="border-left-color:#8b5cf6">
+                <h4><i class="fa-solid fa-users" style="color:#8b5cf6"></i> Layer 3: Social Sentiment &mdash; 10% weight</h4>
+                <p>StockTwits bull ratio, Reddit mentions, news sentiment, pump&amp;dump detection. Minimum threshold: 50.</p>
+            </div>
+            <div class="layer-card" style="border-left-color:#f59e0b">
+                <h4><i class="fa-solid fa-industry" style="color:#f59e0b"></i> Layer 4: Sector Momentum &mdash; 15% weight</h4>
+                <p>Sector ETF trend, relative strength vs SPY, rotation model position. Minimum threshold: 60.</p>
+            </div>
+            <div class="layer-card" style="border-left-color:#ef4444">
+                <h4><i class="fa-solid fa-globe" style="color:#ef4444"></i> Layer 5: Macro Regime &mdash; 15% weight</h4>
+                <p>Strategy-regime alignment, VIX compatibility, dollar impact. Minimum threshold: 60.</p>
+            </div>
+            <div class="layer-card" style="border-left-color:#06b6d4">
+                <h4><i class="fa-solid fa-brain" style="color:#06b6d4"></i> Layer 6: AI Conviction &mdash; 10% weight</h4>
+                <p>LLM narrative analysis, red flag detection, historical pattern matching. Minimum threshold: 65.</p>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric-card"><div class="metric-value" style="color:#10b981">92+</div><div class="metric-label">A++ Threshold</div></div>
+                <div class="metric-card"><div class="metric-value" style="color:#3b82f6">85+</div><div class="metric-label">A+ Threshold</div></div>
+                <div class="metric-card"><div class="metric-value" style="color:#f59e0b">70+</div><div class="metric-label">A Threshold</div></div>
+                <div class="metric-card"><div class="metric-value" style="color:#ef4444">&lt;70</div><div class="metric-label">Rejected</div></div>
+            </div>
+        </div>
+
+        <!-- Layer 1: Technical -->
+        <div id="technical" class="content-card">
+            <h2><i class="fa-solid fa-chart-line" style="color:#3b82f6"></i> Layer 1: Technical Scoring Engine</h2>
+
+            <p>The technical layer evaluates price action, momentum, volume, and pattern quality. The core concept is <strong>confluence</strong> &mdash; the more independent signals align, the higher the score.</p>
+
+            <h3>Signal Detection</h3>
+            <div class="code-label">Technical Scoring Algorithm</div>
+<pre><code>function scoreTechnical(data) {
+  const signals = [];
+  let score = 50; // Base score
+
+  // === RSI Analysis ===
+  if (data.rsi14 < 30) {
+    signals.push({ name: "RSI Oversold", weight: 15, type: "bullish" });
+    score += 15;
+  } else if (data.rsi14 > 70) {
+    signals.push({ name: "RSI Overbought", weight: -10, type: "bearish" });
+    score -= 10;
+  } else if (data.rsi14 > 45 && data.rsi14 < 65) {
+    signals.push({ name: "RSI Healthy Zone", weight: 5, type: "neutral" });
+    score += 5;
+  }
+
+  // === MACD Analysis ===
+  if (data.macdHistogram > 0 && data.prevMacdHistogram <= 0) {
+    signals.push({ name: "MACD Bullish Cross", weight: 12, type: "bullish" });
+    score += 12;
+  } else if (data.macdHistogram > data.prevMacdHistogram && data.macd > 0) {
+    signals.push({ name: "MACD Expanding", weight: 8, type: "bullish" });
+    score += 8;
+  } else if (data.macdHistogram < 0 && data.macdHistogram < data.prevMacdHistogram) {
+    signals.push({ name: "MACD Deteriorating", weight: -8, type: "bearish" });
+    score -= 8;
+  }
+
+  // === Moving Average Alignment ===
+  const maAlignment = [
+    data.price > data.ema20,
+    data.ema20 > data.ema50,
+    data.ema50 > data.ema200,
+    data.price > data.sma200
+  ].filter(Boolean).length;
+
+  if (maAlignment === 4) {
+    signals.push({ name: "Perfect MA Alignment", weight: 15, type: "bullish" });
+    score += 15;
+  } else if (maAlignment >= 3) {
+    signals.push({ name: "Strong MA Alignment", weight: 8, type: "bullish" });
+    score += 8;
+  } else if (maAlignment <= 1) {
+    signals.push({ name: "Bearish MA Structure", weight: -10, type: "bearish" });
+    score -= 10;
+  }
+
+  // Golden cross / Death cross detection
+  if (data.ema50 > data.ema200 && data.prevEma50 <= data.prevEma200) {
+    signals.push({ name: "Golden Cross", weight: 10, type: "bullish" });
+    score += 10;
+  }
+
+  // === Volume Confirmation ===
+  const relativeVolume = data.volume / data.avgVolume;
+  if (relativeVolume > 2.0) {
+    signals.push({ name: "Volume Surge (2x+)", weight: 12, type: "bullish" });
+    score += 12;
+  } else if (relativeVolume > 1.5) {
+    signals.push({ name: "Above Avg Volume", weight: 6, type: "bullish" });
+    score += 6;
+  } else if (relativeVolume < 0.5) {
+    signals.push({ name: "Low Volume Warning", weight: -5, type: "bearish" });
+    score -= 5;
+  }
+
+  // === Support/Resistance Proximity ===
+  const nearestSupport = data.supports?.[0];
+  const nearestResistance = data.resistances?.[0];
+
+  if (nearestSupport) {
+    const distToSupport = (data.price - nearestSupport.price) / data.price;
+    if (distToSupport < 0.03 && distToSupport > 0) {
+      signals.push({ name: "Near Strong Support", weight: 10, type: "bullish" });
+      score += 10;
+    }
+  }
+
+  if (nearestResistance) {
+    const distToResistance = (nearestResistance.price - data.price) / data.price;
+    if (distToResistance < 0.02) {
+      signals.push({ name: "At Resistance", weight: -5, type: "bearish" });
+      score -= 5;
+    }
+  }
+
+  // === Bollinger Band Analysis ===
+  if (data.price < data.bbLower) {
+    signals.push({ name: "Below Lower BB", weight: 8, type: "bullish" });
+    score += 8;
+  }
+  if (data.bbWidth < 5) {
+    signals.push({ name: "BB Squeeze", weight: 7, type: "neutral" });
+    score += 7; // Potential energy
+  }
+
+  // === ATR-Based Stop Quality ===
+  const atrStop = data.price - (1.5 * data.atr14);
+  const stopDistance = (data.price - atrStop) / data.price;
+  if (stopDistance < 0.05) {
+    signals.push({ name: "Tight Stop Possible (<5%)", weight: 5, type: "bullish" });
+    score += 5;
+  }
+
+  // === Confluence Count ===
+  const bullishSignals = signals.filter(s => s.type === "bullish").length;
+  const bearishSignals = signals.filter(s => s.type === "bearish").length;
+
+  // Bonus for high confluence
+  if (bullishSignals >= 5) score += 10;
+  else if (bullishSignals >= 4) score += 5;
+
+  // Penalty for mixed signals
+  if (bullishSignals > 0 && bearishSignals >= 3) score -= 10;
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    signals,
+    confluence: bullishSignals,
+    bearishCount: bearishSignals
+  };
+}</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Why Confluence Matters</h4>
+                <p>A single indicator (e.g., RSI oversold) is correct about 55% of the time. Two aligned signals push accuracy to ~62%. Four or more aligned signals can reach 70-75% win rate. The scoring engine quantifies this: more independent confirming signals = higher score = higher probability.</p>
+            </div>
+        </div>
+
+        <!-- Layer 2: Fundamental -->
+        <div id="fundamental" class="content-card">
+            <h2><i class="fa-solid fa-building-columns" style="color:#10b981"></i> Layer 2: Fundamental Scoring</h2>
+
+            <p>The fundamental layer assesses the quality of the underlying business. A great technical setup on a fundamentally weak stock is a trap. This layer separates quality setups from value traps.</p>
+
+            <div class="code-label">Fundamental Scoring Algorithm</div>
+<pre><code>function scoreFundamental(data) {
+  let score = 50;
+  const notes = [];
+
+  // === Revenue Growth ===
+  const revenueGrowthYoY = data.financials?.revenueGrowthYoY;
+  if (revenueGrowthYoY > 25) { score += 15; notes.push("Strong revenue growth >25%"); }
+  else if (revenueGrowthYoY > 10) { score += 8; notes.push("Healthy revenue growth"); }
+  else if (revenueGrowthYoY > 0) { score += 3; }
+  else if (revenueGrowthYoY < -10) { score -= 10; notes.push("Revenue declining"); }
+
+  // === Margin Trajectory ===
+  const grossMargin = data.financials?.grossMargin;
+  const operatingMargin = data.financials?.operatingMargin;
+  if (grossMargin > 0.60) { score += 8; notes.push("High gross margin >60%"); }
+  else if (grossMargin > 0.40) { score += 4; }
+  else if (grossMargin < 0.20) { score -= 5; }
+
+  if (operatingMargin > 0.20) { score += 7; notes.push("Strong operating leverage"); }
+  else if (operatingMargin < 0) { score -= 8; notes.push("Operating losses"); }
+
+  // === Cash Flow Quality ===
+  const fcf = data.financials?.freeCashFlow;
+  const revenue = data.financials?.revenue;
+  if (fcf && revenue && fcf > 0) {
+    const fcfMargin = fcf / revenue;
+    if (fcfMargin > 0.15) { score += 10; notes.push("Excellent FCF margin >15%"); }
+    else if (fcfMargin > 0.05) { score += 5; }
+  } else if (fcf < 0) {
+    score -= 8; notes.push("Negative free cash flow");
+  }
+
+  // === Balance Sheet Health ===
+  const currentRatio = data.stats?.currentRatio;
+  const debtEquity = data.stats?.debtEquity;
+  if (currentRatio > 2.0) { score += 5; }
+  else if (currentRatio < 1.0) { score -= 8; notes.push("Liquidity risk"); }
+
+  if (debtEquity < 0.5) { score += 5; notes.push("Low debt"); }
+  else if (debtEquity > 2.0) { score -= 7; notes.push("High leverage"); }
+
+  // === Earnings Surprise History ===
+  const earnings = data.earnings_quarterly || [];
+  const lastFourBeats = earnings.slice(0, 4)
+    .filter(e => e.epsActual > e.epsEstimate).length;
+  if (lastFourBeats === 4) { score += 10; notes.push("4/4 earnings beats"); }
+  else if (lastFourBeats >= 3) { score += 5; }
+  else if (lastFourBeats <= 1) { score -= 5; }
+
+  // === Valuation ===
+  const forwardPE = data.stats?.forwardPE;
+  const peg = data.stats?.peg;
+  if (peg && peg > 0 && peg < 1.0) { score += 8; notes.push("PEG < 1 (undervalued)"); }
+  else if (peg > 3.0) { score -= 5; notes.push("Expensive PEG"); }
+
+  if (forwardPE && forwardPE < 15) { score += 5; }
+  else if (forwardPE > 50) { score -= 5; }
+
+  // === Insider Activity ===
+  const insiderBuys = (data.insider_transactions || [])
+    .filter(t => t.type === "buy" && daysSince(t.date) < 90);
+  if (insiderBuys.length >= 3) {
+    score += 10; notes.push("Significant insider buying");
+  } else if (insiderBuys.length >= 1) {
+    score += 5;
+  }
+
+  // === Special Cases: Pre-Revenue Biotech ===
+  if (!revenue || revenue === 0) {
+    score = 40; // Reset base for pre-revenue
+    const cashRunway = data.financials?.cashAndEquivalents;
+    const burnRate = data.financials?.operatingCashFlow;
+    if (cashRunway && burnRate && burnRate < 0) {
+      const months = (cashRunway / Math.abs(burnRate)) * 3;
+      if (months > 24) { score += 20; notes.push("Cash runway >2 years"); }
+      else if (months > 12) { score += 10; }
+      else { score -= 15; notes.push("Cash runway <12 months — dilution risk"); }
+    }
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    notes
+  };
+}</code></pre>
+        </div>
+
+        <!-- Layer 3: Social Sentiment -->
+        <div id="social" class="content-card">
+            <h2><i class="fa-solid fa-users" style="color:#8b5cf6"></i> Layer 3: Social Sentiment Engine</h2>
+
+            <p>Social sentiment acts as a <strong>contrarian indicator</strong> and <strong>momentum amplifier</strong>. Extreme bullish sentiment often signals tops; extreme bearish sentiment can signal bottoms. But when sentiment aligns with technicals, it amplifies conviction.</p>
+
+            <div class="code-label">Social Scoring Algorithm</div>
+<pre><code>function scoreSocial(data) {
+  let score = 50;
+  const flags = [];
+
+  const sentiment = data.sentiment_overall;
+  if (!sentiment) return { score: 50, flags: ["No sentiment data"] };
+
+  // === Overall Sentiment Score ===
+  // sentiment.score ranges from -1.0 (extreme bearish) to +1.0 (extreme bullish)
+  const sentScore = sentiment.score;
+
+  if (sentScore > 0.7) {
+    // Extreme bullish = contrarian warning
+    score -= 5;
+    flags.push("EXTREME BULLISH — contrarian caution");
+  } else if (sentScore > 0.3) {
+    score += 10;
+    flags.push("Moderately bullish sentiment");
+  } else if (sentScore < -0.5) {
+    // Extreme bearish + technical oversold = strong buy signal
+    score += 15;
+    flags.push("EXTREME BEARISH — potential contrarian buy");
+  } else if (sentScore < -0.2) {
+    score += 5;
+    flags.push("Mildly bearish sentiment");
+  }
+
+  // === StockTwits Analysis ===
+  const st = data.sentiment_stocktwits;
+  if (st) {
+    const bullRatio = st.bullish / (st.bullish + st.bearish || 1);
+    if (bullRatio > 0.80) {
+      score -= 5; flags.push("StockTwits overcrowded bull");
+    } else if (bullRatio > 0.55 && bullRatio < 0.75) {
+      score += 5; flags.push("Healthy StockTwits bull bias");
+    }
+    // Volume of messages = attention
+    if (st.messages_24h > 500) {
+      score += 3; flags.push("High social volume");
+    }
+  }
+
+  // === Reddit/WSB Analysis ===
+  const reddit = data.sentiment_reddit;
+  if (reddit && reddit.mentions_24h > 50) {
+    score += 3;
+    if (reddit.mentions_24h > 200) {
+      flags.push("HIGH REDDIT ATTENTION — pump risk");
+      // Pump & Dump detection
+      if (pumpDumpCheck(data)) {
+        score -= 20;
+        flags.push("PUMP & DUMP DETECTED — REJECT");
+      }
+    }
+  }
+
+  // === News Sentiment ===
+  const news = data.news || [];
+  const recentNews = news.filter(n => daysSince(n.date) < 3);
+  const posNews = recentNews.filter(n => n.sentiment === "positive").length;
+  const negNews = recentNews.filter(n => n.sentiment === "negative").length;
+  if (posNews > negNews + 2) { score += 5; }
+  else if (negNews > posNews + 2) { score -= 5; }
+
+  return { score: Math.max(0, Math.min(100, score)), flags };
+}
+
+function pumpDumpCheck(data) {
+  // 6 criteria for pump & dump detection
+  let redFlags = 0;
+  if (data.marketCap < 500000000) redFlags++;      // Small cap
+  if (data.relativeVolume > 5) redFlags++;          // Abnormal volume
+  if (data.changePercent5d > 30) redFlags++;        // Parabolic move
+  if (data.shortPercent > 20) redFlags++;           // High short interest
+  if (data.insiderSelling90d > 3) redFlags++;       // Insiders dumping
+  if (data.sentiment_reddit?.mentions_24h > 300) redFlags++;  // WSB hype
+  return redFlags >= 4; // 4 out of 6 = likely pump & dump
+}</code></pre>
+        </div>
+
+        <!-- Layer 4: Sector -->
+        <div id="sector" class="content-card">
+            <h2><i class="fa-solid fa-industry" style="color:#f59e0b"></i> Layer 4: Sector Momentum</h2>
+
+            <p>Trading a stock whose sector has headwinds is swimming against the current. This layer checks if the sector supports or undermines the trade thesis.</p>
+
+            <div class="code-label">Sector Scoring Algorithm</div>
+<pre><code>// Sector ETF mapping
+const SECTOR_ETFS = {
+  "Technology": "XLK",     "Healthcare": "XLV",
+  "Financials": "XLF",     "Energy": "XLE",
+  "Industrials": "XLI",    "Materials": "XLB",
+  "Consumer Discretionary": "XLY",  "Consumer Staples": "XLP",
+  "Utilities": "XLU",      "Real Estate": "XLRE",
+  "Communication Services": "XLC"
+};
+
+function scoreSector(tickerData, sectorData) {
+  let score = 50;
+  const notes = [];
+
+  const sectorETF = SECTOR_ETFS[tickerData.sector];
+  if (!sectorETF || !sectorData) return { score: 50, notes: ["No sector data"] };
+
+  // === Sector Trend (5d, 20d, 60d) ===
+  const s5d = sectorData.change5d;
+  const s20d = sectorData.change20d;
+  const s60d = sectorData.change60d;
+
+  if (s5d > 0 && s20d > 0 && s60d > 0) {
+    score += 15; notes.push("Sector in uptrend (all timeframes)");
+  } else if (s5d > 0 && s20d > 0) {
+    score += 8; notes.push("Sector short-term positive");
+  } else if (s5d < 0 && s20d < 0 && s60d < 0) {
+    score -= 15; notes.push("Sector in downtrend");
+  } else if (s5d < -2 && s20d > 0) {
+    score += 5; notes.push("Sector pulling back in uptrend");
+  }
+
+  // === Relative Strength vs SPY ===
+  const sectorRS = sectorData.change20d - sectorData.spyChange20d;
+  if (sectorRS > 3) {
+    score += 10; notes.push("Sector outperforming SPY by >3%");
+  } else if (sectorRS > 0) {
+    score += 5;
+  } else if (sectorRS < -5) {
+    score -= 10; notes.push("Sector lagging SPY significantly");
+  }
+
+  // === Rotation Model ===
+  // Early cycle: financials, consumer discretionary
+  // Mid cycle: tech, industrials
+  // Late cycle: energy, materials, healthcare
+  // Recession: utilities, consumer staples
+  const regimeFavoredSectors = {
+    "RISK_ON": ["Technology", "Consumer Discretionary", "Financials"],
+    "NEUTRAL": ["Technology", "Industrials", "Healthcare"],
+    "EARLY_RISK_OFF": ["Energy", "Materials", "Healthcare", "Utilities"],
+    "RISK_OFF": ["Utilities", "Consumer Staples", "Healthcare"],
+    "RECOVERY": ["Financials", "Technology", "Industrials"]
+  };
+
+  const favored = regimeFavoredSectors[tickerData.currentRegime] || [];
+  if (favored.includes(tickerData.sector)) {
+    score += 10; notes.push("Sector favored in current regime");
+  }
+
+  // === Money Flow ===
+  if (sectorData.volumeTrend === "rising" && s5d > 0) {
+    score += 5; notes.push("Rising volume + rising price in sector");
+  }
+
+  return { score: Math.max(0, Math.min(100, score)), notes };
+}</code></pre>
+        </div>
+
+        <!-- Layer 5: Macro Regime -->
+        <div id="macro" class="content-card">
+            <h2><i class="fa-solid fa-globe" style="color:#ef4444"></i> Layer 5: Macro Regime Compatibility</h2>
+
+            <p>This layer checks whether the trade <strong>strategy</strong> matches the current macro regime. A momentum breakout setup in a Risk-Off environment gets penalized; an oversold bounce gets boosted.</p>
+
+            <div class="code-label">Macro Compatibility Matrix</div>
+<pre><code>const STRATEGY_REGIME_COMPATIBILITY = {
+  // Strategy: { regime: compatibility_score }
+  "momentum_breakout": {
+    "RISK_ON": 95, "NEUTRAL": 70, "EARLY_RISK_OFF": 30,
+    "RISK_OFF": 10, "RECOVERY": 60
+  },
+  "trend_following": {
+    "RISK_ON": 90, "NEUTRAL": 75, "EARLY_RISK_OFF": 40,
+    "RISK_OFF": 20, "RECOVERY": 55
+  },
+  "oversold_bounce": {
+    "RISK_ON": 50, "NEUTRAL": 65, "EARLY_RISK_OFF": 90,
+    "RISK_OFF": 60, "RECOVERY": 95
+  },
+  "volatility_squeeze": {
+    "RISK_ON": 70, "NEUTRAL": 80, "EARLY_RISK_OFF": 50,
+    "RISK_OFF": 30, "RECOVERY": 70
+  },
+  "safe_haven": {
+    "RISK_ON": 20, "NEUTRAL": 40, "EARLY_RISK_OFF": 85,
+    "RISK_OFF": 95, "RECOVERY": 30
+  },
+  "value_insiders": {
+    "RISK_ON": 60, "NEUTRAL": 70, "EARLY_RISK_OFF": 75,
+    "RISK_OFF": 65, "RECOVERY": 80
+  }
+};
+
+function scoreMacro(strategy, regime, marketData) {
+  let score = STRATEGY_REGIME_COMPATIBILITY[strategy]?.[regime] || 50;
+
+  // VIX adjustment
+  if (marketData.vix > 30 && strategy !== "safe_haven") score -= 10;
+  if (marketData.vix < 15 && strategy === "momentum_breakout") score += 5;
+
+  // Dollar adjustment (strong dollar hurts intl/commodity stocks)
+  if (marketData.dxyChange5d > 2 && ["energy", "materials", "intl"].includes(strategy))
+    score -= 5;
+
+  // Yield curve (inverted = recession risk)
+  if (marketData.yieldSpread < 0) {
+    if (strategy === "safe_haven") score += 5;
+    else score -= 5;
+  }
+
+  return { score: Math.max(0, Math.min(100, score)) };
+}</code></pre>
+        </div>
+
+        <!-- Layer 6: AI Conviction -->
+        <div id="ai-conviction" class="content-card">
+            <h2><i class="fa-solid fa-brain" style="color:#06b6d4"></i> Layer 6: AI Conviction Layer</h2>
+
+            <p>The final layer is the AI "gut check." Claude Code synthesizes all available data and generates a conviction score. This catches things the quantitative layers might miss: narrative inconsistencies, upcoming catalysts, sector-specific risks.</p>
+
+            <div class="code-label">AI Conviction Prompt (Claude Code Skill)</div>
+<pre><code># AI Conviction Assessment
+
+You are scoring setup conviction for {TICKER} ({STRATEGY}).
+
+## Available Data
+- Technical score: {tech_score}/100 (confluence: {confluence})
+- Fundamental score: {fund_score}/100
+- Social score: {social_score}/100
+- Sector score: {sector_score}/100
+- Macro score: {macro_score}/100
+
+## Recent Context
+- News: {recent_news_summary}
+- Earnings: {next_earnings_date}
+- Insider activity: {insider_summary}
+- Sector trend: {sector_trend}
+
+## Your Task
+1. Does the narrative make sense? (Is there a coherent reason this stock
+   should move in the expected direction?)
+2. Are there red flags the numbers miss?
+   - Pending litigation, FDA decision, regulatory action
+   - Key person departure, accounting concerns
+   - Sector-specific risks (tariffs, regulation)
+3. Is the timing right?
+   - Earnings in < 5 days = higher volatility risk
+   - FOMC meeting this week = macro uncertainty
+   - OpEx Friday = gamma effects
+4. Historical pattern matching:
+   - Has this setup worked before in similar conditions?
+
+## Output
+{
+  "conviction": 0-100,
+  "thesis": "2-3 sentences explaining why",
+  "redFlags": ["list of concerns"],
+  "catalysts": ["list of positive catalysts"],
+  "timingRisk": "low|medium|high"
+}</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Why an AI Layer?</h4>
+                <p>Quantitative screens are powerful but blind to context. An AI layer can catch things like: "CF Industries has great technicals, but the Biden administration just announced fertilizer subsidies are ending" &mdash; something no RSI or MACD indicator would detect. It's the difference between <em>data</em> and <em>understanding</em>.</p>
+            </div>
+        </div>
+
+        <!-- Composite Score -->
+        <div id="composite" class="content-card">
+            <h2><i class="fa-solid fa-star" style="color:#f59e0b"></i> The Composite Score</h2>
+
+            <div class="code-label">Composite Score Calculation</div>
+<pre><code>function calculateComposite(layers) {
+  const weights = {
+    technical:    0.30,
+    fundamental:  0.20,
+    social:       0.10,
+    sector:       0.15,
+    macro:        0.15,
+    aiConviction: 0.10
+  };
+
+  const thresholds = {
+    technical:    70,
+    fundamental:  65,
+    social:       50,
+    sector:       60,
+    macro:        60,
+    aiConviction: 65
+  };
+
+  // Weighted average
+  let composite = 0;
+  for (const [layer, weight] of Object.entries(weights)) {
+    composite += layers[layer] * weight;
+  }
+
+  // Check all minimum thresholds
+  const failedLayers = Object.entries(thresholds)
+    .filter(([layer, min]) => layers[layer] < min)
+    .map(([layer]) => layer);
+
+  // Classification
+  let grade;
+  if (composite >= 92 && failedLayers.length === 0) grade = "A++";
+  else if (composite >= 85 && failedLayers.length === 0) grade = "A+";
+  else if (composite >= 78 && failedLayers.length <= 1) grade = "A";
+  else if (composite >= 70) grade = "B+";
+  else grade = "REJECT";
+
+  return {
+    composite: Math.round(composite * 10) / 10,
+    grade,
+    failedLayers,
+    layers,
+    pass: grade !== "REJECT"
+  };
+}</code></pre>
+
+            <h3>Example: Scoring CF Industries (Early Risk-Off)</h3>
+            <div class="score-example">
+                <div class="score-row"><span class="score-label">Technical (confluence: 5)</span><div class="score-bar"><div class="score-fill" style="width:88%;background:#3b82f6"></div></div><span class="score-val">88</span></div>
+                <div class="score-row"><span class="score-label">Fundamental</span><div class="score-bar"><div class="score-fill" style="width:82%;background:#10b981"></div></div><span class="score-val">82</span></div>
+                <div class="score-row"><span class="score-label">Social Sentiment</span><div class="score-bar"><div class="score-fill" style="width:65%;background:#8b5cf6"></div></div><span class="score-val">65</span></div>
+                <div class="score-row"><span class="score-label">Sector Momentum</span><div class="score-bar"><div class="score-fill" style="width:91%;background:#f59e0b"></div></div><span class="score-val">91</span></div>
+                <div class="score-row"><span class="score-label">Macro Regime</span><div class="score-bar"><div class="score-fill" style="width:90%;background:#ef4444"></div></div><span class="score-val">90</span></div>
+                <div class="score-row"><span class="score-label">AI Conviction</span><div class="score-bar"><div class="score-fill" style="width:85%;background:#06b6d4"></div></div><span class="score-val">85</span></div>
+                <div class="score-row" style="border-top:2px solid #10b981;padding-top:1rem;margin-top:.5rem"><span class="score-label" style="color:#10b981;font-weight:800">COMPOSITE</span><div class="score-bar"><div class="score-fill" style="width:86%;background:linear-gradient(90deg,#10b981,#059669)"></div></div><span class="score-val" style="font-size:1.1rem">86.2</span></div>
+            </div>
+            <p style="text-align:center;margin-top:1rem"><strong style="color:#10b981;font-size:1.2rem">Grade: A+</strong> &mdash; All layers above threshold. Oversold bounce strategy, highly compatible with Early Risk-Off regime. Strong fundamentals in fertilizer sector with energy tailwinds.</p>
+        </div>
+
+        <!-- Building a Skill -->
+        <div id="skill" class="content-card">
+            <h2><i class="fa-solid fa-wand-magic-sparkles" style="color:#10b981"></i> Building a Claude Code Skill</h2>
+
+            <p>The entire scoring engine is packaged as a Claude Code skill &mdash; a reusable prompt template that can be invoked from CLAUDE.md or directly.</p>
+
+            <div class="code-label">.claude/skills/analyze-setup.md</div>
+<pre><code># Analyze Setup — Multi-Layer Scoring
+
+## Input
+Ticker: {TICKER}
+Strategy: {STRATEGY} (oversold_bounce | momentum_breakout | trend_following |
+                       volatility_squeeze | safe_haven | value_insiders)
+
+## Steps
+
+### 1. Collect Data
+Call QueryData with:
+- symbols: [{TICKER}, sector_etf]
+- types: quote,technicals,support_resistance,trading_signals,
+         sentiment_overall,sentiment_stocktwits,insider_transactions,
+         financials,earnings_quarterly,stats,news
+
+Call GetMarketOverview for regime context.
+
+### 2. Score Each Layer
+Apply the 6-layer scoring framework:
+- Technical: RSI, MACD, MA alignment, volume, S/R, confluence
+- Fundamental: Growth, margins, FCF, balance sheet, earnings, valuation
+- Social: Sentiment score, StockTwits, Reddit, news, P&D detection
+- Sector: ETF trend, relative strength, rotation model
+- Macro: Strategy-regime compatibility, VIX, DXY, yield curve
+- AI Conviction: Narrative coherence, red flags, catalysts, timing
+
+### 3. Compute Composite
+Weighted average (30/20/10/15/15/10).
+Check all minimums. Assign grade (A++/A+/A/B+/REJECT).
+
+### 4. Generate Trade Parameters (if A+ or A++)
+- Entry: current price or key level
+- Stop: nearest support - ATR buffer, or 1.5x ATR below entry
+- TP1: first resistance or +1R
+- TP2: second resistance or +2R
+- R/R ratio: (TP1 - Entry) / (Entry - Stop)
+- Horizon: swing (3-10 days) or position (2-6 weeks)
+
+### 5. Output
+Return structured JSON:
+{
+  "ticker": "CF",
+  "strategy": "oversold_bounce",
+  "composite": 86.2,
+  "grade": "A+",
+  "layers": { ... },
+  "entry": 78.50,
+  "stop": 74.20,
+  "tp1": 84.00,
+  "tp2": 89.50,
+  "rr": 1.28,
+  "thesis": "...",
+  "confirmations": [...],
+  "invalidations": [...],
+  "timing": "swing 5-8 days",
+  "sector": "Materials",
+  "geo": "US"
+}</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Skills are Declarative</h4>
+                <p>Notice there's zero code to maintain. The skill is a markdown prompt that tells Claude Code what to do. It orchestrates MCP calls, applies scoring logic, and generates structured output. When you want to change the scoring weights or add a new layer, just edit the markdown.</p>
+            </div>
+        </div>
+
+        <!-- Next CTA -->
+        <a href="/tech/automated-trading/part4-alert-dsl/" class="next-cta">
+            <div><div class="next-label">Part 4 of 6</div><div class="next-title">The Alert DSL &mdash; Programmable Trading Triggers</div></div>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="series-bar"><div class="series-bar-inner">
+        <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+        <span class="series-title">Automated Trading with Claude Code</span>
+        <div class="series-steps">
+            <a href="/tech/automated-trading/" class="series-step"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+            <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step current"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+            <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+            <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+            <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+        </div>
+        <span class="series-counter">3/6</span>
+        <a href="/tech/automated-trading/part4-alert-dsl/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+    </div></div>
+
+    <footer class="article-footer">&copy; 2026 Market Watch. Data via MarketWatch Gateway. Not financial advice.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

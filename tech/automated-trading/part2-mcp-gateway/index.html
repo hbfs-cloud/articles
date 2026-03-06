@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="ai,tech,trading,automation,education" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Market Intelligence — Mastering the MCP Gateway | Automated Trading 2/6 | Market Watch</title>
+    <meta name="description" content="Part 2/6 — Deep dive into the MarketWatch MCP Gateway: 58 data types, custom screening DSL, auto-adaptive regime detection, and real-time market data mastery.">
+    <meta property="og:title" content="Real-Time Market Intelligence — Mastering the MCP Gateway">
+    <meta property="og:description" content="58 data types, custom screening DSL, and auto-adaptive regime detection — your market data superpower.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.market-watch.xyz/tech/automated-trading/part2-mcp-gateway/">
+    <meta property="og:type" content="article">
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .hero-section{padding:5rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#d1fae5 100%);text-align:center;border-bottom:1px solid #a7f3d0}
+        .hero-date{font-size:.85rem;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+        .hero-title{font-size:2.8rem;font-weight:900;color:#064e3b;margin:.5rem 0;letter-spacing:-.03em}
+        .hero-subtitle{font-size:1.15rem;color:#065f46;max-width:750px;margin:1rem auto 0;line-height:1.7}
+        .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+        .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.75rem;font-weight:700;background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+        .container{max-width:900px;margin:0 auto;padding:0 1rem;position:relative}
+        .content-card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0}
+        h2{font-size:1.8rem;font-weight:900;color:#0f172a;margin:1.5rem 0;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem}
+        h3{font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem}
+        h4{font-size:1.1rem;font-weight:700;color:#334155;margin:1.5rem 0 .75rem}
+        p{font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem}
+        pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+        code{font-family:'JetBrains Mono','Fira Code',monospace}
+        pre code{color:#e2e8f0}
+        .code-label{display:inline-block;background:#10b981;color:white;padding:.25rem .75rem;border-radius:6px 6px 0 0;font-size:.75rem;font-weight:700;margin-bottom:-1px}
+        ul,ol{font-size:1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;padding-left:1.5rem}
+        li{margin-bottom:.5rem}
+        .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+        .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(16,185,129,.3)}
+        .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+        .next-cta .next-title{font-size:1.25rem;font-weight:800}
+        .next-cta i{font-size:1.5rem}
+        .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0}
+        .metric-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;text-align:center}
+        .metric-value{font-size:1.5rem;font-weight:800;color:#0f172a;margin-bottom:.25rem}
+        .metric-label{font-size:.85rem;color:#64748b}
+        .tool-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;margin:.75rem 0}
+        .tool-card h4{color:#059669;margin-top:0;display:flex;align-items:center;gap:.5rem}
+        .tool-card .tool-tag{font-size:.7rem;background:#10b981;color:white;padding:.15rem .5rem;border-radius:4px;font-weight:700}
+        .dsl-example{background:#0f172a;border:2px solid #10b981;border-radius:12px;padding:1.5rem;margin:1rem 0}
+        .dsl-example .dsl-name{color:#10b981;font-weight:800;font-size:.85rem;margin-bottom:.5rem}
+        .dsl-example code{color:#a5f3fc;font-size:.9rem}
+        .response-block{background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:1.5rem;margin:1rem 0}
+        .response-block h4{color:#059669;margin-top:0}
+        @media(max-width:768px){.content-card{padding:1.5rem}.hero-section{padding:3rem 1rem 6rem}.hero-title{font-size:2rem}}
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+    <header class="hero-section">
+        <div class="hero-date">Automated Trading with Claude Code &mdash; Part 2/6</div>
+        <h1 class="hero-title">Real-Time Market Intelligence</h1>
+        <p class="hero-subtitle">Mastering the MCP Gateway &mdash; 58 data types, custom screening DSL, auto-adaptive regime detection, and the complete data backbone of your automated trading system.</p>
+        <div class="hero-badges">
+            <span class="hero-badge"><i class="fa-solid fa-database"></i> 58 Data Types</span>
+            <span class="hero-badge"><i class="fa-solid fa-code"></i> Screening DSL</span>
+            <span class="hero-badge"><i class="fa-solid fa-gauge-high"></i> Regime Detection</span>
+            <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Real-Time</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <!-- Series Bar -->
+    <div class="series-bar"><div class="series-bar-inner">
+        <a href="/tech/automated-trading/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+        <span class="series-title">Automated Trading with Claude Code</span>
+        <div class="series-steps">
+            <a href="/tech/automated-trading/" class="series-step"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step current"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+            <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+            <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+            <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+            <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+        </div>
+        <span class="series-counter">2/6</span>
+        <a href="/tech/automated-trading/part3-analysis-engine/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+    </div></div>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#mcp-fundamentals" class="fnav-item" data-section="mcp-fundamentals"><i class="fas fa-plug"></i><span>MCP Protocol</span></a>
+            <a href="#gateway-overview" class="fnav-item" data-section="gateway-overview"><i class="fas fa-server"></i><span>Gateway Tools</span></a>
+            <a href="#querydata" class="fnav-item" data-section="querydata"><i class="fas fa-database"></i><span>QueryData</span></a>
+            <a href="#screener-dsl" class="fnav-item" data-section="screener-dsl"><i class="fas fa-code"></i><span>Screener DSL</span></a>
+            <a href="#auto-screener" class="fnav-item" data-section="auto-screener"><i class="fas fa-gauge-high"></i><span>AutoScreener</span></a>
+            <a href="#scanner-workflow" class="fnav-item" data-section="scanner-workflow"><i class="fas fa-sitemap"></i><span>Scanner Flow</span></a>
+            <a href="#data-quality" class="fnav-item" data-section="data-quality"><i class="fas fa-shield-check"></i><span>Data Quality</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <div class="container" style="margin-top:-4rem;">
+
+        <!-- Section 1: MCP Protocol Fundamentals -->
+        <div id="mcp-fundamentals" class="content-card">
+            <h2><i class="fa-solid fa-plug" style="color:#10b981"></i> MCP Protocol Fundamentals</h2>
+
+            <p>The <strong>Model Context Protocol (MCP)</strong> is an open standard created by Anthropic that lets AI models interact with external tools and data sources through a unified interface. Think of it as a USB-C port for AI &mdash; one standardized connection that works with any compatible service.</p>
+
+            <h3>How MCP Works</h3>
+            <p>The architecture follows a client-server model:</p>
+            <ol>
+                <li><strong>MCP Client</strong> (Claude Code) discovers available tools by querying the MCP server</li>
+                <li><strong>MCP Server</strong> (MarketWatch Gateway) exposes a catalog of tools with JSON Schema definitions</li>
+                <li>Claude Code calls tools by name with typed parameters</li>
+                <li>The server executes the request and returns structured results</li>
+                <li>Claude Code processes the results and can chain additional tool calls</li>
+            </ol>
+
+            <h3>Configuration</h3>
+            <p>MCP servers are declared in your Claude Code settings. The MarketWatch Gateway connects via stdio transport:</p>
+
+            <div class="code-label">~/.claude/settings.json</div>
+<pre><code>{
+  "mcpServers": {
+    "market-watch": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-market-watch"],
+      "env": {
+        "MW_API_KEY": "your-api-key",
+        "MW_ENDPOINT": "https://gateway.market-watch.xyz"
+      }
+    },
+    "market-alerts": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-market-alerts"],
+      "env": {
+        "ALERTS_DB": "/path/to/alerts.db"
+      }
+    }
+  }
+}</code></pre>
+
+            <p>Once configured, Claude Code automatically discovers all available tools at startup. You can verify with:</p>
+
+            <div class="code-label">Shell</div>
+<pre><code>$ claude --mcp-debug
+MCP Server: market-watch (connected)
+  Tools: 15 available
+  - GetMarketOverview
+  - QueryData
+  - GetInstruments
+  - RunAutoScreener
+  - RunScreener
+  - CalculateOptionsGreeks
+  - AnalyzeOptionsStrategy
+  - LLMAnalysis
+  - GetReferentialData
+  - GetVersion
+  - GetHealth
+  - GetWorkflows
+  - StartWorkflow
+  - CheckJobStatus
+  - ListJobs
+
+MCP Server: market-alerts (connected)
+  Tools: 7 available
+  - create_alert
+  - list_alerts
+  - update_alert
+  - delete_alert
+  - pause_alert
+  - snooze_alert
+  - get_alert_status</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Key Insight</h4>
+                <p>MCP tools are <strong>discoverable at runtime</strong>. Claude Code reads the tool schemas and understands what each tool does, what parameters it accepts, and what it returns. You don't need to write any integration code &mdash; just configure the server and Claude Code handles the rest.</p>
+            </div>
+
+            <h3>Tool Call Anatomy</h3>
+            <p>When Claude Code calls an MCP tool, here's what happens under the hood:</p>
+
+            <div class="code-label">Request (Claude Code &rarr; MCP Server)</div>
+<pre><code>{
+  "method": "tools/call",
+  "params": {
+    "name": "QueryData",
+    "arguments": {
+      "symbols": ["AAPL", "MSFT", "GOOGL"],
+      "types": "quote,technicals,sentiment_overall",
+      "period": "1y"
+    }
+  }
+}</code></pre>
+
+            <div class="code-label">Response (MCP Server &rarr; Claude Code)</div>
+<pre><code>{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"AAPL\": {\"quote\": {\"price\": 187.44, \"change\": 2.31, ...}, ...}}"
+    }
+  ]
+}</code></pre>
+
+            <p>The response is always a JSON object with the requested data types nested under each symbol. Claude Code parses this automatically and uses the data for analysis.</p>
+        </div>
+
+        <!-- Section 2: Gateway Overview -->
+        <div id="gateway-overview" class="content-card">
+            <h2><i class="fa-solid fa-server" style="color:#3b82f6"></i> The MarketWatch Gateway</h2>
+
+            <p>The MarketWatch MCP Gateway is a comprehensive financial data service exposing 15 tools. Here's the complete catalog with use cases:</p>
+
+            <div class="metric-grid">
+                <div class="metric-card"><div class="metric-value">15</div><div class="metric-label">MCP Tools</div></div>
+                <div class="metric-card"><div class="metric-value">58</div><div class="metric-label">Data Types</div></div>
+                <div class="metric-card"><div class="metric-value">5</div><div class="metric-label">Regime States</div></div>
+                <div class="metric-card"><div class="metric-value">&lt;2s</div><div class="metric-label">Avg Response</div></div>
+            </div>
+
+            <h3>Core Data Tools</h3>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-globe"></i> GetMarketOverview <span class="tool-tag">ESSENTIAL</span></h4>
+                <p>Returns a complete market snapshot: all major indices, commodities, crypto, rates, VIX, dollar index, market regime, sentiment indicators, and top news. This is your morning briefing in one call.</p>
+                <div class="code-label">Usage</div>
+<pre><code>GetMarketOverview({ depth: "deep" })
+
+// Returns:
+{
+  "regime": "EARLY_RISK_OFF",
+  "vix": 23.75,
+  "dxy": 103.42,
+  "indices": {
+    "SPY": { "price": 559.23, "change": -1.2, "rsi14": 38.5 },
+    "QQQ": { "price": 472.10, "change": -1.8, "rsi14": 35.2 },
+    ...
+  },
+  "commodities": { "GLD": ..., "SLV": ..., "USO": ... },
+  "crypto": { "BTC-USD": ..., "ETH-USD": ..., "SOL-USD": ... },
+  "rates": { "US10Y": 4.32, "US2Y": 4.15, "spread": 0.17 },
+  "sentiment": { "fear_greed": 28, "put_call_ratio": 1.15, ... },
+  "news": [ ... top 20 market-moving headlines ... ]
+}</code></pre>
+            </div>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-database"></i> QueryData <span class="tool-tag">58 TYPES</span></h4>
+                <p>The Swiss Army knife of market data. Query any combination of 58 data types for any list of symbols. This is the tool you'll use most.</p>
+                <div class="code-label">Usage</div>
+<pre><code>QueryData({
+  symbols: ["NVDA", "AMD", "AVGO"],
+  types: "quote,bars_daily,technicals,sentiment_overall,financials",
+  period: "1y"
+})</code></pre>
+            </div>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-microscope"></i> GetInstruments <span class="tool-tag">DEEP ANALYSIS</span></h4>
+                <p>Comprehensive analysis of a single symbol. Returns everything: quote, technicals, fundamentals, earnings, holders, sentiment, news, support/resistance, volume profile, trading signals, analyst actions, insider transactions. One call, complete picture.</p>
+                <div class="code-label">Usage</div>
+<pre><code>GetInstruments({ symbols: ["AAPL"] })
+
+// Returns 50-100KB of structured data per symbol</code></pre>
+            </div>
+
+            <h3>Screening Tools</h3>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-gauge-high"></i> RunAutoScreener <span class="tool-tag">AI-ADAPTIVE</span></h4>
+                <p>Automatically detects the current market regime and runs regime-appropriate screening strategies. Adjusts strategy weights based on VIX, breadth, momentum, and other regime indicators.</p>
+            </div>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-code"></i> RunScreener <span class="tool-tag">CUSTOM DSL</span></h4>
+                <p>Run custom screening queries using the MarketWatch DSL. Full control over conditions, universe, and sorting. This is how you build strategy-specific screens.</p>
+            </div>
+
+            <h3>Options Tools</h3>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-calculator"></i> CalculateOptionsGreeks</h4>
+                <p>Calculate Black-Scholes Greeks for any option contract. Supports custom volatility inputs and SABR model.</p>
+            </div>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-layer-group"></i> AnalyzeOptionsStrategy</h4>
+                <p>Analyze multi-leg options strategies: spreads, straddles, iron condors, butterflies. Returns P&L diagram, max profit/loss, breakeven points, and Greeks.</p>
+            </div>
+
+            <h3>Analysis Tools</h3>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-brain"></i> LLMAnalysis</h4>
+                <p>Send data to a DeepSeek model for additional AI perspective. Useful for narrative analysis, pattern recognition, and cross-referencing your own analysis with a different AI model.</p>
+            </div>
+
+            <div class="tool-card">
+                <h4><i class="fa-solid fa-book"></i> GetReferentialData</h4>
+                <p>Reference data: symbol lists, sector classifications, index constituents, ETF holdings. Essential for building universes and sector analysis.</p>
+            </div>
+        </div>
+
+        <!-- Section 3: QueryData Deep Dive -->
+        <div id="querydata" class="content-card">
+            <h2><i class="fa-solid fa-database" style="color:#8b5cf6"></i> QueryData Mastery &mdash; 58 Data Types</h2>
+
+            <p>QueryData is the workhorse of the Gateway. It accepts a list of symbols and a comma-separated list of data types. Here's the complete reference organized by category:</p>
+
+            <h3>Price Data</h3>
+            <table class="data-table">
+                <thead><tr><th>Type</th><th>Description</th><th>Key Fields</th></tr></thead>
+                <tbody>
+                    <tr><td><code>quote</code></td><td>Current quote with bid/ask/volume</td><td>price, change, changePercent, volume, avgVolume, marketCap, pe, eps</td></tr>
+                    <tr><td><code>bars_daily</code></td><td>Daily OHLCV bars (default 1 year)</td><td>date, open, high, low, close, volume</td></tr>
+                    <tr><td><code>bars_intraday</code></td><td>Intraday bars (5min/15min/1h)</td><td>timestamp, open, high, low, close, volume</td></tr>
+                    <tr><td><code>bars_weekly</code></td><td>Weekly OHLCV bars</td><td>date, open, high, low, close, volume</td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-label">Example: Price + Volume Analysis</div>
+<pre><code>QueryData({
+  symbols: ["AAPL"],
+  types: "quote,bars_daily",
+  period: "6m"
+})
+
+// quote response:
+{
+  "price": 187.44,
+  "previousClose": 185.13,
+  "change": 2.31,
+  "changePercent": 1.25,
+  "volume": 58234100,
+  "avgVolume": 52100000,
+  "marketCap": 2890000000000,
+  "pe": 31.2,
+  "eps": 6.01,
+  "52wHigh": 199.62,
+  "52wLow": 164.08,
+  "beta": 1.24
+}
+
+// bars_daily response (last 5 bars):
+[
+  { "date": "2026-03-05", "open": 185.50, "high": 188.20, "low": 184.90, "close": 187.44, "volume": 58234100 },
+  { "date": "2026-03-04", "open": 184.20, "high": 186.10, "low": 183.75, "close": 185.13, "volume": 49876000 },
+  ...
+]</code></pre>
+
+            <h3>Technical Indicators</h3>
+            <table class="data-table">
+                <thead><tr><th>Type</th><th>Description</th><th>Key Fields</th></tr></thead>
+                <tbody>
+                    <tr><td><code>technicals</code></td><td>RSI, MACD, Bollinger, EMAs, SMA, ATR</td><td>rsi14, macd, macdSignal, macdHistogram, ema20, ema50, ema200, sma20, sma50, sma200, atr14, bbUpper, bbLower, bbWidth</td></tr>
+                    <tr><td><code>support_resistance</code></td><td>Key S/R levels with strength scores</td><td>supports[], resistances[] with price, strength, touches</td></tr>
+                    <tr><td><code>volume_profile</code></td><td>Volume at price distribution</td><td>poc (point of control), valueAreaHigh, valueAreaLow, nodes[]</td></tr>
+                    <tr><td><code>trading_signals</code></td><td>Aggregated buy/sell signals</td><td>summary (buy/sell/hold), signals[] with name, action, value</td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-label">Example: Technical Analysis Package</div>
+<pre><code>QueryData({
+  symbols: ["NVDA"],
+  types: "technicals,support_resistance,trading_signals"
+})
+
+// technicals:
+{
+  "rsi14": 42.3,
+  "macd": -2.15,
+  "macdSignal": -1.87,
+  "macdHistogram": -0.28,
+  "ema20": 875.50,
+  "ema50": 890.20,
+  "ema200": 820.10,
+  "atr14": 18.75,
+  "bbUpper": 920.30,
+  "bbLower": 830.70,
+  "bbWidth": 10.2
+}
+
+// support_resistance:
+{
+  "supports": [
+    { "price": 840.00, "strength": 0.92, "touches": 4 },
+    { "price": 815.50, "strength": 0.85, "touches": 3 }
+  ],
+  "resistances": [
+    { "price": 900.00, "strength": 0.88, "touches": 5 },
+    { "price": 930.00, "strength": 0.78, "touches": 2 }
+  ]
+}
+
+// trading_signals:
+{
+  "summary": "SELL",
+  "signals": [
+    { "name": "RSI(14)", "action": "sell", "value": 42.3 },
+    { "name": "MACD(12,26)", "action": "sell", "value": -2.15 },
+    { "name": "EMA(20)", "action": "sell", "value": "below" },
+    { "name": "Bollinger", "action": "neutral", "value": "mid" },
+    { "name": "Volume", "action": "buy", "value": "above_avg" }
+  ]
+}</code></pre>
+
+            <h3>Fundamental Data</h3>
+            <table class="data-table">
+                <thead><tr><th>Type</th><th>Description</th><th>Key Fields</th></tr></thead>
+                <tbody>
+                    <tr><td><code>financials</code></td><td>Income statement, balance sheet, cash flow</td><td>revenue, netIncome, grossMargin, operatingMargin, freeCashFlow, totalDebt, currentRatio</td></tr>
+                    <tr><td><code>earnings_quarterly</code></td><td>Quarterly EPS vs estimates</td><td>date, epsActual, epsEstimate, surprise, revenueActual, revenueEstimate</td></tr>
+                    <tr><td><code>stats</code></td><td>Key statistics and ratios</td><td>pe, forwardPE, peg, ps, pb, evEbitda, roe, roa, debtEquity, currentRatio</td></tr>
+                    <tr><td><code>holders</code></td><td>Top institutional holders</td><td>holders[] with name, shares, percentHeld, changeShares</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Sentiment & Social</h3>
+            <table class="data-table">
+                <thead><tr><th>Type</th><th>Description</th><th>Key Fields</th></tr></thead>
+                <tbody>
+                    <tr><td><code>sentiment_overall</code></td><td>Aggregated sentiment score</td><td>score (-1 to 1), bullPercent, bearPercent, volume, trending</td></tr>
+                    <tr><td><code>sentiment_stocktwits</code></td><td>StockTwits-specific sentiment</td><td>bullish, bearish, messages_24h, watchers, trending</td></tr>
+                    <tr><td><code>sentiment_reddit</code></td><td>Reddit/WSB sentiment</td><td>mentions_24h, sentiment, subreddits[], topPosts[]</td></tr>
+                    <tr><td><code>news</code></td><td>Recent news articles</td><td>articles[] with title, source, date, sentiment, url</td></tr>
+                    <tr><td><code>analyst_actions</code></td><td>Analyst upgrades/downgrades</td><td>actions[] with firm, action, priceTarget, date</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Short Interest & Institutional</h3>
+            <table class="data-table">
+                <thead><tr><th>Type</th><th>Description</th><th>Key Fields</th></tr></thead>
+                <tbody>
+                    <tr><td><code>short_interest</code></td><td>Short interest data</td><td>shortPercent, shortRatio, shortShares, daysTocover</td></tr>
+                    <tr><td><code>ctb</code></td><td>Cost to borrow (current)</td><td>fee, available, lastUpdate</td></tr>
+                    <tr><td><code>ctb_history</code></td><td>CTB over time</td><td>history[] with date, fee, available</td></tr>
+                    <tr><td><code>ftd_threshold</code></td><td>Failure to deliver data</td><td>ftd[] with date, quantity, price</td></tr>
+                    <tr><td><code>insider_transactions</code></td><td>Insider buys and sells</td><td>transactions[] with name, title, type, shares, price, date</td></tr>
+                    <tr><td><code>institutional_holders</code></td><td>13F filings data</td><td>holders[] with name, shares, value, changePercent</td></tr>
+                    <tr><td><code>sec_filings</code></td><td>Recent SEC filings</td><td>filings[] with type, date, description, url</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Options Data</h3>
+            <table class="data-table">
+                <thead><tr><th>Type</th><th>Description</th><th>Key Fields</th></tr></thead>
+                <tbody>
+                    <tr><td><code>options_chain</code></td><td>Full options chain by expiry</td><td>calls[], puts[] with strike, bid, ask, volume, oi, iv, greeks</td></tr>
+                    <tr><td><code>unusual_options</code></td><td>Unusual options activity</td><td>trades[] with type, strike, expiry, volume, oi, premium, sentiment</td></tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Performance Tip</h4>
+                <p>Request only the data types you need. Each type adds to response time and payload size. For a quick scan, <code>quote,technicals</code> is sufficient. Save <code>financials,earnings_quarterly,holders</code> for deep dives on final candidates.</p>
+            </div>
+
+            <h3>Batch Queries &mdash; Multiple Symbols</h3>
+            <p>QueryData supports up to 50 symbols per call. This is critical for efficient scanning:</p>
+
+            <div class="code-label">Batch Query for Scanner Candidates</div>
+<pre><code>// Stage 1: Quick scan of 30 candidates
+QueryData({
+  symbols: ["CF","CHRD","AMPX","MEOH","PAA","TTE","EWG","EWJ",
+            "XLE","GLD","AAPL","NVDA","AMD","MSFT","GOOGL",
+            "META","AMZN","TSLA","JPM","GS","BAC","XOM","CVX",
+            "LLY","UNH","PFE","COST","WMT","HD","CAT"],
+  types: "quote,technicals"
+})
+
+// Stage 2: Deep dive on top 10
+QueryData({
+  symbols: ["CF","CHRD","AMPX","MEOH","PAA","TTE","EWG","EWJ","XLE","GLD"],
+  types: "quote,technicals,sentiment_overall,insider_transactions,financials,
+          support_resistance,trading_signals,news"
+})</code></pre>
+        </div>
+
+        <!-- Section 4: Screener DSL -->
+        <div id="screener-dsl" class="content-card">
+            <h2><i class="fa-solid fa-code" style="color:#f59e0b"></i> RunScreener DSL Reference</h2>
+
+            <p>The RunScreener tool accepts custom conditions written in a domain-specific language (DSL). This DSL lets you express complex screening criteria in a single line of readable code.</p>
+
+            <h3>DSL Syntax</h3>
+
+            <h4>Available Fields</h4>
+            <table class="data-table">
+                <thead><tr><th>Category</th><th>Fields</th></tr></thead>
+                <tbody>
+                    <tr><td>Price</td><td><code>close</code>, <code>open</code>, <code>high</code>, <code>low</code>, <code>prevClose</code></td></tr>
+                    <tr><td>Volume</td><td><code>vol</code>, <code>avgVol</code>, <code>relVol</code></td></tr>
+                    <tr><td>Momentum</td><td><code>rsi14</code>, <code>macd</code>, <code>macdSignal</code>, <code>macdHist</code></td></tr>
+                    <tr><td>Trend</td><td><code>ema20</code>, <code>ema50</code>, <code>ema200</code>, <code>sma20</code>, <code>sma50</code>, <code>sma200</code></td></tr>
+                    <tr><td>Volatility</td><td><code>atr14</code>, <code>bbWidth</code>, <code>bbUpper</code>, <code>bbLower</code></td></tr>
+                    <tr><td>Fundamentals</td><td><code>pe</code>, <code>forwardPE</code>, <code>ps</code>, <code>marketCap</code>, <code>eps</code></td></tr>
+                    <tr><td>Short</td><td><code>shortPercent</code>, <code>shortRatio</code>, <code>daysTocover</code></td></tr>
+                </tbody>
+            </table>
+
+            <h4>Functions</h4>
+            <table class="data-table">
+                <thead><tr><th>Function</th><th>Description</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td><code>sma(field, period)</code></td><td>Simple moving average</td><td><code>close &gt; sma(close, 200)</code></td></tr>
+                    <tr><td><code>ema(field, period)</code></td><td>Exponential moving average</td><td><code>close &gt; ema(close, 50)</code></td></tr>
+                    <tr><td><code>std(field, period)</code></td><td>Standard deviation</td><td><code>close &lt; sma(close,20) - 2*std(close,20)</code></td></tr>
+                    <tr><td><code>max(field, period)</code></td><td>Period maximum</td><td><code>close == max(close, 52w)</code></td></tr>
+                    <tr><td><code>min(field, period)</code></td><td>Period minimum</td><td><code>close &gt; min(close, 52w) * 1.1</code></td></tr>
+                    <tr><td><code>change(field, period)</code></td><td>Percentage change</td><td><code>change(close, 5d) &gt; 5</code></td></tr>
+                    <tr><td><code>rank(field)</code></td><td>Percentile rank in universe</td><td><code>rank(relVol) &gt; 90</code></td></tr>
+                </tbody>
+            </table>
+
+            <h4>Operators</h4>
+            <table class="data-table">
+                <thead><tr><th>Operator</th><th>Description</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td><code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></td><td>Comparison</td><td><code>rsi14 &lt; 30</code></td></tr>
+                    <tr><td><code>==</code>, <code>!=</code></td><td>Equality</td><td><code>sector == "Technology"</code></td></tr>
+                    <tr><td><code>&amp;&amp;</code></td><td>AND (all conditions must be true)</td><td><code>rsi14 &lt; 30 &amp;&amp; vol &gt; avgVol * 2</code></td></tr>
+                    <tr><td><code>||</code></td><td>OR (any condition can be true)</td><td><code>rsi14 &lt; 25 || macd &lt; -2</code></td></tr>
+                    <tr><td><code>crosses_above</code></td><td>Crossed above (today)</td><td><code>close crosses_above ema(close,50)</code></td></tr>
+                    <tr><td><code>crosses_below</code></td><td>Crossed below (today)</td><td><code>macd crosses_below macdSignal</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>Strategy-Specific Screeners</h3>
+
+            <div class="dsl-example">
+                <div class="dsl-name"><i class="fa-solid fa-arrow-rotate-left"></i> Oversold Bounce</div>
+                <code>rsi14 &lt; 30 &amp;&amp; vol &gt; sma(vol,20) * 2 &amp;&amp; close &gt; sma(close,200) &amp;&amp; macdHist &gt; 0</code>
+            </div>
+
+            <div class="response-block">
+                <h4>What it finds:</h4>
+                <p>Stocks that are oversold (RSI below 30) with volume confirmation (2x average), still in a long-term uptrend (above 200-day SMA), and showing early momentum reversal (MACD histogram turning positive). These are high-probability mean reversion setups.</p>
+            </div>
+
+            <div class="dsl-example">
+                <div class="dsl-name"><i class="fa-solid fa-rocket"></i> Momentum Breakout</div>
+                <code>close &gt; max(high, 20d) &amp;&amp; vol &gt; avgVol * 1.5 &amp;&amp; rsi14 &gt; 55 &amp;&amp; rsi14 &lt; 75 &amp;&amp; close &gt; ema(close,50)</code>
+            </div>
+
+            <div class="response-block">
+                <h4>What it finds:</h4>
+                <p>Stocks breaking out above their 20-day high on above-average volume, with RSI in the sweet spot (strong but not overbought), and above the 50 EMA. These are continuation setups with momentum confirmation.</p>
+            </div>
+
+            <div class="dsl-example">
+                <div class="dsl-name"><i class="fa-solid fa-compress"></i> Volatility Squeeze</div>
+                <code>bbWidth &lt; 5 &amp;&amp; atr14 &lt; sma(atr14,20) * 0.7 &amp;&amp; vol &lt; avgVol * 0.6 &amp;&amp; close &gt; sma(close,200)</code>
+            </div>
+
+            <div class="response-block">
+                <h4>What it finds:</h4>
+                <p>Stocks in a tight consolidation (narrow Bollinger Bands, low ATR, low volume) above the 200 SMA. These often precede explosive moves. The direction of the breakout determines the trade.</p>
+            </div>
+
+            <div class="dsl-example">
+                <div class="dsl-name"><i class="fa-solid fa-chart-line"></i> Trend Following</div>
+                <code>close &gt; ema(close,20) &amp;&amp; ema(close,20) &gt; ema(close,50) &amp;&amp; ema(close,50) &gt; ema(close,200) &amp;&amp; rsi14 &gt; 50 &amp;&amp; change(close,5d) &gt; 0</code>
+            </div>
+
+            <div class="dsl-example">
+                <div class="dsl-name"><i class="fa-solid fa-shield-halved"></i> Safe Haven (Risk-Off)</div>
+                <code>sector == "Utilities" || sector == "Consumer Staples" || symbol IN ("GLD","SLV","TLT","SH","SQQQ") &amp;&amp; rsi14 &lt; 65 &amp;&amp; change(close,5d) &gt; 0</code>
+            </div>
+
+            <div class="dsl-example">
+                <div class="dsl-name"><i class="fa-solid fa-building"></i> Value + Insider Buying</div>
+                <code>pe &lt; 15 &amp;&amp; forwardPE &lt; pe &amp;&amp; change(close,3m) &lt; -15 &amp;&amp; insider_net_buying_90d &gt; 0</code>
+            </div>
+
+            <h3>Running a Screener</h3>
+
+            <div class="code-label">RunScreener Call</div>
+<pre><code>RunScreener({
+  conditions: "rsi14 < 30 && vol > sma(vol,20) * 2 && close > sma(close,200)",
+  universe: "SP500",     // SP500, NASDAQ100, RUSSELL2000, ALL_US, custom list
+  sort: "rsi14 ASC",     // Sort oversold first
+  limit: 20              // Top 20 results
+})
+
+// Response:
+{
+  "count": 7,
+  "regime": "EARLY_RISK_OFF",
+  "results": [
+    {
+      "symbol": "CF",
+      "name": "CF Industries Holdings",
+      "price": 78.50,
+      "change": -3.2,
+      "rsi14": 22.1,
+      "volume": 8500000,
+      "avgVolume": 3200000,
+      "relVol": 2.66,
+      "sma200": 72.30,
+      "sector": "Materials",
+      "marketCap": 15200000000,
+      "score": 87
+    },
+    ...
+  ]
+}</code></pre>
+
+            <h3>Custom Universe</h3>
+            <p>You can screen specific symbols instead of a predefined universe:</p>
+
+            <div class="code-label">EU + APAC Screen</div>
+<pre><code>RunScreener({
+  conditions: "rsi14 < 35 && close > ema(close,50)",
+  symbols: ["VGK","EWG","EWQ","EWU","SAP","ASML","BBVA","TTE","SIE",
+            "EWJ","EWY","EWH","FXI","MCHI"],
+  sort: "rsi14 ASC",
+  limit: 10
+})</code></pre>
+        </div>
+
+        <!-- Section 5: RunAutoScreener -->
+        <div id="auto-screener" class="content-card">
+            <h2><i class="fa-solid fa-gauge-high" style="color:#ef4444"></i> RunAutoScreener &mdash; Regime-Adaptive Screening</h2>
+
+            <p>The AutoScreener is the crown jewel of the Gateway. It automatically detects the current market regime and adjusts its screening strategies accordingly.</p>
+
+            <h3>The 5 Market Regimes</h3>
+
+            <table class="data-table">
+                <thead><tr><th>Regime</th><th>VIX Range</th><th>Breadth</th><th>Dominant Strategy</th><th>Hedge %</th></tr></thead>
+                <tbody>
+                    <tr><td><strong style="color:#10b981">RISK ON</strong></td><td>&lt; 16</td><td>&gt; 60%</td><td>Momentum, Breakout</td><td>0%</td></tr>
+                    <tr><td><strong style="color:#3b82f6">NEUTRAL</strong></td><td>16-22</td><td>40-60%</td><td>Balanced (all strategies)</td><td>10%</td></tr>
+                    <tr><td><strong style="color:#f59e0b">EARLY RISK-OFF</strong></td><td>22-30</td><td>30-40%</td><td>Oversold bounce, Safe haven</td><td>20%</td></tr>
+                    <tr><td><strong style="color:#ef4444">RISK OFF</strong></td><td>&gt; 30</td><td>&lt; 30%</td><td>Shorts, Hedges, Cash</td><td>40%+</td></tr>
+                    <tr><td><strong style="color:#8b5cf6">RECOVERY</strong></td><td>Falling from &gt;25</td><td>Rising</td><td>Oversold leaders, Sector rotation</td><td>10%</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Regime Detection Algorithm</h3>
+            <p>The AutoScreener uses a composite of 7 indicators to determine the regime:</p>
+
+            <div class="code-label">Regime Detection Logic (Pseudocode)</div>
+<pre><code>function detectRegime(marketData) {
+  const signals = {
+    vix:         marketData.vix,                    // VIX level
+    vixTrend:    marketData.vix_5d_change,          // VIX direction
+    breadth:     marketData.advanceDeclineRatio,     // NYSE A/D ratio
+    putCall:     marketData.putCallRatio,            // Options P/C ratio
+    spyRsi:      marketData.spy_rsi14,              // SPY RSI
+    dxy:         marketData.dxy_5d_change,          // Dollar strength
+    yieldCurve:  marketData.us10y - marketData.us2y // Yield spread
+  };
+
+  let score = 0; // -100 (full risk-off) to +100 (full risk-on)
+
+  // VIX contribution (weight: 25%)
+  if (signals.vix < 16) score += 25;
+  else if (signals.vix < 22) score += 10;
+  else if (signals.vix < 30) score -= 15;
+  else score -= 25;
+
+  // VIX trend (weight: 10%)
+  if (signals.vixTrend < -2) score += 10;  // VIX falling = bullish
+  else if (signals.vixTrend > 3) score -= 10;
+
+  // Breadth (weight: 25%)
+  if (signals.breadth > 2.0) score += 25;
+  else if (signals.breadth > 1.0) score += 10;
+  else if (signals.breadth < 0.5) score -= 25;
+  else score -= 10;
+
+  // Put/Call (weight: 15%)
+  if (signals.putCall > 1.2) score -= 15;   // Fear = bearish
+  else if (signals.putCall < 0.7) score += 15;
+
+  // SPY RSI (weight: 10%)
+  if (signals.spyRsi > 65) score += 10;
+  else if (signals.spyRsi < 35) score -= 10;
+
+  // Dollar (weight: 10%)
+  if (signals.dxy > 1.5) score -= 10;  // Strong dollar = risk-off
+  else if (signals.dxy < -1.0) score += 10;
+
+  // Yield curve (weight: 5%)
+  if (signals.yieldCurve < 0) score -= 5; // Inverted = warning
+  else score += 5;
+
+  // Map score to regime
+  if (score > 40) return "RISK_ON";
+  if (score > 10) return "NEUTRAL";
+  if (score > -20) return "EARLY_RISK_OFF";
+  if (score <= -20) {
+    if (signals.vixTrend < -3) return "RECOVERY";
+    return "RISK_OFF";
+  }
+}</code></pre>
+
+            <h3>Strategy Weights by Regime</h3>
+
+            <table class="data-table">
+                <thead><tr><th>Strategy</th><th>Risk-On</th><th>Neutral</th><th>Early Risk-Off</th><th>Risk-Off</th><th>Recovery</th></tr></thead>
+                <tbody>
+                    <tr><td>Momentum Breakout</td><td>35%</td><td>25%</td><td>10%</td><td>0%</td><td>20%</td></tr>
+                    <tr><td>Trend Following</td><td>25%</td><td>25%</td><td>15%</td><td>5%</td><td>15%</td></tr>
+                    <tr><td>Oversold Bounce</td><td>15%</td><td>20%</td><td>30%</td><td>15%</td><td>35%</td></tr>
+                    <tr><td>Volatility Squeeze</td><td>15%</td><td>15%</td><td>10%</td><td>5%</td><td>15%</td></tr>
+                    <tr><td>Value + Insiders</td><td>10%</td><td>15%</td><td>15%</td><td>15%</td><td>15%</td></tr>
+                    <tr><td>Safe Haven / Short</td><td>0%</td><td>0%</td><td>20%</td><td>60%</td><td>0%</td></tr>
+                </tbody>
+            </table>
+
+            <div class="code-label">RunAutoScreener Call</div>
+<pre><code>RunAutoScreener()
+
+// Response:
+{
+  "regime": "EARLY_RISK_OFF",
+  "regimeScore": -12,
+  "indicators": {
+    "vix": 23.75,
+    "vixTrend": +2.1,
+    "breadth": 0.75,
+    "putCall": 1.05,
+    "spyRsi": 38.5,
+    "dxy": +0.8,
+    "yieldSpread": 0.17
+  },
+  "strategyWeights": {
+    "momentum_breakout": 0.10,
+    "trend_following": 0.15,
+    "oversold_bounce": 0.30,
+    "volatility_squeeze": 0.10,
+    "value_insiders": 0.15,
+    "safe_haven": 0.20
+  },
+  "candidates": [
+    { "symbol": "CF", "strategy": "oversold_bounce", "score": 92, ... },
+    { "symbol": "GLD", "strategy": "safe_haven", "score": 88, ... },
+    { "symbol": "TTE", "strategy": "value_insiders", "score": 87, ... },
+    ...
+  ],
+  "totalCandidates": 47,
+  "timestamp": "2026-03-05T23:00:00Z"
+}</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Why Auto-Adaptive Matters</h4>
+                <p>A momentum breakout strategy that works beautifully in a bull market can lose money fast in a risk-off environment. The AutoScreener prevents this by automatically shifting to defensive strategies when conditions deteriorate. During the March 2026 early risk-off environment (VIX 23.75), it allocated 30% to oversold bounce and 20% to safe haven &mdash; exactly the right response.</p>
+            </div>
+        </div>
+
+        <!-- Section 6: Building a Complete Scanner -->
+        <div id="scanner-workflow" class="content-card">
+            <h2><i class="fa-solid fa-sitemap" style="color:#06b6d4"></i> Building a Complete Market Scanner</h2>
+
+            <p>Here's the complete 5-step workflow that combines multiple MCP calls into a production-grade market scanner. This is exactly what runs every weekday at 23:00 via the automated pipeline.</p>
+
+            <h3>Step 1: Market Regime Assessment</h3>
+            <div class="code-label">get_regime.md (Claude Code Skill)</div>
+<pre><code># Market Regime Assessment
+
+## Instructions
+1. Call `GetMarketOverview` with depth "deep"
+2. Extract: VIX, SPY RSI, DXY change, breadth, put/call ratio
+3. Determine the regime: RISK_ON, NEUTRAL, EARLY_RISK_OFF, RISK_OFF, RECOVERY
+4. Output the regime and the strategy weight matrix
+
+## Expected Output
+```json
+{
+  "regime": "EARLY_RISK_OFF",
+  "strategyWeights": { ... },
+  "keyIndicators": { ... },
+  "narrative": "Brief market context..."
+}
+```</code></pre>
+
+            <h3>Step 2: Multi-Strategy Screening</h3>
+            <div class="code-label">scan_candidates.md (Claude Code Skill)</div>
+<pre><code># Multi-Strategy Scanner
+
+## Instructions
+Run 6 screens in parallel:
+
+1. RunAutoScreener — Get regime-adapted candidates (limit 50)
+2. RunScreener — Oversold bounce on SP500:
+   `rsi14 < 30 && vol > sma(vol,20) * 2 && close > sma(close,200)`
+3. RunScreener — Momentum breakout on SP500:
+   `close > max(high, 20d) && vol > avgVol * 1.5 && rsi14 > 55 && rsi14 < 75`
+4. RunScreener — Volatility squeeze on SP500:
+   `bbWidth < 5 && atr14 < sma(atr14,20) * 0.7 && close > sma(close,200)`
+5. RunScreener — EU/APAC (custom symbols):
+   `rsi14 < 40 && close > ema(close,50)`
+   symbols: VGK, EWG, EWQ, EWU, SAP, ASML, EWJ, EWY, EWH, FXI
+6. RunScreener — Sector ETFs:
+   `change(close,5d) > 2 && vol > avgVol * 1.2`
+   symbols: XLF, XLE, XLK, XLV, XLI, GLD, SLV, TLT, ARKK, ICLN
+
+Merge all results, deduplicate by symbol, keep top 30 by score.
+
+## Anti-Duplicate Check
+Read last 3 scanner articles. At least 70% of selected symbols must be NEW
+(not in last 3 scans). If not, replace repeats with next-best candidates.</code></pre>
+
+            <h3>Step 3: Deep Data Collection</h3>
+            <div class="code-label">deep_analysis.md (Claude Code Skill)</div>
+<pre><code># Deep Analysis for Scanner Candidates
+
+## Instructions
+For the top 30 candidates from Step 2, run:
+
+QueryData({
+  symbols: [top 30 tickers],
+  types: "quote,technicals,support_resistance,trading_signals,
+          sentiment_overall,insider_transactions,financials,news"
+})
+
+## Validation (P0 — Critical)
+For EACH candidate:
+- Verify entry price is within 10% of current spot price
+- If entry zone > 10% from spot → REJECT (stale data)
+- Verify volume is not 0 (halted stocks)
+- Verify market cap > $500M (no penny stocks)
+
+## Output
+Structured data per candidate for the scoring engine.</code></pre>
+
+            <h3>Step 4: Multi-Layer Scoring</h3>
+            <p>This is covered in detail in <a href="/tech/automated-trading/part3-analysis-engine/" style="color:#10b981;font-weight:600;">Part 3: The Analysis Engine</a>. Each candidate is scored across 6 dimensions:</p>
+
+            <ol>
+                <li><strong>Technical</strong> (30%): RSI, MACD, volume, support/resistance, confluence count</li>
+                <li><strong>Fundamental</strong> (20%): Revenue growth, margins, valuation, cash flow</li>
+                <li><strong>Social</strong> (10%): StockTwits sentiment, Reddit mentions, news sentiment</li>
+                <li><strong>Sector</strong> (15%): Sector ETF momentum, relative strength vs SPY</li>
+                <li><strong>Macro</strong> (15%): Regime compatibility, strategy alignment</li>
+                <li><strong>AI Conviction</strong> (10%): LLM narrative analysis, red flag detection</li>
+            </ol>
+
+            <h3>Step 5: Final Selection &amp; Alert Generation</h3>
+            <div class="code-label">final_selection.md (Claude Code Skill)</div>
+<pre><code># Final Selection — Top 10 A+ Setups
+
+## Selection Criteria
+From scored candidates:
+1. Composite score >= 85 (A+ threshold)
+2. No layer below 60 (no red flags)
+3. Technical confluence >= 3 signals
+4. Diversification: min 5 US + 2 EU + 1 APAC + 2 ETF
+
+## In Risk-Off/Early Risk-Off regimes:
+- Minimum 20% defensive setups (GLD, TLT, SH, SQQQ, safe-haven ETFs)
+
+## For each selected setup, compute:
+- Entry zone: current price or key level (support, EMA pullback)
+- Stop loss: below nearest support or 1.5x ATR
+- TP1: first resistance or +1R
+- TP2: second resistance or +2R
+- R/R ratio: must be >= 1.5
+
+## A++ Selection (Top 3)
+From the 10 A+ setups, select the 3 with:
+- Highest composite score
+- Highest technical confluence
+- Best R/R ratio
+- Most unique (not in recent scans)
+These go to the priority Discord channel.
+
+## Output Format
+For each setup: ticker, name, strategy, score, entry, stop, TP1, TP2,
+R/R, thesis (3 sentences), confirmations (4), invalidations (4),
+timing notes, sector/geo badge.</code></pre>
+
+            <h3>The Complete Pipeline as a CLAUDE.md Instruction</h3>
+            <p>All 5 steps are orchestrated by a single instruction in your project's <code>CLAUDE.md</code> file. When Claude Code receives "scan du jour", it executes all steps automatically:</p>
+
+            <div class="code-label">CLAUDE.md excerpt</div>
+<pre><code>### "Scanner" / "Scan du jour"
+1. Read ALL retrospectives (scanner/retrospective/YYYYMMDD/)
+   - Extract hit rates by strategy
+   - Adjust strategy weights accordingly
+2. Read last 3 scans for anti-duplicate filter
+3. RunAutoScreener — detect regime + get candidates
+4. RunScreener x3 (oversold, momentum, breakout)
+5. RunScreener EU/APAC + sector ETFs
+6. QueryData deep analysis for all candidates
+7. Multi-layer scoring (6 dimensions)
+8. Select top 10 A+ with diversification constraints
+9. Generate HTML article in scanner/YYYYMMDD/
+10. Index with add_card.js
+11. Git commit & push (auto-deploy)
+12. Post top 3 A++ to Discord</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Key Insight</h4>
+                <p>The entire pipeline is defined <strong>declaratively</strong> in CLAUDE.md. Claude Code reads the instructions and orchestrates the MCP calls, data processing, HTML generation, indexing, and deployment. There is zero application code to maintain &mdash; the AI <em>is</em> the application.</p>
+            </div>
+        </div>
+
+        <!-- Section 7: Data Quality -->
+        <div id="data-quality" class="content-card">
+            <h2><i class="fa-solid fa-shield-halved" style="color:#8b5cf6"></i> Data Quality &amp; Gotchas</h2>
+
+            <h3>Rate Limits</h3>
+            <p>The Gateway handles rate limiting internally, but here are practical guidelines:</p>
+            <ul>
+                <li><strong>QueryData</strong>: Max 50 symbols per call, unlimited calls per minute</li>
+                <li><strong>GetInstruments</strong>: 1 symbol at a time, ~2-5 seconds per call</li>
+                <li><strong>RunScreener</strong>: Max 5 concurrent screens, ~3-8 seconds each</li>
+                <li><strong>RunAutoScreener</strong>: 1 call at a time, ~10-15 seconds</li>
+            </ul>
+
+            <h3>Data Freshness</h3>
+            <table class="data-table">
+                <thead><tr><th>Data Type</th><th>Update Frequency</th><th>Delay</th></tr></thead>
+                <tbody>
+                    <tr><td>quote</td><td>Real-time (market hours)</td><td>&lt; 1 second</td></tr>
+                    <tr><td>bars_intraday</td><td>Every bar close</td><td>1-2 seconds</td></tr>
+                    <tr><td>bars_daily</td><td>After market close</td><td>~30 minutes</td></tr>
+                    <tr><td>technicals</td><td>With bars_daily</td><td>~30 minutes</td></tr>
+                    <tr><td>financials</td><td>After earnings release</td><td>1-24 hours</td></tr>
+                    <tr><td>sentiment_stocktwits</td><td>Every 15 minutes</td><td>15 minutes</td></tr>
+                    <tr><td>insider_transactions</td><td>After SEC filing</td><td>1-2 days</td></tr>
+                    <tr><td>short_interest</td><td>Bi-monthly (FINRA)</td><td>10 business days</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Common Pitfalls</h3>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Pitfall: Stale Entry Prices</h4>
+                <p>If the scanner runs at 23:00 but uses closing data from 16:00, after-hours moves can invalidate setups. <strong>Always validate</strong> entry prices against current quote before posting alerts. Reject if &gt;10% drift.</p>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Pitfall: Missing Data for Foreign Stocks</h4>
+                <p>EU/APAC stocks traded as ADRs (e.g., SAP, ASML) have full data. But ETFs like EWG or FXI may lack sentiment data. Handle gracefully: if <code>sentiment_overall</code> is null, use sector-level sentiment as a proxy.</p>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Pitfall: Weekend/Holiday Data</h4>
+                <p>Running scans on Sunday will return Friday's closing data for equities. Crypto is 24/7. Always check <code>quote.lastUpdate</code> timestamp and note data age in the output.</p>
+            </div>
+
+            <h3>Timezone Considerations</h3>
+            <ul>
+                <li><strong>US Markets</strong>: 9:30-16:00 ET (14:30-21:00 UTC)</li>
+                <li><strong>Pre-market</strong>: 4:00-9:30 ET</li>
+                <li><strong>After-hours</strong>: 16:00-20:00 ET</li>
+                <li><strong>EU Markets</strong>: 8:00-16:30 CET (various)</li>
+                <li><strong>Asia Markets</strong>: Various (check per exchange)</li>
+                <li><strong>Scanner runs at 23:00 ET</strong>: All markets closed except crypto</li>
+            </ul>
+
+            <h3>Error Handling Patterns</h3>
+            <div class="code-label">Robust MCP Call Pattern</div>
+<pre><code>// In your CLAUDE.md or skill file:
+
+When calling MCP tools, follow this error handling pattern:
+
+1. If GetMarketOverview fails → retry once after 5 seconds
+   If still fails → use cached regime from yesterday's scan
+2. If RunScreener returns 0 results → loosen conditions by 10%
+   Example: rsi14 < 30 → rsi14 < 35
+3. If QueryData returns partial data (some symbols missing) →
+   continue with available data, note missing symbols in output
+4. If GetInstruments fails for a candidate →
+   use QueryData fallback (less data but still usable)
+5. Never generate setups without fresh quote validation</code></pre>
+        </div>
+
+        <!-- Next CTA -->
+        <div class="content-card" style="text-align:center;padding:2rem;">
+            <h2 style="justify-content:center;border:none;padding:0"><i class="fa-solid fa-arrow-right" style="color:#10b981"></i> Up Next</h2>
+            <p>Now that you can pull any market data in real-time, it's time to build the <strong>AI Analysis Engine</strong> that scores setups across 6 dimensions to identify A++ quality trades.</p>
+        </div>
+
+        <a href="/tech/automated-trading/part3-analysis-engine/" class="next-cta">
+            <div>
+                <div class="next-label">Part 3 of 6</div>
+                <div class="next-title">The AI Analysis Engine &mdash; Multi-Layer Scoring</div>
+            </div>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+
+    </div>
+    <!-- /container -->
+
+    <!-- Series Bar Bottom -->
+    <div class="series-bar"><div class="series-bar-inner">
+        <a href="/tech/automated-trading/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+        <span class="series-title">Automated Trading with Claude Code</span>
+        <div class="series-steps">
+            <a href="/tech/automated-trading/" class="series-step"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step current"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+            <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+            <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+            <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+            <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+        </div>
+        <span class="series-counter">2/6</span>
+        <a href="/tech/automated-trading/part3-analysis-engine/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+    </div></div>
+
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Data via MarketWatch Gateway. Not financial advice.
+        <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

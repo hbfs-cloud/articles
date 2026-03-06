@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="ai,tech,trading,automation,education" data-tab="tech">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Integration & Daily Pipeline — Zero-Touch Automation | Automated Trading 5/6 | Market Watch</title>
+    <meta name="description" content="Part 5/6 — Build the Discord bot, scheduling system, rich embeds, and the complete zero-touch daily pipeline that delivers A++ setups to your phone.">
+    <meta property="og:title" content="Discord Integration & Daily Pipeline — Zero-Touch Automation">
+    <meta property="og:description" content="The complete daily automation pipeline: scan, score, filter, and deliver A++ setups to Discord without lifting a finger.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.market-watch.xyz/tech/automated-trading/part5-discord-pipeline/">
+    <meta property="og:type" content="article">
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .hero-section{padding:5rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#d1fae5 100%);text-align:center;border-bottom:1px solid #a7f3d0}
+        .hero-date{font-size:.85rem;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+        .hero-title{font-size:2.8rem;font-weight:900;color:#064e3b;margin:.5rem 0;letter-spacing:-.03em}
+        .hero-subtitle{font-size:1.15rem;color:#065f46;max-width:750px;margin:1rem auto 0;line-height:1.7}
+        .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+        .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.75rem;font-weight:700;background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+        .container{max-width:900px;margin:0 auto;padding:0 1rem;position:relative}
+        .content-card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0}
+        h2{font-size:1.8rem;font-weight:900;color:#0f172a;margin:1.5rem 0;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem}
+        h3{font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem}
+        h4{font-size:1.1rem;font-weight:700;color:#334155;margin:1.5rem 0 .75rem}
+        p{font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem}
+        pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+        code{font-family:'JetBrains Mono','Fira Code',monospace}
+        pre code{color:#e2e8f0}
+        .code-label{display:inline-block;background:#10b981;color:white;padding:.25rem .75rem;border-radius:6px 6px 0 0;font-size:.75rem;font-weight:700;margin-bottom:-1px}
+        ul,ol{font-size:1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;padding-left:1.5rem}
+        li{margin-bottom:.5rem}
+        .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+        .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(16,185,129,.3)}
+        .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+        .next-cta .next-title{font-size:1.25rem;font-weight:800}
+        .next-cta i{font-size:1.5rem}
+        .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0}
+        .metric-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;text-align:center}
+        .metric-value{font-size:1.5rem;font-weight:800;color:#0f172a;margin-bottom:.25rem}
+        .metric-label{font-size:.85rem;color:#64748b}
+        .discord-embed{background:#2b2d31;border-radius:8px;padding:1rem 1rem 1rem 1.25rem;margin:1rem 0;border-left:4px solid #10b981;color:#dbdee1;font-size:.85rem;line-height:1.6}
+        .discord-embed .embed-title{color:white;font-weight:700;font-size:1rem;margin-bottom:.5rem}
+        .discord-embed .embed-field{display:inline-block;min-width:120px;margin:.25rem 1rem .25rem 0}
+        .discord-embed .embed-field-name{color:#949ba4;font-size:.7rem;text-transform:uppercase;font-weight:700}
+        .discord-embed .embed-field-value{color:#dbdee1;font-size:.85rem;font-weight:600}
+        .discord-embed .embed-footer{color:#949ba4;font-size:.7rem;margin-top:.75rem;padding-top:.5rem;border-top:1px solid #3f4147}
+        .timeline{position:relative;padding-left:2rem;margin:2rem 0}
+        .timeline::before{content:'';position:absolute;left:.5rem;top:0;bottom:0;width:2px;background:#e2e8f0}
+        .timeline-item{position:relative;margin-bottom:1.5rem;padding-left:1.5rem}
+        .timeline-item::before{content:'';position:absolute;left:-1.6rem;top:.4rem;width:12px;height:12px;border-radius:50%;background:#10b981;border:2px solid white;box-shadow:0 0 0 2px #10b981}
+        .timeline-time{font-size:.8rem;font-weight:800;color:#10b981;margin-bottom:.25rem}
+        .timeline-content{font-size:.95rem;color:#334155}
+        @media(max-width:768px){.content-card{padding:1.5rem}.hero-section{padding:3rem 1rem 6rem}.hero-title{font-size:2rem}}
+    </style>
+</head>
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+    <header class="hero-section">
+        <div class="hero-date">Automated Trading with Claude Code &mdash; Part 5/6</div>
+        <h1 class="hero-title">Discord Pipeline</h1>
+        <p class="hero-subtitle">Zero-touch automation &mdash; the complete daily pipeline that scans markets, scores setups, and delivers A++ recommendations to your Discord every single day.</p>
+        <div class="hero-badges">
+            <span class="hero-badge"><i class="fa-brands fa-discord"></i> Discord Bot</span>
+            <span class="hero-badge"><i class="fa-solid fa-clock"></i> Scheduled Tasks</span>
+            <span class="hero-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Rich Embeds</span>
+            <span class="hero-badge"><i class="fa-solid fa-robot"></i> Zero-Touch</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="series-bar"><div class="series-bar-inner">
+        <a href="/tech/automated-trading/part4-alert-dsl/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+        <span class="series-title">Automated Trading with Claude Code</span>
+        <div class="series-steps">
+            <a href="/tech/automated-trading/" class="series-step"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+            <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+            <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+            <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step current"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+            <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+        </div>
+        <span class="series-counter">5/6</span>
+        <a href="/tech/automated-trading/part6-feedback-loop/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+    </div></div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#dream" class="fnav-item" data-section="dream"><i class="fas fa-sparkles"></i><span>The Dream</span></a>
+            <a href="#bot-arch" class="fnav-item" data-section="bot-arch"><i class="fas fa-robot"></i><span>Bot Architecture</span></a>
+            <a href="#embeds" class="fnav-item" data-section="embeds"><i class="fas fa-palette"></i><span>Rich Embeds</span></a>
+            <a href="#scheduling" class="fnav-item" data-section="scheduling"><i class="fas fa-clock"></i><span>Scheduling</span></a>
+            <a href="#daily-flow" class="fnav-item" data-section="daily-flow"><i class="fas fa-sitemap"></i><span>Daily Flow</span></a>
+            <a href="#a-plus-plus" class="fnav-item" data-section="a-plus-plus"><i class="fas fa-crown"></i><span>A++ Selection</span></a>
+            <a href="#monitoring" class="fnav-item" data-section="monitoring"><i class="fas fa-heartbeat"></i><span>Monitoring</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button>
+    </div>
+
+    <div class="container" style="margin-top:-4rem;">
+
+        <div id="dream" class="content-card">
+            <h2><i class="fa-solid fa-wand-magic-sparkles" style="color:#10b981"></i> The Dream: Zero-Touch Trading</h2>
+            <p>Here's what your day looks like once the pipeline is running:</p>
+
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-time">07:00 AM</div><div class="timeline-content"><strong>Morning Briefing</strong> lands in #market-briefing. Regime status, overnight moves, key events today. You read it on your phone over coffee.</div></div>
+                <div class="timeline-item"><div class="timeline-time">09:30 AM</div><div class="timeline-content"><strong>Market Opens</strong>. Alert state machine starts checking your 10 active setups every 15 minutes. You do nothing.</div></div>
+                <div class="timeline-item"><div class="timeline-time">10:45 AM</div><div class="timeline-content"><strong>CONFIRMED</strong> alert fires in #priority-alerts: "CF Oversold Bounce — All 4 conditions met." Entry $77.85, Stop $73.80, TP1 $83.00. You place the trade.</div></div>
+                <div class="timeline-item"><div class="timeline-time">04:00 PM</div><div class="timeline-content"><strong>Market Closes</strong>. Alert system pauses equity monitoring. Crypto alerts continue 24/7.</div></div>
+                <div class="timeline-item"><div class="timeline-time">11:00 PM</div><div class="timeline-content"><strong>Scanner Runs</strong>. New scan generates 10 A+ setups. Top 3 A++ posted to #priority-alerts. HTML article deployed to GitHub Pages. Monitoring alerts created for all 10.</div></div>
+                <div class="timeline-item"><div class="timeline-time">11:05 PM</div><div class="timeline-content"><strong>Done</strong>. You review tomorrow's setups before bed. Total active time today: ~15 minutes.</div></div>
+            </div>
+
+            <p>No charts to analyze. No screeners to run. No articles to write. The system does everything. You just follow the highest-conviction alerts.</p>
+        </div>
+
+        <div id="bot-arch" class="content-card">
+            <h2><i class="fa-solid fa-robot" style="color:#3b82f6"></i> Discord Bot Architecture</h2>
+
+            <p>The bot is a Node.js application using discord.js v14. It's the bridge between Claude Code and your Discord server.</p>
+
+            <div class="code-label">bot.js — Main Structure</div>
+<pre><code>const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { exec } = require('child_process');
+const schedule = require('./scheduler');
+const config = require('./config.json');
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+// Command handler
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(config.prefix)) return;
+
+  const args = message.content.slice(config.prefix.length).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
+
+  switch (command) {
+    case 'analyze':
+      await handleAnalyze(message, args);
+      break;
+    case 'scan':
+      await handleScan(message);
+      break;
+    case 'market':
+      await handleMarketOverview(message);
+      break;
+    case 'alerts':
+      await handleAlerts(message, args);
+      break;
+    case 'status':
+      await handleStatus(message);
+      break;
+    case 'schedules':
+      await handleSchedules(message);
+      break;
+    case 'run':
+      await handleManualRun(message, args);
+      break;
+    case 'pause':
+    case 'resume':
+    case 'cancel':
+      await handleScheduleControl(message, command, args);
+      break;
+  }
+});
+
+// How the bot invokes Claude Code
+async function runClaudeCode(project, prompt) {
+  return new Promise((resolve, reject) => {
+    const cmd = `claude -p "${prompt}" --project /path/to/${project}`;
+    const proc = exec(cmd, {
+      maxBuffer: 10 * 1024 * 1024, // 10MB for large outputs
+      timeout: 600000               // 10 min timeout
+    });
+
+    let output = '';
+    proc.stdout.on('data', (data) => output += data);
+    proc.stderr.on('data', (data) => console.error(`[stderr] ${data}`));
+    proc.on('close', (code) => {
+      if (code === 0) resolve(output);
+      else reject(new Error(`Claude Code exited with code ${code}`));
+    });
+  });
+}
+
+// Scheduled task execution
+async function executeScheduledTask(task) {
+  const channel = client.channels.cache.get(config.channels.botLog);
+  try {
+    await channel?.send(`⏰ Starting scheduled task: **${task.command}**`);
+
+    const result = await runClaudeCode(task.project, task.command);
+
+    await channel?.send(`✅ Task completed: **${task.command}**`);
+
+    // Post results to appropriate channel based on task type
+    if (task.command.includes('daily')) {
+      await postDailyBriefing(result);
+    } else if (task.command.includes('scan')) {
+      await postScannerResults(result);
+    } else if (task.command.includes('retrospective')) {
+      await postRetrospective(result);
+    }
+
+  } catch (error) {
+    await channel?.send(`❌ Task failed: **${task.command}**\n\`\`\`${error.message}\`\`\``);
+  }
+}
+
+client.login(config.token);</code></pre>
+
+            <h3>Process Management</h3>
+            <div class="code-label">ecosystem.config.js (PM2)</div>
+<pre><code>module.exports = {
+  apps: [{
+    name: 'claude-discord-bot',
+    script: './bot.js',
+    watch: false,
+    autorestart: true,
+    max_restarts: 10,
+    restart_delay: 5000,
+    env: {
+      NODE_ENV: 'production',
+      DISCORD_TOKEN: process.env.DISCORD_TOKEN
+    }
+  }]
+};
+
+// Start: pm2 start ecosystem.config.js
+// Monitor: pm2 monit
+// Logs: pm2 logs claude-discord-bot</code></pre>
+        </div>
+
+        <div id="embeds" class="content-card">
+            <h2><i class="fa-solid fa-palette" style="color:#8b5cf6"></i> Rich Discord Embeds</h2>
+
+            <h3>A++ Setup Alert Embed</h3>
+            <div class="discord-embed" style="border-left-color:#10b981">
+                <div class="embed-title">🟢 CONFIRMED: CF Industries — Oversold Bounce [A+]</div>
+                <p style="color:#dbdee1;margin:.5rem 0">Fertilizer stock oversold on broad market selloff. Strong fundamentals, insider buying, sector tailwinds from energy rally.</p>
+                <div>
+                    <div class="embed-field"><div class="embed-field-name">Score</div><div class="embed-field-value">86.2 / 100</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Entry</div><div class="embed-field-value">$76.50 – $78.50</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Stop</div><div class="embed-field-value">$73.80 (-4.1%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Target 1</div><div class="embed-field-value">$83.00 (+6.4%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Target 2</div><div class="embed-field-value">$88.50 (+14.3%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">R/R</div><div class="embed-field-value">1.67</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Regime</div><div class="embed-field-value">Early Risk-Off</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Horizon</div><div class="embed-field-value">Swing 5-8 days</div></div>
+                </div>
+                <div class="embed-footer">MarketWatch Scanner | Mar 5, 2026 23:00 | Confluence: 5 signals</div>
+            </div>
+
+            <div class="code-label">Embed Builder Code</div>
+<pre><code>function buildSetupEmbed(setup) {
+  const color = setup.grade === "A++" ? 0xf59e0b :
+                setup.grade === "A+"  ? 0x10b981 : 0x3b82f6;
+
+  const emoji = setup.direction === "long" ? "🟢" : "🔴";
+
+  return new EmbedBuilder()
+    .setColor(color)
+    .setTitle(`${emoji} CONFIRMED: ${setup.ticker} — ${setup.strategy} [${setup.grade}]`)
+    .setDescription(setup.thesis)
+    .addFields(
+      { name: 'Score', value: `${setup.composite}/100`, inline: true },
+      { name: 'Entry', value: `$${setup.entry}`, inline: true },
+      { name: 'Stop', value: `$${setup.stop} (${setup.stopPct}%)`, inline: true },
+      { name: 'Target 1', value: `$${setup.tp1} (+${setup.tp1Pct}%)`, inline: true },
+      { name: 'Target 2', value: `$${setup.tp2} (+${setup.tp2Pct}%)`, inline: true },
+      { name: 'R/R', value: `${setup.rr}`, inline: true },
+      { name: 'Regime', value: setup.regime, inline: true },
+      { name: 'Horizon', value: setup.horizon, inline: true },
+      { name: 'Sector', value: `${setup.geo} ${setup.sector}`, inline: true }
+    )
+    .setThumbnail(`https://charts2.finviz.com/chart.ashx?t=${setup.ticker}&ty=c&ta=1&p=d&s=l`)
+    .setFooter({ text: `MarketWatch Scanner | ${setup.date} | Confluence: ${setup.confluence}` })
+    .setTimestamp();
+}</code></pre>
+
+            <h3>Daily Briefing Embed</h3>
+            <div class="discord-embed" style="border-left-color:#3b82f6">
+                <div class="embed-title">📊 Daily Briefing — Thursday March 6, 2026</div>
+                <div>
+                    <div class="embed-field"><div class="embed-field-name">Regime</div><div class="embed-field-value">⚠️ Early Risk-Off</div></div>
+                    <div class="embed-field"><div class="embed-field-name">VIX</div><div class="embed-field-value">23.75 (+8.2%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">SPY</div><div class="embed-field-value">$559.23 (-1.2%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">QQQ</div><div class="embed-field-value">$472.10 (-1.8%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">BTC</div><div class="embed-field-value">$87,450 (-0.5%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">GLD</div><div class="embed-field-value">$285.30 (+1.2%)</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Key Event</div><div class="embed-field-value">Nonfarm Payrolls 8:30 AM</div></div>
+                    <div class="embed-field"><div class="embed-field-name">Active Alerts</div><div class="embed-field-value">10 watching, 2 near-confirmed</div></div>
+                </div>
+                <div class="embed-footer">Full briefing: articles.market-watch.xyz/daily/20260306/</div>
+            </div>
+        </div>
+
+        <div id="scheduling" class="content-card">
+            <h2><i class="fa-solid fa-clock" style="color:#f59e0b"></i> Scheduling System</h2>
+
+            <div class="code-label">schedules.json</div>
+<pre><code>[
+  {
+    "id": 1,
+    "name": "Daily Briefing",
+    "schedule": "every day at 07:00",
+    "command": "analyse daily",
+    "project": "articles",
+    "enabled": true,
+    "timezone": "Europe/Paris",
+    "channels": ["#market-briefing"],
+    "lastRun": "2026-03-05T07:00:00Z",
+    "nextRun": "2026-03-06T07:00:00Z"
+  },
+  {
+    "id": 2,
+    "name": "Daily Scanner",
+    "schedule": "every weekday at 23:00",
+    "command": "scan du jour",
+    "project": "articles",
+    "enabled": true,
+    "timezone": "America/New_York",
+    "channels": ["#trading-signals", "#priority-alerts"],
+    "lastRun": "2026-03-05T23:00:00Z",
+    "nextRun": "2026-03-06T23:00:00Z"
+  },
+  {
+    "id": 3,
+    "name": "Weekly Retrospective",
+    "schedule": "every friday at 23:00",
+    "command": "rétrospective scanner",
+    "project": "articles",
+    "enabled": true,
+    "channels": ["#performance"],
+    "lastRun": "2026-02-28T23:00:00Z",
+    "nextRun": "2026-03-07T23:00:00Z"
+  },
+  {
+    "id": 4,
+    "name": "Weekly Report",
+    "schedule": "every sunday at 18:00",
+    "command": "nouvelle analyse weekly",
+    "project": "articles",
+    "enabled": true,
+    "channels": ["#weekly-report"]
+  }
+]</code></pre>
+
+            <h3>Discord Commands for Schedule Management</h3>
+<pre><code>// List all schedules
+!schedules
+→ #1 Daily Briefing    | every day at 07:00    | ✅ Enabled | Next: Mar 6 07:00
+  #2 Daily Scanner     | weekday at 23:00      | ✅ Enabled | Next: Mar 6 23:00
+  #3 Weekly Retro      | friday at 23:00       | ✅ Enabled | Next: Mar 7 23:00
+  #4 Weekly Report     | sunday at 18:00       | ✅ Enabled | Next: Mar 8 18:00
+
+// Force-run a task now
+!run #2
+→ ⏰ Starting: Daily Scanner (manual trigger)
+
+// Pause a task
+!pause #2
+→ ⏸️ Paused: Daily Scanner
+
+// Resume
+!resume #2
+→ ▶️ Resumed: Daily Scanner</code></pre>
+        </div>
+
+        <div id="daily-flow" class="content-card">
+            <h2><i class="fa-solid fa-sitemap" style="color:#06b6d4"></i> The Daily Pipeline &mdash; Step by Step</h2>
+
+            <p>Here's exactly what happens when the 23:00 scanner task fires:</p>
+
+            <div class="code-label">Scanner Pipeline (12 steps)</div>
+<pre><code>// Step 1: Read retrospective feedback
+const retros = readAllRetrospectives("scanner/retrospective/");
+const adjustedWeights = computeAdjustedWeights(retros);
+// Output: strategy weights modified by historical performance
+
+// Step 2: Read last 3 scans for anti-duplicate check
+const recentTickers = readRecentScans(3);
+// Output: Set of tickers to avoid (70% must be new)
+
+// Step 3: Regime detection
+const overview = await GetMarketOverview({ depth: "deep" });
+const regime = detectRegime(overview);
+// Output: "EARLY_RISK_OFF", strategy weights
+
+// Step 4: Multi-strategy screening
+const autoResults = await RunAutoScreener();
+const oversold = await RunScreener({
+  conditions: "rsi14 < 30 && vol > sma(vol,20) * 2 && close > sma(close,200)",
+  universe: "SP500"
+});
+const momentum = await RunScreener({
+  conditions: "close > max(high,20d) && vol > avgVol * 1.5 && rsi14 > 55",
+  universe: "SP500"
+});
+const breakout = await RunScreener({
+  conditions: "bbWidth < 5 && close > sma(close,200)",
+  universe: "SP500"
+});
+// Output: ~50 unique candidates
+
+// Step 5: EU/APAC/ETF screening
+const euApac = await RunScreener({
+  conditions: "rsi14 < 40 && close > ema(close,50)",
+  symbols: ["VGK","EWG","EWQ","SAP","ASML","EWJ","EWY","FXI"]
+});
+const etfs = await RunScreener({
+  conditions: "change(close,5d) > 2 && vol > avgVol",
+  symbols: ["XLF","XLE","XLK","XLV","GLD","SLV","TLT","ARKK"]
+});
+// Output: ~10 additional candidates
+
+// Step 6: Deep data collection
+const deepData = await QueryData({
+  symbols: allCandidates,
+  types: "quote,technicals,support_resistance,sentiment_overall," +
+         "insider_transactions,financials,news,trading_signals"
+});
+// Output: Full data for 60 candidates
+
+// Step 7: P0 validation
+const validated = allCandidates.filter(t => {
+  const spot = deepData[t].quote.price;
+  const entry = computeEntry(deepData[t]);
+  return Math.abs(spot - entry) / spot < 0.10; // Within 10%
+});
+// Output: ~55 validated candidates
+
+// Step 8: Multi-layer scoring (Part 3)
+const scored = validated.map(t => scoreAllLayers(t, deepData[t], regime));
+// Output: Each candidate has composite score + 6 layer scores
+
+// Step 9: Filter and diversify
+const topCandidates = scored
+  .filter(s => s.composite >= 85 && s.failedLayers.length === 0)
+  .sort((a, b) => b.composite - a.composite);
+
+const final10 = diversify(topCandidates, {
+  minUS: 5, minEU: 2, minAPAC: 1, minETF: 2,
+  minDefensive: regime.includes("RISK_OFF") ? 2 : 0
+});
+// Output: 10 diversified A+ setups
+
+// Step 10: A++ re-rank (top 3)
+const top3 = final10.slice(0, 3);
+// These go to #priority-alerts
+
+// Step 11: Generate HTML + deploy
+await generateScannerArticle(final10, regime, overview);
+await exec("node tools/add_card.js scanner/YYYYMMDD/index.html");
+await exec("git add scanner/ data/ && git commit && git push");
+// Output: Article live on GitHub Pages
+
+// Step 12: Post to Discord + create alerts
+for (const setup of top3) {
+  await postToChannel("#priority-alerts", buildSetupEmbed(setup));
+}
+for (const setup of final10) {
+  await postToChannel("#trading-signals", buildSetupSummary(setup));
+  await createMonitoringAlert(setup); // Part 4 alert system
+}</code></pre>
+        </div>
+
+        <div id="a-plus-plus" class="content-card">
+            <h2><i class="fa-solid fa-crown" style="color:#f59e0b"></i> The A++ Selection Funnel</h2>
+
+            <p>From 500+ stocks in the universe down to 3 A++ trades &mdash; here's the funnel:</p>
+
+            <table class="data-table">
+                <thead><tr><th>Stage</th><th>Filter</th><th>Candidates</th><th>Reduction</th></tr></thead>
+                <tbody>
+                    <tr><td>1. Universe</td><td>RunAutoScreener + 3 DSL strategies</td><td>~500 &rarr; 60</td><td>88%</td></tr>
+                    <tr><td>2. P0 Validation</td><td>Price within 10% of spot, not halted</td><td>60 &rarr; 55</td><td>8%</td></tr>
+                    <tr><td>3. Multi-Layer Score</td><td>Composite &ge; 85, no failed layers</td><td>55 &rarr; 20</td><td>64%</td></tr>
+                    <tr><td>4. Diversification</td><td>Sector/geo/strategy mix requirements</td><td>20 &rarr; 12</td><td>40%</td></tr>
+                    <tr><td>5. Anti-Duplicate</td><td>70% must be new vs last 3 scans</td><td>12 &rarr; 10</td><td>17%</td></tr>
+                    <tr><td>6. AI Re-Rank</td><td>Top 3 by conviction + R/R + uniqueness</td><td>10 &rarr; 3</td><td>70%</td></tr>
+                </tbody>
+            </table>
+
+            <div class="metric-grid">
+                <div class="metric-card"><div class="metric-value">500+</div><div class="metric-label">Universe</div></div>
+                <div class="metric-card"><div class="metric-value">10</div><div class="metric-label">A+ Setups</div></div>
+                <div class="metric-card"><div class="metric-value" style="color:#f59e0b">3</div><div class="metric-label">A++ Elite</div></div>
+                <div class="metric-card"><div class="metric-value">0.6%</div><div class="metric-label">Selection Rate</div></div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Why Only 3?</h4>
+                <p>Retail traders lose money by over-trading. By limiting to 3 A++ setups per day, you force extreme selectivity. Each trade has maximum conviction across all 6 scoring layers. Quality over quantity. If none qualify as A++, the system reports 0 trades &mdash; and that's perfectly fine.</p>
+            </div>
+        </div>
+
+        <div id="monitoring" class="content-card">
+            <h2><i class="fa-solid fa-heartbeat" style="color:#ef4444"></i> Monitoring &amp; Reliability</h2>
+
+            <h3>Health Check System</h3>
+            <div class="code-label">!status command output</div>
+<pre><code>📊 Bot Status
+━━━━━━━━━━━━━━━━━━━━━━
+Uptime:         12d 4h 32m
+Last Scan:      Mar 5 23:00 ✅
+Last Briefing:  Mar 6 07:00 ✅
+Last Retro:     Feb 28 23:00 ✅
+
+MCP Servers:
+  market-watch:  🟢 Connected (latency: 45ms)
+  market-alerts: 🟢 Connected (latency: 12ms)
+
+Active Alerts:  10 watching, 2 near-confirmed, 0 confirmed
+Errors (24h):   0
+Disk Usage:     2.3 GB / 10 GB
+Git Status:     clean, up to date with origin/main</code></pre>
+
+            <h3>Error Handling Strategy</h3>
+            <table class="data-table">
+                <thead><tr><th>Error Type</th><th>Action</th><th>Notification</th></tr></thead>
+                <tbody>
+                    <tr><td>MCP connection failure</td><td>Retry 3x with exponential backoff</td><td>#bot-logs warning</td></tr>
+                    <tr><td>Claude Code timeout (10min)</td><td>Kill process, retry once</td><td>#bot-logs error</td></tr>
+                    <tr><td>Git push failure</td><td>Stash, pull, reapply, retry</td><td>#bot-logs error</td></tr>
+                    <tr><td>Empty scanner results</td><td>Loosen DSL thresholds by 10%</td><td>#bot-logs warning</td></tr>
+                    <tr><td>HTML &lt; 10KB</td><td>Abort push, log error</td><td>#bot-logs critical</td></tr>
+                    <tr><td>add_card.js failure</td><td>Abort push, manual fix needed</td><td>#bot-logs critical + @admin</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Security Checklist</h3>
+            <ul>
+                <li><strong>Discord token</strong>: Environment variable, never in code or config files</li>
+                <li><strong>MCP API keys</strong>: In <code>~/.claude/settings.json</code>, not in repo</li>
+                <li><strong>Channel permissions</strong>: Only admins can <code>!run</code>, <code>!pause</code>, <code>!cancel</code></li>
+                <li><strong>Rate limiting</strong>: Max 1 manual <code>!run</code> per 5 minutes per user</li>
+                <li><strong>No PII</strong>: Alerts contain only ticker/price data, never personal info</li>
+                <li><strong>.gitignore</strong>: <code>.env</code>, <code>config.json</code>, <code>node_modules/</code></li>
+            </ul>
+        </div>
+
+        <a href="/tech/automated-trading/part6-feedback-loop/" class="next-cta">
+            <div><div class="next-label">Part 6 of 6 — Final</div><div class="next-title">The Feedback Loop &mdash; Self-Improving Intelligence</div></div>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="series-bar"><div class="series-bar-inner">
+        <a href="/tech/automated-trading/part4-alert-dsl/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+        <span class="series-title">Automated Trading with Claude Code</span>
+        <div class="series-steps">
+            <a href="/tech/automated-trading/" class="series-step"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+            <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+            <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+            <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step current"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+            <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+        </div>
+        <span class="series-counter">5/6</span>
+        <a href="/tech/automated-trading/part6-feedback-loop/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+    </div></div>
+
+    <footer class="article-footer">&copy; 2026 Market Watch. Data via MarketWatch Gateway. Not financial advice.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

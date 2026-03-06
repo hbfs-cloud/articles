@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="ai,tech,trading,automation,education" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Automated Trading Stack — From Manual to Fully Automated A++ Setups | Market Watch</title>
+    <meta name="description"
+        content="Part 1/6 — Build a fully automated trading pipeline with Claude Code, MCP protocol, and AI-driven analysis. Architecture overview, tech stack, and A++ selection criteria.">
+    <meta property="og:title" content="The Automated Trading Stack — From Manual to Fully Automated A++ Setups">
+    <meta property="og:description"
+        content="Part 1/6 — Build a fully automated trading pipeline with Claude Code, MCP protocol, and AI-driven analysis.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.market-watch.xyz/tech/automated-trading/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        .hero-section{padding:5rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#d1fae5 100%);text-align:center;border-bottom:1px solid #a7f3d0}
+        .hero-date{font-size:.85rem;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+        .hero-title{font-size:2.8rem;font-weight:900;color:#064e3b;margin:.5rem 0;letter-spacing:-.03em}
+        .hero-subtitle{font-size:1.15rem;color:#065f46;max-width:750px;margin:1rem auto 0;line-height:1.7}
+        .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+        .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.75rem;font-weight:700;background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+        .container{max-width:900px;margin:0 auto;padding:0 1rem;position:relative}
+        .content-card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0}
+        h2{font-size:1.8rem;font-weight:900;color:#0f172a;margin:1.5rem 0;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem}
+        h3{font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem}
+        h4{font-size:1.1rem;font-weight:700;color:#334155;margin:1.5rem 0 .75rem}
+        p{font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem}
+        pre{background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:1.5rem 0}
+        code{font-family:'JetBrains Mono','Fira Code',monospace}
+        pre code{color:#e2e8f0}
+        .code-label{display:inline-block;background:#10b981;color:white;padding:.25rem .75rem;border-radius:6px 6px 0 0;font-size:.75rem;font-weight:700;margin-bottom:-1px}
+        ul,ol{font-size:1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;padding-left:1.5rem}
+        li{margin-bottom:.5rem}
+        .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+        .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(16,185,129,.3)}
+        .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+        .next-cta .next-title{font-size:1.25rem;font-weight:800}
+        .next-cta i{font-size:1.5rem}
+        .arch-card{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #86efac;border-radius:12px;padding:1.5rem;margin:.75rem 0}
+        .arch-card h4{color:#059669;margin-top:0}
+        .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0}
+        .metric-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;text-align:center}
+        .metric-value{font-size:1.5rem;font-weight:800;color:#0f172a;margin-bottom:.25rem}
+        .metric-label{font-size:.85rem;color:#64748b}
+        .layer-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
+        .layer-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;position:relative;overflow:hidden}
+        .layer-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+        .layer-card.l-tech::before{background:#3b82f6}
+        .layer-card.l-fund::before{background:#10b981}
+        .layer-card.l-social::before{background:#8b5cf6}
+        .layer-card.l-sector::before{background:#f59e0b}
+        .layer-card.l-macro::before{background:#ef4444}
+        .layer-card.l-ai::before{background:#06b6d4}
+        .layer-num{font-size:2rem;font-weight:900;color:#e2e8f0;position:absolute;top:.5rem;right:1rem}
+        .layer-title{font-size:1.1rem;font-weight:800;margin-bottom:.5rem}
+        .layer-threshold{display:inline-block;background:#10b981;color:white;padding:.15rem .5rem;border-radius:6px;font-size:.7rem;font-weight:700;margin-bottom:.75rem}
+        .pipeline-step{display:flex;align-items:flex-start;gap:1.5rem;margin:1.5rem 0;padding:1.5rem;background:#f8fafc;border-radius:12px;border-left:4px solid #10b981}
+        .pipeline-num{background:#10b981;color:white;width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;flex-shrink:0}
+        .pipeline-content{flex:1}
+        .pipeline-content h4{margin-top:0;color:#059669}
+        .pipeline-time{font-size:.75rem;font-weight:700;color:#64748b;background:#e2e8f0;padding:.2rem .5rem;border-radius:4px;display:inline-block;margin-bottom:.5rem}
+        .tech-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;margin:.75rem 0;display:flex;gap:1.25rem;align-items:flex-start}
+        .tech-icon{width:3rem;height:3rem;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+        .tech-icon.green{background:#ecfdf5;color:#10b981}
+        .tech-icon.blue{background:#eff6ff;color:#3b82f6}
+        .tech-icon.purple{background:#f5f3ff;color:#8b5cf6}
+        .tech-icon.amber{background:#fffbeb;color:#f59e0b}
+        .tech-icon.red{background:#fef2f2;color:#ef4444}
+        .tech-icon.cyan{background:#ecfeff;color:#06b6d4}
+        .tech-body h4{margin-top:0}
+        .compare-row{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:1.5rem 0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}
+        .compare-col{padding:1.5rem}
+        .compare-col.before{background:#fef2f2}
+        .compare-col.after{background:#f0fdf4}
+        .compare-col h4{margin-top:0}
+        .file-tree{font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85rem;line-height:1.8;background:#1e293b;color:#e2e8f0;padding:1.5rem;border-radius:12px;margin:1.5rem 0}
+        .file-tree .dir{color:#10b981;font-weight:700}
+        .file-tree .file{color:#94a3b8}
+        .file-tree .comment{color:#64748b;font-style:italic}
+        @media(max-width:768px){.content-card{padding:1.5rem}.hero-section{padding:3rem 1rem 6rem}.hero-title{font-size:2rem}.layer-grid{grid-template-columns:1fr}.compare-row{grid-template-columns:1fr}}
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- Brand Bar -->
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="hero-date">Tech Series — Part 1 of 6</div>
+        <h1 class="hero-title">The Automated Trading Stack</h1>
+        <p class="hero-subtitle">From manual chart-staring to a fully autonomous pipeline that scans 8,000+ tickers nightly, scores setups across 6 dimensions, and delivers only A++ trade recommendations to your Discord. You do nothing except follow the alerts.</p>
+        <div class="hero-badges">
+            <span class="hero-badge"><i class="fas fa-robot"></i> Claude Code CLI</span>
+            <span class="hero-badge"><i class="fas fa-plug"></i> MCP Protocol</span>
+            <span class="hero-badge"><i class="fas fa-chart-line"></i> 6-Layer Scoring</span>
+            <span class="hero-badge"><i class="fab fa-discord"></i> Discord Delivery</span>
+            <span class="hero-badge"><i class="fas fa-code"></i> Expert Level</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <!-- Series Bar -->
+    <div class="series-bar">
+        <div class="series-bar-inner">
+            <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
+            <span class="series-title">Automated Trading with Claude Code</span>
+            <div class="series-steps">
+                <a href="/tech/automated-trading/" class="series-step current"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+                <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+                <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+                <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+                <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+                <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+            </div>
+            <span class="series-counter">1/6</span>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#vision" class="fnav-item" data-section="vision"><i class="fas fa-eye"></i><span>The Vision</span></a>
+            <a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-sitemap"></i><span>Architecture</span></a>
+            <a href="#stack" class="fnav-item" data-section="stack"><i class="fas fa-layer-group"></i><span>Tech Stack</span></a>
+            <a href="#scoring" class="fnav-item" data-section="scoring"><i class="fas fa-star"></i><span>A++ Criteria</span></a>
+            <a href="#pipeline" class="fnav-item" data-section="pipeline"><i class="fas fa-arrows-spin"></i><span>Daily Pipeline</span></a>
+            <a href="#setup" class="fnav-item" data-section="setup"><i class="fas fa-terminal"></i><span>Project Setup</span></a>
+            <a href="#next" class="fnav-item" data-section="next"><i class="fas fa-arrow-right"></i><span>What's Next</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+
+        <!-- ============================================ -->
+        <!-- SECTION 1: THE VISION                        -->
+        <!-- ============================================ -->
+        <div id="vision" class="content-card">
+            <h2><i class="fas fa-eye"></i> The Vision</h2>
+
+            <p>Every evening at 23:00, while you are asleep, an autonomous AI agent wakes up. It connects to live market data feeds, scans over 8,000 tickers across US, European, and Asia-Pacific exchanges, runs multi-strategy screening algorithms, scores every candidate through a 6-dimensional quality filter, and delivers 3 meticulously researched trade recommendations to your Discord channel. By the time you check your phone in the morning, the work is done. All you need to do is decide whether to execute.</p>
+
+            <p>This is not a fantasy. This is what we have been running in production at Market Watch since January 2026. The system has generated over 200 scanner reports, each containing 10 A+ setups, with a documented hit rate tracked through weekly retrospectives. And it is built entirely on tools that are available to any retail investor today: Claude Code, the Model Context Protocol (MCP), and a handful of well-configured servers.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fas fa-graduation-cap"></i> What This Series Will Teach You</h4>
+                <p>Over 6 parts, you will build the exact same pipeline we use. Not a simplified version. Not a toy demo. The real thing. By the end, you will have a fully operational automated trading research system that runs on your own machine, uses your own analysis criteria, and delivers results wherever you want them.</p>
+            </div>
+
+            <h3>The Problem With Manual Trading Research</h3>
+
+            <p>If you are a retail trader doing your own research, your workflow probably looks something like this: you open TradingView, flip through a watchlist of 30-50 tickers, check RSI and MACD on each, maybe read some news, glance at earnings dates, and then try to synthesize all of that into a trade decision. On a good day, this takes 2-3 hours. On a busy day, you skip it entirely.</p>
+
+            <p>The problems with this approach are structural, not personal:</p>
+
+            <ul>
+                <li><strong>Coverage is pathetically narrow.</strong> You cannot manually screen 8,000 tickers. So you miss opportunities in names you have never heard of. The best setups often come from obscure mid-caps that never make it to FinTwit.</li>
+                <li><strong>Analysis is inconsistent.</strong> Monday-you applies different criteria than Friday-you. Your emotional state, your recent P&L, whether you slept well — all of these introduce noise into your selection process.</li>
+                <li><strong>Multi-dimensional scoring is impossible at scale.</strong> Checking technicals is easy. But simultaneously evaluating technicals + fundamentals + social sentiment + sector rotation + macro regime + AI conviction for hundreds of candidates? That requires compute, not willpower.</li>
+                <li><strong>There is no feedback loop.</strong> Did your screening criteria actually produce profitable setups? Without systematic tracking, you are flying blind. You cannot improve what you do not measure.</li>
+                <li><strong>Opportunity cost is enormous.</strong> Those 2-3 hours could be spent on actual edge — studying market microstructure, backtesting strategies, or simply living your life.</li>
+            </ul>
+
+            <div class="compare-row">
+                <div class="compare-col before">
+                    <h4><i class="fas fa-user"></i> Manual Workflow</h4>
+                    <ul>
+                        <li>30-50 tickers screened</li>
+                        <li>2-3 hours daily</li>
+                        <li>1-2 dimensions checked</li>
+                        <li>Inconsistent criteria</li>
+                        <li>No systematic tracking</li>
+                        <li>Emotional bias</li>
+                        <li>Missed opportunities</li>
+                    </ul>
+                </div>
+                <div class="compare-col after">
+                    <h4><i class="fas fa-robot"></i> Automated Pipeline</h4>
+                    <ul>
+                        <li>8,000+ tickers scanned</li>
+                        <li>0 hours (runs at 23:00)</li>
+                        <li>6 dimensions scored</li>
+                        <li>Deterministic criteria</li>
+                        <li>Weekly retrospectives</li>
+                        <li>Zero emotional input</li>
+                        <li>Global coverage</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>What "Automated" Actually Means</h3>
+
+            <p>Let us be precise about terminology, because "automated trading" means different things to different people:</p>
+
+            <ul>
+                <li><strong>Automated execution</strong> (algo trading) = a bot places orders on your behalf. We are NOT building this. Automated execution requires brokerage API integration, real-time risk management, latency optimization, and regulatory compliance. That is a different (and much more dangerous) project.</li>
+                <li><strong>Automated research</strong> (what we are building) = an AI agent performs all the research, analysis, and scoring that a human analyst would do, and delivers structured trade recommendations. You make the final execution decision.</li>
+            </ul>
+
+            <p>This distinction matters enormously. Our system is a <strong>research automation pipeline</strong>, not a trading bot. It replaces the analyst, not the trader. You retain full control over execution, sizing, and risk management. The AI handles the tedious, high-volume, multi-dimensional screening work that no human can do consistently at scale.</p>
+
+            <div class="alert-box">
+                <h4><i class="fas fa-triangle-exclamation"></i> Critical Disclaimer</h4>
+                <p>Nothing in this series constitutes financial advice. The system we describe is a research tool. Every trade recommendation it produces must be independently validated before execution. Past scanner performance (tracked in our retrospectives) does not guarantee future results. You are solely responsible for your own trading decisions.</p>
+            </div>
+
+            <h3>The End State</h3>
+
+            <p>When you finish all 6 parts of this series, here is what your daily life as a trader will look like:</p>
+
+            <ol>
+                <li><strong>23:00</strong> — A cron job fires. Claude Code wakes up and begins its nightly scan.</li>
+                <li><strong>23:05</strong> — The MCP Gateway returns market regime analysis (Risk-On, Risk-Off, Neutral, Transition).</li>
+                <li><strong>23:08</strong> — Three parallel screener strategies run: oversold reversals, momentum breakouts, and mean-reversion setups. 150+ candidates identified.</li>
+                <li><strong>23:12</strong> — Each candidate is scored across 6 layers. Only setups scoring 85+ make the first cut (typically 20-30).</li>
+                <li><strong>23:18</strong> — AI re-ranking via DeepSeek analysis reduces the list to 10 A+ setups.</li>
+                <li><strong>23:22</strong> — The top 3 A++ setups are packaged as Discord alerts with entry zones, stop losses, take-profit targets, and risk/reward ratios.</li>
+                <li><strong>23:25</strong> — Discord notifications land on your phone. A full HTML report is committed to GitHub Pages for the permanent record.</li>
+                <li><strong>07:00 next day</strong> — You wake up, review the 3 recommendations over coffee, and decide which (if any) to execute at market open.</li>
+            </ol>
+
+            <p>The entire pipeline takes less than 30 minutes and requires zero human intervention. Let us build it.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">8,000+</div>
+                    <div class="metric-label">Tickers Scanned Nightly</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">6</div>
+                    <div class="metric-label">Scoring Dimensions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">A++ Setups Delivered</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0 min</div>
+                    <div class="metric-label">Human Time Required</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION 2: ARCHITECTURE OVERVIEW              -->
+        <!-- ============================================ -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fas fa-sitemap"></i> Architecture Overview</h2>
+
+            <p>The system follows a classic ETL pattern — Extract, Transform, Load — with an AI agent at the center acting as the orchestrator. But unlike traditional ETL where each step is a discrete service, our entire pipeline is a single Claude Code session that makes tool calls through the Model Context Protocol.</p>
+
+            <h3>The 30,000-Foot View</h3>
+
+            <p>There are four major subsystems, each exposed to Claude Code as an MCP server:</p>
+
+            <div class="mermaid">
+graph TB
+    subgraph Trigger["Trigger Layer"]
+        CRON["Cron / Discord Bot<br/>Schedule: 23:00 daily"]
+    end
+
+    subgraph Brain["AI Brain (Claude Code)"]
+        CC["Claude Code CLI<br/>claude -p 'scan du jour'"]
+        PROMPT["System Prompt<br/>CLAUDE.md instructions"]
+        CC --> PROMPT
+    end
+
+    subgraph Data["Data Layer (MCP Servers)"]
+        MW["Market Watch Gateway<br/>58 data types"]
+        WEB["Web Search<br/>News & catalysts"]
+    end
+
+    subgraph Analysis["Analysis Layer"]
+        SCREEN["RunAutoScreener<br/>Regime detection"]
+        DSL["RunScreener<br/>3 DSL strategies"]
+        SCORE["6-Layer Scoring<br/>Technical + Fundamental<br/>+ Social + Sector<br/>+ Macro + AI"]
+        LLM["LLMAnalysis<br/>DeepSeek re-ranking"]
+    end
+
+    subgraph Delivery["Delivery Layer"]
+        DISCORD["Discord MCP<br/>Alert messages"]
+        GHPAGES["GitHub Pages<br/>HTML reports"]
+        ALERTS["Market Alerts MCP<br/>Price triggers"]
+    end
+
+    CRON -->|"triggers"| CC
+    CC -->|"MCP calls"| MW
+    CC -->|"tool calls"| WEB
+    CC --> SCREEN
+    CC --> DSL
+    SCREEN --> SCORE
+    DSL --> SCORE
+    SCORE --> LLM
+    LLM -->|"top 3 A++"| DISCORD
+    LLM -->|"full report"| GHPAGES
+    LLM -->|"price alerts"| ALERTS
+
+    classDef trigger fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef brain fill:#ecfdf5,stroke:#10b981,stroke-width:2px
+    classDef data fill:#eff6ff,stroke:#3b82f6,stroke-width:2px
+    classDef analysis fill:#f5f3ff,stroke:#8b5cf6,stroke-width:2px
+    classDef delivery fill:#fef2f2,stroke:#ef4444,stroke-width:2px
+
+    class CRON trigger
+    class CC,PROMPT brain
+    class MW,WEB data
+    class SCREEN,DSL,SCORE,LLM analysis
+    class DISCORD,GHPAGES,ALERTS delivery
+            </div>
+
+            <h3>Data Flow in Detail</h3>
+
+            <p>Let us trace a single execution from trigger to delivery. Understanding this flow is essential before we start building, because every architectural decision serves a specific purpose in this chain.</p>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-1"></i> Trigger</h4>
+                <p>A Discord bot (or cron job) executes <code>claude -p "scan du jour"</code> inside a tmux session. The <code>-p</code> flag runs Claude Code in non-interactive (pipe) mode, meaning it reads the prompt, executes, and exits. The working directory is the articles repository, so Claude Code automatically loads <code>CLAUDE.md</code> as its system prompt.</p>
+            </div>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-2"></i> Regime Detection</h4>
+                <p>Claude Code's first MCP call is <code>RunAutoScreener</code>. This is not a simple stock screener — it first analyzes the current market regime by examining VIX levels, yield curves, sector rotation patterns, and breadth indicators. The regime (Risk-On, Risk-Off, Neutral, Transition, Early Risk-On, Early Risk-Off) determines which screening strategies to prioritize. In a Risk-Off regime, for example, the system increases allocation to short setups and hedges (GLD, TLT, SH, SQQQ).</p>
+            </div>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-3"></i> Multi-Strategy Screening</h4>
+                <p>Three <code>RunScreener</code> calls execute in sequence, each with a different DSL (Domain-Specific Language) strategy: oversold reversals, momentum continuation, and breakout setups. Additional screeners target EU equities (VGK, EWG, EWQ, SAP, ASML), APAC names (EWJ, EWY, FXI), and thematic ETFs (XLF, XLE, GLD, ARKK). The combined candidate pool typically contains 100-200 names.</p>
+            </div>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-4"></i> Data Enrichment</h4>
+                <p>For every candidate that passes initial screening, Claude Code calls <code>QueryData</code> with types including <code>quote</code>, <code>insider_transactions</code>, <code>sentiment_overall</code>, <code>trading_signals</code>, <code>support_resistance</code>, and <code>volume_profile</code>. This enrichment step is where most of the API calls happen — easily 50+ calls per scan. The MCP Gateway handles batching and rate limiting internally.</p>
+            </div>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-5"></i> 6-Layer Scoring</h4>
+                <p>Each enriched candidate is scored across six dimensions (detailed in Section 4). Claude Code computes a composite score using weights that adapt to the current regime. Only candidates scoring above 85/100 survive this filter. Typically, 20-30 out of 150+ candidates make the cut.</p>
+            </div>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-6"></i> AI Re-Ranking</h4>
+                <p>The survivors are passed to <code>LLMAnalysis</code> (DeepSeek) for a second-opinion AI analysis. This catches edge cases that the scoring system might miss — for example, a ticker with great technicals but a pending SEC investigation, or a setup that looks like a value trap. The AI re-ranking reduces the list to the final 10 A+ setups.</p>
+            </div>
+
+            <div class="arch-card">
+                <h4><i class="fas fa-7"></i> Delivery</h4>
+                <p>Three outputs are generated simultaneously: (1) a full HTML report committed to GitHub Pages via <code>git add/commit/push</code>, (2) Discord alerts for the top 3 A++ setups via the Discord MCP server, and (3) price-level alerts via the Market Alerts MCP server that will fire when entry zones are hit.</p>
+            </div>
+
+            <h3>Why MCP is the Key Enabler</h3>
+
+            <p>The Model Context Protocol is what makes this entire architecture possible. Before MCP, connecting an LLM to external data sources required custom API wrappers, prompt engineering for tool calling, and fragile output parsing. MCP standardizes the interface: every data source, every action, every delivery mechanism exposes the same JSON-RPC protocol. Claude Code does not know (or care) whether it is talking to a market data API, a Discord webhook, or a Git repository. It just makes tool calls.</p>
+
+            <p>This has three profound implications for our architecture:</p>
+
+            <ol>
+                <li><strong>Composability.</strong> Adding a new data source (say, on-chain crypto data) means adding a new MCP server. Zero changes to the pipeline code, zero changes to the prompt. Claude Code discovers the new tools automatically.</li>
+                <li><strong>Reliability.</strong> MCP servers handle their own retry logic, rate limiting, and error handling. The AI agent sees clean tool responses, not raw HTTP errors.</li>
+                <li><strong>Testability.</strong> Each MCP server can be tested in isolation. You can mock the Market Watch Gateway to run the pipeline on historical data for backtesting.</li>
+            </ol>
+
+            <div class="pedagogy-box">
+                <h4><i class="fas fa-lightbulb"></i> MCP in 30 Seconds</h4>
+                <p>The Model Context Protocol (MCP) is an open standard created by Anthropic for connecting AI models to external tools and data. Think of it like USB for AI: a universal connector that lets any AI model talk to any data source. An MCP server exposes "tools" (functions the AI can call) and "resources" (data the AI can read). Claude Code is an MCP client that can connect to multiple servers simultaneously, composing their capabilities into a single workflow.</p>
+            </div>
+
+            <h3>Architecture Constraints</h3>
+
+            <p>Before we move on, it is important to document the deliberate constraints in this architecture, because they prevent common mistakes:</p>
+
+            <ul>
+                <li><strong>No automated execution.</strong> The pipeline produces recommendations, not orders. There is no brokerage API integration. This is a research tool, not an algo trading system.</li>
+                <li><strong>Single-threaded execution.</strong> Claude Code runs as a single agent per pipeline invocation. We do not parallelize multiple scans — this ensures consistent reasoning and prevents race conditions in data collection.</li>
+                <li><strong>Append-only reporting.</strong> Every scan produces a new HTML report in a dated directory (<code>scanner/YYYYMMDD/</code>). We never overwrite historical reports. This creates an immutable audit trail.</li>
+                <li><strong>Human-in-the-loop on retrospectives.</strong> While daily scans are fully automated, weekly retrospectives (where we grade the scanner's performance) are triggered by the same bot but reviewed by a human before publishing adjustments to scoring weights.</li>
+                <li><strong>Conservative regime adaptation.</strong> In Risk-Off or Transition regimes, the system does not just change stock selection — it mandates minimum 20% allocation to hedges and shorts. This is hardcoded in the system prompt, not left to the AI's discretion.</li>
+            </ul>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION 3: THE TECH STACK                     -->
+        <!-- ============================================ -->
+        <div id="stack" class="content-card">
+            <h2><i class="fas fa-layer-group"></i> The Tech Stack</h2>
+
+            <p>Let us break down every component in the stack, what it does, and why we chose it. This is an opinionated stack — there are alternatives for every layer — but these components work together exceptionally well.</p>
+
+            <div class="tech-card">
+                <div class="tech-icon green"><i class="fas fa-terminal"></i></div>
+                <div class="tech-body">
+                    <h4>Claude Code CLI</h4>
+                    <p>The central orchestrator. Claude Code is Anthropic's official CLI for the Claude model family. Unlike the web interface or API, Claude Code can execute shell commands, read and write files, and — critically — connect to MCP servers. When invoked with <code>claude -p "prompt"</code>, it runs in non-interactive pipe mode: it reads the prompt, processes it using the system instructions from <code>CLAUDE.md</code>, makes whatever tool calls are necessary, and exits. This makes it perfect for scheduled automation.</p>
+                    <p>Claude Code also maintains a <code>CLAUDE.md</code> file in the project root that acts as persistent memory. Our CLAUDE.md is over 400 lines of instructions that define the scanning methodology, scoring criteria, output format, and delivery mechanism. The AI follows these instructions deterministically on every run.</p>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon blue"><i class="fas fa-plug"></i></div>
+                <div class="tech-body">
+                    <h4>Model Context Protocol (MCP)</h4>
+                    <p>The communication layer. MCP is a JSON-RPC-based protocol that standardizes how AI models interact with external tools. Each MCP server exposes a set of "tools" (callable functions) that the AI can invoke. The protocol handles serialization, transport (stdio or HTTP/SSE), and error propagation. Our pipeline uses three MCP servers simultaneously, and Claude Code manages the connections automatically.</p>
+                    <p>Key MCP concepts: <strong>Tools</strong> are functions the AI calls (e.g., <code>GetMarketOverview</code>). <strong>Resources</strong> are data the AI reads (e.g., a JSON dataset). <strong>Prompts</strong> are templates that structure AI interactions. We primarily use tools.</p>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon purple"><i class="fas fa-chart-bar"></i></div>
+                <div class="tech-body">
+                    <h4>Market Watch MCP Gateway</h4>
+                    <p>The data layer. This is our custom MCP server that provides access to 58 types of market data via a unified interface. Under the hood, it aggregates data from multiple providers (Yahoo Finance, Alpha Vantage, Polygon, Finnhub, social sentiment APIs) into a consistent schema. The key tools are:</p>
+                    <ul>
+                        <li><code>GetMarketOverview</code> — Full market snapshot: indices, commodities, crypto, rates, VIX, sentiment, regime classification, and top news stories.</li>
+                        <li><code>QueryData</code> — Flexible data query supporting 58 types: quotes, OHLCV bars, technicals, financials, earnings, insider transactions, options chains, analyst actions, support/resistance levels, volume profiles, sentiment scores, and more.</li>
+                        <li><code>RunAutoScreener</code> — Intelligent screener that first detects the market regime, then runs regime-appropriate screening strategies.</li>
+                        <li><code>RunScreener</code> — Custom screener using a DSL (Domain-Specific Language) for defining screening criteria.</li>
+                        <li><code>GetInstruments</code> — Deep analysis of specific symbols, returning comprehensive data across all 58 types.</li>
+                        <li><code>LLMAnalysis</code> — Secondary AI analysis via DeepSeek for cross-validation.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon amber"><i class="fab fa-discord"></i></div>
+                <div class="tech-body">
+                    <h4>Discord MCP Server</h4>
+                    <p>The notification layer. A lightweight MCP server that exposes Discord API operations as tools. Claude Code can send messages, embeds, and attachments to specified channels. For our pipeline, the Discord server is configured to post to a <code>#scanner-alerts</code> channel with rich embeds that include the ticker, setup type, entry/stop/TP levels, the score breakdown, and a link to the full report on GitHub Pages.</p>
+                    <p>The Discord server also serves as the trigger mechanism: a Discord bot listens for scheduled commands (e.g., <code>every weekday at 23:00 articles scan du jour</code>) and invokes Claude Code via <code>claude -p</code> in a tmux session.</p>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon red"><i class="fas fa-bell"></i></div>
+                <div class="tech-body">
+                    <h4>Market Alerts MCP Server</h4>
+                    <p>The monitoring layer. This server manages persistent price alerts that fire when specific conditions are met. When the scanner identifies an A++ setup with an entry zone at $45.20-$45.80, it creates an alert that monitors the price in real-time. When the price enters the zone, a Discord notification fires immediately, giving you a heads-up that the setup is actionable. Alerts support multiple condition types: price above/below, percentage change, volume spike, and custom expressions.</p>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon cyan"><i class="fas fa-clock"></i></div>
+                <div class="tech-body">
+                    <h4>Scheduling (Discord Bot + tmux)</h4>
+                    <p>The trigger layer. Rather than using system cron (which has limited error handling and no easy way to inspect logs), we use a custom Discord bot that manages schedules via a JSON configuration file. The bot runs Claude Code inside tmux sessions, which means: (1) sessions persist even if the bot restarts, (2) you can attach to a running session to inspect progress in real-time, and (3) output is captured for debugging. The bot supports day-of-week filters, time zones, and manual trigger commands (<code>run #1</code> to execute a schedule immediately).</p>
+                </div>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon green"><i class="fab fa-github"></i></div>
+                <div class="tech-body">
+                    <h4>GitHub Pages (Reporting)</h4>
+                    <p>The archive layer. Every scanner report, every analysis, every weekly briefing is a static HTML file committed to a Git repository and served via GitHub Pages. This gives us: (1) an immutable audit trail of every recommendation, (2) free hosting with global CDN, (3) version history via Git, and (4) easy integration with the pipeline (Claude Code can <code>git add</code>, <code>git commit</code>, and <code>git push</code> as part of its normal tool calls). The report site serves as both the public-facing archive and the internal dashboard for tracking scanner performance.</p>
+                </div>
+            </div>
+
+            <h3>Why Not Use [Alternative X]?</h3>
+
+            <p>Before someone says "you could just use a Python script with yfinance" — yes, you could. Here is why we do not:</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Approach</th>
+                        <th>Coverage</th>
+                        <th>Analysis Depth</th>
+                        <th>Adaptability</th>
+                        <th>Maintenance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Python script + yfinance</td>
+                        <td>US only</td>
+                        <td>Technicals only</td>
+                        <td>Hardcoded rules</td>
+                        <td>High (code changes for every strategy tweak)</td>
+                    </tr>
+                    <tr>
+                        <td>TradingView alerts</td>
+                        <td>Broad</td>
+                        <td>Technicals only</td>
+                        <td>Pine Script</td>
+                        <td>Medium (visual but limited logic)</td>
+                    </tr>
+                    <tr>
+                        <td>Commercial screener (Finviz, TC2000)</td>
+                        <td>US mostly</td>
+                        <td>Tech + some fundamental</td>
+                        <td>Preset filters</td>
+                        <td>Low (but no AI layer)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude Code + MCP</strong></td>
+                        <td><strong>Global (US/EU/APAC/Crypto)</strong></td>
+                        <td><strong>6 dimensions</strong></td>
+                        <td><strong>Natural language</strong></td>
+                        <td><strong>Zero (update CLAUDE.md)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>The fundamental advantage of the Claude Code approach is that <strong>strategy changes are prompt changes, not code changes</strong>. When you want to add a new scoring dimension (say, options flow analysis), you add a paragraph to CLAUDE.md. You do not write new code, you do not deploy a new service, you do not update a database schema. The AI reads the new instructions and adapts its behavior on the next run.</p>
+
+            <p>This is a paradigm shift. Traditional quantitative systems require engineering effort proportional to the complexity of the strategy. AI-orchestrated systems require engineering effort proportional to the complexity of the data plumbing — and MCP already handles that.</p>
+
+            <h3>The Full Stack Diagram</h3>
+
+            <div class="mermaid">
+graph LR
+    subgraph Scheduling["Scheduling Layer"]
+        BOT["Discord Bot<br/>(Node.js)"]
+        TMUX["tmux sessions"]
+        SCHED["schedules.json"]
+        BOT --> TMUX
+        BOT --> SCHED
+    end
+
+    subgraph Orchestration["Orchestration Layer"]
+        CLI["Claude Code CLI<br/>(claude -p)"]
+        CMD["CLAUDE.md<br/>(400+ lines)"]
+        MEM["Memory<br/>(MEMORY.md)"]
+        CLI --> CMD
+        CLI --> MEM
+    end
+
+    subgraph MCP_Servers["MCP Servers"]
+        direction TB
+        GW["Market Watch<br/>Gateway"]
+        DC["Discord<br/>MCP"]
+        AL["Market Alerts<br/>MCP"]
+        FS["Filesystem<br/>MCP"]
+    end
+
+    subgraph Outputs["Output Layer"]
+        GH["GitHub Pages<br/>(HTML reports)"]
+        DIS["Discord<br/>(#scanner-alerts)"]
+        PRA["Price Alerts<br/>(real-time)"]
+    end
+
+    TMUX -->|"claude -p"| CLI
+    CLI -->|"MCP stdio"| GW
+    CLI -->|"MCP stdio"| DC
+    CLI -->|"MCP stdio"| AL
+    CLI -->|"MCP stdio"| FS
+    GW -->|"report HTML"| GH
+    DC -->|"embed"| DIS
+    AL -->|"trigger"| PRA
+
+    classDef sched fill:#fffbeb,stroke:#f59e0b
+    classDef orch fill:#ecfdf5,stroke:#10b981
+    classDef mcp fill:#eff6ff,stroke:#3b82f6
+    classDef out fill:#fef2f2,stroke:#ef4444
+
+    class BOT,TMUX,SCHED sched
+    class CLI,CMD,MEM orch
+    class GW,DC,AL,FS mcp
+    class GH,DIS,PRA out
+            </div>
+
+            <h3>Component Versions</h3>
+
+            <p>For reproducibility, here are the exact versions we run in production:</p>
+
+            <div class="code-label">versions.txt</div>
+            <pre><code>Claude Code CLI    : 1.0.17 (claude --version)
+Claude Model       : claude-opus-4-6
+Node.js            : v22.x LTS
+MCP SDK            : @modelcontextprotocol/sdk 1.12.x
+Discord.js         : 14.x
+GitHub CLI (gh)    : 2.x
+OS                 : macOS Sequoia 15.x / Ubuntu 24.04 LTS
+Shell              : zsh (macOS) / bash (Linux)
+Git                : 2.43+</code></pre>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION 4: A++ SELECTION CRITERIA             -->
+        <!-- ============================================ -->
+        <div id="scoring" class="content-card">
+            <h2><i class="fas fa-star"></i> A++ Selection Criteria</h2>
+
+            <p>This is the heart of the system. Everything else — the MCP plumbing, the scheduling, the Discord delivery — is infrastructure. The scoring system is the actual edge. It determines what gets recommended and what gets filtered out. Getting this right is the difference between a system that produces noise and one that produces alpha.</p>
+
+            <p>Our scoring model evaluates every candidate across 6 independent dimensions. Each dimension produces a score from 0 to 100. The composite score is a weighted average, with weights that shift based on the current market regime. A candidate must score above 85 on the composite AND above the individual threshold on EVERY dimension to qualify as A+. The top 3 candidates by composite score are labeled A++.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fas fa-graduation-cap"></i> Why 6 Dimensions?</h4>
+                <p>Single-dimension screening is how you blow up your account. A stock with a perfect RSI oversold signal means nothing if the company is going bankrupt (fundamentals), the sector is rotating out (sector), the overall market is crashing (macro), social media is screaming about fraud (social), and the AI detects an earnings trap (conviction). Every dimension is a veto gate. All 6 must pass. This is what makes A++ setups so rare — and so reliable.</p>
+            </div>
+
+            <div class="layer-grid">
+                <div class="layer-card l-tech">
+                    <span class="layer-num">1</span>
+                    <div class="layer-title"><i class="fas fa-chart-line"></i> Technical Confluence</div>
+                    <span class="layer-threshold">Threshold: >= 4 signals aligned</span>
+                    <p>We require at least 4 independent technical signals to confirm the setup. This is not "RSI is oversold, buy." This is multi-timeframe confluence:</p>
+                    <ul>
+                        <li>Price at key support/resistance (S/R from volume profile)</li>
+                        <li>RSI divergence (bullish or bearish) on daily AND weekly</li>
+                        <li>MACD crossover or histogram reversal</li>
+                        <li>Volume confirmation (above 20-day average on signal bar)</li>
+                        <li>EMA alignment (8 > 21 > 50 for bullish, inverse for bearish)</li>
+                        <li>Bollinger Band squeeze breakout</li>
+                        <li>Fibonacci retracement to 0.618 or 0.786 level</li>
+                        <li>Candlestick pattern (hammer, engulfing, morning star)</li>
+                    </ul>
+                    <p>The system checks all 8 signals and requires at least 4 to be present and aligned in the same direction. Conflicting signals (e.g., bullish RSI divergence but bearish EMA alignment) reduce the technical score.</p>
+                </div>
+
+                <div class="layer-card l-fund">
+                    <span class="layer-num">2</span>
+                    <div class="layer-title"><i class="fas fa-building"></i> Fundamental Quality</div>
+                    <span class="layer-threshold">Threshold: score >= 80/100</span>
+                    <p>Fundamental analysis prevents us from buying cheap garbage. The fundamental score aggregates:</p>
+                    <ul>
+                        <li><strong>Earnings quality:</strong> EPS trend (last 4 quarters), earnings surprise history, revenue growth rate</li>
+                        <li><strong>Balance sheet:</strong> Debt/equity ratio, current ratio, free cash flow yield</li>
+                        <li><strong>Valuation:</strong> Forward P/E vs. sector median, PEG ratio, EV/EBITDA</li>
+                        <li><strong>Insider activity:</strong> Net insider buying in last 90 days (strong signal when executives buy with their own money)</li>
+                        <li><strong>Analyst consensus:</strong> Mean target vs. current price, number of recent upgrades/downgrades</li>
+                    </ul>
+                    <p>For ETFs and crypto, the fundamental score adapts: ETFs are scored on tracking error, expense ratio, and AUM. Crypto is scored on network activity, TVL, and developer activity.</p>
+                </div>
+
+                <div class="layer-card l-social">
+                    <span class="layer-num">3</span>
+                    <div class="layer-title"><i class="fas fa-users"></i> Social Sentiment</div>
+                    <span class="layer-threshold">Threshold: aligned with trade direction</span>
+                    <p>Social sentiment is not a contrarian indicator — it is a confirmation signal. We want sentiment aligned with our trade direction, but not euphoric (which would indicate we are late):</p>
+                    <ul>
+                        <li><strong>StockTwits:</strong> Message volume trend, bullish/bearish ratio, change from 7-day average</li>
+                        <li><strong>Reddit (WSB, stocks):</strong> Mention frequency, sentiment polarity, DD post quality</li>
+                        <li><strong>News sentiment:</strong> NLP score across last 50 articles, headline vs. body sentiment divergence</li>
+                        <li><strong>Short interest:</strong> Days to cover, short % of float, cost to borrow changes</li>
+                    </ul>
+                    <p>The ideal social profile for a long setup: moderately bullish sentiment with rising mention volume but below the "hype" threshold. If everyone on WSB is screaming about a ticker, we are too late.</p>
+                </div>
+
+                <div class="layer-card l-sector">
+                    <span class="layer-num">4</span>
+                    <div class="layer-title"><i class="fas fa-industry"></i> Sector Trend</div>
+                    <span class="layer-threshold">Threshold: sector outperforming SPY on 5d/20d</span>
+                    <p>Swimming against the sector tide is a losing strategy. We want our picks in sectors that are gaining relative strength:</p>
+                    <ul>
+                        <li><strong>Relative strength:</strong> Sector ETF performance vs. SPY over 5-day and 20-day windows</li>
+                        <li><strong>Fund flows:</strong> Net inflows/outflows to sector ETFs (XLK, XLF, XLE, etc.)</li>
+                        <li><strong>Rotation signal:</strong> Which sectors are gaining/losing institutional allocation (derived from 13F filings and ETF flows)</li>
+                        <li><strong>Earnings season:</strong> If the sector is mid-earnings season, have the early reporters beaten or missed?</li>
+                    </ul>
+                    <p>A setup in a sector that is underperforming SPY by more than 2% over 20 days gets an automatic downgrade, regardless of how good the individual stock looks.</p>
+                </div>
+
+                <div class="layer-card l-macro">
+                    <span class="layer-num">5</span>
+                    <div class="layer-title"><i class="fas fa-globe"></i> Macro Regime</div>
+                    <span class="layer-threshold">Threshold: compatible with detected regime</span>
+                    <p>The macro layer ensures we are not fighting the market. The regime detection algorithm classifies the current environment into one of six states:</p>
+                    <ul>
+                        <li><strong>Risk-On:</strong> VIX < 18, yield curve positive, breadth > 60%. Favor growth, momentum, high-beta.</li>
+                        <li><strong>Early Risk-On:</strong> VIX declining from spike, breadth recovering. Favor oversold quality names.</li>
+                        <li><strong>Neutral:</strong> Mixed signals. Favor sector leaders and range-bound strategies.</li>
+                        <li><strong>Transition:</strong> Regime change in progress. Reduce position sizes, favor hedges.</li>
+                        <li><strong>Early Risk-Off:</strong> VIX rising, breadth deteriorating. Start building short/hedge positions.</li>
+                        <li><strong>Risk-Off:</strong> VIX > 25, yield curve flat/inverted, breadth < 40%. Favor shorts, puts, GLD, TLT.</li>
+                    </ul>
+                    <p>A long-only momentum setup in a Risk-Off regime fails the macro check automatically. The system will not even score it further — it is immediately rejected.</p>
+                </div>
+
+                <div class="layer-card l-ai">
+                    <span class="layer-num">6</span>
+                    <div class="layer-title"><i class="fas fa-brain"></i> AI Conviction</div>
+                    <span class="layer-threshold">Threshold: conviction >= 85%</span>
+                    <p>The final layer is the AI's own judgment, applied after all quantitative scores are computed. Claude Code synthesizes all available information and assigns a conviction percentage:</p>
+                    <ul>
+                        <li><strong>Pattern recognition:</strong> Has the AI seen this setup pattern before? What was the historical outcome?</li>
+                        <li><strong>Risk/reward asymmetry:</strong> Does the entry-to-stop distance justify the potential reward?</li>
+                        <li><strong>Catalyst timing:</strong> Is there an upcoming earnings, FDA decision, or macro event that could invalidate the setup?</li>
+                        <li><strong>Cross-validation:</strong> Does the DeepSeek second-opinion analysis agree with the primary scoring?</li>
+                        <li><strong>Anti-trap detection:</strong> Is this a value trap, a dead cat bounce, or a short squeeze setup that reverses violently?</li>
+                    </ul>
+                    <p>The AI conviction layer is deliberately subjective. It captures the holistic reasoning that quantitative scores cannot — the "this just does not look right" instinct that experienced traders develop over decades.</p>
+                </div>
+            </div>
+
+            <h3>Composite Score Calculation</h3>
+
+            <p>The composite score is a weighted average that adapts to market regime. Here are the weight profiles:</p>
+
+            <div class="code-label">scoring-weights.json</div>
+            <pre><code>{
+  "Risk-On": {
+    "technical": 0.25,
+    "fundamental": 0.15,
+    "social": 0.10,
+    "sector": 0.20,
+    "macro": 0.10,
+    "ai_conviction": 0.20
+  },
+  "Risk-Off": {
+    "technical": 0.30,
+    "fundamental": 0.10,
+    "social": 0.05,
+    "sector": 0.15,
+    "macro": 0.25,
+    "ai_conviction": 0.15
+  },
+  "Neutral": {
+    "technical": 0.25,
+    "fundamental": 0.20,
+    "social": 0.10,
+    "sector": 0.15,
+    "macro": 0.15,
+    "ai_conviction": 0.15
+  },
+  "Transition": {
+    "technical": 0.20,
+    "fundamental": 0.15,
+    "social": 0.05,
+    "sector": 0.15,
+    "macro": 0.30,
+    "ai_conviction": 0.15
+  }
+}</code></pre>
+
+            <p>Notice how the weights shift: in Risk-Off, macro weight jumps to 0.30 because fighting the macro trend is suicidal. In Risk-On, sector weight rises to 0.20 because riding the right sector wave amplifies returns. Social sentiment weight drops in Risk-Off because social media becomes unreliable in panics (too much noise).</p>
+
+            <h3>From A+ to A++</h3>
+
+            <p>The scoring system produces A+ setups (composite >= 85, all dimensions pass). But we go one step further to identify A++ — the absolute cream. The A++ designation requires:</p>
+
+            <ol>
+                <li><strong>Composite score >= 90</strong> (not just 85)</li>
+                <li><strong>No dimension below 75</strong> (no weak links)</li>
+                <li><strong>R:R >= 2:1</strong> (the reward must be at least 2x the risk)</li>
+                <li><strong>AI re-ranking confirmation</strong> (DeepSeek must independently rate the setup as "high conviction")</li>
+                <li><strong>No upcoming binary event within 5 trading days</strong> (no earnings, FDA, FOMC directly ahead that could invalidate the thesis)</li>
+            </ol>
+
+            <p>On any given night, the scanner might produce 10 A+ setups but only 2-3 A++ setups. Some nights produce zero A++. That is fine — we would rather miss a mediocre opportunity than recommend one. A++ is about <strong>precision</strong>, not recall.</p>
+
+            <div class="alert-box">
+                <h4><i class="fas fa-triangle-exclamation"></i> The Anti-Recency Bias Filter</h4>
+                <p>One critical filter that is easy to overlook: the system maintains a "recently recommended" list. Any ticker that appeared in the last 3 scanner reports is automatically deprioritized unless it has a materially different setup type (e.g., it was a momentum play last week but is now an oversold reversal). This prevents the scanner from falling in love with the same names and ensures at least 70% fresh tickers per scan.</p>
+            </div>
+
+            <h3>Example Scoring Breakdown</h3>
+
+            <p>To make this concrete, here is how a real A++ setup might score:</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Score</th>
+                        <th>Detail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Technical</strong></td>
+                        <td>92</td>
+                        <td>5/8 signals aligned: RSI bullish divergence (daily+weekly), MACD histogram reversal, price at Fib 0.618, volume spike 2.3x average. EMA alignment pending (8 below 21 but crossing).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fundamental</strong></td>
+                        <td>88</td>
+                        <td>4 consecutive EPS beats, revenue growing 18% YoY, forward P/E 15x (sector median 22x), 3 insider buys in last 30 days totaling $2.1M.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Social</strong></td>
+                        <td>78</td>
+                        <td>StockTwits bullish ratio 68% (up from 52% last week), Reddit mentions +40% but below hype threshold. News sentiment neutral-positive.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sector</strong></td>
+                        <td>85</td>
+                        <td>XLK outperforming SPY by 1.8% over 20 days. Tech earnings reporters beating at 72% rate. Fund flows positive.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Macro</strong></td>
+                        <td>90</td>
+                        <td>Regime: Risk-On (VIX 14.2, breadth 68%, yield curve +42bps). All conditions favorable for long momentum.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI Conviction</strong></td>
+                        <td>91</td>
+                        <td>Strong asymmetric R:R (2.8:1), no binary events within 2 weeks, DeepSeek confirms "high conviction — clean pullback to rising support with institutional accumulation signals."</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p><strong>Composite Score:</strong> 0.25(92) + 0.15(88) + 0.10(78) + 0.20(85) + 0.10(90) + 0.20(91) = 23.0 + 13.2 + 7.8 + 17.0 + 9.0 + 18.2 = <strong>88.2 (A+)</strong></p>
+            <p>With all dimensions above 75 and R:R at 2.8:1, this qualifies as <strong>A++</strong>.</p>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION 5: THE DAILY PIPELINE FLOW            -->
+        <!-- ============================================ -->
+        <div id="pipeline" class="content-card">
+            <h2><i class="fas fa-arrows-spin"></i> The Daily Pipeline Flow</h2>
+
+            <p>Now let us trace the entire pipeline in chronological order, from the moment the cron fires to the moment Discord alerts land on your phone. This is the operational blueprint that Parts 2-6 will implement in detail.</p>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">1</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:00:00</span>
+                    <h4>Trigger: Discord Bot Fires</h4>
+                    <p>The Discord bot reads <code>schedules.json</code>, matches the current time to the "Scanner Quotidien" schedule (weekdays 23:00), and spawns a new tmux session:</p>
+                    <div class="code-label">shell</div>
+                    <pre><code>tmux new-session -d -s scanner-20260305 \
+  "cd /Users/marketwatchxyz/GolandProjects/articles && \
+   claude -p 'scan du jour' \
+   --model claude-opus-4-6 \
+   2>&1 | tee /tmp/scanner-20260305.log"</code></pre>
+                    <p>The <code>-p</code> flag puts Claude Code in pipe mode. The <code>tee</code> captures output for debugging. The session name includes the date for easy identification.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">2</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:00:05</span>
+                    <h4>Initialization: CLAUDE.md Loading</h4>
+                    <p>Claude Code boots up, reads <code>CLAUDE.md</code> from the project root (400+ lines of instructions), and identifies the "Scanner" command section. This section specifies the complete scanning methodology, including:</p>
+                    <ul>
+                        <li>Read all previous retrospectives to learn from past mistakes</li>
+                        <li>Read the most recent scan for the anti-doublon filter</li>
+                        <li>Geographic diversification requirements (min 5 US + 2 EU + 1 APAC + 2 ETFs)</li>
+                        <li>Regime-adaptive strategy allocation</li>
+                        <li>Output format and delivery requirements</li>
+                    </ul>
+                    <p>The AI has everything it needs to execute autonomously. No human input required from this point forward.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">3</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:00:30</span>
+                    <h4>Retrospective Learning</h4>
+                    <p>Before scanning anything, Claude Code reads every file in <code>scanner/retrospective/*/index.html</code>. These are weekly performance reviews that grade the scanner. From each retrospective, the AI extracts:</p>
+                    <ul>
+                        <li>Hit rate by strategy type (oversold, momentum, breakout)</li>
+                        <li>Average P&L by sector</li>
+                        <li>Tickers that consistently underperformed (blacklist candidates)</li>
+                        <li>Stops that were too tight or too loose</li>
+                        <li>Pattern-level learnings (e.g., "small-cap biotech oversold reversals have 30% hit rate — reduce allocation")</li>
+                    </ul>
+                    <p>This is the feedback loop that makes the system improve over time. A strategy that underperforms in 2+ consecutive retrospectives gets its weight reduced automatically.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">4</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:01:00</span>
+                    <h4>Previous Scan Analysis</h4>
+                    <p>Claude Code reads the most recent <code>scanner/YYYYMMDD/index.html</code> to extract the 10 tickers from the last scan. These go into the anti-doublon filter: the new scan must contain at least 70% fresh tickers. This prevents the scanner from recommending the same names night after night.</p>
+                    <div class="code-label">anti-doublon logic (conceptual)</div>
+                    <pre><code>previous_tickers = extract_tickers(last_scan)  # e.g., [AAPL, NVDA, GLD, ...]
+new_candidates = score_and_rank(all_candidates)
+
+# Enforce 70% freshness
+fresh_count = 0
+for candidate in new_candidates:
+    if candidate.ticker in previous_tickers:
+        candidate.score *= 0.7  # 30% penalty for repeat
+    else:
+        fresh_count += 1
+
+# If fresh_count < 7, expand screening to find more unique names</code></pre>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">5</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:02:00</span>
+                    <h4>Market Regime Detection</h4>
+                    <p>The first MCP call fires:</p>
+                    <div class="code-label">MCP Tool Call</div>
+                    <pre><code>Tool: mcp__market-watch__RunAutoScreener
+Parameters: {}</code></pre>
+                    <p>RunAutoScreener returns a comprehensive regime analysis including:</p>
+                    <div class="code-label">RunAutoScreener Response (abbreviated)</div>
+                    <pre><code>{
+  "regime": {
+    "current": "Risk-On",
+    "confidence": 0.82,
+    "vix": 14.2,
+    "vix_trend": "declining",
+    "breadth": {
+      "above_200sma": 0.68,
+      "advance_decline": 1.85,
+      "new_highs_lows": 3.2
+    },
+    "yield_curve": {
+      "2y10y_spread": 0.42,
+      "trend": "steepening"
+    },
+    "sector_rotation": {
+      "leading": ["XLK", "XLY", "XLC"],
+      "lagging": ["XLU", "XLP", "XLRE"]
+    }
+  },
+  "recommended_strategies": [
+    "momentum_continuation",
+    "breakout_volume",
+    "oversold_quality"
+  ],
+  "candidates": [
+    // ... initial candidate list
+  ]
+}</code></pre>
+                    <p>Based on the regime, Claude Code selects weight profiles and strategy allocation. In Risk-On with 82% confidence, the system allocates 40% to momentum, 35% to breakout, and 25% to oversold quality names.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">6</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:04:00</span>
+                    <h4>Multi-Strategy Screening</h4>
+                    <p>Three RunScreener calls execute with different DSL strategies:</p>
+                    <div class="code-label">Strategy 1: Oversold Quality Reversals</div>
+                    <pre><code>Tool: mcp__market-watch__RunScreener
+Parameters: {
+  "dsl": "RSI(14) < 35 AND SMA(50) > SMA(200) AND Volume > SMA_Volume(20) * 1.5 AND MarketCap > 1B",
+  "universe": "US_LARGE_MID"
+}</code></pre>
+                    <div class="code-label">Strategy 2: Momentum Breakout</div>
+                    <pre><code>Tool: mcp__market-watch__RunScreener
+Parameters: {
+  "dsl": "Close > SMA(20) AND SMA(20) > SMA(50) AND RSI(14) BETWEEN 55 AND 75 AND ADX(14) > 25 AND Volume > SMA_Volume(20) * 1.2",
+  "universe": "US_ALL"
+}</code></pre>
+                    <div class="code-label">Strategy 3: Mean-Reversion Breakout</div>
+                    <pre><code>Tool: mcp__market-watch__RunScreener
+Parameters: {
+  "dsl": "Close > BB_Upper(20,2) AND Volume > SMA_Volume(20) * 2 AND ATR(14)/Close < 0.05",
+  "universe": "US_ALL"
+}</code></pre>
+                    <p>Additional screeners target international markets:</p>
+                    <div class="code-label">EU + APAC + ETF Screening</div>
+                    <pre><code>// European equities
+Tool: mcp__market-watch__RunScreener
+Parameters: {
+  "symbols": ["VGK","EWG","EWQ","EWU","SAP","ASML","BBVA","TTE","SIE","LVMHF"],
+  "dsl": "RSI(14) < 40 OR (Close > SMA(20) AND ADX(14) > 20)"
+}
+
+// Asia-Pacific
+Tool: mcp__market-watch__RunScreener
+Parameters: {
+  "symbols": ["EWJ","EWY","EWH","FXI","MCHI"],
+  "dsl": "RSI(14) < 40 OR (Close > SMA(20) AND ADX(14) > 20)"
+}
+
+// Thematic ETFs
+Tool: mcp__market-watch__RunScreener
+Parameters: {
+  "symbols": ["XLF","XLE","XLK","XLV","XLI","GLD","SLV","TLT","ARKK","ICLN"],
+  "dsl": "RSI(14) < 35 OR (Close > SMA(20) AND Volume > SMA_Volume(20) * 1.3)"
+}</code></pre>
+                    <p>The combined output from all screeners typically yields 100-200 candidates. These are deduplicated and passed to the enrichment step.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">7</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:08:00</span>
+                    <h4>Data Enrichment</h4>
+                    <p>For the top 30 candidates (ranked by raw screening score), Claude Code calls <code>QueryData</code> with comprehensive data types:</p>
+                    <div class="code-label">Data Enrichment Call</div>
+                    <pre><code>Tool: mcp__market-watch__QueryData
+Parameters: {
+  "symbols": ["AAPL", "NVDA", "TSLA", ...],  // top 30 candidates
+  "types": [
+    "quote",                    // Current price, volume, change
+    "bars_daily",               // 90 days OHLCV
+    "insider_transactions",     // Last 90 days insider buys/sells
+    "sentiment_overall",        // Aggregated sentiment score
+    "trading_signals",          // Technical signal summary
+    "support_resistance",       // Key S/R levels
+    "volume_profile",           // Volume at price distribution
+    "stats",                    // Beta, avg volume, 52w range
+    "analyst_actions",          // Recent upgrades/downgrades
+    "financials",               // Latest quarterly financials
+    "earnings_quarterly"        // EPS history and surprises
+  ]
+}</code></pre>
+                    <p>This is the most API-intensive step. Each ticker requires data from multiple providers, aggregated by the MCP Gateway. The Gateway handles caching (60-second TTL for quotes, 24-hour for financials) and rate limiting internally.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">8</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:12:00</span>
+                    <h4>6-Layer Scoring</h4>
+                    <p>Claude Code now has all the data needed to score each candidate. It computes the 6 dimension scores, applies the regime-adjusted weights, and calculates the composite score. This is where the AI's reasoning ability matters — it is not just running formulas, it is interpreting the data contextually:</p>
+                    <div class="code-label">Scoring Logic (Claude Code's internal reasoning)</div>
+                    <pre><code>For each candidate:
+  1. Technical Score
+     - Count aligned signals from trading_signals + support_resistance
+     - Check multi-timeframe confirmation (daily vs weekly)
+     - Score: (aligned_signals / 8) * 100, with bonuses for rare confluences
+
+  2. Fundamental Score
+     - Extract EPS trend from earnings_quarterly
+     - Check insider_transactions for net buying
+     - Compare valuation metrics to sector medians from financials
+     - Score: weighted aggregate of sub-scores
+
+  3. Social Score
+     - Parse sentiment_overall for bullish/bearish ratio
+     - Check if sentiment is rising but below "euphoria" threshold
+     - Score: alignment * magnitude * freshness
+
+  4. Sector Score
+     - Compare sector ETF performance vs SPY (5d, 20d)
+     - Check if sector is in the "leading" list from regime analysis
+     - Score: relative_strength * 100, capped at 100
+
+  5. Macro Score
+     - Is the setup type compatible with current regime?
+     - Long momentum in Risk-On? Score = 95
+     - Long momentum in Risk-Off? Score = 20 (auto-fail)
+     - Score: compatibility * regime_confidence * 100
+
+  6. AI Conviction
+     - Synthesize all data points holistically
+     - Check for red flags: upcoming earnings, FDA, FOMC
+     - Estimate R:R from entry to S/R levels
+     - Score: subjective assessment 0-100
+
+  Composite = sum(weight_i * score_i) for i in dimensions
+  Pass = composite >= 85 AND all individual scores >= threshold</code></pre>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">9</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:16:00</span>
+                    <h4>AI Re-Ranking via LLMAnalysis</h4>
+                    <p>The top 20 candidates (by composite score) are passed to the LLMAnalysis tool for a second-opinion from DeepSeek:</p>
+                    <div class="code-label">MCP Tool Call</div>
+                    <pre><code>Tool: mcp__market-watch__LLMAnalysis
+Parameters: {
+  "query": "Rank these 20 setups by conviction. For each, provide:
+    1. Conviction level (high/medium/low)
+    2. Primary risk factor
+    3. Optimal entry strategy (limit at support vs market)
+    4. Position sizing suggestion (% of portfolio)
+    Setups: [detailed data for each candidate]"
+}</code></pre>
+                    <p>DeepSeek's independent analysis serves as a cross-validation layer. If Claude scores a setup as 92/100 but DeepSeek flags a risk that Claude missed (e.g., "this company has a patent trial verdict next Tuesday"), the setup gets downgraded. Conversely, if both AIs agree on high conviction, the setup's A++ status is confirmed.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">10</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:18:00</span>
+                    <h4>Price Validation (P0 Control)</h4>
+                    <p>Before finalizing the selection, a critical sanity check runs: for every selected ticker, Claude Code calls <code>QueryData</code> with <code>types: quote</code> to get the real-time spot price. If the calculated entry price differs by more than 10% from the current market price, the setup is rejected. This catches stale data issues, stock splits, and ticker symbol errors:</p>
+                    <div class="code-label">P0 Validation</div>
+                    <pre><code>for each selected_setup:
+  spot_price = QueryData(symbols=[setup.ticker], types=["quote"]).price
+  entry_price = setup.entry_zone_midpoint
+
+  deviation = abs(spot_price - entry_price) / spot_price
+  if deviation > 0.10:
+    REJECT setup  # Entry price too far from reality
+    log("P0 FAIL: {ticker} spot={spot_price} entry={entry_price} dev={deviation}")</code></pre>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">11</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:20:00</span>
+                    <h4>Geographic Diversification Enforcement</h4>
+                    <p>The final 10 setups must meet geographic diversification requirements:</p>
+                    <ul>
+                        <li>Minimum 5 US equities</li>
+                        <li>Minimum 2 European equities or ETFs</li>
+                        <li>Minimum 1 Asia-Pacific name</li>
+                        <li>Minimum 2 thematic/sector ETFs</li>
+                    </ul>
+                    <p>If the scoring naturally produces 10 US names, Claude Code replaces the lowest-scoring US names with the highest-scoring EU, APAC, and ETF candidates — even if their absolute scores are lower. This prevents home bias and ensures global coverage.</p>
+                    <p>Additionally, in Risk-Off or Early Risk-Off regimes, at least 20% of setups (2 out of 10) must be defensive: short positions, inverse ETFs (SH, SQQQ), or safe havens (GLD, TLT).</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">12</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:22:00</span>
+                    <h4>Report Generation</h4>
+                    <p>Claude Code generates a full HTML report at <code>scanner/YYYYMMDD/index.html</code> using the project's CSS framework (<code>report.css</code>). The report includes:</p>
+                    <ul>
+                        <li>Hero with regime badge and date</li>
+                        <li>Dashboard with key metrics (regime, hit rate target, regime confidence)</li>
+                        <li>10 setup cards, each with: ticker, score breakdown radar chart (ECharts), entry zone, stop loss, TP1/TP2, R:R ratio, thesis summary, confirmation signals, invalidation signals, geographic badge</li>
+                        <li>Retrospective reference ("Following the retrospective of DD/MM, we adjusted...")</li>
+                        <li>Sources and disclaimer</li>
+                    </ul>
+                    <p>The report is written directly to the filesystem via Claude Code's file writing capability.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">13</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:24:00</span>
+                    <h4>Indexing and Git Operations</h4>
+                    <p>Three sequential commands execute:</p>
+                    <div class="code-label">shell</div>
+                    <pre><code># Index the new report
+node tools/add_card.js scanner/20260305/index.html
+
+# Commit and push
+git add scanner/20260305/ data/scanner.json data/search_data.js
+git commit -m "feat: scanner 20260305 — Risk-On, 10 setups A+"
+git push origin main</code></pre>
+                    <p>The <code>add_card.js</code> script parses the HTML report, extracts metadata (title, date, tags, tickers), creates a card object, injects it into <code>data/scanner.json</code>, and regenerates the global search index. The git push triggers a GitHub Actions deployment that publishes the report to GitHub Pages within 60 seconds.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">14</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:25:00</span>
+                    <h4>Discord Alert Delivery</h4>
+                    <p>For the top 3 A++ setups, Claude Code sends rich Discord embeds:</p>
+                    <div class="code-label">Discord Embed Structure</div>
+                    <pre><code>{
+  "embeds": [{
+    "title": "A++ SETUP: NVDA — Momentum Continuation",
+    "color": 1089337,  // #10a569 (green)
+    "fields": [
+      { "name": "Entry Zone", "value": "$875 - $882", "inline": true },
+      { "name": "Stop Loss", "value": "$848 (-3.5%)", "inline": true },
+      { "name": "TP1 / TP2", "value": "$920 / $965", "inline": true },
+      { "name": "R:R", "value": "2.4 : 1", "inline": true },
+      { "name": "Score", "value": "91/100 (A++)", "inline": true },
+      { "name": "Regime", "value": "Risk-On (82%)", "inline": true },
+      { "name": "Thesis", "value": "Pullback to rising 21 EMA with volume contraction. 5 of 8 technical signals aligned. Insider buying $4.2M in last 30 days. AI datacenter capex cycle intact." },
+      { "name": "Confirmations", "value": "1. Hold above $870 on daily close\n2. Volume expansion on next green day\n3. SOX index holds 5,200\n4. No VIX spike above 18" },
+      { "name": "Invalidations", "value": "1. Daily close below $848 (stop)\n2. Sector rotation out of XLK\n3. Macro regime shift to Risk-Off\n4. Earnings pre-announcement" }
+    ],
+    "footer": {
+      "text": "Full report: articles.market-watch.xyz/scanner/20260305/"
+    }
+  }]
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">15</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:26:00</span>
+                    <h4>Price Alert Creation</h4>
+                    <p>For each A++ setup, a persistent price alert is created via the Market Alerts MCP:</p>
+                    <div class="code-label">MCP Tool Call</div>
+                    <pre><code>Tool: mcp__market-alerts__create_alert
+Parameters: {
+  "symbol": "NVDA",
+  "condition": "price_between",
+  "value": [875, 882],
+  "message": "NVDA entering A++ entry zone ($875-$882). Scanner score: 91/100.",
+  "channel": "#scanner-alerts",
+  "expires": "2026-03-12T23:59:59Z"  // 7 day expiry
+}</code></pre>
+                    <p>The alert fires if/when the price enters the entry zone during market hours. This solves the timing problem: the scanner runs at 23:00, but the optimal entry might be during the next trading session when the price pulls back to the entry zone.</p>
+                </div>
+            </div>
+
+            <div class="pipeline-step">
+                <div class="pipeline-num">16</div>
+                <div class="pipeline-content">
+                    <span class="pipeline-time">23:27:00</span>
+                    <h4>Completion and Cleanup</h4>
+                    <p>Claude Code exits. The tmux session closes. The Discord bot logs the completion status and duration. Total elapsed time: approximately 27 minutes. The complete pipeline log is saved at <code>/tmp/scanner-YYYYMMDD.log</code> for debugging if needed.</p>
+                    <p>The next morning at 07:00, a separate pipeline runs the "Daily Briefing" which includes a section summarizing last night's scanner highlights.</p>
+                </div>
+            </div>
+
+            <h3>Pipeline Timing Summary</h3>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">~27 min</div>
+                    <div class="metric-label">Total Pipeline Duration</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">50-80</div>
+                    <div class="metric-label">MCP Tool Calls Per Run</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">~150</div>
+                    <div class="metric-label">Candidates Evaluated</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">10 / 3</div>
+                    <div class="metric-label">A+ / A++ Delivered</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION 6: PROJECT SETUP                      -->
+        <!-- ============================================ -->
+        <div id="setup" class="content-card">
+            <h2><i class="fas fa-terminal"></i> Project Setup</h2>
+
+            <p>Let us get your environment set up. By the end of this section, you will have Claude Code installed, all three MCP servers configured, and you will run your first test scan. We will build the full pipeline in subsequent parts, but this foundation must be solid.</p>
+
+            <h3>Prerequisites</h3>
+
+            <p>You need the following installed before proceeding:</p>
+
+            <ul>
+                <li><strong>Node.js 22+</strong> — Required for Claude Code and MCP servers. Install via <code>nvm install 22</code> or from <a href="https://nodejs.org">nodejs.org</a>.</li>
+                <li><strong>Git 2.43+</strong> — Version control and GitHub Pages deployment. Install via your package manager.</li>
+                <li><strong>GitHub CLI (gh)</strong> — For checking deployment status. Install via <code>brew install gh</code> (macOS) or <code>apt install gh</code> (Linux).</li>
+                <li><strong>tmux</strong> — Terminal multiplexer for persistent sessions. Install via <code>brew install tmux</code> (macOS) or <code>apt install tmux</code> (Linux).</li>
+                <li><strong>An Anthropic API key</strong> — Sign up at <a href="https://console.anthropic.com">console.anthropic.com</a>. You need access to Claude Opus or Sonnet models.</li>
+            </ul>
+
+            <h3>Step 1: Install Claude Code</h3>
+
+            <div class="code-label">shell</div>
+            <pre><code># Install Claude Code globally
+npm install -g @anthropic-ai/claude-code
+
+# Verify installation
+claude --version
+# Expected: claude-code 1.0.x
+
+# Authenticate (interactive — follow browser prompts)
+claude auth login
+
+# Test basic functionality
+claude -p "What is 2 + 2?"
+# Expected: "4" (or a more verbose response ending with 4)</code></pre>
+
+            <p>Claude Code stores its configuration in <code>~/.claude/</code>. The key files are:</p>
+
+            <ul>
+                <li><code>~/.claude/config.json</code> — Global settings (model, theme, permissions)</li>
+                <li><code>~/.claude/CLAUDE.md</code> — Global system instructions (applied to all projects)</li>
+                <li><code>~/.claude/projects/</code> — Per-project memory files</li>
+            </ul>
+
+            <h3>Step 2: Configure MCP Servers</h3>
+
+            <p>MCP servers are configured in <code>~/.claude/claude_desktop_config.json</code>. This file tells Claude Code which MCP servers to connect to and how to start them. Here is the full configuration for our 3-server setup:</p>
+
+            <div class="code-label">~/.claude/claude_desktop_config.json</div>
+            <pre><code>{
+  "mcpServers": {
+    "market-watch": {
+      "command": "node",
+      "args": [
+        "/path/to/market-watch-mcp/dist/index.js"
+      ],
+      "env": {
+        "MW_API_KEY": "your-market-watch-api-key",
+        "MW_BASE_URL": "https://api.market-watch.xyz",
+        "MW_CACHE_TTL": "60",
+        "MW_MAX_CONCURRENT": "10",
+        "MW_TIMEOUT": "30000"
+      },
+      "disabled": false
+    },
+    "market-alerts": {
+      "command": "node",
+      "args": [
+        "/path/to/market-alerts-mcp/dist/index.js"
+      ],
+      "env": {
+        "ALERTS_DB_PATH": "/path/to/alerts.db",
+        "ALERTS_CHECK_INTERVAL": "60000",
+        "DISCORD_WEBHOOK_URL": "https://discord.com/api/webhooks/xxx/yyy"
+      },
+      "disabled": false
+    },
+    "discord": {
+      "command": "node",
+      "args": [
+        "/path/to/discord-mcp/dist/index.js"
+      ],
+      "env": {
+        "DISCORD_TOKEN": "your-discord-bot-token",
+        "DISCORD_DEFAULT_CHANNEL": "scanner-alerts",
+        "DISCORD_GUILD_ID": "your-guild-id"
+      },
+      "disabled": false
+    }
+  }
+}</code></pre>
+
+            <div class="alert-box">
+                <h4><i class="fas fa-triangle-exclamation"></i> Security Warning</h4>
+                <p>The <code>claude_desktop_config.json</code> file contains API keys and tokens. Never commit this file to version control. Add it to your global <code>.gitignore</code>. Consider using a secrets manager or environment variable references instead of hardcoded values.</p>
+            </div>
+
+            <h3>Step 3: Configure the Market Watch MCP Server</h3>
+
+            <p>The Market Watch MCP server is the data backbone of the pipeline. It exposes 58 data types through a unified QueryData interface. Here is how to set it up:</p>
+
+            <div class="code-label">shell</div>
+            <pre><code># Clone the MCP server
+git clone https://github.com/market-watch-xyz/market-watch-mcp.git
+cd market-watch-mcp
+
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Test the server locally (stdio mode)
+echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | node dist/index.js
+
+# Expected: JSON response listing all available tools
+# - GetMarketOverview
+# - QueryData
+# - RunAutoScreener
+# - RunScreener
+# - GetInstruments
+# - LLMAnalysis
+# - CalculateOptionsGreeks
+# - AnalyzeOptionsStrategy
+# - ... (20+ tools total)</code></pre>
+
+            <p>The server configuration is controlled via environment variables. Here are the key ones:</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>MW_API_KEY</code></td>
+                        <td>(required)</td>
+                        <td>API authentication key</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_BASE_URL</code></td>
+                        <td><code>https://api.market-watch.xyz</code></td>
+                        <td>Gateway API endpoint</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_CACHE_TTL</code></td>
+                        <td><code>60</code></td>
+                        <td>Cache TTL in seconds (quotes)</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_CACHE_TTL_FINANCIALS</code></td>
+                        <td><code>86400</code></td>
+                        <td>Cache TTL for financials (24h)</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_MAX_CONCURRENT</code></td>
+                        <td><code>10</code></td>
+                        <td>Max concurrent API requests</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_TIMEOUT</code></td>
+                        <td><code>30000</code></td>
+                        <td>Request timeout in milliseconds</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_RETRY_COUNT</code></td>
+                        <td><code>3</code></td>
+                        <td>Number of retries on failure</td>
+                    </tr>
+                    <tr>
+                        <td><code>MW_LOG_LEVEL</code></td>
+                        <td><code>info</code></td>
+                        <td>Logging verbosity (debug, info, warn, error)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Step 4: Set Up the Project Repository</h3>
+
+            <p>Create the directory structure for your automated trading reports:</p>
+
+            <div class="code-label">shell</div>
+            <pre><code># Create the project
+mkdir -p automated-trading-reports
+cd automated-trading-reports
+git init
+
+# Create the directory structure
+mkdir -p scanner/{retrospective}
+mkdir -p daily
+mkdir -p weekly
+mkdir -p analyses
+mkdir -p data
+mkdir -p assets
+mkdir -p tools
+
+# Create the CNAME for GitHub Pages
+echo "your-domain.xyz" > CNAME
+
+# Initialize the data files
+echo "[]" > data/scanner.json
+echo "[]" > data/daily.json
+echo "[]" > data/weekly.json
+echo "[]" > data/analyses.json
+echo "var searchData = [];" > data/search_data.js</code></pre>
+
+            <div class="file-tree">
+<span class="dir">automated-trading-reports/</span>
+├── <span class="dir">scanner/</span>              <span class="comment"># Daily scanner reports</span>
+│   ├── <span class="dir">20260305/</span>          <span class="comment"># One folder per scan date</span>
+│   │   └── <span class="file">index.html</span>     <span class="comment"># Full HTML report</span>
+│   └── <span class="dir">retrospective/</span>     <span class="comment"># Weekly performance reviews</span>
+│       ├── <span class="dir">20260228/</span>
+│       │   └── <span class="file">index.html</span>
+│       └── <span class="file">index.html</span>     <span class="comment"># Redirect to latest</span>
+├── <span class="dir">daily/</span>                <span class="comment"># Morning briefings</span>
+├── <span class="dir">weekly/</span>               <span class="comment"># Weekly market reports</span>
+├── <span class="dir">analyses/</span>             <span class="comment"># Individual ticker analyses</span>
+├── <span class="dir">data/</span>                 <span class="comment"># JSON indexes for the landing page</span>
+│   ├── <span class="file">scanner.json</span>
+│   ├── <span class="file">daily.json</span>
+│   ├── <span class="file">weekly.json</span>
+│   ├── <span class="file">analyses.json</span>
+│   └── <span class="file">search_data.js</span>
+├── <span class="dir">assets/</span>               <span class="comment"># Shared CSS and JS</span>
+│   ├── <span class="file">report.css</span>        <span class="comment"># Global stylesheet (3000+ lines)</span>
+│   ├── <span class="file">core.js</span>           <span class="comment"># Tag renderer + filters</span>
+│   └── <span class="file">tag-renderer.js</span>   <span class="comment"># Clickable tag system</span>
+├── <span class="dir">tools/</span>                <span class="comment"># Automation scripts</span>
+│   └── <span class="file">add_card.js</span>       <span class="comment"># Auto-indexing tool</span>
+├── <span class="file">CLAUDE.md</span>             <span class="comment"># System prompt (400+ lines)</span>
+├── <span class="file">CNAME</span>                 <span class="comment"># GitHub Pages domain</span>
+├── <span class="file">index.html</span>            <span class="comment"># Landing page with tabs</span>
+└── <span class="file">.gitignore</span>
+            </div>
+
+            <h3>Step 5: Create the CLAUDE.md System Prompt</h3>
+
+            <p>The <code>CLAUDE.md</code> file is the brain of the operation. It contains all the instructions that Claude Code follows during automated runs. Here is a minimal skeleton to get started — the full version we use in production is 400+ lines:</p>
+
+            <div class="code-label">CLAUDE.md (starter template)</div>
+            <pre><code># CLAUDE.md - Automated Trading Pipeline
+
+## Project Overview
+Automated trading research pipeline using Claude Code + MCP.
+Publishes scanner reports, daily briefings, and ticker analyses.
+
+## MCP Gateway
+Available tools:
+- `mcp__market-watch__GetMarketOverview` — Full market snapshot
+- `mcp__market-watch__QueryData` — 58 data types
+- `mcp__market-watch__RunAutoScreener` — Regime-aware screening
+- `mcp__market-watch__RunScreener` — Custom DSL screening
+- `mcp__market-watch__GetInstruments` — Deep symbol analysis
+- `mcp__market-watch__LLMAnalysis` — DeepSeek second opinion
+
+## Scanner Command ("scan du jour")
+
+### Step 1: Read Retrospectives
+Read ALL files in `scanner/retrospective/*/index.html`.
+Extract: hit rates, flop tickers, strategy adjustments.
+
+### Step 2: Read Previous Scan
+Read the most recent `scanner/YYYYMMDD/index.html`.
+Extract the 10 tickers for anti-doublon filter (70% new minimum).
+
+### Step 3: Regime Detection
+Call `RunAutoScreener` to detect market regime.
+Regimes: Risk-On, Early Risk-On, Neutral, Transition,
+         Early Risk-Off, Risk-Off.
+
+### Step 4: Multi-Strategy Screening
+Run 3 DSL strategies:
+1. Oversold: RSI(14) &lt; 35 AND SMA(50) > SMA(200) AND Volume spike
+2. Momentum: Close > SMA(20) > SMA(50) AND RSI 55-75 AND ADX > 25
+3. Breakout: Close > BB_Upper AND Volume > 2x average
+
+Additional screens: EU (VGK, SAP, ASML...), APAC (EWJ, FXI...),
+ETFs (XLF, GLD, TLT, ARKK...).
+
+### Step 5: Scoring (6 Layers)
+For top 30 candidates, score across:
+1. Technical confluence (>= 4 signals)
+2. Fundamental quality (>= 80/100)
+3. Social sentiment (aligned with direction)
+4. Sector trend (outperforming SPY)
+5. Macro regime (compatible)
+6. AI conviction (>= 85%)
+
+Composite >= 85 = A+. Top 3 with >= 90 = A++.
+
+### Step 6: Output
+- Create `scanner/YYYYMMDD/index.html` (> 40KB)
+- Run `node tools/add_card.js scanner/YYYYMMDD/index.html`
+- Git add, commit, push
+- Send top 3 A++ to Discord
+
+### Constraints
+- Geographic diversity: min 5 US + 2 EU + 1 APAC + 2 ETF
+- Risk-Off: min 20% defensive setups
+- Anti-doublon: min 70% new tickers vs previous scan
+- P0 control: reject if entry price > 10% from spot</code></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fas fa-lightbulb"></i> The Power of CLAUDE.md</h4>
+                <p>This file IS the trading strategy. When you want to add a new scoring dimension, change the geographic allocation, adjust the A++ threshold, or modify the output format, you edit this file. No code changes, no deployments, no compilation. Claude Code reads it fresh on every invocation. This is why AI-orchestrated systems are fundamentally different from traditional automation: the strategy lives in natural language, not in compiled code.</p>
+            </div>
+
+            <h3>Step 6: First Test Run</h3>
+
+            <p>With everything configured, let us run a minimal test to verify the pipeline works end-to-end:</p>
+
+            <div class="code-label">shell</div>
+            <pre><code># Navigate to your project directory
+cd /path/to/automated-trading-reports
+
+# Run a simple market overview query
+claude -p "Call GetMarketOverview and summarize the current market regime in 3 sentences."
+
+# Expected output: Something like:
+# "The current market regime is Risk-On with 78% confidence.
+#  VIX is at 15.3 and declining, with market breadth at 65%
+#  above the 200-day SMA. Leading sectors are Technology and
+#  Consumer Discretionary."</code></pre>
+
+            <p>If this works, your MCP Gateway is correctly configured. Now test a more complex query:</p>
+
+            <div class="code-label">shell</div>
+            <pre><code># Test QueryData with multiple data types
+claude -p "Query the following data for AAPL and NVDA: quote, trading_signals, support_resistance. \
+For each ticker, tell me: current price, RSI(14), nearest support level, nearest resistance level, \
+and whether you would consider it a buy, sell, or hold based purely on technicals."</code></pre>
+
+            <p>If both tests pass, your data layer is operational. The next test is the full scanner — but we will build that properly in Parts 2-5 of this series.</p>
+
+            <h3>Step 7: Configure the Discord Bot (Optional)</h3>
+
+            <p>For automated scheduling, you need a Discord bot that can invoke Claude Code on a timer. Here is the minimal setup:</p>
+
+            <div class="code-label">shell</div>
+            <pre><code># Clone the Discord bot
+git clone https://github.com/market-watch-xyz/claude-discord-bot.git
+cd claude-discord-bot
+
+# Install dependencies
+npm install
+
+# Configure
+cp .env.example .env
+# Edit .env with your Discord bot token and channel IDs</code></pre>
+
+            <div class="code-label">schedules.json</div>
+            <pre><code>{
+  "schedules": [
+    {
+      "id": 1,
+      "name": "Scanner Quotidien",
+      "cron": "0 23 * * 1-5",
+      "command": "cd /path/to/automated-trading-reports && claude -p 'scan du jour'",
+      "channel": "scanner-alerts",
+      "enabled": true,
+      "description": "Nightly scanner — weekdays at 23:00"
+    },
+    {
+      "id": 2,
+      "name": "Daily Briefing",
+      "cron": "0 7 * * *",
+      "command": "cd /path/to/automated-trading-reports && claude -p 'analyse daily'",
+      "channel": "daily-briefing",
+      "enabled": true,
+      "description": "Morning briefing — every day at 07:00"
+    },
+    {
+      "id": 3,
+      "name": "Weekly Report",
+      "cron": "0 18 * * 0",
+      "command": "cd /path/to/automated-trading-reports && claude -p 'nouvelle analyse weekly'",
+      "channel": "weekly-reports",
+      "enabled": true,
+      "description": "Weekly market report — Sundays at 18:00"
+    },
+    {
+      "id": 4,
+      "name": "Scanner Retrospective",
+      "cron": "0 23 * * 5",
+      "command": "cd /path/to/automated-trading-reports && claude -p 'rétrospective scanner'",
+      "channel": "scanner-alerts",
+      "enabled": true,
+      "description": "Weekly scanner review — Fridays at 23:00"
+    }
+  ]
+}</code></pre>
+
+            <div class="code-label">shell</div>
+            <pre><code># Start the Discord bot
+npm start
+
+# Or in a tmux session for persistence
+tmux new-session -d -s discord-bot "cd /path/to/claude-discord-bot && npm start"
+
+# Test: In Discord, type:
+# > run #1
+# This will manually trigger the Scanner task</code></pre>
+
+            <h3>Troubleshooting Common Setup Issues</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Symptom</th>
+                        <th>Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MCP server not found</td>
+                        <td><code>Error: Tool mcp__market-watch__* not available</code></td>
+                        <td>Check <code>claude_desktop_config.json</code> path. Run <code>node /path/to/dist/index.js</code> manually to verify the server starts.</td>
+                    </tr>
+                    <tr>
+                        <td>API key invalid</td>
+                        <td><code>401 Unauthorized</code> in server logs</td>
+                        <td>Verify <code>MW_API_KEY</code> in the config. Check the key has not expired.</td>
+                    </tr>
+                    <tr>
+                        <td>CLAUDE.md not loaded</td>
+                        <td>Claude Code does not follow scanning instructions</td>
+                        <td>Ensure you are running <code>claude -p</code> from the project root where CLAUDE.md lives. Use <code>pwd</code> to verify.</td>
+                    </tr>
+                    <tr>
+                        <td>Git push fails</td>
+                        <td><code>Permission denied (publickey)</code></td>
+                        <td>Set up SSH key: <code>ssh-keygen -t ed25519</code> and add to GitHub. Or use <code>gh auth login</code> for HTTPS.</td>
+                    </tr>
+                    <tr>
+                        <td>Discord bot offline</td>
+                        <td>Schedules do not fire</td>
+                        <td>Check tmux session: <code>tmux attach -t discord-bot</code>. Look for crash logs. Restart if needed.</td>
+                    </tr>
+                    <tr>
+                        <td>Scanner report too small</td>
+                        <td>HTML file < 10KB</td>
+                        <td>Claude Code may have been truncated. Increase the <code>max_tokens</code> setting or split the generation into multiple write operations.</td>
+                    </tr>
+                    <tr>
+                        <td>Rate limiting</td>
+                        <td><code>429 Too Many Requests</code></td>
+                        <td>Reduce <code>MW_MAX_CONCURRENT</code> to 5. Increase <code>MW_CACHE_TTL</code> to reduce API calls.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Environment Verification Checklist</h3>
+
+            <p>Run through this checklist before proceeding to Part 2:</p>
+
+            <div class="code-label">shell</div>
+            <pre><code># 1. Claude Code installed and authenticated
+claude --version          # Should show 1.0.x
+claude -p "hello"         # Should respond
+
+# 2. MCP servers configured
+claude -p "List all available MCP tools that contain 'market'"
+# Should list: GetMarketOverview, QueryData, RunScreener, etc.
+
+# 3. Market data accessible
+claude -p "Call GetMarketOverview and tell me the current VIX level"
+# Should return a VIX value (e.g., "VIX is at 14.8")
+
+# 4. Git configured
+git status                # Should show clean working tree
+git remote -v             # Should show your GitHub remote
+
+# 5. GitHub Pages deployed
+gh api repos/{owner}/{repo}/pages
+# Should show: "status": "built"
+
+# 6. Directory structure correct
+ls scanner/ daily/ weekly/ analyses/ data/ assets/ tools/
+# All directories should exist
+
+# 7. CLAUDE.md present
+wc -l CLAUDE.md
+# Should show 100+ lines (ideally 400+)</code></pre>
+
+            <p>If all 7 checks pass, your environment is ready. You have the foundation for a fully automated trading research pipeline.</p>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION 7: WHAT'S NEXT                        -->
+        <!-- ============================================ -->
+        <div id="next" class="content-card">
+            <h2><i class="fas fa-arrow-right"></i> What's Next</h2>
+
+            <p>In this first part, we established the vision, architecture, and foundation of the automated trading pipeline. You now understand:</p>
+
+            <ul>
+                <li>What we are building and why it is fundamentally different from traditional screening tools</li>
+                <li>The 4-layer architecture: Trigger, Data (MCP), Analysis (Claude Code), Delivery (Discord + GitHub)</li>
+                <li>The complete tech stack and why each component was chosen</li>
+                <li>The 6-dimensional scoring model that separates A++ setups from noise</li>
+                <li>The step-by-step daily pipeline flow from cron trigger to Discord delivery</li>
+                <li>How to set up your environment with Claude Code, MCP servers, and the project structure</li>
+            </ul>
+
+            <h3>The Series Roadmap</h3>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Part</th>
+                        <th>Title</th>
+                        <th>What You Will Build</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1 (this)</strong></td>
+                        <td>The Automated Trading Stack</td>
+                        <td>Architecture overview, environment setup, first MCP test</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2</strong></td>
+                        <td>Real-Time Market Intelligence</td>
+                        <td>Deep dive into the MCP Gateway: all 58 data types, QueryData mastery, caching strategies, rate limiting. Build a market regime detector from scratch.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3</strong></td>
+                        <td>The AI Analysis Engine</td>
+                        <td>Implement the 6-layer scoring model in CLAUDE.md. Build the full screener pipeline: DSL strategies, multi-strategy screening, data enrichment, composite scoring, AI re-ranking.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4</strong></td>
+                        <td>The Alert DSL</td>
+                        <td>Build the Market Alerts MCP server. Design the alert condition language. Implement persistent price monitoring with expiry, snooze, and escalation logic.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5</strong></td>
+                        <td>Discord Pipeline</td>
+                        <td>Build the Discord delivery system: rich embeds, formatted alerts, channel routing, error notifications. Set up the Discord bot scheduler with tmux integration.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6</strong></td>
+                        <td>Feedback Loop</td>
+                        <td>Build the retrospective system that grades scanner performance weekly. Implement adaptive weight adjustment based on cumulative retrospective data. Close the feedback loop.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Before You Move On</h3>
+
+            <p>Make sure you have completed the following before starting Part 2:</p>
+
+            <ol>
+                <li>Claude Code installed and authenticated (<code>claude --version</code> works)</li>
+                <li>MCP Gateway server configured and accessible (the <code>GetMarketOverview</code> test passes)</li>
+                <li>Project repository created with the correct directory structure</li>
+                <li>A starter <code>CLAUDE.md</code> in the project root</li>
+                <li>GitHub Pages configured for your repository</li>
+            </ol>
+
+            <p>Part 2 will be deeply technical — we will explore every one of the 58 data types available through the MCP Gateway, learn how to compose complex queries, build real-time market regime detection, and understand the caching architecture that makes 50+ API calls per scan feasible. It is the data plumbing that makes everything else possible.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fas fa-code"></i> Homework: Build Your First Mini-Scanner</h4>
+                <p>Before Part 2, try this exercise: Using only the tools you have now, run the following Claude Code prompt and examine the output:</p>
+                <pre><code>claude -p "Call RunAutoScreener to detect the current market regime. \
+Then call RunScreener with this DSL: \
+'RSI(14) < 35 AND SMA(50) > SMA(200) AND Volume > SMA_Volume(20) * 1.5' \
+For the top 5 results, call QueryData with types quote,trading_signals. \
+For each ticker, provide: name, price, RSI, and whether you think it is \
+a genuine oversold reversal or a falling knife. Explain your reasoning."</code></pre>
+                <p>This is a simplified version of what the full scanner does. If you can get this working, you already understand the core concept: Claude Code as an autonomous research analyst that chains MCP tool calls into a coherent analysis workflow.</p>
+            </div>
+        </div>
+
+        <!-- Next Part CTA -->
+        <a href="/tech/automated-trading/part2-mcp-gateway/" class="next-cta">
+            <div>
+                <div class="next-label">Part 2 of 6</div>
+                <div class="next-title">Real-Time Market Intelligence — The MCP Gateway Deep Dive</div>
+            </div>
+            <i class="fas fa-arrow-right"></i>
+        </a>
+
+    </div>
+    <!-- /container -->
+
+    <!-- Series Bar (Bottom) -->
+    <div class="series-bar">
+        <div class="series-bar-inner">
+            <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
+            <span class="series-title">Automated Trading with Claude Code</span>
+            <div class="series-steps">
+                <a href="/tech/automated-trading/" class="series-step current"><span class="series-num">1</span><span class="series-label">Architecture</span></a>
+                <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-step"><span class="series-num">2</span><span class="series-label">MCP Gateway</span></a>
+                <a href="/tech/automated-trading/part3-analysis-engine/" class="series-step"><span class="series-num">3</span><span class="series-label">Analysis Engine</span></a>
+                <a href="/tech/automated-trading/part4-alert-dsl/" class="series-step"><span class="series-num">4</span><span class="series-label">Alert DSL</span></a>
+                <a href="/tech/automated-trading/part5-discord-pipeline/" class="series-step"><span class="series-num">5</span><span class="series-label">Discord Pipeline</span></a>
+                <a href="/tech/automated-trading/part6-feedback-loop/" class="series-step"><span class="series-num">6</span><span class="series-label">Feedback Loop</span></a>
+            </div>
+            <span class="series-counter">1/6</span>
+            <a href="/tech/automated-trading/part2-mcp-gateway/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+    <script>
+        // Initialize Mermaid diagrams
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'neutral',
+            themeVariables: {
+                primaryColor: '#ecfdf5',
+                primaryBorderColor: '#10b981',
+                primaryTextColor: '#064e3b',
+                lineColor: '#10b981',
+                secondaryColor: '#eff6ff',
+                tertiaryColor: '#f5f3ff',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+
+</html>
