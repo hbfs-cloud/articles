@@ -54,6 +54,10 @@
     setText('modeCustomSub', L.modeCustomSub);
     setText('modeLibLabel', L.modeLibLabel);
     setText('modeLibSub', L.modeLibSub);
+    setText('modeAgentLabel', L.modeAgentLabel);
+    setText('modeAgentSub', L.modeAgentSub);
+    setText('modeFactoryLabel', L.modeFactoryLabel);
+    setText('modeFactorySub', L.modeFactorySub);
     var libBadge = document.getElementById('libCountBadge');
     if (libBadge) libBadge.textContent = LIBRARY.length;
 

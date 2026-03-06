@@ -3,45 +3,100 @@
 
   var LANG_CODE = (new URLSearchParams(window.location.search).get('lang')) || 'en';
   if (['fr','en','ar','es','zh'].indexOf(LANG_CODE) === -1) LANG_CODE = 'en';
-  var isFR = LANG_CODE === 'fr';
 
   // ═══════════════════════════════════════
-  // UI LABELS
+  // UI LABELS (all 5 languages)
   // ═══════════════════════════════════════
   var UI = {
     en: {
       agentIntro: 'Pick a workflow. Get a complete, self-configuring AI agent project.',
       factoryIntro: 'Build smart alerts visually. Download a ready-to-run project.',
-      watchlist: 'Watchlist',
+      agentBtn: 'Agent', agentBtnSub: 'AI workflows + MCP',
+      factoryBtn: 'Alerts', factoryBtnSub: 'Smart alert builder',
+      dataSource: 'Data Source',
+      srcCustom: 'My Watchlist', srcScanner: 'Scanner A+ Picks', srcAuto: 'Auto-Screener',
       watchlistPh: 'AAPL, NVDA, BTC-USD...',
-      generate: 'Generate Project',
-      download: 'Download ZIP',
-      copy: 'Copy CLAUDE.md',
-      step1: 'What to monitor',
-      step2: 'When to alert',
-      step3: 'What to do',
+      generate: 'Generate Project', download: 'Download ZIP', copy: 'Copy CLAUDE.md',
+      step1: 'What to monitor', step2: 'When to alert', step3: 'What to do',
       tickersPh: 'AAPL, TSLA, BTC-USD...',
-      useScannerPicks: 'Use today\'s Market Watch A+ picks',
-      learnMore: 'Learn more',
-      includes: 'Project includes',
-      howTo: 'How to use'
+      includes: 'Project includes', howTo: 'How to use',
+      howToStep1: 'Unzip \u2192 <code>cd mcp-server && npm install && cd ..</code>',
+      howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code> (MCP server auto-detected via .mcp.json)',
+      howToStep2Factory: '<code>claude</code> (MCP auto-detected)',
+      howToStep3Agent: '<strong>Cursor:</strong> Open folder in Cursor (.cursorrules auto-detected)',
+      howToStep3Factory: '"Start monitoring my alerts"'
     },
     fr: {
       agentIntro: 'Choisis un workflow. Obtiens un projet IA complet, auto-configuré.',
       factoryIntro: 'Crée des alertes visuellement. Télécharge un projet prêt à l\'emploi.',
-      watchlist: 'Watchlist',
+      agentBtn: 'Agent', agentBtnSub: 'Workflows IA + MCP',
+      factoryBtn: 'Alertes', factoryBtnSub: 'Créateur d\'alertes',
+      dataSource: 'Source de données',
+      srcCustom: 'Ma Watchlist', srcScanner: 'Picks A+ Scanner', srcAuto: 'Auto-Screener',
       watchlistPh: 'AAPL, NVDA, BTC-USD...',
-      generate: 'Générer le Projet',
-      download: 'Télécharger ZIP',
-      copy: 'Copier CLAUDE.md',
-      step1: 'Quoi surveiller',
-      step2: 'Quand alerter',
-      step3: 'Quoi faire',
+      generate: 'Générer le Projet', download: 'Télécharger ZIP', copy: 'Copier CLAUDE.md',
+      step1: 'Quoi surveiller', step2: 'Quand alerter', step3: 'Quoi faire',
       tickersPh: 'AAPL, TSLA, BTC-USD...',
-      useScannerPicks: 'Utiliser les picks A+ Market Watch du jour',
-      learnMore: 'En savoir plus',
-      includes: 'Le projet contient',
-      howTo: 'Comment utiliser'
+      includes: 'Le projet contient', howTo: 'Comment utiliser',
+      howToStep1: 'Décompresse le ZIP \u2192 <code>cd mcp-server && npm install && cd ..</code>',
+      howToStep2Agent: '<strong>Claude Code :</strong> <code>claude</code> (le MCP server est auto-détecté via .mcp.json)',
+      howToStep2Factory: '<code>claude</code> (MCP auto-détecté)',
+      howToStep3Agent: '<strong>Cursor :</strong> Ouvre le dossier dans Cursor (.cursorrules auto-détecté)',
+      howToStep3Factory: '"Start monitoring my alerts"'
+    },
+    ar: {
+      agentIntro: '\u0627\u062e\u062a\u0631 \u0633\u064a\u0631 \u0639\u0645\u0644. \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u0645\u0634\u0631\u0648\u0639 \u0648\u0643\u064a\u0644 \u0630\u0643\u0627\u0621 \u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0643\u0627\u0645\u0644.',
+      factoryIntro: '\u0623\u0646\u0634\u0626 \u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0630\u0643\u064a\u0629 \u0628\u0635\u0631\u064a\u0627\u064b. \u062d\u0645\u0651\u0644 \u0645\u0634\u0631\u0648\u0639\u0627\u064b \u062c\u0627\u0647\u0632\u0627\u064b.',
+      agentBtn: '\u0648\u0643\u064a\u0644', agentBtnSub: 'MCP + \u0633\u064a\u0631 \u0639\u0645\u0644 \u0627\u0644\u0630\u0643\u0627\u0621',
+      factoryBtn: '\u062a\u0646\u0628\u064a\u0647\u0627\u062a', factoryBtnSub: '\u0645\u0646\u0634\u0626 \u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0630\u0643\u064a\u0629',
+      dataSource: '\u0645\u0635\u062f\u0631 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a',
+      srcCustom: '\u0642\u0627\u0626\u0645\u062a\u064a', srcScanner: 'A+ \u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a', srcAuto: '\u0641\u0631\u0632 \u062a\u0644\u0642\u0627\u0626\u064a',
+      watchlistPh: 'AAPL, NVDA, BTC-USD...',
+      generate: '\u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0634\u0631\u0648\u0639', download: '\u062a\u062d\u0645\u064a\u0644 ZIP', copy: '\u0646\u0633\u062e CLAUDE.md',
+      step1: '\u0645\u0627\u0630\u0627 \u062a\u0631\u0627\u0642\u0628', step2: '\u0645\u062a\u0649 \u062a\u064f\u0646\u0628\u0651\u0647', step3: '\u0645\u0627\u0630\u0627 \u062a\u0641\u0639\u0644',
+      tickersPh: 'AAPL, TSLA, BTC-USD...',
+      includes: '\u064a\u062a\u0636\u0645\u0651\u0646 \u0627\u0644\u0645\u0634\u0631\u0648\u0639', howTo: '\u0643\u064a\u0641\u064a\u0629 \u0627\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645',
+      howToStep1: 'ZIP \u0641\u0643\u0651 \u0627\u0644\u0636\u063a\u0637 \u2192 <code>cd mcp-server && npm install && cd ..</code>',
+      howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code> (\u064a\u062a\u0645 \u0627\u0643\u062a\u0634\u0627\u0641 MCP \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b)',
+      howToStep2Factory: '<code>claude</code> (\u0627\u0643\u062a\u0634\u0627\u0641 MCP \u062a\u0644\u0642\u0627\u0626\u064a)',
+      howToStep3Agent: '<strong>Cursor:</strong> \u0627\u0641\u062a\u062d \u0627\u0644\u0645\u062c\u0644\u062f \u0641\u064a Cursor',
+      howToStep3Factory: '"Start monitoring my alerts"'
+    },
+    es: {
+      agentIntro: 'Elige un flujo de trabajo. Obtén un proyecto de agente IA completo.',
+      factoryIntro: 'Crea alertas inteligentes visualmente. Descarga un proyecto listo.',
+      agentBtn: 'Agente', agentBtnSub: 'Flujos IA + MCP',
+      factoryBtn: 'Alertas', factoryBtnSub: 'Constructor de alertas',
+      dataSource: 'Fuente de datos',
+      srcCustom: 'Mi Watchlist', srcScanner: 'Picks A+ Scanner', srcAuto: 'Auto-Screener',
+      watchlistPh: 'AAPL, NVDA, BTC-USD...',
+      generate: 'Generar Proyecto', download: 'Descargar ZIP', copy: 'Copiar CLAUDE.md',
+      step1: 'Qué vigilar', step2: 'Cuándo alertar', step3: 'Qué hacer',
+      tickersPh: 'AAPL, TSLA, BTC-USD...',
+      includes: 'El proyecto incluye', howTo: 'Cómo usar',
+      howToStep1: 'Descomprime el ZIP \u2192 <code>cd mcp-server && npm install && cd ..</code>',
+      howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code> (MCP auto-detectado via .mcp.json)',
+      howToStep2Factory: '<code>claude</code> (MCP auto-detectado)',
+      howToStep3Agent: '<strong>Cursor:</strong> Abre la carpeta en Cursor (.cursorrules auto-detectado)',
+      howToStep3Factory: '"Start monitoring my alerts"'
+    },
+    zh: {
+      agentIntro: '\u9009\u62e9\u5de5\u4f5c\u6d41\u3002\u83b7\u53d6\u5b8c\u6574\u7684\u81ea\u914d\u7f6e AI \u4ee3\u7406\u9879\u76ee\u3002',
+      factoryIntro: '\u53ef\u89c6\u5316\u521b\u5efa\u667a\u80fd\u8b66\u62a5\u3002\u4e0b\u8f7d\u5373\u7528\u9879\u76ee\u3002',
+      agentBtn: '\u4ee3\u7406', agentBtnSub: 'AI \u5de5\u4f5c\u6d41 + MCP',
+      factoryBtn: '\u8b66\u62a5', factoryBtnSub: '\u667a\u80fd\u8b66\u62a5\u6784\u5efa\u5668',
+      dataSource: '\u6570\u636e\u6e90',
+      srcCustom: '\u6211\u7684\u5173\u6ce8\u5217\u8868', srcScanner: 'A+ \u7cbe\u9009', srcAuto: '\u81ea\u52a8\u7b5b\u9009',
+      watchlistPh: 'AAPL, NVDA, BTC-USD...',
+      generate: '\u751f\u6210\u9879\u76ee', download: '\u4e0b\u8f7d ZIP', copy: '\u590d\u5236 CLAUDE.md',
+      step1: '\u76d1\u63a7\u4ec0\u4e48', step2: '\u4f55\u65f6\u8b66\u62a5', step3: '\u6267\u884c\u4ec0\u4e48',
+      tickersPh: 'AAPL, TSLA, BTC-USD...',
+      includes: '\u9879\u76ee\u5305\u542b', howTo: '\u5982\u4f55\u4f7f\u7528',
+      howToStep1: '\u89e3\u538b ZIP \u2192 <code>cd mcp-server && npm install && cd ..</code>',
+      howToStep2Agent: '<strong>Claude Code:</strong> <code>claude</code>\uff08\u901a\u8fc7 .mcp.json \u81ea\u52a8\u68c0\u6d4b MCP\uff09',
+      howToStep2Factory: '<code>claude</code>\uff08\u81ea\u52a8\u68c0\u6d4b MCP\uff09',
+      howToStep3Agent: '<strong>Cursor:</strong> \u5728 Cursor \u4e2d\u6253\u5f00\u6587\u4ef6\u5939\uff08.cursorrules \u81ea\u52a8\u68c0\u6d4b\uff09',
+      howToStep3Factory: '"Start monitoring my alerts"'
     }
   };
   var L = UI[LANG_CODE] || UI.en;
@@ -49,73 +104,57 @@
   // ═══════════════════════════════════════
   // WORKFLOWS — Agent Mode
   // ═══════════════════════════════════════
-  var WORKFLOWS = [
-    {
-      id: 'trading-desk',
-      icon: '🏢',
-      title: isFR ? 'Trading Desk' : 'Trading Desk',
-      sub: isFR ? 'Scan → Analyse → Alertes → Rapport EOD' : 'Scan → Analyze → Alert → EOD Report',
-      desc: isFR
-        ? 'Transforme ton IA en desk de trading complet. Chaque matin, il fetch les picks A+, analyse le marché, surveille tes positions, et génère des alertes en temps réel.'
-        : 'Turn your AI into a full trading desk. Every morning it fetches A+ picks, analyzes the market, monitors positions, and generates real-time alerts.',
-      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md']
+  // Workflow i18n helper
+  var WF_I18N = {
+    'trading-desk': {
+      sub: { fr: 'Scan → Analyse → Alertes → Rapport EOD', en: 'Scan → Analyze → Alert → EOD Report', ar: '\u0645\u0633\u062d → \u062a\u062d\u0644\u064a\u0644 → \u062a\u0646\u0628\u064a\u0647 → \u062a\u0642\u0631\u064a\u0631', es: 'Escaneo → Análisis → Alerta → Informe', zh: '\u626b\u63cf → \u5206\u6790 → \u8b66\u62a5 → \u65e5\u62a5' },
+      desc: { fr: 'Transforme ton IA en desk de trading complet. Chaque matin, il fetch les picks A+, analyse le marché, surveille tes positions, et génère des alertes en temps réel.', en: 'Turn your AI into a full trading desk. Every morning it fetches A+ picks, analyzes the market, monitors positions, and generates real-time alerts.', ar: '\u062d\u0648\u0651\u0644 \u0630\u0643\u0627\u0621\u0643 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0625\u0644\u0649 \u0645\u0643\u062a\u0628 \u062a\u062f\u0627\u0648\u0644 \u0643\u0627\u0645\u0644. \u0643\u0644 \u0635\u0628\u0627\u062d \u064a\u062c\u0644\u0628 \u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a A+ \u0648\u064a\u062d\u0644\u0644 \u0627\u0644\u0633\u0648\u0642 \u0648\u064a\u0631\u0627\u0642\u0628 \u0645\u0631\u0627\u0643\u0632\u0643.', es: 'Convierte tu IA en un desk de trading completo. Cada mañana obtiene los picks A+, analiza el mercado y genera alertas en tiempo real.', zh: '\u5c06\u4f60\u7684 AI \u53d8\u6210\u5b8c\u6574\u7684\u4ea4\u6613\u53f0\u3002\u6bcf\u5929\u65e9\u4e0a\u83b7\u53d6 A+ \u7cbe\u9009\uff0c\u5206\u6790\u5e02\u573a\uff0c\u76d1\u63a7\u4ed3\u4f4d\uff0c\u5b9e\u65f6\u751f\u6210\u8b66\u62a5\u3002' }
     },
-    {
-      id: 'scanner-sniper',
-      icon: '🎯',
-      title: isFR ? 'Scanner Sniper' : 'Scanner Sniper',
-      sub: isFR ? 'Deep-dive sur les picks A+ du jour' : 'Deep-dive today\'s A+ picks',
-      desc: isFR
-        ? 'L\'IA récupère les 10 meilleurs setups du scanner Market Watch, fait une analyse multi-source approfondie de chacun, et génère un plan de trade détaillé.'
-        : 'The AI fetches today\'s top 10 scanner picks, runs deep multi-source analysis on each, and generates detailed trade plans.',
-      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md']
+    'scanner-sniper': {
+      sub: { fr: 'Deep-dive sur les picks A+ du jour', en: 'Deep-dive today\'s A+ picks', ar: '\u062a\u062d\u0644\u064a\u0644 \u0645\u0639\u0645\u0651\u0642 \u0644\u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a A+ \u0627\u0644\u064a\u0648\u0645', es: 'Análisis profundo de los picks A+ del día', zh: '\u6df1\u5165\u5206\u6790\u4eca\u65e5 A+ \u7cbe\u9009' },
+      desc: { fr: 'L\'IA récupère les 10 meilleurs setups du scanner Market Watch, fait une analyse multi-source approfondie de chacun, et génère un plan de trade détaillé.', en: 'The AI fetches today\'s top 10 scanner picks, runs deep multi-source analysis on each, and generates detailed trade plans.', ar: '\u064a\u062c\u0644\u0628 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0623\u0641\u0636\u0644 10 \u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a \u0648\u064a\u062c\u0631\u064a \u062a\u062d\u0644\u064a\u0644\u0627\u064b \u0645\u0639\u0645\u0651\u0642\u0627\u064b \u0644\u0643\u0644 \u0645\u0646\u0647\u0627.', es: 'La IA obtiene los 10 mejores setups del scanner, ejecuta un análisis profundo y genera planes de trading detallados.', zh: 'AI \u83b7\u53d6\u626b\u63cf\u5668\u524d 10 \u4e2a\u7cbe\u9009\uff0c\u5bf9\u6bcf\u4e2a\u8fdb\u884c\u591a\u6e90\u6df1\u5ea6\u5206\u6790\uff0c\u751f\u6210\u8be6\u7ec6\u4ea4\u6613\u8ba1\u5212\u3002' }
     },
-    {
-      id: 'portfolio-sentinel',
-      icon: '📊',
-      title: isFR ? 'Portfolio Sentinel' : 'Portfolio Sentinel',
-      sub: isFR ? 'Surveillance risques + corrélations' : 'Risk monitoring + correlations',
-      desc: isFR
-        ? 'Surveille ton portefeuille en continu : corrélations, drawdown, concentration sectorielle, Greek exposure. Alerte si un seuil de risque est franchi.'
-        : 'Continuously monitors your portfolio: correlations, drawdown, sector concentration, Greek exposure. Alerts when risk thresholds are breached.',
-      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'portfolio.json', 'README.md']
+    'portfolio-sentinel': {
+      sub: { fr: 'Surveillance risques + corrélations', en: 'Risk monitoring + correlations', ar: '\u0645\u0631\u0627\u0642\u0628\u0629 \u0627\u0644\u0645\u062e\u0627\u0637\u0631 + \u0627\u0644\u0627\u0631\u062a\u0628\u0627\u0637\u0627\u062a', es: 'Monitoreo de riesgos + correlaciones', zh: '\u98ce\u9669\u76d1\u63a7 + \u76f8\u5173\u6027\u5206\u6790' },
+      desc: { fr: 'Surveille ton portefeuille en continu : corrélations, drawdown, concentration sectorielle, Greek exposure. Alerte si un seuil de risque est franchi.', en: 'Continuously monitors your portfolio: correlations, drawdown, sector concentration, Greek exposure. Alerts when risk thresholds are breached.', ar: '\u064a\u0631\u0627\u0642\u0628 \u0645\u062d\u0641\u0638\u062a\u0643 \u0628\u0627\u0633\u062a\u0645\u0631\u0627\u0631: \u0627\u0644\u0627\u0631\u062a\u0628\u0627\u0637\u0627\u062a\u060c \u0627\u0644\u062a\u0631\u0627\u062c\u0639\u060c \u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u0642\u0637\u0627\u0639\u0627\u062a. \u064a\u0646\u0628\u0651\u0647 \u0639\u0646\u062f \u062a\u062c\u0627\u0648\u0632 \u0639\u062a\u0628\u0629 \u0627\u0644\u0645\u062e\u0627\u0637\u0631.', es: 'Monitorea tu portafolio continuamente: correlaciones, drawdown, concentración sectorial. Alerta cuando se superan umbrales de riesgo.', zh: '\u6301\u7eed\u76d1\u63a7\u4f60\u7684\u6295\u8d44\u7ec4\u5408\uff1a\u76f8\u5173\u6027\u3001\u56de\u64a4\u3001\u884c\u4e1a\u96c6\u4e2d\u5ea6\u3001Greeks \u654e\u53e3\u3002\u98ce\u9669\u9608\u503c\u7a81\u7834\u65f6\u8b66\u62a5\u3002' }
     },
-    {
-      id: 'earnings-analyst',
-      icon: '📈',
-      title: isFR ? 'Earnings Analyst' : 'Earnings Analyst',
-      sub: isFR ? 'Saison des résultats — pré/post analyse' : 'Earnings season — pre/post analysis',
-      desc: isFR
-        ? 'Suit le calendrier des earnings, analyse le consensus vs whisper, pricing des options pré-earnings, et fait l\'analyse beat/miss en post-earnings.'
-        : 'Tracks the earnings calendar, analyzes consensus vs whisper numbers, pre-earnings options pricing, and runs beat/miss analysis post-earnings.',
-      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'earnings-watchlist.json', 'README.md']
+    'earnings-analyst': {
+      sub: { fr: 'Saison des résultats — pré/post analyse', en: 'Earnings season — pre/post analysis', ar: '\u0645\u0648\u0633\u0645 \u0627\u0644\u0623\u0631\u0628\u0627\u062d — \u062a\u062d\u0644\u064a\u0644 \u0642\u0628\u0644/\u0628\u0639\u062f', es: 'Temporada de resultados — análisis pre/post', zh: '\u8d22\u62a5\u5b63 — \u53d1\u5e03\u524d/\u540e\u5206\u6790' },
+      desc: { fr: 'Suit le calendrier des earnings, analyse le consensus vs whisper, pricing des options pré-earnings, et fait l\'analyse beat/miss en post-earnings.', en: 'Tracks the earnings calendar, analyzes consensus vs whisper numbers, pre-earnings options pricing, and runs beat/miss analysis post-earnings.', ar: '\u064a\u062a\u0627\u0628\u0639 \u062a\u0642\u0648\u064a\u0645 \u0627\u0644\u0623\u0631\u0628\u0627\u062d\u060c \u064a\u062d\u0644\u0644 \u0627\u0644\u0625\u062c\u0645\u0627\u0639 \u0645\u0642\u0627\u0628\u0644 \u0627\u0644\u062a\u0648\u0642\u0639\u0627\u062a\u060c \u0648\u064a\u062c\u0631\u064a \u062a\u062d\u0644\u064a\u0644 \u0627\u0644\u062a\u0641\u0648\u0642/\u0627\u0644\u0625\u062e\u0641\u0627\u0642 \u0628\u0639\u062f \u0627\u0644\u0625\u0639\u0644\u0627\u0646.', es: 'Sigue el calendario de resultados, analiza consenso vs whisper, pricing de opciones pre-earnings, y análisis beat/miss post-earnings.', zh: '\u8ddf\u8e2a\u8d22\u62a5\u65e5\u5386\uff0c\u5206\u6790\u5171\u8bc6 vs \u5e02\u573a\u4f20\u95fb\uff0c\u53d1\u5e03\u524d\u671f\u6743\u5b9a\u4ef7\uff0c\u53d1\u5e03\u540e\u8d85\u9884\u671f/\u4e0d\u53ca\u9884\u671f\u5206\u6790\u3002' }
     },
-    {
-      id: 'news-reactor',
-      icon: '📰',
-      title: isFR ? 'News Reactor' : 'News Reactor',
-      sub: isFR ? 'Détection de news → analyse d\'impact auto' : 'Breaking news detection → auto impact analysis',
-      desc: isFR
-        ? 'Surveille les news en continu pour ta watchlist. Classe chaque news (market-moving vs bruit), analyse l\'impact, et génère des alertes actionnables.'
-        : 'Monitors news continuously for your watchlist. Classifies each story (market-moving vs noise), analyzes impact, and generates actionable alerts.',
-      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md']
+    'news-reactor': {
+      sub: { fr: 'Détection de news → analyse d\'impact auto', en: 'Breaking news detection → auto impact analysis', ar: '\u0643\u0634\u0641 \u0627\u0644\u0623\u062e\u0628\u0627\u0631 → \u062a\u062d\u0644\u064a\u0644 \u0627\u0644\u062a\u0623\u062b\u064a\u0631 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b', es: 'Detección de noticias → análisis de impacto auto', zh: '\u7a81\u53d1\u65b0\u95fb\u68c0\u6d4b → \u81ea\u52a8\u5f71\u54cd\u5206\u6790' },
+      desc: { fr: 'Surveille les news en continu pour ta watchlist. Classe chaque news (market-moving vs bruit), analyse l\'impact, et génère des alertes actionnables.', en: 'Monitors news continuously for your watchlist. Classifies each story (market-moving vs noise), analyzes impact, and generates actionable alerts.', ar: '\u064a\u0631\u0627\u0642\u0628 \u0627\u0644\u0623\u062e\u0628\u0627\u0631 \u0628\u0627\u0633\u062a\u0645\u0631\u0627\u0631 \u0644\u0642\u0627\u0626\u0645\u062a\u0643. \u064a\u0635\u0646\u0651\u0641 \u0643\u0644 \u062e\u0628\u0631 \u0648\u064a\u062d\u0644\u0644 \u0627\u0644\u062a\u0623\u062b\u064a\u0631 \u0648\u064a\u0648\u0644\u0651\u062f \u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u062a\u0646\u0641\u064a\u0630.', es: 'Monitorea noticias continuamente para tu watchlist. Clasifica cada noticia y genera alertas accionables.', zh: '\u6301\u7eed\u76d1\u63a7\u4f60\u5173\u6ce8\u5217\u8868\u7684\u65b0\u95fb\u3002\u5c06\u6bcf\u6761\u65b0\u95fb\u5206\u7c7b\uff08\u5f71\u54cd\u5e02\u573a vs \u566a\u97f3\uff09\uff0c\u5206\u6790\u5f71\u54cd\uff0c\u751f\u6210\u53ef\u64cd\u4f5c\u8b66\u62a5\u3002' }
     },
-    {
-      id: 'alert-architect',
-      icon: '🔔',
-      title: isFR ? 'Alert Architect' : 'Alert Architect',
-      sub: isFR ? 'Alertes multi-conditions personnalisées' : 'Custom multi-condition alerts',
-      desc: isFR
-        ? 'Définis des règles d\'alerte complexes : "Si RSI < 30 ET VIX > 25 ET insider buy détecté → Telegram + analyse complète". Multi-actifs, multi-timeframe.'
-        : 'Define complex alert rules: "If RSI < 30 AND VIX > 25 AND insider buy detected → Telegram + full analysis". Multi-asset, multi-timeframe.',
-      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'alerts-config.json', 'README.md']
+    'alert-architect': {
+      sub: { fr: 'Alertes multi-conditions personnalisées', en: 'Custom multi-condition alerts', ar: '\u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0645\u062a\u0639\u062f\u062f\u0629 \u0627\u0644\u0634\u0631\u0648\u0637 \u0645\u062e\u0635\u0635\u0629', es: 'Alertas personalizadas multi-condición', zh: '\u81ea\u5b9a\u4e49\u591a\u6761\u4ef6\u8b66\u62a5' },
+      desc: { fr: 'Définis des règles d\'alerte complexes : "Si RSI < 30 ET VIX > 25 ET insider buy détecté → Telegram + analyse complète". Multi-actifs, multi-timeframe.', en: 'Define complex alert rules: "If RSI < 30 AND VIX > 25 AND insider buy detected → Telegram + full analysis". Multi-asset, multi-timeframe.', ar: '\u062d\u062f\u0651\u062f \u0642\u0648\u0627\u0639\u062f \u062a\u0646\u0628\u064a\u0647 \u0645\u0639\u0642\u062f\u0629: "\u0625\u0630\u0627 RSI < 30 \u0648 VIX > 25 → Telegram + \u062a\u062d\u0644\u064a\u0644 \u0643\u0627\u0645\u0644". \u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0623\u0635\u0648\u0644.', es: 'Define reglas de alerta complejas: "Si RSI < 30 Y VIX > 25 Y insider buy → Telegram + análisis completo". Multi-activo, multi-timeframe.', zh: '\u5b9a\u4e49\u590d\u6742\u8b66\u62a5\u89c4\u5219\uff1a"\u5982\u679c RSI < 30 \u4e14 VIX > 25 \u4e14\u68c0\u6d4b\u5230\u5185\u90e8\u4eba\u4e70\u5165 → Telegram + \u5b8c\u6574\u5206\u6790"\u3002\u591a\u8d44\u4ea7\u3001\u591a\u65f6\u95f4\u6846\u67b6\u3002' }
     }
+  };
+
+  function wfText(id, field) { return (WF_I18N[id] && WF_I18N[id][field] && WF_I18N[id][field][LANG_CODE]) || WF_I18N[id][field].en; }
+
+  var WORKFLOWS = [
+    { id: 'trading-desk', icon: '🏢', title: 'Trading Desk', sub: wfText('trading-desk','sub'), desc: wfText('trading-desk','desc'), files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md'] },
+    { id: 'scanner-sniper', icon: '🎯', title: 'Scanner Sniper', sub: wfText('scanner-sniper','sub'), desc: wfText('scanner-sniper','desc'), files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md'] },
+    { id: 'portfolio-sentinel', icon: '📊', title: 'Portfolio Sentinel', sub: wfText('portfolio-sentinel','sub'), desc: wfText('portfolio-sentinel','desc'), files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'portfolio.json', 'README.md'] },
+    { id: 'earnings-analyst', icon: '📈', title: 'Earnings Analyst', sub: wfText('earnings-analyst','sub'), desc: wfText('earnings-analyst','desc'), files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'earnings-watchlist.json', 'README.md'] },
+    { id: 'news-reactor', icon: '📰', title: 'News Reactor', sub: wfText('news-reactor','sub'), desc: wfText('news-reactor','desc'), files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md'] },
+    { id: 'alert-architect', icon: '🔔', title: 'Alert Architect', sub: wfText('alert-architect','sub'), desc: wfText('alert-architect','desc'), files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'alerts-config.json', 'README.md'] }
   ];
 
   // ═══════════════════════════════════════
   // WORKFLOW TEMPLATES (CLAUDE.md generators)
   // ═══════════════════════════════════════
+  var AUTO_SCREENER_TEXT = 'Auto: Use RunAutoScreener MCP tool to detect market regime and find the best setups automatically. No manual watchlist needed — the screener adapts to current conditions.';
+
+  function normalizeTickers(tickers) {
+    if (tickers === '__AUTO_SCREENER__') return AUTO_SCREENER_TEXT;
+    return tickers;
+  }
+
   function tplTradingDesk(tickers) {
+    tickers = normalizeTickers(tickers);
     return `# Market Watch — Trading Desk 🏢
 
 ## Your Role
@@ -208,6 +247,7 @@ Say one of these commands:
   }
 
   function tplScannerSniper(tickers) {
+    tickers = normalizeTickers(tickers);
     return `# Market Watch — Scanner Sniper 🎯
 
 ## Your Role
@@ -269,6 +309,7 @@ Say: "Analyze today's picks" or "Sniper mode"
   }
 
   function tplPortfolioSentinel(tickers) {
+    tickers = normalizeTickers(tickers);
     return `# Market Watch — Portfolio Sentinel 📊
 
 ## Your Role
@@ -320,6 +361,7 @@ Say: "Portfolio check" or "Risk report"
   }
 
   function tplEarningsAnalyst(tickers) {
+    tickers = normalizeTickers(tickers);
     return `# Market Watch — Earnings Analyst 📈
 
 ## Your Role
@@ -384,6 +426,7 @@ Say: "Earnings preview for this week" or "Post-earnings analysis [TICKER]"
   }
 
   function tplNewsReactor(tickers) {
+    tickers = normalizeTickers(tickers);
     return `# Market Watch — News Reactor 📰
 
 ## Your Role
@@ -444,6 +487,7 @@ Say: "Scan for news" or "What's happening with my watchlist?"
   }
 
   function tplAlertArchitect(tickers) {
+    tickers = normalizeTickers(tickers);
     return `# Market Watch — Alert Architect 🔔
 
 ## Your Role
@@ -830,9 +874,13 @@ https://articles.market-watch.xyz
     html += '<div class="wf-config-desc" id="wfConfigDesc"></div></div>';
     html += '</div>';
 
-    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-list"></i> ' + L.watchlist + '</div>';
-    html += '<input type="text" class="fi" id="wfTickers" placeholder="' + L.watchlistPh + '">';
-    html += '<label class="wf-checkbox"><input type="checkbox" id="wfUseScanner" checked> <span>' + L.useScannerPicks + '</span></label></div>';
+    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-database"></i> ' + L.dataSource + '</div>';
+    html += '<div class="src-switch" id="wfSrcSwitch">';
+    html += '<button type="button" class="src-opt" data-src="custom"><i class="fa-solid fa-pen"></i> ' + L.srcCustom + '</button>';
+    html += '<button type="button" class="src-opt active" data-src="scanner"><i class="fa-solid fa-crosshairs"></i> ' + L.srcScanner + '</button>';
+    html += '<button type="button" class="src-opt" data-src="auto"><i class="fa-solid fa-wand-magic-sparkles"></i> ' + L.srcAuto + '</button>';
+    html += '</div>';
+    html += '<input type="text" class="fi" id="wfTickers" placeholder="' + L.watchlistPh + '" style="display:none"></div>';
 
     html += '<div class="wf-config-files" id="wfConfigFiles"></div>';
 
@@ -851,9 +899,9 @@ https://articles.market-watch.xyz
     html += '<button class="action-btn" onclick="window._downloadAgent()"><i class="fa-solid fa-download"></i> ' + L.download + '</button>';
     html += '</div>';
     html += '<div class="wf-howto"><div class="pedagogy-box"><h4><i class="fa-solid fa-graduation-cap"></i> ' + L.howTo + '</h4>';
-    html += '<ol><li>' + (isFR ? 'Décompresse le ZIP → <code>cd mcp-server && npm install && cd ..</code>' : 'Unzip → <code>cd mcp-server && npm install && cd ..</code>') + '</li>';
-    html += '<li><strong>Claude Code:</strong> <code>claude</code> ' + (isFR ? '(le MCP server est auto-détecté via .mcp.json)' : '(MCP server auto-detected via .mcp.json)') + '</li>';
-    html += '<li><strong>Cursor:</strong> ' + (isFR ? 'Ouvre le dossier dans Cursor (.cursorrules auto-détecté)' : 'Open folder in Cursor (.cursorrules auto-detected)') + '</li></ol>';
+    html += '<ol><li>' + L.howToStep1 + '</li>';
+    html += '<li>' + L.howToStep2Agent + '</li>';
+    html += '<li>' + L.howToStep3Agent + '</li></ol>';
     html += '</div></div></div>';
 
     panel.innerHTML = html;
@@ -864,6 +912,33 @@ https://articles.market-watch.xyz
         selectWorkflow(this.dataset.wf);
       });
     });
+
+    // Source switch logic
+    initSrcSwitch('wfSrcSwitch', 'wfTickers');
+  }
+
+  // ── Source switch logic ──
+  function initSrcSwitch(switchId, inputId) {
+    var sw = document.getElementById(switchId);
+    var input = document.getElementById(inputId);
+    if (!sw || !input) return;
+    sw.querySelectorAll('.src-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        sw.querySelectorAll('.src-opt').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        input.style.display = this.dataset.src === 'custom' ? '' : 'none';
+        if (this.dataset.src === 'custom') input.focus();
+      });
+    });
+  }
+
+  function getSourceTickers(switchId, inputId) {
+    var sw = document.getElementById(switchId);
+    var active = sw ? sw.querySelector('.src-opt.active') : null;
+    var src = active ? active.dataset.src : 'scanner';
+    if (src === 'custom') return document.getElementById(inputId).value.trim() || null;
+    if (src === 'auto') return '__AUTO_SCREENER__';
+    return null; // scanner = null → templates use "Auto: loaded from Market Watch scanner A+ picks"
   }
 
   var selectedWorkflow = null;
@@ -904,9 +979,7 @@ https://articles.market-watch.xyz
 
   window._generateAgent = function() {
     if (!selectedWorkflow) return;
-    var tickers = document.getElementById('wfTickers').value.trim();
-    var useScanner = document.getElementById('wfUseScanner').checked;
-    if (useScanner && !tickers) tickers = null; // will use "Auto" in template
+    var tickers = getSourceTickers('wfSrcSwitch', 'wfTickers');
 
     var claudeMd = TEMPLATE_MAP[selectedWorkflow](tickers);
     var output = document.getElementById('wfOutput');
@@ -927,38 +1000,40 @@ https://articles.market-watch.xyz
 
   window._downloadAgent = function() {
     if (!selectedWorkflow) return;
-    var tickers = document.getElementById('wfTickers').value.trim() || null;
+    var tickers = getSourceTickers('wfSrcSwitch', 'wfTickers');
     downloadProject(selectedWorkflow, tickers);
   };
 
   // ═══════════════════════════════════════
   // FACTORY MODE — Alert Builder
   // ═══════════════════════════════════════
+  function t(translations) { return translations[LANG_CODE] || translations.en; }
+
   var CONDITIONS = [
     { id: 'rsi-low', icon: 'fa-solid fa-arrow-down', label: 'RSI < 30', cat: 'technical' },
     { id: 'rsi-high', icon: 'fa-solid fa-arrow-up', label: 'RSI > 70', cat: 'technical' },
     { id: 'macd-cross', icon: 'fa-solid fa-right-left', label: 'MACD Cross', cat: 'technical' },
     { id: 'ema200-above', icon: 'fa-solid fa-chart-line', label: 'Price > EMA200', cat: 'technical' },
     { id: 'ema200-below', icon: 'fa-solid fa-chart-line', label: 'Price < EMA200', cat: 'technical' },
-    { id: 'volume-spike', icon: 'fa-solid fa-volume-high', label: isFR ? 'Volume > 2x moy.' : 'Volume > 2x avg', cat: 'technical' },
-    { id: '52w-high', icon: 'fa-solid fa-mountain-sun', label: isFR ? 'Nouveau 52W High' : 'New 52W High', cat: 'technical' },
-    { id: '52w-low', icon: 'fa-solid fa-water', label: isFR ? 'Nouveau 52W Low' : 'New 52W Low', cat: 'technical' },
+    { id: 'volume-spike', icon: 'fa-solid fa-volume-high', label: t({fr:'Volume > 2x moy.',en:'Volume > 2x avg',ar:'حجم > 2x المتوسط',es:'Volumen > 2x prom.',zh:'成交量 > 2倍均值'}), cat: 'technical' },
+    { id: '52w-high', icon: 'fa-solid fa-mountain-sun', label: t({fr:'Nouveau 52W High',en:'New 52W High',ar:'قمة 52 أسبوع جديدة',es:'Nuevo máx. 52S',zh:'新52周高点'}), cat: 'technical' },
+    { id: '52w-low', icon: 'fa-solid fa-water', label: t({fr:'Nouveau 52W Low',en:'New 52W Low',ar:'قاع 52 أسبوع جديد',es:'Nuevo mín. 52S',zh:'新52周低点'}), cat: 'technical' },
     { id: 'vix-25', icon: 'fa-solid fa-triangle-exclamation', label: 'VIX > 25', cat: 'macro' },
     { id: 'vix-35', icon: 'fa-solid fa-skull', label: 'VIX > 35', cat: 'macro' },
-    { id: 'regime-change', icon: 'fa-solid fa-rotate', label: isFR ? 'Changement de régime' : 'Regime Change', cat: 'macro' },
-    { id: 'rate-decision', icon: 'fa-solid fa-landmark', label: isFR ? 'Décision de taux' : 'Rate Decision', cat: 'macro' },
-    { id: 'earnings-near', icon: 'fa-solid fa-calendar', label: isFR ? 'Earnings < 7j' : 'Earnings < 7d', cat: 'event' },
-    { id: 'insider-buy', icon: 'fa-solid fa-user-tie', label: 'Insider Buy', cat: 'event' },
-    { id: 'analyst-upgrade', icon: 'fa-solid fa-star', label: isFR ? 'Upgrade analyste' : 'Analyst Upgrade', cat: 'event' },
-    { id: 'news-catalyst', icon: 'fa-solid fa-newspaper', label: isFR ? 'News majeure' : 'Major News', cat: 'event' }
+    { id: 'regime-change', icon: 'fa-solid fa-rotate', label: t({fr:'Changement de régime',en:'Regime Change',ar:'تغيير النظام',es:'Cambio de régimen',zh:'市场制度变化'}), cat: 'macro' },
+    { id: 'rate-decision', icon: 'fa-solid fa-landmark', label: t({fr:'Décision de taux',en:'Rate Decision',ar:'قرار الفائدة',es:'Decisión de tipos',zh:'利率决议'}), cat: 'macro' },
+    { id: 'earnings-near', icon: 'fa-solid fa-calendar', label: t({fr:'Earnings < 7j',en:'Earnings < 7d',ar:'أرباح < 7 أيام',es:'Resultados < 7d',zh:'财报 < 7天'}), cat: 'event' },
+    { id: 'insider-buy', icon: 'fa-solid fa-user-tie', label: t({fr:'Achat d\'insider',en:'Insider Buy',ar:'شراء من الداخل',es:'Compra insider',zh:'内部人买入'}), cat: 'event' },
+    { id: 'analyst-upgrade', icon: 'fa-solid fa-star', label: t({fr:'Upgrade analyste',en:'Analyst Upgrade',ar:'ترقية محلل',es:'Upgrade analista',zh:'分析师上调'}), cat: 'event' },
+    { id: 'news-catalyst', icon: 'fa-solid fa-newspaper', label: t({fr:'News majeure',en:'Major News',ar:'أخبار رئيسية',es:'Noticia importante',zh:'重大新闻'}), cat: 'event' }
   ];
 
   var ACTIONS = [
-    { id: 'telegram', icon: 'fa-brands fa-telegram', label: 'Telegram', desc: isFR ? 'Alerte instantanée via bot' : 'Instant alert via bot' },
+    { id: 'telegram', icon: 'fa-brands fa-telegram', label: 'Telegram', desc: t({fr:'Alerte instantanée via bot',en:'Instant alert via bot',ar:'تنبيه فوري عبر بوت',es:'Alerta instantánea via bot',zh:'通过机器人即时警报'}) },
     { id: 'discord', icon: 'fa-brands fa-discord', label: 'Discord', desc: 'Webhook' },
-    { id: 'full-analysis', icon: 'fa-solid fa-microscope', label: isFR ? 'Analyse complète' : 'Full Analysis', desc: isFR ? 'Deep-dive automatique' : 'Auto deep-dive' },
-    { id: 'trade-plan', icon: 'fa-solid fa-bullseye', label: 'Trade Plan', desc: isFR ? 'Entry/Stop/TP' : 'Entry/Stop/TP' },
-    { id: 'save-report', icon: 'fa-solid fa-file-export', label: isFR ? 'Sauvegarder' : 'Save Report', desc: isFR ? 'Fichier local' : 'Local file' }
+    { id: 'full-analysis', icon: 'fa-solid fa-microscope', label: t({fr:'Analyse complète',en:'Full Analysis',ar:'تحليل كامل',es:'Análisis completo',zh:'完整分析'}), desc: t({fr:'Deep-dive automatique',en:'Auto deep-dive',ar:'تحليل معمّق تلقائي',es:'Deep-dive automático',zh:'自动深度分析'}) },
+    { id: 'trade-plan', icon: 'fa-solid fa-bullseye', label: 'Trade Plan', desc: 'Entry/Stop/TP' },
+    { id: 'save-report', icon: 'fa-solid fa-file-export', label: t({fr:'Sauvegarder',en:'Save Report',ar:'حفظ التقرير',es:'Guardar informe',zh:'保存报告'}), desc: t({fr:'Fichier local',en:'Local file',ar:'ملف محلي',es:'Archivo local',zh:'本地文件'}) }
   ];
 
   function renderFactoryPanel() {
@@ -973,8 +1048,13 @@ https://articles.market-watch.xyz
     html += '<div class="factory-step-num">1</div>';
     html += '<div class="factory-step-label">' + L.step1 + '</div>';
     html += '</div>';
-    html += '<div class="fg"><input type="text" class="fi" id="factoryTickers" placeholder="' + L.tickersPh + '">';
-    html += '<label class="wf-checkbox"><input type="checkbox" id="factoryUseScanner" checked> <span>' + L.useScannerPicks + '</span></label></div>';
+    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-database"></i> ' + L.dataSource + '</div>';
+    html += '<div class="src-switch" id="factorySrcSwitch">';
+    html += '<button type="button" class="src-opt" data-src="custom"><i class="fa-solid fa-pen"></i> ' + L.srcCustom + '</button>';
+    html += '<button type="button" class="src-opt active" data-src="scanner"><i class="fa-solid fa-crosshairs"></i> ' + L.srcScanner + '</button>';
+    html += '<button type="button" class="src-opt" data-src="auto"><i class="fa-solid fa-wand-magic-sparkles"></i> ' + L.srcAuto + '</button>';
+    html += '</div>';
+    html += '<input type="text" class="fi" id="factoryTickers" placeholder="' + L.tickersPh + '" style="display:none"></div>';
 
     // Step 2: Conditions
     html += '<div class="factory-step">';
@@ -1008,7 +1088,7 @@ https://articles.market-watch.xyz
 
     // Output
     html += '<div class="wf-output" id="factoryOutput" style="display:none">';
-    html += '<div class="output-header"><h3><i class="fa-solid fa-bell"></i> ' + (isFR ? 'Système d\'Alertes' : 'Alert System') + '</h3>';
+    html += '<div class="output-header"><h3><i class="fa-solid fa-bell"></i> ' + t({fr:'Système d\'Alertes',en:'Alert System',ar:'\u0646\u0638\u0627\u0645 \u0627\u0644\u062a\u0646\u0628\u064a\u0647\u0627\u062a',es:'Sistema de Alertas',zh:'\u8b66\u62a5\u7cfb\u7edf'}) + '</h3>';
     html += '<div class="output-meta"><span id="factoryOutputChars"><i class="fa-solid fa-text-width"></i></span></div></div>';
     html += '<pre class="prompt-output" id="factoryOutputCode"></pre>';
     html += '<div class="wf-output-actions">';
@@ -1016,9 +1096,9 @@ https://articles.market-watch.xyz
     html += '<button class="action-btn" onclick="window._downloadFactory()"><i class="fa-solid fa-download"></i> ' + L.download + '</button>';
     html += '</div>';
     html += '<div class="wf-howto"><div class="pedagogy-box"><h4><i class="fa-solid fa-graduation-cap"></i> ' + L.howTo + '</h4>';
-    html += '<ol><li>' + (isFR ? 'Décompresse le ZIP → <code>cd mcp-server && npm install && cd ..</code>' : 'Unzip → <code>cd mcp-server && npm install && cd ..</code>') + '</li>';
-    html += '<li><code>claude</code> ' + (isFR ? '(MCP auto-détecté)' : '(MCP auto-detected)') + '</li>';
-    html += '<li>"Start monitoring my alerts"</li></ol>';
+    html += '<ol><li>' + L.howToStep1 + '</li>';
+    html += '<li>' + L.howToStep2Factory + '</li>';
+    html += '<li>' + L.howToStep3Factory + '</li></ol>';
     html += '</div></div></div>';
 
     panel.innerHTML = html;
@@ -1027,9 +1107,13 @@ https://articles.market-watch.xyz
     panel.querySelectorAll('.focus-chip').forEach(function(chip) {
       chip.addEventListener('click', function() { this.classList.toggle('active'); });
     });
+
+    // Source switch logic
+    initSrcSwitch('factorySrcSwitch', 'factoryTickers');
   }
 
   function generateAlertCLAUDEmd(tickers, conditions, actions) {
+    tickers = normalizeTickers(tickers);
     var condText = conditions.map(function(id) {
       var c = CONDITIONS.find(function(x) { return x.id === id; });
       return c ? '- **' + c.label + '**' : '';
@@ -1097,9 +1181,7 @@ Say: "Start monitoring" or "Check conditions now"
   }
 
   window._generateFactory = function() {
-    var tickers = document.getElementById('factoryTickers').value.trim();
-    var useScanner = document.getElementById('factoryUseScanner').checked;
-    if (useScanner && !tickers) tickers = null;
+    var tickers = getSourceTickers('factorySrcSwitch', 'factoryTickers');
 
     var conditions = [];
     document.querySelectorAll('#factoryConditions .focus-chip.active').forEach(function(c) {
@@ -1127,7 +1209,7 @@ Say: "Start monitoring" or "Check conditions now"
   };
 
   window._downloadFactory = function() {
-    var tickers = document.getElementById('factoryTickers').value.trim() || null;
+    var tickers = getSourceTickers('factorySrcSwitch', 'factoryTickers');
     var conditions = [];
     document.querySelectorAll('#factoryConditions .focus-chip.active').forEach(function(c) {
       conditions.push(c.dataset.cond);
