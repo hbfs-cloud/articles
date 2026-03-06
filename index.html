@@ -3426,18 +3426,52 @@
       }
     }
 
-    // Intercept existing switchTab function
-    document.addEventListener("DOMContentLoaded", () => {
-      // Initial fetch for the active tab
-      const activeBtn = document.querySelector('.main-tab.active');
-      if (activeBtn) {
-        loadTabContent(activeBtn.dataset.tab);
-      }
+    // Pre-fetch all tab data (for counters), render only the active tab
+    function prefetchAllTabs() {
+      var tabs = ['weekly', 'daily', 'analyses', 'scanner', 'tech', 'series'];
+      var activeTab = '';
+      var activeBtn = document.querySelector('.main-tab.active');
+      if (activeBtn) activeTab = activeBtn.dataset.tab;
 
-      // Add click listeners to tabs
+      tabs.forEach(function(tab) {
+        if (tabState[tab].loaded) return;
+        fetch('/data/' + tab + '.json')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            tabState[tab].data = data;
+            tabState[tab].loaded = true;
+            // Only render the active tab immediately
+            if (tab === activeTab) {
+              renderCards(tab, true);
+              if (typeof applyAllFilters === 'function') applyAllFilters();
+            }
+            // Update counters after each tab loads
+            if (typeof updateTabCounts === 'function') updateTabCounts();
+          })
+          .catch(function(e) { console.error("Failed to load " + tab, e); });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      prefetchAllTabs();
+
+      // Add click listeners to tabs — render on first click if not yet rendered
       document.querySelectorAll('.main-tab').forEach(btn => {
         btn.addEventListener('click', function () {
-          setTimeout(() => { loadTabContent(this.dataset.tab); }, 50); // Small delay to let switchTab run
+          const tab = this.dataset.tab;
+          setTimeout(() => {
+            if (tabState[tab].loaded) {
+              const panel = document.getElementById('tab-' + tab);
+              const grid = panel ? panel.querySelector('.grid-cards') : null;
+              // Render if grid is empty (data loaded but not rendered)
+              if (grid && !grid.querySelector('.report-card')) {
+                renderCards(tab, true);
+                if (typeof applyAllFilters === 'function') applyAllFilters();
+              }
+            } else {
+              loadTabContent(tab);
+            }
+          }, 50);
         });
       });
     });
@@ -3731,23 +3765,42 @@
       return Array.from(langs);
     }
 
-    // Update tab counters based on visible cards
+    // Update tab counters — works even for tabs not yet rendered
+    // Counts from tabState.data (raw HTML strings) so we don't need DOM cards
     function updateTabCounts() {
       ['weekly', 'daily', 'analyses', 'scanner', 'tech', 'series'].forEach(function(tab) {
-        var panel = document.getElementById('tab-' + tab);
-        if (!panel) return;
-        var cards = panel.querySelectorAll('.report-card');
-        var visible = 0;
-        cards.forEach(function(c) { if (c.style.display !== 'none') visible++; });
         var countEl = document.getElementById(tab + 'Count');
-        if (countEl) {
-          if (currentLangFilter === 'all' && typeof activeTags !== 'undefined' && !activeTags.length) {
-            var state = typeof tabState !== 'undefined' ? tabState[tab] : null;
-            if (state && state.data) countEl.textContent = state.data.length;
-          } else {
-            countEl.textContent = visible;
-          }
+        if (!countEl) return;
+        var state = typeof tabState !== 'undefined' ? tabState[tab] : null;
+        if (!state || !state.data || !state.data.length) return;
+
+        // No filters active → show total
+        var noLangFilter = (currentLangFilter === 'all');
+        var noTagFilter = (typeof activeTags === 'undefined' || !activeTags.length);
+        if (noLangFilter && noTagFilter) {
+          countEl.textContent = state.data.length;
+          return;
         }
+
+        // Count matching cards from raw HTML strings (no DOM needed)
+        var count = 0;
+        state.data.forEach(function(html) {
+          // Language filter
+          if (!noLangFilter) {
+            var langMatch = html.match(/data-lang="([^"]*)"/);
+            var langs = langMatch ? langMatch[1].split(',') : ['fr'];
+            if (langs.indexOf(currentLangFilter) === -1) return;
+          }
+          // Tag filter
+          if (!noTagFilter) {
+            var tagMatch = html.match(/data-tags="([^"]*)"/);
+            var cardTags = tagMatch ? tagMatch[1].split(',') : [];
+            var allTagsMatch = activeTags.every(function(t) { return cardTags.indexOf(t) !== -1; });
+            if (!allTagsMatch) return;
+          }
+          count++;
+        });
+        countEl.textContent = count;
       });
     }
 
