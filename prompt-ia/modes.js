@@ -17,7 +17,9 @@
       fearGreed: 'Fear/Greed', picks: 'A+ Picks', updated: 'Updated',
       entry: 'Entry', stop: 'Stop', tp1: 'TP1', score: 'Score',
       agentIntro: 'Pick a workflow below. Download a ready-to-run project for your AI tool.',
-      generate: 'Generate Project', download: 'Download ZIP', copy: 'Copy CLAUDE.md',
+      dataSource: 'Data Source',
+      srcScanner: 'A+ Picks', srcAuto: 'Auto-Screener', srcCustom: 'Custom',
+      generate: 'Download Project', download: 'Download ZIP', copy: 'Copy CLAUDE.md',
       includes: 'Project includes', howTo: 'How to use',
       howToStep1: 'Unzip the project folder',
       howToStep2: '<code>cd mcp-server && npm install && cd ..</code>',
@@ -38,7 +40,9 @@
       fearGreed: 'Fear/Greed', picks: 'Picks A+', updated: 'Mis à jour',
       entry: 'Entrée', stop: 'Stop', tp1: 'TP1', score: 'Score',
       agentIntro: 'Choisis un workflow. Télécharge un projet prêt à l\'emploi pour ton outil IA.',
-      generate: 'Générer le Projet', download: 'Télécharger ZIP', copy: 'Copier CLAUDE.md',
+      dataSource: 'Source de données',
+      srcScanner: 'Picks A+', srcAuto: 'Auto-Screener', srcCustom: 'Personnalisé',
+      generate: 'Télécharger le Projet', download: 'Télécharger ZIP', copy: 'Copier CLAUDE.md',
       includes: 'Le projet contient', howTo: 'Comment utiliser',
       howToStep1: 'Décompresse le dossier',
       howToStep2: '<code>cd mcp-server && npm install && cd ..</code>',
@@ -59,7 +63,9 @@
       fearGreed: '\u062e\u0648\u0641/\u0637\u0645\u0639', picks: '\u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a A+', updated: '\u0645\u062d\u062f\u0651\u062b',
       entry: '\u062f\u062e\u0648\u0644', stop: '\u0648\u0642\u0641', tp1: 'TP1', score: '\u0646\u0642\u0627\u0637',
       agentIntro: '\u0627\u062e\u062a\u0631 \u0633\u064a\u0631 \u0639\u0645\u0644. \u062d\u0645\u0651\u0644 \u0645\u0634\u0631\u0648\u0639\u0627\u064b \u062c\u0627\u0647\u0632\u0627\u064b \u0644\u0623\u062f\u0627\u0629 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a.',
-      generate: '\u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0634\u0631\u0648\u0639', download: '\u062a\u062d\u0645\u064a\u0644 ZIP', copy: '\u0646\u0633\u062e CLAUDE.md',
+      dataSource: '\u0645\u0635\u062f\u0631 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a',
+      srcScanner: '\u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a A+', srcAuto: '\u0641\u0631\u0632 \u062a\u0644\u0642\u0627\u0626\u064a', srcCustom: '\u0645\u062e\u0635\u0635',
+      generate: '\u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0645\u0634\u0631\u0648\u0639', download: '\u062a\u062d\u0645\u064a\u0644 ZIP', copy: '\u0646\u0633\u062e CLAUDE.md',
       includes: '\u064a\u062a\u0636\u0645\u0651\u0646 \u0627\u0644\u0645\u0634\u0631\u0648\u0639', howTo: '\u0643\u064a\u0641\u064a\u0629 \u0627\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645',
       howToStep1: '\u0641\u0643\u0651 \u0636\u063a\u0637 \u0627\u0644\u0645\u062c\u0644\u062f',
       howToStep2: '<code>cd mcp-server && npm install && cd ..</code>',
@@ -80,7 +86,9 @@
       fearGreed: 'Miedo/Codicia', picks: 'Picks A+', updated: 'Actualizado',
       entry: 'Entrada', stop: 'Stop', tp1: 'TP1', score: 'Puntos',
       agentIntro: 'Elige un flujo de trabajo. Descarga un proyecto listo para tu herramienta IA.',
-      generate: 'Generar Proyecto', download: 'Descargar ZIP', copy: 'Copiar CLAUDE.md',
+      dataSource: 'Fuente de datos',
+      srcScanner: 'Picks A+', srcAuto: 'Auto-Screener', srcCustom: 'Personalizado',
+      generate: 'Descargar Proyecto', download: 'Descargar ZIP', copy: 'Copiar CLAUDE.md',
       includes: 'El proyecto incluye', howTo: 'Cómo usar',
       howToStep1: 'Descomprime la carpeta',
       howToStep2: '<code>cd mcp-server && npm install && cd ..</code>',
@@ -101,7 +109,9 @@
       fearGreed: '\u6050\u60e7/\u8d2a\u5a6a', picks: 'A+ \u7cbe\u9009', updated: '\u66f4\u65b0\u65f6\u95f4',
       entry: '\u5165\u573a', stop: '\u6b62\u635f', tp1: 'TP1', score: '\u5206\u6570',
       agentIntro: '\u9009\u62e9\u5de5\u4f5c\u6d41\u3002\u4e0b\u8f7d\u9002\u7528\u4e8e\u4f60 AI \u5de5\u5177\u7684\u5373\u7528\u9879\u76ee\u3002',
-      generate: '\u751f\u6210\u9879\u76ee', download: '\u4e0b\u8f7d ZIP', copy: '\u590d\u5236 CLAUDE.md',
+      dataSource: '\u6570\u636e\u6e90',
+      srcScanner: 'A+ \u7cbe\u9009', srcAuto: '\u81ea\u52a8\u7b5b\u9009', srcCustom: '\u81ea\u5b9a\u4e49',
+      generate: '\u4e0b\u8f7d\u9879\u76ee', download: '\u4e0b\u8f7d ZIP', copy: '\u590d\u5236 CLAUDE.md',
       includes: '\u9879\u76ee\u5305\u542b', howTo: '\u5982\u4f55\u4f7f\u7528',
       howToStep1: '\u89e3\u538b\u6587\u4ef6\u5939',
       howToStep2: '<code>cd mcp-server && npm install && cd ..</code>',
@@ -627,9 +637,14 @@
     html += '<div class="wf-config-desc" id="wfConfigDesc"></div></div>';
     html += '</div>';
 
-    // Optional custom tickers (simple text field, not 3-way switch)
-    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-chart-line"></i> ' + L.tickersLabel + ' <span class="opt">' + L.tickersOpt + '</span></div>';
-    html += '<input type="text" class="fi" id="wfTickers" placeholder="' + L.watchlistPh + '"></div>';
+    // Data source switch (3-way)
+    html += '<div class="fg"><div class="fl"><i class="fa-solid fa-database"></i> ' + L.dataSource + '</div>';
+    html += '<div class="src-switch" id="wfSrcSwitch">';
+    html += '<button type="button" class="src-opt active" data-src="scanner"><i class="fa-solid fa-crosshairs"></i> ' + L.srcScanner + '</button>';
+    html += '<button type="button" class="src-opt" data-src="auto"><i class="fa-solid fa-wand-magic-sparkles"></i> ' + L.srcAuto + '</button>';
+    html += '<button type="button" class="src-opt" data-src="custom"><i class="fa-solid fa-pen"></i> ' + L.srcCustom + '</button>';
+    html += '</div>';
+    html += '<input type="text" class="fi" id="wfTickers" placeholder="' + L.watchlistPh + '" style="display:none"></div>';
 
     html += '<div class="wf-config-files" id="wfConfigFiles"></div>';
 
@@ -638,20 +653,16 @@
     html += '<i class="fa-solid fa-wand-magic-sparkles"></i> ' + L.generate + '</button>';
     html += '</div></div>';
 
-    // Output area
+    // Post-download area (how-to + copy option)
     html += '<div class="wf-output" id="wfOutput" style="display:none">';
-    html += '<div class="output-header"><h3><i class="fa-solid fa-file-code"></i> CLAUDE.md</h3>';
-    html += '<div class="output-meta"><span id="wfOutputChars"><i class="fa-solid fa-text-width"></i></span></div></div>';
-    html += '<pre class="prompt-output" id="wfOutputCode"></pre>';
-    html += '<div class="wf-output-actions">';
-    html += '<button class="action-btn primary" onclick="window._copyAgent()"><i class="fa-solid fa-copy"></i> ' + L.copy + '</button>';
-    html += '<button class="action-btn" onclick="window._downloadAgent()"><i class="fa-solid fa-download"></i> ' + L.download + '</button>';
-    html += '</div>';
     html += '<div class="wf-howto"><div class="pedagogy-box"><h4><i class="fa-solid fa-graduation-cap"></i> ' + L.howTo + '</h4>';
     html += '<ol><li>' + L.howToStep1 + '</li>';
     html += '<li>' + L.howToStep2 + '</li>';
     html += '<li>' + L.howToStep3 + '</li></ol>';
-    html += '</div></div></div>';
+    html += '</div></div>';
+    html += '<div class="wf-output-actions">';
+    html += '<button class="action-btn" onclick="window._copyAgent()"><i class="fa-solid fa-copy"></i> ' + L.copy + '</button>';
+    html += '</div></div>';
 
     panel.innerHTML = html;
 
@@ -660,8 +671,47 @@
       card.addEventListener('click', function() { selectWorkflow(this.dataset.wf); });
     });
 
+    // Init source switch
+    initSrcSwitch('wfSrcSwitch', 'wfTickers');
+
     // Fetch live data
     fetchLiveData();
+  }
+
+  // ═══════════════════════════════════════
+  // SOURCE SWITCH (A+ Picks / Auto-Screener / Custom)
+  // ═══════════════════════════════════════
+  function initSrcSwitch(switchId, inputId) {
+    var switchEl = document.getElementById(switchId);
+    var inputEl = document.getElementById(inputId);
+    if (!switchEl || !inputEl) return;
+
+    switchEl.querySelectorAll('.src-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        switchEl.querySelectorAll('.src-opt').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        inputEl.style.display = btn.dataset.src === 'custom' ? '' : 'none';
+        if (btn.dataset.src === 'custom') inputEl.focus();
+      });
+    });
+  }
+
+  function getSourceTickers() {
+    var switchEl = document.getElementById('wfSrcSwitch');
+    if (!switchEl) return null;
+    var active = switchEl.querySelector('.src-opt.active');
+    if (!active) return null;
+    var src = active.dataset.src;
+
+    if (src === 'custom') {
+      var val = document.getElementById('wfTickers').value.trim();
+      return val || null;
+    }
+    if (src === 'scanner' && liveData && liveData.picks) {
+      return liveData.picks.map(function(p) { return p.ticker; }).join(', ');
+    }
+    // 'auto' = no tickers specified, agent uses RunAutoScreener
+    return null;
   }
 
   function selectWorkflow(id) {
@@ -694,27 +744,23 @@
 
   window._generateAgent = function() {
     if (!selectedWorkflow) return;
-    var tickers = document.getElementById('wfTickers').value.trim() || null;
-    var claudeMd = TEMPLATE_MAP[selectedWorkflow](tickers);
+    var tickers = getSourceTickers();
+    downloadProject(selectedWorkflow, tickers);
+    // Show how-to after download
     var output = document.getElementById('wfOutput');
-    document.getElementById('wfOutputCode').textContent = claudeMd;
-    document.getElementById('wfOutputChars').innerHTML = '<i class="fa-solid fa-text-width"></i> ' + claudeMd.length.toLocaleString() + ' chars';
-    output.style.display = '';
-    setTimeout(function() { output.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+    if (output) {
+      output.style.display = '';
+      setTimeout(function() { output.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 300);
+    }
   };
 
   window._copyAgent = function() {
-    var code = document.getElementById('wfOutputCode');
-    if (!code) return;
-    navigator.clipboard.writeText(code.textContent).then(function() {
-      if (typeof showCopySuccess === 'function') showCopySuccess('Claude Code');
-    });
-  };
-
-  window._downloadAgent = function() {
     if (!selectedWorkflow) return;
-    var tickers = document.getElementById('wfTickers').value.trim() || null;
-    downloadProject(selectedWorkflow, tickers);
+    var tickers = getSourceTickers();
+    var claudeMd = TEMPLATE_MAP[selectedWorkflow](tickers);
+    navigator.clipboard.writeText(claudeMd).then(function() {
+      if (typeof showCopySuccess === 'function') showCopySuccess('CLAUDE.md');
+    });
   };
 
   // ═══════════════════════════════════════
