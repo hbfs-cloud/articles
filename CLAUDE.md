@@ -306,9 +306,14 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
 7. Créer les variantes multilangue/multiniveau
 8. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
-9. **OBLIGATOIRE — Commit & Push** :
+9. **OBLIGATOIRE — Mettre à jour `mcp/watchlist.json`** avec les données du scan :
+   - Écrire directement le fichier `mcp/watchlist.json` avec les 10 picks, le régime, VIX, DXY, SPX, Fear/Greed
+   - Format : voir `mcp/watchlist.json` existant comme référence
+   - Ce fichier alimente la **Live Data Preview** de `/prompt-ia/` et le **MCP server** pour les agents IA
+   - Les champs obligatoires : `updated` (ISO date), `regime`, `vix`, `dxy`, `spx`, `fear_greed`, `picks[]` (ticker, name, strategy, entry, stop, tp1, tp2, rr, score, region, tags, catalyst), `alerts`, `next_update`
+10. **OBLIGATOIRE — Commit & Push** :
    ```bash
-   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js
+   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json
    git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
    git push origin main
    ```
