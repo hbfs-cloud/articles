@@ -261,11 +261,14 @@
   // ── MODE SWITCHER ──
   function switchMode(mode) {
     document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.mode === mode); });
-    document.getElementById('panelCustom').classList.toggle('active', mode === 'custom');
-    document.getElementById('panelLibrary').classList.toggle('active', mode === 'library');
+    document.querySelectorAll('.mode-panel').forEach(function(p) { p.classList.remove('active'); });
+    var panelId = 'panel' + mode.charAt(0).toUpperCase() + mode.slice(1);
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.add('active');
   }
-  document.getElementById('modeCustomBtn').addEventListener('click', function() { switchMode('custom'); });
-  document.getElementById('modeLibBtn').addEventListener('click', function() { switchMode('library'); });
+  document.querySelectorAll('.mode-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { switchMode(this.dataset.mode); });
+  });
 
   // ── AI RECOMMENDATION ENGINE ──
   var aiLabels = { chatgpt:'ChatGPT', claude:'Claude', perplexity:'Perplexity', grok:'Grok', gemini:'Gemini', deepseek:'DeepSeek' };

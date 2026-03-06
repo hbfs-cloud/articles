@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="ai,tech,architecture" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Watch x AI Agents — MCP Data Source for Claude Code, Cursor, Gemini CLI | Market Watch</title>
+    <meta name="description" content="Turn your AI into a premium trading desk. Auto-configured workflows, live data, smart alerts. Works with Claude Code, Cursor, Gemini CLI and more.">
+    <meta property="og:title" content="Market Watch x AI Agents">
+    <meta property="og:description" content="Turn your AI into a premium trading desk. Auto-configured workflows, live data, smart alerts.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.market-watch.xyz/mcp/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section { padding: 5rem 2rem 4rem; background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); text-align: center; border-bottom: 1px solid #93c5fd; }
+        .hero-date { font-size: 0.85rem; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem; }
+        .hero-badges { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); }
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; position: relative; }
+        .content-card { background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 3rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
+        h2 { font-size: 1.8rem; font-weight: 900; color: #0f172a; margin: 0 0 1.5rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.75rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; }
+        h3 { font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 2rem 0 1rem; }
+        h4 { font-size: 1.1rem; font-weight: 700; color: #334155; margin: 1.5rem 0 0.75rem; }
+        p { font-size: 1.05rem; line-height: 1.7; color: #334155; margin-bottom: 1.25rem; }
+        ul, ol { font-size: 1.05rem; line-height: 1.7; color: #334155; margin-bottom: 1.25rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        pre { background: #1e293b; color: #e2e8f0; padding: 1.5rem; border-radius: 12px; overflow-x: auto; font-size: 0.9rem; line-height: 1.6; margin: 1.5rem 0; }
+        code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        pre code { color: #e2e8f0; }
+        .code-label { display: inline-block; background: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 6px 6px 0 0; font-size: 0.75rem; font-weight: 700; margin-bottom: -1px; }
+        .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; padding: 2rem 1rem; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin: 1.5rem 0; }
+        .flow-box { background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem 1.5rem; text-align: center; min-width: 140px; }
+        .flow-box i { font-size: 1.5rem; color: #3b82f6; display: block; margin-bottom: 0.5rem; }
+        .flow-box strong { font-size: 0.85rem; color: #0f172a; }
+        .flow-box small { font-size: 0.7rem; color: #64748b; display: block; margin-top: 0.25rem; }
+        .flow-arrow { font-size: 1.5rem; color: #94a3b8; }
+        .workflow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .workflow-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; transition: box-shadow 0.2s; }
+        .workflow-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .workflow-card .wf-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .workflow-card .wf-title { font-weight: 800; color: #0f172a; font-size: 0.95rem; margin-bottom: 0.25rem; }
+        .workflow-card .wf-desc { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+        .workflow-card a { color: #3b82f6; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-block; margin-top: 0.5rem; }
+        .workflow-card a:hover { text-decoration: underline; }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; background: #3b82f6; color: white; font-weight: 800; font-size: 0.9rem; margin-right: 0.5rem; flex-shrink: 0; }
+        .config-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 0; }
+        .config-tab { padding: 0.75rem 1.25rem; font-size: 0.85rem; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; }
+        .config-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+        .config-panel { display: none; }
+        .config-panel.active { display: block; }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; text-align: center; }
+        .metric-value { font-size: 1.5rem; font-weight: 900; color: #0f172a; }
+        .metric-label { font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; }
+        @media (max-width: 768px) { .content-card { padding: 1.5rem; } .hero-section { padding: 3rem 1rem; } .flow-diagram { flex-direction: column; } .flow-arrow { transform: rotate(90deg); } .workflow-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">MarketWatch</span>
+      </a>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">AI AGENT DATA SOURCE</div>
+        <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Market Watch <span style="color:#3b82f6;">&times;</span> AI Agents
+        </h1>
+        <p style="font-size:1.15rem; color:#475569; max-width:700px; margin:1rem auto 0; font-weight:400; line-height:1.6;">
+            Turn your AI into a premium trading desk. Auto-configured workflows, live data, smart alerts.
+        </p>
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-link"></i> MCP Ready</div>
+            <div class="hero-badge"><i class="fa-solid fa-satellite-dish"></i> Live Data</div>
+            <div class="hero-badge"><i class="fa-solid fa-robot"></i> Self-Configuring</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+    </header>
+
+    <div class="container">
+
+<!-- ============================================== -->
+<!-- SECTION 1 : WHAT IS THIS?                      -->
+<!-- ============================================== -->
+<div id="what-is" class="content-card">
+    <h2><i class="fa-solid fa-circle-info" style="color:#3b82f6;"></i> What Is This?</h2>
+
+    <p>Market Watch publishes a <strong>daily watchlist</strong> of A+ scanner picks at <code>/mcp/watchlist.json</code> &mdash; a machine-readable JSON endpoint updated every trading day at 23:00 UTC.</p>
+
+    <p>Any AI coding agent &mdash; <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Gemini CLI</strong>, <strong>Windsurf</strong>, or even <strong>ChatGPT</strong> &mdash; can fetch this data and act on it. Combined with a pre-built workflow configuration (a <code>CLAUDE.md</code> prompt file), your AI becomes a fully autonomous trading desk: scanning markets, analyzing setups, generating alerts, and producing institutional-grade reports.</p>
+
+    <div class="pedagogy-box">
+        <strong><i class="fas fa-graduation-cap"></i> How it works in practice</strong>
+        <p style="margin-top:0.5rem;">You point your AI agent at the Market Watch watchlist. The agent reads the current market regime, VIX level, and 10 curated A+ picks with precise entry/stop/target levels. Then it runs analysis, monitors conditions, and alerts you when something triggers. No coding required &mdash; just a prompt file.</p>
+    </div>
+
+    <h3>The Data Pipeline</h3>
+    <div class="flow-diagram">
+        <div class="flow-box">
+            <i class="fas fa-radar"></i>
+            <strong>MW Scanner</strong>
+            <small>10 A+ picks daily</small>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-box">
+            <i class="fas fa-file-code"></i>
+            <strong>watchlist.json</strong>
+            <small>Static JSON endpoint</small>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-box">
+            <i class="fas fa-robot"></i>
+            <strong>Your AI Agent</strong>
+            <small>Claude, Cursor, Gemini</small>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-box">
+            <i class="fas fa-bell"></i>
+            <strong>Alerts &amp; Reports</strong>
+            <small>Telegram, Discord, PDF</small>
+        </div>
+    </div>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-value">10</div>
+            <div class="metric-label">A+ picks per day</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">23:00</div>
+            <div class="metric-label">UTC daily update</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">6</div>
+            <div class="metric-label">Pre-built workflows</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">Free</div>
+            <div class="metric-label">Open JSON endpoint</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 2 : QUICK START                        -->
+<!-- ============================================== -->
+<div id="quickstart" class="content-card">
+    <h2><i class="fa-solid fa-rocket" style="color:#3b82f6;"></i> 3-Step Quick Start</h2>
+
+    <p>Get a fully autonomous trading desk running in under 2 minutes.</p>
+
+    <div class="pedagogy-box">
+        <strong><span class="step-number">1</span> Create a project folder</strong>
+        <p style="margin-top:0.5rem;">This will be your AI agent's workspace. All configs, reports, and alerts will live here.</p>
+    </div>
+    <div class="code-label">Terminal</div>
+    <pre><code>mkdir trading-desk && cd trading-desk</code></pre>
+
+    <div class="pedagogy-box">
+        <strong><span class="step-number">2</span> Download the workflow config</strong>
+        <p style="margin-top:0.5rem;">The <code>CLAUDE.md</code> file tells your AI agent how to behave &mdash; what to fetch, how to analyze, when to alert. It works with any agent that reads system prompts.</p>
+    </div>
+    <div class="code-label">Terminal</div>
+    <pre><code># Download the pre-built trading desk prompt
+curl -o CLAUDE.md https://articles.market-watch.xyz/prompt-ia/en/trading-desk.md</code></pre>
+    <p>Or visit <a href="/prompt-ia/?mode=agent" style="color:#3b82f6; font-weight:700;">/prompt-ia/ &rarr; Agent Mode</a> to customize and copy the prompt interactively.</p>
+
+    <div class="pedagogy-box">
+        <strong><span class="step-number">3</span> Start your AI</strong>
+        <p style="margin-top:0.5rem;">Launch your preferred AI agent in the project folder. The agent will auto-detect the <code>CLAUDE.md</code> and start working.</p>
+    </div>
+    <div class="code-label">Terminal</div>
+    <pre><code># Claude Code
+claude
+
+# Or Cursor (open folder, Cmd+L)
+cursor .
+
+# Or Gemini CLI
+gemini
+
+# Then say:
+# "Run the morning scan"
+# "Analyze today's watchlist"
+# "Set up alerts for all A+ picks"</code></pre>
+
+    <div class="alert-box">
+        <strong><i class="fas fa-circle-check"></i> That's it.</strong> Your AI will fetch the latest watchlist from <code>/mcp/watchlist.json</code>, analyze each pick, check conditions, and report back. No API keys, no setup, no subscriptions.
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 3 : WATCHLIST API                      -->
+<!-- ============================================== -->
+<div id="watchlist-api" class="content-card">
+    <h2><i class="fa-solid fa-database" style="color:#3b82f6;"></i> Watchlist API</h2>
+
+    <p>The watchlist is a <strong>static JSON file</strong> served at a predictable URL. It is not a REST API &mdash; no authentication, no rate limits, no API keys. Just an HTTP GET request.</p>
+
+    <div class="code-label">Endpoint</div>
+    <pre><code>GET https://articles.market-watch.xyz/mcp/watchlist.json</code></pre>
+
+    <h3>Update Schedule</h3>
+    <ul>
+        <li><strong>Monday&ndash;Friday</strong>: Updated at <strong>23:00 UTC</strong> after the scanner completes</li>
+        <li><strong>Weekends</strong>: Friday's watchlist remains active (crypto picks may update)</li>
+        <li>The <code>next_update</code> field tells your agent when to check again</li>
+    </ul>
+
+    <h3>JSON Schema</h3>
+    <div class="code-label">watchlist.json</div>
+    <pre><code>{
+  "updated": "2026-03-06T23:00:00Z",     // Last update timestamp (ISO 8601)
+  "source": "Market Watch Scanner",       // Data source identifier
+  "url": "https://articles.market-watch.xyz/scanner/",
+  "regime": "EARLY RISK-OFF",             // Market regime (see below)
+  "vix": 22.5,                            // CBOE VIX level
+  "dxy": 104.2,                           // US Dollar Index
+  "us10y": 4.28,                          // US 10Y Treasury yield
+  "spx": 5740,                            // S&amp;P 500 level
+  "fear_greed": 38,                       // CNN Fear &amp; Greed Index (0-100)
+  "picks": [                              // Array of 10 A+ setups
+    {
+      "ticker": "GLD",                    // Symbol
+      "name": "SPDR Gold Shares",         // Full name
+      "strategy": "Momentum Continuation",// Strategy type
+      "entry": 236.00,                    // Entry price zone
+      "stop": 228.50,                     // Stop loss level
+      "tp1": 245.00,                      // Target price 1
+      "tp2": 255.00,                      // Target price 2
+      "rr": "1:2.5",                      // Risk/Reward ratio
+      "score": 94,                        // Composite score (0-100)
+      "region": "ETF",                    // US | EU | APAC | ETF | Crypto
+      "tags": ["commodity", "gold"],      // Thematic tags
+      "catalyst": "Iran tensions + ..."   // Key catalyst
+    }
+  ],
+  "alerts": {                             // Market-level alerts
+    "regime_change": false,               // Regime shifted since last update
+    "vix_elevated": true,                 // VIX above 20
+    "earnings_today": ["AVGO", "COST"],   // Tickers reporting today
+    "macro_events": ["NFP 8:30 AM ET"]    // Key economic events
+  },
+  "next_update": "2026-03-07T23:00:00Z"  // When to check again
+}</code></pre>
+
+    <h3>Market Regimes</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr><th>Regime</th><th>Description</th><th>Typical Strategy</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>RISK-ON</strong></td><td>Broad rally, low VIX, bullish breadth</td><td>Momentum longs, breakouts</td></tr>
+                <tr><td><strong>EARLY RISK-ON</strong></td><td>Recovery phase, improving breadth</td><td>Oversold reversals, value</td></tr>
+                <tr><td><strong>RISK-OFF</strong></td><td>Selloff, high VIX, defensive rotation</td><td>Shorts, hedges (GLD, TLT)</td></tr>
+                <tr><td><strong>EARLY RISK-OFF</strong></td><td>Deteriorating conditions, rising VIX</td><td>Reduced exposure, hedges</td></tr>
+                <tr><td><strong>NEUTRAL</strong></td><td>Range-bound, mixed signals</td><td>Mean reversion, pairs</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Fetching from Your Agent</h3>
+    <p>Your AI agent can fetch the watchlist with a simple command. Here is how it works in practice:</p>
+    <div class="code-label">Agent Prompt</div>
+    <pre><code># In your CLAUDE.md or system prompt:
+"Fetch https://articles.market-watch.xyz/mcp/watchlist.json
+ Parse the picks array. For each pick with score >= 90:
+ - Check if current price is within 2% of entry
+ - Verify the catalyst is still active (web search)
+ - If conditions met, generate an alert"</code></pre>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 4 : WORKFLOWS                          -->
+<!-- ============================================== -->
+<div id="workflows" class="content-card">
+    <h2><i class="fa-solid fa-diagram-project" style="color:#3b82f6;"></i> Pre-Built Workflows</h2>
+
+    <p>Six ready-to-use workflows are available in the <a href="/prompt-ia/?mode=agent" style="color:#3b82f6; font-weight:700;">Prompt Lab &rarr; Agent Mode</a>. Each workflow is a self-contained prompt that turns your AI into a specialist.</p>
+
+    <div class="workflow-grid">
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-building-columns"></i></div>
+            <div class="wf-title">Trading Desk</div>
+            <div class="wf-desc">Full daily pipeline: fetch watchlist, analyze picks, monitor prices, generate alerts and end-of-day reports.</div>
+            <a href="/prompt-ia/?mode=agent&workflow=trading-desk">Open workflow &rarr;</a>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-crosshairs"></i></div>
+            <div class="wf-title">Scanner Sniper</div>
+            <div class="wf-desc">Deep-dive analysis on today's A+ picks. Technical levels, catalyst validation, risk assessment for each setup.</div>
+            <a href="/prompt-ia/?mode=agent&workflow=scanner-sniper">Open workflow &rarr;</a>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="wf-title">Portfolio Sentinel</div>
+            <div class="wf-desc">Monitor your portfolio against the watchlist regime. Hedge alerts, correlation checks, VaR updates.</div>
+            <a href="/prompt-ia/?mode=agent&workflow=portfolio-sentinel">Open workflow &rarr;</a>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="wf-title">Earnings Analyst</div>
+            <div class="wf-desc">Track upcoming earnings from the watchlist. Pre-earnings analysis, post-results reaction, consensus vs. actual.</div>
+            <a href="/prompt-ia/?mode=agent&workflow=earnings-analyst">Open workflow &rarr;</a>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-newspaper"></i></div>
+            <div class="wf-title">News Reactor</div>
+            <div class="wf-desc">Breaking news detection for watchlist tickers. Cross-reference news with technical levels, instant trade plans.</div>
+            <a href="/prompt-ia/?mode=agent&workflow=news-reactor">Open workflow &rarr;</a>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-bell"></i></div>
+            <div class="wf-title">Alert Architect</div>
+            <div class="wf-desc">Build custom multi-condition alerts: RSI thresholds, MACD crosses, volume spikes, VIX triggers, combined.</div>
+            <a href="/prompt-ia/?mode=factory">Open builder &rarr;</a>
+        </div>
+    </div>
+
+    <div class="pedagogy-box">
+        <strong><i class="fas fa-lightbulb"></i> How workflows work</strong>
+        <p style="margin-top:0.5rem;">Each workflow is a structured prompt (a <code>CLAUDE.md</code> file) that your AI reads on startup. It contains instructions for fetching data, analysis logic, alert conditions, and output formats. Your AI follows the instructions autonomously &mdash; you just pick the workflow and let it run.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 5 : ALERTS                             -->
+<!-- ============================================== -->
+<div id="alerts" class="content-card">
+    <h2><i class="fa-solid fa-bell" style="color:#3b82f6;"></i> Smart Alerts</h2>
+
+    <p>The alert system lets your AI agent monitor conditions and notify you when something triggers. Alerts combine <strong>technical signals</strong>, <strong>market events</strong>, and <strong>watchlist data</strong> into actionable notifications.</p>
+
+    <h3>Alert Conditions</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr><th>Category</th><th>Conditions</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Technical</strong></td><td>RSI, MACD, EMA cross, Volume spike</td><td>RSI &lt; 30 on AVGO</td></tr>
+                <tr><td><strong>Price</strong></td><td>Entry zone hit, Stop breach, TP reached</td><td>GLD hits $236 entry</td></tr>
+                <tr><td><strong>Volatility</strong></td><td>VIX threshold, IV rank, regime change</td><td>VIX crosses above 25</td></tr>
+                <tr><td><strong>Earnings</strong></td><td>Pre-earnings window, results released</td><td>COST reports after close</td></tr>
+                <tr><td><strong>News</strong></td><td>Breaking news, SEC filings, insider buys</td><td>Insider purchase &gt; $1M</td></tr>
+                <tr><td><strong>Macro</strong></td><td>CPI, FOMC, NFP, PMI releases</td><td>NFP at 8:30 AM ET</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Alert Actions</h3>
+    <ul>
+        <li><i class="fab fa-telegram" style="color:#3b82f6;"></i> <strong>Telegram</strong> &mdash; Push notification to your phone</li>
+        <li><i class="fab fa-discord" style="color:#3b82f6;"></i> <strong>Discord</strong> &mdash; Post to a channel via webhook</li>
+        <li><i class="fas fa-file-lines" style="color:#3b82f6;"></i> <strong>Analysis</strong> &mdash; Auto-generate a deep-dive report</li>
+        <li><i class="fas fa-chess" style="color:#3b82f6;"></i> <strong>Trade Plan</strong> &mdash; Auto-generate entry/stop/target plan</li>
+    </ul>
+
+    <h3>Example Alert Output</h3>
+    <div class="alert-box" style="background:#f0fdf4; border-color:#16a34a;">
+        <strong><i class="fas fa-triangle-exclamation"></i> ALERT &mdash; Entry Zone Hit</strong>
+        <p style="margin:0.5rem 0 0;"><strong>GLD</strong> (SPDR Gold Shares) just entered the buy zone at <strong>$236.12</strong>.</p>
+        <p style="margin:0.5rem 0 0;">Setup: Momentum Continuation | Score: 94/100 | R:R 1:2.5</p>
+        <p style="margin:0.5rem 0 0;">Stop: $228.50 | TP1: $245.00 | TP2: $255.00</p>
+        <p style="margin:0.5rem 0 0; font-size:0.85rem; color:#64748b;">Catalyst: Iran tensions + rate cut expectations &bull; Regime: EARLY RISK-OFF</p>
+    </div>
+
+    <p>Build your own alert rules in the <a href="/prompt-ia/?mode=factory" style="color:#3b82f6; font-weight:700;">Prompt Lab &rarr; Factory Mode</a> visual builder.</p>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 6 : SETUP PER TOOL                     -->
+<!-- ============================================== -->
+<div id="setup" class="content-card">
+    <h2><i class="fa-solid fa-wrench" style="color:#3b82f6;"></i> AI Tool Configuration</h2>
+
+    <p>Copy-paste setup instructions for each major AI coding agent. All configurations point to the same watchlist endpoint and use the same workflow prompts.</p>
+
+    <div class="config-tabs">
+        <button class="config-tab active" onclick="showTab('claude')">Claude Code</button>
+        <button class="config-tab" onclick="showTab('cursor')">Cursor</button>
+        <button class="config-tab" onclick="showTab('gemini')">Gemini CLI</button>
+        <button class="config-tab" onclick="showTab('windsurf')">Windsurf</button>
+        <button class="config-tab" onclick="showTab('chatgpt')">ChatGPT</button>
+    </div>
+
+    <div id="tab-claude" class="config-panel active">
+        <h4><i class="fas fa-terminal"></i> Claude Code</h4>
+        <p>Claude Code auto-reads <code>CLAUDE.md</code> from your project root. Drop the file and start.</p>
+        <div class="code-label">Setup</div>
+        <pre><code># 1. Create project
+mkdir trading-desk && cd trading-desk
+
+# 2. Download the trading desk workflow
+curl -o CLAUDE.md \
+  https://articles.market-watch.xyz/prompt-ia/en/trading-desk.md
+
+# 3. Launch Claude Code
+claude
+
+# Claude will auto-detect CLAUDE.md and start the workflow.
+# Say: "Run the morning scan"</code></pre>
+        <div class="pedagogy-box">
+            <strong><i class="fas fa-plug"></i> Optional: MCP Gateway</strong>
+            <p style="margin-top:0.5rem;">For real-time data (intraday quotes, options chains, technicals), add the Market Watch MCP server to your <code>~/.claude.json</code>. This is optional &mdash; the static watchlist works without it.</p>
+        </div>
+    </div>
+
+    <div id="tab-cursor" class="config-panel">
+        <h4><i class="fas fa-i-cursor"></i> Cursor</h4>
+        <p>Cursor reads <code>.cursorrules</code> from your project root.</p>
+        <div class="code-label">.cursorrules</div>
+        <pre><code># Market Watch Trading Desk
+# Watchlist: https://articles.market-watch.xyz/mcp/watchlist.json
+
+You are a trading desk AI. Every morning:
+1. Fetch the Market Watch watchlist from the URL above
+2. Parse the JSON: check regime, VIX, and all picks
+3. For each pick with score >= 90:
+   - Verify current price vs entry zone
+   - Search for recent news on the ticker
+   - Generate a buy/pass/wait recommendation
+4. Output a summary table with all picks and your analysis
+5. Flag any picks where entry zone has been breached
+
+Always cite the watchlist data. Include stop and target levels.
+When regime is RISK-OFF, prioritize hedge positions (GLD, TLT).</code></pre>
+    </div>
+
+    <div id="tab-gemini" class="config-panel">
+        <h4><i class="fas fa-gem"></i> Gemini CLI</h4>
+        <p>Gemini CLI reads <code>GEMINI.md</code> from your project root.</p>
+        <div class="code-label">GEMINI.md</div>
+        <pre><code># Market Watch Trading Desk
+# Watchlist: https://articles.market-watch.xyz/mcp/watchlist.json
+
+You are a trading desk AI. Every morning:
+1. Fetch the Market Watch watchlist from the URL above
+2. Parse the JSON: check regime, VIX, and all picks
+3. For each pick with score >= 90:
+   - Verify current price vs entry zone
+   - Search for recent news on the ticker
+   - Generate a buy/pass/wait recommendation
+4. Output a summary table with all picks and your analysis
+
+Regime definitions:
+- RISK-ON: favor momentum longs
+- RISK-OFF: favor hedges (GLD, TLT, SH)
+- NEUTRAL: favor mean reversion</code></pre>
+    </div>
+
+    <div id="tab-windsurf" class="config-panel">
+        <h4><i class="fas fa-wind"></i> Windsurf / Continue</h4>
+        <p>Windsurf and Continue both support custom system prompts. Add the following to your workspace rules.</p>
+        <div class="code-label">Workspace Rules</div>
+        <pre><code># Market Watch Trading Desk
+# Data source: https://articles.market-watch.xyz/mcp/watchlist.json
+
+You are a trading desk AI. On every session:
+1. Fetch the watchlist JSON from the URL above
+2. Summarize: regime, VIX, top 3 picks by score
+3. For the top 3, check if price is near entry zone
+4. Recommend action: BUY / WAIT / SKIP for each
+5. If VIX > 25 or regime contains "RISK-OFF",
+   add a warning banner to your output
+
+Output format: markdown table with columns:
+Ticker | Score | Entry | Current | Action | Catalyst</code></pre>
+    </div>
+
+    <div id="tab-chatgpt" class="config-panel">
+        <h4><i class="fas fa-comments"></i> ChatGPT / Custom GPT</h4>
+        <p>Paste the workflow prompt as a system message, or create a Custom GPT with these instructions.</p>
+        <div class="code-label">System Prompt</div>
+        <pre><code>You are a Market Watch trading desk assistant.
+
+Data source: https://articles.market-watch.xyz/mcp/watchlist.json
+
+When the user says "morning scan" or "check watchlist":
+1. Fetch the watchlist JSON (user will paste it if you
+   cannot browse)
+2. Report: regime, VIX level, fear/greed index
+3. List all 10 picks in a table: ticker, score, entry,
+   stop, TP1, R:R, catalyst
+4. Highlight picks with score >= 92 as "Priority"
+5. Note any regime warnings or macro events from
+   the alerts object
+
+Always include the disclaimer:
+"This is not financial advice. Data from Market Watch."</code></pre>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 7 : FAQ                                -->
+<!-- ============================================== -->
+<div id="faq" class="content-card">
+    <h2><i class="fa-solid fa-circle-question" style="color:#3b82f6;"></i> FAQ</h2>
+
+    <h4>Is the watchlist free?</h4>
+    <p>Yes. The <code>/mcp/watchlist.json</code> endpoint is free and open. No API key, no subscription, no rate limit. It is a static JSON file served via GitHub Pages.</p>
+
+    <h4>How often is the data updated?</h4>
+    <p>Every trading day (Monday&ndash;Friday) at <strong>23:00 UTC</strong>, after the Market Watch scanner completes its analysis. The <code>next_update</code> field in the JSON tells your agent exactly when to check again.</p>
+
+    <h4>Do I need the MarketWatch Gateway MCP?</h4>
+    <p>No. The static watchlist works standalone &mdash; your agent just needs to fetch a URL. However, if you want <strong>real-time data</strong> (live quotes, options chains, intraday bars, technicals), the MCP Gateway adds 58 data types via a direct connection. It is available for Claude Code and other MCP-compatible tools.</p>
+
+    <h4>Can I use this with ChatGPT?</h4>
+    <p>Yes. Paste the watchlist JSON into the conversation (or use the browsing feature to fetch the URL), along with the workflow prompt as a system message. It works with any LLM that can parse JSON.</p>
+
+    <h4>What is the difference between the watchlist and the full scanner?</h4>
+    <p>The <a href="/scanner/" style="color:#3b82f6;">full scanner page</a> is a human-readable HTML report with charts, technical analysis, and detailed commentary. The <code>watchlist.json</code> is the machine-readable extract &mdash; same 10 picks, structured for programmatic consumption.</p>
+
+    <h4>Is this financial advice?</h4>
+    <div class="alert-box">
+        <strong><i class="fas fa-triangle-exclamation"></i> No.</strong> Market Watch provides data and analysis for educational purposes. The watchlist, scanner picks, and workflows are not financial advice. Always do your own due diligence. Past scanner performance does not guarantee future results. See our full <a href="/scanner/retrospective/" style="color:#3b82f6;">scanner retrospectives</a> for historical accuracy data.
+    </div>
+</div>
+
+<!-- End container -->
+</div>
+
+    <!-- Footer -->
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+        This is not financial advice.
+        <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- Tab switching script -->
+    <script>
+    function showTab(id) {
+      document.querySelectorAll('.config-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('.config-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.getElementById('tab-' + id).classList.add('active');
+      event.target.classList.add('active');
+    }
+    </script>
+
+    <script src="/assets/core.js"></script>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#what-is" class="fnav-item" data-section="what-is"><i class="fas fa-circle-info"></i><span>What Is This</span></a>
+            <a href="#quickstart" class="fnav-item" data-section="quickstart"><i class="fas fa-rocket"></i><span>Quick Start</span></a>
+            <a href="#watchlist-api" class="fnav-item" data-section="watchlist-api"><i class="fas fa-database"></i><span>Watchlist API</span></a>
+            <a href="#workflows" class="fnav-item" data-section="workflows"><i class="fas fa-diagram-project"></i><span>Workflows</span></a>
+            <a href="#alerts" class="fnav-item" data-section="alerts"><i class="fas fa-bell"></i><span>Smart Alerts</span></a>
+            <a href="#setup" class="fnav-item" data-section="setup"><i class="fas fa-wrench"></i><span>AI Setup</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <script>
+    (function() {
+      var fab = document.getElementById('fnavBtn');
+      var menu = document.getElementById('fnavMenu');
+      var icon = document.getElementById('fnavIcon');
+      var label = document.getElementById('fnavLabel');
+      var open = false;
+      var items = menu.querySelectorAll('.fnav-item');
+
+      fab.addEventListener('click', function() {
+        open = !open;
+        menu.classList.toggle('open', open);
+        icon.className = open ? 'fas fa-xmark' : 'fas fa-bars';
+        label.textContent = open ? 'Close' : 'Menu';
+      });
+      items.forEach(function(item) {
+        item.addEventListener('click', function() {
+          open = false;
+          menu.classList.remove('open');
+          icon.className = 'fas fa-bars';
+          label.textContent = 'Menu';
+        });
+      });
+    })();
+    </script>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

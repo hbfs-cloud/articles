@@ -79,7 +79,7 @@
     .generating{position:relative;overflow:hidden}
     .generating::after{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1.5s infinite}
 
-    /* ── MODE SWITCHER — 2 big buttons ── */
+    /* ── MODE SWITCHER — 4 buttons ── */
     .mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem}
     .mode-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;transition:all .25s;font-family:'Inter',sans-serif;animation:slideUp .4s ease both}
     .mode-btn:nth-child(1){animation-delay:.05s}
@@ -92,6 +92,10 @@
     .mode-btn[data-mode="custom"].active .mode-btn-icon{background:#6366f1;color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.3)}
     .mode-btn[data-mode="library"] .mode-btn-icon{background:#faf5ff;color:#8b5cf6}
     .mode-btn[data-mode="library"].active .mode-btn-icon{background:#8b5cf6;color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.3)}
+    .mode-btn[data-mode="agent"] .mode-btn-icon{background:#ecfdf5;color:#059669}
+    .mode-btn[data-mode="agent"].active .mode-btn-icon{background:#059669;color:#fff;box-shadow:0 4px 12px rgba(5,150,105,.3)}
+    .mode-btn[data-mode="factory"] .mode-btn-icon{background:#fef3c7;color:#d97706}
+    .mode-btn[data-mode="factory"].active .mode-btn-icon{background:#d97706;color:#fff;box-shadow:0 4px 12px rgba(217,119,6,.3)}
     .mode-btn-label{font-size:.8rem;font-weight:700;color:#334155;display:flex;align-items:center;gap:3px}
     .mode-btn.active .mode-btn-label{color:#4338ca}
     .mode-btn-sub{font-size:.62rem;color:#94a3b8;font-weight:500}
@@ -228,6 +232,60 @@
     .share-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
     .share-toast i{color:#6366f1}
 
+    /* ── WORKFLOW CARDS (Agent Mode) ── */
+    .wf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem}
+    .wf-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all .25s;background:#fff;font-family:'Inter',sans-serif;text-align:center}
+    .wf-card:hover{border-color:#a5b4fc;background:#f5f3ff;transform:translateY(-2px);box-shadow:0 6px 20px rgba(99,102,241,.08)}
+    .wf-card.active{border-color:#6366f1;background:#eef2ff;box-shadow:0 4px 16px rgba(99,102,241,.12)}
+    .wf-icon{font-size:1.5rem;line-height:1}
+    .wf-title{font-size:.76rem;font-weight:700;color:#0f172a}
+    .wf-sub{font-size:.6rem;color:#64748b;line-height:1.3}
+    .wf-card.active .wf-title{color:#4338ca}
+    .wf-card.active .wf-sub{color:#6366f1}
+
+    /* ── WORKFLOW CONFIG ── */
+    .wf-config{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;margin-bottom:.75rem;animation:slideUp .3s ease both}
+    .wf-config-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid #f1f5f9}
+    .wf-config-icon{font-size:1.8rem;flex-shrink:0}
+    .wf-config-title{font-size:1rem;font-weight:800;color:#0f172a}
+    .wf-config-desc{font-size:.74rem;color:#64748b;line-height:1.5;margin-top:2px}
+    .wf-checkbox{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:.72rem;color:#475569;cursor:pointer}
+    .wf-checkbox input{accent-color:#6366f1}
+    .wf-files-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+    .wf-file-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:.66rem;font-weight:600;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+    .wf-file-badge i{font-size:.6rem;color:#6366f1}
+    .wf-actions{margin-top:.75rem}
+
+    /* ── WORKFLOW OUTPUT ── */
+    .wf-output{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-top:.75rem;overflow:hidden;animation:slideUp .4s ease both}
+    .wf-output .output-header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid #e2e8f0;background:#f8fafc;flex-wrap:wrap;gap:.4rem}
+    .wf-output .output-header h3{font-size:.84rem;font-weight:700;margin:0;display:flex;align-items:center;gap:6px}
+    .wf-output .output-header h3 i{color:#6366f1}
+    .wf-output .prompt-output{margin:.75rem;max-height:500px}
+    .wf-output-actions{display:flex;gap:.4rem;padding:.75rem;border-top:1px solid #e2e8f0;background:#f8fafc}
+    .wf-output-actions .action-btn{flex:1}
+    .wf-howto{padding:0 .75rem .75rem}
+    .wf-howto .pedagogy-box{margin:0;font-size:.74rem}
+    .wf-howto ol{margin:.4rem 0 0;padding-left:1.2rem}
+    .wf-howto li{margin-bottom:.3rem}
+    .wf-howto code{background:#eef2ff;padding:1px 5px;border-radius:4px;font-size:.7rem}
+
+    /* ── FACTORY STEPS ── */
+    .factory-step{display:flex;align-items:center;gap:8px;margin:1rem 0 .4rem}
+    .factory-step-num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .factory-step-label{font-size:.78rem;font-weight:700;color:#0f172a}
+
+    /* ── CHIP VARIANTS ── */
+    .chip-macro{border-color:#fde68a;color:#92400e}
+    .chip-macro.active{background:#f59e0b;border-color:#f59e0b;color:#fff}
+    .chip-event{border-color:#c4b5fd;color:#5b21b6}
+    .chip-event.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+
+    /* ── MCP LINK ── */
+    .mcp-link{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:.75rem;padding:8px;border:1px dashed #e2e8f0;border-radius:10px;font-size:.72rem;color:#64748b;text-decoration:none;transition:all .2s}
+    .mcp-link:hover{border-color:#6366f1;color:#6366f1;background:#f5f3ff}
+    .mcp-link i{color:#6366f1}
+
     /* ── ANIMATIONS ── */
     @keyframes shimmer{100%{left:100%}}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -278,6 +336,10 @@
       .mode-btn-icon{width:34px;height:34px;font-size:.95rem}
       .focus-chips{gap:4px}
       .focus-chip{padding:4px 9px;font-size:.68rem}
+      .wf-grid{grid-template-columns:1fr 1fr}
+      .wf-icon{font-size:1.2rem}
+      .wf-title{font-size:.7rem}
+      .wf-sub{font-size:.56rem}
     }
   </style>
 </head>
@@ -326,6 +388,16 @@
         <span class="mode-btn-icon"><i class="fa-solid fa-book-bookmark"></i></span>
         <span class="mode-btn-label">📚 <span id="modeLibLabel">Library</span> <span class="lib-count-badge" id="libCountBadge"></span></span>
         <span class="mode-btn-sub" id="modeLibSub">Ready-to-use prompts</span>
+      </button>
+      <button class="mode-btn" data-mode="agent" id="modeAgentBtn" type="button">
+        <span class="mode-btn-icon"><i class="fa-solid fa-robot"></i></span>
+        <span class="mode-btn-label">🤖 Agent</span>
+        <span class="mode-btn-sub">AI workflows + MCP</span>
+      </button>
+      <button class="mode-btn" data-mode="factory" id="modeFactoryBtn" type="button">
+        <span class="mode-btn-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span class="mode-btn-label">⚡ Alerts</span>
+        <span class="mode-btn-sub">Smart alert builder</span>
       </button>
     </div>
 
@@ -435,6 +507,18 @@
       <div class="prompt-lib-grid" id="promptLibGrid"></div>
     </div>
 
+    <!-- ═══ MODE: AGENT ═══ -->
+    <div class="mode-panel" id="panelAgent"></div>
+
+    <!-- ═══ MODE: FACTORY ═══ -->
+    <div class="mode-panel" id="panelFactory"></div>
+
+    <a href="/mcp/" class="mcp-link">
+      <i class="fa-solid fa-plug"></i>
+      <span>Market Watch MCP — Live data endpoint &amp; setup guide</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+
   </div>
 
   <!-- Copy Animation -->
@@ -467,11 +551,20 @@
       sec.classList.toggle('open');
       tog.classList.toggle('open');
     }
+    // Deep-link: ?mode=agent or ?mode=factory
+    document.addEventListener('DOMContentLoaded', function() {
+      var modeParam = new URLSearchParams(window.location.search).get('mode');
+      if (modeParam && typeof switchMode === 'function') {
+        setTimeout(function() { switchMode(modeParam); }, 100);
+      }
+    });
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="/assets/core.js"></script>
-  <script src="/prompt-ia/lang.js?v=14"></script>
-  <script src="/prompt-ia/library.js?v=14"></script>
-  <script src="/prompt-ia/app.js?v=14"></script>
+  <script src="/prompt-ia/lang.js?v=15"></script>
+  <script src="/prompt-ia/library.js?v=15"></script>
+  <script src="/prompt-ia/app.js?v=15"></script>
+  <script src="/prompt-ia/modes.js?v=15"></script>
 <script src="/assets/tag-renderer.js"></script>
 </body>
 </html>
