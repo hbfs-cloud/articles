@@ -348,8 +348,8 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
    Vérifier que le fichier HTML fait > 10KB et que `add_card.js` a réussi avant de push.
 
 ### Landing Page (index.html) — Tabs
-5 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Portfolio** (stratégies systématiques).
-- URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=portfolio`
+6 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Tech** (guides techniques), **Séries** (séries éducatives).
+- URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=tech`, `?tab=series`
 - Grade filter : `?grade=A` (tab analyses uniquement)
 - Recherche : symbole ticker uniquement
 - Mobile : les tabs s'affichent en grille d'icones (5 colonnes) au lieu de texte horizontal
@@ -431,7 +431,11 @@ Placé dans le hero de chaque article. Peuplé automatiquement par `/assets/tag-
 ```html
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
+<script src="/assets/lang-banner.js"></script>
+<script src="/assets/echarts-responsive.js"></script>
 ```
+- `lang-banner.js` : Affiche un bandeau informatif si la langue de l'article ne correspond pas à la préférence utilisateur (stockée dans `localStorage` via le switcher FR/EN de la landing page).
+- `echarts-responsive.js` : Patch automatique des instances ECharts pour mobile (réduction des fontSize, ajustement des grilles, tooltip confiné). Inclure uniquement sur les pages avec des ECharts.
 
 ### Autres Conventions
 - **Logo brand-bar** (**OBLIGATOIRE**) : Dans les pages d'analyses individuelles (`analyses/{TICKER}/`), le `ticker-header` doit **TOUJOURS** utiliser le logo Market Watch (`<img src="https://market-watch.xyz/logo.svg" alt="MW">`), **JAMAIS** le logo de la société. Le logo de la société (parqet.com) est réservé **uniquement** aux cartes de listing dans `index.html`.

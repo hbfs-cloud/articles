@@ -1000,6 +1000,23 @@ p {
         height: 300px !important;
     }
 
+    /* ECharts containers — cap height on tablets */
+    div[id$="Chart"],
+    div[id$="chart"],
+    div[id*="Chart"],
+    div[id*="chart"] {
+        max-height: 280px !important;
+    }
+
+    /* Tables — scrollable on tablets */
+    .data-table,
+    table {
+        display: block !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        table-layout: auto !important;
+    }
+
     /* Typography */
     h2 {
         font-size: 1.25rem !important;
@@ -1479,6 +1496,88 @@ p {
     .risk-card { padding: 1rem !important; }
     .verdict-grid { grid-template-columns: 1fr !important; }
     .score-card .score-value { font-size: 2rem !important; }
+
+    /* ===== ECHARTS MOBILE FIX ===== */
+    /* Reduce chart container heights on small screens */
+    div[id$="Chart"],
+    div[id$="chart"],
+    div[id*="Chart"],
+    div[id*="chart"] {
+        max-height: 220px !important;
+        min-height: 160px !important;
+    }
+
+    /* Gauge charts can be smaller */
+    div[id*="gauge"],
+    div[id*="Gauge"] {
+        max-height: 180px !important;
+        min-height: 140px !important;
+    }
+
+    /* Radar charts need some room */
+    div[id*="radar"],
+    div[id*="Radar"] {
+        max-height: 240px !important;
+    }
+
+    /* Treemap/Sankey need width more than height */
+    div[id*="treemap"],
+    div[id*="Treemap"],
+    div[id*="sankey"],
+    div[id*="Sankey"] {
+        max-height: 200px !important;
+    }
+
+    /* Social radar grids */
+    .social-radar > div[style*="grid"] {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* ===== TABLE MOBILE FIX ===== */
+    /* Replace fixed layout with scrollable wrapper */
+    .data-table,
+    table {
+        table-layout: auto !important;
+    }
+
+    /* Tables that overflow: wrap in scrollable container */
+    .content-card > .data-table,
+    .content-card > table,
+    .content-card > div > table {
+        display: block !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        white-space: nowrap !important;
+        max-width: 100% !important;
+    }
+
+    /* But allow text to wrap inside cells */
+    .data-table td,
+    table td {
+        white-space: normal !important;
+        min-width: 60px !important;
+    }
+
+    /* First column (labels) stays readable */
+    .data-table td:first-child,
+    table td:first-child,
+    .data-table th:first-child,
+    table th:first-child {
+        font-weight: 600 !important;
+        min-width: 80px !important;
+        position: sticky !important;
+        left: 0 !important;
+        background: white !important;
+        z-index: 1 !important;
+    }
+
+    /* Compare tables */
+    .compare-table {
+        display: block !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
 }
 
 /* ===================================================================== */

@@ -140,36 +140,78 @@
       background: #1d4ed8;
     }
 
-    .lang-toggle {
-      position: absolute;
-      top: 2rem;
-      right: 2rem;
-      display: flex;
-      gap: 10px;
-      z-index: 10;
+    /* ===== LANGUAGE SWITCHER ===== */
+    .lang-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      background: rgba(15, 23, 42, 0.06);
+      border-radius: 10px;
+      padding: 3px;
+      margin-top: 1rem;
+      border: 1px solid rgba(15, 23, 42, 0.08);
     }
 
-    .lang-btn {
-      background: rgba(0, 0, 0, 0.05);
-      /* Light background for light theme */
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: 0.2s;
+    .lang-switcher-btn {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.8rem;
       font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: "Inter", sans-serif;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.01em;
     }
 
-    .lang-btn.active {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
+    .lang-switcher-btn:hover {
+      color: var(--text-primary);
     }
 
-    .lang-btn:hover {
-      background: rgba(0, 0, 0, 0.1);
-      border-color: var(--text-primary);
+    .lang-switcher-btn.active {
+      background: white;
+      color: var(--text-primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .lang-switcher-btn .lang-flag {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* Language banner on articles */
+    .lang-banner {
+      display: none;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+      color: #1e40af;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-banner.visible {
+      display: flex;
+    }
+
+    .lang-banner i {
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .lang-banner a {
+      color: #1d4ed8;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .report-card-meta {
@@ -869,16 +911,13 @@
         padding: 0 1rem;
       }
 
-      .lang-toggle {
-        top: 1rem;
-        right: 1rem;
-        flex-direction: column;
-        gap: 5px;
+      .lang-switcher {
+        margin-top: 0.75rem;
       }
 
-      .lang-btn {
-        padding: 6px 12px;
-        font-size: 0.85rem;
+      .lang-switcher-btn {
+        padding: 5px 12px;
+        font-size: 0.75rem;
       }
 
       .report-card {
@@ -1558,11 +1597,19 @@
       MARKET WATCH
     </a>
     <div class="container">
-      <h1 class="hero-title">Intelligence Institutionnelle.</h1>
-      <p class="hero-subtitle">
+      <h1 class="hero-title" id="heroTitle">Intelligence Institutionnelle.</h1>
+      <p class="hero-subtitle" id="heroSubtitle">
         Analyses hebdomadaires approfondies sur la Macro, les Actions, Métaux
         et Cryptos. Clair, actionnable, sans bruit.
       </p>
+      <div class="lang-switcher" id="langSwitcher">
+        <button class="lang-switcher-btn active" data-lang="fr" onclick="setLang('fr')">
+          <span class="lang-flag">FR</span>
+        </button>
+        <button class="lang-switcher-btn" data-lang="en" onclick="setLang('en')">
+          <span class="lang-flag">EN</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -3423,6 +3470,84 @@
         });
       });
     });
+  </script>
+
+  <!-- Language Switcher Logic -->
+  <script>
+    var langStrings = {
+      fr: {
+        heroTitle: 'Intelligence Institutionnelle.',
+        heroSub: 'Analyses hebdomadaires approfondies sur la Macro, les Actions, M\u00e9taux et Cryptos. Clair, actionnable, sans bruit.',
+        search: 'Rechercher...',
+        weeklyTitle: 'Rapports Hebdomadaires',
+        weeklySub: 'Analyse macro institutionnelle chaque dimanche \u2014 March\u00e9s, secteurs, crypto, m\u00e9taux et g\u00e9opolitique',
+        dailyTitle: 'Briefing Quotidien',
+        dailySub: 'March\u00e9s US, Europe, Asie-Pacifique et Crypto \u2014 Chaque matin \u00e0 7h00',
+        tabWeekly: 'Hebdo', tabDaily: 'Daily', tabAnalyses: 'Analyses',
+        tabScanner: 'Scanner', tabTech: 'Tech', tabSeries: 'S\u00e9ries',
+        noResults: 'Aucun r\u00e9sultat'
+      },
+      en: {
+        heroTitle: 'Institutional Intelligence.',
+        heroSub: 'In-depth weekly analysis on Macro, Equities, Precious Metals and Crypto. Clear, actionable, noise-free.',
+        search: 'Search...',
+        weeklyTitle: 'Weekly Reports',
+        weeklySub: 'Institutional macro analysis every Sunday \u2014 Markets, sectors, crypto, metals and geopolitics',
+        dailyTitle: 'Daily Briefing',
+        dailySub: 'US, Europe, Asia-Pacific and Crypto markets \u2014 Every morning at 7:00 AM',
+        tabWeekly: 'Weekly', tabDaily: 'Daily', tabAnalyses: 'Analyses',
+        tabScanner: 'Scanner', tabTech: 'Tech', tabSeries: 'Series',
+        noResults: 'No results'
+      }
+    };
+
+    function setLang(lang) {
+      localStorage.setItem('mw-lang', lang);
+      document.querySelectorAll('.lang-switcher-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+      var s = langStrings[lang];
+      if (!s) return;
+      var title = document.getElementById('heroTitle');
+      var sub = document.getElementById('heroSubtitle');
+      if (title) title.textContent = s.heroTitle;
+      if (sub) title && (sub.textContent = s.heroSub);
+
+      // Update tab labels
+      var tabMap = { weekly: 'tabWeekly', daily: 'tabDaily', analyses: 'tabAnalyses',
+        scanner: 'tabScanner', tech: 'tabTech', series: 'tabSeries' };
+      document.querySelectorAll('.main-tab').forEach(function(btn) {
+        var key = tabMap[btn.dataset.tab];
+        var label = btn.querySelector('.tab-label');
+        if (key && label && s[key]) label.textContent = s[key];
+      });
+
+      // Update search placeholder
+      var si = document.getElementById('searchInput');
+      if (si) si.placeholder = s.search;
+
+      // Update tab panel headings
+      var weeklyH = document.querySelector('#tab-weekly h2');
+      var weeklyP = document.querySelector('#tab-weekly p');
+      if (weeklyH) weeklyH.innerHTML = '<i class="fa-solid fa-calendar-week" style="color:#2563eb;margin-right:8px"></i>' + s.weeklyTitle;
+      if (weeklyP) weeklyP.textContent = s.weeklySub;
+      var dailyH = document.querySelector('#tab-daily h2');
+      var dailyP = document.querySelector('#tab-daily p');
+      if (dailyH) dailyH.innerHTML = '<i class="fa-solid fa-sun" style="color:#f59e0b;margin-right:8px"></i>' + s.dailyTitle;
+      if (dailyP) dailyP.textContent = s.dailySub;
+
+      document.documentElement.lang = lang;
+    }
+
+    // Init from stored preference or browser language
+    (function() {
+      var stored = localStorage.getItem('mw-lang');
+      if (!stored) {
+        var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+        stored = nav.startsWith('fr') ? 'fr' : 'en';
+      }
+      setLang(stored);
+    })();
   </script>
 </body>
 

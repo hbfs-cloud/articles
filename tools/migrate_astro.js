@@ -331,6 +331,24 @@ function fixCoreScript(html) {
     }
   }
 
+  // Add lang-banner.js if missing (language mismatch banner for non-FR visitors)
+  if (!out.includes('lang-banner.js')) {
+    const bodyEnd = out.lastIndexOf('</body>');
+    if (bodyEnd !== -1) {
+      out = out.slice(0, bodyEnd) + '    <script src="/assets/lang-banner.js"></script>\n' + out.slice(bodyEnd);
+      fixes.push('script: added lang-banner.js');
+    }
+  }
+
+  // Add echarts-responsive.js if page uses ECharts and doesn't have it yet
+  if (out.includes('echarts.init') && !out.includes('echarts-responsive.js')) {
+    const bodyEnd = out.lastIndexOf('</body>');
+    if (bodyEnd !== -1) {
+      out = out.slice(0, bodyEnd) + '    <script src="/assets/echarts-responsive.js"></script>\n' + out.slice(bodyEnd);
+      fixes.push('script: added echarts-responsive.js');
+    }
+  }
+
   return { html: out, fixes };
 }
 
