@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>AI Layer — Claude API for Narrative Analysis | Build Your Own Trading Terminal with AI — Part 5/6 | Market Watch</title>
+ <meta name="description" content="Build Your Own Trading Terminal with AI — Part 5/6: Claude API integration, MCP server setup, automated morning briefings, sentiment analysis, anti-hallucination techniques.">
+ <meta property="og:title" content="AI Layer — Claude API for Narrative Analysis | Trading Terminal 5/6 | Market Watch">
+ <meta property="og:description" content="Integrate Claude API with MCP server, automate morning briefings, build sentiment analysis, and ground AI output in real data.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-terminal/part5-ai-layer/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-orange{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.2)}.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}.compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}.code-block{background:#0f172a;color:#e2e8f0;padding:1.5rem;border-radius:12px;margin:1.5rem 0;overflow-x:auto;font-family:'Fira Code','Cascadia Code','JetBrains Mono',monospace;font-size:.85rem;line-height:1.7}.code-block .code-label{display:block;color:#94a3b8;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;font-weight:600;font-family:Inter,sans-serif}.code-block .kw{color:#c084fc}.code-block .str{color:#86efac}.code-block .cm{color:#64748b}.code-block .fn{color:#67e8f9}.code-block .num{color:#fbbf24}.code-block .op{color:#f472b6}.takeaway-box{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #059669;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#047857;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(5,150,105,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#059669;margin-top:.2rem;flex-shrink:0}.next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(5,150,105,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}.step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}.step-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #059669}.step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}.step-number{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#059669,#047857);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:#fff;margin:0 auto .75rem}.step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}.step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}.formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#6ee7b7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.hero-badge{font-size:.7rem;padding:.35rem .75rem}.next-cta{flex-direction:column;text-align:center}.step-grid{grid-template-columns:1fr 1fr}.code-block{font-size:.75rem;padding:1rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.hero-badge{font-size:.65rem;padding:.3rem .6rem}.hero-badges{gap:.4rem;margin-top:1rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-terminal"></i> Build Your Own Trading Terminal with AI — Part 5 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">AI Layer — Claude API for Narrative Analysis</h1>
+  <p class="hero-subtitle">This is the layer that transforms your terminal from a data viewer into an intelligent assistant. Integrate Claude's reasoning with your real market data via MCP to generate institutional-quality analysis, automated briefings, and grounded sentiment insights.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-robot"></i> Claude API</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-plug"></i> MCP Server</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-newspaper"></i> Auto Briefings</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-shield-halved"></i> Anti-Hallucination</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-terminal/part4-dashboard/" class="series-arrow" title="Dashboard"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build Your Own Trading Terminal with AI</span><div class="series-steps"><a href="/series/trading-terminal/part1-architecture/" class="series-step" title="Architecture"><span class="series-num">1</span><span class="series-label">Architecture</span></a><a href="/series/trading-terminal/part2-data-pipeline/" class="series-step" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/trading-terminal/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/trading-terminal/part4-dashboard/" class="series-step" title="Dashboard"><span class="series-num">4</span><span class="series-label">Dashboard</span></a><a href="/series/trading-terminal/part5-ai-layer/" class="series-step current" title="AI Layer"><span class="series-num">5</span><span class="series-label">AI Layer</span></a><a href="/series/trading-terminal/part6-deployment/" class="series-step" title="Deployment"><span class="series-num">6</span><span class="series-label">Deployment</span></a></div><span class="series-counter">5/6</span><a href="/series/trading-terminal/part6-deployment/" class="series-arrow" title="Deployment"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why-ai" class="fnav-item" data-section="why-ai"><i class="fas fa-bookmark"></i><span>Why AI Completes It</span></a><a href="#claude-api" class="fnav-item" data-section="claude-api"><i class="fas fa-bookmark"></i><span>Claude API Integration</span></a><a href="#mcp-server" class="fnav-item" data-section="mcp-server"><i class="fas fa-bookmark"></i><span>MCP Server Setup</span></a><a href="#briefings" class="fnav-item" data-section="briefings"><i class="fas fa-bookmark"></i><span>Automated Briefings</span></a><a href="#sentiment" class="fnav-item" data-section="sentiment"><i class="fas fa-bookmark"></i><span>Sentiment Analysis</span></a><a href="#grounding" class="fnav-item" data-section="grounding"><i class="fas fa-bookmark"></i><span>Anti-Hallucination</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var ca=null;var obs=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var m=sections.find(function(s){return s.el===entry.target;});if(m){if(ca)ca.item.classList.remove('active');m.item.classList.add('active');ca=m;label.textContent=m.item.querySelector('span').textContent;}}});},{rootMargin:'-15% 0px -65% 0px',threshold:0});sections.forEach(function(s){obs.observe(s.el);});if(sections.length>0){sections[0].item.classList.add('active');ca=sections[0];label.textContent=sections[0].item.querySelector('span').textContent;}})();</script>
+
+<div class="container">
+
+<div class="section-divider" id="why-ai"><i class="fa-solid fa-brain" style="color:#059669;"></i> Why AI Completes the Terminal</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#059669;"></i> The Missing Layer — AI for Pattern Recognition and Synthesis</h2>
+  <p>Your terminal already has data, signals, and visualization. But there's a gap between <strong>seeing data</strong> and <strong>understanding it</strong>. That gap is narrative synthesis — the ability to look at 50 data points and say "this is a risk-off rotation driven by yield curve inversion, with tech showing relative strength due to flight-to-quality."</p>
+  <p>Humans are slow at this. AI is fast. Claude can read your entire watchlist's technical profile, cross-reference macro data, check news sentiment, and produce a structured market assessment in under 10 seconds. That's the AI layer.</p>
+
+  <div class="step-grid">
+    <div class="step-card"><div class="step-number"><i class="fa-solid fa-magnifying-glass"></i></div><h4>Pattern Recognition</h4><p>AI spots complex multi-factor patterns that simple indicators miss: sector rotation, relative strength shifts, regime changes.</p></div>
+    <div class="step-card" style="border-top-color:#2563eb;"><div class="step-number" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);"><i class="fa-solid fa-file-lines"></i></div><h4>News Synthesis</h4><p>Reads 100 headlines, extracts market-moving information, assesses impact. Replaces 30 minutes of manual reading.</p></div>
+    <div class="step-card" style="border-top-color:#9333ea;"><div class="step-number" style="background:linear-gradient(135deg,#9333ea,#7c3aed);"><i class="fa-solid fa-shield-halved"></i></div><h4>Risk Assessment</h4><p>Portfolio Greeks, correlation matrix, VaR — AI interprets numbers and flags hidden concentration risks in plain English.</p></div>
+    <div class="step-card" style="border-top-color:#f59e0b;"><div class="step-number" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fa-solid fa-bell"></i></div><h4>Morning Briefings</h4><p>Automated pre-market briefing delivered to Telegram at 7 AM: overnight moves, macro events, earnings, signals to watch.</p></div>
+  </div>
+</div>
+
+<div class="section-divider" id="claude-api"><i class="fa-solid fa-code" style="color:#2563eb;"></i> Claude API Integration</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-code" style="color:#2563eb;"></i> Structured Prompts for Market Analysis</h2>
+  <p>The key to reliable AI output is <strong>structured prompting</strong>. You provide the data explicitly in the prompt, define the exact output format, and constrain the model to only use the data you gave it.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Claude API Market Analysis</span>
+<span class="kw">import</span> anthropic
+
+client = anthropic.Anthropic()  <span class="cm"># uses ANTHROPIC_API_KEY env var</span>
+
+<span class="kw">async def</span> <span class="fn">analyze_stock</span>(symbol: <span class="fn">str</span>, data: <span class="fn">dict</span>) -&gt; <span class="fn">dict</span>:
+    <span class="str">"""Generate institutional-quality stock analysis."""</span>
+
+    prompt = <span class="str">f"""Analyze {symbol} using ONLY the following data. Do not use any
+information from your training data — only what is provided below.
+
+## Market Data
+- Current Price: ${data['price']}
+- 52-Week High: ${data['high_52w']} | Low: ${data['low_52w']}
+- RSI(14): {data['rsi']}
+- MACD Histogram: {data['macd_hist']}
+- Volume vs 20d Avg: {data['vol_ratio']}x
+- Above EMA 200: {data['above_ema200']}
+- ATR(14): ${data['atr']} ({data['atr_pct']}% of price)
+
+## Fundamentals
+- Market Cap: ${data['market_cap']}
+- P/E: {data['pe']} | Forward P/E: {data['fwd_pe']}
+- Revenue Growth (YoY): {data['rev_growth']}%
+- Free Cash Flow: ${data['fcf']}
+- Insider Activity (90d): {data['insider_summary']}
+
+## Recent News
+{data['news_headlines']}
+
+## Instructions
+Provide analysis in this exact JSON format:
+{{
+  "summary": "2-3 sentence executive summary",
+  "technical_view": "bullish|neutral|bearish",
+  "fundamental_view": "strong|moderate|weak",
+  "key_levels": {{"support": price, "resistance": price}},
+  "catalysts": ["upcoming catalyst 1", "catalyst 2"],
+  "risks": ["risk 1", "risk 2"],
+  "confidence": 1-10,
+  "trade_idea": {{
+    "direction": "long|short|none",
+    "entry": price,
+    "stop": price,
+    "target": price,
+    "rationale": "1-2 sentences"
+  }}
+}}"""</span>
+
+    response = client.messages.create(
+        model=<span class="str">"claude-sonnet-4-20250514"</span>,
+        max_tokens=<span class="num">2000</span>,
+        messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: prompt}],
+        temperature=<span class="num">0.3</span>,  <span class="cm"># Low temp for factual output</span>
+    )
+
+    <span class="kw">return</span> json.loads(response.content[<span class="num">0</span>].text)
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Claude API Cost for Trading Terminal</div>
+    <span class="formula-highlight">~$0.50/day</span> = 10 stock analyses + 1 morning briefing + 5 ad-hoc queries = <span class="formula-highlight">~$15/month</span>
+  </div>
+</div>
+
+<div class="section-divider" id="mcp-server"><i class="fa-solid fa-plug" style="color:#9333ea;"></i> MCP Server — Exposing Your Data</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-plug" style="color:#9333ea;"></i> Building an MCP Server for Your Terminal</h2>
+  <p>MCP (Model Context Protocol) is the bridge between Claude and your database. Instead of pasting data into prompts manually, MCP lets Claude <strong>call your tools directly</strong> — querying your database, running your screeners, and accessing live quotes in real-time.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Full MCP Server Implementation</span>
+<span class="kw">from</span> mcp.server <span class="kw">import</span> Server
+<span class="kw">from</span> mcp.types <span class="kw">import</span> Tool, TextContent
+<span class="kw">import</span> json
+
+server = Server(<span class="str">"trading-terminal-mcp"</span>)
+
+<span class="op">@</span>server.tool()
+<span class="kw">async def</span> <span class="fn">get_market_overview</span>() -&gt; <span class="fn">list</span>[TextContent]:
+    <span class="str">"""Get snapshot of major indices, crypto, commodities, rates."""</span>
+    overview = <span class="kw">await</span> db.get_market_snapshot()
+    <span class="kw">return</span> [TextContent(type=<span class="str">"text"</span>, text=json.dumps(overview, default=<span class="fn">str</span>))]
+
+<span class="op">@</span>server.tool()
+<span class="kw">async def</span> <span class="fn">query_data</span>(
+    symbols: <span class="fn">str</span>,
+    data_types: <span class="fn">str</span>,
+    period: <span class="fn">str</span> = <span class="str">"3M"</span>
+) -&gt; <span class="fn">list</span>[TextContent]:
+    <span class="str">"""Query market data. Types: quote, bars_daily, technicals,
+    financials, earnings, sentiment, news, insider_transactions."""</span>
+    results = {}
+    <span class="kw">for</span> sym <span class="kw">in</span> symbols.split(<span class="str">","</span>):
+        sym_data = {}
+        <span class="kw">for</span> dtype <span class="kw">in</span> data_types.split(<span class="str">","</span>):
+            sym_data[dtype] = <span class="kw">await</span> db.query(sym.strip(), dtype.strip(), period)
+        results[sym.strip()] = sym_data
+    <span class="kw">return</span> [TextContent(type=<span class="str">"text"</span>, text=json.dumps(results, default=<span class="fn">str</span>))]
+
+<span class="op">@</span>server.tool()
+<span class="kw">async def</span> <span class="fn">run_screener</span>(
+    strategy: <span class="fn">str</span>,
+    universe: <span class="fn">str</span> = <span class="str">"SP500"</span>,
+    max_results: <span class="fn">int</span> = <span class="num">10</span>
+) -&gt; <span class="fn">list</span>[TextContent]:
+    <span class="str">"""Run a predefined screening strategy.
+    Strategies: oversold_bounce, momentum_breakout, mean_reversion,
+    earnings_surprise, insider_buying."""</span>
+    results = <span class="kw">await</span> screener.run_strategy(strategy, universe, max_results)
+    <span class="kw">return</span> [TextContent(type=<span class="str">"text"</span>, text=json.dumps(results, default=<span class="fn">str</span>))]
+
+<span class="op">@</span>server.tool()
+<span class="kw">async def</span> <span class="fn">get_portfolio</span>() -&gt; <span class="fn">list</span>[TextContent]:
+    <span class="str">"""Get current portfolio positions with P&L and risk metrics."""</span>
+    portfolio = <span class="kw">await</span> db.get_portfolio()
+    <span class="kw">return</span> [TextContent(type=<span class="str">"text"</span>, text=json.dumps(portfolio, default=<span class="fn">str</span>))]
+
+<span class="cm"># Run the MCP server</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="kw">import</span> asyncio
+    <span class="kw">from</span> mcp.server.stdio <span class="kw">import</span> stdio_server
+    asyncio.run(stdio_server(server))
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#059669;"></i> MCP Server Configuration</h4>
+    <p style="margin:0;">Add your MCP server to Claude Desktop's config (<code>claude_desktop_config.json</code>) or Claude Code's MCP settings. Claude will automatically discover your tools and use them when analyzing markets. The key advantage: Claude decides <em>what</em> data to fetch based on the question — you don't need to pre-load everything.</p>
+  </div>
+</div>
+
+<div class="section-divider" id="briefings"><i class="fa-solid fa-newspaper" style="color:#f59e0b;"></i> Automated Morning Briefings</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-newspaper" style="color:#f59e0b;"></i> The AI-Powered Morning Briefing Pipeline</h2>
+  <p>Every morning at 7 AM, your terminal should deliver a structured briefing to your phone. Here's the pipeline:</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Automated Morning Briefing Generator</span>
+<span class="kw">class</span> <span class="fn">MorningBriefing</span>:
+    <span class="str">"""Generate and deliver daily morning briefing."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, ai_client, db, alert_service):
+        self.ai = ai_client
+        self.db = db
+        self.alerts = alert_service
+
+    <span class="kw">async def</span> <span class="fn">generate</span>(self) -&gt; <span class="fn">str</span>:
+        <span class="cm"># 1. Collect all data</span>
+        market = <span class="kw">await</span> self.db.get_market_snapshot()
+        signals = <span class="kw">await</span> self.db.get_latest_signals()
+        portfolio = <span class="kw">await</span> self.db.get_portfolio()
+        calendar = <span class="kw">await</span> self.db.get_economic_calendar()
+        news = <span class="kw">await</span> self.db.get_overnight_news(limit=<span class="num">20</span>)
+
+        <span class="cm"># 2. Ask Claude to synthesize</span>
+        prompt = <span class="str">f"""Generate a concise morning market briefing using
+ONLY the following data. Format as Telegram Markdown.
+
+## Market Snapshot
+{json.dumps(market, indent=2)}
+
+## Active Signals
+{json.dumps(signals, indent=2)}
+
+## Portfolio (Open Positions)
+{json.dumps(portfolio, indent=2)}
+
+## Economic Calendar Today
+{json.dumps(calendar, indent=2)}
+
+## Overnight News
+{json.dumps(news, indent=2)}
+
+## Format
+1. One-line market mood (emoji + 5 words max)
+2. Key overnight moves (3 bullets)
+3. Today's calendar events (ranked by impact)
+4. Signal alerts (new signals from screener)
+5. Portfolio check (positions to watch)
+6. Risk flags (anything unusual)
+Keep it under 2000 chars for Telegram."""</span>
+
+        response = self.ai.messages.create(
+            model=<span class="str">"claude-sonnet-4-20250514"</span>,
+            max_tokens=<span class="num">1500</span>,
+            messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: prompt}],
+            temperature=<span class="num">0.2</span>,
+        )
+
+        <span class="kw">return</span> response.content[<span class="num">0</span>].text
+
+    <span class="kw">async def</span> <span class="fn">deliver</span>(self):
+        briefing = <span class="kw">await</span> self.generate()
+        <span class="kw">await</span> self.alerts.send_telegram(briefing)
+        <span class="kw">await</span> self.alerts.send_discord(briefing, channel=<span class="str">"morning-briefing"</span>)
+  </div>
+
+  <div id="chart-briefing" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<div class="section-divider" id="sentiment"><i class="fa-solid fa-face-smile" style="color:#2563eb;"></i> Sentiment Analysis</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-face-smile" style="color:#2563eb;"></i> News Headlines and Social Media Pulse</h2>
+  <p>Sentiment analysis is one of the most valuable AI applications in trading. The idea: score news headlines and social media posts on a <strong>bullish-to-bearish scale</strong>, then aggregate scores per symbol to get a sentiment signal.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Batch Headline Sentiment Scorer</span>
+<span class="kw">async def</span> <span class="fn">score_headlines</span>(
+    headlines: <span class="fn">list</span>[<span class="fn">dict</span>],
+    client: anthropic.Anthropic
+) -&gt; <span class="fn">list</span>[<span class="fn">dict</span>]:
+    <span class="str">"""Score a batch of headlines for market sentiment.
+
+    Returns list of {headline, symbol, score, reasoning}.
+    Score: -1.0 (very bearish) to +1.0 (very bullish).
+    """</span>
+
+    headlines_text = <span class="str">"\n"</span>.join(
+        <span class="str">f"{i+1}. [{h['symbol']}] {h['title']}"</span>
+        <span class="kw">for</span> i, h <span class="kw">in</span> <span class="fn">enumerate</span>(headlines)
+    )
+
+    prompt = <span class="str">f"""Score each headline for market sentiment impact.
+Return a JSON array with one object per headline.
+
+Headlines:
+{headlines_text}
+
+For each headline, return:
+- "index": headline number
+- "score": float from -1.0 (very bearish) to +1.0 (very bullish)
+- "impact": "high", "medium", or "low"
+- "reasoning": one sentence explaining the score
+
+Only consider impact on the stock price. Ignore neutral news (score 0).
+Return ONLY valid JSON array, no markdown."""</span>
+
+    response = client.messages.create(
+        model=<span class="str">"claude-sonnet-4-20250514"</span>,
+        max_tokens=<span class="num">2000</span>,
+        messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: prompt}],
+        temperature=<span class="num">0.1</span>,
+    )
+
+    scores = json.loads(response.content[<span class="num">0</span>].text)
+
+    <span class="cm"># Merge scores back with original headlines</span>
+    <span class="kw">for</span> s <span class="kw">in</span> scores:
+        idx = s[<span class="str">"index"</span>] - <span class="num">1</span>
+        headlines[idx][<span class="str">"sentiment_score"</span>] = s[<span class="str">"score"</span>]
+        headlines[idx][<span class="str">"sentiment_impact"</span>] = s[<span class="str">"impact"</span>]
+
+    <span class="kw">return</span> headlines
+  </div>
+
+  <div id="chart-sentiment" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<div class="section-divider" id="grounding"><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Anti-Hallucination Techniques</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Grounding AI Output in Real Data</h2>
+  <p>The #1 risk of using AI for trading analysis is <strong>hallucination</strong> — the model inventing facts, prices, or events that don't exist. Here are the techniques to eliminate this:</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Technique</th><th>How It Works</th><th>Effectiveness</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Data injection</strong></td><td>All data provided explicitly in the prompt. Model told to use ONLY provided data.</td><td>Very High</td></tr>
+      <tr><td><strong>Low temperature</strong></td><td>Temperature 0.1-0.3 reduces creative output, increases factual adherence.</td><td>High</td></tr>
+      <tr><td><strong>Structured output</strong></td><td>JSON schema forces model to fill specific fields, no free-form text.</td><td>High</td></tr>
+      <tr><td><strong>MCP tools</strong></td><td>Model fetches data via tools instead of relying on memory. Real-time grounding.</td><td>Very High</td></tr>
+      <tr><td><strong>Post-validation</strong></td><td>Compare AI-generated prices/dates against your database. Flag discrepancies.</td><td>Very High</td></tr>
+      <tr><td><strong>Confidence scoring</strong></td><td>Model rates its own confidence 1-10. Discard analyses below 6.</td><td>Medium</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Golden Rule</h4>
+    <p style="margin:0;">Never let AI output directly trigger a trade. AI generates <strong>analysis and suggestions</strong>. A human (you) makes the <strong>decision</strong>. Even with perfect grounding, AI can misinterpret context. Use it as a highly intelligent research assistant, not an autopilot.</p>
+  </div>
+
+  <div id="chart-confidence" style="width:100%; height:300px; margin:2rem 0;"></div>
+</div>
+
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> Key Takeaways</div>
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark"></i> Key Takeaways — Part 5</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> AI transforms your terminal from a data viewer into an intelligent assistant that synthesizes patterns, news, and risk.</li>
+    <li><i class="fa-solid fa-check"></i> Use Claude API with structured prompts and low temperature (0.1-0.3) for factual market analysis.</li>
+    <li><i class="fa-solid fa-check"></i> Build an MCP server to give Claude direct access to your database, screeners, and portfolio — real-time grounding.</li>
+    <li><i class="fa-solid fa-check"></i> Automated morning briefings (7 AM Telegram) save 30 minutes of manual research daily.</li>
+    <li><i class="fa-solid fa-check"></i> Sentiment analysis on news headlines provides a quantified bullish/bearish signal per symbol.</li>
+    <li><i class="fa-solid fa-check"></i> Anti-hallucination: inject data explicitly, use structured output, validate against your DB, never auto-trade.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-terminal/part6-deployment/" class="next-cta">
+  <div>
+    <div class="next-label">Part 6 of 6</div>
+    <div class="next-title">Deployment — Ship It to Production <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Build Your Own Trading Terminal with AI</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Complete 6-part series — From architecture to production deployment</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#059669; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Back to Home</a>
+</div>
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-terminal/part4-dashboard/" class="series-arrow" title="Dashboard"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build Your Own Trading Terminal with AI</span><div class="series-steps"><a href="/series/trading-terminal/part1-architecture/" class="series-step" title="Architecture"><span class="series-num">1</span><span class="series-label">Architecture</span></a><a href="/series/trading-terminal/part2-data-pipeline/" class="series-step" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/trading-terminal/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/trading-terminal/part4-dashboard/" class="series-step" title="Dashboard"><span class="series-num">4</span><span class="series-label">Dashboard</span></a><a href="/series/trading-terminal/part5-ai-layer/" class="series-step current" title="AI Layer"><span class="series-num">5</span><span class="series-label">AI Layer</span></a><a href="/series/trading-terminal/part6-deployment/" class="series-step" title="Deployment"><span class="series-num">6</span><span class="series-label">Deployment</span></a></div><span class="series-counter">5/6</span><a href="/series/trading-terminal/part6-deployment/" class="series-arrow" title="Deployment"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Data via MarketWatch Gateway. This is not financial advice.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Briefing Pipeline (Funnel)
+var c1=echarts.init(document.getElementById('chart-briefing'));
+c1.setOption({
+  title:{text:'Morning Briefing Pipeline',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'item',formatter:'{b}: {c}ms'},
+  series:[{type:'funnel',left:'10%',right:'10%',top:'18%',bottom:'8%',minSize:'20%',maxSize:'100%',sort:'descending',gap:4,
+    label:{show:true,position:'inside',fontSize:11,fontWeight:600},
+    data:[
+      {value:2000,name:'Fetch Market Data',itemStyle:{color:'#9333ea'}},
+      {value:1500,name:'Fetch News & Calendar',itemStyle:{color:'#2563eb'}},
+      {value:800,name:'Run Screener Signals',itemStyle:{color:'#059669'}},
+      {value:5000,name:'Claude API Synthesis',itemStyle:{color:'#f59e0b'}},
+      {value:500,name:'Format & Deliver',itemStyle:{color:'#ef4444'}}
+    ]}]
+});
+
+// Sentiment Heatmap
+var c2=echarts.init(document.getElementById('chart-sentiment'));
+var symbols=['AAPL','MSFT','NVDA','TSLA','AMZN','META','GOOGL','JPM'];
+var days=['Mon','Tue','Wed','Thu','Fri'];
+var sentData=[];
+for(var i=0;i<symbols.length;i++){for(var j=0;j<days.length;j++){sentData.push([j,i,(Math.random()*2-1).toFixed(2)]);}}
+c2.setOption({
+  title:{text:'Sentiment Score Heatmap — Last 5 Days',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},
+  tooltip:{formatter:function(p){return symbols[p.value[1]]+' ('+days[p.value[0]]+'): '+p.value[2];}},
+  grid:{left:'12%',right:'8%',bottom:'8%',top:'18%'},
+  xAxis:{type:'category',data:days,axisLabel:{fontSize:11}},
+  yAxis:{type:'category',data:symbols,axisLabel:{fontSize:11,fontWeight:600}},
+  visualMap:{min:-1,max:1,calculable:true,orient:'horizontal',left:'center',bottom:'0%',inRange:{color:['#ef4444','#fef3c7','#10b981']},textStyle:{fontSize:10}},
+  series:[{type:'heatmap',data:sentData,label:{show:true,fontSize:9,formatter:function(p){return p.value[2];}},
+    itemStyle:{borderColor:'#fff',borderWidth:2}}]
+});
+
+// Confidence Distribution
+var c3=echarts.init(document.getElementById('chart-confidence'));
+c3.setOption({
+  title:{text:'AI Analysis Confidence Distribution (Last 100 Analyses)',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'axis'},
+  grid:{left:'3%',right:'4%',bottom:'8%',top:'18%',containLabel:true},
+  xAxis:{type:'category',data:['1','2','3','4','5','6','7','8','9','10'],name:'Confidence Score',axisLabel:{fontSize:11}},
+  yAxis:{type:'value',name:'Count',axisLabel:{fontSize:11}},
+  series:[{type:'bar',data:[
+    {value:0,itemStyle:{color:'#ef4444'}},
+    {value:1,itemStyle:{color:'#ef4444'}},
+    {value:2,itemStyle:{color:'#f87171'}},
+    {value:3,itemStyle:{color:'#fca5a5'}},
+    {value:5,itemStyle:{color:'#fcd34d'}},
+    {value:8,itemStyle:{color:'#fbbf24'}},
+    {value:22,itemStyle:{color:'#34d399'}},
+    {value:35,itemStyle:{color:'#10b981'}},
+    {value:18,itemStyle:{color:'#059669'}},
+    {value:6,itemStyle:{color:'#047857'}}
+  ],barWidth:'60%',label:{show:true,position:'top',fontWeight:600,fontSize:11}}]
+});
+
+window.addEventListener('resize',function(){c1.resize();c2.resize();c3.resize();});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

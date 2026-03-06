@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Building Analyst Agents — Automated Research & Scoring | AI Agents for Finance — Part 3/5 | Market Watch</title>
+ <meta name="description" content="AI Agents for Finance — Part 3/5: How to build autonomous analyst agents that collect data, analyze fundamentals and technicals, generate institutional-grade reports, and self-verify for accuracy.">
+ <meta property="og:title" content="Building Analyst Agents — Automated Research & Scoring | AI Agents for Finance 3/5 | Market Watch">
+ <meta property="og:description" content="The complete analyst agent workflow: data ingestion, structured extraction, sentiment analysis, peer benchmarking, report generation, and anti-hallucination techniques.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/ai-agents-finance/part3-analyst-agents/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfeff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0891b2; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-cyan { background:rgba(8,145,178,0.1); color:#0891b2; border:1px solid rgba(8,145,178,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#0e7490; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0891b2; margin-right:0.75rem; }
+ details[open] summary { border-color:#0891b2; background:#ecfeff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #164e63 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#22d3ee; }
+ .takeaway-box { background:linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); border:1px solid #0891b2; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0e7490; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(8,145,178,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0891b2; margin-top:0.2rem; flex-shrink:0; }
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(8,145,178,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0891b2; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0891b2 0%, #0e7490 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#0891b2; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+ .pedagogy-box { background:linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%); border:1px solid #99f6e4; border-radius:16px; padding:1.75rem; margin:1.5rem 0; }
+ .pedagogy-box h4 { color:#0e7490; margin-top:0; font-size:1rem; }
+ .pedagogy-box p { font-size:0.92rem; color:#334155; line-height:1.7; margin:0.5rem 0; }
+ .alert-box { background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+ .alert-box h4 { color:#dc2626; margin-top:0; font-size:0.95rem; }
+ .alert-box p { font-size:0.9rem; color:#7f1d1d; line-height:1.6; margin:0.5rem 0; }
+ .code-block { background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; }
+ .code-block pre { margin:0; color:#e2e8f0; font-family:'JetBrains Mono', 'Fira Code', monospace; font-size:0.85rem; line-height:1.7; }
+ .code-label { display:inline-block; background:#0891b2; color:white; padding:0.2rem 0.75rem; border-radius:6px 6px 0 0; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:-1px; position:relative; z-index:1; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#22d3ee; }
+ .code-block .string { color:#a5f3fc; }
+ .pipeline-step { display:flex; align-items:flex-start; gap:1.25rem; padding:1.25rem; margin:0.75rem 0; background:white; border:1px solid #e2e8f0; border-radius:12px; border-left:4px solid #0891b2; }
+ .pipeline-num { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #0891b2, #0e7490); color:white; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:0.9rem; flex-shrink:0; }
+ .pipeline-content h4 { font-size:0.95rem; font-weight:700; color:#0f172a; margin:0 0 0.25rem; }
+ .pipeline-content p { font-size:0.88rem; color:#64748b; margin:0; line-height:1.5; }
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .step-grid { grid-template-columns:1fr; }
+   .capability-grid { grid-template-columns:1fr; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-robot"></i> AI Agents for Finance Series — Part 3 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Building Analyst Agents — Automated Research & Scoring</h1>
+  <p class="hero-subtitle">The complete pipeline from raw data to institutional-grade analysis. How to build agents that collect financial data, extract structured insights, run sentiment analysis, benchmark against peers, generate comprehensive reports, and self-verify every claim for accuracy.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-cyan"><i class="fa-solid fa-magnifying-glass-chart"></i> Data Ingestion</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-file-lines"></i> Structured Extraction</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-bar"></i> Scoring System</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-shield-halved"></i> Anti-Hallucination</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/ai-agents-finance/part2-architectures/" class="series-arrow" title="Agent Architectures"><i class="fas fa-chevron-left"></i></a><span class="series-title">AI Agents for Finance</span><div class="series-steps"><a href="/series/ai-agents-finance/part1-paradigm-shift/" class="series-step" title="The Paradigm Shift"><span class="series-num">1</span><span class="series-label">Paradigm Shift</span></a><a href="/series/ai-agents-finance/part2-architectures/" class="series-step" title="Agent Architectures"><span class="series-num">2</span><span class="series-label">Architectures</span></a><a href="/series/ai-agents-finance/part3-analyst-agents/" class="series-step current" title="Analyst Agents"><span class="series-num">3</span><span class="series-label">Analyst Agents</span></a><a href="/series/ai-agents-finance/part4-trading-agents/" class="series-step" title="Trading Agents"><span class="series-num">4</span><span class="series-label">Trading Agents</span></a><a href="/series/ai-agents-finance/part5-limits-future/" class="series-step" title="Limits & Future"><span class="series-num">5</span><span class="series-label">Limits & Future</span></a></div><span class="series-counter">3/5</span><a href="/series/ai-agents-finance/part4-trading-agents/" class="series-arrow" title="Trading Agents"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#workflow" class="fnav-item" data-section="workflow"><i class="fas fa-bookmark"></i><span>Analyst Workflow</span></a><a href="#data-ingestion" class="fnav-item" data-section="data-ingestion"><i class="fas fa-bookmark"></i><span>Data Ingestion</span></a><a href="#extraction" class="fnav-item" data-section="extraction"><i class="fas fa-bookmark"></i><span>Structured Extraction</span></a><a href="#sentiment" class="fnav-item" data-section="sentiment"><i class="fas fa-bookmark"></i><span>Sentiment Analysis</span></a><a href="#benchmarking" class="fnav-item" data-section="benchmarking"><i class="fas fa-bookmark"></i><span>Peer Benchmarking</span></a><a href="#report-gen" class="fnav-item" data-section="report-gen"><i class="fas fa-bookmark"></i><span>Report Generation</span></a><a href="#anti-hallucination" class="fnav-item" data-section="anti-hallucination"><i class="fas fa-bookmark"></i><span>Anti-Hallucination</span></a><a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn'), menu = document.getElementById('fnavMenu'), icon = document.getElementById('fnavIcon'), label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item'), sections = [], isOpen = false;
+  items.forEach(function(item) { var id = item.getAttribute('data-section'), el = document.getElementById(id); if (el) sections.push({ id:id, el:el, item:item }); });
+  function toggle() { isOpen = !isOpen; menu.classList.toggle('open', isOpen); fab.classList.toggle('open', isOpen); icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars'; }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) { if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) { item.addEventListener('click', function(e) { e.preventDefault(); var target = document.getElementById(this.getAttribute('data-section')); if (target) { var offset = (document.querySelector('.brand-bar') || {}).offsetHeight || 56; window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset - 20, behavior:'smooth' }); } if (isOpen) toggle(); }); });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) { entries.forEach(function(entry) { if (entry.isIntersecting) { var match = sections.find(function(s) { return s.el === entry.target; }); if (match) { if (currentActive) currentActive.classList.remove('active'); match.item.classList.add('active'); currentActive = match.item; label.textContent = match.item.querySelector('span').textContent; } } }); }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+})();
+</script>
+
+<!-- ========== SECTION 1: THE ANALYST WORKFLOW ========== -->
+<div class="section-divider"><i class="fa-solid fa-route"></i> The Pipeline</div>
+
+<div id="workflow" class="content-card">
+  <h2><i class="fa-solid fa-route" style="color:#0891b2;"></i> The Analyst Agent Workflow</h2>
+
+  <p>A human financial analyst follows a predictable workflow: collect data, analyze it across multiple dimensions, synthesize findings, and produce a recommendation. An analyst agent follows the exact same workflow — but executes it in 10 minutes instead of 6 hours, with perfect consistency across every report.</p>
+
+  <div id="workflowChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pipeline-step">
+    <div class="pipeline-num">1</div>
+    <div class="pipeline-content">
+      <h4>Data Collection</h4>
+      <p>Fetch quotes, historical bars, financials, earnings, insider activity, analyst consensus, sentiment, options chain, and news via MCP tools and web search. This is the raw material for the analysis.</p>
+    </div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipeline-num">2</div>
+    <div class="pipeline-content">
+      <h4>Structured Extraction</h4>
+      <p>Transform raw data into structured dimensions: technical score, fundamental score, sentiment score, risk score. Each dimension uses a consistent rubric with numerical ratings.</p>
+    </div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipeline-num">3</div>
+    <div class="pipeline-content">
+      <h4>Comparative Analysis</h4>
+      <p>Benchmark the stock against peers in the same sector, against its own history, and against market averages. Identify relative strengths and weaknesses.</p>
+    </div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipeline-num">4</div>
+    <div class="pipeline-content">
+      <h4>Synthesis & Recommendation</h4>
+      <p>Combine all dimensions into a composite score and investment thesis. Generate trade ideas with entry, stop, and target levels when warranted.</p>
+    </div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipeline-num">5</div>
+    <div class="pipeline-content">
+      <h4>Report Generation</h4>
+      <p>Produce a 50-100KB institutional-grade HTML report with ECharts visualizations, data tables, trade boxes, and structured navigation.</p>
+    </div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipeline-num">6</div>
+    <div class="pipeline-content">
+      <h4>Quality Assurance</h4>
+      <p>Verify file size, validate data citations against live sources, check for hallucinated numbers, run anti-doublon checks, index and deploy.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Human Analyst vs. Agent Analyst</div>
+    6 hours manual &rarr; <span class="formula-highlight">10 minutes</span> autonomous &rarr; <span class="formula-highlight">5 minutes</span> human review = <span class="formula-highlight">36x</span> productivity gain
+  </div>
+</div>
+
+<!-- ========== SECTION 2: DATA INGESTION ========== -->
+<div class="section-divider"><i class="fa-solid fa-database"></i> Raw Material</div>
+
+<div id="data-ingestion" class="content-card">
+  <h2><i class="fa-solid fa-database" style="color:#0891b2;"></i> Data Ingestion: Building the Information Base</h2>
+
+  <p>The quality of an analysis is bounded by the quality of its data. An analyst agent's first task is to build a comprehensive information base for the target security. Here is the full data matrix that a production analyst agent collects:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Data Category</th>
+        <th>MCP Tool / Source</th>
+        <th>Key Fields</th>
+        <th>Use</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Price & Volume</strong></td>
+        <td>QueryData: quote, bars_daily, bars_intraday</td>
+        <td>Price, change%, 52W range, volume, VWAP</td>
+        <td>Current positioning, trend assessment</td>
+      </tr>
+      <tr>
+        <td><strong>Technical Indicators</strong></td>
+        <td>QueryData: trading_signals, support_resistance</td>
+        <td>RSI, MACD, EMAs, S/R levels, volume profile</td>
+        <td>Technical score, entry/exit levels</td>
+      </tr>
+      <tr>
+        <td><strong>Fundamentals</strong></td>
+        <td>QueryData: financials, stats</td>
+        <td>Revenue, EPS, PE, PB, ROE, debt/equity, FCF</td>
+        <td>Valuation assessment, financial health</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings</strong></td>
+        <td>QueryData: earnings_quarterly</td>
+        <td>Beat/miss history, surprise %, guidance</td>
+        <td>Earnings quality, trend</td>
+      </tr>
+      <tr>
+        <td><strong>Analyst Coverage</strong></td>
+        <td>QueryData: analyst_actions</td>
+        <td>Upgrades, downgrades, PT changes, consensus</td>
+        <td>Street sentiment, PT upside</td>
+      </tr>
+      <tr>
+        <td><strong>Insider Activity</strong></td>
+        <td>QueryData: insider_transactions</td>
+        <td>Buy/sell transactions, 10b5-1 plans, cluster buys</td>
+        <td>Smart money signal</td>
+      </tr>
+      <tr>
+        <td><strong>Sentiment</strong></td>
+        <td>QueryData: sentiment_overall</td>
+        <td>Bull/bear ratio, social mentions, news tone</td>
+        <td>Crowd positioning</td>
+      </tr>
+      <tr>
+        <td><strong>Holders</strong></td>
+        <td>QueryData: holders</td>
+        <td>Institutional %, top holders, recent changes</td>
+        <td>Institutional conviction</td>
+      </tr>
+      <tr>
+        <td><strong>Options</strong></td>
+        <td>QueryData: options_chain</td>
+        <td>IV percentile, put/call ratio, max pain, OI</td>
+        <td>Expected move, hedging activity</td>
+      </tr>
+      <tr>
+        <td><strong>News</strong></td>
+        <td>QueryData: news + WebSearch</td>
+        <td>Headlines, catalysts, regulatory actions</td>
+        <td>Event risk, narrative assessment</td>
+      </tr>
+      <tr>
+        <td><strong>Short Interest</strong></td>
+        <td>QueryData: ctb (cost to borrow)</td>
+        <td>Short %, days to cover, CTB rate</td>
+        <td>Bear conviction, squeeze potential</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="code-label">Data Collection — Full Agent Call Sequence</div>
+  <div class="code-block"><pre><span class="comment">// Step 1: Core data via single MCP call</span>
+<span class="keyword">GetInstruments</span>(symbols=["NVDA"])
+<span class="comment">→ Returns comprehensive snapshot: price, fundamentals, technicals</span>
+
+<span class="comment">// Step 2: Detailed time-series and flow data</span>
+<span class="keyword">QueryData</span>(
+  types=<span class="string">"quote,bars_daily,bars_intraday,financials,
+         earnings_quarterly,holders,stats,support_resistance,
+         volume_profile,sentiment_overall,trading_signals,
+         analyst_actions,insider_transactions,ctb,news"</span>,
+  symbols=<span class="string">"NVDA"</span>
+)
+
+<span class="comment">// Step 3: Options data (if equity)</span>
+<span class="keyword">QueryData</span>(types=<span class="string">"options_chain"</span>, symbols=<span class="string">"NVDA"</span>)
+
+<span class="comment">// Step 4: Recent news and catalysts</span>
+<span class="keyword">WebSearch</span>(<span class="string">"NVIDIA NVDA latest news earnings catalyst 2026"</span>)
+<span class="keyword">WebSearch</span>(<span class="string">"NVDA analyst upgrade downgrade this week"</span>)</pre></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The Data Completeness Principle</h4>
+    <p>A common mistake in automated analysis is collecting too little data and compensating with LLM reasoning. This invites hallucination. The opposite approach is better: collect <strong>exhaustive data</strong> and let the LLM <strong>summarize and synthesize</strong>. An LLM summarizing real data is reliable. An LLM inventing data is dangerous. The rule: when in doubt, fetch more data.</p>
+  </div>
+</div>
+
+<!-- ========== SECTION 3: STRUCTURED EXTRACTION ========== -->
+<div class="section-divider"><i class="fa-solid fa-filter"></i> From Raw to Structured</div>
+
+<div id="extraction" class="content-card">
+  <h2><i class="fa-solid fa-filter" style="color:#0891b2;"></i> Structured Extraction: Turning Data into Scores</h2>
+
+  <p>Raw data is useless until it is structured into comparable dimensions. The analyst agent applies a consistent scoring rubric that converts 50+ data points into a small set of dimensional scores.</p>
+
+  <h3>The Multi-Dimensional Scoring Framework</h3>
+
+  <div id="radarChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="code-label">Analyst Agent Scoring Rubric</div>
+  <div class="code-block"><pre><span class="keyword">SCORING RUBRIC — Each dimension 0-10</span>
+
+<span class="keyword">Technical Score</span> (weight: 0.25)
+  RSI 30-50 oversold bounce zone:    +2
+  Price above EMA50:                  +1
+  Price above EMA200:                 +1
+  MACD bullish crossover:             +2
+  Volume confirmation (> 1.2x avg):   +1
+  Near support level (< 3%):          +2
+  Clean chart pattern (base/flag):    +1
+  Max: 10
+
+<span class="keyword">Fundamental Score</span> (weight: 0.30)
+  PE below sector average:            +2
+  Revenue growth > 10% YoY:           +2
+  EPS beat 3+ consecutive quarters:   +2
+  ROE > 15%:                          +1
+  Debt/Equity < 1.0:                  +1
+  FCF yield > 3%:                     +1
+  Margin expansion YoY:               +1
+  Max: 10
+
+<span class="keyword">Sentiment Score</span> (weight: 0.20)
+  Analyst consensus Buy (> 70%):      +2
+  PT upside > 15%:                    +2
+  Insider buying (non-routine):       +3
+  Social sentiment bullish:           +1
+  Short interest declining:           +1
+  Institutional accumulation:         +1
+  Max: 10
+
+<span class="keyword">Risk Score</span> (weight: 0.25)
+  Beta < 1.5:                         +2
+  IV percentile < 50:                 +1
+  Clear stop loss level:              +2
+  R/R ratio > 2:1:                    +2
+  No earnings in 2 weeks:             +1
+  No regulatory overhang:             +1
+  Portfolio correlation < 0.6:        +1
+  Max: 10
+
+<span class="keyword">Composite</span> = Tech*0.25 + Fund*0.30 + Sent*0.20 + Risk*0.25
+  A+: >= 8.5  |  A: >= 7.5  |  B+: >= 6.5
+  B:  >= 5.5  |  C: >= 4.5  |  D: < 4.5</pre></div>
+
+  <h3>Extraction from SEC Filings</h3>
+  <p>For deep-dive analyses, agents can process SEC filings (10-K, 10-Q, 8-K) to extract metrics not available in standard data feeds:</p>
+
+  <div class="capability-grid">
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(8,145,178,0.1); color:#0891b2;"><i class="fa-solid fa-file-contract"></i></div>
+      <h4>Risk Factors</h4>
+      <p>Extract and categorize risk factors from 10-K. New risks vs. prior filing indicate emerging concerns.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(8,145,178,0.1); color:#0891b2;"><i class="fa-solid fa-comments-dollar"></i></div>
+      <h4>Management Commentary</h4>
+      <p>Parse MD&A section for tone shifts, guidance language, and strategic pivots that numbers alone miss.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(8,145,178,0.1); color:#0891b2;"><i class="fa-solid fa-scale-balanced"></i></div>
+      <h4>Segment Breakdown</h4>
+      <p>Extract revenue and margin by business segment. Identify which segments are growing vs. dragging.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(8,145,178,0.1); color:#0891b2;"><i class="fa-solid fa-handshake"></i></div>
+      <h4>Related Party Transactions</h4>
+      <p>Flag unusual related party deals, executive compensation changes, and governance red flags.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECTION 4: SENTIMENT ========== -->
+<div class="section-divider"><i class="fa-solid fa-face-smile"></i> Market Psychology</div>
+
+<div id="sentiment" class="content-card">
+  <h2><i class="fa-solid fa-face-smile" style="color:#0891b2;"></i> Sentiment Analysis: Reading the Market's Mood</h2>
+
+  <p>Quantitative data tells you where a stock is. Sentiment tells you where the crowd thinks it is going — and whether that crowd is right or wrong. Analyst agents combine multiple sentiment signals into a composite view.</p>
+
+  <h3>Sentiment Sources Hierarchy</h3>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Signal Quality</th>
+        <th>Lead Time</th>
+        <th>Agent Access</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Insider Transactions</strong></td>
+        <td>Highest (skin in the game)</td>
+        <td>1-3 months</td>
+        <td>MCP: insider_transactions</td>
+      </tr>
+      <tr>
+        <td><strong>Institutional 13F</strong></td>
+        <td>High (smart money)</td>
+        <td>45 days delayed</td>
+        <td>MCP: holders</td>
+      </tr>
+      <tr>
+        <td><strong>Analyst Actions</strong></td>
+        <td>Medium-high (professional)</td>
+        <td>0-7 days</td>
+        <td>MCP: analyst_actions</td>
+      </tr>
+      <tr>
+        <td><strong>Options Flow</strong></td>
+        <td>Medium (positioning)</td>
+        <td>Real-time</td>
+        <td>MCP: options_chain</td>
+      </tr>
+      <tr>
+        <td><strong>News Tone</strong></td>
+        <td>Medium (narrative)</td>
+        <td>Real-time</td>
+        <td>MCP: news + WebSearch</td>
+      </tr>
+      <tr>
+        <td><strong>Social Media</strong></td>
+        <td>Low-medium (noisy)</td>
+        <td>Real-time</td>
+        <td>MCP: sentiment_overall</td>
+      </tr>
+      <tr>
+        <td><strong>Reddit/StockTwits</strong></td>
+        <td>Low (retail noise)</td>
+        <td>Real-time</td>
+        <td>WebSearch</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div id="sentimentChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> The Contrarian Signal</h4>
+    <p>Sentiment is most useful at extremes. When 90%+ of social media is bullish on a stock, it often means the easy money has been made and a pullback is coming (everyone who wanted to buy already has). When sentiment is deeply bearish but fundamentals are intact, it can signal a buying opportunity. The analyst agent weighs sentiment as a <strong>confirming or contrarian</strong> signal, never as the primary driver. Insider buying during a period of deep retail pessimism is one of the strongest bullish signals in markets.</p>
+  </div>
+
+  <h3>Earnings Call Tone Analysis</h3>
+  <p>Agents can analyze earnings call transcripts for tone shifts that predict future performance:</p>
+
+  <div class="code-label">Earnings Call Tone Extraction</div>
+  <div class="code-block"><pre><span class="comment">// Agent prompt for earnings call analysis</span>
+<span class="keyword">Analyze this earnings call transcript for:</span>
+
+1. <span class="string">Confidence indicators</span>:
+   - "We are confident" / "We expect" (strong)
+   - "We hope" / "We believe" (weak)
+   - Frequency of hedging language ("approximately", "roughly")
+
+2. <span class="string">Forward guidance tone</span>:
+   - Raised / maintained / lowered
+   - Specific numbers vs. vague ranges
+   - Management's tone on macro headwinds
+
+3. <span class="string">Red flag phrases</span>:
+   - "One-time charge" / "Non-recurring"
+   - "Challenging environment" / "Headwinds"
+   - "Strategic review" / "Exploring alternatives"
+
+4. <span class="string">Positive signals</span>:
+   - "Record" / "Strongest quarter"
+   - "Accelerating" / "Expanding margins"
+   - "Returning capital" / "Increasing dividend"
+
+<span class="keyword">Output</span>: tone_score (-5 to +5), key_quotes[], red_flags[]</pre></div>
+</div>
+
+<!-- ========== SECTION 5: PEER BENCHMARKING ========== -->
+<div class="section-divider"><i class="fa-solid fa-scale-balanced"></i> Relative Analysis</div>
+
+<div id="benchmarking" class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#0891b2;"></i> Comparative Analysis: Peer Benchmarking</h2>
+
+  <p>No stock exists in isolation. An analyst agent evaluates every security relative to its peers, its sector, and the broader market. This comparative analysis is where agents truly shine — they can process 10 peer companies as easily as one.</p>
+
+  <h3>The Benchmarking Matrix</h3>
+
+  <div id="peerChart" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="code-label">Peer Comparison — Agent Workflow</div>
+  <div class="code-block"><pre><span class="comment">// Step 1: Identify peers (same sector, similar market cap)</span>
+<span class="keyword">Target:</span> NVDA (Semiconductors, $3.5T)
+<span class="keyword">Peers:</span> AMD, INTC, AVGO, QCOM, TXN
+
+<span class="comment">// Step 2: Fetch comparable data for all</span>
+<span class="keyword">QueryData</span>(
+  types=<span class="string">"quote,financials,stats,earnings_quarterly"</span>,
+  symbols=<span class="string">"NVDA,AMD,INTC,AVGO,QCOM,TXN"</span>
+)
+
+<span class="comment">// Step 3: Build comparison matrix</span>
+<span class="keyword">Metrics:</span> PE, PEG, Revenue Growth, Gross Margin,
+         ROE, Debt/Equity, FCF Yield, EPS Growth
+
+<span class="comment">// Step 4: Rank and highlight outliers</span>
+<span class="keyword">NVDA ranks:</span>
+  PE: 5th/6 (most expensive) — <span class="string">BUT</span>
+  Revenue Growth: 1st/6 (highest growth justifies premium)
+  Gross Margin: 1st/6 (73% — structural moat)
+  ROE: 1st/6 (exceptional capital efficiency)
+  <span class="keyword">Verdict: Premium valuation justified by best-in-class growth</span></pre></div>
+
+  <h3>Sector Positioning Map</h3>
+  <p>The agent generates a scatter plot positioning the target stock against peers across two key dimensions (typically valuation vs. growth). This provides an instant visual read on whether the stock is over or underpriced relative to peers.</p>
+
+  <div id="positionChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The Valuation Trap</h4>
+    <p>A stock can look "cheap" on PE but be a value trap (declining business). A stock can look "expensive" on PE but be a great investment (accelerating growth). The agent's comparative analysis <strong>adjusts for growth</strong> by using PEG ratio (PE / EPS growth) and forward multiples. NVDA at 68x trailing PE looks expensive. NVDA at 2.1x PEG with 32% EPS growth looks reasonable. Context is everything.</p>
+  </div>
+</div>
+
+<!-- ========== SECTION 6: REPORT GENERATION ========== -->
+<div class="section-divider"><i class="fa-solid fa-file-code"></i> The Deliverable</div>
+
+<div id="report-gen" class="content-card">
+  <h2><i class="fa-solid fa-file-code" style="color:#0891b2;"></i> Report Generation: From Data to Deliverable</h2>
+
+  <p>The final output of an analyst agent is an institutional-grade research report. In the Market Watch system, these are 50-100KB HTML files with structured navigation, interactive ECharts visualizations, data tables, trade ideas, and a consistent visual identity.</p>
+
+  <h3>The Report Template Architecture</h3>
+  <p>Every analyst report follows a standardized structure defined in the project's CLAUDE.md. This ensures consistency across hundreds of analyses:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Hero Section</h4>
+      <p>Ticker, price, change%, key badges (sector, grade, market cap tier), variant switcher for language/level</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Navigation</h4>
+      <p>FAB floating menu with 6-8 section shortcuts. Brand bar with home link. Series bar if part of a series.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Overview Dashboard</h4>
+      <p>Score metrics row, company snapshot, key fundamentals grid. Radar chart for multi-dimensional score.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Technical Analysis</h4>
+      <p>Support/resistance levels, trend assessment, chart patterns, momentum indicators. ECharts for price action.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">5</div>
+      <h4>Fundamental Deep Dive</h4>
+      <p>Revenue/earnings trends, margin analysis, valuation vs. peers, cash flow quality. Compare tables and bar charts.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">6</div>
+      <h4>Sentiment & Flow</h4>
+      <p>Social radar, analyst consensus, insider activity, options positioning. Gauge charts for sentiment scores.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">7</div>
+      <h4>Trade Idea</h4>
+      <p>Entry zone, stop loss, TP1/TP2, R/R ratio, confirmation/invalidation signals, timing/sizing guidance.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">8</div>
+      <h4>Disclaimer & Sources</h4>
+      <p>Risk warnings, data sources, publication date, history modal for version tracking.</p>
+    </div>
+  </div>
+
+  <h3>ECharts Visualization Strategy</h3>
+  <p>A single analysis report typically includes 6-10 ECharts visualizations. The agent selects chart types based on data characteristics:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Data Type</th>
+        <th>Chart Type</th>
+        <th>Use Case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Multi-dimensional scores</td>
+        <td>Radar chart</td>
+        <td>Technical/Fundamental/Sentiment/Risk spider</td>
+      </tr>
+      <tr>
+        <td>Revenue/earnings history</td>
+        <td>Bar + line combo</td>
+        <td>Revenue bars with EPS growth line overlay</td>
+      </tr>
+      <tr>
+        <td>Peer comparison</td>
+        <td>Horizontal bar</td>
+        <td>Valuation metrics ranked across peers</td>
+      </tr>
+      <tr>
+        <td>Sector allocation</td>
+        <td>Treemap or pie</td>
+        <td>Revenue by segment, holder distribution</td>
+      </tr>
+      <tr>
+        <td>Sentiment meter</td>
+        <td>Gauge</td>
+        <td>Bull/bear ratio, Fear & Greed index</td>
+      </tr>
+      <tr>
+        <td>Correlation matrix</td>
+        <td>Heatmap</td>
+        <td>Sector correlations, portfolio overlap</td>
+      </tr>
+      <tr>
+        <td>Price positioning</td>
+        <td>Scatter</td>
+        <td>Valuation vs. growth across peers</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-paintbrush"></i> The Visualization Principle</h4>
+    <p>Every chart must answer a specific question. "What does this chart tell me that a table cannot?" If you cannot answer that question in one sentence, the chart does not belong in the report. A radar chart instantly shows that NVDA excels technically but lags on valuation — a table of 10 numbers requires mental processing to reach the same conclusion. The agent is trained to select the visualization that delivers the insight with minimum cognitive load.</p>
+  </div>
+</div>
+
+<!-- ========== SECTION 7: ANTI-HALLUCINATION ========== -->
+<div class="section-divider"><i class="fa-solid fa-shield-halved"></i> Trust & Verify</div>
+
+<div id="anti-hallucination" class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Anti-Hallucination: Ensuring Data Integrity</h2>
+
+  <p>The single biggest risk in AI-generated financial analysis is hallucination — the model confidently stating incorrect facts. In finance, a hallucinated price, a fabricated earnings number, or an invented analyst upgrade can lead to real financial losses. Anti-hallucination is not optional; it is the foundation of trust.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-skull-crossbones"></i> Real Hallucination Examples</h4>
+    <p>"AAPL reported Q2 2026 EPS of $2.18, beating estimates by 12%" — <strong>Completely fabricated.</strong> The model generated a plausible-sounding but fictional earnings number because it was asked to analyze before the actual report was released. This kind of hallucination is dangerous because it <em>sounds</em> authoritative.</p>
+  </div>
+
+  <h3>The Anti-Hallucination Stack</h3>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-database" style="font-size:0.8rem;"></i></div>
+      <h4>1. Ground in Live Data</h4>
+      <p>Every numerical claim must trace back to a tool call result. Never let the model generate prices, PE ratios, or earnings numbers from memory.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-quote-right" style="font-size:0.8rem;"></i></div>
+      <h4>2. Cite Sources</h4>
+      <p>Every data point must have an explicit source: "Price: $198.50 (MCP:quote, 2026-03-06 14:32 UTC)". If a claim has no source, it should not be in the report.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-circle-question" style="font-size:0.8rem;"></i></div>
+      <h4>3. Express Uncertainty</h4>
+      <p>"Based on available data..." / "Estimated..." / "Unable to verify..." — The agent must communicate confidence levels, not pretend certainty.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-magnifying-glass" style="font-size:0.8rem;"></i></div>
+      <h4>4. Cross-Validate</h4>
+      <p>For critical claims (earnings, insider activity), verify against a second source. MCP data + web search confirmation = validated fact.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-calculator" style="font-size:0.8rem;"></i></div>
+      <h4>5. Spot Price Check (P0)</h4>
+      <p>Every trade idea must validate entry price against live quote. If entry differs by >10% from spot, reject the setup. This catches stale or fabricated prices.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-ruler" style="font-size:0.8rem;"></i></div>
+      <h4>6. File Size Gate</h4>
+      <p>A complete analysis should be 50-100KB. Below 10KB, sections are missing. Below 50KB, the analysis is likely superficial. These bounds catch truncated or incomplete outputs.</p>
+    </div>
+  </div>
+
+  <div id="hallucinationChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="code-label">Anti-Hallucination Prompt Template</div>
+  <div class="code-block"><pre><span class="keyword">CRITICAL INSTRUCTIONS:</span>
+
+1. <span class="string">NEVER generate a price, PE ratio, revenue figure, or EPS
+   number from your training data.</span> Always use the values
+   returned by MCP tool calls in this conversation.
+
+2. If a data point is unavailable (tool returned null or error),
+   write <span class="string">"Data unavailable"</span> — do NOT estimate or approximate.
+
+3. For every numerical claim, include the source in parentheses:
+   <span class="string">"Revenue: $35.1B (MCP:financials)"</span>
+
+4. Before generating a trade idea, validate:
+   - Entry price within 10% of live quote (MCP:quote)
+   - Stop loss at a real technical level (MCP:support_resistance)
+   - Target at a real resistance level, not a round number
+
+5. If you are uncertain about any claim, prefix with
+   <span class="string">"Based on available data..."</span> or <span class="string">"Note: this could not
+   be independently verified."</span>
+
+6. NEVER say <span class="string">"as of my last update"</span> — you have live data.
+   Say <span class="string">"as of [date from tool response]"</span> instead.</pre></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> The Trust Spectrum</h4>
+    <p>Not all agent outputs need the same level of verification. The trust spectrum for financial analysis: <strong>Qualitative commentary</strong> (low risk — the model's interpretation of data) needs light review. <strong>Quantitative claims</strong> (medium risk — specific numbers) need source verification. <strong>Trade recommendations</strong> (high risk — money at stake) need both data verification AND logical validation of the trade thesis. The anti-hallucination stack applies proportionally: more critical outputs get more validation layers.</p>
+  </div>
+</div>
+
+<!-- ========== TAKEAWAYS ========== -->
+<div class="section-divider"><i class="fa-solid fa-star"></i> Summary</div>
+
+<div id="takeaways" class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#0891b2;"></i> Key Takeaways</h2>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-list-check"></i> Building Analyst Agents</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-circle-check"></i> <strong>The analyst workflow is a pipeline.</strong> Data collection, structured extraction, comparative analysis, synthesis, report generation, and quality assurance. Each step has clear inputs and outputs.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Collect exhaustive data, summarize with LLM.</strong> The more real data the agent has, the less it needs to hallucinate. Over-fetch, then let the model synthesize. Never let it invent numbers.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Structured scoring enables comparison.</strong> A consistent rubric (Technical + Fundamental + Sentiment + Risk = Composite) makes every analysis comparable and auditable.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Sentiment is a confirming signal, not a primary one.</strong> Use insider transactions (highest quality) over social media (lowest quality). Sentiment is most useful at extremes.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Peer benchmarking reveals relative value.</strong> No stock is expensive or cheap in absolute terms. Always compare against peers, sector, and market averages. Adjust for growth.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Anti-hallucination is non-negotiable.</strong> Ground every claim in live data, cite sources, express uncertainty, cross-validate critical numbers, and enforce spot price checks on trade ideas.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>The 36x productivity multiplier is real.</strong> A well-built analyst agent produces in 10 minutes what takes a human 6 hours — with greater consistency and data coverage.</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary>Quiz: Test Your Understanding</summary>
+    <div class="quiz-answer">
+      <p><strong>Q1:</strong> What is the most important anti-hallucination technique for financial agents?</p>
+      <p><strong>A:</strong> Grounding every numerical claim in live data from tool calls (MCP, API), never from model memory. If a data point is unavailable, the agent must say "data unavailable" rather than estimate.</p>
+      <p><strong>Q2:</strong> Why is PEG ratio better than PE ratio for peer comparison?</p>
+      <p><strong>A:</strong> PE alone does not account for growth. A stock at 60x PE with 30% growth (PEG 2.0) may be cheaper than a stock at 15x PE with 3% growth (PEG 5.0). PEG adjusts valuation for the growth rate.</p>
+      <p><strong>Q3:</strong> Which sentiment source has the highest signal quality and why?</p>
+      <p><strong>A:</strong> Insider transactions, because insiders have the most information about their company and are putting their own money at stake. Non-routine insider buying (not 10b5-1 plans) is one of the strongest bullish signals.</p>
+    </div>
+  </details>
+
+  <a href="/series/ai-agents-finance/part4-trading-agents/" class="next-cta">
+    <div>
+      <div class="next-label">Next — Part 4 of 5</div>
+      <div class="next-title">Trading Agents — From Signals to Execution</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Workflow Funnel
+var wfChart = echarts.init(document.getElementById('workflowChart'));
+wfChart.setOption({
+  title: { text: 'Analyst Agent Pipeline', left: 'center', textStyle: { fontSize: 15, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c} min' },
+  series: [{
+    type: 'funnel',
+    left: '10%', right: '10%', top: 50, bottom: 20,
+    width: '80%',
+    sort: 'none',
+    gap: 4,
+    label: { show: true, position: 'inside', fontSize: 12, fontWeight: 'bold', color: '#fff' },
+    data: [
+      { value: 100, name: 'Data Collection (2 min)', itemStyle: { color: '#0891b2' } },
+      { value: 85, name: 'Structured Extraction (2 min)', itemStyle: { color: '#0e7490' } },
+      { value: 70, name: 'Comparative Analysis (2 min)', itemStyle: { color: '#155e75' } },
+      { value: 55, name: 'Synthesis & Scoring (1 min)', itemStyle: { color: '#164e63' } },
+      { value: 40, name: 'Report Generation (2 min)', itemStyle: { color: '#06b6d4' } },
+      { value: 25, name: 'Quality Assurance (1 min)', itemStyle: { color: '#22d3ee' } }
+    ]
+  }]
+});
+
+// Radar Chart
+var radarChart = echarts.init(document.getElementById('radarChart'));
+radarChart.setOption({
+  title: { text: 'Multi-Dimensional Scoring — NVDA Example', left: 'center', textStyle: { fontSize: 15, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: 'Technical', max: 10 },
+      { name: 'Fundamental', max: 10 },
+      { name: 'Sentiment', max: 10 },
+      { name: 'Risk', max: 10 },
+      { name: 'Momentum', max: 10 },
+      { name: 'Value', max: 10 }
+    ],
+    shape: 'polygon',
+    axisName: { fontSize: 12, fontWeight: 600, color: '#334155' }
+  },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [8, 7, 8, 5, 9, 4], name: 'NVDA', lineStyle: { color: '#0891b2', width: 3 }, itemStyle: { color: '#0891b2' }, areaStyle: { color: 'rgba(8,145,178,0.2)' } },
+      { value: [6, 6, 6, 7, 5, 7], name: 'Sector Avg', lineStyle: { color: '#94a3b8', width: 1, type: 'dashed' }, itemStyle: { color: '#94a3b8' }, areaStyle: { color: 'rgba(148,163,184,0.1)' } }
+    ]
+  }]
+});
+
+// Sentiment Gauge
+var sentChart = echarts.init(document.getElementById('sentimentChart'));
+sentChart.setOption({
+  title: { text: 'Sentiment Composite — NVDA', left: 'center', textStyle: { fontSize: 15, fontWeight: 700, color: '#0f172a' } },
+  series: [{
+    type: 'gauge',
+    startAngle: 180, endAngle: 0,
+    min: 0, max: 100,
+    radius: '100%',
+    center: ['50%', '75%'],
+    axisLine: {
+      lineStyle: { width: 20,
+        color: [[0.25, '#ef4444'], [0.5, '#f59e0b'], [0.75, '#10b981'], [1, '#0891b2']]
+      }
+    },
+    pointer: { length: '60%', width: 6, itemStyle: { color: '#0f172a' } },
+    axisTick: { show: false },
+    splitLine: { show: false },
+    axisLabel: { show: false },
+    detail: { formatter: '{value}%\nBullish', fontSize: 16, fontWeight: 'bold', color: '#0891b2', offsetCenter: [0, '20%'] },
+    data: [{ value: 72, name: 'Sentiment' }]
+  }]
+});
+
+// Peer Comparison
+var peerChart = echarts.init(document.getElementById('peerChart'));
+peerChart.setOption({
+  title: { text: 'Peer Valuation Comparison', left: 'center', textStyle: { fontSize: 15, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  xAxis: { type: 'value', name: 'Forward PE', nameLocation: 'center', nameGap: 30 },
+  yAxis: { type: 'category', data: ['TXN', 'QCOM', 'INTC', 'AVGO', 'AMD', 'NVDA'], axisLabel: { fontWeight: 700, fontSize: 12 } },
+  grid: { left: 80, right: 40, top: 50, bottom: 50 },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 24, itemStyle: { color: '#94a3b8' } },
+      { value: 17, itemStyle: { color: '#94a3b8' } },
+      { value: 22, itemStyle: { color: '#94a3b8' } },
+      { value: 32, itemStyle: { color: '#94a3b8' } },
+      { value: 45, itemStyle: { color: '#06b6d4' } },
+      { value: 68, itemStyle: { color: '#0891b2' } }
+    ],
+    label: { show: true, position: 'right', fontSize: 12, fontWeight: 700, formatter: '{c}x' },
+    barWidth: 20
+  }]
+});
+
+// Position Scatter
+var posChart = echarts.init(document.getElementById('positionChart'));
+posChart.setOption({
+  title: { text: 'Valuation vs. Growth Positioning', left: 'center', textStyle: { fontSize: 15, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { formatter: function(p) { return p.data[3] + '<br/>PE: ' + p.data[0] + 'x<br/>Rev Growth: ' + p.data[1] + '%'; } },
+  xAxis: { type: 'value', name: 'Forward PE (x)', nameLocation: 'center', nameGap: 35, min: 10, max: 80 },
+  yAxis: { type: 'value', name: 'Revenue Growth YoY (%)', nameLocation: 'center', nameGap: 45, min: -5, max: 55 },
+  grid: { left: 70, right: 30, top: 50, bottom: 55 },
+  series: [{
+    type: 'scatter',
+    symbolSize: function(data) { return Math.sqrt(data[2]) * 3; },
+    data: [
+      [68, 50, 3500, 'NVDA'],
+      [45, 20, 280, 'AMD'],
+      [22, -5, 110, 'INTC'],
+      [32, 15, 780, 'AVGO'],
+      [17, 8, 210, 'QCOM'],
+      [24, 5, 180, 'TXN']
+    ],
+    label: { show: true, formatter: function(p) { return p.data[3]; }, position: 'top', fontSize: 11, fontWeight: 700 },
+    itemStyle: { color: function(p) { return p.data[3] === 'NVDA' ? '#0891b2' : '#94a3b8'; } }
+  }],
+  visualMap: { show: false }
+});
+
+// Hallucination Risk
+var hallChart = echarts.init(document.getElementById('hallucinationChart'));
+hallChart.setOption({
+  title: { text: 'Hallucination Risk by Data Type', left: 'center', textStyle: { fontSize: 15, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  xAxis: { type: 'category', data: ['Commentary', 'Trends', 'Percentages', 'Prices', 'Earnings', 'Dates'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Risk Level', max: 10, axisLabel: { formatter: '{value}/10' } },
+  grid: { left: 60, right: 20, top: 50, bottom: 40 },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 2, itemStyle: { color: '#10b981', borderRadius: [6,6,0,0] } },
+      { value: 4, itemStyle: { color: '#f59e0b', borderRadius: [6,6,0,0] } },
+      { value: 6, itemStyle: { color: '#f97316', borderRadius: [6,6,0,0] } },
+      { value: 8, itemStyle: { color: '#ef4444', borderRadius: [6,6,0,0] } },
+      { value: 9, itemStyle: { color: '#dc2626', borderRadius: [6,6,0,0] } },
+      { value: 7, itemStyle: { color: '#ef4444', borderRadius: [6,6,0,0] } }
+    ],
+    label: { show: true, position: 'top', fontWeight: 700, fontSize: 12 },
+    barWidth: 40
+  }]
+});
+
+window.addEventListener('resize', function() { wfChart.resize(); radarChart.resize(); sentChart.resize(); peerChart.resize(); posChart.resize(); hallChart.resize(); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

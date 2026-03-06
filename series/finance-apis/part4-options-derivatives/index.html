@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Options &amp; Derivatives APIs — Chains, Flow &amp; Greeks | Finance APIs — The Ultimate Guide — Part 4/5 | Market Watch</title>
+ <meta name="description" content="Finance APIs Series — Part 4/5: Complete guide to options and derivatives APIs — CBOE, Tradier, Polygon.io Options, Unusual Whales, TD Ameritrade. Greek calculations, max pain, options scanner, IV surface visualization.">
+ <meta property="og:title" content="Options &amp; Derivatives APIs | Finance APIs 4/5 | Market Watch">
+ <meta property="og:description" content="Every API for options chains, flow data, Greeks calculation, and derivatives analytics — with code for building an options scanner.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/finance-apis/part4-options-derivatives/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #e0f2fe 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-sky { background:rgba(2,132,199,0.1); color:#0284c7; border:1px solid rgba(2,132,199,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code','Cascadia Code',monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; font-family:Inter,sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#c084fc; }
+ .code-block .string { color:#86efac; }
+ .code-block .function { color:#7dd3fc; }
+ .code-block .number { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border:1px solid #0284c7; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0369a1; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(2,132,199,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0284c7; margin-top:0.2rem; flex-shrink:0; }
+
+ .pedagogy-box { background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border:1px solid #7dd3fc; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .pedagogy-box h4 { color:#0284c7; margin-top:0; display:flex; align-items:center; gap:0.5rem; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(2,132,199,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .api-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-left:4px solid #0284c7; transition:all 0.3s; }
+ .api-card:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .api-card h3 { margin-top:0; color:#0f172a; font-size:1.2rem; }
+ .api-card .api-meta { display:flex; gap:0.75rem; flex-wrap:wrap; margin:0.75rem 0; }
+ .api-card .api-tag { font-size:0.7rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:99px; text-transform:uppercase; letter-spacing:0.05em; }
+ .api-tag-free { background:#f0fdf4; color:#16a34a; border:1px solid #86efac; }
+ .api-tag-paid { background:#fef3c7; color:#d97706; border:1px solid #fcd34d; }
+ .api-tag-freemium { background:#e0f2fe; color:#0284c7; border:1px solid #7dd3fc; }
+
+ .pros-cons { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0; }
+ .pros-cons ul { list-style:none; padding:0; margin:0; }
+ .pros-cons li { padding:0.3rem 0; font-size:0.85rem; display:flex; align-items:flex-start; gap:0.5rem; }
+ .pros h4 { color:#16a34a; margin:0 0 0.5rem; font-size:0.85rem; }
+ .cons h4 { color:#dc2626; margin:0 0 0.5rem; font-size:0.85rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0284c7; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.1rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#7dd3fc; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0284c7; margin-right:0.75rem; }
+ details[open] summary { border-color:#0284c7; background:#e0f2fe; border-radius:12px 12px 0 0; }
+ details .detail-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .pros-cons { grid-template-columns:1fr; }
+   .compare-table { font-size:0.75rem; }
+   .compare-table th, .compare-table td { padding:0.5rem; }
+   .formula-box { font-size:0.9rem; padding:1rem; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .code-block { font-size:0.75rem; padding:1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> Finance APIs Series — Part 4 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Options &amp; Derivatives APIs — Chains, Flow &amp; Greeks</h1>
+  <p class="hero-subtitle">From CBOE delayed data to Polygon.io's institutional options feed. Calculate Greeks, compute max pain, build an options scanner, and visualize IV surfaces — all with code.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-sky"><i class="fa-solid fa-link"></i> Options Chains</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calculator"></i> Greeks</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-water"></i> Flow Data</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-area"></i> IV Surface</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/finance-apis/part3-sentiment/" class="series-arrow" title="Sentiment"><i class="fas fa-chevron-left"></i></a><span class="series-title">Finance APIs — The Ultimate Guide</span><div class="series-steps"><a href="/series/finance-apis/part1-price-data/" class="series-step" title="Price Data"><span class="series-num">1</span><span class="series-label">Price Data</span></a><a href="/series/finance-apis/part2-fundamentals/" class="series-step" title="Fundamentals"><span class="series-num">2</span><span class="series-label">Fundamentals</span></a><a href="/series/finance-apis/part3-sentiment/" class="series-step" title="Sentiment"><span class="series-num">3</span><span class="series-label">Sentiment</span></a><a href="/series/finance-apis/part4-options-derivatives/" class="series-step current" title="Options"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/finance-apis/part5-aggregator/" class="series-step" title="Aggregator"><span class="series-num">5</span><span class="series-label">Aggregator</span></a></div><span class="series-counter">4/5</span><a href="/series/finance-apis/part5-aggregator/" class="series-arrow" title="Aggregator"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-map"></i><span>Overview</span></a><a href="#apis" class="fnav-item" data-section="apis"><i class="fas fa-plug"></i><span>Options APIs</span></a><a href="#greeks" class="fnav-item" data-section="greeks"><i class="fas fa-calculator"></i><span>Greeks</span></a><a href="#maxpain" class="fnav-item" data-section="maxpain"><i class="fas fa-crosshairs"></i><span>Max Pain</span></a><a href="#scanner" class="fnav-item" data-section="scanner"><i class="fas fa-search"></i><span>Options Scanner</span></a><a href="#iv" class="fnav-item" data-section="iv"><i class="fas fa-chart-area"></i><span>IV Surface</span></a><a href="#comparison" class="fnav-item" data-section="comparison"><i class="fas fa-table"></i><span>Comparison</span></a><a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-star"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<!-- ===== OVERVIEW ===== -->
+<div class="section-divider"><i class="fa-solid fa-map"></i> The Options Data Landscape</div>
+
+<div id="overview" class="content-card">
+  <h2><i class="fa-solid fa-map" style="color:#0284c7; margin-right:0.5rem;"></i> Why Options Data Is the Smartest Money Signal</h2>
+  <p>Options data is the closest thing to a crystal ball in finance. While social media tells you what <em>retail traders say</em>, options flow tells you what <em>institutional money does</em>. A $5M call sweep on AAPL expiring in 2 weeks is a far stronger signal than 10,000 bullish StockTwits posts.</p>
+  <p>The options market is roughly 40x the size of the stock market in notional value. Every trade in the options market expresses a view on direction, timing, and magnitude — information that doesn't exist in stock trades alone.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Options Data Primer</h4>
+    <p>An <strong>options chain</strong> shows all available contracts for a given stock: calls and puts at every strike price, for every expiration date. Each contract has:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-tag" style="color:#0284c7;"></i> <strong>Strike Price</strong> — the price at which you can buy (call) or sell (put) the stock</li>
+      <li><i class="fa-solid fa-calendar" style="color:#0284c7;"></i> <strong>Expiration</strong> — when the contract expires (weekly, monthly, LEAPS)</li>
+      <li><i class="fa-solid fa-dollar-sign" style="color:#0284c7;"></i> <strong>Premium</strong> — the price of the contract (bid/ask)</li>
+      <li><i class="fa-solid fa-chart-bar" style="color:#0284c7;"></i> <strong>Volume &amp; Open Interest</strong> — trading activity and outstanding contracts</li>
+      <li><i class="fa-solid fa-wave-square" style="color:#0284c7;"></i> <strong>Implied Volatility (IV)</strong> — the market's forecast of future price movement</li>
+      <li><i class="fa-solid fa-calculator" style="color:#0284c7;"></i> <strong>Greeks</strong> — Delta, Gamma, Theta, Vega, Rho — sensitivity measures</li>
+    </ul>
+  </div>
+
+  <h3>The Greeks — Quick Reference</h3>
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">&Delta;</div>
+      <h4>Delta</h4>
+      <p>Price sensitivity. How much the option moves per $1 move in the stock. Also approximates probability of expiring ITM.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">&Gamma;</div>
+      <h4>Gamma</h4>
+      <p>Rate of change of Delta. High near ATM and near expiration. The "acceleration" of options pricing.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">&Theta;</div>
+      <h4>Theta</h4>
+      <p>Time decay. How much value the option loses per day. Accelerates near expiration.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">V</div>
+      <h4>Vega</h4>
+      <p>Volatility sensitivity. How much the option moves per 1% change in implied volatility.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OPTIONS APIs ===== -->
+<div class="section-divider"><i class="fa-solid fa-plug"></i> Options Data APIs</div>
+
+<div id="apis" class="content-card">
+  <h2><i class="fa-solid fa-plug" style="color:#0284c7; margin-right:0.5rem;"></i> The APIs — Deep Dive</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-building-columns" style="color:#1e3a5f; margin-right:0.5rem;"></i> CBOE (Chicago Board Options Exchange)</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free (Delayed)</span>
+    </div>
+    <p>The CBOE is where options were invented. Their website provides free delayed options data including the VIX, put/call ratios, and basic options chains. For programmatic access, their market data portal offers delayed snapshots. The data is 15-20 minutes delayed but perfectly fine for end-of-day analysis and backtesting.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free delayed data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> VIX and put/call ratio</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Authoritative source</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No API (web scraping required)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> 15-20 min delay</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Limited historical data</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-chart-line" style="color:#10b981; margin-right:0.5rem;"></i> Tradier</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free (Sandbox)</span>
+      <span class="api-tag api-tag-freemium">Free Delayed</span>
+      <span class="api-tag api-tag-paid">$0 with Account</span>
+    </div>
+    <p>Tradier is a brokerage-as-a-service platform with an excellent free API tier. With a paper trading account (free), you get real-time options chains, streaming quotes, and order execution in sandbox mode. Delayed data is completely free with just an API key — no brokerage account needed.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free delayed options chains</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Real-time with brokerage account</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Sandbox for paper trading</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Excellent API design</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Streaming via WebSocket</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No historical options data</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Greeks not included (calculate yourself)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> US options only</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+
+TRADIER_KEY = <span class="string">"YOUR_TRADIER_KEY"</span>
+headers = {<span class="string">"Authorization"</span>: <span class="string">f"Bearer {TRADIER_KEY}"</span>, <span class="string">"Accept"</span>: <span class="string">"application/json"</span>}
+
+<span class="comment"># Get available expiration dates</span>
+exp_url = <span class="string">"https://api.tradier.com/v1/markets/options/expirations?symbol=AAPL"</span>
+expirations = requests.get(exp_url, headers=headers).json()
+dates = expirations[<span class="string">"expirations"</span>][<span class="string">"date"</span>]
+<span class="function">print</span>(<span class="string">f"Available expirations: {dates[:5]}"</span>)
+
+<span class="comment"># Get full options chain for nearest expiration</span>
+chain_url = <span class="string">f"https://api.tradier.com/v1/markets/options/chains?symbol=AAPL&expiration={dates[0]}"</span>
+chain = requests.get(chain_url, headers=headers).json()
+
+<span class="keyword">for</span> opt <span class="keyword">in</span> chain[<span class="string">"options"</span>][<span class="string">"option"</span>][:<span class="number">5</span>]:
+    <span class="function">print</span>(<span class="string">f"  {opt['option_type'].upper()} {opt['strike']} — Bid: ${opt['bid']}, Ask: ${opt['ask']}, "
+          f"Vol: {opt['volume']}, OI: {opt['open_interest']}, IV: {opt.get('greeks', {}).get('mid_iv', 'N/A')}"</span>)</pre>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-bolt" style="color:#7c3aed; margin-right:0.5rem;"></i> Polygon.io Options</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-paid">$29-199/mo</span>
+    </div>
+    <p>Polygon.io provides the most complete options data API for developers. Their Options Starter plan ($29/mo) includes real-time options chains and snapshots. The Business plan ($199/mo) adds historical options data, Greeks, and the full OPRA feed. This is the go-to for building production options analytics.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Full OPRA feed (real-time)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Historical options data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Greeks included</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> WebSocket streaming</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Snapshot endpoint (all contracts at once)</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Full data on $199/mo tier only</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Historical data is massive (storage)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> US options only</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-fish-fins" style="color:#f97316; margin-right:0.5rem;"></i> Unusual Whales</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-paid">$40/mo</span>
+    </div>
+    <p>Unusual Whales specializes in <strong>options flow</strong> — not just the raw chain data, but the interpreted flow: large trades, sweeps, dark pool prints, and unusual activity. Their API identifies institutional-sized options bets and categorizes them by sentiment, size, and urgency. Essential for flow-based trading strategies.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Pre-interpreted flow data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Sweep detection (institutional trades)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Dark pool prints</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Historical flow database</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> API documentation is basic</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Flow interpretation is subjective</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-chart-pie" style="color:#2563eb; margin-right:0.5rem;"></i> TD Ameritrade / Schwab API</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free with Account</span>
+    </div>
+    <p>The TD Ameritrade (now Schwab) API provides <strong>free real-time options chains</strong> with a funded brokerage account. The data includes full Greeks, IV, and all standard chain data. Since Schwab's minimum account is $0, this is effectively free. The API is well-documented and supports OAuth 2.0.</p>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-brands fa-yahoo" style="color:#6001d2; margin-right:0.5rem;"></i> Yahoo Finance Options</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free</span>
+    </div>
+    <p>Yahoo Finance (via yfinance) provides free options chain data including bid/ask, volume, open interest, and implied volatility. The data is delayed 15-20 minutes. While not suitable for real-time trading, it's perfect for end-of-day analysis, backtesting options strategies, and learning.</p>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+
+ticker = yf.Ticker(<span class="string">"AAPL"</span>)
+
+<span class="comment"># List all expiration dates</span>
+expirations = ticker.options
+<span class="function">print</span>(<span class="string">f"Expirations: {expirations[:5]}"</span>)
+
+<span class="comment"># Get options chain for nearest expiration</span>
+chain = ticker.option_chain(expirations[<span class="number">0</span>])
+
+<span class="comment"># Calls</span>
+<span class="function">print</span>(<span class="string">"\\nTop 5 Calls by Volume:"</span>)
+top_calls = chain.calls.nlargest(<span class="number">5</span>, <span class="string">"volume"</span>)
+<span class="keyword">for</span> _, c <span class="keyword">in</span> top_calls.iterrows():
+    <span class="function">print</span>(<span class="string">f"  CALL {c['strike']} — Bid: ${c['bid']}, Ask: ${c['ask']}, "
+          f"Vol: {c['volume']}, OI: {c['openInterest']}, IV: {c['impliedVolatility']:.1%}"</span>)
+
+<span class="comment"># Put/Call ratio</span>
+total_call_oi = chain.calls[<span class="string">"openInterest"</span>].sum()
+total_put_oi = chain.puts[<span class="string">"openInterest"</span>].sum()
+pcr = total_put_oi / total_call_oi <span class="keyword">if</span> total_call_oi > <span class="number">0</span> <span class="keyword">else</span> <span class="number">0</span>
+<span class="function">print</span>(<span class="string">f"\\nPut/Call OI Ratio: {pcr:.2f}"</span>)</pre>
+  </div>
+</div>
+
+<!-- ===== GREEKS ===== -->
+<div class="section-divider"><i class="fa-solid fa-calculator"></i> Calculating Greeks</div>
+
+<div id="greeks" class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#0284c7; margin-right:0.5rem;"></i> Black-Scholes Greeks Calculator</h2>
+
+  <div class="formula-box">
+    <div class="formula-label">Black-Scholes Call Price</div>
+    C = S &middot; N(<span class="formula-highlight">d1</span>) - K &middot; e<sup>-rT</sup> &middot; N(<span class="formula-highlight">d2</span>)
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">from</span> scipy.stats <span class="keyword">import</span> norm
+<span class="keyword">from</span> scipy.optimize <span class="keyword">import</span> brentq
+
+<span class="keyword">class</span> <span class="function">BlackScholes</span>:
+    <span class="string">"""Black-Scholes Greeks calculator."""</span>
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">d1</span>(S, K, T, r, sigma):
+        <span class="keyword">return</span> (np.log(S / K) + (r + sigma**<span class="number">2</span> / <span class="number">2</span>) * T) / (sigma * np.sqrt(T))
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">d2</span>(S, K, T, r, sigma):
+        <span class="keyword">return</span> BlackScholes.d1(S, K, T, r, sigma) - sigma * np.sqrt(T)
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">call_price</span>(S, K, T, r, sigma):
+        d1 = BlackScholes.d1(S, K, T, r, sigma)
+        d2 = BlackScholes.d2(S, K, T, r, sigma)
+        <span class="keyword">return</span> S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">put_price</span>(S, K, T, r, sigma):
+        d1 = BlackScholes.d1(S, K, T, r, sigma)
+        d2 = BlackScholes.d2(S, K, T, r, sigma)
+        <span class="keyword">return</span> K * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">greeks</span>(S, K, T, r, sigma, option_type=<span class="string">"call"</span>):
+        d1 = BlackScholes.d1(S, K, T, r, sigma)
+        d2 = BlackScholes.d2(S, K, T, r, sigma)
+        sqrt_T = np.sqrt(T)
+
+        <span class="comment"># Delta</span>
+        delta = norm.cdf(d1) <span class="keyword">if</span> option_type == <span class="string">"call"</span> <span class="keyword">else</span> norm.cdf(d1) - <span class="number">1</span>
+
+        <span class="comment"># Gamma (same for calls and puts)</span>
+        gamma = norm.pdf(d1) / (S * sigma * sqrt_T)
+
+        <span class="comment"># Theta (per day)</span>
+        common = -(S * norm.pdf(d1) * sigma) / (<span class="number">2</span> * sqrt_T)
+        <span class="keyword">if</span> option_type == <span class="string">"call"</span>:
+            theta = common - r * K * np.exp(-r * T) * norm.cdf(d2)
+        <span class="keyword">else</span>:
+            theta = common + r * K * np.exp(-r * T) * norm.cdf(-d2)
+        theta /= <span class="number">365</span>  <span class="comment"># per day</span>
+
+        <span class="comment"># Vega (per 1% IV change)</span>
+        vega = S * sqrt_T * norm.pdf(d1) / <span class="number">100</span>
+
+        <span class="keyword">return</span> {<span class="string">"delta"</span>: delta, <span class="string">"gamma"</span>: gamma, <span class="string">"theta"</span>: theta, <span class="string">"vega"</span>: vega}
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">implied_volatility</span>(market_price, S, K, T, r, option_type=<span class="string">"call"</span>):
+        <span class="string">"""Solve for IV using Brent's method."""</span>
+        price_fn = BlackScholes.call_price <span class="keyword">if</span> option_type == <span class="string">"call"</span> <span class="keyword">else</span> BlackScholes.put_price
+        <span class="keyword">try</span>:
+            iv = brentq(<span class="keyword">lambda</span> s: price_fn(S, K, T, r, s) - market_price, <span class="number">0.01</span>, <span class="number">5.0</span>)
+            <span class="keyword">return</span> iv
+        <span class="keyword">except</span>:
+            <span class="keyword">return</span> <span class="function">float</span>(<span class="string">'nan'</span>)
+
+<span class="comment"># Example: AAPL $230 call, 30 days to expiry</span>
+S = <span class="number">228.50</span>   <span class="comment"># Current price</span>
+K = <span class="number">230.00</span>   <span class="comment"># Strike</span>
+T = <span class="number">30</span>/<span class="number">365</span>   <span class="comment"># Time to expiry (years)</span>
+r = <span class="number">0.045</span>    <span class="comment"># Risk-free rate</span>
+sigma = <span class="number">0.25</span> <span class="comment"># Implied volatility (25%)</span>
+
+price = BlackScholes.call_price(S, K, T, r, sigma)
+greeks = BlackScholes.greeks(S, K, T, r, sigma, <span class="string">"call"</span>)
+
+<span class="function">print</span>(<span class="string">f"Call Price: ${price:.2f}"</span>)
+<span class="function">print</span>(<span class="string">f"Delta: {greeks['delta']:.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Gamma: {greeks['gamma']:.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Theta: ${greeks['theta']:.4f}/day"</span>)
+<span class="function">print</span>(<span class="string">f"Vega: ${greeks['vega']:.4f}/1% IV"</span>)</pre>
+  </div>
+</div>
+
+<!-- ===== MAX PAIN ===== -->
+<div class="section-divider"><i class="fa-solid fa-crosshairs"></i> Max Pain Calculation</div>
+
+<div id="maxpain" class="content-card">
+  <h2><i class="fa-solid fa-crosshairs" style="color:#0284c7; margin-right:0.5rem;"></i> Computing Max Pain from Open Interest</h2>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> What Is Max Pain?</h4>
+    <p><strong>Max Pain</strong> is the strike price where the total payout to options holders is minimized — i.e., where market makers lose the least money. The theory suggests that stocks tend to gravitate toward the max pain price at expiration because market makers hedge their positions dynamically. While controversial, many traders use max pain as a weekly price target.</p>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="keyword">def</span> <span class="function">calculate_max_pain</span>(symbol, expiration=<span class="keyword">None</span>):
+    <span class="string">"""Calculate max pain for a given stock and expiration."""</span>
+    ticker = yf.Ticker(symbol)
+    <span class="keyword">if</span> expiration <span class="keyword">is None</span>:
+        expiration = ticker.options[<span class="number">0</span>]  <span class="comment"># Nearest expiration</span>
+
+    chain = ticker.option_chain(expiration)
+    calls = chain.calls[[<span class="string">"strike"</span>, <span class="string">"openInterest"</span>]].dropna()
+    puts = chain.puts[[<span class="string">"strike"</span>, <span class="string">"openInterest"</span>]].dropna()
+
+    strikes = sorted(<span class="function">set</span>(calls[<span class="string">"strike"</span>].tolist() + puts[<span class="string">"strike"</span>].tolist()))
+    total_pain = {}
+
+    <span class="keyword">for</span> test_price <span class="keyword">in</span> strikes:
+        <span class="comment"># Call pain: sum of (test_price - strike) * OI for ITM calls</span>
+        call_pain = <span class="number">0</span>
+        <span class="keyword">for</span> _, row <span class="keyword">in</span> calls.iterrows():
+            <span class="keyword">if</span> test_price > row[<span class="string">"strike"</span>]:
+                call_pain += (test_price - row[<span class="string">"strike"</span>]) * row[<span class="string">"openInterest"</span>]
+
+        <span class="comment"># Put pain: sum of (strike - test_price) * OI for ITM puts</span>
+        put_pain = <span class="number">0</span>
+        <span class="keyword">for</span> _, row <span class="keyword">in</span> puts.iterrows():
+            <span class="keyword">if</span> test_price < row[<span class="string">"strike"</span>]:
+                put_pain += (row[<span class="string">"strike"</span>] - test_price) * row[<span class="string">"openInterest"</span>]
+
+        total_pain[test_price] = call_pain + put_pain
+
+    max_pain_strike = <span class="function">min</span>(total_pain, key=total_pain.get)
+    <span class="keyword">return</span> {
+        <span class="string">"symbol"</span>: symbol,
+        <span class="string">"expiration"</span>: expiration,
+        <span class="string">"max_pain"</span>: max_pain_strike,
+        <span class="string">"current_price"</span>: ticker.info.get(<span class="string">"regularMarketPrice"</span>, <span class="number">0</span>),
+        <span class="string">"pain_by_strike"</span>: total_pain
+    }
+
+result = calculate_max_pain(<span class="string">"AAPL"</span>)
+<span class="function">print</span>(<span class="string">f"AAPL Max Pain: ${result['max_pain']} (Current: ${result['current_price']})"</span>)</pre>
+  </div>
+
+  <h3>Max Pain Visualization</h3>
+  <div id="maxpainChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ===== OPTIONS SCANNER ===== -->
+<div class="section-divider"><i class="fa-solid fa-search"></i> Building an Options Scanner</div>
+
+<div id="scanner" class="content-card">
+  <h2><i class="fa-solid fa-search" style="color:#0284c7; margin-right:0.5rem;"></i> Building an Options Scanner</h2>
+  <p>An options scanner monitors the entire options market for unusual activity: volume spikes, large open interest changes, and IV rank extremes. Here's a production-ready scanner:</p>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+<span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+<span class="keyword">from</span> typing <span class="keyword">import</span> List
+
+<span class="keyword">@dataclass</span>
+<span class="keyword">class</span> <span class="function">OptionsAlert</span>:
+    symbol: <span class="function">str</span>
+    alert_type: <span class="function">str</span>    <span class="comment"># "unusual_volume", "iv_spike", "large_oi_change"</span>
+    option_type: <span class="function">str</span>   <span class="comment"># "call" or "put"</span>
+    strike: <span class="function">float</span>
+    expiration: <span class="function">str</span>
+    volume: <span class="function">int</span>
+    open_interest: <span class="function">int</span>
+    iv: <span class="function">float</span>
+    vol_oi_ratio: <span class="function">float</span>
+    score: <span class="function">float</span>
+
+<span class="keyword">class</span> <span class="function">OptionsScanner</span>:
+    <span class="string">"""Scan for unusual options activity."""</span>
+
+    <span class="keyword">def</span> <span class="function">scan</span>(self, symbols: List[<span class="function">str</span>], min_volume=<span class="number">100</span>, min_vol_oi=<span class="number">2.0</span>) -> List[OptionsAlert]:
+        alerts = []
+        <span class="keyword">for</span> symbol <span class="keyword">in</span> symbols:
+            <span class="keyword">try</span>:
+                ticker = yf.Ticker(symbol)
+                <span class="keyword">for</span> exp <span class="keyword">in</span> ticker.options[:<span class="number">3</span>]:  <span class="comment"># Check next 3 expirations</span>
+                    chain = ticker.option_chain(exp)
+                    <span class="keyword">for</span> opt_type, df <span class="keyword">in</span> [(<span class="string">"call"</span>, chain.calls), (<span class="string">"put"</span>, chain.puts)]:
+                        <span class="keyword">for</span> _, row <span class="keyword">in</span> df.iterrows():
+                            vol = row.get(<span class="string">"volume"</span>, <span class="number">0</span>) <span class="keyword">or</span> <span class="number">0</span>
+                            oi = row.get(<span class="string">"openInterest"</span>, <span class="number">0</span>) <span class="keyword">or</span> <span class="number">0</span>
+                            iv = row.get(<span class="string">"impliedVolatility"</span>, <span class="number">0</span>) <span class="keyword">or</span> <span class="number">0</span>
+
+                            <span class="keyword">if</span> vol < min_volume:
+                                <span class="keyword">continue</span>
+
+                            vol_oi = vol / oi <span class="keyword">if</span> oi > <span class="number">0</span> <span class="keyword">else</span> <span class="number">999</span>
+
+                            <span class="keyword">if</span> vol_oi >= min_vol_oi:
+                                score = <span class="function">min</span>(vol_oi * <span class="number">20</span>, <span class="number">100</span>)  <span class="comment"># Normalize to 0-100</span>
+                                alerts.append(OptionsAlert(
+                                    symbol=symbol, alert_type=<span class="string">"unusual_volume"</span>,
+                                    option_type=opt_type, strike=row[<span class="string">"strike"</span>],
+                                    expiration=exp, volume=<span class="function">int</span>(vol),
+                                    open_interest=<span class="function">int</span>(oi), iv=iv,
+                                    vol_oi_ratio=vol_oi, score=score
+                                ))
+            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+                <span class="function">print</span>(<span class="string">f"Error scanning {symbol}: {e}"</span>)
+
+        <span class="keyword">return</span> sorted(alerts, key=<span class="keyword">lambda</span> x: x.score, reverse=<span class="keyword">True</span>)
+
+<span class="comment"># Scan top 20 S&P 500 names</span>
+scanner = OptionsScanner()
+symbols = [<span class="string">"AAPL"</span>, <span class="string">"MSFT"</span>, <span class="string">"GOOGL"</span>, <span class="string">"AMZN"</span>, <span class="string">"NVDA"</span>, <span class="string">"META"</span>, <span class="string">"TSLA"</span>, <span class="string">"JPM"</span>, <span class="string">"V"</span>, <span class="string">"JNJ"</span>]
+alerts = scanner.scan(symbols, min_volume=<span class="number">500</span>, min_vol_oi=<span class="number">3.0</span>)
+
+<span class="function">print</span>(<span class="string">f"Found {len(alerts)} unusual activity alerts:"</span>)
+<span class="keyword">for</span> a <span class="keyword">in</span> alerts[:<span class="number">10</span>]:
+    <span class="function">print</span>(<span class="string">f"  {a.symbol} {a.option_type.upper()} ${a.strike} exp:{a.expiration} — "
+          f"Vol:{a.volume} OI:{a.open_interest} Ratio:{a.vol_oi_ratio:.1f}x IV:{a.iv:.0%} Score:{a.score:.0f}"</span>)</pre>
+  </div>
+</div>
+
+<!-- ===== IV SURFACE ===== -->
+<div class="section-divider"><i class="fa-solid fa-chart-area"></i> IV Surface Visualization</div>
+
+<div id="iv" class="content-card">
+  <h2><i class="fa-solid fa-chart-area" style="color:#0284c7; margin-right:0.5rem;"></i> Implied Volatility Surface</h2>
+  <p>The IV surface is a 3D visualization of implied volatility across all strike prices and expiration dates. It reveals the market's volatility expectations and can identify mispriced options. The "volatility smile" (IV is higher for deep OTM and ITM options) and "volatility term structure" (IV varies by expiration) are both visible in the surface.</p>
+
+  <div id="ivSurfaceChart" style="width:100%; height:500px; margin:2rem 0;"></div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="keyword">def</span> <span class="function">build_iv_surface</span>(symbol):
+    <span class="string">"""Build IV surface data from options chain."""</span>
+    ticker = yf.Ticker(symbol)
+    current_price = ticker.info.get(<span class="string">"regularMarketPrice"</span>, <span class="number">0</span>)
+    surface_data = []
+
+    <span class="keyword">for</span> exp <span class="keyword">in</span> ticker.options[:<span class="number">6</span>]:  <span class="comment"># Next 6 expirations</span>
+        chain = ticker.option_chain(exp)
+        dte = (pd.Timestamp(exp) - pd.Timestamp.now()).days
+
+        <span class="keyword">for</span> _, row <span class="keyword">in</span> chain.calls.iterrows():
+            iv = row.get(<span class="string">"impliedVolatility"</span>, <span class="number">0</span>)
+            <span class="keyword">if</span> iv > <span class="number">0</span> <span class="keyword">and</span> iv < <span class="number">3</span>:  <span class="comment"># Filter outliers</span>
+                moneyness = row[<span class="string">"strike"</span>] / current_price
+                <span class="keyword">if</span> <span class="number">0.8</span> <= moneyness <= <span class="number">1.2</span>:  <span class="comment"># +/- 20% from spot</span>
+                    surface_data.append({
+                        <span class="string">"strike"</span>: row[<span class="string">"strike"</span>],
+                        <span class="string">"moneyness"</span>: moneyness,
+                        <span class="string">"dte"</span>: dte,
+                        <span class="string">"iv"</span>: iv,
+                        <span class="string">"expiration"</span>: exp
+                    })
+
+    <span class="keyword">return</span> pd.DataFrame(surface_data)
+
+surface = build_iv_surface(<span class="string">"AAPL"</span>)
+<span class="function">print</span>(surface.head(<span class="number">10</span>))</pre>
+  </div>
+</div>
+
+<!-- ===== COMPARISON ===== -->
+<div class="section-divider"><i class="fa-solid fa-table"></i> Comparison</div>
+
+<div id="comparison" class="content-card">
+  <h2><i class="fa-solid fa-table" style="color:#0284c7; margin-right:0.5rem;"></i> Options API Comparison</h2>
+
+  <div style="overflow-x:auto;">
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>API</th>
+        <th>Price</th>
+        <th>Chains</th>
+        <th>Greeks</th>
+        <th>Flow</th>
+        <th>Historical</th>
+        <th>Real-Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Yahoo (yfinance)</strong></td>
+        <td>Free</td>
+        <td>Yes (delayed)</td>
+        <td>No (calculate)</td>
+        <td>No</td>
+        <td>No</td>
+        <td>15min delay</td>
+      </tr>
+      <tr>
+        <td><strong>Tradier</strong></td>
+        <td>Free / $0*</td>
+        <td>Yes</td>
+        <td>Basic</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Yes (with acct)</td>
+      </tr>
+      <tr>
+        <td><strong>Polygon.io</strong></td>
+        <td>$29-199/mo</td>
+        <td>Yes</td>
+        <td>Yes ($199)</td>
+        <td>No</td>
+        <td>Yes ($199)</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><strong>Unusual Whales</strong></td>
+        <td>$40/mo</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Yes (best)</td>
+        <td>Yes</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><strong>TD/Schwab</strong></td>
+        <td>Free*</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><strong>CBOE</strong></td>
+        <td>Free (delayed)</td>
+        <td>Basic</td>
+        <td>No</td>
+        <td>No</td>
+        <td>No</td>
+        <td>20min delay</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p><em>* "Free" requires a funded brokerage account ($0 minimum)</em></p>
+</div>
+
+<!-- ===== TAKEAWAYS ===== -->
+<div class="section-divider"><i class="fa-solid fa-star"></i> Key Takeaways</div>
+
+<div id="takeaways" class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#0284c7; margin-right:0.5rem;"></i> Key Takeaways</h2>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> What You Should Remember</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Start with yfinance for learning</strong> — free options chains with IV. Calculate your own Greeks using the Black-Scholes code from this article.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Tradier is the best free real-time source</strong> — free delayed data, real-time with a paper trading account. Excellent API design.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Polygon.io at $199/mo is the production choice</strong> — full OPRA feed, historical options data, Greeks, and WebSocket streaming.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Options flow is the strongest sentiment signal</strong> — a $5M call sweep says more than 10,000 Reddit posts. Use Unusual Whales for pre-processed flow.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Volume/OI ratio is the key scanner metric</strong> — a ratio above 3x means today's trading volume exceeds the existing position size, signaling new directional bets.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Max pain works as a weekly magnet</strong> — stocks tend to close near max pain on Friday expiration. Useful for weekly options strategies.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>The IV surface reveals mispricing</strong> — if one strike's IV is significantly different from its neighbors, it may be mispriced. This is the basis of volatility arbitrage.</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary>What is OPRA and why is it expensive?</summary>
+    <div class="detail-answer">
+      <p><strong>OPRA (Options Price Reporting Authority)</strong> is the consolidated tape for all US options exchanges. It includes every trade, quote, and open interest update from all 16 options exchanges. The raw OPRA feed processes 100+ billion messages per day — more data than all stock exchanges combined. This is why options data is expensive: the sheer volume of data requires significant infrastructure. Polygon.io at $199/mo is actually cheap for OPRA-quality data.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Should I use Black-Scholes or the Binomial model?</summary>
+    <div class="detail-answer">
+      <p><strong>Black-Scholes</strong> is fine for European-style options and quick Greeks calculations. For American-style options (which can be exercised early), the <strong>Binomial (Cox-Ross-Rubinstein) model</strong> is more accurate, especially for deep ITM puts and high-dividend stocks. In practice, the difference is small for ATM options with 30+ days to expiry. Use Black-Scholes for speed, Binomial for accuracy on edge cases.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ===== NEXT CTA ===== -->
+<a href="/series/finance-apis/part5-aggregator/" class="next-cta">
+  <div>
+    <div class="next-label">Next in Series — Part 5</div>
+    <div class="next-title">Building Your Aggregator — One API to Rule Them All</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Max Pain Chart
+  var maxpainChart = echarts.init(document.getElementById('maxpainChart'));
+  var strikes = [215, 217.5, 220, 222.5, 225, 227.5, 230, 232.5, 235, 237.5, 240];
+  var callPain = [45000, 38000, 31000, 24000, 18000, 12000, 7500, 4000, 2000, 800, 200];
+  var putPain = [200, 800, 2000, 4000, 7500, 12000, 18000, 24000, 31000, 38000, 45000];
+  var totalPain = callPain.map((c, i) => c + putPain[i]);
+  var minPain = Math.min(...totalPain);
+  var maxPainIdx = totalPain.indexOf(minPain);
+
+  maxpainChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Call Pain', 'Put Pain', 'Total Pain'], bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+    xAxis: { type: 'category', data: strikes.map(s => '$' + s), axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Total Pain ($)', axisLabel: { formatter: function(v) { return (v/1000) + 'K'; } } },
+    series: [
+      { name: 'Call Pain', type: 'bar', stack: 'pain', data: callPain, itemStyle: { color: '#10b981' } },
+      { name: 'Put Pain', type: 'bar', stack: 'pain', data: putPain, itemStyle: { color: '#ef4444' } },
+      { name: 'Total Pain', type: 'line', data: totalPain, lineStyle: { color: '#0284c7', width: 3 }, itemStyle: { color: '#0284c7' },
+        markPoint: { data: [{ name: 'Max Pain', coord: ['$' + strikes[maxPainIdx], totalPain[maxPainIdx]], label: { formatter: 'MAX PAIN\n$' + strikes[maxPainIdx], fontSize: 11 } }], symbol: 'pin', symbolSize: 50, itemStyle: { color: '#f97316' } }
+      }
+    ]
+  });
+
+  // IV Surface (simulated 3D as heatmap)
+  var ivChart = echarts.init(document.getElementById('ivSurfaceChart'));
+  var dtes = [7, 14, 30, 60, 90, 120];
+  var moneyness = [0.85, 0.90, 0.95, 0.975, 1.0, 1.025, 1.05, 1.10, 1.15];
+  var ivData = [];
+  dtes.forEach(function(dte, y) {
+    moneyness.forEach(function(m, x) {
+      // Simulate volatility smile + term structure
+      var smile = 0.22 + 0.15 * Math.pow(m - 1.0, 2) * 10;
+      var term = 0.02 * Math.sqrt(dte / 30);
+      var iv = smile + term + (Math.random() - 0.5) * 0.02;
+      ivData.push([x, y, Math.round(iv * 100) / 100]);
+    });
+  });
+
+  ivChart.setOption({
+    tooltip: { formatter: function(p) { return 'Moneyness: ' + moneyness[p.data[0]].toFixed(3) + '<br>DTE: ' + dtes[p.data[1]] + '<br>IV: ' + (p.data[2] * 100).toFixed(1) + '%'; } },
+    grid: { left: '10%', right: '15%', top: '5%', bottom: '15%' },
+    xAxis: { type: 'category', data: moneyness.map(m => m.toFixed(3)), name: 'Moneyness (Strike/Spot)', nameLocation: 'center', nameGap: 35, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'category', data: dtes.map(d => d + 'D'), name: 'DTE', nameLocation: 'center', nameGap: 40, axisLabel: { fontSize: 11 } },
+    visualMap: { min: 0.15, max: 0.45, calculable: true, orient: 'vertical', right: 10, top: 'center', inRange: { color: ['#e0f2fe', '#7dd3fc', '#0284c7', '#7c3aed', '#dc2626'] }, text: ['High IV', 'Low IV'] },
+    series: [{ type: 'heatmap', data: ivData, label: { show: true, formatter: function(p) { return (p.data[2] * 100).toFixed(0) + '%'; }, fontSize: 10 } }]
+  });
+
+  window.addEventListener('resize', function() { maxpainChart.resize(); ivChart.resize(); });
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

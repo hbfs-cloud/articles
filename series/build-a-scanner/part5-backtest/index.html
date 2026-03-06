@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,formation,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Backtesting Your Scanner — Proving It Works | Build a Stock Scanner — Part 5/6 | Market Watch</title>
+ <meta name="description" content="Build a Stock Scanner series — Part 5/6: Build a backtest engine with walk-forward validation. Track win rate, profit factor, Sharpe ratio. Avoid overfitting and survivorship bias.">
+ <meta property="og:title" content="Backtesting Your Scanner — Proving It Works | Build a Scanner 5/6 | Market Watch">
+ <meta property="og:description" content="A scanner without validation is faith-based trading. Build a backtest engine that proves your scanner works before risking real money.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/build-a-scanner/part5-backtest/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#fef2f2 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-red{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-orange{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .takeaway-box{background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #dc2626;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#b91c1c;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(220,38,38,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#dc2626;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(220,38,38,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .code-block{background:#0f172a;border-radius:12px;padding:1.5rem;margin:1.5rem 0;overflow-x:auto}.code-block pre{margin:0;color:#e2e8f0;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85rem;line-height:1.6}.code-label{display:inline-block;background:#dc2626;color:#fff;padding:.2rem .75rem;border-radius:6px 6px 0 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:-1px;position:relative;z-index:1}.code-block .comment{color:#64748b}.code-block .keyword{color:#f87171}.code-block .string{color:#34d399}.code-block .number{color:#fbbf24}.code-block .function{color:#60a5fa}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.1rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#f87171}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.hero-badge{font-size:.7rem;padding:.35rem .75rem}.next-cta{flex-direction:column;text-align:center}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.hero-badge{font-size:.65rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-crosshairs"></i> Build a Stock Scanner Series — Part 5 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Backtesting Your Scanner — Proving It Works Before Risking Real Money</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">A scanner without validation is a random number generator with a nice UI. Build a backtest engine that simulates 2 years of trades, measures win rate and profit factor, and uses walk-forward validation to avoid overfitting.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-flask"></i> Walk-Forward Testing</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> Equity Curves</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-percent"></i> Win Rate &amp; PF</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-triangle-exclamation"></i> Overfitting Traps</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part4-regime/" class="series-arrow" title="Regime"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step current" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">5/6</span><a href="/series/build-a-scanner/part6-production/" class="series-arrow" title="Production"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#imperative" class="fnav-item" data-section="imperative"><i class="fas fa-flask"></i><span>The Imperative</span></a><a href="#engine" class="fnav-item" data-section="engine"><i class="fas fa-cogs"></i><span>Backtest Engine</span></a><a href="#metrics" class="fnav-item" data-section="metrics"><i class="fas fa-chart-bar"></i><span>Key Metrics</span></a><a href="#walkforward" class="fnav-item" data-section="walkforward"><i class="fas fa-forward"></i><span>Walk-Forward</span></a><a href="#traps" class="fnav-item" data-section="traps"><i class="fas fa-skull-crossbones"></i><span>Overfitting Traps</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- THE IMPERATIVE -->
+<div class="section-divider" id="imperative"><i class="fa-solid fa-flask" style="color:#dc2626;"></i> The Backtesting Imperative</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#dc2626;"></i> Why You Must Backtest</h2>
+  <p>You have built filters (Part 2), a scoring engine (Part 3), and a regime detector (Part 4). The question is: <strong>does it actually work?</strong> Not "does it look good on today's data" — but does it produce profitable trades consistently over months and years?</p>
+  <p>The answer requires running your scanner historically and simulating every trade it would have generated. This is backtesting — the scientific method applied to trading.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> What You Backtest</h4>
+    <p>You do not backtest the scanner itself — you backtest the <strong>trades it generates</strong>. For every historical "pass" event, you simulate: entry at next day's open, stop at N x ATR below entry, target at M x ATR above entry. Then you track whether the trade hit the target or the stop.</p>
+  </div>
+
+  <h3>The Backtest Pipeline</h3>
+  <div class="code-label">Python — Backtest Engine</div>
+  <div class="code-block"><pre><span class="keyword">class</span> <span class="function">BacktestEngine</span>:
+    <span class="string">"""Simulate scanner trades over historical data."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, scanner, universe_bars, atr_stop=<span class="number">1.5</span>, atr_tp1=<span class="number">2.0</span>, atr_tp2=<span class="number">3.0</span>):
+        self.scanner = scanner
+        self.bars = universe_bars  <span class="comment"># dict of ticker -> DataFrame</span>
+        self.atr_stop = atr_stop
+        self.atr_tp1 = atr_tp1
+        self.atr_tp2 = atr_tp2
+        self.trade_journal = []
+
+    <span class="keyword">def</span> <span class="function">run</span>(self, start_date, end_date):
+        <span class="string">"""Run scanner for each trading day and simulate trades."""</span>
+        dates = pd.bdate_range(start_date, end_date)
+
+        <span class="keyword">for</span> date <span class="keyword">in</span> dates:
+            <span class="comment"># Build universe snapshot for this date</span>
+            snapshot = self._build_snapshot(date)
+            <span class="keyword">if</span> snapshot <span class="keyword">is</span> <span class="number">None</span>: <span class="keyword">continue</span>
+
+            <span class="comment"># Run scanner (regime + filter + score)</span>
+            top10 = self.scanner.daily_scan(snapshot, date)
+
+            <span class="comment"># Simulate each trade</span>
+            <span class="keyword">for</span> _, setup <span class="keyword">in</span> top10.iterrows():
+                trade = self._simulate_trade(setup, date)
+                <span class="keyword">if</span> trade:
+                    self.trade_journal.append(trade)
+
+        <span class="keyword">return</span> pd.DataFrame(self.trade_journal)
+
+    <span class="keyword">def</span> <span class="function">_simulate_trade</span>(self, setup, signal_date):
+        <span class="string">"""Simulate a single trade with ATR-based stops/targets."""</span>
+        ticker = setup[<span class="string">'ticker'</span>]
+        bars = self.bars[ticker]
+
+        <span class="comment"># Entry: next day's open</span>
+        entry_idx = bars.index.get_loc(signal_date) + <span class="number">1</span>
+        <span class="keyword">if</span> entry_idx >= len(bars): <span class="keyword">return</span> <span class="number">None</span>
+        entry_price = bars.iloc[entry_idx][<span class="string">'open'</span>]
+        atr = setup[<span class="string">'atr_14'</span>]
+
+        <span class="comment"># Levels</span>
+        stop = entry_price - self.atr_stop * atr
+        tp1 = entry_price + self.atr_tp1 * atr
+        tp2 = entry_price + self.atr_tp2 * atr
+
+        <span class="comment"># Walk forward day by day</span>
+        <span class="keyword">for</span> i <span class="keyword">in</span> range(entry_idx + <span class="number">1</span>, min(entry_idx + <span class="number">30</span>, len(bars))):
+            bar = bars.iloc[i]
+            <span class="keyword">if</span> bar[<span class="string">'low'</span>] <= stop:
+                <span class="keyword">return</span> self._log_trade(setup, entry_price, stop,
+                    <span class="string">'stopped'</span>, bars.index[i])
+            <span class="keyword">if</span> bar[<span class="string">'high'</span>] >= tp1:
+                <span class="keyword">return</span> self._log_trade(setup, entry_price, tp1,
+                    <span class="string">'tp1_hit'</span>, bars.index[i])
+
+        <span class="comment"># Max holding period reached — exit at close</span>
+        exit_price = bars.iloc[min(entry_idx+<span class="number">29</span>, len(bars)-<span class="number">1</span>)][<span class="string">'close'</span>]
+        <span class="keyword">return</span> self._log_trade(setup, entry_price, exit_price,
+            <span class="string">'timeout'</span>, bars.index[min(entry_idx+<span class="number">29</span>, len(bars)-<span class="number">1</span>)])</pre>
+  </div>
+</div>
+
+<!-- KEY METRICS -->
+<div class="section-divider" id="metrics"><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> Key Metrics</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> Measuring Scanner Performance</h2>
+
+  <table class="compare-table">
+    <thead><tr><th>Metric</th><th>Formula</th><th>Target</th><th>Why It Matters</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Win Rate</strong></td><td>Winning trades / Total trades</td><td>&gt; 55%</td><td>What % of trades are profitable. Below 45% is concerning.</td></tr>
+      <tr><td><strong>Profit Factor</strong></td><td>Gross profit / Gross loss</td><td>&gt; 1.5</td><td>How much you make per dollar lost. Below 1.0 = losing money.</td></tr>
+      <tr><td><strong>Sharpe Ratio</strong></td><td>Mean return / Std dev of returns</td><td>&gt; 1.0</td><td>Risk-adjusted return. Above 2.0 is excellent.</td></tr>
+      <tr><td><strong>Max Drawdown</strong></td><td>Worst peak-to-trough decline</td><td>&lt; 20%</td><td>How much pain you endure. Above 30% and most traders quit.</td></tr>
+      <tr><td><strong>Average R/R</strong></td><td>Mean win size / Mean loss size</td><td>&gt; 1.5:1</td><td>Your wins should be larger than your losses.</td></tr>
+      <tr><td><strong>Trade Count</strong></td><td>Total trades in backtest period</td><td>&gt; 100</td><td>Statistical significance. 20 trades proves nothing.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-label">Python — Metrics Calculator</div>
+  <div class="code-block"><pre><span class="keyword">def</span> <span class="function">compute_metrics</span>(journal_df):
+    <span class="string">"""Compute key backtest metrics from trade journal."""</span>
+    wins = journal_df[journal_df[<span class="string">'pnl'</span>] > <span class="number">0</span>]
+    losses = journal_df[journal_df[<span class="string">'pnl'</span>] <= <span class="number">0</span>]
+
+    win_rate = len(wins) / len(journal_df) * <span class="number">100</span>
+    profit_factor = wins[<span class="string">'pnl'</span>].sum() / abs(losses[<span class="string">'pnl'</span>].sum()) <span class="keyword">if</span> len(losses) > <span class="number">0</span> <span class="keyword">else</span> float(<span class="string">'inf'</span>)
+    avg_rr = wins[<span class="string">'pnl'</span>].mean() / abs(losses[<span class="string">'pnl'</span>].mean()) <span class="keyword">if</span> len(losses) > <span class="number">0</span> <span class="keyword">else</span> float(<span class="string">'inf'</span>)
+
+    <span class="comment"># Sharpe (annualized)</span>
+    daily_returns = journal_df.groupby(<span class="string">'exit_date'</span>)[<span class="string">'pnl_pct'</span>].sum()
+    sharpe = daily_returns.mean() / daily_returns.std() * (<span class="number">252</span> ** <span class="number">0.5</span>)
+
+    <span class="comment"># Max drawdown</span>
+    cumulative = (<span class="number">1</span> + daily_returns / <span class="number">100</span>).cumprod()
+    peak = cumulative.expanding().max()
+    drawdown = (cumulative - peak) / peak * <span class="number">100</span>
+    max_dd = drawdown.min()
+
+    <span class="keyword">return</span> {
+        <span class="string">'trades'</span>: len(journal_df),
+        <span class="string">'win_rate'</span>: round(win_rate, <span class="number">1</span>),
+        <span class="string">'profit_factor'</span>: round(profit_factor, <span class="number">2</span>),
+        <span class="string">'sharpe'</span>: round(sharpe, <span class="number">2</span>),
+        <span class="string">'max_drawdown'</span>: round(max_dd, <span class="number">1</span>),
+        <span class="string">'avg_rr'</span>: round(avg_rr, <span class="number">2</span>),
+    }</pre>
+  </div>
+
+  <!-- EChart: Equity Curve -->
+  <div id="chart-equity" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <!-- EChart: Win Rate by Strategy -->
+  <div id="chart-winrate" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- WALK-FORWARD -->
+<div class="section-divider" id="walkforward"><i class="fa-solid fa-forward" style="color:#10b981;"></i> Walk-Forward Validation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-forward" style="color:#10b981;"></i> The Gold Standard: Walk-Forward</h2>
+  <p>A simple backtest (train on all data, test on all data) is almost guaranteed to overfit. Walk-forward validation solves this by sliding a training window forward through time:</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#10b981;"></i> Walk-Forward Steps</h4>
+    <ol>
+      <li><strong>Window 1:</strong> Train on months 1-24. Test on months 25-30. Record results.</li>
+      <li><strong>Window 2:</strong> Train on months 7-30. Test on months 31-36. Record results.</li>
+      <li><strong>Window 3:</strong> Train on months 13-36. Test on months 37-42. Record results.</li>
+      <li>Continue sliding until you exhaust your data.</li>
+      <li>Your backtest result is the <strong>average of all test windows</strong> — not the cherry-picked best one.</li>
+    </ol>
+    <p>If your scanner performs well in-sample but terribly out-of-sample, it is overfit. The walk-forward result is the honest estimate of live performance.</p>
+  </div>
+
+  <div class="code-label">Python — Walk-Forward</div>
+  <div class="code-block"><pre><span class="keyword">def</span> <span class="function">walk_forward</span>(engine, full_data, train_months=<span class="number">24</span>, test_months=<span class="number">6</span>, step=<span class="number">6</span>):
+    <span class="string">"""Walk-forward validation with sliding windows."""</span>
+    results = []
+    start = full_data.index.min()
+    end = full_data.index.max()
+
+    window_start = start
+    <span class="keyword">while</span> <span class="number">True</span>:
+        train_end = window_start + pd.DateOffset(months=train_months)
+        test_end = train_end + pd.DateOffset(months=test_months)
+        <span class="keyword">if</span> test_end > end: <span class="keyword">break</span>
+
+        <span class="comment"># Train: optimize thresholds on training data</span>
+        train_data = full_data[window_start:train_end]
+        engine.optimize(train_data)
+
+        <span class="comment"># Test: run scanner on unseen data</span>
+        test_data = full_data[train_end:test_end]
+        journal = engine.run(test_data)
+        metrics = compute_metrics(journal)
+        metrics[<span class="string">'window'</span>] = <span class="string">f"{train_end:%Y-%m} to {test_end:%Y-%m}"</span>
+        results.append(metrics)
+
+        window_start += pd.DateOffset(months=step)
+
+    <span class="keyword">return</span> pd.DataFrame(results)</pre>
+  </div>
+
+  <!-- EChart: Walk-Forward Windows -->
+  <div id="chart-walkforward" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- OVERFITTING TRAPS -->
+<div class="section-divider" id="traps"><i class="fa-solid fa-skull-crossbones" style="color:#f97316;"></i> Overfitting Traps</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-skull-crossbones" style="color:#f97316;"></i> How to Ruin a Perfectly Good Scanner</h2>
+
+  <table class="compare-table">
+    <thead><tr><th>Trap</th><th>How It Happens</th><th>How to Avoid It</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Too Many Parameters</strong></td><td>Your filter has 12 criteria with specific thresholds. It fits the past perfectly and the future terribly.</td><td>Keep it to 4-6 criteria per strategy. If you need 12 filters to make it work, the strategy is not real.</td></tr>
+      <tr><td><strong>Threshold Mining</strong></td><td>You test RSI thresholds from 20 to 40 in steps of 1 and pick the "best" one. That is data mining.</td><td>Use round numbers (30, 35, 40). If RSI 32.7 works but 30 does not, the edge is noise.</td></tr>
+      <tr><td><strong>Survivorship Bias</strong></td><td>Your universe only includes stocks that still exist today. All the bankrupt ones are invisible.</td><td>Include delisted stocks in backtests. Use point-in-time constituent lists.</td></tr>
+      <tr><td><strong>Look-Ahead Bias</strong></td><td>You accidentally use tomorrow's data to make today's decision (e.g., closing price for a signal that triggers at the open).</td><td>Entry always at next day's open. All indicators use data available at signal time.</td></tr>
+      <tr><td><strong>Small Sample Size</strong></td><td>You backtest 6 months and get 30 trades. That is not statistically significant.</td><td>Minimum 100 trades. Minimum 2 years of data. Minimum 2 market regimes.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Regime Backtest</h4>
+    <p>The ultimate validation: does your scanner perform BETTER in the right regime? Run your backtest, then split results by regime. Momentum trades should have higher win rates in Risk-On. Mean-reversion trades should outperform in Risk-Off. If there is no difference, your regime detector is not adding value.</p>
+  </div>
+
+  <h3>When to Kill a Strategy</h3>
+  <p>Not all strategies survive contact with reality. Here are the kill signals:</p>
+  <ul>
+    <li><strong>3 consecutive losing months</strong> — strategy may be broken or the market has structurally changed</li>
+    <li><strong>Win rate below 35%</strong> over 50+ trades — not enough winners to compensate for losers</li>
+    <li><strong>Profit factor below 1.0</strong> — you are literally losing money</li>
+    <li><strong>Max drawdown exceeds 25%</strong> — risk is too high for the returns generated</li>
+  </ul>
+
+  <!-- EChart: Monthly Returns Heatmap -->
+  <div id="chart-heatmap" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <!-- EChart: Monte Carlo Simulation -->
+  <div id="chart-monte" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- BENCHMARKING -->
+<div class="section-divider" id="benchmark"><i class="fa-solid fa-scale-balanced" style="color:#dc2626;"></i> Benchmarking Your Scanner</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#dc2626;"></i> Is Your Scanner Actually Adding Value?</h2>
+
+  <p>A backtest that shows positive returns is meaningless without context. The critical question is: <strong>does your scanner beat the alternatives?</strong> If your scanner returns 18% annually but SPY returned 22%, you are paying yourself in complexity for underperformance. Every scanner must be measured against appropriate benchmarks.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> The Three Benchmarks Every Scanner Must Beat</h4>
+    <p><strong>Benchmark 1 — Buy & Hold SPY:</strong> The simplest possible strategy. If your scanner cannot beat buying SPY and holding it, the scanner is destroying value. This is the absolute minimum bar. Approximately 80% of professional fund managers fail to beat this benchmark over 10 years.</p>
+    <p><strong>Benchmark 2 — Equal-Weight Universe:</strong> Buy every stock in your scanner's universe with equal weight and rebalance monthly. This tests whether your <em>selection</em> adds value beyond just <em>exposure</em> to the universe. If your scanner picks from the Russell 2000 but cannot beat an equal-weight Russell 2000 portfolio, your scoring system is not working.</p>
+    <p><strong>Benchmark 3 — Random Selection:</strong> Pick N random stocks from the same universe at each rebalance. Run this 1,000 times and compute the distribution. Your scanner should beat the 75th percentile of random selection — otherwise, a monkey throwing darts would match your results a quarter of the time.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Metric</th><th>Your Scanner</th><th>Buy & Hold SPY</th><th>Equal-Weight Universe</th><th>Random (Median)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Annual Return</strong></td><td>+24.3%</td><td>+12.1%</td><td>+14.8%</td><td>+11.2%</td></tr>
+      <tr><td><strong>Sharpe Ratio</strong></td><td>1.42</td><td>0.78</td><td>0.65</td><td>0.52</td></tr>
+      <tr><td><strong>Max Drawdown</strong></td><td>-14.2%</td><td>-18.7%</td><td>-22.4%</td><td>-26.8%</td></tr>
+      <tr><td><strong>Win Rate</strong></td><td>57%</td><td>N/A</td><td>N/A</td><td>48%</td></tr>
+      <tr><td><strong>Turnover (Monthly)</strong></td><td>35%</td><td>0%</td><td>8%</td><td>35%</td></tr>
+      <tr><td><strong>Net of Costs</strong></td><td>+21.8%</td><td>+12.0%</td><td>+14.2%</td><td>+8.7%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Calculating Information Ratio</h3>
+  <p>The <strong>Information Ratio (IR)</strong> measures your scanner's skill relative to its benchmark, adjusted for tracking error. It answers: "How much extra return do I earn per unit of extra risk I take versus the benchmark?"</p>
+
+  <div class="formula-box">
+    <strong>IR = (Scanner Return - Benchmark Return) / Tracking Error</strong><br>
+    <span style="color:#64748b;">Where Tracking Error = Std Dev of (Scanner Return - Benchmark Return) across periods</span><br><br>
+    <strong>Example:</strong> Scanner = +24.3%, SPY = +12.1%, Tracking Error = 8.5%<br>
+    IR = (24.3 - 12.1) / 8.5 = <span style="color:#dc2626; font-weight:700;">1.44</span> — Excellent (> 1.0 is top-tier)
+  </div>
+
+  <h3>Regime-Conditional Benchmarking</h3>
+  <p>Global benchmarks can hide regime-specific failures. Your scanner might crush the benchmark in Risk-On but get destroyed in Risk-Off, with the overall numbers still looking acceptable. Always split your benchmark comparison by regime:</p>
+
+  <ul>
+    <li><strong>Risk-On periods:</strong> Scanner should beat SPY by at least 5% annualized (you are taking more concentrated bets)</li>
+    <li><strong>Risk-Off periods:</strong> Scanner should <em>lose less</em> than SPY. If your scanner has regime detection (Part 4), it should shift to defensive strategies and outperform on a drawdown basis</li>
+    <li><strong>Transition periods:</strong> These are the hardest. Accept lower alpha here but ensure you are not giving back all your Risk-On gains</li>
+  </ul>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Cost-Adjusted Reality Check</h4>
+    <p>Many scanners beat their benchmark on a gross basis but <strong>underperform net of costs</strong>. A scanner with 35% monthly turnover generates ~8.4 round-trip trades per position per year. At 0.30% cost per round trip, that is 2.5% annual drag. Your gross alpha must exceed this hurdle just to break even versus buy-and-hold. High-turnover strategies need proportionally higher gross returns to justify their existence. Always report net-of-cost results alongside gross returns.</p>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-brain" style="color:#dc2626;"></i> Knowledge Check</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain"></i> Test Your Understanding</h2>
+
+  <details>
+    <summary>Quiz 1: Your backtest shows a 87% win rate and Sharpe ratio of 4.2. What's your reaction?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> <strong>Suspicion, not celebration.</strong> A Sharpe of 4.2 and 87% win rate are almost certainly red flags indicating one or more biases: look-ahead bias (using future data), survivorship bias (missing delisted stocks), or overfitting (parameters tuned to historical noise). Results this good in finance are extraordinarily rare — even Renaissance Technologies reportedly achieves Sharpe ratios around 2-3. Review the methodology thoroughly. Check for data leaks, ensure stops aren't unrealistically wide, and run the same scanner in a 30-day forward test. Live results will reveal the truth.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 2: What is look-ahead bias? Give a concrete example with a scanner.</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Look-ahead bias is using information in a backtest that <strong>wasn't available at the time of the simulated trade</strong>. Concrete example: your scanner uses "quarterly revenue beat" as a bullish signal. In the backtest, you check revenue on the quarter-end date (March 31). But the 10-Q filing wasn't published until April 28. Between March 31 and April 28, you're using data you wouldn't have had in real-time. The fix is to use <strong>point-in-time databases</strong> where fundamental data only becomes available on the SEC filing date, not the period-end date. This is one of the most insidious biases because it's easy to introduce accidentally and hard to detect.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 3: Why is walk-forward optimization better than a single in-sample backtest?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> A single in-sample backtest uses the <strong>same data for both training and testing</strong>, which is the textbook definition of overfitting. You're optimizing parameters to fit historical noise, not genuine market patterns. Walk-forward optimization trains on one time window and tests on a <strong>completely separate future window</strong>, repeating this across 4-6 windows. This produces multiple independent out-of-sample tests. A strategy that works in 5 out of 6 walk-forward windows spanning different market conditions (bull, bear, transition) has demonstrated genuine predictive power — not just historical curve-fitting.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 4: Your scanner has a 60% win rate and average R:R of 1.5:1. What is the expectancy per trade?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Expectancy = (Win% x Avg Win) - (Loss% x Avg Loss) = (0.60 x 1.5R) - (0.40 x 1.0R) = 0.90R - 0.40R = <strong>+0.50R per trade</strong>. This means for every dollar risked, you expect to make $0.50 on average. Over 200 trades, that's +100R — an excellent result. This combination places the scanner firmly in the "Good to Excellent" range. The key insight: you don't need a high win rate if your R:R is favorable. A 45% win rate with 2.5:1 R:R also produces +0.575R expectancy.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 5: Why should your backtest include transaction costs, and how much should you model?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> A strategy with 0.3% average return per trade can be net negative after costs. Realistic cost modeling: <strong>Commission:</strong> $5 per trade (or $0 for commission-free brokers but still model spread). <strong>Bid-ask spread:</strong> Half the average spread — approximately 0.03-0.05% for large-caps, 0.15-0.30% for small-caps. <strong>Slippage:</strong> 0.05-0.10% for liquid stocks, 0.20-0.50% for small-caps (your order moves the price). <strong>Market impact:</strong> For positions above $100K, add 0.05-0.20% depending on average daily volume. Total round-trip cost: typically 0.20-0.50% for liquid stocks, 0.50-1.50% for small-caps. If your average trade return is below this threshold, the strategy is net negative despite looking profitable gross of costs.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 6: Your walk-forward shows great results in 5/6 windows but terrible in window 3 (the 2022 bear market). What do you do?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Don't throw out the scanner. First, <strong>diagnose</strong>: window 3 corresponds to a specific regime (Risk-Off/bear market). If your scanner performed well in all other regimes but failed in the bear, the fix is likely <strong>regime detection</strong> (Part 4) — the scanner needs to switch strategies when the regime changes. Check whether the regime classifier correctly identified the 2022 bear market. If it did but the scanner still ran momentum strategies, there's a bug in the strategy rotation logic. If the classifier missed it, recalibrate the regime thresholds. The key principle: a scanner that works in 5/6 environments and correctly avoids the 6th (via regime detection) is a strong scanner.
+    </div>
+  </details>
+</div>
+
+<!-- TAKEAWAY -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 5</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Backtest the TRADES your scanner generates, not the scanner itself. Entry at next open, ATR-based stops and targets.</li>
+    <li><i class="fa-solid fa-check"></i> Key metrics: Win Rate &gt; 55%, Profit Factor &gt; 1.5, Sharpe &gt; 1.0, Max Drawdown &lt; 20%, 100+ trades.</li>
+    <li><i class="fa-solid fa-check"></i> Walk-forward validation is non-negotiable. Train on 2 years, test on 6 months, slide forward. Average all windows.</li>
+    <li><i class="fa-solid fa-check"></i> Overfitting kills more scanners than bad logic. Keep parameters few, use round numbers, include delisted stocks.</li>
+    <li><i class="fa-solid fa-check"></i> Split results by regime. If momentum does not outperform in Risk-On, your regime detection is not working.</li>
+    <li><i class="fa-solid fa-check"></i> Kill strategies with 3 consecutive losing months or profit factor below 1.0. Be ruthless.</li>
+  </ul>
+</div>
+
+<a href="/series/build-a-scanner/part6-production/" class="next-cta">
+  <div>
+    <div class="next-label">Part 6 of 6</div>
+    <div class="next-title">Going Live — From Prototype to Daily Edge <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part4-regime/" class="series-arrow" title="Regime"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step current" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">5/6</span><a href="/series/build-a-scanner/part6-production/" class="series-arrow" title="Production"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Data via MarketWatch Gateway. This is not financial advice.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Equity Curve
+var c1=echarts.init(document.getElementById('chart-equity'));
+var months=['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12','M13','M14','M15','M16','M17','M18','M19','M20','M21','M22','M23','M24'];
+var equity=[100,103,108,105,112,118,115,122,128,124,130,136,132,138,145,142,150,156,152,160,167,163,170,178];
+var drawdown=[0,0,0,-2.8,0,0,-2.5,0,0,-3.1,0,0,-2.9,0,0,-2.1,0,0,-2.6,0,0,-2.4,0,0];
+c1.setOption({title:{text:'Scanner Equity Curve — 24-Month Backtest',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{fontSize:11}},grid:{left:'3%',right:'4%',bottom:'15%',top:'15%',containLabel:true},xAxis:{type:'category',data:months,axisLabel:{fontSize:10}},yAxis:[{type:'value',name:'Equity ($K)',axisLabel:{fontSize:10}},{type:'value',name:'Drawdown %',max:0,min:-10,axisLabel:{fontSize:10}}],series:[{name:'Equity',type:'line',data:equity,smooth:true,lineStyle:{width:2,color:'#dc2626'},areaStyle:{color:'rgba(220,38,38,0.08)'},itemStyle:{color:'#dc2626'}},{name:'Drawdown',type:'bar',yAxisIndex:1,data:drawdown,itemStyle:{color:'rgba(239,68,68,0.3)'}}]});
+
+// Win Rate by Strategy
+var c2=echarts.init(document.getElementById('chart-winrate'));
+c2.setOption({title:{text:'Win Rate & Profit Factor by Strategy',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},legend:{bottom:0,textStyle:{fontSize:11}},grid:{left:'3%',right:'4%',bottom:'15%',top:'15%',containLabel:true},xAxis:{type:'category',data:['Contraction','Momentum','Breakout','Mean Reversion','All Combined'],axisLabel:{fontSize:10}},yAxis:[{type:'value',name:'Win Rate %',max:80},{type:'value',name:'Profit Factor',max:3}],series:[{name:'Win Rate %',type:'bar',data:[52,58,42,60,55],itemStyle:{color:'#dc2626',borderRadius:[4,4,0,0]}},{name:'Profit Factor',type:'line',yAxisIndex:1,data:[1.6,1.9,2.2,1.5,1.8],lineStyle:{width:2,color:'#2563eb'},itemStyle:{color:'#2563eb'},symbol:'circle',symbolSize:8}]});
+
+// Walk-Forward Windows
+var c3=echarts.init(document.getElementById('chart-walkforward'));
+c3.setOption({title:{text:'Walk-Forward Test Results by Window',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},legend:{bottom:0,textStyle:{fontSize:11}},grid:{left:'3%',right:'4%',bottom:'15%',top:'15%',containLabel:true},xAxis:{type:'category',data:['W1\nJul-Dec 24','W2\nJan-Jun 25','W3\nJul-Dec 25','W4\nJan-Jun 26','Average'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Annualized Return %'},series:[{name:'In-Sample',type:'bar',data:[42,38,45,40,41],itemStyle:{color:'#94a3b8',borderRadius:[4,4,0,0]}},{name:'Out-of-Sample',type:'bar',data:[28,22,32,26,27],itemStyle:{color:'#dc2626',borderRadius:[4,4,0,0]}}]});
+
+// Monthly Returns Heatmap
+var c4=echarts.init(document.getElementById('chart-heatmap'));
+var mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var yrs=['2024','2025'];
+var heatData=[];
+var vals=[[3.2,1.8,4.5,-1.2,2.8,3.1,-0.8,2.4,3.6,-2.1,1.9,4.2],[2.1,3.8,-0.5,2.4,3.2,1.6,-1.4,2.8,4.1,-0.3,3.5,2.9]];
+for(var y=0;y<2;y++)for(var m=0;m<12;m++)heatData.push([m,y,vals[y][m]]);
+c4.setOption({title:{text:'Monthly Returns Heatmap (%)',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{formatter:function(p){return mos[p.value[0]]+' '+yrs[p.value[1]]+': '+p.value[2]+'%';}},grid:{left:'10%',right:'10%',top:50,bottom:50},xAxis:{type:'category',data:mos,axisLabel:{fontSize:10}},yAxis:{type:'category',data:yrs,axisLabel:{fontSize:11}},visualMap:{min:-3,max:5,calculable:true,orient:'horizontal',left:'center',bottom:0,inRange:{color:['#fca5a5','#fef2f2','#f0fdf4','#10b981']},textStyle:{fontSize:10}},series:[{type:'heatmap',data:heatData,label:{show:true,fontSize:10,fontWeight:600,formatter:function(p){return p.value[2]>0?'+'+p.value[2]:p.value[2];}}}]});
+
+// Monte Carlo
+var c5=echarts.init(document.getElementById('chart-monte'));
+var paths=[];var colors=['rgba(220,38,38,0.15)','rgba(37,99,235,0.15)','rgba(16,185,129,0.15)','rgba(147,51,234,0.15)','rgba(249,115,22,0.15)'];
+for(var p=0;p<5;p++){var d=[100];for(var i=1;i<25;i++)d.push(Math.round(d[i-1]*(1+(Math.random()*6-1)/100)*100)/100);paths.push({name:'Path '+(p+1),type:'line',data:d,smooth:true,lineStyle:{width:1,color:colors[p].replace('0.15','0.4')},symbol:'none',emphasis:{disabled:true}});}
+paths.push({name:'Median',type:'line',data:equity,smooth:true,lineStyle:{width:3,color:'#dc2626'},symbol:'none',z:10});
+c5.setOption({title:{text:'Monte Carlo Simulation — 5 Random Paths + Median',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis'},grid:{left:'3%',right:'4%',bottom:'8%',top:'15%',containLabel:true},xAxis:{type:'category',data:months,axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Equity ($K)'},legend:{show:false},series:paths});
+
+window.addEventListener('resize',function(){[c1,c2,c3,c4,c5].forEach(function(c){c.resize();});});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

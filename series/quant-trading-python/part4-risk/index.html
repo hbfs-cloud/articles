@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Risk Management — The Only Edge That Lasts | Quant Trading in Python — Part 4/6 | Market Watch</title>
+ <meta name="description" content="Quant Trading in Python — Part 4/6: Position sizing with Kelly criterion, portfolio optimization, VaR, Expected Shortfall, drawdown control, and correlation-aware allocation.">
+ <meta property="og:title" content="Risk Management — The Only Edge That Lasts | Quant Trading Python 4/6 | Market Watch">
+ <meta property="og:description" content="Position sizing, Kelly criterion, VaR, Expected Shortfall, drawdown circuit breakers, efficient frontier. The complete risk management toolkit.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/quant-trading-python/part4-risk/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#fffbeb 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .code-block{background:#0f172a;border-radius:12px;overflow:hidden;margin:1.5rem 0}.code-label{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;background:#1e293b;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #334155}.code-label i{color:#d97706}.code-content{padding:1.25rem;overflow-x:auto}.code-content pre{margin:0;color:#e2e8f0;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85rem;line-height:1.7;white-space:pre}.code-content .kw{color:#c084fc}.code-content .fn{color:#67e8f9}.code-content .str{color:#86efac}.code-content .cm{color:#64748b}.code-content .num{color:#fbbf24}.code-content .op{color:#f472b6}.code-content .var{color:#e2e8f0}.code-content .imp{color:#fb923c}.code-content .dec{color:#f472b6}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#fbbf24}
+ .takeaway-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #d97706;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#b45309;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(217,119,6,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#d97706;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(217,119,6,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}.next-cta i{font-size:1.5rem}
+ .pedagogy-box{background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:1.5rem;margin:1.5rem 0}.pedagogy-box h4{color:#b45309;margin-top:0;font-size:.95rem}.pedagogy-box p{font-size:.9rem;color:#334155;line-height:1.7;margin:0}
+ .alert-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:1.5rem;margin:1.5rem 0}.alert-box h4{color:#dc2626;margin-top:0;font-size:.95rem}.alert-box p{font-size:.9rem;color:#334155;line-height:1.7;margin:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#d97706;margin-right:.75rem}details[open] summary{border-color:#d97706;background:#fffbeb;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.next-cta{flex-direction:column;text-align:center}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-python"></i> Quant Trading in Python — Part 4 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Risk Management — The Only Edge That Lasts</h1>
+  <p class="hero-subtitle">Amateurs focus on entries. Professionals focus on risk. We'll build a complete risk management framework: position sizing, portfolio optimization, VaR, drawdown control, and the Kelly criterion.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-shield-halved"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-scale-balanced"></i> Kelly Criterion</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-area"></i> VaR</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-pie"></i> Efficient Frontier</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/quant-trading-python/part3-signals/" class="series-arrow" title="Signals"><i class="fas fa-chevron-left"></i></a><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step current" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">4/6</span><a href="/series/quant-trading-python/part5-live/" class="series-arrow" title="Live"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#position-sizing" class="fnav-item" data-section="position-sizing"><i class="fas fa-bookmark"></i><span>Position Sizing</span></a><a href="#kelly" class="fnav-item" data-section="kelly"><i class="fas fa-bookmark"></i><span>Kelly Criterion</span></a><a href="#stops" class="fnav-item" data-section="stops"><i class="fas fa-bookmark"></i><span>Stop Losses</span></a><a href="#var" class="fnav-item" data-section="var"><i class="fas fa-bookmark"></i><span>VaR & ES</span></a><a href="#portfolio" class="fnav-item" data-section="portfolio"><i class="fas fa-bookmark"></i><span>Portfolio Optimization</span></a><a href="#drawdown" class="fnav-item" data-section="drawdown"><i class="fas fa-bookmark"></i><span>Drawdown Control</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'})}if(isOpen)toggle()})});var ca=null;var obs=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var m=sections.find(function(s){return s.el===entry.target});if(m){if(ca)ca.item.classList.remove('active');m.item.classList.add('active');ca=m;label.textContent=m.item.querySelector('span').textContent}}})},{rootMargin:'-20% 0px -60% 0px'});sections.forEach(function(s){obs.observe(s.el)})})();</script>
+
+<!-- ==================== SECTION 1: POSITION SIZING ==================== -->
+<div class="section-divider"><i class="fa-solid fa-scale-balanced"></i> Position Sizing</div>
+
+<div id="position-sizing" class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#d97706;"></i> Position Sizing: How Much to Bet</h2>
+  <p>The single most important decision in trading isn't what to buy — it's how much. A great strategy with bad sizing will blow up. A mediocre strategy with good sizing will survive long enough to improve.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> risk/position_sizer.py</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+<span class="kw">import</span> <span class="imp">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+
+<span class="kw">class</span> <span class="fn">PositionSizer</span>:
+    <span class="str">"""Position sizing methods for quant trading."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">fixed_fractional</span>(capital: float,
+                          risk_per_trade: float = <span class="num">0.02</span>,
+                          entry_price: float = <span class="num">100</span>,
+                          stop_price: float = <span class="num">95</span>) -> int:
+        <span class="str">"""
+        Fixed fractional: risk X% of capital per trade.
+
+        Standard rule: never risk more than 1-2% per trade.
+        """</span>
+        <span class="var">risk_amount</span> = capital * risk_per_trade  <span class="cm"># $2,000 on $100k</span>
+        <span class="var">risk_per_share</span> = <span class="fn">abs</span>(entry_price - stop_price)
+        <span class="var">shares</span> = <span class="fn">int</span>(risk_amount / risk_per_share)
+        <span class="kw">return</span> shares
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">volatility_adjusted</span>(capital: float,
+                             risk_per_trade: float = <span class="num">0.02</span>,
+                             atr: float = <span class="num">3.5</span>,
+                             atr_multiplier: float = <span class="num">2.0</span>,
+                             price: float = <span class="num">100</span>) -> int:
+        <span class="str">"""
+        Size based on ATR (volatility-adjusted).
+
+        Stop = entry - ATR * multiplier.
+        More volatile stocks = smaller position.
+        """</span>
+        <span class="var">risk_amount</span> = capital * risk_per_trade
+        <span class="var">risk_per_share</span> = atr * atr_multiplier
+        <span class="var">shares</span> = <span class="fn">int</span>(risk_amount / risk_per_share)
+
+        <span class="cm"># Cap at 10% of capital</span>
+        <span class="var">max_shares</span> = <span class="fn">int</span>(capital * <span class="num">0.10</span> / price)
+        <span class="kw">return</span> <span class="fn">min</span>(shares, max_shares)
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">equal_risk</span>(capital: float,
+                    volatilities: pd.Series,
+                    target_vol: float = <span class="num">0.15</span>) -> pd.Series:
+        <span class="str">"""
+        Equal risk contribution: each position contributes
+        equal volatility to the portfolio.
+
+        Inverse-volatility weighting.
+        """</span>
+        <span class="var">inv_vol</span> = <span class="num">1</span> / volatilities
+        <span class="var">weights</span> = inv_vol / inv_vol.<span class="fn">sum</span>()
+
+        <span class="cm"># Scale to target portfolio volatility</span>
+        <span class="var">port_vol</span> = (weights * volatilities).<span class="fn">sum</span>()
+        <span class="var">scale</span> = target_vol / port_vol
+        <span class="kw">return</span> weights * scale * capital</pre></div>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Method</th><th>Risk Per Trade</th><th>Pros</th><th>Cons</th><th>Best For</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Fixed Fractional</strong></td><td>1-2% of capital</td><td>Simple, consistent</td><td>Ignores volatility</td><td>Beginners</td></tr>
+      <tr><td><strong>Volatility-Adjusted</strong></td><td>Varies with ATR</td><td>Adapts to market</td><td>More complex</td><td>Swing traders</td></tr>
+      <tr><td><strong>Kelly Criterion</strong></td><td>Optimal math</td><td>Maximizes growth</td><td>Aggressive, needs accurate estimates</td><td>Advanced quants</td></tr>
+      <tr><td><strong>Equal Risk</strong></td><td>Equal vol contribution</td><td>Diversified</td><td>Ignores conviction</td><td>Portfolios</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== SECTION 2: KELLY ==================== -->
+<div class="section-divider"><i class="fa-solid fa-brain"></i> Kelly Criterion</div>
+
+<div id="kelly" class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#d97706;"></i> The Kelly Criterion</h2>
+  <p>The Kelly criterion tells you the mathematically optimal fraction of your capital to bet, given your edge. It maximizes the long-run geometric growth rate of your portfolio. But full Kelly is too aggressive for trading — most practitioners use half-Kelly or quarter-Kelly.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Kelly Fraction</div>
+    f* = <span class="formula-highlight">W/A</span> - <span class="formula-highlight">(1-W)/B</span> = (W * B - (1-W) * A) / (A * B)
+  </div>
+  <p style="text-align:center; font-size:0.85rem; color:#64748b; margin-top:-1rem;">Where W = win rate, A = avg loss, B = avg win. Use half-Kelly (f*/2) in practice.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> risk/kelly.py</div>
+    <div class="code-content"><pre><span class="kw">def</span> <span class="fn">kelly_fraction</span>(win_rate: float,
+                    avg_win: float,
+                    avg_loss: float) -> float:
+    <span class="str">"""
+    Kelly criterion for optimal position sizing.
+
+    Args:
+        win_rate: probability of winning (0 to 1)
+        avg_win:  average winning trade return (positive)
+        avg_loss: average losing trade return (positive, absolute)
+
+    Returns:
+        Optimal fraction of capital to risk.
+        Use f/2 (half-Kelly) for real trading.
+    """</span>
+    <span class="kw">if</span> avg_loss == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0</span>
+
+    <span class="cm"># Kelly formula</span>
+    <span class="var">b</span> = avg_win / avg_loss  <span class="cm"># Win/loss ratio</span>
+    <span class="var">f</span> = win_rate - (<span class="num">1</span> - win_rate) / b
+
+    <span class="cm"># Clip to [0, 0.25] — never risk more than 25%</span>
+    <span class="kw">return</span> <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(f, <span class="num">0.25</span>))
+
+<span class="cm"># Example</span>
+<span class="var">wr</span> = <span class="num">0.55</span>     <span class="cm"># 55% win rate</span>
+<span class="var">aw</span> = <span class="num">0.035</span>    <span class="cm"># Average win: +3.5%</span>
+<span class="var">al</span> = <span class="num">0.025</span>    <span class="cm"># Average loss: -2.5%</span>
+
+<span class="var">full_kelly</span> = <span class="fn">kelly_fraction</span>(wr, aw, al)
+<span class="fn">print</span>(<span class="str">f"Full Kelly:  {full_kelly:.1%}"</span>)   <span class="cm"># ~23%</span>
+<span class="fn">print</span>(<span class="str">f"Half Kelly:  {full_kelly/2:.1%}"</span>)  <span class="cm"># ~11.5%</span>
+<span class="fn">print</span>(<span class="str">f"Qtr Kelly:   {full_kelly/4:.1%}"</span>)  <span class="cm"># ~5.8%</span></pre></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why Half-Kelly?</h4>
+    <p>Full Kelly maximizes growth but with wild swings — it can produce 50%+ drawdowns. Half-Kelly achieves ~75% of the growth rate with less than half the volatility. The key insight: the Kelly curve is flat near the top. Going from half-Kelly to full-Kelly barely increases growth but dramatically increases risk. Quarter-Kelly is even more conservative and appropriate for strategies with uncertain edge estimates.</p>
+  </div>
+
+  <!-- ECharts: Kelly Growth Curves -->
+  <div id="kellyChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 3: STOP LOSSES ==================== -->
+<div class="section-divider"><i class="fa-solid fa-hand"></i> Stop Losses</div>
+
+<div id="stops" class="content-card">
+  <h2><i class="fa-solid fa-hand" style="color:#ef4444;"></i> Stop Loss Strategies</h2>
+  <p>Stop losses limit your downside. The right stop depends on the strategy, volatility, and timeframe.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> risk/stops.py</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">StopLossManager</span>:
+    <span class="str">"""Stop loss strategies."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">fixed_stop</span>(entry: float, pct: float = <span class="num">0.05</span>) -> float:
+        <span class="str">"""Fixed percentage stop. Simple but ignores volatility."""</span>
+        <span class="kw">return</span> entry * (<span class="num">1</span> - pct)
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">atr_stop</span>(entry: float, atr: float,
+                  multiplier: float = <span class="num">2.0</span>) -> float:
+        <span class="str">"""ATR-based stop. Adapts to current volatility.
+        Wider in volatile markets, tighter in quiet markets."""</span>
+        <span class="kw">return</span> entry - atr * multiplier
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">trailing_stop</span>(prices: pd.Series,
+                       multiplier: float = <span class="num">2.0</span>,
+                       atr: pd.Series = <span class="kw">None</span>) -> pd.Series:
+        <span class="str">"""Chandelier trailing stop.
+        Follows the highest high minus ATR * multiplier.
+        Never moves down — only up."""</span>
+        <span class="kw">if</span> atr <span class="kw">is None</span>:
+            <span class="cm"># Use rolling range as proxy</span>
+            atr = prices.<span class="fn">rolling</span>(<span class="num">14</span>).<span class="fn">apply</span>(
+                <span class="kw">lambda</span> x: x.<span class="fn">max</span>() - x.<span class="fn">min</span>()
+            )
+
+        <span class="var">highest</span> = prices.<span class="fn">cummax</span>()
+        <span class="var">stop</span> = highest - atr * multiplier
+        <span class="cm"># Trailing: stop never decreases</span>
+        <span class="kw">return</span> stop.<span class="fn">cummax</span>()
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">time_stop</span>(entry_date, max_days: int = <span class="num">20</span>,
+                   current_date = <span class="kw">None</span>) -> bool:
+        <span class="str">"""Time-based stop. Close if trade hasn't moved
+        after max_days. Prevents capital from being tied up."""</span>
+        <span class="kw">if</span> current_date <span class="kw">is None</span>:
+            <span class="kw">return</span> <span class="kw">False</span>
+        <span class="kw">return</span> (current_date - entry_date).days >= max_days</pre></div>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Stop Type</th><th>Method</th><th>Pros</th><th>Cons</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Fixed %</strong></td><td>Entry - X%</td><td>Simple, predictable</td><td>Ignores volatility</td></tr>
+      <tr><td><strong>ATR-based</strong></td><td>Entry - N*ATR</td><td>Volatility-adaptive</td><td>Wide in volatile markets</td></tr>
+      <tr><td><strong>Trailing</strong></td><td>HH - N*ATR</td><td>Locks in profits</td><td>Can be whipsawed</td></tr>
+      <tr><td><strong>Time-based</strong></td><td>Close after N days</td><td>Frees capital</td><td>May exit too early</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== SECTION 4: VaR ==================== -->
+<div class="section-divider"><i class="fa-solid fa-chart-area"></i> VaR & Expected Shortfall</div>
+
+<div id="var" class="content-card">
+  <h2><i class="fa-solid fa-chart-area" style="color:#2563eb;"></i> Value at Risk & Expected Shortfall</h2>
+  <p>VaR answers: "What's the worst I can lose with 95% confidence over the next day?" Expected Shortfall (CVaR) answers the harder question: "When things go bad, HOW bad?"</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> risk/var.py</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+<span class="kw">from</span> <span class="imp">scipy</span> <span class="kw">import</span> <span class="var">stats</span>
+
+<span class="kw">class</span> <span class="fn">RiskMetrics</span>:
+    <span class="str">"""VaR and Expected Shortfall calculators."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">parametric_var</span>(returns: pd.Series,
+                        confidence: float = <span class="num">0.95</span>,
+                        horizon: int = <span class="num">1</span>) -> float:
+        <span class="str">"""Parametric VaR assuming normal distribution.
+        Fast but underestimates tail risk."""</span>
+        <span class="var">mu</span> = returns.<span class="fn">mean</span>() * horizon
+        <span class="var">sigma</span> = returns.<span class="fn">std</span>() * np.<span class="fn">sqrt</span>(horizon)
+        <span class="kw">return</span> -(mu + sigma * stats.norm.<span class="fn">ppf</span>(<span class="num">1</span> - confidence))
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">historical_var</span>(returns: pd.Series,
+                        confidence: float = <span class="num">0.95</span>) -> float:
+        <span class="str">"""Historical VaR — no distribution assumption.
+        Uses actual return distribution."""</span>
+        <span class="kw">return</span> -np.<span class="fn">percentile</span>(returns, (<span class="num">1</span> - confidence) * <span class="num">100</span>)
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">expected_shortfall</span>(returns: pd.Series,
+                            confidence: float = <span class="num">0.95</span>) -> float:
+        <span class="str">"""Expected Shortfall (CVaR) — average loss beyond VaR.
+        More conservative and coherent risk measure."""</span>
+        <span class="var">var</span> = -np.<span class="fn">percentile</span>(returns, (<span class="num">1</span> - confidence) * <span class="num">100</span>)
+        <span class="var">tail</span> = returns[returns <= -var]
+        <span class="kw">return</span> -tail.<span class="fn">mean</span>() <span class="kw">if</span> <span class="fn">len</span>(tail) > <span class="num">0</span> <span class="kw">else</span> var
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">monte_carlo_var</span>(returns: pd.Series,
+                          confidence: float = <span class="num">0.95</span>,
+                          horizon: int = <span class="num">10</span>,
+                          simulations: int = <span class="num">10000</span>) -> float:
+        <span class="str">"""Monte Carlo VaR — simulate many possible paths."""</span>
+        <span class="var">mu</span> = returns.<span class="fn">mean</span>()
+        <span class="var">sigma</span> = returns.<span class="fn">std</span>()
+
+        <span class="cm"># Simulate random paths</span>
+        <span class="var">sims</span> = np.random.<span class="fn">normal</span>(mu, sigma, (simulations, horizon))
+        <span class="var">cum_returns</span> = sims.<span class="fn">sum</span>(axis=<span class="num">1</span>)
+
+        <span class="kw">return</span> -np.<span class="fn">percentile</span>(cum_returns, (<span class="num">1</span> - confidence) * <span class="num">100</span>)
+
+<span class="cm"># Example: $100k portfolio</span>
+<span class="var">rm</span> = <span class="fn">RiskMetrics</span>()
+<span class="var">capital</span> = <span class="num">100_000</span>
+
+<span class="var">p_var</span> = rm.<span class="fn">parametric_var</span>(returns)
+<span class="var">h_var</span> = rm.<span class="fn">historical_var</span>(returns)
+<span class="var">es</span> = rm.<span class="fn">expected_shortfall</span>(returns)
+<span class="var">mc_var</span> = rm.<span class="fn">monte_carlo_var</span>(returns, horizon=<span class="num">10</span>)
+
+<span class="fn">print</span>(<span class="str">f"1-Day 95% VaR (Parametric):    ${p_var * capital:,.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"1-Day 95% VaR (Historical):    ${h_var * capital:,.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"1-Day 95% Expected Shortfall:  ${es * capital:,.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"10-Day 95% VaR (Monte Carlo):  ${mc_var * capital:,.0f}"</span>)</pre></div>
+  </div>
+
+  <!-- ECharts: VaR Distribution -->
+  <div id="varChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 5: PORTFOLIO ==================== -->
+<div class="section-divider"><i class="fa-solid fa-chart-pie"></i> Portfolio Optimization</div>
+
+<div id="portfolio" class="content-card">
+  <h2><i class="fa-solid fa-chart-pie" style="color:#10b981;"></i> Portfolio Optimization</h2>
+  <p>Harry Markowitz won the Nobel Prize for proving that diversification is the only free lunch in finance. The efficient frontier shows the optimal risk/return tradeoff for a given set of assets.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> risk/portfolio.py — Mean-Variance Optimizer</div>
+    <div class="code-content"><pre><span class="kw">from</span> <span class="imp">scipy.optimize</span> <span class="kw">import</span> <span class="fn">minimize</span>
+
+<span class="kw">class</span> <span class="fn">PortfolioOptimizer</span>:
+    <span class="str">"""Mean-variance portfolio optimization."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, returns: pd.DataFrame):
+        self.returns = returns
+        self.mean_returns = returns.<span class="fn">mean</span>() * <span class="num">252</span>
+        self.cov_matrix = returns.<span class="fn">cov</span>() * <span class="num">252</span>
+        self.n_assets = <span class="fn">len</span>(returns.columns)
+
+    <span class="kw">def</span> <span class="fn">portfolio_stats</span>(self, weights):
+        <span class="str">"""Compute portfolio return and volatility."""</span>
+        <span class="var">ret</span> = np.<span class="fn">dot</span>(weights, self.mean_returns)
+        <span class="var">vol</span> = np.<span class="fn">sqrt</span>(np.<span class="fn">dot</span>(weights.T,
+                     np.<span class="fn">dot</span>(self.cov_matrix, weights)))
+        <span class="kw">return</span> ret, vol
+
+    <span class="kw">def</span> <span class="fn">max_sharpe</span>(self, risk_free: float = <span class="num">0.05</span>):
+        <span class="str">"""Find the maximum Sharpe ratio portfolio."""</span>
+        <span class="kw">def</span> <span class="fn">neg_sharpe</span>(w):
+            r, v = self.<span class="fn">portfolio_stats</span>(w)
+            <span class="kw">return</span> -(r - risk_free) / v
+
+        <span class="var">constraints</span> = [{<span class="str">'type'</span>: <span class="str">'eq'</span>, <span class="str">'fun'</span>: <span class="kw">lambda</span> w: np.<span class="fn">sum</span>(w) - <span class="num">1</span>}]
+        <span class="var">bounds</span> = [(<span class="num">0</span>, <span class="num">0.30</span>)] * self.n_assets  <span class="cm"># Max 30% per asset</span>
+        <span class="var">w0</span> = np.<span class="fn">ones</span>(self.n_assets) / self.n_assets
+
+        <span class="var">result</span> = <span class="fn">minimize</span>(neg_sharpe, w0,
+                          method=<span class="str">'SLSQP'</span>,
+                          bounds=bounds,
+                          constraints=constraints)
+        <span class="kw">return</span> result.x
+
+    <span class="kw">def</span> <span class="fn">min_volatility</span>(self):
+        <span class="str">"""Find the minimum volatility portfolio."""</span>
+        <span class="kw">def</span> <span class="fn">portfolio_vol</span>(w):
+            <span class="kw">return</span> np.<span class="fn">sqrt</span>(np.<span class="fn">dot</span>(w.T, np.<span class="fn">dot</span>(self.cov_matrix, w)))
+
+        <span class="var">constraints</span> = [{<span class="str">'type'</span>: <span class="str">'eq'</span>, <span class="str">'fun'</span>: <span class="kw">lambda</span> w: np.<span class="fn">sum</span>(w) - <span class="num">1</span>}]
+        <span class="var">bounds</span> = [(<span class="num">0</span>, <span class="num">0.30</span>)] * self.n_assets
+        <span class="var">w0</span> = np.<span class="fn">ones</span>(self.n_assets) / self.n_assets
+
+        <span class="var">result</span> = <span class="fn">minimize</span>(portfolio_vol, w0,
+                          method=<span class="str">'SLSQP'</span>,
+                          bounds=bounds,
+                          constraints=constraints)
+        <span class="kw">return</span> result.x
+
+    <span class="kw">def</span> <span class="fn">efficient_frontier</span>(self, n_points: int = <span class="num">100</span>):
+        <span class="str">"""Generate the efficient frontier."""</span>
+        <span class="var">results</span> = []
+        <span class="var">target_returns</span> = np.<span class="fn">linspace</span>(
+            self.mean_returns.<span class="fn">min</span>(),
+            self.mean_returns.<span class="fn">max</span>(),
+            n_points
+        )
+
+        <span class="kw">for</span> target <span class="kw">in</span> target_returns:
+            <span class="kw">def</span> <span class="fn">vol</span>(w):
+                <span class="kw">return</span> np.<span class="fn">sqrt</span>(np.<span class="fn">dot</span>(w.T, np.<span class="fn">dot</span>(self.cov_matrix, w)))
+
+            <span class="var">constraints</span> = [
+                {<span class="str">'type'</span>: <span class="str">'eq'</span>, <span class="str">'fun'</span>: <span class="kw">lambda</span> w: np.<span class="fn">sum</span>(w) - <span class="num">1</span>},
+                {<span class="str">'type'</span>: <span class="str">'eq'</span>, <span class="str">'fun'</span>: <span class="kw">lambda</span> w: np.<span class="fn">dot</span>(w, self.mean_returns) - target}
+            ]
+            <span class="var">bounds</span> = [(<span class="num">0</span>, <span class="num">0.30</span>)] * self.n_assets
+            <span class="var">w0</span> = np.<span class="fn">ones</span>(self.n_assets) / self.n_assets
+
+            <span class="var">res</span> = <span class="fn">minimize</span>(vol, w0, method=<span class="str">'SLSQP'</span>,
+                           bounds=bounds, constraints=constraints)
+            <span class="kw">if</span> res.success:
+                results.<span class="fn">append</span>((res.fun, target))
+
+        <span class="kw">return</span> results</pre></div>
+  </div>
+
+  <!-- ECharts: Efficient Frontier -->
+  <div id="frontierChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 6: DRAWDOWN CONTROL ==================== -->
+<div class="section-divider"><i class="fa-solid fa-shield-halved"></i> Drawdown Control</div>
+
+<div id="drawdown" class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Drawdown Control & Circuit Breakers</h2>
+  <p>A 50% drawdown requires a 100% return to recover. A 10% drawdown only needs 11%. Controlling drawdown is the difference between surviving and blowing up.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> risk/drawdown.py — Circuit Breaker</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">DrawdownController</span>:
+    <span class="str">"""Drawdown monitoring and circuit breakers."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self,
+                 max_drawdown: float = <span class="num">0.15</span>,   <span class="cm"># Kill switch at 15%</span>
+                 reduce_at: float = <span class="num">0.08</span>,      <span class="cm"># Reduce size at 8%</span>
+                 reduction: float = <span class="num">0.50</span>):     <span class="cm"># Cut to 50% size</span>
+        self.max_drawdown = max_drawdown
+        self.reduce_at = reduce_at
+        self.reduction = reduction
+        self.peak = <span class="num">0</span>
+        self.halted = <span class="kw">False</span>
+
+    <span class="kw">def</span> <span class="fn">update</span>(self, equity: float) -> dict:
+        <span class="str">"""Update drawdown state. Call after each trade/bar."""</span>
+        self.peak = <span class="fn">max</span>(self.peak, equity)
+        <span class="var">dd</span> = (self.peak - equity) / self.peak
+
+        <span class="kw">if</span> dd >= self.max_drawdown:
+            self.halted = <span class="kw">True</span>
+            <span class="kw">return</span> {
+                <span class="str">'action'</span>: <span class="str">'HALT'</span>,
+                <span class="str">'drawdown'</span>: dd,
+                <span class="str">'message'</span>: <span class="str">f'Max drawdown {dd:.1%} hit. Liquidating.'</span>,
+                <span class="str">'size_multiplier'</span>: <span class="num">0</span>
+            }
+        <span class="kw">elif</span> dd >= self.reduce_at:
+            <span class="kw">return</span> {
+                <span class="str">'action'</span>: <span class="str">'REDUCE'</span>,
+                <span class="str">'drawdown'</span>: dd,
+                <span class="str">'message'</span>: <span class="str">f'Drawdown {dd:.1%}. Reducing to {self.reduction:.0%}.'</span>,
+                <span class="str">'size_multiplier'</span>: self.reduction
+            }
+        <span class="kw">else</span>:
+            <span class="kw">return</span> {
+                <span class="str">'action'</span>: <span class="str">'OK'</span>,
+                <span class="str">'drawdown'</span>: dd,
+                <span class="str">'size_multiplier'</span>: <span class="num">1.0</span>
+            }
+
+    <span class="kw">def</span> <span class="fn">equity_curve_trading</span>(self,
+                              equity_curve: pd.Series,
+                              sma_period: int = <span class="num">50</span>) -> pd.Series:
+        <span class="str">"""Equity curve trading: only trade when your
+        equity curve is above its own moving average.
+        Meta-strategy that reduces exposure during drawdowns."""</span>
+        <span class="var">equity_sma</span> = equity_curve.<span class="fn">rolling</span>(sma_period).<span class="fn">mean</span>()
+        <span class="var">active</span> = (equity_curve > equity_sma).<span class="fn">astype</span>(float)
+        <span class="kw">return</span> active</pre></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The Recovery Table</h4>
+    <p>Drawdowns are asymmetric. A <strong>10% loss</strong> needs 11% to recover. A <strong>25% loss</strong> needs 33%. A <strong>50% loss</strong> needs 100%. A <strong>75% loss</strong> needs 300%. This is why prevention is better than cure. Set your max drawdown tolerance before you start trading and stick to it. Most institutional quants use 15-20% as their hard stop.</p>
+  </div>
+
+  <!-- ECharts: Drawdown Comparison -->
+  <div id="ddChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== TAKEAWAY ==================== -->
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-check-circle"></i> Part 4 Checklist</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Implemented 4 position sizing methods: fixed fractional, volatility-adjusted, Kelly, equal risk</li>
+    <li><i class="fa-solid fa-check"></i> Understood Kelly criterion and why to use half-Kelly in practice</li>
+    <li><i class="fa-solid fa-check"></i> Built 4 stop loss strategies: fixed, ATR-based, trailing, time-based</li>
+    <li><i class="fa-solid fa-check"></i> Computed VaR (parametric, historical, Monte Carlo) and Expected Shortfall</li>
+    <li><i class="fa-solid fa-check"></i> Built portfolio optimizer with efficient frontier</li>
+    <li><i class="fa-solid fa-check"></i> Implemented drawdown circuit breaker and equity curve trading</li>
+  </ul>
+</div>
+
+<a href="/series/quant-trading-python/part5-live/" class="next-cta">
+  <div><div class="next-label">Next: Part 5 of 6</div><div class="next-title">Going Live — Paper Trading to Real Money</div></div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/quant-trading-python/part3-signals/" class="series-arrow" title="Signals"><i class="fas fa-chevron-left"></i></a><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step current" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">4/6</span><a href="/series/quant-trading-python/part5-live/" class="series-arrow" title="Live"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Données via MarketWatch Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Kelly Growth Curves
+var kChart = echarts.init(document.getElementById('kellyChart'));
+var trades = [];for(var i=0;i<500;i++)trades.push(i);
+function kellyGrowth(frac,wr,aw,al){var eq=[100000];for(var i=1;i<500;i++){var win=Math.random()<wr;var ret=win?aw*frac:-al*frac;eq.push(eq[i-1]*(1+ret))}return eq}
+var fullK=kellyGrowth(0.23,0.55,0.035,0.025);var halfK=kellyGrowth(0.115,0.55,0.035,0.025);var qtrK=kellyGrowth(0.058,0.55,0.035,0.025);var fixedK=kellyGrowth(0.02,0.55,0.035,0.025);
+kChart.setOption({
+  title:{text:'Kelly Fraction Growth Comparison (500 trades)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  grid:{left:70,right:30,top:50,bottom:40},
+  xAxis:{type:'category',data:trades,axisLabel:{interval:99}},
+  yAxis:{type:'value',axisLabel:{formatter:function(v){return '$'+Math.round(v/1000)+'k'}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  series:[
+    {name:'Full Kelly',type:'line',data:fullK,lineStyle:{color:'#ef4444',width:1.5},symbol:'none'},
+    {name:'Half Kelly',type:'line',data:halfK,lineStyle:{color:'#d97706',width:2.5},symbol:'none'},
+    {name:'Quarter Kelly',type:'line',data:qtrK,lineStyle:{color:'#10b981',width:2},symbol:'none'},
+    {name:'Fixed 2%',type:'line',data:fixedK,lineStyle:{color:'#94a3b8',width:1.5,type:'dashed'},symbol:'none'}
+  ]
+});
+
+// VaR Distribution
+var varC=echarts.init(document.getElementById('varChart'));
+var bins=[];var counts=[];for(var b=-5;b<=5;b+=0.25){bins.push((b).toFixed(2)+'%');var c=Math.round(200*Math.exp(-b*b/2));counts.push(c)}
+var var95idx=Math.floor(bins.length*0.05);
+varC.setOption({
+  title:{text:'Return Distribution with VaR (95%) and ES',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category',data:bins,axisLabel:{fontSize:9,interval:7}},
+  yAxis:{type:'value',splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  series:[{type:'bar',data:counts.map(function(v,i){return{value:v,itemStyle:{color:i<var95idx?'#ef4444':i<var95idx+3?'#fbbf24':'#d97706',opacity:i<var95idx?0.9:0.5}}}),barWidth:'90%'}],
+  graphic:[
+    {type:'text',left:'8%',top:60,style:{text:'Expected\nShortfall\n(avg tail loss)',fontSize:10,fill:'#ef4444',fontWeight:600}},
+    {type:'text',left:'16%',top:60,style:{text:'VaR 95%',fontSize:10,fill:'#fbbf24',fontWeight:700}}
+  ]
+});
+
+// Efficient Frontier
+var efC=echarts.init(document.getElementById('frontierChart'));
+var efData=[];for(var i=0;i<100;i++){var v=5+i*0.25;var r=2+Math.sqrt(v-5)*4-Math.random()*2;efData.push([v,r])}
+var assets=[{v:12,r:8,n:'AAPL'},{v:18,r:12,n:'NVDA'},{v:15,r:10,n:'MSFT'},{v:8,r:5,n:'GLD'},{v:6,r:4,n:'TLT'},{v:22,r:15,n:'BTC'},{v:10,r:6,n:'SPY'}];
+efC.setOption({
+  title:{text:'Efficient Frontier — 7 Asset Portfolio',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{formatter:function(p){if(p.seriesName==='Assets')return p.data[2]+'<br>Vol: '+p.data[0]+'% | Ret: '+p.data[1]+'%';return'Vol: '+p.data[0].toFixed(1)+'% | Ret: '+p.data[1].toFixed(1)+'%'}},
+  grid:{left:60,right:30,top:50,bottom:40},
+  xAxis:{type:'value',name:'Volatility (%)',nameLocation:'center',nameGap:30,splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  yAxis:{type:'value',name:'Return (%)',splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  series:[
+    {name:'Frontier',type:'scatter',data:efData,symbolSize:4,itemStyle:{color:'#d97706',opacity:0.6}},
+    {name:'Assets',type:'scatter',data:assets.map(function(a){return[a.v,a.r,a.n]}),symbolSize:14,itemStyle:{color:'#2563eb'},label:{show:true,formatter:function(p){return p.data[2]},position:'right',fontSize:10,fontWeight:600}},
+    {name:'Max Sharpe',type:'scatter',data:[[11,9.5]],symbolSize:20,itemStyle:{color:'#10b981'},symbol:'diamond',label:{show:true,formatter:'Max Sharpe',position:'right',fontWeight:700}}
+  ]
+});
+
+// Drawdown Chart
+var ddC=echarts.init(document.getElementById('ddChart'));
+var ddDays=[];var dd1=[];var dd2=[];var p1=100;var p2=100;var pk1=100;var pk2=100;
+for(var i=0;i<500;i++){ddDays.push(i);var r=(Math.random()-0.48)*0.025;p1*=(1+r);pk1=Math.max(pk1,p1);dd1.push(-((pk1-p1)/pk1)*100);p2*=(1+r*(Math.abs(r)>0.02?0.5:1));pk2=Math.max(pk2,p2);dd2.push(-((pk2-p2)/pk2)*100)}
+ddC.setOption({
+  title:{text:'Drawdown: No Risk Mgmt vs Circuit Breaker',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{trigger:'axis',formatter:function(p){return'Trade '+p[0].name+'<br>'+p.map(function(s){return s.marker+s.seriesName+': '+s.value.toFixed(1)+'%'}).join('<br>')}},
+  legend:{bottom:0},grid:{left:50,right:30,top:50,bottom:40},
+  xAxis:{type:'category',data:ddDays,axisLabel:{interval:99}},
+  yAxis:{type:'value',name:'Drawdown %',inverse:true,splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  series:[
+    {name:'No Risk Mgmt',type:'line',data:dd1,lineStyle:{color:'#ef4444',width:1.5},areaStyle:{color:'rgba(239,68,68,0.1)'},symbol:'none'},
+    {name:'With Circuit Breaker',type:'line',data:dd2,lineStyle:{color:'#10b981',width:2},areaStyle:{color:'rgba(16,185,129,0.1)'},symbol:'none'}
+  ]
+});
+
+window.addEventListener('resize',function(){kChart.resize();varC.resize();efC.resize();ddC.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

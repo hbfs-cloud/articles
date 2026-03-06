@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Factors & Signals — Finding Your Edge | Quant Trading in Python — Part 3/6 | Market Watch</title>
+ <meta name="description" content="Quant Trading in Python — Part 3/6: Momentum, mean reversion, volume and volatility signals. Multi-factor models, signal quality metrics, and feature engineering for ML.">
+ <meta property="og:title" content="Factors & Signals — Finding Your Edge | Quant Trading Python 3/6 | Market Watch">
+ <meta property="og:description" content="Build a complete signal library: RSI, MACD, Bollinger Bands, OBV, ATR channels. Combine into multi-factor models with proper quality metrics.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/quant-trading-python/part3-signals/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#fffbeb 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .code-block{background:#0f172a;border-radius:12px;overflow:hidden;margin:1.5rem 0}.code-label{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;background:#1e293b;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #334155}.code-label i{color:#d97706}.code-content{padding:1.25rem;overflow-x:auto}.code-content pre{margin:0;color:#e2e8f0;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85rem;line-height:1.7;white-space:pre}.code-content .kw{color:#c084fc}.code-content .fn{color:#67e8f9}.code-content .str{color:#86efac}.code-content .cm{color:#64748b}.code-content .num{color:#fbbf24}.code-content .op{color:#f472b6}.code-content .var{color:#e2e8f0}.code-content .imp{color:#fb923c}.code-content .dec{color:#f472b6}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#fbbf24}
+ .takeaway-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #d97706;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#b45309;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(217,119,6,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#d97706;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(217,119,6,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}.next-cta i{font-size:1.5rem}
+ .pedagogy-box{background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:1.5rem;margin:1.5rem 0}.pedagogy-box h4{color:#b45309;margin-top:0;font-size:.95rem}.pedagogy-box p{font-size:.9rem;color:#334155;line-height:1.7;margin:0}
+ .alert-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:1.5rem;margin:1.5rem 0}.alert-box h4{color:#dc2626;margin-top:0;font-size:.95rem}.alert-box p{font-size:.9rem;color:#334155;line-height:1.7;margin:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#d97706;margin-right:.75rem}details[open] summary{border-color:#d97706;background:#fffbeb;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.next-cta{flex-direction:column;text-align:center}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-python"></i> Quant Trading in Python — Part 3 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Factors & Signals — Finding Your Edge</h1>
+  <p class="hero-subtitle">A strategy is only as good as its signals. We'll build a complete signal library covering momentum, mean reversion, volume, and volatility — then combine them into multi-factor models that capture different market regimes.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-bolt"></i> Momentum</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-wave-square"></i> Mean Reversion</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-bar"></i> Volume</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-tornado"></i> Volatility</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/quant-trading-python/part2-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-left"></i></a><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step current" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">3/6</span><a href="/series/quant-trading-python/part4-risk/" class="series-arrow" title="Risk"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#momentum" class="fnav-item" data-section="momentum"><i class="fas fa-bookmark"></i><span>Momentum Signals</span></a><a href="#reversion" class="fnav-item" data-section="reversion"><i class="fas fa-bookmark"></i><span>Mean Reversion</span></a><a href="#volume" class="fnav-item" data-section="volume"><i class="fas fa-bookmark"></i><span>Volume Signals</span></a><a href="#volatility" class="fnav-item" data-section="volatility"><i class="fas fa-bookmark"></i><span>Volatility</span></a><a href="#multifactor" class="fnav-item" data-section="multifactor"><i class="fas fa-bookmark"></i><span>Multi-Factor</span></a><a href="#features" class="fnav-item" data-section="features"><i class="fas fa-bookmark"></i><span>Feature Engineering</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'})}if(isOpen)toggle()})});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent}}})},{rootMargin:'-20% 0px -60% 0px'});sections.forEach(function(s){observer.observe(s.el)})})();</script>
+
+<!-- ==================== SECTION 1: MOMENTUM ==================== -->
+<div class="section-divider"><i class="fa-solid fa-bolt"></i> Momentum Signals</div>
+
+<div id="momentum" class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#d97706;"></i> Momentum Signals</h2>
+  <p>Momentum is the most persistent anomaly in financial markets. Stocks that have been going up tend to keep going up (over 3-12 month horizons). Here are the core momentum signals.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> signals/momentum.py</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+<span class="kw">import</span> <span class="imp">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+<span class="kw">import</span> <span class="imp">talib</span>
+
+<span class="kw">class</span> <span class="fn">MomentumSignals</span>:
+    <span class="str">"""Momentum-based signal generators."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">roc</span>(prices: pd.Series, period: int = <span class="num">20</span>) -> pd.Series:
+        <span class="str">"""Rate of Change — simplest momentum measure."""</span>
+        <span class="kw">return</span> prices.<span class="fn">pct_change</span>(period)
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">rsi</span>(prices: pd.Series, period: int = <span class="num">14</span>) -> pd.Series:
+        <span class="str">"""RSI using TA-Lib (exponential smoothing)."""</span>
+        <span class="kw">return</span> pd.<span class="fn">Series</span>(
+            talib.<span class="fn">RSI</span>(prices.values, timeperiod=period),
+            index=prices.index
+        )
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">macd</span>(prices: pd.Series,
+              fast: int = <span class="num">12</span>, slow: int = <span class="num">26</span>,
+              signal: int = <span class="num">9</span>) -> pd.DataFrame:
+        <span class="str">"""MACD — trend direction and strength."""</span>
+        <span class="var">macd_line</span>, <span class="var">signal_line</span>, <span class="var">histogram</span> = talib.<span class="fn">MACD</span>(
+            prices.values, fastperiod=fast,
+            slowperiod=slow, signalperiod=signal
+        )
+        <span class="kw">return</span> pd.<span class="fn">DataFrame</span>({
+            <span class="str">'macd'</span>: macd_line,
+            <span class="str">'signal'</span>: signal_line,
+            <span class="str">'histogram'</span>: histogram
+        }, index=prices.index)
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">adx</span>(high: pd.Series, low: pd.Series,
+             close: pd.Series, period: int = <span class="num">14</span>) -> pd.Series:
+        <span class="str">"""ADX — trend strength (not direction).
+        ADX > 25 = trending, ADX < 20 = ranging."""</span>
+        <span class="kw">return</span> pd.<span class="fn">Series</span>(
+            talib.<span class="fn">ADX</span>(high.values, low.values, close.values, period),
+            index=close.index
+        )
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">dual_momentum</span>(prices: pd.Series,
+                       benchmark: pd.Series,
+                       lookback: int = <span class="num">252</span>) -> pd.Series:
+        <span class="str">"""Dual momentum: long only if both absolute
+        and relative momentum are positive."""</span>
+        <span class="var">abs_mom</span> = prices.<span class="fn">pct_change</span>(lookback)  <span class="cm"># Absolute</span>
+        <span class="var">rel_mom</span> = abs_mom - benchmark.<span class="fn">pct_change</span>(lookback)  <span class="cm"># Relative</span>
+
+        <span class="var">signal</span> = pd.<span class="fn">Series</span>(<span class="num">0</span>, index=prices.index)
+        signal[(abs_mom > <span class="num">0</span>) & (rel_mom > <span class="num">0</span>)] = <span class="num">1</span>
+
+        <span class="kw">return</span> signal</pre></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Momentum Time Horizons</h4>
+    <p><strong>Short-term (1-4 weeks)</strong>: mean-reverting. Stocks that dropped last week tend to bounce. <strong>Medium-term (3-12 months)</strong>: momentum. Winners keep winning. <strong>Long-term (3-5 years)</strong>: mean-reverting again. This is the "momentum anomaly" — one of the most robust findings in academic finance, documented since Jegadeesh & Titman (1993).</p>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Signal</th><th>Type</th><th>Best Market</th><th>Typical Lookback</th><th>Strength</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ROC</strong></td><td>Rate of Change</td><td>Trending</td><td>20-60 days</td><td>Simple, versatile</td></tr>
+      <tr><td><strong>RSI</strong></td><td>Oscillator</td><td>Range-bound</td><td>14 days</td><td>Overbought/oversold</td></tr>
+      <tr><td><strong>MACD</strong></td><td>Trend + momentum</td><td>Trending</td><td>12/26/9</td><td>Direction + strength</td></tr>
+      <tr><td><strong>ADX</strong></td><td>Trend strength</td><td>Both</td><td>14 days</td><td>Filter (trend vs range)</td></tr>
+      <tr><td><strong>Dual Momentum</strong></td><td>Cross-asset</td><td>Trending</td><td>12 months</td><td>Regime filter</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== SECTION 2: MEAN REVERSION ==================== -->
+<div class="section-divider"><i class="fa-solid fa-wave-square"></i> Mean Reversion Signals</div>
+
+<div id="reversion" class="content-card">
+  <h2><i class="fa-solid fa-wave-square" style="color:#2563eb;"></i> Mean Reversion Signals</h2>
+  <p>If momentum says "the trend is your friend," mean reversion says "rubber bands snap back." These signals identify when price has deviated too far from its norm.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> signals/reversion.py</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">ReversionSignals</span>:
+    <span class="str">"""Mean reversion signal generators."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">bollinger_bands</span>(prices: pd.Series,
+                         period: int = <span class="num">20</span>,
+                         num_std: float = <span class="num">2.0</span>) -> pd.DataFrame:
+        <span class="str">"""Bollinger Bands — price relative to volatility envelope."""</span>
+        <span class="var">sma</span> = prices.<span class="fn">rolling</span>(period).<span class="fn">mean</span>()
+        <span class="var">std</span> = prices.<span class="fn">rolling</span>(period).<span class="fn">std</span>()
+        <span class="var">upper</span> = sma + num_std * std
+        <span class="var">lower</span> = sma - num_std * std
+
+        <span class="cm"># %B: where price sits within the bands (0=lower, 1=upper)</span>
+        <span class="var">pct_b</span> = (prices - lower) / (upper - lower)
+
+        <span class="kw">return</span> pd.<span class="fn">DataFrame</span>({
+            <span class="str">'upper'</span>: upper, <span class="str">'middle'</span>: sma, <span class="str">'lower'</span>: lower,
+            <span class="str">'pct_b'</span>: pct_b, <span class="str">'bandwidth'</span>: (upper - lower) / sma
+        }, index=prices.index)
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">zscore</span>(prices: pd.Series, period: int = <span class="num">20</span>) -> pd.Series:
+        <span class="str">"""Z-score: how many std devs from the rolling mean.
+        |z| > 2 = extreme. Buy at z < -2, sell at z > +2."""</span>
+        <span class="var">mean</span> = prices.<span class="fn">rolling</span>(period).<span class="fn">mean</span>()
+        <span class="var">std</span> = prices.<span class="fn">rolling</span>(period).<span class="fn">std</span>()
+        <span class="kw">return</span> (prices - mean) / std
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">pairs_spread</span>(price_a: pd.Series,
+                      price_b: pd.Series,
+                      lookback: int = <span class="num">60</span>) -> pd.DataFrame:
+        <span class="str">"""Pairs trading spread with z-score.
+        Trade the spread between two correlated assets."""</span>
+        <span class="cm"># Log price ratio (hedge ratio = 1 for simplicity)</span>
+        <span class="var">spread</span> = np.<span class="fn">log</span>(price_a / price_b)
+        <span class="var">z</span> = (spread - spread.<span class="fn">rolling</span>(lookback).<span class="fn">mean</span>()) / \
+            spread.<span class="fn">rolling</span>(lookback).<span class="fn">std</span>()
+
+        <span class="cm"># Signal: buy spread when z < -2, sell when z > +2</span>
+        <span class="var">signal</span> = pd.<span class="fn">Series</span>(<span class="num">0</span>, index=price_a.index)
+        signal[z < -<span class="num">2</span>] = <span class="num">1</span>    <span class="cm"># Long A, short B</span>
+        signal[z > <span class="num">2</span>] = -<span class="num">1</span>    <span class="cm"># Short A, long B</span>
+
+        <span class="kw">return</span> pd.<span class="fn">DataFrame</span>({
+            <span class="str">'spread'</span>: spread, <span class="str">'zscore'</span>: z, <span class="str">'signal'</span>: signal
+        }, index=price_a.index)</pre></div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Z-Score</div>
+    Z = (<span class="formula-highlight">Price</span> - <span class="formula-highlight">Mean</span>) / <span class="formula-highlight">StdDev</span> — buy when Z &lt; -2, sell when Z &gt; +2
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> When to Use Mean Reversion vs Momentum</h4>
+    <p>Use <strong>ADX</strong> as a regime filter: when ADX &gt; 25, the market is trending — use momentum signals. When ADX &lt; 20, the market is range-bound — use mean reversion. This simple regime switch can dramatically improve performance. We'll formalize this in the multi-factor section below.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3: VOLUME ==================== -->
+<div class="section-divider"><i class="fa-solid fa-chart-bar"></i> Volume Signals</div>
+
+<div id="volume" class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#10b981;"></i> Volume Signals</h2>
+  <p>Price tells you WHAT happened. Volume tells you WHO was behind it. A breakout on 3x average volume is real. A breakout on thin volume is suspect.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> signals/volume.py</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">VolumeSignals</span>:
+    <span class="str">"""Volume-based signal generators."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">obv</span>(close: pd.Series, volume: pd.Series) -> pd.Series:
+        <span class="str">"""On-Balance Volume — cumulative volume flow.
+        Rising OBV with flat price = accumulation (bullish).
+        Falling OBV with flat price = distribution (bearish)."""</span>
+        <span class="var">direction</span> = np.<span class="fn">sign</span>(close.<span class="fn">diff</span>())
+        <span class="kw">return</span> (direction * volume).<span class="fn">cumsum</span>()
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">vwap_deviation</span>(close: pd.Series,
+                        volume: pd.Series,
+                        period: int = <span class="num">20</span>) -> pd.Series:
+        <span class="str">"""Price deviation from rolling VWAP.
+        Positive = above VWAP (bullish), negative = below (bearish)."""</span>
+        <span class="var">typical_price</span> = close  <span class="cm"># Simplified; ideally (H+L+C)/3</span>
+        <span class="var">vwap</span> = (typical_price * volume).<span class="fn">rolling</span>(period).<span class="fn">sum</span>() / \
+               volume.<span class="fn">rolling</span>(period).<span class="fn">sum</span>()
+        <span class="kw">return</span> (close - vwap) / vwap
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">volume_spike</span>(volume: pd.Series,
+                      period: int = <span class="num">20</span>,
+                      threshold: float = <span class="num">2.0</span>) -> pd.Series:
+        <span class="str">"""Detect volume spikes (> threshold * average).
+        Volume spikes often precede significant moves."""</span>
+        <span class="var">avg_vol</span> = volume.<span class="fn">rolling</span>(period).<span class="fn">mean</span>()
+        <span class="var">vol_ratio</span> = volume / avg_vol
+        <span class="kw">return</span> vol_ratio
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">mfi</span>(high: pd.Series, low: pd.Series,
+             close: pd.Series, volume: pd.Series,
+             period: int = <span class="num">14</span>) -> pd.Series:
+        <span class="str">"""Money Flow Index — volume-weighted RSI.
+        MFI < 20 = oversold, MFI > 80 = overbought."""</span>
+        <span class="kw">return</span> pd.<span class="fn">Series</span>(
+            talib.<span class="fn">MFI</span>(high.values, low.values,
+                      close.values, volume.values, period),
+            index=close.index
+        )</pre></div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 4: VOLATILITY ==================== -->
+<div class="section-divider"><i class="fa-solid fa-tornado"></i> Volatility Signals</div>
+
+<div id="volatility" class="content-card">
+  <h2><i class="fa-solid fa-tornado" style="color:#9333ea;"></i> Volatility Signals</h2>
+  <p>Volatility is mean-reverting: high-volatility periods compress, low-volatility periods explode. Understanding volatility regimes is key to position sizing (Part 4) and strategy selection.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> signals/volatility.py</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">VolatilitySignals</span>:
+    <span class="str">"""Volatility-based signal generators."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">atr</span>(high: pd.Series, low: pd.Series,
+             close: pd.Series, period: int = <span class="num">14</span>) -> pd.Series:
+        <span class="str">"""Average True Range — measures volatility in price units.
+        Used for stop losses and position sizing."""</span>
+        <span class="kw">return</span> pd.<span class="fn">Series</span>(
+            talib.<span class="fn">ATR</span>(high.values, low.values, close.values, period),
+            index=close.index
+        )
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">bollinger_squeeze</span>(prices: pd.Series,
+                           bb_period: int = <span class="num">20</span>,
+                           kc_period: int = <span class="num">20</span>,
+                           kc_mult: float = <span class="num">1.5</span>) -> pd.Series:
+        <span class="str">"""Bollinger Squeeze — BB inside Keltner Channel.
+        Squeeze = low volatility, breakout imminent.
+        1 = squeeze on, 0 = squeeze off."""</span>
+        <span class="cm"># Bollinger Bands</span>
+        <span class="var">bb_mid</span> = prices.<span class="fn">rolling</span>(bb_period).<span class="fn">mean</span>()
+        <span class="var">bb_std</span> = prices.<span class="fn">rolling</span>(bb_period).<span class="fn">std</span>()
+        <span class="var">bb_upper</span> = bb_mid + <span class="num">2</span> * bb_std
+        <span class="var">bb_lower</span> = bb_mid - <span class="num">2</span> * bb_std
+
+        <span class="cm"># Keltner Channel (simplified with rolling range)</span>
+        <span class="var">kc_mid</span> = prices.<span class="fn">rolling</span>(kc_period).<span class="fn">mean</span>()
+        <span class="var">kc_range</span> = prices.<span class="fn">rolling</span>(kc_period).<span class="fn">apply</span>(
+            <span class="kw">lambda</span> x: np.<span class="fn">mean</span>(np.<span class="fn">abs</span>(np.<span class="fn">diff</span>(x)))
+        ) * kc_mult
+        <span class="var">kc_upper</span> = kc_mid + kc_range
+        <span class="var">kc_lower</span> = kc_mid - kc_range
+
+        <span class="cm"># Squeeze: BB inside KC</span>
+        <span class="var">squeeze</span> = ((bb_lower > kc_lower) & (bb_upper < kc_upper)).<span class="fn">astype</span>(int)
+        <span class="kw">return</span> squeeze
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">realized_vs_implied</span>(close: pd.Series,
+                              vix: pd.Series,
+                              period: int = <span class="num">20</span>) -> pd.Series:
+        <span class="str">"""Volatility Risk Premium = Implied Vol - Realized Vol.
+        Positive = options overpriced (sell vol).
+        Negative = options underpriced (buy vol)."""</span>
+        <span class="var">realized</span> = close.<span class="fn">pct_change</span>().<span class="fn">rolling</span>(period).<span class="fn">std</span>() * np.<span class="fn">sqrt</span>(<span class="num">252</span>) * <span class="num">100</span>
+        <span class="kw">return</span> vix - realized</pre></div>
+  </div>
+
+  <!-- ECharts: Signal Type Comparison Radar -->
+  <div id="signalRadar" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 5: MULTI-FACTOR ==================== -->
+<div class="section-divider"><i class="fa-solid fa-layer-group"></i> Multi-Factor Models</div>
+
+<div id="multifactor" class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#d97706;"></i> Combining Signals: Multi-Factor Models</h2>
+  <p>Individual signals are noisy. Combining them with proper weighting creates a more robust composite signal. The key insight: signals from different families (momentum, volume, volatility) are less correlated, so their combination is more powerful than using three momentum signals.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> signals/composite.py — Multi-Factor Score</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">CompositeSignal</span>:
+    <span class="str">"""Combine multiple signals into a single score."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, weights: dict = <span class="kw">None</span>):
+        self.weights = weights <span class="kw">or</span> {
+            <span class="str">'momentum'</span>: <span class="num">0.30</span>,
+            <span class="str">'reversion'</span>: <span class="num">0.25</span>,
+            <span class="str">'volume'</span>: <span class="num">0.20</span>,
+            <span class="str">'volatility'</span>: <span class="num">0.15</span>,
+            <span class="str">'trend'</span>: <span class="num">0.10</span>,
+        }
+
+    <span class="kw">def</span> <span class="fn">normalize</span>(self, signal: pd.Series) -> pd.Series:
+        <span class="str">"""Normalize signal to [-1, +1] range using z-score."""</span>
+        <span class="var">z</span> = (signal - signal.<span class="fn">rolling</span>(<span class="num">252</span>).<span class="fn">mean</span>()) / \
+            signal.<span class="fn">rolling</span>(<span class="num">252</span>).<span class="fn">std</span>()
+        <span class="kw">return</span> z.<span class="fn">clip</span>(-<span class="num">3</span>, <span class="num">3</span>) / <span class="num">3</span>  <span class="cm"># Scale to [-1, 1]</span>
+
+    <span class="kw">def</span> <span class="fn">score</span>(self, data: pd.DataFrame) -> pd.Series:
+        <span class="str">"""
+        Compute composite score from OHLCV data.
+
+        Returns: pd.Series of scores in [-1, +1]
+                 > +0.3 = bullish, < -0.3 = bearish
+        """</span>
+        <span class="var">close</span> = data[<span class="str">'Close'</span>]
+        <span class="var">high</span> = data[<span class="str">'High'</span>]
+        <span class="var">low</span> = data[<span class="str">'Low'</span>]
+        <span class="var">volume</span> = data[<span class="str">'Volume'</span>]
+
+        <span class="cm"># Compute individual signals</span>
+        <span class="var">mom</span> = MomentumSignals
+        <span class="var">rev</span> = ReversionSignals
+        <span class="var">vol</span> = VolumeSignals
+        <span class="var">vlt</span> = VolatilitySignals
+
+        <span class="cm"># Momentum: RSI normalized</span>
+        <span class="var">rsi</span> = mom.<span class="fn">rsi</span>(close) / <span class="num">100</span> * <span class="num">2</span> - <span class="num">1</span>  <span class="cm"># [0,100] -> [-1,1]</span>
+
+        <span class="cm"># Reversion: Bollinger %B</span>
+        <span class="var">bb</span> = rev.<span class="fn">bollinger_bands</span>(close)
+        <span class="var">bb_sig</span> = -(bb[<span class="str">'pct_b'</span>] * <span class="num">2</span> - <span class="num">1</span>)  <span class="cm"># Inverted: low %B = buy</span>
+
+        <span class="cm"># Volume: VWAP deviation</span>
+        <span class="var">vwap</span> = vol.<span class="fn">vwap_deviation</span>(close, volume)
+        <span class="var">vwap_sig</span> = self.<span class="fn">normalize</span>(vwap)
+
+        <span class="cm"># Volatility: squeeze as filter (1 = ready to move)</span>
+        <span class="var">squeeze</span> = vlt.<span class="fn">bollinger_squeeze</span>(close)
+
+        <span class="cm"># Trend: ADX-filtered MACD</span>
+        <span class="var">macd_data</span> = mom.<span class="fn">macd</span>(close)
+        <span class="var">adx</span> = mom.<span class="fn">adx</span>(high, low, close)
+        <span class="var">trend_sig</span> = self.<span class="fn">normalize</span>(macd_data[<span class="str">'histogram'</span>])
+        trend_sig[adx < <span class="num">20</span>] = <span class="num">0</span>  <span class="cm"># Kill trend signal in ranging market</span>
+
+        <span class="cm"># Weighted composite</span>
+        <span class="var">composite</span> = (
+            self.weights[<span class="str">'momentum'</span>] * rsi +
+            self.weights[<span class="str">'reversion'</span>] * bb_sig +
+            self.weights[<span class="str">'volume'</span>] * vwap_sig +
+            self.weights[<span class="str">'volatility'</span>] * squeeze * trend_sig.<span class="fn">abs</span>() +
+            self.weights[<span class="str">'trend'</span>] * trend_sig
+        )
+
+        <span class="kw">return</span> composite.<span class="fn">clip</span>(-<span class="num">1</span>, <span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">generate_signals</span>(self, data: pd.DataFrame,
+                          threshold: float = <span class="num">0.3</span>) -> pd.Series:
+        <span class="str">"""Convert composite score to trading signals."""</span>
+        <span class="var">score</span> = self.<span class="fn">score</span>(data)
+        <span class="var">signals</span> = pd.<span class="fn">Series</span>(<span class="num">0</span>, index=data.index)
+        signals[score > threshold] = <span class="num">1</span>    <span class="cm"># Long</span>
+        signals[score < -threshold] = -<span class="num">1</span>  <span class="cm"># Short</span>
+        <span class="kw">return</span> signals</pre></div>
+  </div>
+
+  <h3>Signal Quality Metrics</h3>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Measuring Signal Quality</div>
+    <div class="code-content"><pre><span class="kw">def</span> <span class="fn">signal_quality</span>(signal: pd.Series,
+                    forward_returns: pd.Series) -> dict:
+    <span class="str">"""
+    Measure how predictive a signal is.
+
+    Args:
+        signal: signal values (continuous, e.g., z-score)
+        forward_returns: next-day returns
+    """</span>
+    <span class="cm"># Information Coefficient: rank correlation between</span>
+    <span class="cm"># signal and forward returns</span>
+    <span class="var">ic</span> = signal.<span class="fn">corr</span>(forward_returns, method=<span class="str">'spearman'</span>)
+
+    <span class="cm"># Hit rate: % of times signal direction matches return direction</span>
+    <span class="var">hits</span> = ((signal > <span class="num">0</span>) == (forward_returns > <span class="num">0</span>)).<span class="fn">mean</span>()
+
+    <span class="cm"># Expectancy: average return when signal is positive</span>
+    <span class="var">long_ret</span> = forward_returns[signal > <span class="num">0</span>].<span class="fn">mean</span>()
+    <span class="var">short_ret</span> = forward_returns[signal < <span class="num">0</span>].<span class="fn">mean</span>()
+
+    <span class="cm"># Decay: IC over different forward horizons</span>
+    <span class="var">decay</span> = {}
+    <span class="kw">for</span> days <span class="kw">in</span> [<span class="num">1</span>, <span class="num">5</span>, <span class="num">10</span>, <span class="num">20</span>]:
+        <span class="var">fwd</span> = forward_returns.<span class="fn">rolling</span>(days).<span class="fn">sum</span>().<span class="fn">shift</span>(-days)
+        decay[<span class="str">f'{days}d'</span>] = signal.<span class="fn">corr</span>(fwd, method=<span class="str">'spearman'</span>)
+
+    <span class="kw">return</span> {
+        <span class="str">'ic'</span>: ic,
+        <span class="str">'hit_rate'</span>: hits,
+        <span class="str">'long_return'</span>: long_ret,
+        <span class="str">'short_return'</span>: short_ret,
+        <span class="str">'long_short_spread'</span>: long_ret - short_ret,
+        <span class="str">'ic_decay'</span>: decay,
+    }</pre></div>
+  </div>
+
+  <!-- ECharts: Factor Correlation Heatmap -->
+  <div id="correlationChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 6: FEATURE ENGINEERING ==================== -->
+<div class="section-divider"><i class="fa-solid fa-cogs"></i> Feature Engineering</div>
+
+<div id="features" class="content-card">
+  <h2><i class="fa-solid fa-cogs" style="color:#d97706;"></i> Feature Engineering for ML</h2>
+  <p>When you move to ML models (Part 6), your signals become features. Good features capture different aspects of market behavior and have low mutual correlation.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> ml/features.py — Feature Generator</div>
+    <div class="code-content"><pre><span class="kw">def</span> <span class="fn">build_features</span>(data: pd.DataFrame,
+                    lookbacks: list = [<span class="num">5</span>, <span class="num">10</span>, <span class="num">20</span>, <span class="num">60</span>]) -> pd.DataFrame:
+    <span class="str">"""
+    Generate ML features from OHLCV data.
+    Returns DataFrame with ~40 features per row.
+    """</span>
+    <span class="var">close</span> = data[<span class="str">'Close'</span>]
+    <span class="var">volume</span> = data[<span class="str">'Volume'</span>]
+    <span class="var">features</span> = pd.<span class="fn">DataFrame</span>(index=data.index)
+
+    <span class="kw">for</span> lb <span class="kw">in</span> lookbacks:
+        <span class="cm"># Price-based</span>
+        features[<span class="str">f'ret_{lb}d'</span>] = close.<span class="fn">pct_change</span>(lb)
+        features[<span class="str">f'vol_{lb}d'</span>] = close.<span class="fn">pct_change</span>().<span class="fn">rolling</span>(lb).<span class="fn">std</span>()
+        features[<span class="str">f'zscore_{lb}d'</span>] = (close - close.<span class="fn">rolling</span>(lb).<span class="fn">mean</span>()) / \
+                                      close.<span class="fn">rolling</span>(lb).<span class="fn">std</span>()
+        features[<span class="str">f'high_dist_{lb}d'</span>] = close / close.<span class="fn">rolling</span>(lb).<span class="fn">max</span>() - <span class="num">1</span>
+        features[<span class="str">f'low_dist_{lb}d'</span>] = close / close.<span class="fn">rolling</span>(lb).<span class="fn">min</span>() - <span class="num">1</span>
+
+        <span class="cm"># Volume-based</span>
+        features[<span class="str">f'vol_ratio_{lb}d'</span>] = volume / volume.<span class="fn">rolling</span>(lb).<span class="fn">mean</span>()
+
+    <span class="cm"># Technical indicators</span>
+    features[<span class="str">'rsi_14'</span>] = MomentumSignals.<span class="fn">rsi</span>(close, <span class="num">14</span>) / <span class="num">100</span>
+    features[<span class="str">'macd_hist'</span>] = MomentumSignals.<span class="fn">macd</span>(close)[<span class="str">'histogram'</span>]
+
+    <span class="cm"># Cross-sectional rank (useful for stock selection)</span>
+    <span class="cm"># features['rank_ret_20'] = close.pct_change(20).rank(pct=True)</span>
+
+    <span class="cm"># Day of week, month (calendar effects)</span>
+    features[<span class="str">'dow'</span>] = data.index.dayofweek / <span class="num">4</span>  <span class="cm"># [0, 1]</span>
+    features[<span class="str">'month'</span>] = data.index.month / <span class="num">12</span>  <span class="cm"># [0, 1]</span>
+
+    <span class="kw">return</span> features.<span class="fn">dropna</span>()</pre></div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Feature Engineering Pitfalls</h4>
+    <p><strong>Never use forward-looking features</strong>: all features must be computed from past data only. <strong>Normalize everything</strong>: ML models struggle with features on different scales (price vs volume vs RSI). <strong>Remove highly correlated features</strong>: if two features have &gt;0.9 correlation, drop one. <strong>Label encoding</strong>: for classification, use next-day return sign (+1/-1), not the return itself.</p>
+  </div>
+
+  <details>
+    <summary>How many features is too many?</summary>
+    <div class="quiz-answer">
+      For 5 years of daily data (~1250 samples), you should have no more than ~50 features. The rule of thumb is at least 20-30 samples per feature to avoid overfitting. With 1250 samples and 40 features, that's about 31 samples per feature — at the edge but workable with proper regularization. For smaller datasets, be more aggressive about feature selection (Part 6 covers this in detail).
+    </div>
+  </details>
+</div>
+
+<!-- ==================== TAKEAWAY ==================== -->
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-check-circle"></i> Part 3 Checklist</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Built momentum signals: ROC, RSI, MACD, ADX, dual momentum</li>
+    <li><i class="fa-solid fa-check"></i> Built mean reversion signals: Bollinger Bands, z-score, pairs spread</li>
+    <li><i class="fa-solid fa-check"></i> Built volume signals: OBV, VWAP deviation, volume spike, MFI</li>
+    <li><i class="fa-solid fa-check"></i> Built volatility signals: ATR, Bollinger squeeze, realized vs implied</li>
+    <li><i class="fa-solid fa-check"></i> Combined signals into a weighted composite multi-factor score</li>
+    <li><i class="fa-solid fa-check"></i> Measured signal quality: IC, hit rate, expectancy, decay</li>
+    <li><i class="fa-solid fa-check"></i> Built a feature engineering pipeline for ML (Part 6)</li>
+  </ul>
+</div>
+
+<a href="/series/quant-trading-python/part4-risk/" class="next-cta">
+  <div><div class="next-label">Next: Part 4 of 6</div><div class="next-title">Risk Management — The Only Edge That Lasts</div></div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/quant-trading-python/part2-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-left"></i></a><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step current" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">3/6</span><a href="/series/quant-trading-python/part4-risk/" class="series-arrow" title="Risk"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Données via MarketWatch Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Signal Radar
+var sigRadar = echarts.init(document.getElementById('signalRadar'));
+sigRadar.setOption({
+  title:{text:'Signal Family Comparison',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{},
+  legend:{bottom:0,data:['Momentum','Mean Reversion','Volume','Volatility']},
+  radar:{
+    indicator:[{name:'Hit Rate',max:70},{name:'Profit Factor',max:3},{name:'IC',max:0.15},{name:'Stability',max:10},{name:'Decay Speed',max:10},{name:'Capacity',max:10}],
+    shape:'polygon',splitArea:{areaStyle:{color:['#fffbeb','#fef3c7','#fde68a','#fcd34d']}}
+  },
+  series:[{type:'radar',data:[
+    {value:[52,1.6,0.08,6,7,9],name:'Momentum',lineStyle:{color:'#d97706'},areaStyle:{color:'rgba(217,119,6,0.1)'}},
+    {value:[58,1.4,0.06,5,4,7],name:'Mean Reversion',lineStyle:{color:'#2563eb'},areaStyle:{color:'rgba(37,99,235,0.1)'}},
+    {value:[48,1.3,0.04,4,5,8],name:'Volume',lineStyle:{color:'#10b981'},areaStyle:{color:'rgba(16,185,129,0.1)'}},
+    {value:[45,1.8,0.05,7,8,6],name:'Volatility',lineStyle:{color:'#9333ea'},areaStyle:{color:'rgba(147,51,234,0.1)'}}
+  ]}]
+});
+
+// Factor Correlation Heatmap
+var corrChart = echarts.init(document.getElementById('correlationChart'));
+var factors = ['RSI','MACD','ROC','BB %B','Z-Score','OBV','VWAP Dev','Vol Spike','ATR','Squeeze'];
+var corrData = [];
+var vals = [
+  [1,.65,.72,-.45,-.48,.15,.20,.08,.10,.12],
+  [.65,1,.58,-.30,-.35,.22,.25,.10,.08,.15],
+  [.72,.58,1,-.40,-.42,.18,.22,.05,.12,.10],
+  [-.45,-.30,-.40,1,.85,-.10,-.15,.02,-.05,-.08],
+  [-.48,-.35,-.42,.85,1,-.12,-.18,.04,-.08,-.10],
+  [.15,.22,.18,-.10,-.12,1,.55,.40,.05,.08],
+  [.20,.25,.22,-.15,-.18,.55,1,.35,.10,.12],
+  [.08,.10,.05,.02,.04,.40,.35,1,.25,.30],
+  [.10,.08,.12,-.05,-.08,.05,.10,.25,1,.65],
+  [.12,.15,.10,-.08,-.10,.08,.12,.30,.65,1]
+];
+for(var i=0;i<10;i++)for(var j=0;j<10;j++)corrData.push([i,j,vals[i][j]]);
+corrChart.setOption({
+  title:{text:'Factor Correlation Matrix',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{formatter:function(p){return factors[p.value[0]]+' vs '+factors[p.value[1]]+': '+p.value[2].toFixed(2)}},
+  grid:{left:100,right:40,top:50,bottom:40},
+  xAxis:{type:'category',data:factors,axisLabel:{fontSize:9,rotate:45}},
+  yAxis:{type:'category',data:factors,axisLabel:{fontSize:9}},
+  visualMap:{min:-1,max:1,calculable:true,orient:'horizontal',left:'center',bottom:0,inRange:{color:['#ef4444','#fbbf24','#f8fafc','#86efac','#10b981']}},
+  series:[{type:'heatmap',data:corrData,label:{show:true,fontSize:8,formatter:function(p){return p.value[2].toFixed(1)}},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}]
+});
+
+window.addEventListener('resize',function(){sigRadar.resize();corrChart.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

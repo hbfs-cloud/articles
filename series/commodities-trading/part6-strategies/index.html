@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="commodity,formation,trade-idea,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Commodity Trading Strategies — Seasonality, Spreads & Risk Management | Trading Commodities — Part 6/6 | Market Watch</title>
+ <meta name="description" content="Trading Commodities series — Part 6/6: Seasonal trading patterns, calendar spreads, trend-following, mean-reversion, correlation pairs, position sizing, and building a commodity portfolio.">
+ <meta property="og:title" content="Commodity Strategies — Seasonality, Spreads & Risk | Trading Commodities 6/6 | Market Watch">
+ <meta property="og:description" content="Advanced commodity trading strategies: seasonal heatmaps, spread trading, trend-following systems, risk management frameworks, and portfolio construction.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/commodities-trading/part6-strategies/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#b45309; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(180,83,9,0.1); color:#b45309; border:1px solid rgba(180,83,9,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #b45309; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#92400e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(180,83,9,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#b45309; margin-top:0.2rem; flex-shrink:0; }
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #b45309 0%, #92400e 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(180,83,9,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #b45309; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #b45309 0%, #92400e 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#f59e0b; }
+ details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+ details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#b45309; }
+ details[open] summary { border-bottom:1px solid #e2e8f0; background:#fffbeb; }
+ details .quiz-content { padding:1.5rem; }
+ details .quiz-content p { margin:0.5rem 0; }
+ @media (max-width:768px) { .hero-section { padding:2.5rem 1rem 5rem; } .hero-section h1 { font-size:1.8rem !important; } .next-cta { flex-direction:column; text-align:center; } .step-grid { grid-template-columns:1fr 1fr; } .formula-box { font-size:1rem; padding:1rem 1.25rem; } }
+ @media (max-width:480px) { .hero-section h1 { font-size:1.4rem !important; } .hero-section { padding:2rem 1rem 4rem; } .step-grid { grid-template-columns:1fr; } }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chess-knight"></i> Trading Commodities Series — Part 6 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Commodity Trading Strategies — Seasonality, Spreads & Risk Management</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">You understand the commodities. Now it is time to trade them. This final chapter covers the proven strategies: seasonal patterns, calendar spreads, trend-following, correlation pairs, position sizing, and how to build a diversified commodity portfolio.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-calendar-days"></i> Seasonality</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-left-right"></i> Spread Trading</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Risk Management</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-pie"></i> Portfolio Design</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/commodities-trading/part5-agriculture/" class="series-arrow" title="Agriculture"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Commodities</span><div class="series-steps"><a href="/series/commodities-trading/part1-introduction/" class="series-step" title="Introduction"><span class="series-num">1</span><span class="series-label">Introduction</span></a><a href="/series/commodities-trading/part2-crude-oil/" class="series-step" title="Crude Oil"><span class="series-num">2</span><span class="series-label">Crude Oil</span></a><a href="/series/commodities-trading/part3-natural-gas/" class="series-step" title="Natural Gas"><span class="series-num">3</span><span class="series-label">Natural Gas</span></a><a href="/series/commodities-trading/part4-precious-metals/" class="series-step" title="Precious Metals"><span class="series-num">4</span><span class="series-label">Precious Metals</span></a><a href="/series/commodities-trading/part5-agriculture/" class="series-step" title="Agriculture"><span class="series-num">5</span><span class="series-label">Agriculture</span></a><a href="/series/commodities-trading/part6-strategies/" class="series-step current" title="Strategies"><span class="series-num">6</span><span class="series-label">Strategies</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#seasonal" class="fnav-item" data-section="seasonal"><i class="fas fa-calendar-days"></i><span>Seasonal Patterns</span></a><a href="#spreads" class="fnav-item" data-section="spreads"><i class="fas fa-arrows-left-right"></i><span>Calendar Spreads</span></a><a href="#trend" class="fnav-item" data-section="trend"><i class="fas fa-arrow-trend-up"></i><span>Trend Following</span></a><a href="#meanrev" class="fnav-item" data-section="meanrev"><i class="fas fa-rotate"></i><span>Mean Reversion</span></a><a href="#pairs" class="fnav-item" data-section="pairs"><i class="fas fa-link"></i><span>Correlation Pairs</span></a><a href="#risk" class="fnav-item" data-section="risk"><i class="fas fa-shield-halved"></i><span>Risk Management</span></a><a href="#portfolio" class="fnav-item" data-section="portfolio"><i class="fas fa-chart-pie"></i><span>Portfolio Design</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- SEASONAL PATTERNS -->
+<div class="section-divider" id="seasonal"><i class="fa-solid fa-calendar-days" style="color:#b45309;"></i> Seasonal Trading Patterns</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-days" style="color:#b45309;"></i> The Most Reliable Seasonal Trades</h2>
+
+  <p>Commodity seasonality is more reliable than equity seasonality because it is grounded in <strong>physical reality</strong>: crops grow and are harvested at specific times, heating demand peaks in winter, driving demand peaks in summer. These patterns repeat year after year with measurable consistency.</p>
+
+  <!-- EChart: Seasonal P&L Heatmap -->
+  <div id="chart-heatmap" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <h3>Top 10 Seasonal Trades by Win Rate</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Trade</th>
+        <th>Entry</th>
+        <th>Exit</th>
+        <th>Win Rate (20Y)</th>
+        <th>Avg Return</th>
+        <th>Logic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Long Natgas</strong></td>
+        <td>Apr-May</td>
+        <td>Oct-Nov</td>
+        <td>65%</td>
+        <td>+12%</td>
+        <td>Buy shoulder bottom, sell before winter uncertainty</td>
+      </tr>
+      <tr>
+        <td><strong>Long Gold</strong></td>
+        <td>Jul-Aug</td>
+        <td>Feb-Mar</td>
+        <td>70%</td>
+        <td>+8%</td>
+        <td>Indian wedding season + Chinese New Year buying</td>
+      </tr>
+      <tr>
+        <td><strong>Long Gasoline</strong></td>
+        <td>Feb</td>
+        <td>May</td>
+        <td>75%</td>
+        <td>+10%</td>
+        <td>Refineries ramp up for summer driving season</td>
+      </tr>
+      <tr>
+        <td><strong>Short Corn</strong></td>
+        <td>Jul (after pollination)</td>
+        <td>Oct</td>
+        <td>60%</td>
+        <td>+6%</td>
+        <td>Harvest pressure — supply floods market</td>
+      </tr>
+      <tr>
+        <td><strong>Long Soybeans</strong></td>
+        <td>Oct-Nov</td>
+        <td>Mar-Apr</td>
+        <td>55%</td>
+        <td>+8%</td>
+        <td>South American weather risk premium build</td>
+      </tr>
+      <tr>
+        <td><strong>Long Heating Oil</strong></td>
+        <td>Jul</td>
+        <td>Nov</td>
+        <td>65%</td>
+        <td>+9%</td>
+        <td>Pre-winter inventory build + cold weather risk</td>
+      </tr>
+      <tr>
+        <td><strong>Long Copper</strong></td>
+        <td>Dec-Jan</td>
+        <td>Apr-May</td>
+        <td>60%</td>
+        <td>+7%</td>
+        <td>Chinese restocking after New Year</td>
+      </tr>
+      <tr>
+        <td><strong>Long Sugar</strong></td>
+        <td>May</td>
+        <td>Sep</td>
+        <td>58%</td>
+        <td>+8%</td>
+        <td>Brazil crushing season uncertainty</td>
+      </tr>
+      <tr>
+        <td><strong>Short Natgas</strong></td>
+        <td>Nov</td>
+        <td>Apr</td>
+        <td>55%</td>
+        <td>+7%</td>
+        <td>Contango roll yield + warm winter probability</td>
+      </tr>
+      <tr>
+        <td><strong>Long Silver</strong></td>
+        <td>Jun-Jul</td>
+        <td>Feb-Mar</td>
+        <td>60%</td>
+        <td>+11%</td>
+        <td>Follows gold seasonal + industrial demand</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#b45309;"></i> How to Use Seasonal Data</h4>
+    <p>Seasonal patterns are not standalone trading signals — they are <strong>context</strong> that increases your edge when combined with other analysis. The workflow:</p>
+    <ol>
+      <li>Check the seasonal pattern: is this a historically favorable time to be long or short this commodity?</li>
+      <li>Confirm with fundamentals: do supply/demand conditions support the seasonal trade this year?</li>
+      <li>Confirm with technicals: is the price action setting up in the direction of the seasonal pattern?</li>
+      <li>Size the trade: seasonal trades have ~60-70% win rates, not 100%. Size for the possibility of being in the 30-40% that fails.</li>
+    </ol>
+    <p>A seasonal trade with fundamental confirmation has a significantly higher win rate than either alone. The combination is where the edge lives.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Seasonal Trading</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> It is February. The gasoline seasonal trade (long Feb, sell May) has a 75% win rate and averages +10%. Crude oil inventories are below average, and refinery maintenance is about to end. Should you take the trade?</p>
+      <p><strong>Answer:</strong> <strong>Yes, with high conviction.</strong> The seasonal pattern is strong (75% win rate). The fundamental confirmation is excellent: below-average inventories mean less supply buffer, and refineries coming back online from maintenance will increase gasoline production and crude demand. The trade has seasonal + fundamental alignment. Enter long gasoline futures or RBOB gasoline ETF. Set stop at 8% below entry (expected return 10%, stop 8% = R:R ~1.25:1). This is a classic seasonal trade with fundamental tailwinds.</p>
+    </div>
+  </details>
+</div>
+
+<!-- CALENDAR SPREADS -->
+<div class="section-divider" id="spreads"><i class="fa-solid fa-arrows-left-right" style="color:#2563eb;"></i> Calendar Spreads</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-left-right" style="color:#2563eb;"></i> Spread Trading — The Professional's Edge</h2>
+
+  <p>A calendar spread (or time spread) involves simultaneously buying one delivery month and selling another delivery month of the same commodity. This is how professional commodity traders make money — not by guessing the direction of outright prices, but by trading the <strong>relative value</strong> between delivery months.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#b45309;"></i> Why Spreads Are Superior</h4>
+    <p>Spread trading has several advantages over outright positions:</p>
+    <ul>
+      <li><strong>Lower margin:</strong> Exchanges recognize that spreads are less risky than outright positions and require only 20-30% of outright margin. This means more capital efficiency.</li>
+      <li><strong>Lower volatility:</strong> The spread between two delivery months of the same commodity moves much less than the outright price. This reduces the impact of unexpected events.</li>
+      <li><strong>Fundamental purity:</strong> A spread trade eliminates macro noise (dollar moves, equity correlation, risk sentiment) and isolates the supply/demand signal specific to that commodity's term structure.</li>
+      <li><strong>Seasonal reliability:</strong> Spread seasonal patterns are more reliable than outright seasonal patterns because they are driven by physical delivery economics (storage costs, transportation).</li>
+    </ul>
+  </div>
+
+  <!-- EChart: Spread Trade Visualization -->
+  <div id="chart-spread" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3>Common Spread Trades</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Spread</th>
+        <th>Structure</th>
+        <th>When to Trade</th>
+        <th>Expected Move</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Bull Spread (Oil)</strong></td>
+        <td>Long near-month, Short far-month</td>
+        <td>When expecting tighter supply (backwardation)</td>
+        <td>Spread widens (near-month rises vs far)</td>
+      </tr>
+      <tr>
+        <td><strong>Bear Spread (Oil)</strong></td>
+        <td>Short near-month, Long far-month</td>
+        <td>When expecting oversupply (contango)</td>
+        <td>Spread narrows or flips to contango</td>
+      </tr>
+      <tr>
+        <td><strong>Corn Jul/Dec</strong></td>
+        <td>Long July (old crop), Short Dec (new crop)</td>
+        <td>When spring planting is delayed or drought risk rises</td>
+        <td>Old crop premium expands</td>
+      </tr>
+      <tr>
+        <td><strong>Soybean Crush</strong></td>
+        <td>Long Meal + Long Oil, Short Soybeans</td>
+        <td>When crush margins are compressed</td>
+        <td>Products outperform beans</td>
+      </tr>
+      <tr>
+        <td><strong>Crack Spread (Oil)</strong></td>
+        <td>Long Gasoline + Long Heating Oil, Short Crude</td>
+        <td>When refining margins are tight</td>
+        <td>Products outperform crude</td>
+      </tr>
+      <tr>
+        <td><strong>Gold/Silver Ratio</strong></td>
+        <td>Long Silver, Short Gold</td>
+        <td>When ratio &gt; 80</td>
+        <td>Ratio compresses toward 65</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Calendar Spread Logic</div>
+    <span class="formula-highlight">Tighter Supply</span> = Near-month rises faster than far-month = <span class="formula-highlight">Bull Spread Profits</span>
+  </div>
+
+  <details>
+    <summary>Quiz: Spread Trading</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> WTI crude is in backwardation: the front month (CL1) is at $82, and the 6-month contract (CL6) is at $76. You believe OPEC will extend cuts, keeping the market tight. How do you trade this?</p>
+      <p><strong>Answer:</strong> Execute a <strong>bull spread</strong>: Long CL1 (front month), Short CL6 (6-month). The current spread is $6 (backwardation). If OPEC extends cuts, the market stays tight, front-month demand increases, and backwardation deepens. The spread could widen to $8-10. Your profit would be $2,000-4,000 per spread (spread change x 1,000 barrels). Margin requirement is only ~$1,500 (vs $6,500 for outright). The trade is insulated from dollar moves, equity correlation, and even moderate demand changes — it is a pure supply tightness play. This is how institutional commodity traders express views.</p>
+    </div>
+  </details>
+</div>
+
+<!-- TREND FOLLOWING -->
+<div class="section-divider" id="trend"><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> Trend Following on Commodities</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> The Trend Is Your Friend (Especially in Commodities)</h2>
+
+  <p>Commodities trend better than any other asset class. This is because supply/demand imbalances take time to resolve — a drought does not fix itself overnight, OPEC cuts last months, and mine development takes years. These structural forces create persistent price trends that systematic traders can exploit.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-chart-line" style="color:#b45309;"></i> A Simple Trend-Following System</h4>
+    <p>The classic commodity trend-following system uses moving average crossovers:</p>
+    <ul>
+      <li><strong>Entry (Long):</strong> When the 20-day EMA crosses above the 50-day EMA and price is above the 200-day SMA.</li>
+      <li><strong>Entry (Short):</strong> When the 20-day EMA crosses below the 50-day EMA and price is below the 200-day SMA.</li>
+      <li><strong>Stop Loss:</strong> 2x ATR (14-period) from entry. Wide enough to avoid noise, tight enough to limit losses.</li>
+      <li><strong>Trailing Stop:</strong> Move stop to breakeven when trade reaches 1.5x ATR profit. Then trail at 2x ATR below highest close.</li>
+      <li><strong>Position Size:</strong> Risk 1% of account per trade. Number of contracts = (1% of account) / (2 x ATR x contract size).</li>
+    </ul>
+    <p>This system applied across 20-30 commodities simultaneously has generated positive returns in every decade since the 1970s, including during the 2008 financial crisis when most asset classes collapsed. The key: diversification across many commodities captures different trends at different times.</p>
+  </div>
+
+  <h3>Why Commodities Trend So Well</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Factor</th>
+        <th>Commodities</th>
+        <th>Equities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Supply Response</strong></td>
+        <td>Slow (years for new mines, one crop cycle)</td>
+        <td>Fast (companies can issue shares, competitors enter)</td>
+      </tr>
+      <tr>
+        <td><strong>Hedger Participation</strong></td>
+        <td>High — producers systematically sell, creating persistent trends</td>
+        <td>Low — corporate hedging is less directional</td>
+      </tr>
+      <tr>
+        <td><strong>Information Diffusion</strong></td>
+        <td>Slow — physical market data takes weeks to compile</td>
+        <td>Fast — earnings, news, social media spread instantly</td>
+      </tr>
+      <tr>
+        <td><strong>Central Bank Influence</strong></td>
+        <td>Indirect (via dollar, rates)</td>
+        <td>Direct (QE, rate policy directly affect stock valuations)</td>
+      </tr>
+      <tr>
+        <td><strong>Trend Persistence</strong></td>
+        <td>High — 12-month momentum is strong predictor</td>
+        <td>Moderate — equity momentum works but mean-reverts faster</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Position Sizing Formula</div>
+    <span class="formula-highlight">Contracts</span> = (Account x 1%) / (ATR x 2 x <span class="formula-highlight">Contract Size</span>)
+  </div>
+
+  <details>
+    <summary>Quiz: Trend Following</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Your trend system signals long gold. Account is $100,000. Gold's 14-day ATR is $45/oz. Gold futures contract is 100 oz. How many contracts do you trade?</p>
+      <p><strong>Answer:</strong> Risk per trade = 1% x $100,000 = $1,000. Dollar risk per contract = 2 x ATR x contract size = 2 x $45 x 100 = $9,000. Contracts = $1,000 / $9,000 = 0.11. <strong>You cannot trade even one standard contract.</strong> You need micro gold futures (/MGC = 10 oz). Dollar risk per micro = 2 x $45 x 10 = $900. Contracts = $1,000 / $900 = 1.1 = <strong>1 micro contract</strong>. This demonstrates why professional trend-following requires significant capital. To diversify across 20 commodities at 1% risk each, you need $500K-1M minimum for standard contracts, or $50-100K for micros.</p>
+    </div>
+  </details>
+</div>
+
+<!-- MEAN REVERSION -->
+<div class="section-divider" id="meanrev"><i class="fa-solid fa-rotate" style="color:#9333ea;"></i> Mean-Reversion Strategies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rotate" style="color:#9333ea;"></i> When Commodities Snap Back</h2>
+
+  <p>While commodities trend well over months, they also exhibit mean-reversion over shorter time frames (1-5 days). Extreme moves tend to partially reverse as the market digests information, repositions, and finds equilibrium. This creates opportunities for contrarian traders.</p>
+
+  <h3>Mean-Reversion Indicators</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Indicator</th>
+        <th>Oversold (Buy)</th>
+        <th>Overbought (Sell)</th>
+        <th>Best Commodities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>RSI (14)</strong></td>
+        <td>Below 25</td>
+        <td>Above 75</td>
+        <td>Gold, crude oil</td>
+      </tr>
+      <tr>
+        <td><strong>Bollinger Band %B</strong></td>
+        <td>Below 0 (outside lower band)</td>
+        <td>Above 1 (outside upper band)</td>
+        <td>Natural gas, coffee</td>
+      </tr>
+      <tr>
+        <td><strong>Z-Score (20-day)</strong></td>
+        <td>Below -2.0</td>
+        <td>Above +2.0</td>
+        <td>All — universal signal</td>
+      </tr>
+      <tr>
+        <td><strong>% from 20-day MA</strong></td>
+        <td>More than -5% below</td>
+        <td>More than +5% above</td>
+        <td>Wheat, corn, soybeans</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> When Mean Reversion Fails</h4>
+    <p>Mean-reversion is the <strong>opposite</strong> of trend following and can be devastatingly wrong during genuine regime changes. If you bought "oversold" crude oil at $100 in 2014, you rode it to $26 — a 74% loss. Mean-reversion works best in range-bound environments. During strong trends, mean-reversion signals become traps. Always check whether the commodity is trending (use 200-day MA or ADX &gt; 25 filter) before applying mean-reversion strategies.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Mean Reversion</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Natural gas drops 12% in two days on a mild weather forecast revision. RSI hits 18. Bollinger %B is at -0.3. The 200-day MA is $3.40 and current price is $3.10. Is this a mean-reversion buy?</p>
+      <p><strong>Answer:</strong> <strong>Cautious yes, with a tight stop.</strong> The 12% drop in 2 days is extreme and likely an overreaction to a single weather model update. RSI at 18 and %B below 0 are both deeply oversold. However, price is below the 200-day MA ($3.10 < $3.40), suggesting the broader trend is bearish. The trade: buy for a 1-3 day bounce targeting a return to $3.25-3.30 (4-6% upside). Set a tight stop at $3.00 (3% risk). R:R is approximately 1.5:1. This is a tactical mean-reversion trade, not a position trade. Exit quickly if the next weather model confirms the mild forecast.</p>
+    </div>
+  </details>
+</div>
+
+<!-- CORRELATION PAIRS -->
+<div class="section-divider" id="pairs"><i class="fa-solid fa-link" style="color:#b45309;"></i> Correlation Pairs</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-link" style="color:#b45309;"></i> Trading Commodity Correlations</h2>
+
+  <p>Commodities do not move in isolation. They exist in a web of relationships driven by shared economic drivers, substitution effects, and physical linkages. Trading these correlations — especially when they diverge from historical norms — is one of the most profitable strategies in commodity markets.</p>
+
+  <h3>Key Correlation Pairs</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Pair</th>
+        <th>Correlation</th>
+        <th>Divergence Trade</th>
+        <th>Logic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Gold / Silver</strong></td>
+        <td>+0.85</td>
+        <td>Long silver when ratio &gt; 80</td>
+        <td>Silver lags gold then catches up with beta &gt; 1</td>
+      </tr>
+      <tr>
+        <td><strong>Oil / Natural Gas</strong></td>
+        <td>+0.30 (weak)</td>
+        <td>Oil/gas ratio reversion (normally 20-25x)</td>
+        <td>Both are energy but different markets. Ratio extremes revert</td>
+      </tr>
+      <tr>
+        <td><strong>Corn / Wheat</strong></td>
+        <td>+0.70</td>
+        <td>Feed substitution when spread diverges</td>
+        <td>When wheat is too expensive, livestock feed switches to corn</td>
+      </tr>
+      <tr>
+        <td><strong>Gold / Copper</strong></td>
+        <td>+0.40</td>
+        <td>Gold/copper ratio signals risk appetite</td>
+        <td>High ratio = risk-off. Low ratio = risk-on. Mean-reversion at extremes</td>
+      </tr>
+      <tr>
+        <td><strong>Soybeans / Corn</strong></td>
+        <td>+0.75</td>
+        <td>Soy/corn ratio drives planting decisions</td>
+        <td>Farmers plant more of whichever has higher ratio. Reversion built in</td>
+      </tr>
+      <tr>
+        <td><strong>Gold / DXY (inverse)</strong></td>
+        <td>-0.50</td>
+        <td>Dollar divergence from gold = opportunity</td>
+        <td>If gold rises while dollar strengthens, one must give</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-seedling" style="color:#b45309;"></i> The Soy/Corn Ratio — Nature's Built-In Reversion</h4>
+    <p>The soybean/corn price ratio is one of the most reliable mean-reverting relationships in commodities. It typically ranges from 2.0 to 3.0 (soybeans are usually 2-3x the price of corn per bushel). The mechanism is biological:</p>
+    <ul>
+      <li>When the ratio exceeds 2.8, soybeans are relatively expensive. Farmers plant more soybeans next season, increasing supply and pushing the ratio down.</li>
+      <li>When the ratio drops below 2.2, corn is relatively expensive. Farmers plant more corn, reducing soybean acreage, and the ratio rises.</li>
+    </ul>
+    <p>The beauty is that reversion is guaranteed by farmer behavior — it just takes one planting season (6-12 months). This gives you a natural edge with a known timeline for mean reversion.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Correlation Pairs</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> The oil/natural gas ratio (oil price / gas price) is at 28x (normally 20-25x). What does this mean and how do you trade it?</p>
+      <p><strong>Answer:</strong> A ratio of 28x means oil is expensive relative to gas (or gas is cheap relative to oil). The trade: <strong>long natural gas, short crude oil</strong> in a dollar-neutral spread. The expectation is that the ratio reverts toward 22-25x over the next 1-3 months. This can happen via gas rising (weather event, storage draw), oil falling (OPEC increase, demand weakness), or both. The spread trade is insulated from macro moves (if both energy prices move together, the spread is unaffected). The risk: oil/gas correlation has weakened over the past decade due to US shale (domestic gas abundant, oil globally priced), so the ratio can stay elevated longer than expected. Use a stop at 32x (above the trade entry at 28x).</p>
+    </div>
+  </details>
+</div>
+
+<!-- RISK MANAGEMENT -->
+<div class="section-divider" id="risk"><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> Risk Management</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> Surviving Commodity Markets</h2>
+
+  <p>Commodity markets have destroyed more trading accounts than any other asset class. Leverage, volatility, and gap risk combine to create an environment where a single bad trade can wipe out months of profits. Risk management is not optional — it is the <strong>primary skill</strong> of successful commodity traders.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Position Sizing</h4>
+      <p>Never risk more than 1-2% of account on any single trade. Use ATR-based sizing. Reduce size in high-volatility environments.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Stop Losses</h4>
+      <p>Always use stops. Set them at 2x ATR for trend trades, 1x ATR for mean-reversion. Never move stops further from entry.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Correlation Limits</h4>
+      <p>Do not hold 5 long energy positions simultaneously. Limit correlated exposure. One bad OPEC meeting hits them all.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Max Drawdown Rule</h4>
+      <p>If account drops 10% from peak, reduce all positions by 50%. If 15%, go flat and reassess. Preservation of capital is rule #1.</p>
+    </div>
+  </div>
+
+  <h3>The Commodity-Specific Risks</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Risk</th>
+        <th>Description</th>
+        <th>Mitigation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Limit Moves</strong></td>
+        <td>Exchanges halt trading when prices move too far in one day. You cannot exit. Natgas, grains are common.</td>
+        <td>Use options instead of futures for event trades. Never hold full position into known binary events.</td>
+      </tr>
+      <tr>
+        <td><strong>Gap Risk</strong></td>
+        <td>Commodities gap on weekend weather changes, Sunday OPEC decisions, Monday market opens.</td>
+        <td>Reduce position size before weekends. Use options for overnight/weekend hedges.</td>
+      </tr>
+      <tr>
+        <td><strong>Roll Risk</strong></td>
+        <td>Futures expire. You must roll or close. Roll can be costly in contango or during low liquidity.</td>
+        <td>Roll 5-7 days before expiry. Never hold into delivery month unless you want physical delivery.</td>
+      </tr>
+      <tr>
+        <td><strong>Liquidity Risk</strong></td>
+        <td>Back-month contracts have thin liquidity. Wide bid-ask spreads. Slippage on entries/exits.</td>
+        <td>Trade only front 2-3 months. Check open interest before entering. Avoid thinly traded commodities.</td>
+      </tr>
+      <tr>
+        <td><strong>Negative Prices</strong></td>
+        <td>WTI went to -$37 in April 2020. Storage full, no buyers. Losses can exceed 100% of position value.</td>
+        <td>Never hold physical-delivery contracts into the delivery window. Use ETFs for long-term holds.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">The Risk Management Hierarchy</div>
+    <span class="formula-highlight">1. Position Size</span> → 2. Stop Loss → 3. Correlation Limits → <span class="formula-highlight">4. Max Drawdown</span> → 5. Hedge
+  </div>
+
+  <details>
+    <summary>Quiz: Risk Management</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You hold 3 long positions: crude oil (2 contracts), heating oil (1 contract), and gasoline (1 contract). All three are energy. What is wrong with this portfolio?</p>
+      <p><strong>Answer:</strong> <strong>Massive correlation risk.</strong> All three commodities are highly correlated (0.85+). If OPEC surprises with a production increase or a global demand shock hits, all three positions will lose simultaneously. You effectively have a single concentrated bet on energy prices with 4x the notional exposure you think you have. Fix: reduce to 1 crude oil contract and diversify into uncorrelated commodities (gold, wheat, or copper). A properly diversified commodity portfolio should have no more than 30-40% of risk in any single sector.</p>
+    </div>
+  </details>
+</div>
+
+<!-- PORTFOLIO DESIGN -->
+<div class="section-divider" id="portfolio"><i class="fa-solid fa-chart-pie" style="color:#b45309;"></i> Building a Commodity Portfolio</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-pie" style="color:#b45309;"></i> The Commodity Portfolio Framework</h2>
+
+  <p>A well-constructed commodity portfolio should be diversified across sectors, strategies, and time horizons. Here is a framework for building one:</p>
+
+  <!-- EChart: Portfolio Optimization Radar -->
+  <div id="chart-portfolio" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <h3>Model Commodity Portfolio (ETF-Based)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Allocation</th>
+        <th>ETF</th>
+        <th>Weight</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Gold</strong></td>
+        <td>GLD or IAU</td>
+        <td>25%</td>
+        <td>Safe haven, inflation hedge, portfolio stabilizer</td>
+      </tr>
+      <tr>
+        <td><strong>Silver</strong></td>
+        <td>SLV</td>
+        <td>10%</td>
+        <td>Industrial + monetary, leveraged gold exposure</td>
+      </tr>
+      <tr>
+        <td><strong>Energy Stocks</strong></td>
+        <td>XLE</td>
+        <td>20%</td>
+        <td>Oil/gas exposure without contango. Dividends</td>
+      </tr>
+      <tr>
+        <td><strong>Agribusiness</strong></td>
+        <td>MOO</td>
+        <td>15%</td>
+        <td>Agricultural commodity exposure via equities</td>
+      </tr>
+      <tr>
+        <td><strong>Broad Commodities</strong></td>
+        <td>PDBC</td>
+        <td>15%</td>
+        <td>Diversified basket, optimized roll, tax-efficient</td>
+      </tr>
+      <tr>
+        <td><strong>Gold Miners</strong></td>
+        <td>GDX</td>
+        <td>10%</td>
+        <td>Leveraged gold exposure, dividends</td>
+      </tr>
+      <tr>
+        <td><strong>Cash / T-Bills</strong></td>
+        <td>SHV</td>
+        <td>5%</td>
+        <td>Dry powder for opportunistic trades</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#b45309;"></i> Portfolio Construction Principles</h4>
+    <ol>
+      <li><strong>Diversify by sector:</strong> Energy, precious metals, agriculture, industrial metals. No single sector should exceed 35% of the portfolio.</li>
+      <li><strong>Prefer equities over futures ETFs:</strong> For buy-and-hold allocations, commodity stocks (XLE, MOO, GDX) outperform futures-based ETFs due to no contango, dividends, and operational leverage.</li>
+      <li><strong>Physical metals for core:</strong> GLD and SLV hold physical metal — no roll cost, no contango. These are the best long-term commodity positions.</li>
+      <li><strong>Use futures for tactical:</strong> Reserve futures trading for short-term opportunistic trades (seasonal patterns, event trades, spreads). Do not hold futures long-term.</li>
+      <li><strong>Rebalance quarterly:</strong> Commodities can diverge significantly over 3 months. Rebalancing captures mean reversion across sectors.</li>
+      <li><strong>Size the allocation:</strong> Commodities should represent 5-15% of a total investment portfolio. More than 15% adds volatility without proportional return benefit.</li>
+    </ol>
+  </div>
+
+  <!-- EChart: Risk/Return Scatter -->
+  <div id="chart-riskreturn" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Portfolio Construction</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You manage a $500,000 investment portfolio and want to add commodity exposure. How much should you allocate and how would you structure it?</p>
+      <p><strong>Answer:</strong> Allocate <strong>10% ($50,000)</strong> to commodities. Structure: $12,500 in GLD (25% — gold core), $5,000 in SLV (10% — silver), $10,000 in XLE (20% — energy equities), $7,500 in MOO (15% — agribusiness), $7,500 in PDBC (15% — broad commodities), $5,000 in GDX (10% — gold miners), $2,500 in cash (5% — dry powder). This gives you diversified exposure across all major commodity sectors with a preference for equity vehicles that pay dividends and avoid contango. Rebalance quarterly. Total expected dividend yield: ~2%. Expected correlation with S&P 500: ~0.3 (meaningful diversification). Expected volatility: ~15% (vs 20% for SPY).</p>
+    </div>
+  </details>
+</div>
+
+<!-- TAKEAWAYS -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#b45309;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 6</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Seasonal patterns in commodities are grounded in physical reality (crop cycles, weather, driving seasons) and have 55-75% win rates over 20+ years.</li>
+    <li><i class="fa-solid fa-check"></i> Calendar spreads are how professionals trade — lower margin, lower volatility, purer fundamental signal. Learn bull/bear spreads and crush/crack spreads.</li>
+    <li><i class="fa-solid fa-check"></i> Commodities trend better than any other asset class because supply/demand imbalances take time to resolve. Trend-following has been profitable every decade since the 1970s.</li>
+    <li><i class="fa-solid fa-check"></i> Mean-reversion works for short-term trades (1-5 days) when RSI/Bollinger signals are extreme. Fails during genuine regime changes — always check the trend first.</li>
+    <li><i class="fa-solid fa-check"></i> Trade correlation pairs (gold/silver, soy/corn, oil/gas ratio) for lower risk and natural mean-reversion built into the physical markets.</li>
+    <li><i class="fa-solid fa-check"></i> Risk management is the primary skill: 1-2% position sizing, ATR-based stops, correlation limits (max 35% in one sector), and max drawdown rules.</li>
+    <li><i class="fa-solid fa-check"></i> Build a commodity portfolio with 5-15% of total assets. Prefer physical-backed ETFs and commodity stocks over futures ETFs. Diversify across sectors and rebalance quarterly.</li>
+  </ul>
+</div>
+
+<a href="/series/commodities-trading/part1-introduction/" class="next-cta">
+  <div>
+    <div class="next-label">Back to the Beginning</div>
+    <div class="next-title">Part 1 — The World of Commodities <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/commodities-trading/part5-agriculture/" class="series-arrow" title="Agriculture"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Commodities</span><div class="series-steps"><a href="/series/commodities-trading/part1-introduction/" class="series-step" title="Introduction"><span class="series-num">1</span><span class="series-label">Introduction</span></a><a href="/series/commodities-trading/part2-crude-oil/" class="series-step" title="Crude Oil"><span class="series-num">2</span><span class="series-label">Crude Oil</span></a><a href="/series/commodities-trading/part3-natural-gas/" class="series-step" title="Natural Gas"><span class="series-num">3</span><span class="series-label">Natural Gas</span></a><a href="/series/commodities-trading/part4-precious-metals/" class="series-step" title="Precious Metals"><span class="series-num">4</span><span class="series-label">Precious Metals</span></a><a href="/series/commodities-trading/part5-agriculture/" class="series-step" title="Agriculture"><span class="series-num">5</span><span class="series-label">Agriculture</span></a><a href="/series/commodities-trading/part6-strategies/" class="series-step current" title="Strategies"><span class="series-num">6</span><span class="series-label">Strategies</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Seasonal P&L Heatmap
+var chartHeatmap = echarts.init(document.getElementById('chart-heatmap'));
+var commodities = ['Gold', 'Silver', 'Crude Oil', 'Natural Gas', 'Corn', 'Wheat', 'Soybeans', 'Coffee', 'Copper', 'Sugar'];
+var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var heatData = [];
+var rawData = [
+  [1.2, 0.8, -0.5, 0.3, -0.2, 1.5, 2.1, 1.8, -0.3, 0.5, 1.0, 0.2],
+  [0.8, 1.5, -1.2, 0.5, -0.8, 2.0, 3.2, 2.5, -1.0, 0.3, 1.5, -0.3],
+  [-0.5, 1.2, 0.8, 1.5, 2.0, 2.5, 1.8, 0.5, -1.5, -0.8, 0.3, 0.5],
+  [2.5, 3.0, -1.0, -2.0, -1.5, 0.5, 1.0, 0.8, 0.5, 2.0, 3.5, 4.0],
+  [-0.5, -0.3, 0.5, 1.0, 2.0, 3.5, 4.0, 1.5, -2.0, -3.0, -1.5, -0.5],
+  [0.3, 0.8, 1.5, 2.0, 1.0, -0.5, -1.0, -2.0, -1.5, 0.5, 1.0, 0.3],
+  [-0.3, 0.5, 1.0, 1.5, 2.5, 3.0, 1.0, 0.5, -1.0, -2.0, 0.5, 0.3],
+  [-1.0, 0.5, 1.5, 0.8, 2.0, 1.0, 3.0, 2.0, -0.5, 0.3, -1.5, -2.0],
+  [1.5, 2.0, 1.0, 2.5, 1.5, -0.5, -1.0, 0.5, -1.5, -0.8, 0.3, 1.0],
+  [0.5, -0.3, 0.8, 1.5, 2.0, 1.0, 0.5, -0.5, 1.5, -1.0, -0.8, 0.3]
+];
+for (var i = 0; i < rawData.length; i++) {
+  for (var j = 0; j < rawData[i].length; j++) {
+    heatData.push([j, i, rawData[i][j]]);
+  }
+}
+chartHeatmap.setOption({
+  title: { text: 'Commodity Monthly Returns Heatmap (% avg, 20Y)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { position: 'top', formatter: function(p) { return commodities[p.data[1]] + ' / ' + months[p.data[0]] + ': ' + p.data[2].toFixed(1) + '%'; } },
+  grid: { left: '12%', right: '10%', bottom: '8%', top: '12%' },
+  xAxis: { type: 'category', data: months, splitArea: { show: true }, axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'category', data: commodities, splitArea: { show: true }, axisLabel: { fontSize: 10 } },
+  visualMap: { min: -4, max: 4, calculable: true, orient: 'vertical', right: 0, top: 'center', inRange: { color: ['#dc2626', '#fecaca', '#ffffff', '#bbf7d0', '#10b981'] }, textStyle: { fontSize: 10 } },
+  series: [{ type: 'heatmap', data: heatData, label: { show: true, fontSize: 9, formatter: function(p) { return p.data[2].toFixed(1); } }, emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } }]
+});
+
+// Chart 2: Spread Trade Visualization
+var chartSpread = echarts.init(document.getElementById('chart-spread'));
+chartSpread.setOption({
+  title: { text: 'WTI Crude Oil Calendar Spread (Front vs 6-Month)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '5%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], axisLabel: { fontSize: 11 }, boundaryGap: false },
+  yAxis: [
+    { type: 'value', name: 'CL Price ($/bbl)', axisLabel: { fontSize: 11, formatter: '${value}' } },
+    { type: 'value', name: 'Spread ($/bbl)', axisLabel: { fontSize: 11, formatter: '${value}' } }
+  ],
+  series: [
+    { name: 'Front Month (CL1)', type: 'line', smooth: true, data: [78, 80, 82, 79, 81, 84, 86, 85, 82, 80, 83, 85], lineStyle: { color: '#b45309', width: 2 }, itemStyle: { color: '#b45309' } },
+    { name: '6-Month (CL6)', type: 'line', smooth: true, data: [76, 77, 78, 77, 78, 79, 80, 80, 79, 78, 79, 80], lineStyle: { color: '#94a3b8', width: 2, type: 'dashed' }, itemStyle: { color: '#94a3b8' } },
+    { name: 'Spread (CL1-CL6)', type: 'bar', yAxisIndex: 1, data: [2, 3, 4, 2, 3, 5, 6, 5, 3, 2, 4, 5], itemStyle: { color: function(p) { return p.value >= 4 ? '#10b981' : '#f59e0b'; }, borderRadius: [4,4,0,0] }, barWidth: '40%' }
+  ]
+});
+
+// Chart 3: Portfolio Optimization Radar
+var chartPortfolio = echarts.init(document.getElementById('chart-portfolio'));
+chartPortfolio.setOption({
+  title: { text: 'Commodity Portfolio — Diversification Radar', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['Beginner Portfolio', 'Balanced Portfolio', 'Aggressive Portfolio'], textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Energy', max: 40 },
+      { name: 'Precious Metals', max: 40 },
+      { name: 'Agriculture', max: 40 },
+      { name: 'Industrial Metals', max: 40 },
+      { name: 'Cash/Bonds', max: 40 },
+      { name: 'Leverage', max: 40 }
+    ],
+    radius: '55%'
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [15, 35, 10, 5, 30, 5], name: 'Beginner Portfolio', lineStyle: { color: '#10b981' }, areaStyle: { color: 'rgba(16,185,129,0.15)' }, itemStyle: { color: '#10b981' } },
+      { value: [25, 30, 20, 10, 10, 5], name: 'Balanced Portfolio', lineStyle: { color: '#b45309', width: 2 }, areaStyle: { color: 'rgba(180,83,9,0.15)' }, itemStyle: { color: '#b45309' } },
+      { value: [30, 20, 20, 15, 5, 10], name: 'Aggressive Portfolio', lineStyle: { color: '#dc2626' }, areaStyle: { color: 'rgba(220,38,38,0.1)' }, itemStyle: { color: '#dc2626' } }
+    ]
+  }]
+});
+
+// Chart 4: Risk/Return Scatter Plot
+var chartRiskreturn = echarts.init(document.getElementById('chart-riskreturn'));
+chartRiskreturn.setOption({
+  title: { text: 'Commodity Risk/Return Profile (10-Year Annualized)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: function(p) { return p.data[3] + '<br>Return: ' + p.data[0] + '%<br>Volatility: ' + p.data[1] + '%'; } },
+  grid: { left: '5%', right: '5%', bottom: '12%', top: '15%', containLabel: true },
+  xAxis: { type: 'value', name: 'Annualized Volatility (%)', nameLocation: 'center', nameGap: 30, axisLabel: { fontSize: 11, formatter: '{value}%' } },
+  yAxis: { type: 'value', name: 'Annualized Return (%)', axisLabel: { fontSize: 11, formatter: '{value}%' } },
+  series: [{
+    type: 'scatter',
+    symbolSize: function(d) { return d[2]; },
+    data: [
+      [18, 12, 30, 'Gold (GLD)'],
+      [30, 8, 25, 'Silver (SLV)'],
+      [35, 6, 25, 'Crude Oil (XLE)'],
+      [52, 2, 20, 'Natural Gas (UNG)'],
+      [22, 5, 20, 'Corn (WEAT)'],
+      [20, 4, 20, 'Agriculture (DBA)'],
+      [15, 10, 28, 'Gold Miners (GDX)'],
+      [25, 7, 22, 'Broad Cmdty (PDBC)'],
+      [28, 9, 22, 'Copper (CPER)'],
+      [40, -5, 20, 'Natgas ETF (UNG)']
+    ],
+    itemStyle: { color: function(p) { return p.data[1] > 8 ? '#10b981' : p.data[1] > 0 ? '#b45309' : '#dc2626'; } },
+    label: { show: true, formatter: function(p) { return p.data[3]; }, position: 'right', fontSize: 10, color: '#334155' }
+  }]
+});
+
+window.addEventListener('resize', function() { chartHeatmap.resize(); chartSpread.resize(); chartPortfolio.resize(); chartRiskreturn.resize(); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

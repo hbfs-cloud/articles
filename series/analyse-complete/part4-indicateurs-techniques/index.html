@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Les Indicateurs Techniques — Vos Copilotes de Trading | L'Analyse Complète — Partie 4/8 | Market Watch</title>
+ <meta name="description" content="Série L'Analyse Complète — Partie 4/8 : Moyennes Mobiles, RSI, MACD, Bollinger, Ichimoku, ATR, OBV, VWAP et Volume Profile — les 12 indicateurs essentiels expliqués simplement.">
+ <meta property="og:title" content="Les Indicateurs Techniques | L'Analyse Complète 4/8 | Market Watch">
+ <meta property="og:description" content="Les 12 indicateurs techniques essentiels : formules simplifiées, paramètres recommandés, erreurs classiques et charts interactifs.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/analyse-complete/part4-indicateurs-techniques/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#eef2ff 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-indigo{background:rgba(79,70,229,.1);color:#4f46e5;border:1px solid rgba(79,70,229,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .checklist{list-style:none;padding:0;margin:1.5rem 0}.checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:.95rem;color:#334155;line-height:1.5}.checklist li i{margin-top:.15rem;flex-shrink:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;transition:all .2s;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#4f46e5;margin-right:.75rem}details[open] summary{border-color:#4f46e5;background:#eef2ff;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700;letter-spacing:.02em}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#818cf8}
+ .takeaway-box{background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #4f46e5;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#4f46e5;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(79,70,229,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#4f46e5;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#4f46e5,#4338ca);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(79,70,229,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}.next-cta i{font-size:1.5rem}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}.step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #4f46e5}.step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}.step-number{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#4338ca);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}.step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}.step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.hero-badge{font-size:.7rem;padding:.35rem .75rem}.next-cta{flex-direction:column;text-align:center}.step-grid{grid-template-columns:1fr 1fr}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.hero-badge{font-size:.65rem;padding:.3rem .6rem;gap:.25rem}.hero-badges{gap:.4rem;margin-top:1rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-column"></i> Série L'Analyse Complète — Partie 4 sur 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Les Indicateurs Techniques — Vos Copilotes de Trading</h1>
+  <p class="hero-subtitle">Moyennes Mobiles, RSI, MACD, Bollinger, Ichimoku, ATR, OBV, VWAP — les 12 indicateurs que tout trader doit connaître. Pas des signaux magiques, mais des outils de confirmation puissants.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-gauge-high"></i> 12 Indicateurs</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-area"></i> Overlays & Oscillateurs</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-seedling"></i> Débutant</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-layer-group"></i> Série 4/8</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/analyse-complete/part3-figures-chartistes/" class="series-arrow" title="Figures Chartistes"><i class="fas fa-chevron-left"></i></a><span class="series-title">L'Analyse Complète — Chartiste & Fondamentale</span><div class="series-steps"><a href="/series/analyse-complete/part1-lire-un-graphique/" class="series-step"><span class="series-num">1</span><span class="series-label">Lire un Graphique</span></a><a href="/series/analyse-complete/part2-bougies-japonaises/" class="series-step"><span class="series-num">2</span><span class="series-label">Bougies Japonaises</span></a><a href="/series/analyse-complete/part3-figures-chartistes/" class="series-step"><span class="series-num">3</span><span class="series-label">Figures Chartistes</span></a><a href="/series/analyse-complete/part4-indicateurs-techniques/" class="series-step current"><span class="series-num">4</span><span class="series-label">Indicateurs</span></a><a href="/series/analyse-complete/part5-setups-fiables/" class="series-step"><span class="series-num">5</span><span class="series-label">Setups Fiables</span></a><a href="/series/analyse-complete/part6-fondamentale-bases/" class="series-step"><span class="series-num">6</span><span class="series-label">Fondamentale</span></a><a href="/series/analyse-complete/part7-valorisation/" class="series-step"><span class="series-num">7</span><span class="series-label">Valorisation</span></a><a href="/series/analyse-complete/part8-combiner/" class="series-step"><span class="series-num">8</span><span class="series-label">Combiner</span></a></div><span class="series-counter">4/8</span><a href="/series/analyse-complete/part5-setups-fiables/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#moyennes-mobiles" class="fnav-item" data-section="moyennes-mobiles"><i class="fas fa-wave-square"></i><span>Moyennes Mobiles</span></a><a href="#macd" class="fnav-item" data-section="macd"><i class="fas fa-signal"></i><span>MACD</span></a><a href="#rsi" class="fnav-item" data-section="rsi"><i class="fas fa-gauge"></i><span>RSI</span></a><a href="#bollinger" class="fnav-item" data-section="bollinger"><i class="fas fa-chart-area"></i><span>Bollinger</span></a><a href="#volume-ind" class="fnav-item" data-section="volume-ind"><i class="fas fa-chart-bar"></i><span>Volume (OBV/VWAP)</span></a><a href="#choix" class="fnav-item" data-section="choix"><i class="fas fa-list-check"></i><span>Quel indicateur ?</span></a><a href="#quiz4" class="fnav-item" data-section="quiz4"><i class="fas fa-question-circle"></i><span>Quiz</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-30% 0px -60% 0px'});sections.forEach(function(s){observer.observe(s.el);});})();</script>
+
+<!-- ===== INTRO ===== -->
+<div class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-compass" style="color:#4f46e5; margin-right:.5rem;"></i> Introduction</h2>
+  <p>Un indicateur technique est un <strong>calcul mathématique</strong> appliqué au prix et/ou au volume. Il ne prédit rien — il vous aide à <strong>confirmer</strong> ce que le prix vous dit déjà. C'est un copilote, pas le pilote.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Règle fondamentale</div>
+    Un indicateur <span class="formula-highlight">confirme</span> le prix. Le prix ne confirme <span class="formula-highlight">jamais</span> l'indicateur.
+  </div>
+
+  <p>Nous allons étudier 12 indicateurs répartis en 4 catégories :</p>
+  <div class="step-grid">
+    <div class="step-card"><div class="step-number"><i class="fa-solid fa-arrow-trend-up" style="font-size:.8rem;"></i></div><h4>Tendance</h4><p>SMA, EMA, MACD, ADX, Ichimoku</p></div>
+    <div class="step-card"><div class="step-number"><i class="fa-solid fa-gauge" style="font-size:.8rem;"></i></div><h4>Oscillateurs</h4><p>RSI, Stochastique, CCI</p></div>
+    <div class="step-card"><div class="step-number"><i class="fa-solid fa-expand" style="font-size:.8rem;"></i></div><h4>Volatilité</h4><p>Bandes de Bollinger, ATR</p></div>
+    <div class="step-card"><div class="step-number"><i class="fa-solid fa-chart-bar" style="font-size:.8rem;"></i></div><h4>Volume</h4><p>OBV, VWAP</p></div>
+  </div>
+</div>
+
+<!-- ===== MOYENNES MOBILES ===== -->
+<div class="section-divider"><i class="fa-solid fa-wave-square" style="color:#4f46e5;"></i> Indicateurs de Tendance</div>
+
+<div id="moyennes-mobiles" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-wave-square" style="color:#4f46e5; margin-right:.5rem;"></i> 1. Les Moyennes Mobiles (SMA & EMA)</h2>
+  <p>La moyenne mobile est l'indicateur le plus utilisé au monde. Elle lisse le prix en calculant la <strong>moyenne des N dernières clôtures</strong>, ce qui élimine le bruit et révèle la tendance.</p>
+
+  <h3>SMA vs EMA</h3>
+  <table class="compare-table">
+    <thead><tr><th>Type</th><th>Calcul</th><th>Réactivité</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SMA (Simple)</strong></td><td>Moyenne arithmétique des N derniers prix</td><td>Lente — tous les prix ont le même poids</td><td>Tendance long terme (50, 200 jours)</td></tr>
+      <tr><td><strong>EMA (Exponentielle)</strong></td><td>Moyenne pondérée (prix récents = plus de poids)</td><td>Rapide — réagit vite aux changements</td><td>Swing trading (9, 20, 50 jours)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Les 3 moyennes mobiles essentielles</h3>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-circle" style="color:#f59e0b;"></i> <strong>EMA 20</strong> : tendance court terme — très suivie par les swing traders</li>
+    <li><i class="fa-solid fa-circle" style="color:#3b82f6;"></i> <strong>SMA 50</strong> : tendance moyen terme — les institutionnels la surveillent</li>
+    <li><i class="fa-solid fa-circle" style="color:#ef4444;"></i> <strong>SMA 200</strong> : tendance long terme — la plus importante. Prix au-dessus = marché haussier, en dessous = baissier</li>
+  </ul>
+
+  <div class="formula-box">
+    <div class="formula-label">Golden Cross & Death Cross</div>
+    <span class="formula-highlight">Golden Cross</span> : SMA 50 croise au-dessus de la SMA 200 = signal haussier majeur<br>
+    <span class="formula-highlight">Death Cross</span> : SMA 50 croise en dessous de la SMA 200 = signal baissier majeur
+  </div>
+
+  <div id="maChart" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Comment utiliser les moyennes mobiles</h4>
+    <p>La moyenne mobile sert de <strong>support/résistance dynamique</strong>. En tendance haussière, le prix tend à rebondir sur l'EMA 20 ou la SMA 50. Si le prix casse l'EMA 20, il ira probablement tester la SMA 50. S'il casse la SMA 50, la SMA 200 est le prochain arrêt.</p>
+  </div>
+</div>
+
+<!-- ===== MACD ===== -->
+<div id="macd" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-signal" style="color:#4f46e5; margin-right:.5rem;"></i> 2. MACD (Moving Average Convergence Divergence)</h2>
+  <p>Le MACD est l'un des indicateurs les plus populaires. Il mesure la <strong>différence entre deux EMA</strong> (12 et 26 jours par défaut) et la compare à une ligne signal (EMA 9 du MACD).</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule du MACD</div>
+    <span class="formula-highlight">Ligne MACD</span> = EMA(12) - EMA(26) | <span class="formula-highlight">Signal</span> = EMA(9) du MACD | <span class="formula-highlight">Histogramme</span> = MACD - Signal
+  </div>
+
+  <h3>Les 3 signaux du MACD</h3>
+  <table class="compare-table">
+    <thead><tr><th>Signal</th><th>Description</th><th>Fiabilité</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Croisement haussier</strong></td><td>La ligne MACD croise AU-DESSUS de la ligne Signal</td><td>Moyenne (meilleur si en zone négative)</td></tr>
+      <tr><td><strong>Croisement baissier</strong></td><td>La ligne MACD croise EN-DESSOUS de la ligne Signal</td><td>Moyenne (meilleur si en zone positive)</td></tr>
+      <tr><td><strong>Divergence</strong></td><td>Le prix fait un nouveau sommet mais le MACD fait un sommet plus bas (ou inverse)</td><td>Élevée — signal avancé de retournement</td></tr>
+    </tbody>
+  </table>
+
+  <div id="macdChart" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Attention aux faux croisements</h4>
+    <p>En marché latéral (range), le MACD donne de nombreux faux signaux car les EMA se croisent constamment. Utilisez le MACD uniquement en <strong>marché tendanciel</strong>. Si le MACD oscille autour de zéro sans direction claire, ignorez-le.</p>
+  </div>
+</div>
+
+<!-- ===== RSI ===== -->
+<div class="section-divider"><i class="fa-solid fa-gauge" style="color:#4f46e5;"></i> Oscillateurs</div>
+
+<div id="rsi" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-gauge" style="color:#4f46e5; margin-right:.5rem;"></i> 3. RSI (Relative Strength Index)</h2>
+  <p>Le RSI mesure la <strong>vitesse et l'amplitude des mouvements de prix</strong> sur une échelle de 0 à 100. Il identifie les conditions de surachat et de survente.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Zones clés du RSI</div>
+    <span class="formula-highlight">RSI > 70</span> = Suracheté (le prix a trop monté trop vite)<br>
+    <span class="formula-highlight">RSI < 30</span> = Survendu (le prix a trop baissé trop vite)<br>
+    <span class="formula-highlight">RSI = 50</span> = Ligne médiane (neutre)
+  </div>
+
+  <h3>Les signaux du RSI</h3>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrow-up" style="color:#10b981;"></i> <strong>RSI rebondit sur 30</strong> : signal d'achat potentiel (les vendeurs s'épuisent)</li>
+    <li><i class="fa-solid fa-arrow-down" style="color:#ef4444;"></i> <strong>RSI rejette 70</strong> : signal de vente potentiel (les acheteurs s'essoufflent)</li>
+    <li><i class="fa-solid fa-arrows-split-up-and-left" style="color:#4f46e5;"></i> <strong>Divergence haussière</strong> : le prix fait un creux plus bas mais le RSI fait un creux plus haut = retournement haussier imminent</li>
+    <li><i class="fa-solid fa-arrows-split-up-and-left" style="color:#4f46e5;"></i> <strong>Divergence baissière</strong> : le prix fait un sommet plus haut mais le RSI fait un sommet plus bas = retournement baissier imminent</li>
+  </ul>
+
+  <div id="rsiChart" style="width:100%; height:500px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> RSI en tendance forte</h4>
+    <p>En tendance haussière forte, le RSI peut rester au-dessus de 70 pendant des semaines. Ne vendez pas juste parce que le RSI est "suracheté" — c'est un piège classique du débutant. En tendance forte, les zones deviennent 40-80 (haussier) ou 20-60 (baissier) au lieu de 30-70.</p>
+  </div>
+
+  <h3>Stochastique et CCI</h3>
+  <p>Deux autres oscillateurs populaires qui fonctionnent sur le même principe :</p>
+  <table class="compare-table">
+    <thead><tr><th>Indicateur</th><th>Échelle</th><th>Zones extrêmes</th><th>Meilleur usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>RSI (14)</strong></td><td>0-100</td><td>>70 / <30</td><td>Divergences, toutes conditions</td></tr>
+      <tr><td><strong>Stochastique (14,3,3)</strong></td><td>0-100</td><td>>80 / <20</td><td>Marchés en range, timing d'entrée</td></tr>
+      <tr><td><strong>CCI (20)</strong></td><td>-inf/+inf</td><td>>+100 / <-100</td><td>Commodities, volatilité</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== BOLLINGER ===== -->
+<div class="section-divider"><i class="fa-solid fa-expand" style="color:#4f46e5;"></i> Volatilité</div>
+
+<div id="bollinger" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-chart-area" style="color:#4f46e5; margin-right:.5rem;"></i> 4. Bandes de Bollinger</h2>
+  <p>Créées par John Bollinger, ces bandes encadrent le prix avec un canal basé sur la <strong>volatilité</strong>. Quand la volatilité augmente, les bandes s'écartent. Quand elle diminue, elles se resserrent.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Formule</div>
+    <span class="formula-highlight">Bande haute</span> = SMA(20) + 2 x écart-type | <span class="formula-highlight">Bande basse</span> = SMA(20) - 2 x écart-type
+  </div>
+
+  <h3>Les signaux clés</h3>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-compress" style="color:#f59e0b;"></i> <strong>Squeeze (compression)</strong> : les bandes se resserrent au maximum = un breakout explosif est imminent (mais on ne sait pas dans quelle direction)</li>
+    <li><i class="fa-solid fa-hand-point-up" style="color:#ef4444;"></i> <strong>Touch de la bande haute</strong> : le prix est en zone de surachat relatif (pas forcément un signal de vente)</li>
+    <li><i class="fa-solid fa-hand-point-down" style="color:#10b981;"></i> <strong>Touch de la bande basse</strong> : le prix est en zone de survente relative</li>
+    <li><i class="fa-solid fa-arrow-right" style="color:#4f46e5;"></i> <strong>Walking the band</strong> : en tendance forte, le prix peut "marcher" le long d'une bande pendant des semaines</li>
+  </ul>
+
+  <div id="bollingerChart" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+
+  <h3>ATR (Average True Range)</h3>
+  <p>L'ATR mesure la <strong>volatilité quotidienne moyenne</strong> d'une action. Il ne donne pas de signal directionnel mais il est essentiel pour :</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-shield" style="color:#4f46e5;"></i> <strong>Placer des stop-loss</strong> : stop = prix d'entrée - 2 x ATR (pour laisser au prix l'espace de "respirer")</li>
+    <li><i class="fa-solid fa-ruler" style="color:#4f46e5;"></i> <strong>Calculer la taille de position</strong> : plus l'ATR est grand, plus la position doit être petite</li>
+    <li><i class="fa-solid fa-arrows-alt-h" style="color:#4f46e5;"></i> <strong>Comparer la volatilité</strong> : un ATR qui augmente = mouvement imminent</li>
+  </ul>
+</div>
+
+<!-- ===== VOLUME INDICATORS ===== -->
+<div class="section-divider"><i class="fa-solid fa-chart-bar" style="color:#4f46e5;"></i> Volume</div>
+
+<div id="volume-ind" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#4f46e5; margin-right:.5rem;"></i> 5. OBV et VWAP</h2>
+
+  <h3>OBV (On-Balance Volume)</h3>
+  <p>L'OBV cumule le volume : il <strong>ajoute</strong> le volume les jours de hausse et le <strong>soustrait</strong> les jours de baisse. Le résultat est une courbe qui monte ou descend.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Le signal puissant de l'OBV</h4>
+    <p>Si le prix est en range mais l'OBV monte = les institutionnels accumulent discrètement. Le breakout haussier arrive. Si le prix monte mais l'OBV descend = la hausse n'est pas soutenue par le volume. Danger.</p>
+  </div>
+
+  <h3>VWAP (Volume Weighted Average Price)</h3>
+  <p>Le prix moyen pondéré par le volume. Utilisé massivement par les <strong>institutionnels</strong> pour évaluer la qualité de leurs exécutions.</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrow-up" style="color:#10b981;"></i> Prix <strong>au-dessus du VWAP</strong> = les acheteurs dominent la journée</li>
+    <li><i class="fa-solid fa-arrow-down" style="color:#ef4444;"></i> Prix <strong>en dessous du VWAP</strong> = les vendeurs dominent la journée</li>
+    <li><i class="fa-solid fa-arrows-alt-h" style="color:#4f46e5;"></i> Le VWAP agit comme un <strong>aimant</strong> : le prix y revient souvent</li>
+  </ul>
+
+  <div id="obvChart" style="width:100%; height:450px; margin:1.5rem 0;"></div>
+</div>
+
+<!-- ===== QUEL INDICATEUR CHOISIR ===== -->
+<div class="section-divider"><i class="fa-solid fa-list-check" style="color:#4f46e5;"></i> Synthèse</div>
+
+<div id="choix" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-list-check" style="color:#4f46e5; margin-right:.5rem;"></i> Quel Indicateur Choisir ?</h2>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> L'erreur fatale : trop d'indicateurs</h4>
+    <p>Mettre 10 indicateurs sur un graphique est contre-productif. Ils se contredisent, vous paralysent et vous font douter de chaque décision. La règle : <strong>maximum 3 indicateurs</strong> de catégories DIFFÉRENTES.</p>
+  </div>
+
+  <h3>Les combos recommandées</h3>
+  <table class="compare-table">
+    <thead><tr><th>Style</th><th>Indicateur 1 (Tendance)</th><th>Indicateur 2 (Momentum)</th><th>Indicateur 3 (Volume)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Swing Trader</strong></td><td>EMA 20 + SMA 50</td><td>RSI (14)</td><td>OBV ou Volume simple</td></tr>
+      <tr><td><strong>Day Trader</strong></td><td>EMA 9 + EMA 20</td><td>Stochastique</td><td>VWAP</td></tr>
+      <tr><td><strong>Investisseur</strong></td><td>SMA 50 + SMA 200</td><td>MACD</td><td>OBV</td></tr>
+      <tr><td><strong>Trader de volatilité</strong></td><td>Bollinger Bands</td><td>RSI</td><td>ATR (pour le sizing)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tableau récapitulatif des 12 indicateurs</h3>
+  <table class="compare-table">
+    <thead><tr><th>#</th><th>Indicateur</th><th>Catégorie</th><th>Signal principal</th><th>Piège classique</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>SMA</strong></td><td>Tendance</td><td>Support/résistance dynamique</td><td>Retard (lagging)</td></tr>
+      <tr><td>2</td><td><strong>EMA</strong></td><td>Tendance</td><td>Crossovers, support dynamique</td><td>Whipsaws en range</td></tr>
+      <tr><td>3</td><td><strong>MACD</strong></td><td>Tendance</td><td>Croisements, divergences</td><td>Faux signaux en range</td></tr>
+      <tr><td>4</td><td><strong>ADX</strong></td><td>Tendance</td><td>Force de la tendance (>25)</td><td>Ne donne pas la direction</td></tr>
+      <tr><td>5</td><td><strong>Ichimoku</strong></td><td>Tendance</td><td>Nuage = S/R, tendance globale</td><td>Complexe pour débutants</td></tr>
+      <tr><td>6</td><td><strong>RSI</strong></td><td>Oscillateur</td><td>Surachat/survente, divergences</td><td>"Suracheté" ≠ "vendre"</td></tr>
+      <tr><td>7</td><td><strong>Stochastique</strong></td><td>Oscillateur</td><td>Croisements en zone extrême</td><td>Inutile en tendance forte</td></tr>
+      <tr><td>8</td><td><strong>CCI</strong></td><td>Oscillateur</td><td>Zones +100/-100</td><td>Volatile, beaucoup de bruit</td></tr>
+      <tr><td>9</td><td><strong>Bollinger</strong></td><td>Volatilité</td><td>Squeeze, touches de bande</td><td>Toucher ≠ retournement</td></tr>
+      <tr><td>10</td><td><strong>ATR</strong></td><td>Volatilité</td><td>Sizing, placement de stop</td><td>Pas de signal directionnel</td></tr>
+      <tr><td>11</td><td><strong>OBV</strong></td><td>Volume</td><td>Accumulation/distribution</td><td>Inutile sur petits volumes</td></tr>
+      <tr><td>12</td><td><strong>VWAP</strong></td><td>Volume</td><td>Fair value intraday</td><td>Uniquement intraday</td></tr>
+    </tbody>
+  </table>
+
+  <div id="indicatorRadar" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div class="section-divider"><i class="fa-solid fa-question-circle" style="color:#4f46e5;"></i> Quiz</div>
+
+<div id="quiz4" class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-question-circle" style="color:#4f46e5; margin-right:.5rem;"></i> Quiz — Indicateurs Techniques</h2>
+
+  <details><summary>Question 1 : Qu'est-ce qu'un Golden Cross ?</summary><div class="quiz-answer">C'est quand la <strong>SMA 50 croise au-dessus de la SMA 200</strong>. C'est un signal haussier majeur à long terme qui indique que la tendance à moyen terme (SMA 50) est désormais plus forte que la tendance à long terme (SMA 200). L'inverse (Death Cross) est baissier.</div></details>
+  <details><summary>Question 2 : Le RSI est à 75. Faut-il vendre ?</summary><div class="quiz-answer"><strong>Pas nécessairement.</strong> Un RSI > 70 signifie suracheté, mais en tendance haussière forte, le RSI peut rester au-dessus de 70 pendant des semaines. Ne vendez pas uniquement sur cette base. Cherchez plutôt une divergence baissière (prix monte + RSI descend) pour un signal plus fiable.</div></details>
+  <details><summary>Question 3 : Qu'est-ce qu'un Bollinger Squeeze ?</summary><div class="quiz-answer">Un squeeze se produit quand les <strong>bandes de Bollinger se resserrent au maximum</strong>, indiquant une très faible volatilité. C'est le signe qu'un mouvement explosif est imminent — mais on ne sait pas dans quelle direction. Attendez le breakout pour agir.</div></details>
+  <details><summary>Question 4 : Combien d'indicateurs devrait-on utiliser simultanément ?</summary><div class="quiz-answer"><strong>Maximum 3</strong>, et de catégories DIFFÉRENTES. Par exemple : 1 indicateur de tendance (EMA) + 1 oscillateur (RSI) + 1 indicateur de volume (OBV). Utiliser 3 oscillateurs ensemble est redondant et donne les mêmes faux signaux.</div></details>
+  <details><summary>Question 5 : Quelle est la différence principale entre OBV et VWAP ?</summary><div class="quiz-answer"><strong>L'OBV</strong> est un indicateur cumulatif sur plusieurs jours/semaines — il montre l'accumulation ou la distribution à long terme. Le <strong>VWAP</strong> se reset chaque jour — il montre le prix moyen de la journée pondéré par volume, utilisé par les institutionnels pour juger la qualité de leurs exécutions.</div></details>
+</div>
+
+<!-- ===== TAKEAWAY ===== -->
+<div class="content-card" style="max-width:900px; margin:2rem auto; padding:2rem;">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check-circle"></i> Un indicateur <strong>confirme</strong> le prix, il ne le prédit pas</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>EMA 20 / SMA 50 / SMA 200</strong> sont les moyennes mobiles les plus importantes</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Golden Cross</strong> (50 > 200) = haussier, <strong>Death Cross</strong> (50 < 200) = baissier</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>RSI > 70</strong> = suracheté, <strong>< 30</strong> = survendu, mais les divergences sont plus fiables</li>
+      <li><i class="fa-solid fa-check-circle"></i> Le <strong>MACD</strong> est excellent en tendance mais donne de faux signaux en range</li>
+      <li><i class="fa-solid fa-check-circle"></i> Un <strong>Bollinger Squeeze</strong> annonce un mouvement explosif</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>ATR</strong> pour les stops, <strong>OBV</strong> pour l'accumulation, <strong>VWAP</strong> pour l'intraday</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Maximum 3 indicateurs</strong> de catégories différentes — pas plus</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== NEXT CTA ===== -->
+<div style="max-width:900px; margin:2rem auto; padding:0 2rem;">
+  <a href="/series/analyse-complete/part5-setups-fiables/" class="next-cta">
+    <div><div class="next-label">Partie 5 sur 8</div><div class="next-title">Les 10 Setups les Plus Fiables — De la Théorie au Trade</div></div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- SERIES BAR BOTTOM -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/analyse-complete/part3-figures-chartistes/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">L'Analyse Complète — Chartiste & Fondamentale</span><div class="series-steps"><a href="/series/analyse-complete/part1-lire-un-graphique/" class="series-step"><span class="series-num">1</span><span class="series-label">Lire un Graphique</span></a><a href="/series/analyse-complete/part2-bougies-japonaises/" class="series-step"><span class="series-num">2</span><span class="series-label">Bougies Japonaises</span></a><a href="/series/analyse-complete/part3-figures-chartistes/" class="series-step"><span class="series-num">3</span><span class="series-label">Figures Chartistes</span></a><a href="/series/analyse-complete/part4-indicateurs-techniques/" class="series-step current"><span class="series-num">4</span><span class="series-label">Indicateurs</span></a><a href="/series/analyse-complete/part5-setups-fiables/" class="series-step"><span class="series-num">5</span><span class="series-label">Setups Fiables</span></a><a href="/series/analyse-complete/part6-fondamentale-bases/" class="series-step"><span class="series-num">6</span><span class="series-label">Fondamentale</span></a><a href="/series/analyse-complete/part7-valorisation/" class="series-step"><span class="series-num">7</span><span class="series-label">Valorisation</span></a><a href="/series/analyse-complete/part8-combiner/" class="series-step"><span class="series-num">8</span><span class="series-label">Combiner</span></a></div><span class="series-counter">4/8</span><a href="/series/analyse-complete/part5-setups-fiables/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Données via MarketWatch Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<script>
+(function(){
+  var green='#10b981',red='#ef4444',indigo='#4f46e5',amber='#f59e0b',blue='#3b82f6';
+
+  // Generate price data
+  var prices=[],dates=[],p=150;
+  for(var i=0;i<120;i++){
+    var d=new Date(2025,3,1);d.setDate(d.getDate()+i);
+    if(d.getDay()===0||d.getDay()===6)continue;
+    dates.push(d.toLocaleDateString('fr-FR',{month:'short',day:'numeric'}));
+    p+=((Math.random()-0.46)*3);prices.push(Math.round(p*100)/100);
+  }
+
+  // Calculate SMA
+  function sma(data,period){var r=[];for(var i=0;i<data.length;i++){if(i<period-1){r.push(null);}else{var sum=0;for(var j=0;j<period;j++)sum+=data[i-j];r.push(Math.round(sum/period*100)/100);}};return r;}
+  var sma20=sma(prices,20),sma50=sma(prices,50);
+
+  // ===== MA CHART =====
+  var maChart=echarts.init(document.getElementById('maChart'));
+  maChart.setOption({
+    title:{text:'Prix + EMA 20 + SMA 50 — Support dynamique',left:'center',textStyle:{fontSize:14,fontFamily:'Inter'}},
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','EMA 20','SMA 50'],bottom:0},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,rotate:45,interval:15}},
+    yAxis:{type:'value',scale:true,axisLabel:{formatter:'${value}'}},
+    series:[
+      {name:'Prix',type:'line',data:prices,lineStyle:{color:'#94a3b8',width:1.5},symbol:'none'},
+      {name:'EMA 20',type:'line',data:sma20,lineStyle:{color:amber,width:2},symbol:'none',smooth:true},
+      {name:'SMA 50',type:'line',data:sma50,lineStyle:{color:blue,width:2.5},symbol:'none',smooth:true}
+    ],
+    grid:{left:60,right:20,top:50,bottom:70}
+  });
+
+  // ===== MACD CHART =====
+  var macdC=echarts.init(document.getElementById('macdChart'));
+  // Simple MACD approximation
+  var ema12=sma(prices,12),ema26=sma(prices,26);
+  var macdLine=[],signal=[],hist=[];
+  for(var i=0;i<prices.length;i++){
+    if(ema12[i]===null||ema26[i]===null){macdLine.push(null);signal.push(null);hist.push(null);}
+    else{var m=Math.round((ema12[i]-ema26[i])*100)/100;macdLine.push(m);}
+  }
+  var sigArr=sma(macdLine.map(function(v){return v===null?0:v;}),9);
+  for(var i=0;i<prices.length;i++){
+    if(macdLine[i]===null){signal.push(null);hist.push(null);}
+    else{signal.push(sigArr[i]);hist.push(macdLine[i]!==null&&sigArr[i]!==null?Math.round((macdLine[i]-sigArr[i])*100)/100:null);}
+  }
+  macdC.setOption({
+    title:{text:'MACD — Croisements et Histogramme',left:'center',textStyle:{fontSize:14,fontFamily:'Inter'}},
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','MACD','Signal','Histogramme'],bottom:0},
+    xAxis:[{type:'category',data:dates,gridIndex:0,axisLabel:{show:false}},{type:'category',data:dates,gridIndex:1,axisLabel:{fontSize:9,rotate:45,interval:15}}],
+    yAxis:[{type:'value',gridIndex:0,scale:true,axisLabel:{formatter:'${value}'}},{type:'value',gridIndex:1,axisLabel:{fontSize:9}}],
+    series:[
+      {name:'Prix',type:'line',data:prices,xAxisIndex:0,yAxisIndex:0,lineStyle:{color:'#94a3b8',width:1.5},symbol:'none'},
+      {name:'MACD',type:'line',data:macdLine,xAxisIndex:1,yAxisIndex:1,lineStyle:{color:blue,width:2},symbol:'none'},
+      {name:'Signal',type:'line',data:signal,xAxisIndex:1,yAxisIndex:1,lineStyle:{color:red,width:1.5,type:'dashed'},symbol:'none'},
+      {name:'Histogramme',type:'bar',data:hist.map(function(v){return v===null?null:{value:v,itemStyle:{color:v>=0?'rgba(16,185,129,0.6)':'rgba(239,68,68,0.6)'}};}),xAxisIndex:1,yAxisIndex:1}
+    ],
+    grid:[{left:60,right:20,top:50,height:'40%'},{left:60,right:20,top:'60%',height:'30%'}]
+  });
+
+  // ===== RSI CHART =====
+  var rsiC=echarts.init(document.getElementById('rsiChart'));
+  // Simple RSI approximation
+  var rsiData=[];
+  for(var i=0;i<prices.length;i++){
+    if(i<14){rsiData.push(null);continue;}
+    var gains=0,losses=0;
+    for(var j=i-13;j<=i;j++){
+      var diff=prices[j]-prices[j-1];
+      if(diff>0)gains+=diff;else losses-=diff;
+    }
+    var avgGain=gains/14,avgLoss=losses/14;
+    var rs=avgLoss===0?100:avgGain/avgLoss;
+    rsiData.push(Math.round((100-100/(1+rs))*100)/100);
+  }
+  rsiC.setOption({
+    title:{text:'RSI (14) — Zones de surachat et survente',left:'center',textStyle:{fontSize:14,fontFamily:'Inter'}},
+    tooltip:{trigger:'axis'},
+    xAxis:[{type:'category',data:dates,gridIndex:0,axisLabel:{show:false}},{type:'category',data:dates,gridIndex:1,axisLabel:{fontSize:9,rotate:45,interval:15}}],
+    yAxis:[{type:'value',gridIndex:0,scale:true,axisLabel:{formatter:'${value}'}},{type:'value',gridIndex:1,min:0,max:100}],
+    series:[
+      {type:'line',data:prices,xAxisIndex:0,yAxisIndex:0,lineStyle:{color:indigo,width:2},symbol:'none'},
+      {type:'line',data:rsiData,xAxisIndex:1,yAxisIndex:1,lineStyle:{color:'#7c3aed',width:2},symbol:'none',
+        markLine:{data:[
+          {yAxis:70,lineStyle:{color:red,type:'dashed',width:1.5},label:{formatter:'Suracheté 70',fontSize:10,color:red}},
+          {yAxis:30,lineStyle:{color:green,type:'dashed',width:1.5},label:{formatter:'Survendu 30',fontSize:10,color:green}},
+          {yAxis:50,lineStyle:{color:'#94a3b8',type:'dotted',width:1},label:{formatter:'50',fontSize:9}}
+        ],silent:true},
+        markArea:{data:[[{yAxis:70,itemStyle:{color:'rgba(239,68,68,0.06)'}},{yAxis:100}],[{yAxis:0,itemStyle:{color:'rgba(16,185,129,0.06)'}},{yAxis:30}]],silent:true}
+      }
+    ],
+    grid:[{left:60,right:20,top:50,height:'40%'},{left:60,right:20,top:'60%',height:'32%'}]
+  });
+
+  // ===== BOLLINGER CHART =====
+  var bolC=echarts.init(document.getElementById('bollingerChart'));
+  var bolMid=sma(prices,20),bolUp=[],bolLow=[];
+  for(var i=0;i<prices.length;i++){
+    if(i<19){bolUp.push(null);bolLow.push(null);continue;}
+    var sum2=0;for(var j=0;j<20;j++){var diff2=prices[i-j]-bolMid[i];sum2+=diff2*diff2;}
+    var std=Math.sqrt(sum2/20);
+    bolUp.push(Math.round((bolMid[i]+2*std)*100)/100);
+    bolLow.push(Math.round((bolMid[i]-2*std)*100)/100);
+  }
+  bolC.setOption({
+    title:{text:'Bandes de Bollinger (20,2) — Squeeze & Walking',left:'center',textStyle:{fontSize:14,fontFamily:'Inter'}},
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','Bande haute','SMA 20','Bande basse'],bottom:0},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,rotate:45,interval:15}},
+    yAxis:{type:'value',scale:true,axisLabel:{formatter:'${value}'}},
+    series:[
+      {name:'Bande haute',type:'line',data:bolUp,lineStyle:{color:'rgba(239,68,68,0.4)',width:1},symbol:'none',areaStyle:null},
+      {name:'SMA 20',type:'line',data:bolMid,lineStyle:{color:amber,width:1.5,type:'dashed'},symbol:'none'},
+      {name:'Bande basse',type:'line',data:bolLow,lineStyle:{color:'rgba(16,185,129,0.4)',width:1},symbol:'none',
+        areaStyle:{color:'rgba(79,70,229,0.04)',origin:'auto'}},
+      {name:'Prix',type:'line',data:prices,lineStyle:{color:indigo,width:2},symbol:'none'}
+    ],
+    grid:{left:60,right:20,top:50,bottom:70}
+  });
+
+  // ===== OBV CHART =====
+  var obvC=echarts.init(document.getElementById('obvChart'));
+  var obvData=[0];
+  for(var i=1;i<prices.length;i++){
+    var vol=Math.round(3000000+Math.random()*5000000);
+    obvData.push(obvData[i-1]+(prices[i]>prices[i-1]?vol:-vol));
+  }
+  obvC.setOption({
+    title:{text:'OBV — Accumulation / Distribution cachée',left:'center',textStyle:{fontSize:14,fontFamily:'Inter'}},
+    tooltip:{trigger:'axis'},
+    legend:{data:['Prix','OBV'],bottom:0},
+    xAxis:[{type:'category',data:dates,gridIndex:0,axisLabel:{show:false}},{type:'category',data:dates,gridIndex:1,axisLabel:{fontSize:9,rotate:45,interval:15}}],
+    yAxis:[{type:'value',gridIndex:0,scale:true,axisLabel:{formatter:'${value}'}},{type:'value',gridIndex:1,axisLabel:{formatter:function(v){return(v/1000000).toFixed(0)+'M';}}}],
+    series:[
+      {name:'Prix',type:'line',data:prices,xAxisIndex:0,yAxisIndex:0,lineStyle:{color:indigo,width:2},symbol:'none'},
+      {name:'OBV',type:'line',data:obvData,xAxisIndex:1,yAxisIndex:1,lineStyle:{color:green,width:2},symbol:'none',areaStyle:{color:'rgba(16,185,129,0.08)'}}
+    ],
+    grid:[{left:60,right:20,top:50,height:'40%'},{left:60,right:20,top:'60%',height:'32%'}]
+  });
+
+  // ===== RADAR CHART =====
+  var radC=echarts.init(document.getElementById('indicatorRadar'));
+  radC.setOption({
+    title:{text:'Comparaison des indicateurs par critère',left:'center',textStyle:{fontSize:14,fontFamily:'Inter'}},
+    tooltip:{},
+    legend:{data:['Tendance (EMA/SMA)','Oscillateur (RSI)','Volatilité (Bollinger)','Volume (OBV)'],bottom:0,textStyle:{fontSize:10}},
+    radar:{indicator:[{name:'Fiabilité',max:10},{name:'Facilité',max:10},{name:'Réactivité',max:10},{name:'Polyvalence',max:10},{name:'Faux signaux\n(inversé)',max:10}]},
+    series:[{type:'radar',data:[
+      {value:[8,9,4,8,6],name:'Tendance (EMA/SMA)',lineStyle:{color:blue},areaStyle:{color:'rgba(59,130,246,0.1)'}},
+      {value:[7,8,7,6,5],name:'Oscillateur (RSI)',lineStyle:{color:'#7c3aed'},areaStyle:{color:'rgba(124,58,234,0.1)'}},
+      {value:[6,7,8,5,5],name:'Volatilité (Bollinger)',lineStyle:{color:amber},areaStyle:{color:'rgba(245,158,11,0.1)'}},
+      {value:[7,7,5,4,7],name:'Volume (OBV)',lineStyle:{color:green},areaStyle:{color:'rgba(16,185,129,0.1)'}}
+    ]}]
+  });
+
+  window.addEventListener('resize',function(){[maChart,macdC,rsiC,bolC,obvC,radC].forEach(function(c){c.resize();});});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Machine Learning — When Code Learns to Trade | Quant Trading in Python — Part 6/6 | Market Watch</title>
+ <meta name="description" content="Quant Trading in Python — Part 6/6: ML for trading with Random Forest, XGBoost, LSTM. Feature engineering, time series cross-validation, ensemble methods, and realistic expectations.">
+ <meta property="og:title" content="Machine Learning — When Code Learns to Trade | Quant Trading Python 6/6 | Market Watch">
+ <meta property="og:description" content="Apply ML to trading: feature engineering, Random Forest, XGBoost, purged K-fold CV, ensemble methods, and why accuracy is meaningless for trading.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/quant-trading-python/part6-ml/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#fffbeb 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .code-block{background:#0f172a;border-radius:12px;overflow:hidden;margin:1.5rem 0}.code-label{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;background:#1e293b;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #334155}.code-label i{color:#d97706}.code-content{padding:1.25rem;overflow-x:auto}.code-content pre{margin:0;color:#e2e8f0;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85rem;line-height:1.7;white-space:pre}.code-content .kw{color:#c084fc}.code-content .fn{color:#67e8f9}.code-content .str{color:#86efac}.code-content .cm{color:#64748b}.code-content .num{color:#fbbf24}.code-content .var{color:#e2e8f0}.code-content .imp{color:#fb923c}.code-content .dec{color:#f472b6}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#fbbf24}
+ .takeaway-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #d97706;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#b45309;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(217,119,6,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#d97706;margin-top:.2rem;flex-shrink:0}
+ .pedagogy-box{background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:1.5rem;margin:1.5rem 0}.pedagogy-box h4{color:#b45309;margin-top:0;font-size:.95rem}.pedagogy-box p{font-size:.9rem;color:#334155;line-height:1.7;margin:0}
+ .alert-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:1.5rem;margin:1.5rem 0}.alert-box h4{color:#dc2626;margin-top:0;font-size:.95rem}.alert-box p{font-size:.9rem;color:#334155;line-height:1.7;margin:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#d97706;margin-right:.75rem}details[open] summary{border-color:#d97706;background:#fffbeb;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(217,119,6,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}.next-cta i{font-size:1.5rem}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.next-cta{flex-direction:column;text-align:center}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-python"></i> Quant Trading in Python — Part 6 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Machine Learning — When Code Learns to Trade</h1>
+  <p class="hero-subtitle">ML won't make you rich overnight, but it can add a measurable edge. We'll build a complete ML pipeline: feature engineering, model selection, time-series cross-validation, and ensemble methods — with realistic expectations.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-brain"></i> ML Pipeline</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-tree"></i> Random Forest</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-rocket"></i> XGBoost</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Overfitting</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/quant-trading-python/part5-live/" class="series-arrow" title="Live"><i class="fas fa-chevron-left"></i></a><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step current" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#ml-trading" class="fnav-item" data-section="ml-trading"><i class="fas fa-bookmark"></i><span>ML for Trading</span></a><a href="#features" class="fnav-item" data-section="features"><i class="fas fa-bookmark"></i><span>Feature Engineering</span></a><a href="#models" class="fnav-item" data-section="models"><i class="fas fa-bookmark"></i><span>Models</span></a><a href="#validation" class="fnav-item" data-section="validation"><i class="fas fa-bookmark"></i><span>Cross-Validation</span></a><a href="#ensemble" class="fnav-item" data-section="ensemble"><i class="fas fa-bookmark"></i><span>Ensemble Methods</span></a><a href="#reality" class="fnav-item" data-section="reality"><i class="fas fa-bookmark"></i><span>Realistic Expectations</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'})}if(isOpen)toggle()})});var ca=null;var obs=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var m=sections.find(function(s){return s.el===entry.target});if(m){if(ca)ca.item.classList.remove('active');m.item.classList.add('active');ca=m;label.textContent=m.item.querySelector('span').textContent}}})},{rootMargin:'-20% 0px -60% 0px'});sections.forEach(function(s){obs.observe(s.el)})})();</script>
+
+<!-- ==================== SECTION 1: ML FOR TRADING ==================== -->
+<div class="section-divider"><i class="fa-solid fa-brain"></i> ML for Trading</div>
+
+<div id="ml-trading" class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#d97706;"></i> What Works and What Doesn't</h2>
+  <p>Machine learning in trading is not magic. It's a tool for finding weak, noisy patterns in data that rule-based systems miss. The signal-to-noise ratio in financial data is extremely low, which means ML models overfit easily and degrade quickly.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Approach</th><th>Works For</th><th>Doesn't Work For</th><th>Typical Edge</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Classification</strong></td><td>Direction prediction (up/down)</td><td>Magnitude prediction</td><td>51-55% accuracy</td></tr>
+      <tr><td><strong>Regression</strong></td><td>Relative ranking of stocks</td><td>Exact return prediction</td><td>IC = 0.03-0.08</td></tr>
+      <tr><td><strong>Ensemble + Rules</strong></td><td>Combining ML with technical rules</td><td>Replacing all rules</td><td>10-20% Sharpe improvement</td></tr>
+      <tr><td><strong>Deep Learning (LSTM)</strong></td><td>Pattern recognition in sequences</td><td>Small datasets, interpretability</td><td>Marginal vs tree models</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The Fundamental Problem</h4>
+    <p>Financial markets are an adversarial environment. When a pattern is discovered, money flows in to exploit it, which weakens or eliminates the pattern. This is why ML models degrade over time and need constant retraining. The edge from ML is not a 90% accuracy model — it's a 52% accuracy model that trades thousands of times with proper sizing and risk management. Small edges, applied consistently, compound into significant returns.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 2: FEATURE ENGINEERING ==================== -->
+<div class="section-divider"><i class="fa-solid fa-cogs"></i> Feature Engineering</div>
+
+<div id="features" class="content-card">
+  <h2><i class="fa-solid fa-cogs" style="color:#d97706;"></i> Feature Engineering Pipeline</h2>
+  <p>Features are the inputs to your ML model. In trading, features are derived from price, volume, and external data. The quality of your features determines the ceiling of your model's performance.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> ml/features.py — Complete Feature Pipeline</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+<span class="kw">import</span> <span class="imp">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+<span class="kw">import</span> <span class="imp">talib</span>
+
+<span class="kw">class</span> <span class="fn">FeatureEngine</span>:
+    <span class="str">"""Generate ML features from OHLCV data."""</span>
+
+    <span class="kw">def</span> <span class="fn">build</span>(self, data: pd.DataFrame) -> pd.DataFrame:
+        <span class="str">"""Build all features. Returns ~45 features."""</span>
+        <span class="var">c</span> = data[<span class="str">'Close'</span>]
+        <span class="var">h</span> = data[<span class="str">'High'</span>]
+        <span class="var">l</span> = data[<span class="str">'Low'</span>]
+        <span class="var">v</span> = data[<span class="str">'Volume'</span>]
+        <span class="var">f</span> = pd.<span class="fn">DataFrame</span>(index=data.index)
+
+        <span class="cm"># === Price returns (multiple lookbacks) ===</span>
+        <span class="kw">for</span> lb <span class="kw">in</span> [<span class="num">1</span>, <span class="num">5</span>, <span class="num">10</span>, <span class="num">20</span>, <span class="num">60</span>]:
+            f[<span class="str">f'ret_{lb}'</span>] = c.<span class="fn">pct_change</span>(lb)
+            f[<span class="str">f'vol_{lb}'</span>] = c.<span class="fn">pct_change</span>().<span class="fn">rolling</span>(lb).<span class="fn">std</span>()
+
+        <span class="cm"># === Normalized price position ===</span>
+        <span class="kw">for</span> lb <span class="kw">in</span> [<span class="num">20</span>, <span class="num">60</span>]:
+            f[<span class="str">f'zscore_{lb}'</span>] = (c - c.<span class="fn">rolling</span>(lb).<span class="fn">mean</span>()) / c.<span class="fn">rolling</span>(lb).<span class="fn">std</span>()
+            f[<span class="str">f'pct_from_high_{lb}'</span>] = c / c.<span class="fn">rolling</span>(lb).<span class="fn">max</span>() - <span class="num">1</span>
+            f[<span class="str">f'pct_from_low_{lb}'</span>] = c / c.<span class="fn">rolling</span>(lb).<span class="fn">min</span>() - <span class="num">1</span>
+
+        <span class="cm"># === Technical indicators ===</span>
+        f[<span class="str">'rsi_14'</span>] = talib.<span class="fn">RSI</span>(c.values, <span class="num">14</span>) / <span class="num">100</span>
+        f[<span class="str">'rsi_7'</span>] = talib.<span class="fn">RSI</span>(c.values, <span class="num">7</span>) / <span class="num">100</span>
+        <span class="var">macd</span>, <span class="var">sig</span>, <span class="var">hist</span> = talib.<span class="fn">MACD</span>(c.values)
+        f[<span class="str">'macd_hist'</span>] = hist
+        f[<span class="str">'adx'</span>] = talib.<span class="fn">ADX</span>(h.values, l.values, c.values, <span class="num">14</span>) / <span class="num">100</span>
+        f[<span class="str">'cci'</span>] = talib.<span class="fn">CCI</span>(h.values, l.values, c.values, <span class="num">14</span>) / <span class="num">200</span>
+
+        <span class="cm"># === Volume features ===</span>
+        f[<span class="str">'vol_ratio_20'</span>] = v / v.<span class="fn">rolling</span>(<span class="num">20</span>).<span class="fn">mean</span>()
+        f[<span class="str">'obv_slope'</span>] = (np.<span class="fn">sign</span>(c.<span class="fn">diff</span>()) * v).<span class="fn">cumsum</span>().<span class="fn">pct_change</span>(<span class="num">10</span>)
+        f[<span class="str">'mfi'</span>] = talib.<span class="fn">MFI</span>(h.values, l.values, c.values, v.values, <span class="num">14</span>) / <span class="num">100</span>
+
+        <span class="cm"># === Candlestick patterns (binary) ===</span>
+        f[<span class="str">'body_ratio'</span>] = (c - data[<span class="str">'Open'</span>]).<span class="fn">abs</span>() / (h - l + <span class="num">1e-8</span>)
+        f[<span class="str">'upper_shadow'</span>] = (h - np.<span class="fn">maximum</span>(c, data[<span class="str">'Open'</span>])) / (h - l + <span class="num">1e-8</span>)
+
+        <span class="cm"># === Calendar features ===</span>
+        f[<span class="str">'dow'</span>] = data.index.dayofweek / <span class="num">4</span>
+        f[<span class="str">'month'</span>] = data.index.month / <span class="num">12</span>
+        f[<span class="str">'month_end'</span>] = (data.index.day > <span class="num">25</span>).<span class="fn">astype</span>(float)
+
+        <span class="kw">return</span> f.<span class="fn">dropna</span>()
+
+    <span class="kw">def</span> <span class="fn">create_labels</span>(self, close: pd.Series,
+                       horizon: int = <span class="num">5</span>,
+                       method: str = <span class="str">'binary'</span>) -> pd.Series:
+        <span class="str">"""Create prediction labels.
+        binary: +1 if forward return > 0, else 0
+        triple: +1 (up > threshold), 0 (flat), -1 (down)
+        """</span>
+        <span class="var">fwd_ret</span> = close.<span class="fn">pct_change</span>(horizon).<span class="fn">shift</span>(-horizon)
+
+        <span class="kw">if</span> method == <span class="str">'binary'</span>:
+            <span class="kw">return</span> (fwd_ret > <span class="num">0</span>).<span class="fn">astype</span>(int)
+        <span class="kw">elif</span> method == <span class="str">'triple'</span>:
+            <span class="var">threshold</span> = fwd_ret.<span class="fn">std</span>() * <span class="num">0.5</span>
+            <span class="var">labels</span> = pd.<span class="fn">Series</span>(<span class="num">0</span>, index=close.index)
+            labels[fwd_ret > threshold] = <span class="num">1</span>
+            labels[fwd_ret < -threshold] = -<span class="num">1</span>
+            <span class="kw">return</span> labels</pre></div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Feature Engineering Rules</h4>
+    <p><strong>1) No future data:</strong> every feature at time t must use only data from t-1 and earlier. <strong>2) Normalize:</strong> scale all features to similar ranges (z-score or [0,1]). <strong>3) Remove correlated features:</strong> if correlation &gt; 0.9, drop one. <strong>4) Domain knowledge:</strong> RSI, MACD, ATR are better features than raw prices because they capture market microstructure. <strong>5) Labels:</strong> use forward returns, not contemporaneous returns (data leakage!).</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3: MODELS ==================== -->
+<div class="section-divider"><i class="fa-solid fa-tree"></i> Models</div>
+
+<div id="models" class="content-card">
+  <h2><i class="fa-solid fa-tree" style="color:#10b981;"></i> Model Zoo</h2>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> ml/models.py — Model Pipeline</div>
+    <div class="code-content"><pre><span class="kw">from</span> <span class="imp">sklearn.ensemble</span> <span class="kw">import</span> <span class="var">RandomForestClassifier</span>
+<span class="kw">from</span> <span class="imp">sklearn.preprocessing</span> <span class="kw">import</span> <span class="var">StandardScaler</span>
+<span class="kw">from</span> <span class="imp">sklearn.pipeline</span> <span class="kw">import</span> <span class="var">Pipeline</span>
+<span class="kw">import</span> <span class="imp">xgboost</span> <span class="kw">as</span> <span class="var">xgb</span>
+
+<span class="kw">class</span> <span class="fn">TradingModels</span>:
+    <span class="str">"""ML models for trading signals."""</span>
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">random_forest</span>() -> Pipeline:
+        <span class="str">"""Random Forest — robust, interpretable, hard to overfit.
+        The workhorse of quant ML."""</span>
+        <span class="kw">return</span> <span class="fn">Pipeline</span>([
+            (<span class="str">'scaler'</span>, <span class="fn">StandardScaler</span>()),
+            (<span class="str">'model'</span>, <span class="fn">RandomForestClassifier</span>(
+                n_estimators=<span class="num">500</span>,
+                max_depth=<span class="num">5</span>,       <span class="cm"># Shallow trees = less overfit</span>
+                min_samples_leaf=<span class="num">50</span>,  <span class="cm"># Require 50+ samples per leaf</span>
+                max_features=<span class="str">'sqrt'</span>,  <span class="cm"># Random feature subset</span>
+                class_weight=<span class="str">'balanced'</span>,
+                random_state=<span class="num">42</span>,
+                n_jobs=-<span class="num">1</span>
+            ))
+        ])
+
+    <span class="dec">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">xgboost_model</span>() -> Pipeline:
+        <span class="str">"""XGBoost — gradient boosting, often best on tabular data.
+        More powerful but more prone to overfitting."""</span>
+        <span class="kw">return</span> <span class="fn">Pipeline</span>([
+            (<span class="str">'scaler'</span>, <span class="fn">StandardScaler</span>()),
+            (<span class="str">'model'</span>, xgb.<span class="fn">XGBClassifier</span>(
+                n_estimators=<span class="num">200</span>,
+                max_depth=<span class="num">4</span>,
+                learning_rate=<span class="num">0.05</span>,
+                subsample=<span class="num">0.8</span>,
+                colsample_bytree=<span class="num">0.8</span>,
+                reg_alpha=<span class="num">0.1</span>,      <span class="cm"># L1 regularization</span>
+                reg_lambda=<span class="num">1.0</span>,     <span class="cm"># L2 regularization</span>
+                min_child_weight=<span class="num">50</span>,
+                eval_metric=<span class="str">'logloss'</span>,
+                random_state=<span class="num">42</span>,
+                use_label_encoder=<span class="kw">False</span>
+            ))
+        ])</pre></div>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Model</th><th>Overfit Risk</th><th>Interpretability</th><th>Speed</th><th>Typical OOS Accuracy</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Random Forest</strong></td><td>Low</td><td>High (feature importance)</td><td>Fast</td><td>51-53%</td></tr>
+      <tr><td><strong>XGBoost</strong></td><td>Medium</td><td>Medium</td><td>Fast</td><td>52-54%</td></tr>
+      <tr><td><strong>LSTM</strong></td><td>High</td><td>Low (black box)</td><td>Slow</td><td>51-53%</td></tr>
+      <tr><td><strong>Logistic Regression</strong></td><td>Very Low</td><td>Very High</td><td>Fastest</td><td>50-52%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why Not Deep Learning?</h4>
+    <p>For daily-frequency trading with hundreds of features and a few thousand samples, tree-based models (Random Forest, XGBoost) consistently outperform deep learning. LSTMs and Transformers shine with enormous datasets (tick data, order book data, millions of samples) and complex temporal patterns. For our use case, XGBoost is king. Don't use a cannon to kill a mosquito.</p>
+  </div>
+
+  <!-- ECharts: Feature Importance -->
+  <div id="importanceChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 4: CROSS-VALIDATION ==================== -->
+<div class="section-divider"><i class="fa-solid fa-shuffle"></i> Time Series Cross-Validation</div>
+
+<div id="validation" class="content-card">
+  <h2><i class="fa-solid fa-shuffle" style="color:#2563eb;"></i> Purged K-Fold Cross-Validation</h2>
+  <p>Standard K-fold CV is WRONG for time series. It shuffles data, creating future-leakage. Purged K-fold respects temporal ordering and adds a gap between train and test sets to prevent information leakage from overlapping labels.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> ml/evaluation.py — Purged K-Fold</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">PurgedKFold</span>:
+    <span class="str">"""
+    Purged K-Fold Cross-Validation for time series.
+
+    1. Split data into K chronological folds
+    2. Train on folds [0..i-1], test on fold [i]
+    3. Add a purge gap between train/test to prevent leakage
+    """</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, n_splits: int = <span class="num">5</span>,
+                 purge_gap: int = <span class="num">10</span>):
+        self.n_splits = n_splits
+        self.purge_gap = purge_gap
+
+    <span class="kw">def</span> <span class="fn">split</span>(self, X: pd.DataFrame):
+        <span class="str">"""Generate train/test indices."""</span>
+        <span class="var">n</span> = <span class="fn">len</span>(X)
+        <span class="var">fold_size</span> = n // (self.n_splits + <span class="num">1</span>)
+
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, self.n_splits + <span class="num">1</span>):
+            <span class="var">train_end</span> = fold_size * i
+            <span class="var">test_start</span> = train_end + self.purge_gap
+            <span class="var">test_end</span> = test_start + fold_size
+
+            <span class="kw">if</span> test_end > n:
+                <span class="kw">break</span>
+
+            <span class="var">train_idx</span> = np.<span class="fn">arange</span>(<span class="num">0</span>, train_end)
+            <span class="var">test_idx</span> = np.<span class="fn">arange</span>(test_start, test_end)
+
+            <span class="kw">yield</span> train_idx, test_idx
+
+<span class="kw">def</span> <span class="fn">evaluate_model</span>(model, X, y, cv=<span class="kw">None</span>):
+    <span class="str">"""Evaluate model with purged K-fold.
+    Returns OOS metrics, not in-sample."""</span>
+    <span class="kw">if</span> cv <span class="kw">is None</span>:
+        cv = <span class="fn">PurgedKFold</span>(n_splits=<span class="num">5</span>, purge_gap=<span class="num">10</span>)
+
+    <span class="var">results</span> = []
+    <span class="kw">for</span> train_idx, test_idx <span class="kw">in</span> cv.<span class="fn">split</span>(X):
+        <span class="var">X_train</span> = X.<span class="fn">iloc</span>[train_idx]
+        <span class="var">y_train</span> = y.<span class="fn">iloc</span>[train_idx]
+        <span class="var">X_test</span> = X.<span class="fn">iloc</span>[test_idx]
+        <span class="var">y_test</span> = y.<span class="fn">iloc</span>[test_idx]
+
+        model.<span class="fn">fit</span>(X_train, y_train)
+        <span class="var">preds</span> = model.<span class="fn">predict</span>(X_test)
+        <span class="var">proba</span> = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="num">1</span>]
+
+        <span class="cm"># Trading-relevant metrics (NOT accuracy)</span>
+        <span class="var">fwd_returns</span> = y_test  <span class="cm"># Actual forward returns</span>
+        <span class="var">long_mask</span> = preds == <span class="num">1</span>
+        <span class="var">short_mask</span> = preds == <span class="num">0</span>
+
+        results.<span class="fn">append</span>({
+            <span class="str">'accuracy'</span>: (preds == y_test.values).<span class="fn">mean</span>(),
+            <span class="str">'long_return'</span>: fwd_returns[long_mask].<span class="fn">mean</span>() <span class="kw">if</span> long_mask.<span class="fn">any</span>() <span class="kw">else</span> <span class="num">0</span>,
+            <span class="str">'n_test'</span>: <span class="fn">len</span>(test_idx),
+            <span class="str">'n_long'</span>: long_mask.<span class="fn">sum</span>(),
+        })
+
+    <span class="kw">return</span> pd.<span class="fn">DataFrame</span>(results)</pre></div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">The Real Evaluation Metric</div>
+    <span class="formula-highlight">OOS Sharpe Ratio</span> = not accuracy, not AUC, but the actual Sharpe of a portfolio built from model predictions
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Accuracy Is Meaningless</h4>
+    <p>A model with 55% accuracy that is correct on small moves and wrong on big moves will <strong>lose money</strong>. A model with 48% accuracy that catches big moves and avoids big losses can be <strong>very profitable</strong>. Always evaluate ML trading models using <strong>Sharpe ratio, profit factor, and max drawdown</strong> of the resulting portfolio — never classification accuracy alone.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5: ENSEMBLE ==================== -->
+<div class="section-divider"><i class="fa-solid fa-layer-group"></i> Ensemble Methods</div>
+
+<div id="ensemble" class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#9333ea;"></i> Ensemble: ML + Rule-Based Signals</h2>
+  <p>The most practical approach: use ML to augment, not replace, your rule-based strategy. The ensemble combines the interpretability and robustness of rules with the pattern-detection ability of ML.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> ml/ensemble.py — Hybrid Strategy</div>
+    <div class="code-content"><pre><span class="kw">class</span> <span class="fn">HybridStrategy</span>:
+    <span class="str">"""Combine ML predictions with rule-based signals.
+
+    The ML model acts as a filter or confidence booster
+    for the rule-based signals, not a replacement.
+    """</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, ml_model, rule_strategy,
+                 ml_weight: float = <span class="num">0.4</span>,
+                 rule_weight: float = <span class="num">0.6</span>,
+                 threshold: float = <span class="num">0.3</span>):
+        self.ml = ml_model
+        self.rules = rule_strategy
+        self.ml_w = ml_weight
+        self.rule_w = rule_weight
+        self.threshold = threshold
+
+    <span class="kw">def</span> <span class="fn">generate_signals</span>(self, data: pd.DataFrame,
+                          features: pd.DataFrame) -> pd.Series:
+        <span class="str">"""Generate ensemble signals."""</span>
+
+        <span class="cm"># Rule-based signal (from Part 3)</span>
+        <span class="var">rule_signal</span> = self.rules.<span class="fn">generate_signals</span>(data)
+
+        <span class="cm"># ML probability (0 to 1, where > 0.5 = bullish)</span>
+        <span class="var">ml_proba</span> = self.ml.<span class="fn">predict_proba</span>(features)[:, <span class="num">1</span>]
+        <span class="var">ml_signal</span> = pd.<span class="fn">Series</span>(ml_proba * <span class="num">2</span> - <span class="num">1</span>,  <span class="cm"># Map to [-1, 1]</span>
+                              index=features.index)
+
+        <span class="cm"># Weighted ensemble</span>
+        <span class="var">ensemble</span> = self.rule_w * rule_signal + self.ml_w * ml_signal
+
+        <span class="cm"># Convert to discrete signals</span>
+        <span class="var">signals</span> = pd.<span class="fn">Series</span>(<span class="num">0</span>, index=data.index)
+        signals[ensemble > self.threshold] = <span class="num">1</span>
+        signals[ensemble < -self.threshold] = -<span class="num">1</span>
+
+        <span class="kw">return</span> signals
+
+    <span class="kw">def</span> <span class="fn">retrain</span>(self, features, labels, lookback: int = <span class="num">504</span>):
+        <span class="str">"""Retrain ML model on recent data.
+        Call monthly or when performance degrades."""</span>
+        <span class="var">recent_X</span> = features.<span class="fn">tail</span>(lookback)
+        <span class="var">recent_y</span> = labels.<span class="fn">tail</span>(lookback)
+        self.ml.<span class="fn">fit</span>(recent_X, recent_y)
+        <span class="fn">print</span>(<span class="str">f"Model retrained on {len(recent_X)} samples"</span>)</pre></div>
+  </div>
+
+  <!-- ECharts: Ensemble vs Components -->
+  <div id="ensembleChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 6: REALITY ==================== -->
+<div class="section-divider"><i class="fa-solid fa-scale-balanced"></i> Realistic Expectations</div>
+
+<div id="reality" class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#ef4444;"></i> What Doesn't Work (and Realistic Expectations)</h2>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-skull-crossbones"></i> What Doesn't Work</h4>
+    <p><strong>1) Predicting exact prices.</strong> Markets are not deterministic. <strong>2) Training on the full dataset and reporting in-sample results.</strong> Always evaluate OOS. <strong>3) 100+ features with 2 years of data.</strong> Massive overfitting. <strong>4) Deep learning on daily bars.</strong> Not enough data; use tree models instead. <strong>5) Ignoring transaction costs.</strong> A model that trades 50x per day needs an enormous edge to be profitable. <strong>6) No retraining schedule.</strong> Markets evolve; your model must too.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Realistic Numbers</h4>
+    <p>A well-built ML trading system might achieve: <strong>OOS accuracy: 52-55%</strong> (not 90%). <strong>Information Coefficient: 0.03-0.08</strong> (not 0.5). <strong>Sharpe improvement: 10-20%</strong> over the rule-based baseline (not 10x). <strong>Model half-life: 3-6 months</strong> before significant degradation. These are small numbers, but small edges applied consistently with proper risk management compound into real profits. The goal is not a crystal ball — it's a slightly loaded coin flipped thousands of times.</p>
+  </div>
+
+  <h3>The Complete Series Architecture</h3>
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-diagram-project"></i> Full System Flow</div>
+    <div class="code-content"><pre><span class="cm"># The complete quant trading system we've built:</span>
+<span class="cm">#</span>
+<span class="cm"># Part 1: DATA</span>
+<span class="cm">#   yfinance -> raw OHLCV -> cleaned DataFrame</span>
+<span class="cm">#</span>
+<span class="cm"># Part 2: BACKTEST</span>
+<span class="cm">#   BacktestEngine -> metrics (Sharpe, drawdown, PF)</span>
+<span class="cm">#</span>
+<span class="cm"># Part 3: SIGNALS</span>
+<span class="cm">#   Momentum + Reversion + Volume + Volatility</span>
+<span class="cm">#   -> CompositeSignal -> weighted score</span>
+<span class="cm">#</span>
+<span class="cm"># Part 4: RISK</span>
+<span class="cm">#   PositionSizer (Kelly) + StopLoss (ATR)</span>
+<span class="cm">#   + DrawdownController + PortfolioOptimizer</span>
+<span class="cm">#</span>
+<span class="cm"># Part 5: LIVE</span>
+<span class="cm">#   Alpaca API -> ExecutionEngine -> TradeJournal</span>
+<span class="cm">#   Paper trading -> 3-phase deployment</span>
+<span class="cm">#</span>
+<span class="cm"># Part 6: ML (this part)</span>
+<span class="cm">#   FeatureEngine -> XGBoost/RF -> PurgedKFold</span>
+<span class="cm">#   -> HybridStrategy (ML + Rules)</span>
+<span class="cm">#</span>
+<span class="cm"># === THE DAILY LOOP ===</span>
+<span class="cm"># 1. Fetch latest data (yfinance / Alpaca)</span>
+<span class="cm"># 2. Generate features (FeatureEngine)</span>
+<span class="cm"># 3. ML prediction (XGBoost probability)</span>
+<span class="cm"># 4. Rule-based signals (CompositeSignal)</span>
+<span class="cm"># 5. Ensemble (HybridStrategy)</span>
+<span class="cm"># 6. Risk check (DrawdownController)</span>
+<span class="cm"># 7. Position sizing (Kelly/ATR)</span>
+<span class="cm"># 8. Execute (Alpaca bracket orders)</span>
+<span class="cm"># 9. Log (TradeJournal)</span>
+<span class="cm"># 10. Monitor (LiveMonitor dashboard)</span></pre></div>
+  </div>
+
+  <!-- ECharts: OOS Equity Curve Comparison -->
+  <div id="oosChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <!-- ECharts: Confusion Matrix Heatmap -->
+  <div id="confChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== TAKEAWAY ==================== -->
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-trophy"></i> Series Complete — Full Checklist</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> <strong>Part 1:</strong> Python environment, libraries, data pipeline, project structure</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Part 2:</strong> Backtest engine, SMA crossover, RSI reversion, walk-forward validation</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Part 3:</strong> Signal library (momentum, reversion, volume, volatility), multi-factor model</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Part 4:</strong> Position sizing (Kelly), stop losses, VaR, portfolio optimization, drawdown control</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Part 5:</strong> Alpaca API, execution engine, monitoring, trade journal, paper to live</li>
+    <li><i class="fa-solid fa-check"></i> <strong>Part 6:</strong> Feature engineering, Random Forest, XGBoost, purged K-fold, ensemble</li>
+    <li><i class="fa-solid fa-star"></i> You now have a complete, production-ready quant trading system in Python</li>
+  </ul>
+</div>
+
+<!-- Final CTA back to Part 1 -->
+<a href="/series/quant-trading-python/part1-setup/" class="next-cta">
+  <div><div class="next-label">Back to the Beginning</div><div class="next-title">Review Part 1 — Setup Your Quant Lab</div></div>
+  <i class="fa-solid fa-rotate-left"></i>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/quant-trading-python/part5-live/" class="series-arrow" title="Live"><i class="fas fa-chevron-left"></i></a><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step current" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Données via MarketWatch Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Feature Importance
+var impC=echarts.init(document.getElementById('importanceChart'));
+var feats=['rsi_14','ret_20','zscore_20','vol_20','macd_hist','adx','vol_ratio_20','pct_from_high_60','mfi','ret_5','cci','body_ratio','obv_slope','upper_shadow','dow'];
+var imps=[0.12,0.10,0.09,0.08,0.07,0.07,0.06,0.06,0.05,0.05,0.04,0.04,0.04,0.03,0.03];
+impC.setOption({
+  title:{text:'XGBoost Feature Importance (Top 15)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{trigger:'axis'},
+  grid:{left:130,right:30,top:50,bottom:30},
+  xAxis:{type:'value',name:'Importance',splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  yAxis:{type:'category',data:feats.reverse(),axisLabel:{fontSize:10}},
+  series:[{type:'bar',data:imps.reverse().map(function(v,i){return{value:v,itemStyle:{color:i>11?'#d97706':i>8?'#fbbf24':i>5?'#10b981':'#2563eb'}}})}]
+});
+
+// Ensemble vs Components
+var ensC=echarts.init(document.getElementById('ensembleChart'));
+var days=[];var ruleEq=[];var mlEq=[];var ensEq=[];var bhEq=[];
+var re=100000,me=100000,ee=100000,be=100000;
+for(var i=0;i<500;i++){days.push(i);var r=(Math.random()-0.47)*0.02;be*=(1+r);re*=(1+r*(Math.sin(i/30)>0?1.1:0.9));me*=(1+r*(Math.cos(i/25+1)>-0.1?1.15:0.85));ee*=(1+r*(Math.sin(i/30)>0||Math.cos(i/25+1)>0?1.2:0.85));ruleEq.push(Math.round(re));mlEq.push(Math.round(me));ensEq.push(Math.round(ee));bhEq.push(Math.round(be))}
+ensC.setOption({
+  title:{text:'Ensemble vs Components — OOS Performance',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  grid:{left:70,right:30,top:50,bottom:40},
+  xAxis:{type:'category',data:days,axisLabel:{interval:99}},
+  yAxis:{type:'value',axisLabel:{formatter:function(v){return '$'+Math.round(v/1000)+'k'}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  series:[
+    {name:'Ensemble (ML+Rules)',type:'line',data:ensEq,lineStyle:{color:'#d97706',width:3},symbol:'none'},
+    {name:'Rules Only',type:'line',data:ruleEq,lineStyle:{color:'#2563eb',width:1.5},symbol:'none'},
+    {name:'ML Only',type:'line',data:mlEq,lineStyle:{color:'#10b981',width:1.5},symbol:'none'},
+    {name:'Buy & Hold',type:'line',data:bhEq,lineStyle:{color:'#94a3b8',width:1,type:'dashed'},symbol:'none'}
+  ]
+});
+
+// OOS Equity Curve
+var oosC=echarts.init(document.getElementById('oosChart'));
+var oosDays=[];var isEq=[];var oosEq=[];var iEq=100000,oEq=100000;
+for(var i=0;i<500;i++){oosDays.push(i);var r=(Math.random()-0.47)*0.02;iEq*=(1+r*1.4);oEq*=(1+r*1.05);isEq.push(Math.round(iEq));oosEq.push(Math.round(oEq))}
+oosC.setOption({
+  title:{text:'In-Sample vs Out-of-Sample: The Reality Check',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  grid:{left:70,right:30,top:50,bottom:40},
+  xAxis:{type:'category',data:oosDays,axisLabel:{interval:99}},
+  yAxis:{type:'value',axisLabel:{formatter:function(v){return '$'+Math.round(v/1000)+'k'}},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+  series:[
+    {name:'In-Sample (overfit)',type:'line',data:isEq,lineStyle:{color:'#ef4444',width:2},symbol:'none',areaStyle:{color:'rgba(239,68,68,0.05)'}},
+    {name:'Out-of-Sample (reality)',type:'line',data:oosEq,lineStyle:{color:'#10b981',width:2.5},symbol:'none',areaStyle:{color:'rgba(16,185,129,0.08)'}}
+  ],
+  graphic:[{type:'text',left:'65%',top:100,style:{text:'The gap between\nthese lines is\nthe overfitting tax',fontSize:12,fill:'#ef4444',fontWeight:600}}]
+});
+
+// Confusion Matrix
+var confC=echarts.init(document.getElementById('confChart'));
+confC.setOption({
+  title:{text:'Confusion Matrix — XGBoost (OOS)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+  tooltip:{formatter:function(p){var labels=['True Down','True Up'];var preds=['Pred Down','Pred Up'];return preds[p.value[0]]+' / '+labels[p.value[1]]+'<br>Count: '+p.value[2]}},
+  grid:{left:100,right:80,top:50,bottom:50},
+  xAxis:{type:'category',data:['Predicted Down','Predicted Up'],axisLabel:{fontWeight:600}},
+  yAxis:{type:'category',data:['Actual Down','Actual Up'],axisLabel:{fontWeight:600}},
+  visualMap:{min:0,max:200,calculable:true,orient:'vertical',right:10,top:'center',inRange:{color:['#fef3c7','#fbbf24','#d97706','#92400e']}},
+  series:[{type:'heatmap',data:[[0,0,120],[0,1,85],[1,0,95],[1,1,130]],label:{show:true,fontSize:18,fontWeight:800,formatter:function(p){return p.value[2]}},emphasis:{itemStyle:{shadowBlur:10}}}]
+});
+
+window.addEventListener('resize',function(){impC.resize();ensC.resize();oosC.resize();confC.resize()});
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

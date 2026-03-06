@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Price Data APIs — OHLCV, Real-Time &amp; Historical | Finance APIs — The Ultimate Guide — Part 1/5 | Market Watch</title>
+ <meta name="description" content="Finance APIs Series — Part 1/5: Complete guide to every free and paid API for OHLCV price data, real-time quotes, and historical bars. Yahoo Finance, Alpha Vantage, Polygon.io, Tiingo, IEX Cloud, Twelve Data, Finnhub, EODHD compared.">
+ <meta property="og:title" content="Price Data APIs — OHLCV, Real-Time &amp; Historical | Finance APIs 1/5 | Market Watch">
+ <meta property="og:description" content="The definitive comparison of every price data API: free tiers, rate limits, WebSocket support, data quality, and code examples in Python and JavaScript.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/finance-apis/part1-price-data/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* SKY BLUE THEME for Finance APIs */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #e0f2fe 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-sky { background:rgba(2,132,199,0.1); color:#0284c7; border:1px solid rgba(2,132,199,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', 'Cascadia Code', monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; font-family:Inter, sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#c084fc; }
+ .code-block .string { color:#86efac; }
+ .code-block .function { color:#7dd3fc; }
+ .code-block .number { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border:1px solid #0284c7; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0369a1; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(2,132,199,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0284c7; margin-top:0.2rem; flex-shrink:0; }
+
+ .pedagogy-box { background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border:1px solid #7dd3fc; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .pedagogy-box h4 { color:#0284c7; margin-top:0; display:flex; align-items:center; gap:0.5rem; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(2,132,199,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .api-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-left:4px solid #0284c7; transition:all 0.3s; }
+ .api-card:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .api-card h3 { margin-top:0; color:#0f172a; font-size:1.2rem; }
+ .api-card .api-meta { display:flex; gap:0.75rem; flex-wrap:wrap; margin:0.75rem 0; }
+ .api-card .api-tag { font-size:0.7rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:99px; text-transform:uppercase; letter-spacing:0.05em; }
+ .api-tag-free { background:#f0fdf4; color:#16a34a; border:1px solid #86efac; }
+ .api-tag-paid { background:#fef3c7; color:#d97706; border:1px solid #fcd34d; }
+ .api-tag-freemium { background:#e0f2fe; color:#0284c7; border:1px solid #7dd3fc; }
+ .api-tag-ws { background:#f5f3ff; color:#7c3aed; border:1px solid #c4b5fd; }
+
+ .pros-cons { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0; }
+ .pros-cons ul { list-style:none; padding:0; margin:0; }
+ .pros-cons li { padding:0.3rem 0; font-size:0.85rem; display:flex; align-items:flex-start; gap:0.5rem; }
+ .pros h4 { color:#16a34a; margin:0 0 0.5rem; font-size:0.85rem; }
+ .cons h4 { color:#dc2626; margin:0 0 0.5rem; font-size:0.85rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0284c7; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0284c7; margin-right:0.75rem; }
+ details[open] summary { border-color:#0284c7; background:#e0f2fe; border-radius:12px 12px 0 0; }
+ details .detail-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .pros-cons { grid-template-columns:1fr; }
+   .compare-table { font-size:0.75rem; }
+   .compare-table th, .compare-table td { padding:0.5rem; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .code-block { font-size:0.75rem; padding:1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> Finance APIs Series — Part 1 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Price Data APIs — OHLCV, Real-Time &amp; Historical</h1>
+  <p class="hero-subtitle">Every free and paid API for market prices compared head-to-head. From Yahoo Finance's legendary free tier to Polygon.io's institutional WebSocket feeds — find the right data source for your stack.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-sky"><i class="fa-solid fa-database"></i> 8 APIs Compared</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-code"></i> Python &amp; JS</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-dollar-sign"></i> Free Tiers</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-bolt"></i> WebSocket</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Finance APIs — The Ultimate Guide</span><div class="series-steps"><a href="/series/finance-apis/part1-price-data/" class="series-step current" title="Price Data"><span class="series-num">1</span><span class="series-label">Price Data</span></a><a href="/series/finance-apis/part2-fundamentals/" class="series-step" title="Fundamentals"><span class="series-num">2</span><span class="series-label">Fundamentals</span></a><a href="/series/finance-apis/part3-sentiment/" class="series-step" title="Sentiment"><span class="series-num">3</span><span class="series-label">Sentiment</span></a><a href="/series/finance-apis/part4-options-derivatives/" class="series-step" title="Options"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/finance-apis/part5-aggregator/" class="series-step" title="Aggregator"><span class="series-num">5</span><span class="series-label">Aggregator</span></a></div><span class="series-counter">1/5</span><a href="/series/finance-apis/part2-fundamentals/" class="series-arrow" title="Fundamentals"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-map"></i><span>Overview</span></a><a href="#yahoo" class="fnav-item" data-section="yahoo"><i class="fas fa-database"></i><span>Yahoo Finance</span></a><a href="#alphavantage" class="fnav-item" data-section="alphavantage"><i class="fas fa-chart-line"></i><span>Alpha Vantage</span></a><a href="#polygon" class="fnav-item" data-section="polygon"><i class="fas fa-bolt"></i><span>Polygon.io</span></a><a href="#others" class="fnav-item" data-section="others"><i class="fas fa-list"></i><span>More APIs</span></a><a href="#comparison" class="fnav-item" data-section="comparison"><i class="fas fa-table"></i><span>Comparison</span></a><a href="#code" class="fnav-item" data-section="code"><i class="fas fa-code"></i><span>Code Examples</span></a><a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-star"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<!-- ===== SECTION 1: OVERVIEW ===== -->
+<div class="section-divider"><i class="fa-solid fa-map"></i> The Price Data Landscape</div>
+
+<div id="overview" class="content-card">
+  <h2><i class="fa-solid fa-map" style="color:#0284c7; margin-right:0.5rem;"></i> Why Price Data Is the Foundation of Everything</h2>
+  <p>Every trading system, every dashboard, every financial model starts with the same primitive: <strong>price data</strong>. Whether you need end-of-day OHLCV bars for backtesting or sub-second WebSocket ticks for a live scalper, the API you choose determines your ceiling.</p>
+  <p>The market for price data APIs has exploded since 2020. Where once you had Bloomberg Terminal or nothing, today a solo developer can access institutional-grade data for under $30/month — or entirely free with some trade-offs.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> What Is OHLCV?</h4>
+    <p><strong>OHLCV</strong> stands for <strong>Open, High, Low, Close, Volume</strong> — the five fundamental data points for each time period (candle). Open is the first trade price, High/Low are the extremes, Close is the last trade price, and Volume is the total number of shares or contracts traded. Every candlestick chart you've ever seen is built from OHLCV data.</p>
+  </div>
+
+  <h3>Three Tiers of Price Data</h3>
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>End-of-Day (EOD)</h4>
+      <p>Daily OHLCV bars, updated after market close. Best for swing trading, backtesting, and portfolio tracking. Often free.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Intraday</h4>
+      <p>1-min to 1-hour bars during market hours. Needed for day trading strategies and intraday analytics. Usually paid.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Real-Time Tick</h4>
+      <p>Sub-second WebSocket feeds with every trade and quote. Required for market making, HFT, and live dashboards. Premium pricing.</p>
+    </div>
+  </div>
+
+  <h3>What to Look For in a Price API</h3>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Historical depth</strong> — How far back does the data go? 5 years? 20 years? This matters for backtesting.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Asset coverage</strong> — US equities only, or also forex, crypto, commodities, international exchanges?</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Rate limits</strong> — Free tiers typically allow 5-25 requests/minute. Paid tiers go up to thousands.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Data quality</strong> — Adjusted for splits/dividends? Any gaps? Corporate actions handled correctly?</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Latency</strong> — 15-minute delay (free) vs. real-time (paid). Matters for execution, not for analysis.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>WebSocket support</strong> — Streaming vs. polling. WebSocket is essential for live applications.</li>
+    <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Documentation quality</strong> — Bad docs cost you hours. Some APIs have excellent SDKs, others have barely a README.</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 2: YAHOO FINANCE ===== -->
+<div class="section-divider"><i class="fa-solid fa-database"></i> The APIs — Deep Dive</div>
+
+<div id="yahoo" class="content-card">
+  <h2><i class="fa-solid fa-database" style="color:#0284c7; margin-right:0.5rem;"></i> Yahoo Finance (yfinance)</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-brands fa-yahoo" style="color:#6001d2; margin-right:0.5rem;"></i> Yahoo Finance / yfinance</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free</span>
+      <span class="api-tag api-tag-free">No API Key</span>
+      <span class="api-tag api-tag-paid">Legal Grey Area</span>
+    </div>
+    <p>The undisputed king of free financial data. Yahoo Finance isn't technically an API — <code>yfinance</code> is a Python library that scrapes Yahoo's internal endpoints. It provides OHLCV data going back 20+ years for thousands of tickers, plus dividends, splits, financials, and options chains.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Completely free, no API key needed</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 20+ years of historical daily data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Global coverage (60+ exchanges)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Adjusted for splits and dividends</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Options chains included</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Massive community, battle-tested</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Not an official API — can break anytime</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Rate limiting is aggressive and opaque</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> 15-minute delay on quotes</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No WebSocket / streaming</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Terms of Service forbid scraping</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No SLA, no support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — Python (yfinance)</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+
+<span class="comment"># Download 5 years of daily OHLCV for Apple</span>
+ticker = yf.Ticker(<span class="string">"AAPL"</span>)
+hist = ticker.history(period=<span class="string">"5y"</span>)
+
+<span class="comment"># Access OHLCV columns</span>
+<span class="function">print</span>(hist[[<span class="string">"Open"</span>, <span class="string">"High"</span>, <span class="string">"Low"</span>, <span class="string">"Close"</span>, <span class="string">"Volume"</span>]].tail())
+
+<span class="comment"># Get intraday data (1-minute bars, last 7 days max)</span>
+intraday = ticker.history(period=<span class="string">"5d"</span>, interval=<span class="string">"1m"</span>)
+
+<span class="comment"># Multiple tickers at once</span>
+data = yf.download([<span class="string">"AAPL"</span>, <span class="string">"MSFT"</span>, <span class="string">"GOOGL"</span>], period=<span class="string">"1y"</span>)
+<span class="function">print</span>(data[<span class="string">"Close"</span>].tail())
+
+<span class="comment"># Dividends and splits</span>
+<span class="function">print</span>(ticker.dividends)
+<span class="function">print</span>(ticker.splits)
+
+<span class="comment"># Options chains</span>
+opts = ticker.options  <span class="comment"># list of expiration dates</span>
+chain = ticker.option_chain(opts[<span class="number">0</span>])
+<span class="function">print</span>(chain.calls.head())</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Legal Grey Area</h4>
+    <p>Yahoo Finance's Terms of Service explicitly prohibit automated scraping. However, <code>yfinance</code> has been the most popular financial data library on PyPI for years with 300K+ weekly downloads. Yahoo has not taken legal action against individual users, but they do periodically change their internal endpoints, breaking the library temporarily. <strong>Never use yfinance for commercial products</strong> — use it for personal research and prototyping, then migrate to a licensed API for production.</p>
+  </div>
+
+  <h3>Rate Limiting Strategy</h3>
+  <p>Yahoo's rate limiting is undocumented and changes frequently. Based on community testing:</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-clock" style="color:#0284c7;"></i> <strong>~2,000 requests/hour</strong> is generally safe for daily data</li>
+    <li><i class="fa-solid fa-clock" style="color:#0284c7;"></i> <strong>Batch requests</strong> with <code>yf.download()</code> are more efficient than individual <code>Ticker.history()</code> calls</li>
+    <li><i class="fa-solid fa-clock" style="color:#0284c7;"></i> <strong>Add random delays</strong> (0.5-2s) between requests to avoid throttling</li>
+    <li><i class="fa-solid fa-clock" style="color:#0284c7;"></i> <strong>Cache aggressively</strong> — daily data doesn't change, so store locally in SQLite/Parquet</li>
+  </ul>
+</div>
+
+<!-- ===== ALPHA VANTAGE ===== -->
+<div id="alphavantage" class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#0284c7; margin-right:0.5rem;"></i> Alpha Vantage</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-chart-line" style="color:#0284c7; margin-right:0.5rem;"></i> Alpha Vantage</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Freemium</span>
+      <span class="api-tag api-tag-paid">$50-250/mo</span>
+    </div>
+    <p>One of the oldest dedicated financial data APIs. Alpha Vantage offers a generous free tier (25 requests/day) and covers stocks, forex, crypto, commodities, and economic indicators. The premium tiers unlock higher rate limits and intraday data with extended history.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Legitimate API with proper licensing</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free tier: 25 req/day (stocks, forex, crypto)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 20+ years of daily data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Technical indicators built in (SMA, EMA, RSI, MACD...)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Economic indicators (GDP, CPI, unemployment)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Simple REST API, JSON/CSV output</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Free tier is extremely limited (25 req/day)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Premium is expensive ($50/mo for 75 req/min)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No WebSocket streaming</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Data quality issues reported (gaps, delays)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Slow response times on free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> JSON format is non-standard (nested keys with dates)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — Python</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+API_KEY = <span class="string">"YOUR_API_KEY"</span>  <span class="comment"># Free key from alphavantage.co</span>
+
+<span class="comment"># Daily OHLCV — full history</span>
+url = <span class="string">f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=AAPL&outputsize=full&apikey={API_KEY}"</span>
+data = requests.get(url).json()
+
+<span class="comment"># Parse into DataFrame</span>
+ts = data[<span class="string">"Time Series (Daily)"</span>]
+df = pd.DataFrame.from_dict(ts, orient=<span class="string">"index"</span>)
+df.index = pd.to_datetime(df.index)
+df = df.astype(<span class="string">float</span>).sort_index()
+<span class="function">print</span>(df.tail())
+
+<span class="comment"># Intraday 5-minute bars (premium only for extended history)</span>
+url_intra = <span class="string">f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=AAPL&interval=5min&apikey={API_KEY}"</span>
+intra = requests.get(url_intra).json()
+
+<span class="comment"># Technical indicator: RSI</span>
+url_rsi = <span class="string">f"https://www.alphavantage.co/query?function=RSI&symbol=AAPL&interval=daily&time_period=14&series_type=close&apikey={API_KEY}"</span>
+rsi = requests.get(url_rsi).json()</pre>
+  </div>
+
+  <h3>Code Example — JavaScript (Node.js)</h3>
+  <div class="code-block">
+    <span class="code-label">JavaScript</span>
+<pre><span class="keyword">const</span> API_KEY = <span class="string">'YOUR_API_KEY'</span>;
+
+<span class="comment">// Fetch daily OHLCV</span>
+<span class="keyword">async function</span> <span class="function">getDailyData</span>(symbol) {
+  <span class="keyword">const</span> url = <span class="string">`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=compact&apikey=${API_KEY}`</span>;
+  <span class="keyword">const</span> res = <span class="keyword">await</span> <span class="function">fetch</span>(url);
+  <span class="keyword">const</span> data = <span class="keyword">await</span> res.json();
+  <span class="keyword">const</span> timeSeries = data[<span class="string">'Time Series (Daily)'</span>];
+
+  <span class="comment">// Transform to array of {date, open, high, low, close, volume}</span>
+  <span class="keyword">return</span> Object.entries(timeSeries).map(([date, vals]) => ({
+    date,
+    open: <span class="function">parseFloat</span>(vals[<span class="string">'1. open'</span>]),
+    high: <span class="function">parseFloat</span>(vals[<span class="string">'2. high'</span>]),
+    low: <span class="function">parseFloat</span>(vals[<span class="string">'3. low'</span>]),
+    close: <span class="function">parseFloat</span>(vals[<span class="string">'4. close'</span>]),
+    volume: <span class="function">parseInt</span>(vals[<span class="string">'6. volume'</span>])
+  }));
+}
+
+<span class="function">getDailyData</span>(<span class="string">'AAPL'</span>).then(d => console.log(d.slice(<span class="number">0</span>, <span class="number">5</span>)));</pre>
+  </div>
+</div>
+
+<!-- ===== POLYGON.IO ===== -->
+<div id="polygon" class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#0284c7; margin-right:0.5rem;"></i> Polygon.io</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-bolt" style="color:#7c3aed; margin-right:0.5rem;"></i> Polygon.io</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Free Tier</span>
+      <span class="api-tag api-tag-paid">$29-199/mo</span>
+      <span class="api-tag api-tag-ws">WebSocket</span>
+    </div>
+    <p>The gold standard for developers who need institutional-grade data. Polygon.io provides real-time and historical data for stocks, options, forex, and crypto with excellent WebSocket streaming. Their Stocks Starter plan ($29/mo) is arguably the best value in the market.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Excellent data quality (SIP feed)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> WebSocket streaming (real-time)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Full options data (chains, greeks, flow)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free tier: 5 API calls/min, delayed data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Excellent documentation &amp; SDKs</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Flat files for bulk historical download</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Free tier is very limited (5 calls/min)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Real-time requires $29+/mo</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Options data only on higher tiers</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> US-only (no international exchanges)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Historical intraday limited on lower tiers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — Python</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+
+API_KEY = <span class="string">"YOUR_POLYGON_KEY"</span>
+
+<span class="comment"># Aggregates (bars) — daily OHLCV for AAPL</span>
+end = datetime.now().strftime(<span class="string">"%Y-%m-%d"</span>)
+start = (datetime.now() - timedelta(days=<span class="number">365</span>)).strftime(<span class="string">"%Y-%m-%d"</span>)
+
+url = <span class="string">f"https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/{start}/{end}?apiKey={API_KEY}"</span>
+data = requests.get(url).json()
+
+<span class="keyword">for</span> bar <span class="keyword">in</span> data[<span class="string">"results"</span>][:<span class="number">3</span>]:
+    <span class="function">print</span>(<span class="string">f"Date: {bar['t']}, O: {bar['o']}, H: {bar['h']}, L: {bar['l']}, C: {bar['c']}, V: {bar['v']}"</span>)
+
+<span class="comment"># Intraday 1-minute bars</span>
+url_1m = <span class="string">f"https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/minute/2026-03-05/2026-03-05?apiKey={API_KEY}"</span>
+intra = requests.get(url_1m).json()
+
+<span class="comment"># Real-time snapshot</span>
+snap = requests.get(<span class="string">f"https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/AAPL?apiKey={API_KEY}"</span>).json()</pre>
+  </div>
+
+  <h3>WebSocket Streaming</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> websocket
+<span class="keyword">import</span> json
+
+<span class="keyword">def</span> <span class="function">on_message</span>(ws, message):
+    data = json.loads(message)
+    <span class="keyword">for</span> event <span class="keyword">in</span> data:
+        <span class="keyword">if</span> event[<span class="string">"ev"</span>] == <span class="string">"T"</span>:  <span class="comment"># Trade event</span>
+            <span class="function">print</span>(<span class="string">f"{event['sym']} — Price: ${event['p']}, Size: {event['s']}"</span>)
+
+<span class="keyword">def</span> <span class="function">on_open</span>(ws):
+    <span class="comment"># Authenticate</span>
+    ws.send(json.dumps({<span class="string">"action"</span>: <span class="string">"auth"</span>, <span class="string">"params"</span>: API_KEY}))
+    <span class="comment"># Subscribe to AAPL trades</span>
+    ws.send(json.dumps({<span class="string">"action"</span>: <span class="string">"subscribe"</span>, <span class="string">"params"</span>: <span class="string">"T.AAPL"</span>}))
+
+ws = websocket.WebSocketApp(
+    <span class="string">"wss://socket.polygon.io/stocks"</span>,
+    on_message=on_message,
+    on_open=on_open
+)
+ws.run_forever()</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> SIP vs. IEX Feed</h4>
+    <p>Polygon.io uses the <strong>SIP (Securities Information Processor)</strong> feed — the consolidated tape that includes all trades from all US exchanges. This is the same feed that Bloomberg and Reuters use. Some cheaper providers use the <strong>IEX-only feed</strong>, which only shows trades executed on the IEX exchange (about 3-5% of total volume). SIP data is more accurate for VWAP, volume analysis, and fair price discovery.</p>
+  </div>
+</div>
+
+<!-- ===== OTHER APIs ===== -->
+<div id="others" class="content-card">
+  <h2><i class="fa-solid fa-list" style="color:#0284c7; margin-right:0.5rem;"></i> More Price Data APIs</h2>
+
+  <!-- Tiingo -->
+  <div class="api-card">
+    <h3><i class="fa-solid fa-chart-area" style="color:#10b981; margin-right:0.5rem;"></i> Tiingo</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Freemium</span>
+      <span class="api-tag api-tag-free">500 Symbols Free</span>
+      <span class="api-tag api-tag-ws">WebSocket (IEX)</span>
+    </div>
+    <p>A hidden gem in the API landscape. Tiingo offers a generous free tier with 500 unique symbols per month, real-time IEX data, and 20+ years of EOD history. The free WebSocket feed streams IEX trades and quotes — perfect for hobby projects.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Generous free tier (500 symbols/month)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free WebSocket (IEX feed)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Excellent EOD data quality</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Crypto and forex included</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> IEX-only real-time (not SIP)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Limited intraday history</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No options data</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — Tiingo</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+
+headers = {<span class="string">"Content-Type"</span>: <span class="string">"application/json"</span>, <span class="string">"Authorization"</span>: <span class="string">f"Token {TIINGO_KEY}"</span>}
+
+<span class="comment"># EOD prices</span>
+url = <span class="string">"https://api.tiingo.com/tiingo/daily/AAPL/prices?startDate=2025-01-01"</span>
+data = requests.get(url, headers=headers).json()
+<span class="keyword">for</span> d <span class="keyword">in</span> data[:<span class="number">3</span>]:
+    <span class="function">print</span>(<span class="string">f"{d['date'][:10]} — Close: ${d['adjClose']:.2f}, Vol: {d['volume']:,}"</span>)
+
+<span class="comment"># IEX real-time</span>
+iex_url = <span class="string">"https://api.tiingo.com/iex/AAPL"</span>
+realtime = requests.get(iex_url, headers=headers).json()
+<span class="function">print</span>(<span class="string">f"Last: ${realtime[0]['last']}, Bid: ${realtime[0]['bidPrice']}, Ask: ${realtime[0]['askPrice']}"</span>)</pre>
+  </div>
+
+  <!-- IEX Cloud -->
+  <div class="api-card">
+    <h3><i class="fa-solid fa-cloud" style="color:#2563eb; margin-right:0.5rem;"></i> IEX Cloud</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-paid">$9-499/mo</span>
+      <span class="api-tag api-tag-ws">WebSocket (SSE)</span>
+    </div>
+    <p>Built on top of the IEX exchange data, IEX Cloud provides a clean, well-documented API. The Launch plan ($9/mo) gives you 50K messages/month. Excellent for dashboards and mid-frequency trading systems. Their SSE (Server-Sent Events) streaming is simple to implement.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Best-in-class documentation</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> SSE streaming (simpler than WebSocket)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Sandbox mode for testing</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Fundamentals + news included</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No free tier anymore</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Message-based pricing is confusing</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> IEX-only data (not SIP)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Gets expensive at scale</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Twelve Data -->
+  <div class="api-card">
+    <h3><i class="fa-solid fa-signal" style="color:#f97316; margin-right:0.5rem;"></i> Twelve Data</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Freemium</span>
+      <span class="api-tag api-tag-free">800 req/day Free</span>
+      <span class="api-tag api-tag-ws">WebSocket</span>
+    </div>
+    <p>Twelve Data offers one of the most generous free tiers: 800 API requests per day with 8 concurrent WebSocket connections. They cover stocks, forex, crypto, ETFs, and indices across 50+ exchanges globally. Their technical indicator library has 100+ indicators built into the API.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 800 req/day free (generous!)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free WebSocket (8 connections)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 100+ built-in technical indicators</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Global coverage (50+ exchanges)</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Free WebSocket is delayed (not real-time)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Historical depth limited on free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Data accuracy varies by exchange</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — Twelve Data WebSocket</h3>
+  <div class="code-block">
+    <span class="code-label">JavaScript</span>
+<pre><span class="keyword">const</span> WebSocket = require(<span class="string">'ws'</span>);
+
+<span class="keyword">const</span> ws = <span class="keyword">new</span> WebSocket(<span class="string">'wss://ws.twelvedata.com/v1/quotes/price?apikey=YOUR_KEY'</span>);
+
+ws.on(<span class="string">'open'</span>, () => {
+  ws.send(JSON.stringify({
+    action: <span class="string">'subscribe'</span>,
+    params: {
+      symbols: <span class="string">'AAPL,MSFT,GOOGL,BTC/USD'</span>
+    }
+  }));
+});
+
+ws.on(<span class="string">'message'</span>, (data) => {
+  <span class="keyword">const</span> msg = JSON.parse(data);
+  <span class="keyword">if</span> (msg.event === <span class="string">'price'</span>) {
+    console.log(<span class="string">`${msg.symbol}: $${msg.price} (${msg.timestamp})`</span>);
+  }
+});</pre>
+  </div>
+
+  <!-- Finnhub -->
+  <div class="api-card">
+    <h3><i class="fa-solid fa-fish" style="color:#0284c7; margin-right:0.5rem;"></i> Finnhub</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Freemium</span>
+      <span class="api-tag api-tag-free">60 req/min Free</span>
+      <span class="api-tag api-tag-ws">WebSocket</span>
+    </div>
+    <p>Finnhub is the Swiss army knife of financial APIs. The free tier includes 60 API calls/minute, free WebSocket for US stocks, and an impressive range of alternative data (social sentiment, insider transactions, congressional trades). Particularly strong for crypto coverage.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 60 req/min free (best rate limit)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free real-time WebSocket (US stocks)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Alternative data (sentiment, insiders)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Good crypto coverage</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Company news and press releases</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Limited historical candle data</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No adjusted prices on free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Documentation could be better</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — Finnhub</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> finnhub
+<span class="keyword">import</span> time
+
+client = finnhub.Client(api_key=<span class="string">"YOUR_FINNHUB_KEY"</span>)
+
+<span class="comment"># Real-time quote</span>
+quote = client.quote(<span class="string">"AAPL"</span>)
+<span class="function">print</span>(<span class="string">f"Current: ${quote['c']}, Change: {quote['dp']:.2f}%"</span>)
+
+<span class="comment"># Candles (OHLCV)</span>
+now = <span class="function">int</span>(time.time())
+one_year_ago = now - <span class="number">365</span> * <span class="number">86400</span>
+candles = client.stock_candles(<span class="string">"AAPL"</span>, <span class="string">"D"</span>, one_year_ago, now)
+<span class="function">print</span>(<span class="string">f"Got {len(candles['c'])} daily bars"</span>)
+
+<span class="comment"># Company news</span>
+news = client.company_news(<span class="string">"AAPL"</span>, _from=<span class="string">"2026-03-01"</span>, to=<span class="string">"2026-03-06"</span>)
+<span class="keyword">for</span> n <span class="keyword">in</span> news[:<span class="number">3</span>]:
+    <span class="function">print</span>(<span class="string">f"  {n['headline']}"</span>)</pre>
+  </div>
+
+  <!-- EODHD -->
+  <div class="api-card">
+    <h3><i class="fa-solid fa-globe" style="color:#9333ea; margin-right:0.5rem;"></i> EODHD (EOD Historical Data)</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-paid">$20-80/mo</span>
+      <span class="api-tag api-tag-ws">WebSocket</span>
+    </div>
+    <p>The budget champion for global coverage. EODHD covers 60+ exchanges worldwide (including obscure ones like Johannesburg, Karachi, and Bangkok) at just $20/month. If you need international EOD data for backtesting a global portfolio, EODHD is hard to beat on price-per-exchange.</p>
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 60+ global exchanges at $20/mo</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 30+ years of EOD history</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Fundamentals, dividends, splits included</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Bulk download via CSV/JSON</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Intraday only on higher plans</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> API design feels dated</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Support can be slow</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code Example — EODHD</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+
+API_KEY = <span class="string">"YOUR_EODHD_KEY"</span>
+
+<span class="comment"># EOD data for a European stock (Airbus on Paris exchange)</span>
+url = <span class="string">f"https://eodhd.com/api/eod/AIR.PA?api_token={API_KEY}&fmt=json&from=2025-01-01"</span>
+data = requests.get(url).json()
+<span class="keyword">for</span> d <span class="keyword">in</span> data[:<span class="number">3</span>]:
+    <span class="function">print</span>(<span class="string">f"{d['date']} — Close: {d['adjusted_close']}, Vol: {d['volume']:,}"</span>)
+
+<span class="comment"># Bulk EOD for entire exchange (e.g., NYSE)</span>
+bulk_url = <span class="string">f"https://eodhd.com/api/eod-bulk-last-day/US?api_token={API_KEY}&fmt=json"</span>
+bulk = requests.get(bulk_url).json()
+<span class="function">print</span>(<span class="string">f"Got {len(bulk)} tickers from NYSE"</span>)
+
+<span class="comment"># Crypto (BTC on multiple exchanges)</span>
+btc_url = <span class="string">f"https://eodhd.com/api/eod/BTC-USD.CC?api_token={API_KEY}&fmt=json&from=2025-01-01"</span>
+btc = requests.get(btc_url).json()</pre>
+  </div>
+</div>
+
+<!-- ===== COMPARISON TABLE ===== -->
+<div class="section-divider"><i class="fa-solid fa-table"></i> Head-to-Head Comparison</div>
+
+<div id="comparison" class="content-card">
+  <h2><i class="fa-solid fa-table" style="color:#0284c7; margin-right:0.5rem;"></i> The Ultimate Comparison Table</h2>
+
+  <div style="overflow-x:auto;">
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>API</th>
+        <th>Free Tier</th>
+        <th>Paid From</th>
+        <th>Rate Limit (Free)</th>
+        <th>WebSocket</th>
+        <th>History Depth</th>
+        <th>Coverage</th>
+        <th>Data Feed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Yahoo (yfinance)</strong></td>
+        <td><span class="api-tag api-tag-free">Yes</span></td>
+        <td>N/A</td>
+        <td>~2K req/hr</td>
+        <td>No</td>
+        <td>20+ years</td>
+        <td>Global (60+ exch.)</td>
+        <td>Delayed 15min</td>
+      </tr>
+      <tr>
+        <td><strong>Alpha Vantage</strong></td>
+        <td><span class="api-tag api-tag-free">Yes</span></td>
+        <td>$50/mo</td>
+        <td>25 req/day</td>
+        <td>No</td>
+        <td>20+ years</td>
+        <td>US + Forex + Crypto</td>
+        <td>Delayed 15min</td>
+      </tr>
+      <tr>
+        <td><strong>Polygon.io</strong></td>
+        <td><span class="api-tag api-tag-free">Yes</span></td>
+        <td>$29/mo</td>
+        <td>5 req/min</td>
+        <td>Yes (paid)</td>
+        <td>15+ years</td>
+        <td>US only</td>
+        <td>SIP (real-time)</td>
+      </tr>
+      <tr>
+        <td><strong>Tiingo</strong></td>
+        <td><span class="api-tag api-tag-free">Yes</span></td>
+        <td>$10/mo</td>
+        <td>500 sym/mo</td>
+        <td>Yes (IEX)</td>
+        <td>20+ years</td>
+        <td>US + Crypto + Forex</td>
+        <td>IEX real-time</td>
+      </tr>
+      <tr>
+        <td><strong>IEX Cloud</strong></td>
+        <td>No</td>
+        <td>$9/mo</td>
+        <td>N/A</td>
+        <td>Yes (SSE)</td>
+        <td>15+ years</td>
+        <td>US + limited intl</td>
+        <td>IEX real-time</td>
+      </tr>
+      <tr>
+        <td><strong>Twelve Data</strong></td>
+        <td><span class="api-tag api-tag-free">Yes</span></td>
+        <td>$29/mo</td>
+        <td>800 req/day</td>
+        <td>Yes (delayed)</td>
+        <td>30+ years</td>
+        <td>Global (50+ exch.)</td>
+        <td>Delayed / RT paid</td>
+      </tr>
+      <tr>
+        <td><strong>Finnhub</strong></td>
+        <td><span class="api-tag api-tag-free">Yes</span></td>
+        <td>$49/mo</td>
+        <td>60 req/min</td>
+        <td>Yes (free!)</td>
+        <td>Limited</td>
+        <td>US + Crypto + Forex</td>
+        <td>Real-time WS</td>
+      </tr>
+      <tr>
+        <td><strong>EODHD</strong></td>
+        <td>No</td>
+        <td>$20/mo</td>
+        <td>N/A</td>
+        <td>Yes (paid)</td>
+        <td>30+ years</td>
+        <td>Global (60+ exch.)</td>
+        <td>Delayed / RT paid</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>API Comparison Radar</h3>
+  <div id="radarChart" style="width:100%; height:500px; margin:2rem 0;"></div>
+
+  <h3>Decision Matrix by Use Case</h3>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Use Case</th>
+        <th>Best Choice</th>
+        <th>Runner-Up</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Backtesting (EOD)</strong></td>
+        <td>Yahoo (yfinance)</td>
+        <td>Twelve Data</td>
+        <td>Free, 20+ years, adjusted data, multi-ticker download</td>
+      </tr>
+      <tr>
+        <td><strong>Live Dashboard</strong></td>
+        <td>Finnhub</td>
+        <td>Twelve Data</td>
+        <td>Free WebSocket, 60 req/min for REST fallback</td>
+      </tr>
+      <tr>
+        <td><strong>Production App</strong></td>
+        <td>Polygon.io ($29)</td>
+        <td>IEX Cloud ($9)</td>
+        <td>SIP feed, proper SLA, excellent docs, flat files</td>
+      </tr>
+      <tr>
+        <td><strong>Global Portfolio</strong></td>
+        <td>EODHD ($20)</td>
+        <td>Twelve Data</td>
+        <td>60+ exchanges, cheap, bulk download</td>
+      </tr>
+      <tr>
+        <td><strong>Crypto Focus</strong></td>
+        <td>Finnhub</td>
+        <td>Tiingo</td>
+        <td>Free real-time crypto WS, wide exchange coverage</td>
+      </tr>
+      <tr>
+        <td><strong>Options Data</strong></td>
+        <td>Polygon.io ($199)</td>
+        <td>Yahoo (yfinance)</td>
+        <td>Full chain + Greeks + flow (see Part 4)</td>
+      </tr>
+      <tr>
+        <td><strong>Technical Indicators</strong></td>
+        <td>Alpha Vantage</td>
+        <td>Twelve Data</td>
+        <td>100+ indicators built into the API</td>
+      </tr>
+      <tr>
+        <td><strong>Zero Budget</strong></td>
+        <td>Yahoo + Finnhub</td>
+        <td>Twelve Data + Tiingo</td>
+        <td>Stack free tiers: Yahoo for history, Finnhub for real-time</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== CODE EXAMPLES ===== -->
+<div class="section-divider"><i class="fa-solid fa-code"></i> Unified Code Examples</div>
+
+<div id="code" class="content-card">
+  <h2><i class="fa-solid fa-code" style="color:#0284c7; margin-right:0.5rem;"></i> Building a Universal Price Fetcher</h2>
+  <p>Instead of coupling your code to a single API, build an abstraction layer. Here's a universal price fetcher that works with any provider:</p>
+
+  <h3>Python — Abstract Price Provider</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+<span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Optional
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="keyword">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Bar</span>:
+    timestamp: datetime
+    open: <span class="function">float</span>
+    high: <span class="function">float</span>
+    low: <span class="function">float</span>
+    close: <span class="function">float</span>
+    volume: <span class="function">int</span>
+
+<span class="keyword">class</span> <span class="function">PriceProvider</span>(ABC):
+    <span class="string">"""Abstract base for all price data providers."""</span>
+
+    <span class="keyword">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">get_bars</span>(self, symbol: <span class="function">str</span>, start: <span class="function">str</span>, end: <span class="function">str</span>,
+                 interval: <span class="function">str</span> = <span class="string">"1d"</span>) -> List[Bar]:
+        <span class="keyword">pass</span>
+
+    <span class="keyword">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">get_quote</span>(self, symbol: <span class="function">str</span>) -> <span class="function">dict</span>:
+        <span class="keyword">pass</span>
+
+    <span class="keyword">def</span> <span class="function">to_dataframe</span>(self, bars: List[Bar]) -> pd.DataFrame:
+        <span class="keyword">return</span> pd.DataFrame([vars(b) <span class="keyword">for</span> b <span class="keyword">in</span> bars]).set_index(<span class="string">"timestamp"</span>)</pre>
+  </div>
+
+  <h3>Yahoo Finance Implementation</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+
+<span class="keyword">class</span> <span class="function">YahooProvider</span>(PriceProvider):
+    <span class="keyword">def</span> <span class="function">get_bars</span>(self, symbol, start, end, interval=<span class="string">"1d"</span>):
+        ticker = yf.Ticker(symbol)
+        df = ticker.history(start=start, end=end, interval=interval)
+        <span class="keyword">return</span> [
+            Bar(timestamp=idx, open=row[<span class="string">"Open"</span>], high=row[<span class="string">"High"</span>],
+                low=row[<span class="string">"Low"</span>], close=row[<span class="string">"Close"</span>], volume=<span class="function">int</span>(row[<span class="string">"Volume"</span>]))
+            <span class="keyword">for</span> idx, row <span class="keyword">in</span> df.iterrows()
+        ]
+
+    <span class="keyword">def</span> <span class="function">get_quote</span>(self, symbol):
+        info = yf.Ticker(symbol).info
+        <span class="keyword">return</span> {
+            <span class="string">"price"</span>: info.get(<span class="string">"regularMarketPrice"</span>),
+            <span class="string">"change"</span>: info.get(<span class="string">"regularMarketChangePercent"</span>),
+            <span class="string">"volume"</span>: info.get(<span class="string">"regularMarketVolume"</span>),
+        }</pre>
+  </div>
+
+  <h3>Polygon.io Implementation</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">class</span> <span class="function">PolygonProvider</span>(PriceProvider):
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, api_key: <span class="function">str</span>):
+        self.api_key = api_key
+        self.base = <span class="string">"https://api.polygon.io"</span>
+
+    <span class="keyword">def</span> <span class="function">get_bars</span>(self, symbol, start, end, interval=<span class="string">"1d"</span>):
+        <span class="comment"># Map interval: "1d" -> (1, "day"), "1h" -> (1, "hour")</span>
+        multiplier = <span class="function">int</span>(interval[:-<span class="number">1</span>]) <span class="keyword">if</span> interval[:-<span class="number">1</span>].isdigit() <span class="keyword">else</span> <span class="number">1</span>
+        timespan = {<span class="string">"d"</span>: <span class="string">"day"</span>, <span class="string">"h"</span>: <span class="string">"hour"</span>, <span class="string">"m"</span>: <span class="string">"minute"</span>}[interval[-<span class="number">1</span>]]
+
+        url = <span class="string">f"{self.base}/v2/aggs/ticker/{symbol}/range/{multiplier}/{timespan}/{start}/{end}"</span>
+        resp = requests.get(url, params={<span class="string">"apiKey"</span>: self.api_key, <span class="string">"limit"</span>: <span class="number">50000</span>}).json()
+
+        <span class="keyword">return</span> [
+            Bar(
+                timestamp=datetime.fromtimestamp(r[<span class="string">"t"</span>] / <span class="number">1000</span>),
+                open=r[<span class="string">"o"</span>], high=r[<span class="string">"h"</span>], low=r[<span class="string">"l"</span>],
+                close=r[<span class="string">"c"</span>], volume=r[<span class="string">"v"</span>]
+            )
+            <span class="keyword">for</span> r <span class="keyword">in</span> resp.get(<span class="string">"results"</span>, [])
+        ]
+
+    <span class="keyword">def</span> <span class="function">get_quote</span>(self, symbol):
+        url = <span class="string">f"{self.base}/v2/snapshot/locale/us/markets/stocks/tickers/{symbol}"</span>
+        data = requests.get(url, params={<span class="string">"apiKey"</span>: self.api_key}).json()
+        tick = data[<span class="string">"ticker"</span>]
+        <span class="keyword">return</span> {
+            <span class="string">"price"</span>: tick[<span class="string">"lastTrade"</span>][<span class="string">"p"</span>],
+            <span class="string">"change"</span>: tick[<span class="string">"todaysChangePerc"</span>],
+            <span class="string">"volume"</span>: tick[<span class="string">"day"</span>][<span class="string">"v"</span>],
+        }</pre>
+  </div>
+
+  <h3>Using the Abstraction</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="comment"># Switch providers with one line</span>
+provider = YahooProvider()           <span class="comment"># Free, for prototyping</span>
+<span class="comment"># provider = PolygonProvider("key")  # Paid, for production</span>
+
+<span class="comment"># Same interface regardless of provider</span>
+bars = provider.get_bars(<span class="string">"AAPL"</span>, <span class="string">"2025-01-01"</span>, <span class="string">"2026-03-01"</span>)
+df = provider.to_dataframe(bars)
+
+<span class="comment"># Calculate SMA</span>
+df[<span class="string">"SMA_20"</span>] = df[<span class="string">"close"</span>].rolling(<span class="number">20</span>).mean()
+df[<span class="string">"SMA_50"</span>] = df[<span class="string">"close"</span>].rolling(<span class="number">50</span>).mean()
+
+<span class="comment"># Golden cross detection</span>
+df[<span class="string">"signal"</span>] = (df[<span class="string">"SMA_20"</span>] > df[<span class="string">"SMA_50"</span>]).astype(<span class="function">int</span>)
+crosses = df[df[<span class="string">"signal"</span>].diff() == <span class="number">1</span>]
+<span class="function">print</span>(<span class="string">f"Golden crosses found: {len(crosses)}"</span>)</pre>
+  </div>
+
+  <h3>JavaScript / Node.js — Fetch Wrapper</h3>
+  <div class="code-block">
+    <span class="code-label">JavaScript</span>
+<pre><span class="keyword">class</span> <span class="function">PriceFetcher</span> {
+  <span class="keyword">constructor</span>(provider = <span class="string">'finnhub'</span>, apiKey = <span class="string">''</span>) {
+    <span class="keyword">this</span>.provider = provider;
+    <span class="keyword">this</span>.apiKey = apiKey;
+  }
+
+  <span class="keyword">async</span> <span class="function">getBars</span>(symbol, from, to) {
+    <span class="keyword">switch</span> (<span class="keyword">this</span>.provider) {
+      <span class="keyword">case</span> <span class="string">'polygon'</span>:
+        <span class="keyword">return</span> <span class="keyword">this</span>._polygonBars(symbol, from, to);
+      <span class="keyword">case</span> <span class="string">'finnhub'</span>:
+        <span class="keyword">return</span> <span class="keyword">this</span>._finnhubBars(symbol, from, to);
+      <span class="keyword">case</span> <span class="string">'twelvedata'</span>:
+        <span class="keyword">return</span> <span class="keyword">this</span>._twelvedataBars(symbol, from, to);
+    }
+  }
+
+  <span class="keyword">async</span> <span class="function">_polygonBars</span>(symbol, from, to) {
+    <span class="keyword">const</span> url = <span class="string">`https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${from}/${to}?apiKey=${this.apiKey}`</span>;
+    <span class="keyword">const</span> data = <span class="keyword">await</span> <span class="function">fetch</span>(url).then(r => r.json());
+    <span class="keyword">return</span> data.results.map(r => ({
+      date: <span class="keyword">new</span> Date(r.t),
+      open: r.o, high: r.h, low: r.l, close: r.c, volume: r.v
+    }));
+  }
+
+  <span class="keyword">async</span> <span class="function">_finnhubBars</span>(symbol, from, to) {
+    <span class="keyword">const</span> f = Math.floor(<span class="keyword">new</span> Date(from).getTime() / <span class="number">1000</span>);
+    <span class="keyword">const</span> t = Math.floor(<span class="keyword">new</span> Date(to).getTime() / <span class="number">1000</span>);
+    <span class="keyword">const</span> url = <span class="string">`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${f}&to=${t}&token=${this.apiKey}`</span>;
+    <span class="keyword">const</span> data = <span class="keyword">await</span> <span class="function">fetch</span>(url).then(r => r.json());
+    <span class="keyword">return</span> data.t.map((ts, i) => ({
+      date: <span class="keyword">new</span> Date(ts * <span class="number">1000</span>),
+      open: data.o[i], high: data.h[i], low: data.l[i],
+      close: data.c[i], volume: data.v[i]
+    }));
+  }
+}
+
+<span class="comment">// Usage</span>
+<span class="keyword">const</span> fetcher = <span class="keyword">new</span> PriceFetcher(<span class="string">'finnhub'</span>, <span class="string">'YOUR_KEY'</span>);
+<span class="keyword">const</span> bars = <span class="keyword">await</span> fetcher.getBars(<span class="string">'AAPL'</span>, <span class="string">'2025-01-01'</span>, <span class="string">'2026-03-01'</span>);
+console.log(bars.slice(-<span class="number">5</span>));</pre>
+  </div>
+</div>
+
+<!-- ===== COST OPTIMIZATION ===== -->
+<div class="section-divider"><i class="fa-solid fa-coins"></i> Cost Optimization</div>
+
+<div id="cost" class="content-card">
+  <h2><i class="fa-solid fa-coins" style="color:#0284c7; margin-right:0.5rem;"></i> Stacking Free Tiers Like a Pro</h2>
+  <p>You don't have to pick just one API. The smartest approach is to stack multiple free tiers and use each one for what it does best:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-database" style="font-size:0.8rem;"></i></div>
+      <h4>Yahoo Finance</h4>
+      <p>Historical EOD data, backtesting, bulk downloads. Your primary data warehouse.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-bolt" style="font-size:0.8rem;"></i></div>
+      <h4>Finnhub</h4>
+      <p>Real-time WebSocket for live dashboards. 60 req/min for REST endpoints.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-chart-line" style="font-size:0.8rem;"></i></div>
+      <h4>Twelve Data</h4>
+      <p>Technical indicators API. 800 req/day for RSI, MACD, Bollinger Bands.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-chart-area" style="font-size:0.8rem;"></i></div>
+      <h4>Tiingo</h4>
+      <p>IEX quotes for US stocks. WebSocket for streaming quotes. 500 symbols/mo.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-calculator"></i> Monthly Cost Comparison</h4>
+    <p><strong>Free tier stack:</strong> Yahoo + Finnhub + Twelve Data + Tiingo = <strong>$0/month</strong> — covers EOD history, real-time streaming, technical indicators, and IEX quotes.</p>
+    <p><strong>Budget production:</strong> Polygon.io Starter ($29) + EODHD ($20) = <strong>$49/month</strong> — SIP feed, US real-time, 60+ global exchanges.</p>
+    <p><strong>Full institutional:</strong> Polygon.io Business ($199) + IEX Cloud Growth ($79) = <strong>$278/month</strong> — full options, unlimited real-time, SLA.</p>
+  </div>
+
+  <h3>Monthly Cost Chart</h3>
+  <div id="costChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ===== TAKEAWAYS ===== -->
+<div class="section-divider"><i class="fa-solid fa-star"></i> Key Takeaways</div>
+
+<div id="takeaways" class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#0284c7; margin-right:0.5rem;"></i> Key Takeaways</h2>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> What You Should Remember</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Start with yfinance</strong> for prototyping and backtesting. It's free, battle-tested, and covers 20+ years of global data. Just don't build a commercial product on it.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Finnhub is the best free real-time API</strong> — free WebSocket streaming for US stocks is unmatched. Combine with Yahoo for historical data.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Polygon.io at $29/mo is the production sweet spot</strong> — SIP data, proper SLA, WebSocket, flat files. Worth every penny when you go live.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Always build an abstraction layer</strong> — never couple your code to a single provider. Use the PriceProvider pattern from this article.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Cache aggressively</strong> — daily bars never change after market close. Store locally in SQLite or Parquet to reduce API calls.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Stack free tiers</strong> — use each API for its strength. Yahoo for history, Finnhub for streaming, Twelve Data for indicators.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>SIP vs. IEX matters</strong> — for accurate volume and VWAP, you need SIP data. IEX-only feeds show ~3-5% of actual market volume.</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary>What about Bloomberg / Reuters / FactSet?</summary>
+    <div class="detail-answer">
+      <p>These are the "enterprise" tier — Bloomberg Terminal costs $24,000/year, Refinitiv Eikon starts at $22,000/year, FactSet at $12,000/year. They offer everything: real-time data, news, analytics, chat, order management. If you're managing $100M+, they're table stakes. For everyone else, the APIs in this article provide 95% of the functionality at 1% of the cost.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Is yfinance going to be shut down?</summary>
+    <div class="detail-answer">
+      <p>It's been "about to be shut down" since 2017. Yahoo periodically changes their internal API structure, which breaks yfinance temporarily. The maintainers (Ran Aroussi and the open-source community) typically fix it within days. The risk is real for production systems, but for personal research it remains the best free option.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Which API has the best documentation?</summary>
+    <div class="detail-answer">
+      <p><strong>Polygon.io</strong> wins by a wide margin. Their docs include interactive examples, Python/JS/Go SDKs, WebSocket playground, and excellent error messages. IEX Cloud is a close second. Alpha Vantage documentation is functional but outdated. Finnhub is adequate. EODHD is the weakest.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ===== NEXT CTA ===== -->
+<a href="/series/finance-apis/part2-fundamentals/" class="next-cta">
+  <div>
+    <div class="next-label">Next in Series — Part 2</div>
+    <div class="next-title">Fundamentals APIs — Financials, Filings &amp; Company Data</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<!-- ===== FOOTER ===== -->
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ===== CHARTS ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Radar Chart — API Comparison
+  var radarChart = echarts.init(document.getElementById('radarChart'));
+  radarChart.setOption({
+    tooltip: { trigger: 'item' },
+    legend: { data: ['Yahoo Finance', 'Alpha Vantage', 'Polygon.io', 'Finnhub', 'Twelve Data', 'Tiingo', 'EODHD'], bottom: 0, textStyle: { fontSize: 11 } },
+    radar: {
+      indicator: [
+        { name: 'Free Tier', max: 10 },
+        { name: 'Data Quality', max: 10 },
+        { name: 'Coverage', max: 10 },
+        { name: 'Real-Time', max: 10 },
+        { name: 'Rate Limits', max: 10 },
+        { name: 'Documentation', max: 10 },
+        { name: 'History Depth', max: 10 }
+      ],
+      radius: '60%',
+      nameGap: 10,
+      axisName: { fontSize: 11 }
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        { value: [10, 7, 10, 2, 7, 5, 10], name: 'Yahoo Finance', lineStyle: { color: '#6001d2' }, itemStyle: { color: '#6001d2' } },
+        { value: [5, 6, 7, 3, 2, 6, 9], name: 'Alpha Vantage', lineStyle: { color: '#ef4444' }, itemStyle: { color: '#ef4444' } },
+        { value: [3, 10, 4, 10, 6, 10, 8], name: 'Polygon.io', lineStyle: { color: '#0284c7' }, itemStyle: { color: '#0284c7' } },
+        { value: [9, 7, 6, 9, 9, 6, 4], name: 'Finnhub', lineStyle: { color: '#10b981' }, itemStyle: { color: '#10b981' } },
+        { value: [8, 7, 9, 6, 7, 7, 9], name: 'Twelve Data', lineStyle: { color: '#f97316' }, itemStyle: { color: '#f97316' } },
+        { value: [8, 8, 6, 7, 6, 7, 9], name: 'Tiingo', lineStyle: { color: '#9333ea' }, itemStyle: { color: '#9333ea' } },
+        { value: [1, 7, 10, 5, 7, 4, 10], name: 'EODHD', lineStyle: { color: '#64748b' }, itemStyle: { color: '#64748b' } }
+      ]
+    }]
+  });
+
+  // Cost Chart — Monthly Pricing Tiers
+  var costChart = echarts.init(document.getElementById('costChart'));
+  costChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Free Tier', 'Starter', 'Pro', 'Business'], bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+    xAxis: { type: 'category', data: ['Yahoo', 'Alpha V.', 'Polygon', 'Tiingo', 'IEX Cloud', 'Twelve Data', 'Finnhub', 'EODHD'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '$/month', axisLabel: { formatter: '${value}' } },
+    series: [
+      { name: 'Free Tier', type: 'bar', stack: 'total', data: [0, 0, 0, 0, '-', 0, 0, '-'], itemStyle: { color: '#10b981' } },
+      { name: 'Starter', type: 'bar', stack: 'total', data: ['-', 50, 29, 10, 9, 29, 49, 20], itemStyle: { color: '#0284c7' } },
+      { name: 'Pro', type: 'bar', stack: 'total', data: ['-', 150, 79, 30, 79, 149, 199, 50], itemStyle: { color: '#7c3aed' } },
+      { name: 'Business', type: 'bar', stack: 'total', data: ['-', 250, 199, 65, 499, 399, 599, 80], itemStyle: { color: '#f97316' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() {
+    radarChart.resize();
+    costChart.resize();
+  });
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

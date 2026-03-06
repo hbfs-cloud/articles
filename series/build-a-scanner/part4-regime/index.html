@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,formation,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Regime Detection — The Scanner That Adapts | Build a Stock Scanner — Part 4/6 | Market Watch</title>
+ <meta name="description" content="Build a Stock Scanner series — Part 4/6: Build a regime detector with 6 weighted indicators (SPY, VIX, DXY, TLT, HYG/LQD, BTC). Map 5 market regimes to dynamic strategy weights.">
+ <meta property="og:title" content="Regime Detection — The Scanner That Adapts | Build a Scanner 4/6 | Market Watch">
+ <meta property="og:description" content="A static scanner in a crash is a money furnace. Build a regime detector that shifts strategy weights daily based on 6 market indicators.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/build-a-scanner/part4-regime/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#fef2f2 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-red{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-orange{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .takeaway-box{background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #dc2626;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#b91c1c;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(220,38,38,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#dc2626;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(220,38,38,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .code-block{background:#0f172a;border-radius:12px;padding:1.5rem;margin:1.5rem 0;overflow-x:auto}.code-block pre{margin:0;color:#e2e8f0;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85rem;line-height:1.6}.code-label{display:inline-block;background:#dc2626;color:#fff;padding:.2rem .75rem;border-radius:6px 6px 0 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:-1px;position:relative;z-index:1}.code-block .comment{color:#64748b}.code-block .keyword{color:#f87171}.code-block .string{color:#34d399}.code-block .number{color:#fbbf24}.code-block .function{color:#60a5fa}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.1rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#f87171}
+ .regime-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;margin:1rem 0;border-left:5px solid #94a3b8}.regime-card h4{margin-top:0;font-size:1rem}.regime-card p{margin-bottom:0;font-size:.9rem;color:#64748b;line-height:1.5}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.hero-badge{font-size:.7rem;padding:.35rem .75rem}.next-cta{flex-direction:column;text-align:center}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.hero-badge{font-size:.65rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-crosshairs"></i> Build a Stock Scanner Series — Part 4 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Regime Detection — The Scanner That Adapts to the Market</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">A momentum scanner in a crash is a money furnace. A regime detector analyzes 6 market indicators daily and shifts your strategy weights automatically. Build one from scratch.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-gauge-high"></i> 5 Market Regimes</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-weight-scale"></i> 6 Weighted Indicators</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrows-rotate"></i> Dynamic Weights</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-area"></i> Regime Timeline</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part3-scoring/" class="series-arrow" title="Scoring"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step current" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">4/6</span><a href="/series/build-a-scanner/part5-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why-regime" class="fnav-item" data-section="why-regime"><i class="fas fa-bolt"></i><span>Why Regime Matters</span></a><a href="#five-regimes" class="fnav-item" data-section="five-regimes"><i class="fas fa-layer-group"></i><span>5 Market Regimes</span></a><a href="#indicators" class="fnav-item" data-section="indicators"><i class="fas fa-gauge-high"></i><span>6 Indicators</span></a><a href="#strategy-weights" class="fnav-item" data-section="strategy-weights"><i class="fas fa-sliders"></i><span>Dynamic Weights</span></a><a href="#implementation" class="fnav-item" data-section="implementation"><i class="fas fa-code"></i><span>Implementation</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- WHY REGIME MATTERS -->
+<div class="section-divider" id="why-regime"><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> Why Regime Matters</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#dc2626;"></i> Why Static Scanners Blow Up</h2>
+
+  <p>In March 2020, a momentum scanner would have been screaming "BUY" on hundreds of stocks that had just bounced 5-10% off their lows. RSI was climbing, volume was surging, MACD was crossing up. Every technical signal said "go." The market then proceeded to drop another 20% in the following week.</p>
+
+  <p>The problem: the scanner had no concept of <strong>regime</strong>. It did not know that VIX was at 82, credit spreads were blowing out, and the Fed had just emergency-cut rates to zero. The same signals that work beautifully in a bull market become death traps in a crash.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Regime Paradox</h4>
+    <p>The same setup (RSI oversold + volume spike + MACD crossover) has a 62% win rate in Risk-On markets and a 28% win rate in Risk-Off markets. Without regime detection, you are averaging those two outcomes and calling it a "strategy." That is like averaging the temperature of Sahara and Antarctica and dressing for 15C.</p>
+  </div>
+
+  <!-- EChart: Same Setup, Different Regime -->
+  <div id="chart-regime-impact" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- 5 MARKET REGIMES -->
+<div class="section-divider" id="five-regimes"><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> The 5 Market Regimes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> Five Regimes, Five Playbooks</h2>
+
+  <p>Markets do not exist in a binary "bull" or "bear" state. There are five distinct regimes, each requiring a different scanner configuration:</p>
+
+  <div class="regime-card" style="border-left-color:#10b981;">
+    <h4><i class="fa-solid fa-circle" style="color:#10b981;"></i> Risk-On (Score &gt; 0.75)</h4>
+    <p>SPY above rising EMAs, VIX below 18, DXY weak, credit tight. <strong>Playbook:</strong> Heavy momentum (45%), breakout (30%), contraction (20%), minimal mean-reversion (5%). This is where trend-following prints money.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#3b82f6;">
+    <h4><i class="fa-solid fa-circle" style="color:#3b82f6;"></i> Recovery (Score 0.60–0.75)</h4>
+    <p>SPY reclaiming EMAs, VIX falling from elevated levels, breadth improving. <strong>Playbook:</strong> Balanced momentum (30%), breakout (25%), contraction (25%), mean-reversion (20%). The market is healing — look for leaders emerging from the wreckage.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#f59e0b;">
+    <h4><i class="fa-solid fa-circle" style="color:#f59e0b;"></i> Neutral (Score 0.40–0.60)</h4>
+    <p>Mixed signals. SPY choppy, VIX 18-25, no clear direction. <strong>Playbook:</strong> Equal weight across all strategies (25% each). Focus on stock-picking over market direction.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#f97316;">
+    <h4><i class="fa-solid fa-circle" style="color:#f97316;"></i> Early Risk-Off (Score 0.25–0.40)</h4>
+    <p>SPY breaking below EMA50, VIX rising above 25, credit widening. <strong>Playbook:</strong> Mean-reversion (40%), contraction (35%), minimal momentum (15%), defensive breakout on hedges (10%). Shift to defensive names and short setups.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#dc2626;">
+    <h4><i class="fa-solid fa-circle" style="color:#dc2626;"></i> Risk-Off (Score &lt; 0.25)</h4>
+    <p>SPY below EMA200, VIX above 30, credit blowout, DXY surging. <strong>Playbook:</strong> Mean-reversion only on quality names (45%), contraction (40%), short candidates (10%), no momentum (5%). Capital preservation is priority one.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Regime</th><th>Score Range</th><th>VIX Typical</th><th>Key Behavior</th><th>Scanner Action</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Risk-On</strong></td><td>&gt; 0.75</td><td>&lt; 18</td><td>Strong uptrend, low fear</td><td>Aggressive momentum and breakout</td></tr>
+      <tr><td><strong>Recovery</strong></td><td>0.60 – 0.75</td><td>18 – 22</td><td>Improving breadth</td><td>Balanced, look for leaders</td></tr>
+      <tr><td><strong>Neutral</strong></td><td>0.40 – 0.60</td><td>18 – 25</td><td>Choppy, no direction</td><td>Equal weight, stock-picking</td></tr>
+      <tr><td><strong>Early Risk-Off</strong></td><td>0.25 – 0.40</td><td>25 – 35</td><td>Deteriorating, caution</td><td>Defensive, hedges, oversold quality</td></tr>
+      <tr><td><strong>Risk-Off</strong></td><td>&lt; 0.25</td><td>&gt; 30</td><td>Crash / panic</td><td>Preservation, short setups, GLD/TLT</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 6 INDICATORS -->
+<div class="section-divider" id="indicators"><i class="fa-solid fa-gauge-high" style="color:#9333ea;"></i> The 6 Indicators</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#9333ea;"></i> Building the Regime Detector</h2>
+
+  <p>The regime detector uses 6 indicators, each producing a score from 0.0 (bearish) to 1.0 (bullish). The indicators are weighted and combined into a single regime score.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>#</th><th>Indicator</th><th>Weight</th><th>Signal</th><th>Computation</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>S&P 500 Trend</strong></td><td>30%</td><td>EMA(20) vs EMA(50)</td><td>1.0 if EMA20 &gt; EMA50 by &gt;2%, 0.5 if flat, 0.0 if EMA20 &lt; EMA50 by &gt;2%</td></tr>
+      <tr><td>2</td><td><strong>VIX Level</strong> (inverted)</td><td>25%</td><td>Fear gauge</td><td>1.0 if VIX &lt; 15, 0.5 if 20-25, 0.0 if &gt; 35</td></tr>
+      <tr><td>3</td><td><strong>Dollar DXY</strong> (inverted)</td><td>15%</td><td>Risk appetite</td><td>1.0 if DXY falling &gt;1%, 0.5 if flat, 0.0 if surging &gt;1%</td></tr>
+      <tr><td>4</td><td><strong>Credit HYG/LQD</strong></td><td>15%</td><td>Institutional risk</td><td>1.0 if ratio rising (risk-on), 0.0 if falling (flight to quality)</td></tr>
+      <tr><td>5</td><td><strong>Treasury TLT</strong> (inverted)</td><td>10%</td><td>Bond vs equity</td><td>1.0 if TLT falling (money into stocks), 0.0 if surging (flight to safety)</td></tr>
+      <tr><td>6</td><td><strong>Bitcoin Momentum</strong></td><td>5%</td><td>Liquidity proxy</td><td>1.0 if BTC EMA20 &gt; EMA50, 0.0 otherwise</td></tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Regime Score Formula</div>
+    regimeScore = 0.30 x <span class="formula-highlight">SPY</span> + 0.25 x <span class="formula-highlight">VIX</span> + 0.15 x <span class="formula-highlight">DXY</span> + 0.15 x <span class="formula-highlight">HYG</span> + 0.10 x <span class="formula-highlight">TLT</span> + 0.05 x <span class="formula-highlight">BTC</span>
+  </div>
+
+  <div class="code-label">Python — Regime Detector</div>
+  <div class="code-block"><pre><span class="keyword">class</span> <span class="function">RegimeDetector</span>:
+    <span class="string">"""Detect market regime from 6 macro indicators."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.weights = {
+            <span class="string">'spy_trend'</span>: <span class="number">0.30</span>,
+            <span class="string">'vix_level'</span>: <span class="number">0.25</span>,
+            <span class="string">'dxy_trend'</span>: <span class="number">0.15</span>,
+            <span class="string">'credit_spread'</span>: <span class="number">0.15</span>,
+            <span class="string">'tlt_trend'</span>: <span class="number">0.10</span>,
+            <span class="string">'btc_momentum'</span>: <span class="number">0.05</span>,
+        }
+
+    <span class="keyword">def</span> <span class="function">_score_spy</span>(self, spy_data):
+        <span class="string">"""Score SPY trend: EMA20 vs EMA50."""</span>
+        ema20 = spy_data[<span class="string">'ema_20'</span>]
+        ema50 = spy_data[<span class="string">'ema_50'</span>]
+        spread = (ema20 - ema50) / ema50
+        <span class="keyword">if</span> spread > <span class="number">0.02</span>: <span class="keyword">return</span> <span class="number">1.0</span>
+        <span class="keyword">elif</span> spread > <span class="number">0.005</span>: <span class="keyword">return</span> <span class="number">0.75</span>
+        <span class="keyword">elif</span> spread > <span class="number">-0.005</span>: <span class="keyword">return</span> <span class="number">0.5</span>
+        <span class="keyword">elif</span> spread > <span class="number">-0.02</span>: <span class="keyword">return</span> <span class="number">0.25</span>
+        <span class="keyword">else</span>: <span class="keyword">return</span> <span class="number">0.0</span>
+
+    <span class="keyword">def</span> <span class="function">_score_vix</span>(self, vix):
+        <span class="string">"""Score VIX (inverted: low VIX = bullish)."""</span>
+        <span class="keyword">if</span> vix < <span class="number">15</span>: <span class="keyword">return</span> <span class="number">1.0</span>
+        <span class="keyword">elif</span> vix < <span class="number">20</span>: <span class="keyword">return</span> <span class="number">0.75</span>
+        <span class="keyword">elif</span> vix < <span class="number">25</span>: <span class="keyword">return</span> <span class="number">0.5</span>
+        <span class="keyword">elif</span> vix < <span class="number">35</span>: <span class="keyword">return</span> <span class="number">0.25</span>
+        <span class="keyword">else</span>: <span class="keyword">return</span> <span class="number">0.0</span>
+
+    <span class="keyword">def</span> <span class="function">detect</span>(self, market_data):
+        <span class="string">"""Run all 6 indicators. Return regime + score."""</span>
+        scores = {
+            <span class="string">'spy_trend'</span>: self._score_spy(market_data[<span class="string">'SPY'</span>]),
+            <span class="string">'vix_level'</span>: self._score_vix(market_data[<span class="string">'VIX'</span>]),
+            <span class="string">'dxy_trend'</span>: self._score_dxy(market_data[<span class="string">'DXY'</span>]),
+            <span class="string">'credit_spread'</span>: self._score_credit(market_data),
+            <span class="string">'tlt_trend'</span>: self._score_tlt(market_data[<span class="string">'TLT'</span>]),
+            <span class="string">'btc_momentum'</span>: self._score_btc(market_data[<span class="string">'BTC'</span>]),
+        }
+
+        <span class="comment"># Weighted composite</span>
+        regime_score = sum(
+            scores[k] * self.weights[k] <span class="keyword">for</span> k <span class="keyword">in</span> scores
+        )
+
+        <span class="comment"># Map to regime name</span>
+        <span class="keyword">if</span> regime_score > <span class="number">0.75</span>: regime = <span class="string">'risk_on'</span>
+        <span class="keyword">elif</span> regime_score > <span class="number">0.60</span>: regime = <span class="string">'recovery'</span>
+        <span class="keyword">elif</span> regime_score > <span class="number">0.40</span>: regime = <span class="string">'neutral'</span>
+        <span class="keyword">elif</span> regime_score > <span class="number">0.25</span>: regime = <span class="string">'early_risk_off'</span>
+        <span class="keyword">else</span>: regime = <span class="string">'risk_off'</span>
+
+        <span class="keyword">return</span> {
+            <span class="string">'regime'</span>: regime,
+            <span class="string">'score'</span>: round(regime_score, <span class="number">3</span>),
+            <span class="string">'indicators'</span>: scores,
+        }</pre>
+  </div>
+
+  <!-- EChart: 6-Indicator Gauge Dashboard -->
+  <div id="chart-indicators" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Why These 6?</h4>
+    <p><strong>SPY trend</strong> (30%) is the king — if the market is going up, most stocks go up. <strong>VIX</strong> (25%) measures fear intensity. <strong>DXY</strong> (15%) captures global risk appetite — a strong dollar means money is fleeing to safety. <strong>HYG/LQD</strong> (15%) is the institutional tell — when institutions dump high-yield bonds for investment-grade, they are positioning for trouble. <strong>TLT</strong> (10%) is the bond refuge indicator. <strong>BTC</strong> (5%) is a liquidity barometer — crypto dies first when liquidity dries up.</p>
+  </div>
+</div>
+
+<!-- DYNAMIC STRATEGY WEIGHTS -->
+<div class="section-divider" id="strategy-weights"><i class="fa-solid fa-sliders" style="color:#f97316;"></i> Dynamic Strategy Weights</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-sliders" style="color:#f97316;"></i> Shifting Strategy Weights by Regime</h2>
+
+  <p>Once you know the regime, you adjust the weight given to each scanner strategy. This is where the real magic happens — the scanner literally reconfigures itself every morning based on what the market is doing.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Strategy</th><th>Risk-On</th><th>Recovery</th><th>Neutral</th><th>Early Risk-Off</th><th>Risk-Off</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Momentum</strong></td><td>45%</td><td>30%</td><td>25%</td><td>15%</td><td>5%</td></tr>
+      <tr><td><strong>Breakout</strong></td><td>30%</td><td>25%</td><td>25%</td><td>10%</td><td>10%</td></tr>
+      <tr><td><strong>Contraction</strong></td><td>20%</td><td>25%</td><td>25%</td><td>35%</td><td>40%</td></tr>
+      <tr><td><strong>Mean Reversion</strong></td><td>5%</td><td>20%</td><td>25%</td><td>40%</td><td>45%</td></tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: Strategy Weights Stacked Bar by Regime -->
+  <div id="chart-weights" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="code-label">Python — Strategy Weight Mapper</div>
+  <div class="code-block"><pre>STRATEGY_WEIGHTS = {
+    <span class="string">'risk_on'</span>:         {<span class="string">'momentum'</span>: <span class="number">45</span>, <span class="string">'breakout'</span>: <span class="number">30</span>, <span class="string">'contraction'</span>: <span class="number">20</span>, <span class="string">'mean_reversion'</span>: <span class="number">5</span>},
+    <span class="string">'recovery'</span>:        {<span class="string">'momentum'</span>: <span class="number">30</span>, <span class="string">'breakout'</span>: <span class="number">25</span>, <span class="string">'contraction'</span>: <span class="number">25</span>, <span class="string">'mean_reversion'</span>: <span class="number">20</span>},
+    <span class="string">'neutral'</span>:         {<span class="string">'momentum'</span>: <span class="number">25</span>, <span class="string">'breakout'</span>: <span class="number">25</span>, <span class="string">'contraction'</span>: <span class="number">25</span>, <span class="string">'mean_reversion'</span>: <span class="number">25</span>},
+    <span class="string">'early_risk_off'</span>: {<span class="string">'momentum'</span>: <span class="number">15</span>, <span class="string">'breakout'</span>: <span class="number">10</span>, <span class="string">'contraction'</span>: <span class="number">35</span>, <span class="string">'mean_reversion'</span>: <span class="number">40</span>},
+    <span class="string">'risk_off'</span>:        {<span class="string">'momentum'</span>: <span class="number">5</span>,  <span class="string">'breakout'</span>: <span class="number">10</span>, <span class="string">'contraction'</span>: <span class="number">40</span>, <span class="string">'mean_reversion'</span>: <span class="number">45</span>},
+}
+
+<span class="keyword">def</span> <span class="function">get_weights</span>(regime):
+    <span class="string">"""Return strategy weights for detected regime."""</span>
+    <span class="keyword">return</span> STRATEGY_WEIGHTS[regime]</pre>
+  </div>
+
+  <h3>The Feedback Loop</h3>
+  <p>The regime detector runs at the start of each daily scan. The full loop:</p>
+  <ol>
+    <li><strong>Fetch macro data</strong> — SPY, VIX, DXY, HYG, LQD, TLT, BTC-USD latest bars</li>
+    <li><strong>Score each indicator</strong> — 0.0 to 1.0</li>
+    <li><strong>Compute regime score</strong> — weighted average</li>
+    <li><strong>Map to regime</strong> — one of 5 regimes</li>
+    <li><strong>Look up strategy weights</strong> — from the weight table</li>
+    <li><strong>Pass weights to filter + scoring engine</strong> — scanner reconfigures</li>
+    <li><strong>Run scanner</strong> — with regime-appropriate behavior</li>
+  </ol>
+
+  <!-- EChart: Regime Timeline 2 Years -->
+  <div id="chart-timeline" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- IMPLEMENTATION -->
+<div class="section-divider" id="implementation"><i class="fa-solid fa-code" style="color:#dc2626;"></i> Putting It All Together</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-code" style="color:#dc2626;"></i> The Regime-Aware Scanner</h2>
+
+  <div class="code-label">Python — Complete Daily Scan with Regime</div>
+  <div class="code-block"><pre><span class="keyword">def</span> <span class="function">daily_scan</span>(universe_df, market_data):
+    <span class="string">"""Full daily scan: regime -> filter -> score -> rank."""</span>
+
+    <span class="comment"># Step 1: Detect regime</span>
+    detector = RegimeDetector()
+    regime_result = detector.detect(market_data)
+    regime = regime_result[<span class="string">'regime'</span>]
+    print(<span class="string">f"Regime: {regime} (score: {regime_result['score']})"</span>)
+
+    <span class="comment"># Step 2: Get strategy weights</span>
+    weights = get_weights(regime)
+    print(<span class="string">f"Weights: {weights}"</span>)
+
+    <span class="comment"># Step 3: Run filters (from Part 2)</span>
+    pipeline = ScannerPipeline()
+    candidates = pipeline.run(universe_df, regime)
+
+    <span class="comment"># Step 4: Score candidates (from Part 3)</span>
+    scorer = ScoringEngine()
+    all_scored = []
+    <span class="keyword">for</span> strategy, weight <span class="keyword">in</span> weights.items():
+        strat_candidates = candidates[candidates[<span class="string">'strategy'</span>] == strategy]
+        scored = scorer.score_candidates(strat_candidates, strategy, weight)
+        all_scored.append(scored)
+
+    <span class="comment"># Step 5: Merge and rank</span>
+    merged = pd.concat(all_scored)
+    merged = merged.sort_values(<span class="string">'final_score'</span>, ascending=<span class="number">False</span>)
+    merged = merged.drop_duplicates(subset=[<span class="string">'ticker'</span>], keep=<span class="string">'first'</span>)
+
+    <span class="comment"># Step 6: Take top 10 with diversification</span>
+    top10 = enforce_diversification(merged.head(<span class="number">20</span>), max_per_sector=<span class="number">2</span>)
+
+    print(<span class="string">f"\nTop 10 Setups ({regime}):"</span>)
+    <span class="keyword">for</span> _, row <span class="keyword">in</span> top10.head(<span class="number">10</span>).iterrows():
+        print(<span class="string">f"  {row['ticker']:6s} | {row['strategy']:15s} | Score: {row['final_score']}"</span>)
+
+    <span class="keyword">return</span> top10.head(<span class="number">10</span>)</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Anti-Pattern: Regime Whiplash</h4>
+    <p>If the regime score hovers near a boundary (e.g., 0.41 one day, 0.39 the next), your scanner will whip between Neutral and Early Risk-Off strategies daily. To prevent this, add <strong>hysteresis</strong>: require the score to move at least 0.05 past a boundary before switching regime. Alternatively, use a 3-day exponential average of the regime score instead of the raw daily value.</p>
+  </div>
+
+  <!-- EChart: Regime Score vs SPY Performance -->
+  <div id="chart-vs-spy" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- QUIZ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-brain" style="color:#dc2626;"></i> Knowledge Check</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain"></i> Test Your Understanding</h2>
+
+  <details>
+    <summary>Quiz 1: VIX is at 28 and rising, breadth is at 38%, SPY is below its falling 50-day MA. What regime is the market in?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> <strong>Early Risk-Off to Risk-Off.</strong> VIX above 25 and rising signals elevated fear. Breadth at 38% means fewer than 4 in 10 stocks are above their 200-day MA — narrow participation consistent with a deteriorating market. SPY below a falling 50-day MA confirms the downtrend. All three indicators align on Risk-Off. The scanner should switch to defensive strategies: scan for shorts, hedges (GLD, TLT), and high-quality dividend payers. Reduce total exposure to 30-50% and tighten stops to 0.75x ATR.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 2: Why does the regime classifier use 6 indicators instead of just the VIX?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> No single indicator captures the full picture. VIX measures <strong>implied volatility expectations</strong> but can spike on isolated events (earnings, geopolitics) without a genuine regime change. By combining VIX with breadth (participation), the yield curve (recession signal), SPX momentum (trend), credit spreads (financial stress), and intermarket signals (flight-to-safety), you get a <strong>multi-dimensional view</strong> that's far more robust. A regime change confirmed by 5/6 indicators is high-confidence; a VIX spike alone might be a false alarm. The voting system prevents any single indicator from triggering unnecessary strategy shifts.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 3: Your regime score hovers between 0.39 and 0.41 for a week. What's the problem and how do you fix it?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> This is <strong>regime whiplash</strong> — the score oscillates around a boundary, causing the scanner to switch strategies daily. This destroys performance because each switch incurs transaction costs and the conflicting strategies cancel each other out. The fix is <strong>hysteresis</strong>: require the score to move at least 0.05 past a boundary before switching. Alternatively, use a 3-day exponential moving average of the regime score instead of the raw daily value. This smoothing prevents daily flip-flopping while still responding to genuine regime changes within 3-5 days.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 4: In a Recovery regime, should you immediately go full Risk-On?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> <strong>No.</strong> Recovery is a transition from Risk-Off toward Risk-On, but it's not confirmed Risk-On yet. Bear market rallies look exactly like Recovery in the early stages. The correct approach is <strong>gradual re-engagement</strong>: increase exposure from 30-50% (Risk-Off) to 50-70%, favor a mix of momentum and mean-reversion strategies, and keep some hedges in place. Only shift to full Risk-On (80-100% exposure, pure momentum) when the regime score sustainably crosses the Risk-On threshold for 3-5 consecutive days. The asymmetry principle applies: be slow to return to offense.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 5: Why is BTC included as a regime indicator (even at only 5% weight)?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Bitcoin serves as a <strong>liquidity canary</strong>. BTC trades 24/7 and is highly sensitive to global liquidity conditions. When central banks tighten (reducing liquidity), BTC often sells off before traditional markets react — it's a leading indicator because it trades outside market hours and attracts speculative capital that evaporates first in risk-off environments. At 5% weight, it doesn't drive regime decisions on its own, but it provides an early confirmation signal. When BTC drops 15% while other indicators are still Risk-On, it's a warning that liquidity conditions are deteriorating underneath the surface.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 6: Your scanner ran a momentum strategy in Risk-Off and lost 8R in a month. What went wrong?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Either the <strong>regime classifier failed</strong> (didn't detect Risk-Off in time) or the <strong>strategy rotation didn't execute</strong> (scanner kept running momentum despite the regime label). Diagnostic steps: (1) Check the regime classifier — were the indicators actually showing Risk-Off during that period? If yes, the classifier worked but the strategy rotation logic had a bug. (2) If the classifier didn't detect Risk-Off, check which indicators lagged. (3) Review the transition rules — perhaps the 3-day confirmation delay was too slow for a fast selloff. The 8R loss in a month is unacceptable and should trigger a kill-switch review before resuming live trading.
+    </div>
+  </details>
+</div>
+
+<!-- TAKEAWAY -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 4</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> The same technical setup has wildly different win rates in different market regimes. Context is everything.</li>
+    <li><i class="fa-solid fa-check"></i> 5 regimes: Risk-On, Recovery, Neutral, Early Risk-Off, Risk-Off. Each gets its own strategy weight profile.</li>
+    <li><i class="fa-solid fa-check"></i> 6 indicators weighted by importance: SPY (30%), VIX (25%), DXY (15%), Credit (15%), TLT (10%), BTC (5%).</li>
+    <li><i class="fa-solid fa-check"></i> Regime detection runs daily, BEFORE the scanner. It determines which strategies get heavy weight.</li>
+    <li><i class="fa-solid fa-check"></i> Risk-On favors momentum/breakout. Risk-Off favors mean-reversion/contraction and hedges.</li>
+    <li><i class="fa-solid fa-check"></i> Add hysteresis or smoothing to prevent regime whiplash near score boundaries.</li>
+  </ul>
+</div>
+
+<a href="/series/build-a-scanner/part5-backtest/" class="next-cta">
+  <div>
+    <div class="next-label">Part 5 of 6</div>
+    <div class="next-title">Backtesting Your Scanner — Proving It Works <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part3-scoring/" class="series-arrow" title="Scoring"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step current" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">4/6</span><a href="/series/build-a-scanner/part5-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div>
+
+<footer class="article-footer">&copy; 2026 Market Watch. Data via MarketWatch Gateway. This is not financial advice.<br><a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
+
+<script>
+var c1=echarts.init(document.getElementById('chart-regime-impact'));
+c1.setOption({title:{text:'Same Setup, Different Outcome — By Regime',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},legend:{bottom:0,textStyle:{fontSize:11}},grid:{left:'3%',right:'4%',bottom:'15%',top:'18%',containLabel:true},xAxis:{type:'category',data:['Win Rate (%)','Avg Gain (%)','Avg Loss (%)','Profit Factor','Sharpe Ratio'],axisLabel:{fontSize:10}},yAxis:{type:'value'},series:[{name:'Risk-On',type:'bar',data:[62,4.2,-2.1,2.4,1.5],itemStyle:{color:'#10b981',borderRadius:[4,4,0,0]}},{name:'Risk-Off',type:'bar',data:[28,2.8,-4.5,0.6,-0.3],itemStyle:{color:'#dc2626',borderRadius:[4,4,0,0]}}]});
+
+var c2=echarts.init(document.getElementById('chart-indicators'));
+c2.setOption({title:{text:'Current Regime Indicator Dashboard',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{left:'3%',right:'4%',bottom:'8%',top:'15%',containLabel:true},xAxis:{type:'category',data:['SPY Trend\n(30%)','VIX Level\n(25%)','DXY\n(15%)','Credit\n(15%)','TLT\n(10%)','BTC\n(5%)'],axisLabel:{fontSize:10}},yAxis:{type:'value',min:0,max:1,axisLabel:{formatter:function(v){return v.toFixed(1);}}},series:[{type:'bar',data:[{value:0.75,itemStyle:{color:'#10b981'}},{value:0.5,itemStyle:{color:'#f59e0b'}},{value:0.75,itemStyle:{color:'#10b981'}},{value:0.5,itemStyle:{color:'#f59e0b'}},{value:0.25,itemStyle:{color:'#f97316'}},{value:1.0,itemStyle:{color:'#10b981'}}],label:{show:true,position:'top',fontSize:11,fontWeight:600},barWidth:'60%',itemStyle:{borderRadius:[6,6,0,0]}}],graphic:[{type:'line',shape:{x1:50,y1:110,x2:680,y2:110},style:{stroke:'#dc2626',lineWidth:2,lineDash:[4,4]}}]});
+
+var c3=echarts.init(document.getElementById('chart-weights'));
+c3.setOption({title:{text:'Strategy Weight Allocation by Regime',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},legend:{bottom:0,textStyle:{fontSize:11}},grid:{left:'3%',right:'4%',bottom:'15%',top:'15%',containLabel:true},xAxis:{type:'category',data:['Risk-On','Recovery','Neutral','Early Risk-Off','Risk-Off'],axisLabel:{fontSize:10}},yAxis:{type:'value',max:100,name:'Weight %'},series:[{name:'Momentum',type:'bar',stack:'total',data:[45,30,25,15,5],itemStyle:{color:'#10b981'}},{name:'Breakout',type:'bar',stack:'total',data:[30,25,25,10,10],itemStyle:{color:'#2563eb'}},{name:'Contraction',type:'bar',stack:'total',data:[20,25,25,35,40],itemStyle:{color:'#9333ea'}},{name:'Mean Reversion',type:'bar',stack:'total',data:[5,20,25,40,45],itemStyle:{color:'#dc2626'}}]});
+
+var c4=echarts.init(document.getElementById('chart-timeline'));
+var months=['Jan 24','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan 25','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var regScores=[0.82,0.78,0.85,0.80,0.72,0.65,0.55,0.48,0.42,0.35,0.30,0.22,0.28,0.38,0.45,0.55,0.62,0.70,0.75,0.78,0.82,0.68,0.72,0.76];
+c4.setOption({title:{text:'Regime Score Timeline (2 Years)',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis'},grid:{left:'3%',right:'4%',bottom:'8%',top:'15%',containLabel:true},xAxis:{type:'category',data:months,axisLabel:{fontSize:9,rotate:30}},yAxis:{type:'value',min:0,max:1,axisLabel:{fontSize:10}},visualMap:{show:false,pieces:[{gt:0.75,color:'#10b981'},{gt:0.60,lte:0.75,color:'#3b82f6'},{gt:0.40,lte:0.60,color:'#f59e0b'},{gt:0.25,lte:0.40,color:'#f97316'},{lte:0.25,color:'#dc2626'}]},series:[{type:'line',data:regScores,smooth:true,lineStyle:{width:3},areaStyle:{opacity:0.15},symbol:'circle',symbolSize:6}]});
+
+var c5=echarts.init(document.getElementById('chart-vs-spy'));
+c5.setOption({title:{text:'Regime-Aware vs Static Scanner — Cumulative P&L',left:'center',textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}},tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{fontSize:11}},grid:{left:'3%',right:'4%',bottom:'15%',top:'15%',containLabel:true},xAxis:{type:'category',data:months,axisLabel:{fontSize:9,rotate:30}},yAxis:{type:'value',name:'Cumulative %',axisLabel:{fontSize:10}},series:[{name:'Regime-Aware Scanner',type:'line',data:[2,5,9,13,16,18,20,21,19,17,16,13,15,18,22,26,30,34,38,42,47,44,47,51],smooth:true,lineStyle:{width:2,color:'#dc2626'},itemStyle:{color:'#dc2626'}},{name:'Static Scanner',type:'line',data:[3,7,12,15,17,18,16,12,6,0,-5,-12,-10,-6,-2,4,10,16,20,24,28,22,25,29],smooth:true,lineStyle:{width:2,color:'#94a3b8',type:'dashed'},itemStyle:{color:'#94a3b8'}}]});
+
+window.addEventListener('resize',function(){[c1,c2,c3,c4,c5].forEach(function(c){c.resize();});});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

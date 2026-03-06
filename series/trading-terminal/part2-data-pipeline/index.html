@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Data Pipeline — Ingesting Real-Time Market Data | Build Your Own Trading Terminal with AI — Part 2/6 | Market Watch</title>
+ <meta name="description" content="Build Your Own Trading Terminal with AI — Part 2/6: Data sources, REST/WebSocket ingestion, OHLCV normalization, TimescaleDB schema, Redis caching, Python code examples.">
+ <meta property="og:title" content="Data Pipeline — Ingesting Real-Time Market Data | Trading Terminal 2/6 | Market Watch">
+ <meta property="og:description" content="Build a robust data pipeline: Yahoo Finance, Polygon, Alpha Vantage ingestion with normalization, TimescaleDB, and Redis cache.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-terminal/part2-data-pipeline/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-emerald { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .code-block { background:#0f172a; color:#e2e8f0; padding:1.5rem; border-radius:12px; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code','Cascadia Code','JetBrains Mono',monospace; font-size:0.85rem; line-height:1.7; }
+ .code-block .code-label { display:block; color:#94a3b8; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; font-weight:600; font-family:Inter,sans-serif; }
+ .code-block .kw { color:#c084fc; } .code-block .str { color:#86efac; } .code-block .cm { color:#64748b; } .code-block .fn { color:#67e8f9; } .code-block .num { color:#fbbf24; } .code-block .op { color:#f472b6; }
+ .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border:1px solid #059669; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#047857; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(5,150,105,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#059669; margin-top:0.2rem; flex-shrink:0; }
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(5,150,105,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #059669; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #059669 0%, #047857 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#6ee7b7; }
+ @media (max-width:768px) { .hero-section { padding:2.5rem 1rem 5rem; } .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; } .next-cta { flex-direction:column; text-align:center; } .step-grid { grid-template-columns:1fr 1fr; } .code-block { font-size:0.75rem; padding:1rem; } }
+ @media (max-width:480px) { .hero-section h1 { font-size:1.4rem !important; } .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; } .hero-badges { gap:0.4rem; margin-top:1rem; } }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-terminal"></i> Build Your Own Trading Terminal with AI — Part 2 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Data Pipeline — Ingesting Real-Time Market Data</h1>
+  <p class="hero-subtitle">Data is the lifeblood of your terminal. In this part, we build a production-grade ingestion layer that pulls from multiple sources, normalizes everything into a unified OHLCV schema, and stores it in TimescaleDB with Redis caching for sub-millisecond reads.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-database"></i> TimescaleDB</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-plug"></i> Multi-Source</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-bolt"></i> WebSocket</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-clock"></i> Real-Time</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-terminal/part1-architecture/" class="series-arrow" title="Architecture"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build Your Own Trading Terminal with AI</span><div class="series-steps"><a href="/series/trading-terminal/part1-architecture/" class="series-step" title="Architecture"><span class="series-num">1</span><span class="series-label">Architecture</span></a><a href="/series/trading-terminal/part2-data-pipeline/" class="series-step current" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/trading-terminal/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/trading-terminal/part4-dashboard/" class="series-step" title="Dashboard"><span class="series-num">4</span><span class="series-label">Dashboard</span></a><a href="/series/trading-terminal/part5-ai-layer/" class="series-step" title="AI Layer"><span class="series-num">5</span><span class="series-label">AI Layer</span></a><a href="/series/trading-terminal/part6-deployment/" class="series-step" title="Deployment"><span class="series-num">6</span><span class="series-label">Deployment</span></a></div><span class="series-counter">2/6</span><a href="/series/trading-terminal/part3-signals/" class="series-arrow" title="Signals"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#sources" class="fnav-item" data-section="sources"><i class="fas fa-bookmark"></i><span>Data Sources</span></a><a href="#realtime" class="fnav-item" data-section="realtime"><i class="fas fa-bookmark"></i><span>Real-Time vs EOD</span></a><a href="#ingestion" class="fnav-item" data-section="ingestion"><i class="fas fa-bookmark"></i><span>Ingestion Layer</span></a><a href="#normalization" class="fnav-item" data-section="normalization"><i class="fas fa-bookmark"></i><span>Data Normalization</span></a><a href="#storage" class="fnav-item" data-section="storage"><i class="fas fa-bookmark"></i><span>Storage Architecture</span></a><a href="#scheduling" class="fnav-item" data-section="scheduling"><i class="fas fa-bookmark"></i><span>Cron Scheduling</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-15% 0px -65% 0px',threshold:0});sections.forEach(function(s){observer.observe(s.el);});if(sections.length>0){sections[0].item.classList.add('active');currentActive=sections[0];label.textContent=sections[0].item.querySelector('span').textContent;}})();
+</script>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: DATA SOURCES                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sources"><i class="fa-solid fa-satellite-dish" style="color:#059669;"></i> Data Sources Deep Dive</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-satellite-dish" style="color:#059669;"></i> Choosing Your Data Providers</h2>
+
+  <p>Not all data is created equal. The difference between a profitable and a broken trading system often comes down to <strong>data quality, freshness, and reliability</strong>. Let's examine each provider in detail.</p>
+
+  <h3><i class="fa-solid fa-star" style="color:#f59e0b;"></i> Yahoo Finance — The Free Workhorse</h3>
+
+  <p>Yahoo Finance is the most popular free data source for retail traders. It provides daily OHLCV data for US equities, ETFs, indices, crypto, and some international stocks. The catch: it's technically a <strong>scraping target</strong>, not an official API, and Yahoo has been known to break things without notice.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Yahoo Finance Provider (yfinance)</span>
+<span class="kw">import</span> yfinance <span class="kw">as</span> yf
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">from</span> typing <span class="kw">import</span> Optional
+
+<span class="kw">class</span> <span class="fn">YahooProvider</span>:
+    <span class="str">"""Yahoo Finance data provider with error handling."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.name = <span class="str">"yahoo"</span>
+        self.rate_limit = <span class="num">30</span>  <span class="cm"># calls/minute (conservative)</span>
+
+    <span class="kw">def</span> <span class="fn">fetch_daily_bars</span>(
+        self,
+        symbol: <span class="fn">str</span>,
+        start: Optional[<span class="fn">str</span>] = <span class="kw">None</span>,
+        end: Optional[<span class="fn">str</span>] = <span class="kw">None</span>,
+        period: <span class="fn">str</span> = <span class="str">"1y"</span>
+    ) -&gt; pd.DataFrame:
+        <span class="str">"""Fetch daily OHLCV bars for a symbol."""</span>
+        ticker = yf.Ticker(symbol)
+        <span class="kw">try</span>:
+            <span class="kw">if</span> start <span class="kw">and</span> end:
+                df = ticker.history(start=start, end=end)
+            <span class="kw">else</span>:
+                df = ticker.history(period=period)
+
+            <span class="kw">if</span> df.empty:
+                <span class="kw">raise</span> ValueError(<span class="str">f"No data for {symbol}"</span>)
+
+            <span class="cm"># Normalize column names to our schema</span>
+            df = df.rename(columns={
+                <span class="str">"Open"</span>: <span class="str">"open"</span>,
+                <span class="str">"High"</span>: <span class="str">"high"</span>,
+                <span class="str">"Low"</span>: <span class="str">"low"</span>,
+                <span class="str">"Close"</span>: <span class="str">"close"</span>,
+                <span class="str">"Volume"</span>: <span class="str">"volume"</span>,
+            })
+            df[<span class="str">"symbol"</span>] = symbol
+            df[<span class="str">"provider"</span>] = self.name
+            df.index.name = <span class="str">"timestamp"</span>
+
+            <span class="cm"># Handle splits & dividends</span>
+            <span class="kw">if</span> <span class="str">"Stock Splits"</span> <span class="kw">in</span> df.columns:
+                df[<span class="str">"split_ratio"</span>] = df[<span class="str">"Stock Splits"</span>]
+            <span class="kw">if</span> <span class="str">"Dividends"</span> <span class="kw">in</span> df.columns:
+                df[<span class="str">"dividend"</span>] = df[<span class="str">"Dividends"</span>]
+
+            <span class="kw">return</span> df[[<span class="str">"symbol"</span>,<span class="str">"open"</span>,<span class="str">"high"</span>,<span class="str">"low"</span>,<span class="str">"close"</span>,<span class="str">"volume"</span>,<span class="str">"provider"</span>]]
+
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            <span class="fn">print</span>(<span class="str">f"[Yahoo] Error fetching {symbol}: {e}"</span>)
+            <span class="kw">return</span> pd.DataFrame()
+  </div>
+
+  <h3><i class="fa-solid fa-gem" style="color:#9333ea;"></i> Polygon.io — The Professional Choice</h3>
+
+  <p>If you need real-time data, options chains, or tick-level granularity, Polygon.io is the go-to. Their WebSocket streams are production-grade and their REST API supports aggregates at any timeframe. The $29/month Starter plan gets you 15-minute delayed data with unlimited API calls; $199/month gets real-time.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Polygon.io WebSocket Stream</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> json
+<span class="kw">import</span> websockets
+
+<span class="kw">class</span> <span class="fn">PolygonStream</span>:
+    <span class="str">"""Real-time trade stream via Polygon WebSocket."""</span>
+
+    WS_URL = <span class="str">"wss://socket.polygon.io/stocks"</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, api_key: <span class="fn">str</span>, symbols: <span class="fn">list</span>[<span class="fn">str</span>]):
+        self.api_key = api_key
+        self.symbols = symbols
+        self.callbacks = []
+
+    <span class="kw">def</span> <span class="fn">on_trade</span>(self, callback):
+        <span class="str">"""Register a callback for trade events."""</span>
+        self.callbacks.append(callback)
+
+    <span class="kw">async def</span> <span class="fn">connect</span>(self):
+        <span class="kw">async with</span> websockets.connect(self.WS_URL) <span class="kw">as</span> ws:
+            <span class="cm"># Authenticate</span>
+            <span class="kw">await</span> ws.send(json.dumps({
+                <span class="str">"action"</span>: <span class="str">"auth"</span>,
+                <span class="str">"params"</span>: self.api_key
+            }))
+
+            <span class="cm"># Subscribe to trade events</span>
+            subs = <span class="str">","</span>.join(<span class="str">f"T.{s}"</span> <span class="kw">for</span> s <span class="kw">in</span> self.symbols)
+            <span class="kw">await</span> ws.send(json.dumps({
+                <span class="str">"action"</span>: <span class="str">"subscribe"</span>,
+                <span class="str">"params"</span>: subs
+            }))
+
+            <span class="cm"># Process incoming trades</span>
+            <span class="kw">async for</span> msg <span class="kw">in</span> ws:
+                data = json.loads(msg)
+                <span class="kw">for</span> event <span class="kw">in</span> data:
+                    <span class="kw">if</span> event.get(<span class="str">"ev"</span>) == <span class="str">"T"</span>:
+                        trade = {
+                            <span class="str">"symbol"</span>: event[<span class="str">"sym"</span>],
+                            <span class="str">"price"</span>: event[<span class="str">"p"</span>],
+                            <span class="str">"size"</span>: event[<span class="str">"s"</span>],
+                            <span class="str">"timestamp"</span>: event[<span class="str">"t"</span>],
+                        }
+                        <span class="kw">for</span> cb <span class="kw">in</span> self.callbacks:
+                            <span class="kw">await</span> cb(trade)
+
+<span class="cm"># Usage</span>
+stream = PolygonStream(<span class="str">"YOUR_API_KEY"</span>, [<span class="str">"AAPL"</span>, <span class="str">"MSFT"</span>, <span class="str">"NVDA"</span>])
+stream.on_trade(<span class="kw">lambda</span> t: <span class="fn">print</span>(<span class="str">f"{t['symbol']}: ${t['price']}"</span>))
+asyncio.run(stream.connect())
+  </div>
+
+  <div id="chart-latency" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: REAL-TIME VS DELAYED                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="realtime"><i class="fa-solid fa-clock" style="color:#2563eb;"></i> Real-Time vs Delayed vs EOD</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clock" style="color:#2563eb;"></i> What Data Freshness Do You Actually Need?</h2>
+
+  <p>This is the most important cost-benefit decision in your terminal. Real-time data costs 10-50x more than EOD data. The question is: <strong>does your strategy actually need it?</strong></p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Data Type</th>
+        <th>Latency</th>
+        <th>Cost</th>
+        <th>Best For</th>
+        <th>Providers</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Real-Time (L1)</strong></td><td>&lt;100ms</td><td>$100-500/mo</td><td>Day trading, scalping</td><td>Polygon, Alpaca, IB</td></tr>
+      <tr><td><strong>15-min Delayed</strong></td><td>15 min</td><td>$0-30/mo</td><td>Swing trading, monitoring</td><td>Polygon Starter, IEX</td></tr>
+      <tr><td><strong>EOD (End of Day)</strong></td><td>~4h after close</td><td>$0</td><td>Swing trading, screening</td><td>Yahoo, Tiingo, Alpha Vantage</td></tr>
+      <tr><td><strong>Weekly/Monthly</strong></td><td>Days</td><td>$0</td><td>Position trading, macro</td><td>FRED, Yahoo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#059669;"></i> The Swing Trader's Sweet Spot</h4>
+    <p style="margin:0;">If you're a swing trader (holding days to weeks), <strong>EOD data is enough for 90% of your needs</strong>. You scan after market close, place limit orders for the next day, and check positions once during the session. The $200/month you save on real-time feeds goes straight into your trading account. Add 15-min delayed for intraday monitoring — that's $30/month with Polygon Starter.</p>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">The Practical Data Stack</div>
+    <span class="formula-highlight">EOD bars</span> (free) + <span class="formula-highlight">15-min delayed quotes</span> ($29/mo) + <span class="formula-highlight">Macro data</span> (free) = <span class="formula-highlight">$29/month</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: BUILDING THE INGESTION LAYER                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="ingestion"><i class="fa-solid fa-gears" style="color:#9333ea;"></i> Building the Ingestion Layer</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-gears" style="color:#9333ea;"></i> The Ingestion Service — Core Architecture</h2>
+
+  <p>The ingestion service is the backbone of your pipeline. It handles three transport protocols: <strong>REST polling</strong> for batch data, <strong>WebSocket streams</strong> for real-time updates, and <strong>SSE (Server-Sent Events)</strong> for one-way push. Here's the unified architecture:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-repeat"></i></div>
+      <h4>REST Polling</h4>
+      <p>Cron-scheduled HTTP requests. Best for EOD bars, financials, earnings. Rate-limited with token bucket.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);"><i class="fa-solid fa-bolt"></i></div>
+      <h4>WebSocket Streams</h4>
+      <p>Persistent connections for real-time trades and quotes. Auto-reconnect with exponential backoff.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #9333ea, #7c3aed);"><i class="fa-solid fa-arrow-down"></i></div>
+      <h4>SSE (Server-Sent Events)</h4>
+      <p>One-way server push. Lighter than WebSocket, used by some news/sentiment feeds.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python — Unified Ingestion Orchestrator</span>
+<span class="kw">import</span> asyncio
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+<span class="kw">from</span> typing <span class="kw">import</span> Protocol
+
+<span class="kw">class</span> <span class="fn">TransportType</span>(Enum):
+    REST = <span class="str">"rest"</span>
+    WEBSOCKET = <span class="str">"websocket"</span>
+    SSE = <span class="str">"sse"</span>
+
+<span class="kw">class</span> <span class="fn">DataProvider</span>(Protocol):
+    <span class="str">"""Interface all providers must implement."""</span>
+    name: <span class="fn">str</span>
+    transport: TransportType
+
+    <span class="kw">async def</span> <span class="fn">fetch</span>(self, symbols: <span class="fn">list</span>[<span class="fn">str</span>]) -&gt; <span class="fn">list</span>[<span class="fn">dict</span>]: ...
+    <span class="kw">async def</span> <span class="fn">health_check</span>(self) -&gt; <span class="fn">bool</span>: ...
+
+<span class="op">@</span>dataclass
+<span class="kw">class</span> <span class="fn">IngestionJob</span>:
+    provider: DataProvider
+    symbols: <span class="fn">list</span>[<span class="fn">str</span>]
+    interval_seconds: <span class="fn">int</span>
+    enabled: <span class="fn">bool</span> = <span class="kw">True</span>
+
+<span class="kw">class</span> <span class="fn">Orchestrator</span>:
+    <span class="str">"""Manages all ingestion jobs with health monitoring."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, db, cache):
+        self.db = db
+        self.cache = cache
+        self.jobs: <span class="fn">list</span>[IngestionJob] = []
+        self.stats = {<span class="str">"total_fetches"</span>: <span class="num">0</span>, <span class="str">"errors"</span>: <span class="num">0</span>}
+
+    <span class="kw">def</span> <span class="fn">register</span>(self, job: IngestionJob):
+        self.jobs.append(job)
+
+    <span class="kw">async def</span> <span class="fn">run_job</span>(self, job: IngestionJob):
+        <span class="kw">while</span> job.enabled:
+            <span class="kw">try</span>:
+                rows = <span class="kw">await</span> job.provider.fetch(job.symbols)
+                <span class="kw">await</span> self.db.upsert_bars(rows)
+                <span class="kw">await</span> self.cache.invalidate(job.symbols)
+                self.stats[<span class="str">"total_fetches"</span>] += <span class="num">1</span>
+            <span class="kw">except</span> Exception <span class="kw">as</span> e:
+                self.stats[<span class="str">"errors"</span>] += <span class="num">1</span>
+                <span class="fn">print</span>(<span class="str">f"[{job.provider.name}] Error: {e}"</span>)
+            <span class="kw">await</span> asyncio.sleep(job.interval_seconds)
+
+    <span class="kw">async def</span> <span class="fn">start</span>(self):
+        tasks = [self.run_job(j) <span class="kw">for</span> j <span class="kw">in</span> self.jobs <span class="kw">if</span> j.enabled]
+        <span class="kw">await</span> asyncio.gather(*tasks)
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Failover Strategy</h4>
+    <p style="margin:0;">Always configure a <strong>primary and fallback provider</strong> for each data type. If Yahoo Finance goes down (happens ~2x/year), your ingestion should automatically fail over to Alpha Vantage or Tiingo. Log every failover event so you can monitor provider reliability over time.</p>
+  </div>
+
+  <div id="chart-flow" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: DATA NORMALIZATION                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="normalization"><i class="fa-solid fa-filter" style="color:#f59e0b;"></i> Data Normalization</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-filter" style="color:#f59e0b;"></i> The OHLCV Schema — Your Universal Language</h2>
+
+  <p>Every data provider returns data in a slightly different format. Yahoo uses "Close" (capitalized), Polygon uses "c" (abbreviated), Alpha Vantage uses "4. close". Your normalizer translates all of them into a <strong>single canonical schema</strong>:</p>
+
+  <div class="code-block">
+    <span class="code-label">SQL — TimescaleDB Schema (OHLCV)</span>
+<span class="kw">CREATE TABLE</span> bars_daily (
+    <span class="fn">timestamp</span>  <span class="kw">TIMESTAMPTZ NOT NULL</span>,
+    symbol     <span class="kw">TEXT NOT NULL</span>,
+    open       <span class="kw">NUMERIC</span>(<span class="num">12</span>,<span class="num">4</span>),
+    high       <span class="kw">NUMERIC</span>(<span class="num">12</span>,<span class="num">4</span>),
+    low        <span class="kw">NUMERIC</span>(<span class="num">12</span>,<span class="num">4</span>),
+    close      <span class="kw">NUMERIC</span>(<span class="num">12</span>,<span class="num">4</span>) <span class="kw">NOT NULL</span>,
+    volume     <span class="kw">BIGINT</span>,
+    adj_close  <span class="kw">NUMERIC</span>(<span class="num">12</span>,<span class="num">4</span>),
+    provider   <span class="kw">TEXT</span>,
+    updated_at <span class="kw">TIMESTAMPTZ DEFAULT NOW</span>()
+);
+
+<span class="cm">-- Convert to TimescaleDB hypertable for time-series optimization</span>
+<span class="kw">SELECT</span> create_hypertable(<span class="str">'bars_daily'</span>, <span class="str">'timestamp'</span>);
+
+<span class="cm">-- Unique constraint prevents duplicate bars</span>
+<span class="kw">CREATE UNIQUE INDEX</span> idx_bars_daily_sym_ts
+    <span class="kw">ON</span> bars_daily (symbol, <span class="fn">timestamp</span>);
+
+<span class="cm">-- Compression policy: compress chunks older than 30 days</span>
+<span class="kw">ALTER TABLE</span> bars_daily <span class="kw">SET</span> (
+    timescaledb.compress,
+    timescaledb.compress_segmentby = <span class="str">'symbol'</span>,
+    timescaledb.compress_orderby = <span class="str">'timestamp DESC'</span>
+);
+<span class="kw">SELECT</span> add_compression_policy(<span class="str">'bars_daily'</span>, INTERVAL <span class="str">'30 days'</span>);
+
+<span class="cm">-- Continuous aggregate: auto-generate weekly bars from daily</span>
+<span class="kw">CREATE MATERIALIZED VIEW</span> bars_weekly
+<span class="kw">WITH</span> (timescaledb.continuous) <span class="kw">AS</span>
+<span class="kw">SELECT</span>
+    time_bucket(<span class="str">'1 week'</span>, <span class="fn">timestamp</span>) <span class="kw">AS</span> week,
+    symbol,
+    first(open, <span class="fn">timestamp</span>) <span class="kw">AS</span> open,
+    max(high) <span class="kw">AS</span> high,
+    min(low) <span class="kw">AS</span> low,
+    last(close, <span class="fn">timestamp</span>) <span class="kw">AS</span> close,
+    sum(volume) <span class="kw">AS</span> volume
+<span class="kw">FROM</span> bars_daily
+<span class="kw">GROUP BY</span> week, symbol;
+  </div>
+
+  <h3><i class="fa-solid fa-code-branch" style="color:#059669;"></i> Handling Splits and Dividends</h3>
+
+  <p>Stock splits and dividends are the silent killers of backtesting accuracy. A 4:1 split on NVDA means every historical price before the split date needs to be divided by 4, and every volume multiplied by 4. Here's how to handle this correctly:</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Split & Dividend Adjustment</span>
+<span class="kw">def</span> <span class="fn">adjust_for_splits</span>(
+    df: pd.DataFrame,
+    splits: <span class="fn">list</span>[<span class="fn">dict</span>]
+) -&gt; pd.DataFrame:
+    <span class="str">"""Apply split adjustments to historical bars.
+
+    Args:
+        df: DataFrame with OHLCV data, indexed by timestamp
+        splits: List of {'date': '2024-06-10', 'ratio': 10}
+    """</span>
+    adjusted = df.copy()
+
+    <span class="kw">for</span> split <span class="kw">in</span> <span class="fn">sorted</span>(splits, key=<span class="kw">lambda</span> s: s[<span class="str">"date"</span>]):
+        split_date = pd.Timestamp(split[<span class="str">"date"</span>])
+        ratio = split[<span class="str">"ratio"</span>]
+
+        mask = adjusted.index &lt; split_date
+        <span class="kw">for</span> col <span class="kw">in</span> [<span class="str">"open"</span>, <span class="str">"high"</span>, <span class="str">"low"</span>, <span class="str">"close"</span>, <span class="str">"adj_close"</span>]:
+            adjusted.loc[mask, col] /= ratio
+        adjusted.loc[mask, <span class="str">"volume"</span>] *= ratio
+
+    <span class="kw">return</span> adjusted
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#059669;"></i> Adjusted vs. Unadjusted Prices</h4>
+    <p style="margin:0;">Always store <strong>both</strong> raw (unadjusted) and adjusted prices. Raw prices are what actually traded on that date — useful for audit trails and order reconstruction. Adjusted prices account for splits and dividends — essential for accurate backtesting and technical analysis. Yahoo Finance's <code>adj_close</code> column handles this, but verify against your own split data.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: STORAGE ARCHITECTURE                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="storage"><i class="fa-solid fa-hard-drive" style="color:#059669;"></i> Storage Architecture</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hard-drive" style="color:#059669;"></i> TimescaleDB + Redis + S3 — The Three-Tier Stack</h2>
+
+  <p>Data access patterns in a trading terminal are highly varied: you need <strong>millisecond reads</strong> for live quotes, <strong>sub-second queries</strong> for chart rendering, and <strong>bulk scans</strong> for backtesting. No single database handles all three well. That's why we use a three-tier architecture:</p>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#ef4444;">
+      <div class="step-number" style="background:linear-gradient(135deg, #ef4444, #dc2626);"><i class="fa-solid fa-bolt"></i></div>
+      <h4>Hot — Redis</h4>
+      <p>Latest quotes, 5-min bars, watchlist data. Sub-ms reads. 256MB memory cap with LRU eviction.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#f59e0b;">
+      <div class="step-number" style="background:linear-gradient(135deg, #f59e0b, #d97706);"><i class="fa-solid fa-database"></i></div>
+      <h4>Warm — TimescaleDB</h4>
+      <p>Last 2 years of daily bars, all active symbols. Hypertable compression for 10x space savings on older data.</p>
+    </div>
+    <div class="step-card" style="border-top-color:#2563eb;">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);"><i class="fa-solid fa-box-archive"></i></div>
+      <h4>Cold — S3/MinIO</h4>
+      <p>Historical archives (10+ years). Parquet files partitioned by year/symbol. Loaded on-demand for backtesting.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python — Redis Cache Layer</span>
+<span class="kw">import</span> redis.asyncio <span class="kw">as</span> redis
+<span class="kw">import</span> json
+
+<span class="kw">class</span> <span class="fn">QuoteCache</span>:
+    <span class="str">"""Redis cache for real-time quotes and recent bars."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, url: <span class="fn">str</span> = <span class="str">"redis://localhost:6379"</span>):
+        self.redis = redis.from_url(url)
+
+    <span class="kw">async def</span> <span class="fn">set_quote</span>(self, symbol: <span class="fn">str</span>, data: <span class="fn">dict</span>):
+        <span class="str">"""Cache a quote with 60s TTL."""</span>
+        key = <span class="str">f"quote:{symbol}"</span>
+        <span class="kw">await</span> self.redis.setex(key, <span class="num">60</span>, json.dumps(data))
+
+    <span class="kw">async def</span> <span class="fn">get_quote</span>(self, symbol: <span class="fn">str</span>) -&gt; <span class="fn">dict</span> | <span class="kw">None</span>:
+        <span class="str">"""Get cached quote, None if expired."""</span>
+        key = <span class="str">f"quote:{symbol}"</span>
+        val = <span class="kw">await</span> self.redis.get(key)
+        <span class="kw">return</span> json.loads(val) <span class="kw">if</span> val <span class="kw">else</span> <span class="kw">None</span>
+
+    <span class="kw">async def</span> <span class="fn">set_bars</span>(self, symbol: <span class="fn">str</span>, tf: <span class="fn">str</span>, bars: <span class="fn">list</span>):
+        <span class="str">"""Cache bar data with 5min TTL for intraday, 1h for daily."""</span>
+        key = <span class="str">f"bars:{symbol}:{tf}"</span>
+        ttl = <span class="num">300</span> <span class="kw">if</span> tf == <span class="str">"5min"</span> <span class="kw">else</span> <span class="num">3600</span>
+        <span class="kw">await</span> self.redis.setex(key, ttl, json.dumps(bars))
+
+    <span class="kw">async def</span> <span class="fn">invalidate</span>(self, symbols: <span class="fn">list</span>[<span class="fn">str</span>]):
+        <span class="str">"""Invalidate cache for given symbols after DB update."""</span>
+        keys = []
+        <span class="kw">for</span> s <span class="kw">in</span> symbols:
+            keys.extend([<span class="str">f"quote:{s}"</span>, <span class="str">f"bars:{s}:*"</span>])
+        <span class="kw">if</span> keys:
+            <span class="kw">await</span> self.redis.delete(*keys)
+  </div>
+
+  <div id="chart-storage" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: CRON SCHEDULING                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scheduling"><i class="fa-solid fa-calendar-check" style="color:#ef4444;"></i> Cron Scheduling</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-check" style="color:#ef4444;"></i> Scheduling Your Ingestion Jobs</h2>
+
+  <p>Different data types need different update frequencies. Here's a production-ready cron schedule for a swing trading terminal:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Job</th>
+        <th>Schedule</th>
+        <th>Provider</th>
+        <th>Symbols</th>
+        <th>Duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Daily bars (US)</strong></td><td>Mon-Fri 17:30 ET</td><td>Yahoo Finance</td><td>500 (S&P 500)</td><td>~3 min</td></tr>
+      <tr><td><strong>Daily bars (EU)</strong></td><td>Mon-Fri 18:00 CET</td><td>Yahoo Finance</td><td>100 (STOXX 600 subset)</td><td>~1 min</td></tr>
+      <tr><td><strong>Crypto quotes</strong></td><td>Every 5 min</td><td>CoinGecko</td><td>20 (top coins)</td><td>~10 sec</td></tr>
+      <tr><td><strong>Macro data</strong></td><td>Daily 08:00 ET</td><td>FRED</td><td>30 series</td><td>~30 sec</td></tr>
+      <tr><td><strong>Financials</strong></td><td>Weekly Sunday</td><td>Alpha Vantage</td><td>500</td><td>~20 min</td></tr>
+      <tr><td><strong>Earnings calendar</strong></td><td>Weekly Sunday</td><td>Yahoo Finance</td><td>Next 2 weeks</td><td>~1 min</td></tr>
+      <tr><td><strong>News headlines</strong></td><td>Every 15 min</td><td>Finnhub</td><td>Watchlist</td><td>~5 sec</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block">
+    <span class="code-label">Python — APScheduler Cron Configuration</span>
+<span class="kw">from</span> apscheduler.schedulers.asyncio <span class="kw">import</span> AsyncIOScheduler
+<span class="kw">from</span> apscheduler.triggers.cron <span class="kw">import</span> CronTrigger
+
+scheduler = AsyncIOScheduler(timezone=<span class="str">"US/Eastern"</span>)
+
+<span class="cm"># Daily bars after US market close</span>
+scheduler.add_job(
+    ingest_daily_bars,
+    CronTrigger(day_of_week=<span class="str">"mon-fri"</span>, hour=<span class="num">17</span>, minute=<span class="num">30</span>),
+    kwargs={<span class="str">"universe"</span>: <span class="str">"SP500"</span>, <span class="str">"provider"</span>: <span class="str">"yahoo"</span>},
+    id=<span class="str">"daily_bars_us"</span>,
+    name=<span class="str">"Ingest US daily bars"</span>,
+)
+
+<span class="cm"># Crypto quotes every 5 minutes</span>
+scheduler.add_job(
+    ingest_crypto_quotes,
+    <span class="str">"interval"</span>,
+    minutes=<span class="num">5</span>,
+    kwargs={<span class="str">"coins"</span>: [<span class="str">"BTC"</span>,<span class="str">"ETH"</span>,<span class="str">"SOL"</span>,<span class="str">"XRP"</span>]},
+    id=<span class="str">"crypto_quotes"</span>,
+)
+
+<span class="cm"># Macro data at 8am ET</span>
+scheduler.add_job(
+    ingest_macro_data,
+    CronTrigger(hour=<span class="num">8</span>, minute=<span class="num">0</span>),
+    kwargs={<span class="str">"series"</span>: [<span class="str">"DGS10"</span>,<span class="str">"VIXCLS"</span>,<span class="str">"DTWEXBGS"</span>]},
+    id=<span class="str">"macro_daily"</span>,
+)
+
+<span class="cm"># Health check every 10 minutes</span>
+scheduler.add_job(
+    check_provider_health,
+    <span class="str">"interval"</span>,
+    minutes=<span class="num">10</span>,
+    id=<span class="str">"health_check"</span>,
+)
+
+scheduler.start()
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#059669;"></i> Timing Is Everything</h4>
+    <p style="margin:0;">Schedule US daily bars at <strong>5:30 PM ET</strong>, not 4:00 PM. Why? After-hours adjustments, split data, and dividend data take 30-90 minutes to propagate. Fetching too early gives you incomplete or incorrect data. For the same reason, schedule EU bars at 6:00 PM CET, not at market close.</p>
+  </div>
+
+  <div id="chart-schedule" style="width:100%; height:300px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark"></i> Key Takeaways — Part 2</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Use Yahoo Finance (free) for daily OHLCV as your primary source, with Alpha Vantage and Tiingo as failovers.</li>
+    <li><i class="fa-solid fa-check"></i> For swing trading, EOD data + 15-min delayed quotes ($29/mo) covers 95% of your needs.</li>
+    <li><i class="fa-solid fa-check"></i> Build a unified ingestion orchestrator with provider interfaces, failover logic, and health monitoring.</li>
+    <li><i class="fa-solid fa-check"></i> Normalize all data to a canonical OHLCV schema in TimescaleDB with hypertable compression.</li>
+    <li><i class="fa-solid fa-check"></i> Three-tier storage: Redis (hot, quotes) + TimescaleDB (warm, bars) + S3 (cold, archives).</li>
+    <li><i class="fa-solid fa-check"></i> Always store both raw and split-adjusted prices. Schedule ingestion 90 minutes after market close.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-terminal/part3-signals/" class="next-cta">
+  <div>
+    <div class="next-label">Part 3 of 6</div>
+    <div class="next-title">Signals & Screeners — From Data to Alpha <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Build Your Own Trading Terminal with AI</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Complete 6-part series — From architecture to production deployment</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#059669; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Back to Home</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-terminal/part1-architecture/" class="series-arrow" title="Architecture"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build Your Own Trading Terminal with AI</span><div class="series-steps"><a href="/series/trading-terminal/part1-architecture/" class="series-step" title="Architecture"><span class="series-num">1</span><span class="series-label">Architecture</span></a><a href="/series/trading-terminal/part2-data-pipeline/" class="series-step current" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/trading-terminal/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/trading-terminal/part4-dashboard/" class="series-step" title="Dashboard"><span class="series-num">4</span><span class="series-label">Dashboard</span></a><a href="/series/trading-terminal/part5-ai-layer/" class="series-step" title="AI Layer"><span class="series-num">5</span><span class="series-label">AI Layer</span></a><a href="/series/trading-terminal/part6-deployment/" class="series-step" title="Deployment"><span class="series-num">6</span><span class="series-label">Deployment</span></a></div><span class="series-counter">2/6</span><a href="/series/trading-terminal/part3-signals/" class="series-arrow" title="Signals"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Data Latency Comparison
+var c1 = echarts.init(document.getElementById('chart-latency'));
+c1.setOption({
+  title: { text: 'Data Latency by Provider & Tier', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>' + p.map(function(i) { return i.marker + i.seriesName + ': ' + i.value + 'ms'; }).join('<br/>'); } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Polygon RT', 'Polygon Delayed', 'Yahoo Finance', 'Alpha Vantage', 'FRED', 'CoinGecko'], axisLabel: { fontSize: 10, rotate: 15 } },
+  yAxis: { type: 'log', name: 'Latency (ms)', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'API Response', type: 'bar', data: [50, 200, 800, 1200, 500, 600], itemStyle: { color: '#059669' } },
+    { name: 'Data Freshness', type: 'bar', data: [100, 900000, 14400000, 86400000, 86400000, 300000], itemStyle: { color: '#2563eb' } }
+  ]
+});
+
+// Chart 2: Data Flow Diagram (Funnel)
+var c2 = echarts.init(document.getElementById('chart-flow'));
+c2.setOption({
+  title: { text: 'Data Pipeline — Processing Funnel', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c} records/day' },
+  series: [{
+    type: 'funnel',
+    left: '10%', right: '10%', top: '18%', bottom: '8%',
+    minSize: '20%', maxSize: '100%',
+    sort: 'descending', gap: 4,
+    label: { show: true, position: 'inside', fontSize: 12, fontWeight: 600 },
+    itemStyle: { borderColor: '#fff', borderWidth: 2 },
+    data: [
+      { value: 50000, name: 'Raw API Responses', itemStyle: { color: '#9333ea' } },
+      { value: 35000, name: 'After Dedup', itemStyle: { color: '#2563eb' } },
+      { value: 30000, name: 'After Validation', itemStyle: { color: '#059669' } },
+      { value: 28000, name: 'Normalized OHLCV', itemStyle: { color: '#f59e0b' } },
+      { value: 25000, name: 'Stored in DB', itemStyle: { color: '#ef4444' } }
+    ]
+  }]
+});
+
+// Chart 3: Storage Tier Size Over Time
+var c3 = echarts.init(document.getElementById('chart-storage'));
+var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+c3.setOption({
+  title: { text: 'Storage Growth — 500 Symbols Over 12 Months', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'GB', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'TimescaleDB', type: 'line', smooth: true, areaStyle: { color: 'rgba(5,150,105,0.15)' }, data: [0.1,0.2,0.35,0.5,0.7,0.9,1.1,1.3,1.5,1.7,1.9,2.1], lineStyle: { color: '#059669', width: 2 }, itemStyle: { color: '#059669' } },
+    { name: 'Redis (peak)', type: 'line', smooth: true, data: [0.05,0.08,0.1,0.12,0.15,0.18,0.2,0.22,0.24,0.25,0.25,0.25], lineStyle: { color: '#ef4444', width: 2 }, itemStyle: { color: '#ef4444' } },
+    { name: 'S3 Archive', type: 'line', smooth: true, areaStyle: { color: 'rgba(37,99,235,0.1)' }, data: [0,0,0,0.5,0.5,0.5,1.0,1.0,1.0,1.5,1.5,1.5], lineStyle: { color: '#2563eb', width: 2, type: 'dashed' }, itemStyle: { color: '#2563eb' } }
+  ]
+});
+
+// Chart 4: Ingestion Schedule Timeline
+var c4 = echarts.init(document.getElementById('chart-schedule'));
+c4.setOption({
+  title: { text: 'Daily Ingestion Schedule (US Eastern)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item' },
+  grid: { left: '15%', right: '5%', bottom: '8%', top: '18%' },
+  xAxis: { type: 'value', min: 0, max: 24, name: 'Hour (ET)', axisLabel: { formatter: '{value}:00', fontSize: 10 }, interval: 3 },
+  yAxis: { type: 'category', data: ['News','Crypto','Macro','EU Bars','US Bars','Financials'], axisLabel: { fontSize: 11 } },
+  series: [{
+    type: 'scatter', symbolSize: function(val) { return val[2] * 3; },
+    data: [
+      [0, 'Crypto', 8], [5, 'Crypto', 8], [10, 'Crypto', 8], [15, 'Crypto', 8], [20, 'Crypto', 8],
+      [8, 'Macro', 12],
+      [12, 'EU Bars', 15],
+      [17.5, 'US Bars', 20],
+      [0, 'News', 6], [4, 'News', 6], [8, 'News', 6], [12, 'News', 6], [16, 'News', 6], [20, 'News', 6],
+      [2, 'Financials', 10]
+    ],
+    itemStyle: { color: function(p) { var colors = {'News':'#94a3b8','Crypto':'#f59e0b','Macro':'#9333ea','EU Bars':'#2563eb','US Bars':'#059669','Financials':'#ef4444'}; return colors[p.value[1]]; } }
+  }]
+});
+
+window.addEventListener('resize', function() { c1.resize(); c2.resize(); c3.resize(); c4.resize(); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>What is MCP? The Protocol That Changes Everything | MCP from A to Z — Part 1/5 | Market Watch</title>
+ <meta name="description" content="MCP Masterclass Part 1/5: Discover the Model Context Protocol — the open standard by Anthropic that gives AI agents real-time data access, tool execution, and live-world capabilities.">
+ <meta property="og:title" content="What is MCP? The Protocol That Changes Everything | MCP Masterclass 1/5 | Market Watch">
+ <meta property="og:description" content="The open protocol that turns AI from a static chatbot into an autonomous agent with real-world capabilities.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/mcp-masterclass/part1-what-is-mcp/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* VIOLET THEME for MCP Masterclass */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-violet { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; position:relative; }
+ .code-block pre { margin:0; color:#e2e8f0; font-family:'Fira Code', 'Courier New', monospace; font-size:0.85rem; line-height:1.7; white-space:pre; }
+ .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; background:#1e293b; padding:0.2rem 0.6rem; border-radius:6px; }
+ .code-block .kw { color:#c084fc; } .code-block .str { color:#86efac; } .code-block .cm { color:#64748b; } .code-block .fn { color:#67e8f9; } .code-block .num { color:#fbbf24; } .code-block .op { color:#f472b6; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#6d28d9; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #7c3aed; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#7c3aed; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ .arch-flow { display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; margin:2rem 0; padding:2rem; background:#f8fafc; border-radius:16px; border:1px solid #e2e8f0; }
+ .arch-box { padding:1rem 1.5rem; border-radius:12px; font-weight:700; font-size:0.85rem; text-align:center; min-width:120px; }
+ .arch-arrow { font-size:1.2rem; color:#7c3aed; font-weight:900; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#a78bfa; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+ details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+   .arch-flow { flex-direction:column; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> MCP Masterclass — Part 1 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">What is MCP? — The Protocol That Changes Everything</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto; color:#64748b; font-size:1.05rem; line-height:1.7;">AI models are incredibly smart — but they're blind. No live data, no tool access, no memory. The Model Context Protocol (MCP) changes that forever. Learn the open standard that turns any AI into an autonomous agent with real-world capabilities.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-plug"></i> Open Protocol</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-robot"></i> AI Agents</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-database"></i> Live Data</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-code"></i> Developer Guide</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">MCP from A to Z</span><div class="series-steps"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-step current" title="What is MCP?"><span class="series-num">1</span><span class="series-label">What is MCP?</span></a><a href="/series/mcp-masterclass/part2-first-server/" class="series-step" title="First Server"><span class="series-num">2</span><span class="series-label">First Server</span></a><a href="/series/mcp-masterclass/part3-live-data/" class="series-step" title="Live Data"><span class="series-num">3</span><span class="series-label">Live Data</span></a><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-step" title="Multi-Tool"><span class="series-num">4</span><span class="series-label">Multi-Tool</span></a><a href="/series/mcp-masterclass/part5-market-watch/" class="series-step" title="Case Study"><span class="series-num">5</span><span class="series-label">Case Study</span></a></div><span class="series-counter">1/5</span><a href="/series/mcp-masterclass/part2-first-server/" class="series-arrow" title="First Server"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#problem" class="fnav-item" data-section="problem"><i class="fas fa-bookmark"></i><span>The Problem</span></a><a href="#what-is-mcp" class="fnav-item" data-section="what-is-mcp"><i class="fas fa-bookmark"></i><span>What is MCP?</span></a><a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-bookmark"></i><span>Architecture</span></a><a href="#primitives" class="fnav-item" data-section="primitives"><i class="fas fa-bookmark"></i><span>3 Primitives</span></a><a href="#transport" class="fnav-item" data-section="transport"><i class="fas fa-bookmark"></i><span>Transport Layers</span></a><a href="#ecosystem" class="fnav-item" data-section="ecosystem"><i class="fas fa-bookmark"></i><span>Ecosystem</span></a><a href="#vs-alternatives" class="fnav-item" data-section="vs-alternatives"><i class="fas fa-bookmark"></i><span>MCP vs Alternatives</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match.item;
+          if (!isOpen) label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+})();
+</script>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: THE PROBLEM                                        -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-triangle-exclamation"></i> The Problem</div>
+
+<div id="problem" class="content-card">
+  <h2><i class="fa-solid fa-eye-slash" style="color:#7c3aed; margin-right:0.5rem;"></i> AI is Smart — But Blind</h2>
+
+  <p>Large Language Models like Claude, GPT-4, and Gemini are extraordinarily capable. They can write code, analyze data, reason through complex problems, and generate human-quality text. But there's a fundamental limitation that holds them back from being truly useful agents.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">The Core Paradox</div>
+    LLM = <span class="formula-highlight">Unlimited Intelligence</span> + Zero Real-World Access
+  </div>
+
+  <p>By default, an LLM has <strong>no access to</strong>:</p>
+
+  <div class="capability-grid">
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(239,68,68,0.1); color:#ef4444;"><i class="fa-solid fa-clock"></i></div>
+      <h4>Live Data</h4>
+      <p>No stock prices, weather, news, or any real-time information</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(249,115,22,0.1); color:#f97316;"><i class="fa-solid fa-database"></i></div>
+      <h4>Your Databases</h4>
+      <p>Cannot query SQL, read files, or access internal systems</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(234,179,8,0.1); color:#eab308;"><i class="fa-solid fa-globe"></i></div>
+      <h4>APIs & Services</h4>
+      <p>Cannot call REST endpoints, send emails, or trigger workflows</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-solid fa-terminal"></i></div>
+      <h4>System Tools</h4>
+      <p>Cannot run shell commands, manage files, or interact with the OS</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b; margin-right:0.5rem;"></i> Think of it This Way</h4>
+    <p>Imagine hiring the world's smartest analyst — someone who has read every textbook, every paper, every manual ever written. But on their first day, you put them in a windowless room with no computer, no phone, and no internet. They can answer questions brilliantly from memory, but they can't check today's stock price, look up your customer database, or send an email. <strong>That's what an LLM is without MCP.</strong></p>
+  </div>
+
+  <p>Before MCP, developers solved this with ad-hoc solutions — custom function calling, proprietary plugins, hardcoded tool definitions. Each AI tool vendor had their own approach. It was the equivalent of every website inventing its own version of HTTP.</p>
+
+  <div id="chart-problem" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <p>The result? A fragmented ecosystem where:</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> Every integration was one-off (OpenAI function calling !== Claude tools !== Gemini extensions)</li>
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> Developers rebuilt the same connectors for each AI tool</li>
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> No standard for authentication, error handling, or data formats</li>
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> Vendor lock-in: tools built for GPT didn't work with Claude</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: WHAT IS MCP                                        -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-plug"></i> The Solution</div>
+
+<div id="what-is-mcp" class="content-card">
+  <h2><i class="fa-solid fa-plug" style="color:#7c3aed; margin-right:0.5rem;"></i> What is MCP?</h2>
+
+  <p>The <strong>Model Context Protocol (MCP)</strong> is an open standard created by Anthropic in late 2024. It defines a universal way for AI models to discover, connect to, and use external tools and data sources — regardless of which AI model or host application is being used.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">MCP in One Sentence</div>
+    MCP is <span class="formula-highlight">USB-C for AI</span> — one universal plug for all data sources
+  </div>
+
+  <p>Just as USB-C standardized how devices connect to peripherals, MCP standardizes how AI models connect to the outside world. Before USB-C, every manufacturer had proprietary connectors. Before MCP, every AI tool had proprietary integrations.</p>
+
+  <h3>The Key Innovation</h3>
+
+  <p>MCP separates <strong>the AI model</strong> from <strong>the data sources</strong> through a clean, well-defined protocol layer. This means:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Build Once</h4>
+      <p>Write an MCP server once, and it works with every MCP-compatible AI tool</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Use Anywhere</h4>
+      <p>Same server works in Claude Code, Cursor, Windsurf, Gemini CLI, and more</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Compose Freely</h4>
+      <p>Mix and match servers — database + API + filesystem in one session</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>No Lock-In</h4>
+      <p>Switch AI providers without rewriting any of your tool integrations</p>
+    </div>
+  </div>
+
+  <h3>A Brief History</h3>
+
+  <div id="chart-timeline" style="width:100%; height:300px; margin:2rem 0;"></div>
+
+  <p>Anthropic open-sourced MCP in November 2024. Within weeks, major IDE makers and AI tool providers announced support. By early 2025, MCP had become the de facto standard for AI-to-tool communication. By Q1 2026, virtually every major AI coding tool supports it natively.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#7c3aed; margin-right:0.5rem;"></i> Why "Protocol" Matters</h4>
+    <p>A protocol is a set of rules for communication. HTTP is a protocol (browsers talk to servers). SMTP is a protocol (email clients talk to mail servers). MCP is a protocol (AI hosts talk to data/tool servers). The beauty of a protocol is that <strong>it's vendor-neutral</strong>. Just as any browser can talk to any web server via HTTP, any AI tool can talk to any MCP server via MCP.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: ARCHITECTURE                                       -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-diagram-project"></i> Architecture</div>
+
+<div id="architecture" class="content-card">
+  <h2><i class="fa-solid fa-sitemap" style="color:#7c3aed; margin-right:0.5rem;"></i> MCP Architecture — The Three Layers</h2>
+
+  <p>MCP uses a client-server architecture with three distinct roles:</p>
+
+  <div class="arch-flow">
+    <div class="arch-box" style="background:#7c3aed; color:white;">
+      <i class="fa-solid fa-desktop"></i><br>Host
+    </div>
+    <span class="arch-arrow"><i class="fa-solid fa-arrows-left-right"></i></span>
+    <div class="arch-box" style="background:#2563eb; color:white;">
+      <i class="fa-solid fa-exchange-alt"></i><br>Client
+    </div>
+    <span class="arch-arrow"><i class="fa-solid fa-arrows-left-right"></i></span>
+    <div class="arch-box" style="background:#10b981; color:white;">
+      <i class="fa-solid fa-server"></i><br>Server
+    </div>
+    <span class="arch-arrow"><i class="fa-solid fa-arrows-left-right"></i></span>
+    <div class="arch-box" style="background:#f59e0b; color:white;">
+      <i class="fa-solid fa-database"></i><br>Data Sources
+    </div>
+  </div>
+
+  <h3>1. Host (The AI Application)</h3>
+  <p>The host is the application where the user interacts with the AI. It's the outer container that manages the overall experience. Examples include Claude Desktop, Claude Code CLI, Cursor IDE, or Windsurf.</p>
+
+  <h3>2. Client (The Protocol Handler)</h3>
+  <p>The client lives inside the host and manages the connection to one or more MCP servers. It handles protocol negotiation, capability discovery, and message routing. Each client maintains a 1:1 connection with a single server. A host can run multiple clients simultaneously.</p>
+
+  <h3>3. Server (The Tool Provider)</h3>
+  <p>The server exposes tools, resources, and prompts to the AI. It's where the actual integration logic lives — calling APIs, querying databases, reading files, etc. Servers can be local processes (stdio) or remote services (HTTP/SSE).</p>
+
+  <div id="chart-architecture" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="code-block">
+    <span class="code-label">Conceptual Flow</span>
+<pre>
+<span class="cm">// User asks Claude Code: "What's the weather in Paris?"</span>
+
+<span class="cm">// 1. Host (Claude Code) receives the message</span>
+<span class="cm">// 2. Claude identifies it needs the "get_weather" tool</span>
+<span class="cm">// 3. Client sends a tool call request to the weather MCP server</span>
+<span class="cm">// 4. Server calls the weather API</span>
+<span class="cm">// 5. Server returns structured data to the client</span>
+<span class="cm">// 6. Client passes it back to Claude</span>
+<span class="cm">// 7. Claude formats a natural language response</span>
+
+User  -->  Host (Claude Code)
+              |
+              v
+           Client  --JSON-RPC-->  MCP Server  --HTTP-->  Weather API
+              |                       |
+              v                       v
+           Claude  <--result--    { temp: 18, condition: "sunny" }
+              |
+              v
+         "It's 18°C and sunny in Paris right now!"
+</pre>
+  </div>
+
+  <p>The key insight is that <strong>Claude never talks to the weather API directly</strong>. It talks to the MCP server through a standardized protocol. This means the same MCP server works whether Claude, GPT, or Gemini is the model behind the host.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b; margin-right:0.5rem;"></i> JSON-RPC 2.0</h4>
+    <p>MCP uses <strong>JSON-RPC 2.0</strong> as its message format. This is a lightweight remote procedure call protocol that uses JSON. Every MCP message is a JSON object with a method name, parameters, and an ID for matching requests to responses. It's the same protocol used by Ethereum nodes and the Language Server Protocol (LSP) in code editors.</p>
+  </div>
+
+  <h3>Capability Negotiation</h3>
+  <p>When a client connects to a server, they perform a handshake:</p>
+
+  <div class="code-block">
+    <span class="code-label">JSON-RPC</span>
+<pre>
+<span class="cm">// Client sends initialize request</span>
+{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"method"</span>: <span class="str">"initialize"</span>,
+  <span class="str">"params"</span>: {
+    <span class="str">"protocolVersion"</span>: <span class="str">"2025-03-26"</span>,
+    <span class="str">"capabilities"</span>: { <span class="str">"roots"</span>: { <span class="str">"listChanged"</span>: <span class="kw">true</span> } },
+    <span class="str">"clientInfo"</span>: { <span class="str">"name"</span>: <span class="str">"claude-code"</span>, <span class="str">"version"</span>: <span class="str">"1.0.0"</span> }
+  }
+}
+
+<span class="cm">// Server responds with its capabilities</span>
+{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"result"</span>: {
+    <span class="str">"protocolVersion"</span>: <span class="str">"2025-03-26"</span>,
+    <span class="str">"capabilities"</span>: {
+      <span class="str">"tools"</span>: { <span class="str">"listChanged"</span>: <span class="kw">true</span> },
+      <span class="str">"resources"</span>: { <span class="str">"subscribe"</span>: <span class="kw">true</span> }
+    },
+    <span class="str">"serverInfo"</span>: { <span class="str">"name"</span>: <span class="str">"weather-server"</span>, <span class="str">"version"</span>: <span class="str">"1.2.0"</span> }
+  }
+}
+</pre>
+  </div>
+
+  <p>After the handshake, the client knows exactly what the server offers — which tools, which resources, which prompts. The AI model can then decide when and how to use them.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: THE 3 PRIMITIVES                                   -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-cubes"></i> The Building Blocks</div>
+
+<div id="primitives" class="content-card">
+  <h2><i class="fa-solid fa-cubes" style="color:#7c3aed; margin-right:0.5rem;"></i> The Three Primitives — Tools, Resources, Prompts</h2>
+
+  <p>MCP defines three core primitives that servers can expose. Understanding the distinction between them is crucial for building effective MCP servers.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Primitive</th>
+        <th>What It Is</th>
+        <th>Controlled By</th>
+        <th>Analogy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Tools</strong></td>
+        <td>Functions the AI can call</td>
+        <td>Model (AI decides when to call)</td>
+        <td>POST endpoints — actions with side effects</td>
+      </tr>
+      <tr>
+        <td><strong>Resources</strong></td>
+        <td>Data the AI can read</td>
+        <td>Application (user/host selects)</td>
+        <td>GET endpoints — read-only data access</td>
+      </tr>
+      <tr>
+        <td><strong>Prompts</strong></td>
+        <td>Pre-built conversation templates</td>
+        <td>User (explicitly triggered)</td>
+        <td>Slash commands — structured workflows</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-wrench" style="color:#2563eb; margin-right:0.4rem;"></i> Tools — The Power of Action</h3>
+
+  <p>Tools are the most commonly used primitive. They're functions that the AI model can decide to call based on the conversation context. The model sees the tool's name, description, and parameter schema, and autonomously decides when to invoke it.</p>
+
+  <div class="code-block">
+    <span class="code-label">Tool Definition</span>
+<pre>
+{
+  <span class="str">"name"</span>: <span class="str">"get_stock_price"</span>,
+  <span class="str">"description"</span>: <span class="str">"Get the current stock price for a given ticker symbol"</span>,
+  <span class="str">"inputSchema"</span>: {
+    <span class="str">"type"</span>: <span class="str">"object"</span>,
+    <span class="str">"properties"</span>: {
+      <span class="str">"symbol"</span>: {
+        <span class="str">"type"</span>: <span class="str">"string"</span>,
+        <span class="str">"description"</span>: <span class="str">"Stock ticker symbol (e.g., AAPL, MSFT)"</span>
+      }
+    },
+    <span class="str">"required"</span>: [<span class="str">"symbol"</span>]
+  }
+}
+</pre>
+  </div>
+
+  <p>When the user asks "What's Apple's stock price?", the AI sees this tool definition, recognizes it's relevant, and calls it with <code>{"symbol": "AAPL"}</code>. The server executes the function and returns the result.</p>
+
+  <h3><i class="fa-solid fa-folder-open" style="color:#10b981; margin-right:0.4rem;"></i> Resources — Structured Data Access</h3>
+
+  <p>Resources are data endpoints that the AI can read. Unlike tools, resources are typically selected by the application or user, not autonomously by the model. They use URI-based addressing.</p>
+
+  <div class="code-block">
+    <span class="code-label">Resource Examples</span>
+<pre>
+<span class="cm">// Static resource — always the same URI</span>
+{ <span class="str">"uri"</span>: <span class="str">"config://app/settings"</span>, <span class="str">"name"</span>: <span class="str">"App Settings"</span> }
+
+<span class="cm">// Dynamic resource template — URI varies</span>
+{ <span class="str">"uriTemplate"</span>: <span class="str">"db://users/{userId}/profile"</span>, <span class="str">"name"</span>: <span class="str">"User Profile"</span> }
+
+<span class="cm">// File resource</span>
+{ <span class="str">"uri"</span>: <span class="str">"file:///var/log/app.log"</span>, <span class="str">"name"</span>: <span class="str">"Application Logs"</span>, <span class="str">"mimeType"</span>: <span class="str">"text/plain"</span> }
+</pre>
+  </div>
+
+  <p>Resources are ideal for providing context — configuration files, database schemas, documentation, log files. The AI reads them to understand the environment before taking action with tools.</p>
+
+  <h3><i class="fa-solid fa-comment-dots" style="color:#f59e0b; margin-right:0.4rem;"></i> Prompts — Reusable Workflows</h3>
+
+  <p>Prompts are pre-built templates that define structured interactions. They're like slash commands — the user explicitly selects one, and it generates a conversation with specific context, instructions, and tool references.</p>
+
+  <div class="code-block">
+    <span class="code-label">Prompt Definition</span>
+<pre>
+{
+  <span class="str">"name"</span>: <span class="str">"analyze_stock"</span>,
+  <span class="str">"description"</span>: <span class="str">"Deep analysis of a stock with technical + fundamental data"</span>,
+  <span class="str">"arguments"</span>: [
+    { <span class="str">"name"</span>: <span class="str">"ticker"</span>, <span class="str">"description"</span>: <span class="str">"Stock ticker"</span>, <span class="str">"required"</span>: <span class="kw">true</span> }
+  ]
+}
+</pre>
+  </div>
+
+  <p>When triggered, the prompt generates a multi-message conversation that guides the AI through a complete workflow — fetching data, analyzing it, and producing a formatted report. Prompts are the most underused primitive but incredibly powerful for standardizing complex workflows.</p>
+
+  <div id="chart-primitives" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: TRANSPORT                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-network-wired"></i> Communication</div>
+
+<div id="transport" class="content-card">
+  <h2><i class="fa-solid fa-network-wired" style="color:#7c3aed; margin-right:0.5rem;"></i> Transport Layers — How Clients Talk to Servers</h2>
+
+  <p>MCP supports multiple transport mechanisms. The transport layer determines how messages are physically delivered between client and server.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Transport</th>
+        <th>How It Works</th>
+        <th>Best For</th>
+        <th>Latency</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>stdio</strong></td>
+        <td>Server runs as child process; messages via stdin/stdout</td>
+        <td>Local tools, CLI integration, development</td>
+        <td>~1ms</td>
+      </tr>
+      <tr>
+        <td><strong>Streamable HTTP</strong></td>
+        <td>HTTP POST for requests, SSE for server-initiated messages</td>
+        <td>Remote servers, cloud deployment, multi-user</td>
+        <td>10-100ms</td>
+      </tr>
+      <tr>
+        <td><strong>SSE (legacy)</strong></td>
+        <td>Server-Sent Events for streaming, HTTP POST for client messages</td>
+        <td>Legacy support (superseded by Streamable HTTP)</td>
+        <td>10-50ms</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>stdio — The Default for Local Development</h3>
+
+  <p>With stdio transport, the host spawns the MCP server as a child process. Communication happens through standard input and standard output — the same pipes used by Unix commands. This is the simplest and fastest option.</p>
+
+  <div class="code-block">
+    <span class="code-label">.mcp.json (Claude Code config)</span>
+<pre>
+{
+  <span class="str">"mcpServers"</span>: {
+    <span class="str">"weather"</span>: {
+      <span class="str">"command"</span>: <span class="str">"node"</span>,
+      <span class="str">"args"</span>: [<span class="str">"./weather-server/index.js"</span>],
+      <span class="str">"env"</span>: {
+        <span class="str">"WEATHER_API_KEY"</span>: <span class="str">"your-api-key-here"</span>
+      }
+    }
+  }
+}
+</pre>
+  </div>
+
+  <p>When Claude Code starts, it reads <code>.mcp.json</code>, spawns the weather server process, and connects via stdio. Zero network overhead, zero configuration complexity.</p>
+
+  <h3>Streamable HTTP — The Future of Remote MCP</h3>
+
+  <p>For production deployments and remote servers, Streamable HTTP is the modern transport. Introduced in the 2025-03-26 protocol revision, it combines the simplicity of HTTP with the streaming capabilities of SSE.</p>
+
+  <div class="code-block">
+    <span class="code-label">Streamable HTTP Flow</span>
+<pre>
+<span class="cm">// Client sends requests via HTTP POST</span>
+POST /mcp HTTP/1.1
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{...}}
+
+<span class="cm">// Server can respond with:</span>
+<span class="cm">// A) Single JSON response (simple)</span>
+Content-Type: application/json
+{"jsonrpc":"2.0","id":1,"result":{...}}
+
+<span class="cm">// B) SSE stream (for long-running operations)</span>
+Content-Type: text/event-stream
+data: {"jsonrpc":"2.0","id":1,"result":{...}}
+</pre>
+  </div>
+
+  <h3>Choosing the Right Transport</h3>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-route" style="color:#7c3aed; margin-right:0.5rem;"></i> Decision Guide</h4>
+    <p><strong>Use stdio when:</strong> You're running the server locally, in development, or deploying as an npm package that users install and run on their machine.</p>
+    <p><strong>Use Streamable HTTP when:</strong> Your server needs to be shared across teams, deployed on a cloud server, or accessed by multiple clients simultaneously.</p>
+    <p>Most MCP servers start with stdio and add HTTP support later when they need to scale. The protocol layer is transport-agnostic — your tool logic stays the same regardless of transport.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: ECOSYSTEM                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-globe"></i> Ecosystem</div>
+
+<div id="ecosystem" class="content-card">
+  <h2><i class="fa-solid fa-globe" style="color:#7c3aed; margin-right:0.5rem;"></i> Who Supports MCP? — The Growing Ecosystem</h2>
+
+  <p>MCP adoption has been remarkably fast. Within 18 months of its release, it has become the de facto standard for AI-tool integration across the industry.</p>
+
+  <h3>AI Hosts (Clients)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Host</th>
+        <th>Type</th>
+        <th>MCP Config</th>
+        <th>Transport</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Claude Code</strong></td>
+        <td>CLI Agent</td>
+        <td><code>.mcp.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>Claude Desktop</strong></td>
+        <td>Desktop App</td>
+        <td><code>claude_desktop_config.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>Cursor</strong></td>
+        <td>IDE</td>
+        <td><code>.cursor/mcp.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>Windsurf</strong></td>
+        <td>IDE</td>
+        <td><code>.windsurf/mcp.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>Gemini CLI</strong></td>
+        <td>CLI Agent</td>
+        <td><code>.gemini/settings.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>Codex CLI</strong></td>
+        <td>CLI Agent</td>
+        <td><code>.codex/mcp.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>VS Code (Copilot)</strong></td>
+        <td>IDE Extension</td>
+        <td><code>.vscode/mcp.json</code></td>
+        <td>stdio, HTTP</td>
+      </tr>
+      <tr>
+        <td><strong>Zed</strong></td>
+        <td>Editor</td>
+        <td><code>settings.json</code></td>
+        <td>stdio</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Notable MCP Servers</h3>
+
+  <div class="capability-grid">
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-brands fa-github"></i></div>
+      <h4>GitHub</h4>
+      <p>PRs, issues, repos, code search, actions</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-database"></i></div>
+      <h4>PostgreSQL</h4>
+      <p>Query, schema inspection, data analysis</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-folder"></i></div>
+      <h4>Filesystem</h4>
+      <p>Read, write, search, directory traversal</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(249,115,22,0.1); color:#f97316;"><i class="fa-brands fa-slack"></i></div>
+      <h4>Slack</h4>
+      <p>Read channels, send messages, search</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(234,179,8,0.1); color:#eab308;"><i class="fa-solid fa-globe"></i></div>
+      <h4>Brave Search</h4>
+      <p>Web search, news, local results</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(239,68,68,0.1); color:#ef4444;"><i class="fa-solid fa-chart-line"></i></div>
+      <h4>Market Watch</h4>
+      <p>Stocks, screener, market regime, earnings</p>
+    </div>
+  </div>
+
+  <div id="chart-ecosystem" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <p>The MCP server ecosystem is growing exponentially. As of early 2026, there are over 2,000 open-source MCP servers on GitHub, covering databases, APIs, cloud providers, developer tools, financial data, and more.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: MCP vs ALTERNATIVES                                -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-scale-balanced"></i> Comparison</div>
+
+<div id="vs-alternatives" class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#7c3aed; margin-right:0.5rem;"></i> Why MCP > Function Calling, Plugins, and Custom Integrations</h2>
+
+  <p>Before MCP, there were several approaches to giving AI tools access to external systems. Here's how they compare:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Function Calling</th>
+        <th>ChatGPT Plugins</th>
+        <th>Custom Code</th>
+        <th>MCP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Standard</strong></td>
+        <td>Vendor-specific</td>
+        <td>OpenAI-only</td>
+        <td>None</td>
+        <td>Open spec</td>
+      </tr>
+      <tr>
+        <td><strong>Cross-model</strong></td>
+        <td>No</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><strong>Discovery</strong></td>
+        <td>Manual</td>
+        <td>Store</td>
+        <td>Manual</td>
+        <td>Automatic</td>
+      </tr>
+      <tr>
+        <td><strong>Streaming</strong></td>
+        <td>Limited</td>
+        <td>No</td>
+        <td>DIY</td>
+        <td>Native</td>
+      </tr>
+      <tr>
+        <td><strong>Stateful</strong></td>
+        <td>No</td>
+        <td>No</td>
+        <td>DIY</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><strong>Auth</strong></td>
+        <td>DIY</td>
+        <td>OAuth</td>
+        <td>DIY</td>
+        <td>OAuth 2.1</td>
+      </tr>
+      <tr>
+        <td><strong>Resources</strong></td>
+        <td>No</td>
+        <td>No</td>
+        <td>DIY</td>
+        <td>Native</td>
+      </tr>
+      <tr>
+        <td><strong>Composability</strong></td>
+        <td>Low</td>
+        <td>Low</td>
+        <td>Medium</td>
+        <td>High</td>
+      </tr>
+      <tr>
+        <td><strong>Community</strong></td>
+        <td>Fragmented</td>
+        <td>Deprecated</td>
+        <td>N/A</td>
+        <td>2000+ servers</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The Critical Advantage: Composability</h3>
+
+  <p>With function calling, you define tools inline in your API call. They exist for that one session. With MCP, servers are independent processes that can be composed freely:</p>
+
+  <div class="code-block">
+    <span class="code-label">.mcp.json — Composing Multiple Servers</span>
+<pre>
+{
+  <span class="str">"mcpServers"</span>: {
+    <span class="str">"github"</span>: {
+      <span class="str">"command"</span>: <span class="str">"npx"</span>,
+      <span class="str">"args"</span>: [<span class="str">"@modelcontextprotocol/server-github"</span>]
+    },
+    <span class="str">"postgres"</span>: {
+      <span class="str">"command"</span>: <span class="str">"npx"</span>,
+      <span class="str">"args"</span>: [<span class="str">"@modelcontextprotocol/server-postgres"</span>],
+      <span class="str">"env"</span>: { <span class="str">"DATABASE_URL"</span>: <span class="str">"postgresql://..."</span> }
+    },
+    <span class="str">"filesystem"</span>: {
+      <span class="str">"command"</span>: <span class="str">"npx"</span>,
+      <span class="str">"args"</span>: [<span class="str">"@modelcontextprotocol/server-filesystem"</span>, <span class="str">"/home/user/project"</span>]
+    },
+    <span class="str">"market-watch"</span>: {
+      <span class="str">"command"</span>: <span class="str">"npx"</span>,
+      <span class="str">"args"</span>: [<span class="str">"@anthropic/market-watch-mcp"</span>]
+    }
+  }
+}
+</pre>
+  </div>
+
+  <p>With this configuration, the AI agent has simultaneous access to GitHub (code), PostgreSQL (data), the filesystem (files), and Market Watch (financial data). It can query the database, push results to GitHub, write a report to disk, and enrich it with market data — all in a single conversation.</p>
+
+  <div id="chart-comparison" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#7c3aed; margin-right:0.5rem;"></i> The Network Effect</h4>
+    <p>MCP benefits from a powerful network effect. Every new server makes all MCP hosts more capable. Every new host makes all existing servers more useful. This is why adoption has been exponential — the value of the ecosystem grows quadratically with each new participant (Metcalfe's Law).</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: HANDS-ON PREVIEW                                   -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-rocket"></i> What's Next</div>
+
+<div id="preview" class="content-card">
+  <h2><i class="fa-solid fa-rocket" style="color:#7c3aed; margin-right:0.5rem;"></i> What You'll Build in This Series</h2>
+
+  <p>Over the next four parts, you'll go from zero to a production-ready MCP server. Here's the roadmap:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Your First Server</h4>
+      <p>Hello World to production — building, testing, and connecting your first MCP server</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Live Data</h4>
+      <p>APIs, web scraping, databases — connecting real data sources</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Multi-Tool Platform</h4>
+      <p>Building a real platform with 5+ tools, auth, and cross-IDE deployment</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">5</div>
+      <h4>Case Study</h4>
+      <p>The Market Watch MCP server — a real-world production system</p>
+    </div>
+  </div>
+
+  <p>By the end of Part 5, you'll have a complete mental model of MCP — from protocol theory to production deployment. You'll know how to build servers that give AI agents real-world superpowers.</p>
+
+  <h3>Prerequisites</h3>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Basic JavaScript/TypeScript knowledge (Node.js)</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Node.js 18+ installed on your machine</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> An MCP-compatible AI tool (Claude Code, Cursor, or similar)</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Curiosity about making AI agents actually useful</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-brain"></i> Knowledge Check</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#7c3aed; margin-right:0.5rem;"></i> Quick Quiz — Test Your Understanding</h2>
+
+  <details>
+    <summary>What does MCP stand for, and who created it?</summary>
+    <div class="quiz-answer"><strong>Model Context Protocol</strong>, created by <strong>Anthropic</strong> and open-sourced in November 2024. It's an open standard — not proprietary to Anthropic, and supported by Google, Microsoft, and many others.</div>
+  </details>
+
+  <details>
+    <summary>What are the three MCP primitives?</summary>
+    <div class="quiz-answer"><strong>Tools</strong> (functions the AI can call), <strong>Resources</strong> (data the AI can read), and <strong>Prompts</strong> (pre-built conversation templates). Tools are model-controlled, resources are app-controlled, and prompts are user-controlled.</div>
+  </details>
+
+  <details>
+    <summary>What's the difference between stdio and Streamable HTTP transport?</summary>
+    <div class="quiz-answer"><strong>stdio</strong> runs the server as a local child process, communicating via stdin/stdout — fast (~1ms) and simple, ideal for local development. <strong>Streamable HTTP</strong> uses HTTP POST + SSE for remote communication — necessary for cloud deployment and multi-user scenarios, with 10-100ms latency.</div>
+  </details>
+
+  <details>
+    <summary>Why is MCP better than OpenAI function calling?</summary>
+    <div class="quiz-answer">MCP is <strong>cross-model</strong> (works with any AI), <strong>composable</strong> (multiple servers in one session), has <strong>automatic discovery</strong> (no manual tool definitions), supports <strong>resources and prompts</strong> (not just tools), and benefits from a <strong>growing open-source ecosystem</strong> of 2000+ servers. Function calling is vendor-specific and session-scoped.</div>
+  </details>
+
+  <details>
+    <summary>Can you use MCP with GPT, Gemini, or local models?</summary>
+    <div class="quiz-answer"><strong>Yes.</strong> MCP is model-agnostic. Any host application can implement an MCP client. Gemini CLI, Codex CLI (OpenAI), VS Code Copilot, and many others support MCP. Even local models via Ollama can use MCP through compatible hosts.</div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 1</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> AI models are powerful but isolated — they can't access live data, APIs, or tools without help.</li>
+    <li><i class="fa-solid fa-check"></i> MCP (Model Context Protocol) is the open standard that gives AI real-world capabilities.</li>
+    <li><i class="fa-solid fa-check"></i> Architecture: Host (AI app) > Client (protocol handler) > Server (tool provider) > Data sources.</li>
+    <li><i class="fa-solid fa-check"></i> Three primitives: Tools (AI calls), Resources (AI reads), Prompts (user triggers).</li>
+    <li><i class="fa-solid fa-check"></i> Two main transports: stdio (local, fast) and Streamable HTTP (remote, scalable).</li>
+    <li><i class="fa-solid fa-check"></i> MCP is cross-model, composable, and supported by every major AI tool.</li>
+  </ul>
+</div>
+
+<a href="/series/mcp-masterclass/part2-first-server/" class="next-cta">
+  <div>
+    <div class="next-label">Part 2 of 5</div>
+    <div class="next-title">Your First MCP Server — Hello World to Production <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">MCP from A to Z — Supercharging AI with Live Data</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Complete series in 5 parts &mdash; From protocol theory to production deployment</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#7c3aed; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Back to Home</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">MCP from A to Z</span><div class="series-steps"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-step current" title="What is MCP?"><span class="series-num">1</span><span class="series-label">What is MCP?</span></a><a href="/series/mcp-masterclass/part2-first-server/" class="series-step" title="First Server"><span class="series-num">2</span><span class="series-label">First Server</span></a><a href="/series/mcp-masterclass/part3-live-data/" class="series-step" title="Live Data"><span class="series-num">3</span><span class="series-label">Live Data</span></a><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-step" title="Multi-Tool"><span class="series-num">4</span><span class="series-label">Multi-Tool</span></a><a href="/series/mcp-masterclass/part5-market-watch/" class="series-step" title="Case Study"><span class="series-num">5</span><span class="series-label">Case Study</span></a></div><span class="series-counter">1/5</span><a href="/series/mcp-masterclass/part2-first-server/" class="series-arrow" title="First Server"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. All rights reserved.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: The Problem — Integration Complexity Before MCP
+var chartProblem = echarts.init(document.getElementById('chart-problem'));
+chartProblem.setOption({
+  title: { text: 'Integration Complexity Before MCP', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { left: '3%', right: '4%', bottom: '8%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Function\nCalling', 'Plugins\n(GPT)', 'Custom\nCode', 'LangChain\nAgents', 'MCP'], axisLabel: { fontSize: 11, interval: 0 } },
+  yAxis: { type: 'value', name: 'Hours to Integrate', axisLabel: { fontSize: 11 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 40, itemStyle: { color: '#ef4444' } },
+      { value: 30, itemStyle: { color: '#f59e0b' } },
+      { value: 80, itemStyle: { color: '#dc2626' } },
+      { value: 25, itemStyle: { color: '#f97316' } },
+      { value: 4, itemStyle: { color: '#7c3aed' } }
+    ],
+    barWidth: '50%',
+    label: { show: true, position: 'top', formatter: '{c}h', fontWeight: 700, fontSize: 12 }
+  }]
+});
+
+// Chart 2: Timeline
+var chartTimeline = echarts.init(document.getElementById('chart-timeline'));
+chartTimeline.setOption({
+  title: { text: 'MCP Adoption Timeline', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  grid: { left: '3%', right: '4%', bottom: '8%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Nov 24', 'Jan 25', 'Mar 25', 'Jun 25', 'Sep 25', 'Dec 25', 'Mar 26'], axisLabel: { fontSize: 11 } },
+  yAxis: [
+    { type: 'value', name: 'MCP Servers', axisLabel: { fontSize: 11 } },
+    { type: 'value', name: 'Host Apps', axisLabel: { fontSize: 11 } }
+  ],
+  series: [
+    { name: 'Open-Source Servers', type: 'bar', data: [12, 80, 250, 600, 1100, 1700, 2200], itemStyle: { color: '#7c3aed', borderRadius: [4,4,0,0] }, barWidth: '40%' },
+    { name: 'Host Applications', type: 'line', yAxisIndex: 1, data: [2, 4, 6, 10, 14, 18, 22], lineStyle: { color: '#10b981', width: 3 }, itemStyle: { color: '#10b981' }, symbol: 'circle', symbolSize: 8, smooth: true }
+  ],
+  legend: { bottom: 0, textStyle: { fontSize: 11 } }
+});
+
+// Chart 3: Architecture Sankey-style (Treemap showing component sizes)
+var chartArch = echarts.init(document.getElementById('chart-architecture'));
+chartArch.setOption({
+  title: { text: 'MCP Architecture — Component Responsibilities', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+  series: [{
+    type: 'treemap',
+    width: '90%',
+    height: '75%',
+    top: '15%',
+    left: '5%',
+    roam: false,
+    nodeClick: false,
+    breadcrumb: { show: false },
+    label: { fontSize: 13, fontWeight: 700, color: '#fff' },
+    levels: [
+      { itemStyle: { borderColor: '#fff', borderWidth: 3, gapWidth: 3 } },
+      { itemStyle: { borderColor: '#fff', borderWidth: 1, gapWidth: 1 }, upperLabel: { show: true, height: 30, color: '#fff', fontWeight: 700 } }
+    ],
+    data: [
+      { name: 'Host (AI App)', value: 30, itemStyle: { color: '#7c3aed' }, children: [
+        { name: 'User Interface', value: 12, itemStyle: { color: '#8b5cf6' } },
+        { name: 'Model Routing', value: 10, itemStyle: { color: '#a78bfa' } },
+        { name: 'Session Mgmt', value: 8, itemStyle: { color: '#c4b5fd' } }
+      ]},
+      { name: 'Client (Protocol)', value: 25, itemStyle: { color: '#2563eb' }, children: [
+        { name: 'JSON-RPC Handler', value: 10, itemStyle: { color: '#3b82f6' } },
+        { name: 'Capability Negotiation', value: 8, itemStyle: { color: '#60a5fa' } },
+        { name: 'Transport Layer', value: 7, itemStyle: { color: '#93c5fd' } }
+      ]},
+      { name: 'Server (Tools)', value: 35, itemStyle: { color: '#10b981' }, children: [
+        { name: 'Tool Handlers', value: 15, itemStyle: { color: '#34d399' } },
+        { name: 'Resource Providers', value: 10, itemStyle: { color: '#6ee7b7' } },
+        { name: 'Prompt Templates', value: 5, itemStyle: { color: '#a7f3d0' } },
+        { name: 'Auth & Validation', value: 5, itemStyle: { color: '#d1fae5' } }
+      ]},
+      { name: 'Data Sources', value: 20, itemStyle: { color: '#f59e0b' }, children: [
+        { name: 'APIs', value: 8, itemStyle: { color: '#fbbf24' } },
+        { name: 'Databases', value: 7, itemStyle: { color: '#fcd34d' } },
+        { name: 'Files & Web', value: 5, itemStyle: { color: '#fde68a' } }
+      ]}
+    ]
+  }]
+});
+
+// Chart 4: Primitives Usage (Pie)
+var chartPrimitives = echarts.init(document.getElementById('chart-primitives'));
+chartPrimitives.setOption({
+  title: { text: 'MCP Primitive Usage in Production Servers', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c}% of servers ({d}%)' },
+  series: [{
+    type: 'pie',
+    radius: ['40%', '70%'],
+    center: ['50%', '55%'],
+    avoidLabelOverlap: true,
+    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+    label: { formatter: '{b}\n{c}%', fontSize: 12, fontWeight: 600 },
+    data: [
+      { value: 95, name: 'Tools', itemStyle: { color: '#2563eb' } },
+      { value: 45, name: 'Resources', itemStyle: { color: '#10b981' } },
+      { value: 15, name: 'Prompts', itemStyle: { color: '#f59e0b' } }
+    ]
+  }]
+});
+
+// Chart 5: Ecosystem Radar
+var chartEcosystem = echarts.init(document.getElementById('chart-ecosystem'));
+chartEcosystem.setOption({
+  title: { text: 'MCP Ecosystem — Server Categories', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: 'Databases', max: 300 },
+      { name: 'Cloud/DevOps', max: 300 },
+      { name: 'Developer Tools', max: 300 },
+      { name: 'APIs & SaaS', max: 300 },
+      { name: 'Data & Analytics', max: 300 },
+      { name: 'Productivity', max: 300 }
+    ],
+    radius: '55%',
+    axisName: { fontSize: 12, fontWeight: 600 },
+    splitArea: { areaStyle: { color: ['rgba(124,58,237,0.02)', 'rgba(124,58,237,0.04)'] } }
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [180, 220, 280, 250, 150, 120], name: 'Open Source Servers', lineStyle: { color: '#7c3aed', width: 2 }, areaStyle: { color: 'rgba(124,58,237,0.15)' }, itemStyle: { color: '#7c3aed' } },
+      { value: [50, 80, 40, 120, 60, 90], name: 'Official (1st party)', lineStyle: { color: '#10b981', width: 2 }, areaStyle: { color: 'rgba(16,185,129,0.15)' }, itemStyle: { color: '#10b981' } }
+    ]
+  }],
+  legend: { bottom: 0, textStyle: { fontSize: 11 } }
+});
+
+// Chart 6: MCP vs Alternatives Radar
+var chartComparison = echarts.init(document.getElementById('chart-comparison'));
+chartComparison.setOption({
+  title: { text: 'MCP vs Alternatives — Feature Comparison', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Cross-Model', max: 10 },
+      { name: 'Composability', max: 10 },
+      { name: 'Ecosystem', max: 10 },
+      { name: 'Streaming', max: 10 },
+      { name: 'Auth', max: 10 },
+      { name: 'Resources', max: 10 },
+      { name: 'Ease of Use', max: 10 }
+    ],
+    radius: '55%',
+    axisName: { fontSize: 11 }
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [10, 10, 10, 9, 9, 10, 8], name: 'MCP', lineStyle: { color: '#7c3aed', width: 3 }, areaStyle: { color: 'rgba(124,58,237,0.15)' }, itemStyle: { color: '#7c3aed' } },
+      { value: [2, 3, 6, 5, 4, 0, 7], name: 'Function Calling', lineStyle: { color: '#ef4444', width: 2 }, areaStyle: { color: 'rgba(239,68,68,0.08)' }, itemStyle: { color: '#ef4444' } },
+      { value: [1, 2, 3, 1, 5, 0, 6], name: 'Plugins (GPT)', lineStyle: { color: '#f59e0b', width: 2 }, areaStyle: { color: 'rgba(245,158,11,0.08)' }, itemStyle: { color: '#f59e0b' } },
+      { value: [5, 5, 4, 3, 3, 2, 3], name: 'Custom Code', lineStyle: { color: '#64748b', width: 2 }, areaStyle: { color: 'rgba(100,116,139,0.08)' }, itemStyle: { color: '#64748b' } }
+    ]
+  }]
+});
+
+// Responsive
+window.addEventListener('resize', function() {
+  chartProblem.resize(); chartTimeline.resize(); chartArch.resize();
+  chartPrimitives.resize(); chartEcosystem.resize(); chartComparison.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

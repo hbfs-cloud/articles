@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,formation,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Production Scanner — Going Live | Build a Stock Scanner — Part 6/6 | Market Watch</title>
+ <meta name="description" content="Build a Stock Scanner — Part 6/6: From prototype to daily runner. Scheduling, data pipelines, alert systems, monitoring, retrospective analysis, and continuous improvement.">
+ <meta property="og:title" content="Production Scanner — Going Live | Part 6/6 | Market Watch">
+ <meta property="og:description" content="Take your scanner from prototype to production. Automation, alerting, monitoring, retrospective analysis, and the continuous improvement loop.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/build-a-scanner/part6-production/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-crimson { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+ .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b91c1c; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#f87171; }
+ .pipeline-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-top:4px solid #dc2626; }
+ .pipeline-card h3 { margin-top:0; color:#0f172a; }
+ .step-num { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:#dc2626; color:white; font-weight:900; font-size:0.85rem; flex-shrink:0; margin-right:0.5rem; }
+ .stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:1rem; margin:1.5rem 0; }
+ .stat-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1rem; text-align:center; }
+ .stat-item .stat-value { font-size:1.3rem; font-weight:800; color:#0f172a; }
+ .stat-item .stat-label { font-size:0.75rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem; }
+ .alert-card { background:linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%); border:1px solid #fca5a5; border-radius:16px; padding:1.5rem 2rem; margin:1rem 0; border-left:4px solid #dc2626; }
+ .alert-card h4 { color:#dc2626; margin-top:0; }
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#dc2626; margin-right:0.75rem; }
+ details[open] summary { border-color:#dc2626; background:#fef2f2; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .stat-grid { grid-template-columns:repeat(2, 1fr); }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-crosshairs"></i> Build a Stock Scanner — Part 6 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Production Scanner — Going Live</h1>
+  <p class="hero-subtitle">From prototype to daily runner. Build a production-grade scanner pipeline with scheduling, data feeds, alerting, monitoring, retrospective analysis, and the continuous improvement loop that separates hobbyists from professionals.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-crimson"><i class="fa-solid fa-server"></i> Production Pipeline</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-bell"></i> Alert Systems</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrows-rotate"></i> Improvement Loop</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-pie"></i> Performance Tracking</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part5-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL Filters"><span class="series-num">2</span><span class="series-label">DSL Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step current" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-sitemap"></i><span>Architecture</span></a><a href="#scheduling" class="fnav-item" data-section="scheduling"><i class="fas fa-clock"></i><span>Scheduling</span></a><a href="#data-pipeline" class="fnav-item" data-section="data-pipeline"><i class="fas fa-database"></i><span>Data Pipeline</span></a><a href="#alerting" class="fnav-item" data-section="alerting"><i class="fas fa-bell"></i><span>Alerting</span></a><a href="#monitoring" class="fnav-item" data-section="monitoring"><i class="fas fa-chart-line"></i><span>Monitoring</span></a><a href="#retrospective" class="fnav-item" data-section="retrospective"><i class="fas fa-magnifying-glass-chart"></i><span>Retrospectives</span></a><a href="#improvement" class="fnav-item" data-section="improvement"><i class="fas fa-arrows-rotate"></i><span>Improvement</span></a><a href="#quiz-prod" class="fnav-item" data-section="quiz-prod"><i class="fas fa-brain"></i><span>Quiz</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn'), menu = document.getElementById('fnavMenu'), icon = document.getElementById('fnavIcon'), label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item'), sections = [], isOpen = false;
+  items.forEach(function(item) { var id = item.getAttribute('data-section'); var el = document.getElementById(id); if (el) sections.push({ id: id, el: el, item: item }); });
+  function toggle() { isOpen = !isOpen; menu.classList.toggle('open', isOpen); fab.classList.toggle('open', isOpen); icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars'; }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) { if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) { item.addEventListener('click', function(e) { e.preventDefault(); var id = this.getAttribute('data-section'); var target = document.getElementById(id); if (target) { var bb = document.querySelector('.brand-bar'); var offset = (bb ? bb.offsetHeight : 56) + 20; window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' }); } if (isOpen) toggle(); }); });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) { entries.forEach(function(entry) { if (entry.isIntersecting) { var match = sections.find(function(s) { return s.el === entry.target; }); if (match) { if (currentActive) currentActive.classList.remove('active'); match.item.classList.add('active'); currentActive = match.item; label.textContent = match.item.querySelector('span').textContent; } } }); }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+})();
+</script>
+
+<!-- ===== SYSTEM ARCHITECTURE ===== -->
+<div class="section-divider"><i class="fa-solid fa-sitemap"></i> System Architecture</div>
+
+<div id="architecture" class="content-card">
+  <h2><i class="fa-solid fa-sitemap"></i> The Production Scanner Architecture</h2>
+
+  <p>You've built the scanner logic (filters, scoring, regime detection) and validated it with backtesting. Now it's time to wrap it in a <strong>production-grade pipeline</strong> that runs reliably every day without manual intervention. Here's the complete architecture.</p>
+
+  <div class="stat-grid">
+    <div class="stat-item">
+      <div class="stat-value" style="color:#dc2626;">5</div>
+      <div class="stat-label">Pipeline Stages</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" style="color:#dc2626;">23:00</div>
+      <div class="stat-label">Daily Run Time</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" style="color:#dc2626;">~15 min</div>
+      <div class="stat-label">Execution Time</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" style="color:#10b981;">99.5%</div>
+      <div class="stat-label">Target Uptime</div>
+    </div>
+  </div>
+
+  <h3>The 5-Stage Pipeline</h3>
+
+  <div class="pipeline-card">
+    <h3><span class="step-num">1</span> Data Ingestion</h3>
+    <p>Pull market data from your data provider(s). This includes end-of-day prices, volume, fundamentals, insider transactions, options flow, and sentiment data. The ingestion layer handles API rate limits, retries, and data validation.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-database" style="color:#dc2626;"></i> <strong>Price data:</strong> EOD quotes for entire universe (~3,000 symbols)</li>
+      <li><i class="fa-solid fa-database" style="color:#dc2626;"></i> <strong>Fundamentals:</strong> Quarterly financials, earnings estimates</li>
+      <li><i class="fa-solid fa-database" style="color:#dc2626;"></i> <strong>Sentiment:</strong> Short interest, analyst ratings, news sentiment</li>
+      <li><i class="fa-solid fa-database" style="color:#dc2626;"></i> <strong>Market regime:</strong> VIX, breadth, yield curve, credit spreads</li>
+    </ul>
+  </div>
+
+  <div class="pipeline-card">
+    <h3><span class="step-num">2</span> Regime Detection</h3>
+    <p>Before running any scanner logic, determine the current market regime. This sets the parameters for everything that follows — which strategies to deploy, position sizing multipliers, and exposure limits.</p>
+    <p>Output: Regime label (Risk-On, Transition, Risk-Off, Crisis) + confidence level (High/Medium/Low).</p>
+  </div>
+
+  <div class="pipeline-card">
+    <h3><span class="step-num">3</span> Filter &amp; Score</h3>
+    <p>Apply the DSL filters (Part 2) to define the candidate universe, then score all candidates (Part 3) using the composite scoring engine. Apply boosts and penalties. This is the core scanner logic.</p>
+    <p>Output: Ranked list of all scored candidates with grades.</p>
+  </div>
+
+  <div class="pipeline-card">
+    <h3><span class="step-num">4</span> Selection &amp; Validation</h3>
+    <p>Select the top N candidates based on grade threshold and diversification rules. Validate each pick: check spot price vs calculated entry (must be within 10%), verify volume is still sufficient, and cross-check for any breaking news that might invalidate the thesis.</p>
+    <p>Output: Final shortlist of 5-10 A+ picks with entry, stop, and target levels.</p>
+  </div>
+
+  <div class="pipeline-card">
+    <h3><span class="step-num">5</span> Output &amp; Alert</h3>
+    <p>Generate the scan report (HTML or PDF), send alerts to configured channels (Discord, email, Telegram), and log all results for retrospective analysis. Archive the full scoring data for audit trail.</p>
+    <p>Output: Published scan report + notifications + historical log entry.</p>
+  </div>
+
+  <!-- Architecture Flow Chart -->
+  <div id="archChart" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> Fail-Safe Design</h3>
+    <p>Production systems fail. APIs go down, data feeds have gaps, your server reboots. Design your pipeline with <strong>fail-safe defaults</strong>:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> <strong>If data ingestion fails:</strong> Don't run the scanner. Better no picks than picks based on stale data.</li>
+      <li><i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> <strong>If regime detection fails:</strong> Default to Transition (cautious) with low confidence (0.5x exposure).</li>
+      <li><i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> <strong>If scoring produces &lt; 3 A+ picks:</strong> Report as "no actionable setups" rather than lowering the bar.</li>
+      <li><i class="fa-solid fa-shield-halved" style="color:#10b981;"></i> <strong>If alerting fails:</strong> Log to local file and retry. Don't trade without reviewing the output.</li>
+    </ul>
+    <p>The golden rule: <strong>when in doubt, do nothing.</strong> No trade is always better than a bad trade based on faulty data.</p>
+  </div>
+</div>
+
+<!-- ===== SCHEDULING ===== -->
+<div class="section-divider"><i class="fa-solid fa-clock"></i> Scheduling &amp; Automation</div>
+
+<div id="scheduling" class="content-card">
+  <h2><i class="fa-solid fa-clock"></i> Daily Scheduling</h2>
+
+  <p>Your scanner needs to run at the same time every day, reliably, without manual intervention. The timing matters — you want results ready for the next trading day's open.</p>
+
+  <h3>Optimal Run Schedule</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Time (ET)</th><th>Task</th><th>Duration</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>20:00</strong></td><td>EOD data finalized</td><td>—</td><td>Most providers finalize by 8 PM ET</td></tr>
+      <tr><td><strong>22:00</strong></td><td>Data ingestion begins</td><td>5-10 min</td><td>Pull all required data sources</td></tr>
+      <tr><td><strong>22:10</strong></td><td>Regime detection + scanning</td><td>3-5 min</td><td>Full pipeline execution</td></tr>
+      <tr><td><strong>22:15</strong></td><td>Validation + report generation</td><td>2-3 min</td><td>Spot price check, HTML report build</td></tr>
+      <tr><td><strong>22:20</strong></td><td>Alerts sent</td><td>1 min</td><td>Discord/email/Telegram notifications</td></tr>
+      <tr><td><strong>06:30</strong></td><td>Pre-market review</td><td>15 min</td><td>Manual review of scanner output + overnight news</td></tr>
+      <tr><td><strong>09:30</strong></td><td>Market open — execute</td><td>—</td><td>Place orders based on reviewed picks</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> Why Run at Night?</h3>
+    <p>Running at night (after market close) has three advantages: (1) EOD data is complete and finalized — no partial candles or delayed feeds. (2) You have the entire overnight period to review results and prepare orders before market open. (3) Intraday scanning generates excessive noise — daily timeframe signals are more reliable for swing trading setups.</p>
+    <p>Some scanners also run a <strong>pre-market refresh</strong> at 7 AM ET to check for overnight news that might invalidate setups (earnings miss, geopolitical event, pre-market gap). This is a quick validation pass, not a full re-scan.</p>
+  </div>
+
+  <h3>Automation Options</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Method</th><th>Complexity</th><th>Reliability</th><th>Cost</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Cron job (Linux/Mac)</strong></td><td>Low</td><td>High (local)</td><td>Free</td><td>Personal scanner on your machine</td></tr>
+      <tr><td><strong>Task Scheduler (Windows)</strong></td><td>Low</td><td>Medium</td><td>Free</td><td>Windows users</td></tr>
+      <tr><td><strong>Cloud function (AWS Lambda)</strong></td><td>Medium</td><td>Very high</td><td>$1-5/month</td><td>Reliable, serverless deployment</td></tr>
+      <tr><td><strong>Docker + cron on VPS</strong></td><td>Medium</td><td>High</td><td>$5-20/month</td><td>Full control, portable environment</td></tr>
+      <tr><td><strong>Bot (Discord/Telegram)</strong></td><td>High</td><td>Very high</td><td>$5-10/month</td><td>Team use, interactive commands</td></tr>
+      <tr><td><strong>GitHub Actions</strong></td><td>Low</td><td>High</td><td>Free (2000 min/mo)</td><td>Open-source scanners, CI/CD native</td></tr>
+    </tbody>
+  </table>
+
+  <p>For most individual traders, a <strong>cron job on a local machine</strong> or a <strong>cloud function</strong> is sufficient. If you need team access or want interactive queries ("run scanner with custom filters"), a Discord/Telegram bot adds significant value. This is the approach Market Watch uses — a Discord bot that triggers the scanner via scheduled commands, with the flexibility to run ad-hoc scans on demand.</p>
+</div>
+
+<!-- ===== DATA PIPELINE ===== -->
+<div class="section-divider"><i class="fa-solid fa-database"></i> Data Pipeline</div>
+
+<div id="data-pipeline" class="content-card">
+  <h2><i class="fa-solid fa-database"></i> Building a Reliable Data Pipeline</h2>
+
+  <p>Your scanner is only as good as its data. A missing data point, a stale quote, or a bad fundamental value can produce a pick that looks great on paper but is based on fiction. The data pipeline is the foundation of production reliability.</p>
+
+  <h3>Data Sources by Type</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Data Type</th><th>Free Options</th><th>Paid Options</th><th>Update Frequency</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>EOD Prices</strong></td><td>Yahoo Finance, Alpha Vantage</td><td>Polygon, IEX Cloud, Tiingo</td><td>Daily (after 8 PM ET)</td></tr>
+      <tr><td><strong>Intraday Prices</strong></td><td>Alpha Vantage (limited)</td><td>Polygon, Alpaca</td><td>1-min to 15-min bars</td></tr>
+      <tr><td><strong>Fundamentals</strong></td><td>SEC EDGAR, Financial Modeling Prep</td><td>Sharadar, Bloomberg</td><td>Quarterly (within days of filing)</td></tr>
+      <tr><td><strong>Insider Transactions</strong></td><td>SEC EDGAR (Form 4)</td><td>OpenInsider, Quiver Quant</td><td>Within 2 business days of trade</td></tr>
+      <tr><td><strong>Options Flow</strong></td><td>Limited free options</td><td>Unusual Whales, FlowAlgo</td><td>Real-time during market hours</td></tr>
+      <tr><td><strong>Sentiment</strong></td><td>StockTwits API</td><td>Sentifi, MarketPsych</td><td>Real-time</td></tr>
+      <tr><td><strong>Market Regime</strong></td><td>FRED (VIX, yield curve)</td><td>Most providers include this</td><td>Daily</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Data Quality Checks</h3>
+
+  <p>Every data ingestion run should pass through quality checks before the scanner processes it. These are your <strong>data circuit breakers</strong>:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Completeness:</strong> Are all symbols in the universe present? Missing symbols = missed opportunities or stale positions.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Freshness:</strong> Is the latest bar from today? Stale data produces yesterday's picks with today's label.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Range validation:</strong> RSI between 0-100? Price > 0? Volume > 0? Catches data feed corruption.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Outlier detection:</strong> A stock that moved +500% in a day is either wrong data or an extraordinary event. Flag for manual review.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Cross-validation:</strong> Compare price from two independent sources. If they diverge by more than 1%, something is wrong.</li>
+  </ul>
+
+  <div class="formula-box">
+    <div class="formula-label">Data Quality Rule</div>
+    <span class="formula-highlight">If quality_score &lt; 95%</span> &rarr; Abort scan and alert operator
+  </div>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> The Backup Data Source</h3>
+    <p>Always have a <strong>secondary data source</strong> configured. If your primary provider goes down (it happens more often than you'd expect), the pipeline should automatically fall back to the secondary source rather than skipping the scan entirely. Log the fallback event for investigation the next day. The key metrics to verify on fallback: price accuracy (&lt;0.5% divergence from primary) and universe coverage (&gt;95% of symbols available).</p>
+  </div>
+</div>
+
+<!-- ===== ALERTING ===== -->
+<div class="section-divider"><i class="fa-solid fa-bell"></i> Alert Systems</div>
+
+<div id="alerting" class="content-card">
+  <h2><i class="fa-solid fa-bell"></i> Multi-Channel Alert System</h2>
+
+  <p>Your scanner produces results. Now they need to reach you — and possibly your team or subscribers — through the right channels at the right time. The key principle is <strong>tiered urgency</strong>: not every alert deserves to wake you up at midnight.</p>
+
+  <h3>Channel Comparison</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Channel</th><th>Latency</th><th>Rich Content</th><th>Team Support</th><th>Setup Effort</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Discord</strong></td><td>&lt; 1s</td><td>Embeds, charts, reactions</td><td>Excellent (channels, roles)</td><td>Medium (bot + webhook)</td></tr>
+      <tr><td><strong>Telegram</strong></td><td>&lt; 1s</td><td>Good (Markdown, images)</td><td>Good (groups, channels)</td><td>Low (bot token + API)</td></tr>
+      <tr><td><strong>Email</strong></td><td>1-30s</td><td>Excellent (full HTML)</td><td>Limited</td><td>Low (SMTP or API)</td></tr>
+      <tr><td><strong>SMS</strong></td><td>&lt; 5s</td><td>None (text only)</td><td>None</td><td>Medium (Twilio)</td></tr>
+      <tr><td><strong>Web Dashboard</strong></td><td>Real-time</td><td>Full (interactive charts)</td><td>Excellent</td><td>High (web app)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Alert Tiers</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Tier</th><th>Channels</th><th>Examples</th><th>Frequency</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Critical</strong></td><td>SMS + Discord</td><td>Scanner failure, data quality issue, regime &rarr; Crisis</td><td>~2/month</td></tr>
+      <tr><td><strong>High</strong></td><td>Discord + Email</td><td>New scan results, A+ picks, regime change</td><td>Daily (scan nights)</td></tr>
+      <tr><td><strong>Medium</strong></td><td>Discord only</td><td>B+ picks, price approaching entry/stop levels</td><td>2-3x/week</td></tr>
+      <tr><td><strong>Low</strong></td><td>Dashboard only</td><td>Watchlist updates, performance stats, market commentary</td><td>Continuous</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Discord Integration Architecture</h3>
+
+  <p>Discord is the most popular choice for trading communities and automated scanners because it supports rich embeds, file attachments (for scan reports), role-based access, and real-time interaction. Here's what a well-structured Discord scanner setup looks like:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Channel</th><th>Purpose</th><th>Update Frequency</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>#scanner-daily</strong></td><td>Daily scan results — top 10 picks with entry/stop/target</td><td>Once/day at 10:20 PM ET</td></tr>
+      <tr><td><strong>#regime-alerts</strong></td><td>Regime changes and confidence level updates</td><td>On regime change only</td></tr>
+      <tr><td><strong>#trade-alerts</strong></td><td>Entry/stop triggers for active picks during market hours</td><td>Real-time during market</td></tr>
+      <tr><td><strong>#retrospective</strong></td><td>Weekly performance review and scoring adjustments</td><td>Once/week (Friday)</td></tr>
+      <tr><td><strong>#scanner-logs</strong></td><td>System health, errors, debugging, data quality reports</td><td>Continuous</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Alert Flow Chart -->
+  <div id="alertFlow" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- ===== MONITORING ===== -->
+<div class="section-divider"><i class="fa-solid fa-chart-line"></i> Monitoring &amp; Debugging</div>
+
+<div id="monitoring" class="content-card">
+  <h2><i class="fa-solid fa-chart-line"></i> Keeping Your Scanner Healthy</h2>
+
+  <p>A production scanner is a living system. It can degrade silently — data quality drops, a signal stops working, market structure changes. Without monitoring, you won't notice until your P&L tells you, and by then the damage is done.</p>
+
+  <h3>Key Health Metrics</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Metric</th><th>Normal Range</th><th>Warning</th><th>Critical</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Data completeness</strong></td><td>&gt; 99%</td><td>95-99%</td><td>&lt; 95% (abort scan)</td></tr>
+      <tr><td><strong>Execution time</strong></td><td>&lt; 10 min</td><td>10-20 min</td><td>&gt; 20 min (likely hanging)</td></tr>
+      <tr><td><strong>Candidates scored</strong></td><td>2,000-3,000</td><td>&lt; 1,500 (data gap?)</td><td>&lt; 500 (feed down)</td></tr>
+      <tr><td><strong>A+ picks generated</strong></td><td>2-6 per scan</td><td>0-1 or 10+ (calibration issue)</td><td>Always 0 or always 10+</td></tr>
+      <tr><td><strong>Rolling 30-day hit rate</strong></td><td>55-70%</td><td>45-55% (strategy degrading)</td><td>&lt; 45% (broken — kill switch)</td></tr>
+      <tr><td><strong>Avg score drift</strong></td><td>Stable (mean ~62)</td><td>Mean shifting 5+ points</td><td>Scores clustering at extremes</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-card">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> When to Pull the Kill Switch</h4>
+    <p>Stop the scanner and investigate if any of these occur:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-times" style="color:#ef4444;"></i> Rolling 14-day hit rate drops below 40%</li>
+      <li><i class="fa-solid fa-times" style="color:#ef4444;"></i> Three consecutive scans produce 0 A+ picks (unless Crisis regime)</li>
+      <li><i class="fa-solid fa-times" style="color:#ef4444;"></i> Data completeness below 90% for 2+ consecutive days</li>
+      <li><i class="fa-solid fa-times" style="color:#ef4444;"></i> Max drawdown exceeds backtest worst-case by 50%</li>
+      <li><i class="fa-solid fa-times" style="color:#ef4444;"></i> Scanner picks correlate &gt; 0.8 with simple SPY buy-and-hold (no alpha being generated)</li>
+    </ul>
+    <p>Pulling the kill switch is not failure — it's prudent risk management. Better to pause for a week of debugging than to bleed capital into a broken system.</p>
+  </div>
+
+  <h3>Debugging Common Issues</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Symptom</th><th>Likely Cause</th><th>Diagnostic Step</th><th>Fix</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>All picks hitting stops</td><td>Regime mismatch</td><td>Check regime classifier accuracy</td><td>Recalibrate regime thresholds</td></tr>
+      <tr><td>Same 5 stocks every scan</td><td>Filters too narrow</td><td>Log candidate count at each filter</td><td>Widen filters or add signal types</td></tr>
+      <tr><td>Score inflation (many A+)</td><td>Correlated signals</td><td>Check signal independence matrix</td><td>Remove correlated signals</td></tr>
+      <tr><td>No picks found</td><td>Overly restrictive or data gap</td><td>Run each filter independently</td><td>Check data, relax weakest filter</td></tr>
+      <tr><td>Good picks, poor execution</td><td>Entry timing or slippage</td><td>Compare entry price vs signal price</td><td>Add limit orders or intraday logic</td></tr>
+      <tr><td>Decreasing hit rate over time</td><td>Market structure shift</td><td>Compare recent vs historical regime</td><td>Re-run walk-forward backtest</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== RETROSPECTIVE ANALYSIS ===== -->
+<div class="section-divider"><i class="fa-solid fa-magnifying-glass-chart"></i> Retrospective Analysis</div>
+
+<div id="retrospective" class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass-chart"></i> The Weekly Retrospective</h2>
+
+  <p>The retrospective is the <strong>most important process</strong> in running a production scanner. It closes the feedback loop: the scanner generates picks, the market delivers outcomes, and you analyze the delta. Without retrospectives, your scanner is static — it will inevitably degrade as markets evolve.</p>
+
+  <h3>Retrospective Structure (45 minutes weekly)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Section</th><th>Contents</th><th>Time</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>1. Results Dashboard</strong></td><td>Hit rate, avg P&L, best/worst picks, profit factor for the week</td><td>5 min</td></tr>
+      <tr><td><strong>2. Pick-by-Pick Review</strong></td><td>For each pick: entry, current price, TP1 hit?, stop hit?, still open</td><td>15 min</td></tr>
+      <tr><td><strong>3. Strategy Analysis</strong></td><td>Hit rate by strategy type (momentum, value, breakout, short)</td><td>5 min</td></tr>
+      <tr><td><strong>4. Regime Accuracy</strong></td><td>Was the regime classifier correct? Did strategy allocation match?</td><td>5 min</td></tr>
+      <tr><td><strong>5. Lessons &amp; Adjustments</strong></td><td>What worked, what didn't, parameter changes for next week</td><td>10 min</td></tr>
+      <tr><td><strong>6. Forward Look</strong></td><td>Regime outlook, earnings calendar, macro events, adjusted strategy</td><td>5 min</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> The 5 Rules of Retrospectives</h3>
+    <ol>
+      <li><strong>Never skip it.</strong> Even when you're winning — especially when you're winning. Winning streaks breed complacency, and the retro catches brewing problems before they explode.</li>
+      <li><strong>Be brutally honest.</strong> Don't rationalize losers ("it would have worked if not for that tweet"). The market is always right. Your job is to understand why, not to argue.</li>
+      <li><strong>Track cumulative patterns.</strong> A single losing trade is noise. The same strategy losing 4 weeks in a row is a signal that demands action.</li>
+      <li><strong>Don't over-adjust.</strong> If last week's retro says "tighten stops," don't widen them this week because one tight stop was premature. Wait for 3+ data points before making parameter changes.</li>
+      <li><strong>Document everything.</strong> Every retro goes into a permanent log. In 6 months, you'll look back and understand exactly when and why your scanner evolved.</li>
+    </ol>
+  </div>
+
+  <h3>Cumulative Performance Tracking</h3>
+
+  <p>Beyond weekly retros, track cumulative performance metrics that reveal the scanner's health over longer horizons:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> <strong>Rolling 30-day hit rate</strong> — Should stay in the 55-65% corridor. Drift below 50% = investigate immediately.</li>
+    <li><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> <strong>Rolling 30-day Sharpe</strong> — Should stay above 1.0. Below 0.5 = the scanner is not generating alpha.</li>
+    <li><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> <strong>Hit rate by grade bracket</strong> — A+ should always outperform A, which outperforms B+. If this ordering breaks, scoring calibration is off.</li>
+    <li><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> <strong>Hit rate by regime</strong> — Monitors regime detection accuracy. If Risk-On hit rate matches Risk-Off hit rate, regime detection isn't working.</li>
+    <li><i class="fa-solid fa-chart-line" style="color:#dc2626;"></i> <strong>Unique tickers ratio</strong> — Are you scanning the whole market or recycling the same 20 names? Target: &gt; 60% unique tickers month-over-month.</li>
+  </ul>
+
+  <!-- Performance Tracking Dashboard -->
+  <div id="perfDashboard" style="width:100%; height:400px; margin:2rem 0;"></div>
+</div>
+
+<!-- ===== CONTINUOUS IMPROVEMENT ===== -->
+<div class="section-divider"><i class="fa-solid fa-arrows-rotate"></i> Continuous Improvement</div>
+
+<div id="improvement" class="content-card">
+  <h2><i class="fa-solid fa-arrows-rotate"></i> The Improvement Flywheel</h2>
+
+  <p>A production scanner is never "done." Markets evolve, correlations shift, new data sources become available, and your own trading style matures. The improvement flywheel ensures your scanner keeps pace with these changes.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">The Flywheel</div>
+    Scan &rarr; Trade &rarr; <span class="formula-highlight">Retrospective</span> &rarr; Adjust &rarr; Backtest &rarr; Deploy &rarr; Repeat
+  </div>
+
+  <h3>A/B Testing Scanner Variants</h3>
+
+  <p>When you want to test a change (new signal, different weight, adjusted threshold), don't just apply it globally. Run <strong>two variants in parallel</strong> and compare results over 30+ trading days.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Element</th><th>Variant A (Control)</th><th>Variant B (Test)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Description</strong></td><td>Current production scanner</td><td>Production + new insider buying signal</td></tr>
+      <tr><td><strong>Duration</strong></td><td>30 trading days minimum</td><td>30 trading days minimum</td></tr>
+      <tr><td><strong>Capital allocation</strong></td><td>80% of normal</td><td>20% of normal (or paper trade)</td></tr>
+      <tr><td><strong>Tracking</strong></td><td>Hit rate, PF, Sharpe, MDD</td><td>Same metrics, tracked separately</td></tr>
+      <tr><td><strong>Decision rule</strong></td><td>Baseline performance</td><td>Promote if improvement &gt; 10%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> The 10% Improvement Threshold</h3>
+    <p>Don't deploy a variant just because it's marginally better. Require a <strong>meaningful improvement</strong> (at least 10% better on key metrics) before promoting it to production. Small improvements may be noise — statistical fluctuations that don't represent genuine edge. Additionally, the variant must perform well across all walk-forward windows in a re-backtest, not just the recent 30-day test period.</p>
+    <p>Be especially cautious about adding complexity. A variant with 2 extra signals that improves hit rate by 3% but makes the scanner harder to maintain and debug is probably not worth deploying. <strong>Simplicity has compounding value</strong> in production systems — every additional dependency is a potential point of failure.</p>
+  </div>
+
+  <h3>Scaling Considerations</h3>
+
+  <p>As your scanner matures and proves its edge, you may want to scale along several dimensions. The critical rule: <strong>scale one dimension at a time</strong> with a 30-day validation period between changes.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Dimension</th><th>Starter</th><th>Intermediate</th><th>Advanced</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Universe</strong></td><td>US large-cap (500)</td><td>US all-cap + Europe (3,000)</td><td>Global + crypto (10,000+)</td></tr>
+      <tr><td><strong>Strategies</strong></td><td>1 (momentum only)</td><td>3 (momentum + value + breakout)</td><td>5+ with regime-based rotation</td></tr>
+      <tr><td><strong>Run frequency</strong></td><td>Daily (EOD)</td><td>Daily + pre-market refresh</td><td>Intraday (every 4 hours)</td></tr>
+      <tr><td><strong>Team</strong></td><td>Solo trader</td><td>2-3 person group</td><td>Full trading desk</td></tr>
+      <tr><td><strong>Output</strong></td><td>Email alert</td><td>Discord bot + dashboard</td><td>Full web app + API + published reports</td></tr>
+      <tr><td><strong>Retrospective</strong></td><td>Monthly (manual)</td><td>Weekly (semi-automated)</td><td>Daily (fully automated with exception alerts)</td></tr>
+    </tbody>
+  </table>
+
+  <p>If you scale multiple dimensions simultaneously and performance degrades, you won't know which change caused the problem. One dimension at a time, with validation between each step, gives you a clear audit trail and easy rollback path.</p>
+
+  <!-- Improvement Flywheel Chart -->
+  <div id="flywheelChart" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div class="section-divider"><i class="fa-solid fa-brain"></i> Knowledge Check</div>
+
+<div id="quiz-prod" class="content-card">
+  <h2><i class="fa-solid fa-brain"></i> Test Your Understanding</h2>
+
+  <details>
+    <summary>Quiz 1: Your data feed fails at 10 PM. What should the scanner do?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> <strong>Abort the scan and alert the operator.</strong> Never run the scanner on stale or missing data. The fail-safe principle is "when in doubt, do nothing." Send a critical alert (SMS + Discord) so you can investigate. Try the backup data source if configured. If backup also fails, skip tonight's scan entirely. No scan is always better than a scan based on yesterday's data labeled as today's.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 2: Why run the scanner at night instead of during market hours?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Three reasons: (1) <strong>Data completeness</strong> — EOD bars are finalized after market close, eliminating partial candles and delayed feeds. (2) <strong>Review time</strong> — Running at night gives you the overnight period to review results, check overnight news, and prepare orders for market open. (3) <strong>Signal quality</strong> — Daily timeframe signals (RSI, MACD, volume) are far more reliable than intraday signals, which generate excessive noise and false positives for swing trading.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 3: Your scanner's rolling 30-day hit rate dropped from 62% to 48%. What do you do?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> This crosses the warning-to-critical threshold. Systematic response: (1) <strong>Check the regime classifier</strong> — did the market change regimes without detection? (2) <strong>Audit data quality</strong> — are there feed issues degrading signal accuracy? (3) <strong>Review recent losers</strong> — look for patterns (same sector, same strategy type, same signal failing). (4) <strong>Pull the kill switch</strong> if you can't identify the root cause within 1-2 days. (5) <strong>Re-run walk-forward backtest</strong> with the most recent 6 months to check if the scanner's edge has structurally decayed. Never keep trading a broken system while you investigate.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 4: What are the 5 rules of a good retrospective?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> (1) <strong>Never skip it</strong> — even when winning, especially when winning. (2) <strong>Be brutally honest</strong> — don't rationalize losers or attribute losses to bad luck. (3) <strong>Track cumulative patterns</strong> — one bad trade is noise; four weeks of the same strategy failing is a signal. (4) <strong>Don't over-adjust</strong> — wait for 3+ data points before changing parameters. Knee-jerk reactions introduce instability. (5) <strong>Document everything</strong> — every retro goes into a permanent log for long-term pattern analysis and institutional memory.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 5: You have a new insider buying signal that improved backtest results by 8%. Should you deploy it?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> <strong>Not yet.</strong> An 8% improvement is below the 10% threshold for promoting a variant to production. Steps: (1) Run it as Variant B in a 30-day A/B test with 20% capital allocation (or paper trade). (2) Verify the improvement holds across all walk-forward windows, not just the recent period. (3) Assess operational complexity — does the new signal add a data dependency that could break the pipeline? Only promote if the improvement is sustained, statistically significant, and operationally manageable. A simple scanner that works reliably beats a complex scanner that breaks unpredictably.
+    </div>
+  </details>
+
+  <details>
+    <summary>Quiz 6: What's the danger of scaling multiple dimensions simultaneously?</summary>
+    <div class="quiz-answer">
+      <strong>Answer:</strong> Each scaling step (larger universe, more strategies, higher frequency, more team members) introduces new failure modes. If you expand the universe AND add new strategies AND increase frequency simultaneously, and performance degrades, <strong>you won't know which change caused the problem</strong>. This makes debugging nearly impossible and rollback ambiguous. Scale one dimension at a time with a 30-day validation period between changes. If something breaks, you know exactly what caused it and can surgically roll back that specific change.
+    </div>
+  </details>
+</div>
+
+<!-- ===== TAKEAWAY ===== -->
+<div class="section-divider"><i class="fa-solid fa-bookmark"></i> Key Takeaways</div>
+
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Part 6 — Key Takeaways</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check-circle"></i> <strong>5-stage pipeline</strong> — Data ingestion, regime detection, filter & score, selection & validation, output & alert. Each stage has quality checks and fail-safes.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Run at night, review in the morning</strong> — EOD data is clean, overnight gives review time, daily signals are more reliable than intraday.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Data quality is non-negotiable</strong> — If quality drops below 95%, abort the scan. Bad data produces bad picks. Always have a backup data source.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Multi-channel alerting with tiered urgency</strong> — Critical alerts via SMS, daily results via Discord, performance via dashboard. Tiered urgency prevents alert fatigue.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Monitor health continuously</strong> — Track data completeness, execution time, candidate count, rolling hit rate, and score distribution. Pull the kill switch when metrics breach critical thresholds.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Weekly retrospectives are mandatory</strong> — The feedback loop is what makes a scanner improve over time. Never skip it. Never rationalize losers.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>A/B test before deploying changes</strong> — 30-day parallel test, 10% improvement threshold, verified across all walk-forward windows before promotion.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Scale one dimension at a time</strong> — Universe, strategies, frequency, team. Validate each expansion independently with 30-day checkpoints.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== SERIES COMPLETE CTA ===== -->
+<div class="content-card">
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-trophy"></i> Series Complete — You Built a Scanner</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-star"></i> <strong>Part 1 — Philosophy:</strong> The 3 pillars (universe, signals, ranking), the funnel model, and 7 common mistakes to avoid</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Part 2 — DSL Filters:</strong> Expression-based filtering, boolean logic, reusable filter templates for momentum, value, and breakout strategies</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Part 3 — Scoring:</strong> Weighted composite scores, normalization methods, grade thresholds, boosts & penalties, sector-relative scoring</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Part 4 — Regime Detection:</strong> 4 market regimes, 6 indicator voting system, dynamic strategy rotation, asymmetric transition rules</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Part 5 — Backtesting:</strong> Walk-forward optimization, 5 bias elimination techniques, 8 key metrics, the go/no-go checklist</li>
+      <li><i class="fa-solid fa-star"></i> <strong>Part 6 — Production:</strong> 5-stage pipeline, scheduling, data quality, multi-channel alerting, monitoring, retrospectives, continuous improvement</li>
+    </ul>
+    <p>You now have the complete blueprint for a professional-grade stock scanner. The rest is execution. Start simple (Parts 1-2), add scoring (Part 3), integrate regime detection (Part 4), validate with backtesting (Part 5), and deploy to production (Part 6). Iterate weekly with retrospectives. Good trading.</p>
+  </div>
+
+  <a href="/series/build-a-scanner/part1-philosophy/" class="next-cta">
+    <div>
+      <div class="next-label">Back to the Beginning</div>
+      <div class="next-title">Part 1: Scanner Philosophy — What Makes a Great Scanner</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- ===== SERIES BAR BOTTOM ===== -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part5-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL Filters"><span class="series-num">2</span><span class="series-label">DSL Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step current" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ===== ECHARTS ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // 1. Architecture Flow (horizontal bar showing pipeline stages)
+  var archChart = echarts.init(document.getElementById('archChart'));
+  archChart.setOption({
+    title: { text: 'Production Pipeline — Execution Timeline', left: 'center', textStyle: { fontSize: 16, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '20%', right: '5%', top: 60, bottom: 40, containLabel: true },
+    xAxis: { type: 'value', name: 'Duration (minutes)', max: 22, axisLabel: { formatter: '{value} min' } },
+    yAxis: {
+      type: 'category',
+      data: ['1. Data Ingestion', '2. Regime Detection', '3. Filter & Score', '4. Selection', '5. Output & Alert'],
+      axisLabel: { fontWeight: 600, fontSize: 11 }
+    },
+    series: [
+      {
+        name: 'Start Offset',
+        type: 'bar',
+        stack: 'pipeline',
+        itemStyle: { color: 'transparent' },
+        data: [0, 8, 10, 15, 18]
+      },
+      {
+        name: 'Duration',
+        type: 'bar',
+        stack: 'pipeline',
+        data: [
+          { value: 8, itemStyle: { color: '#dc2626', borderRadius: [0, 6, 6, 0] } },
+          { value: 2, itemStyle: { color: '#b91c1c', borderRadius: [0, 6, 6, 0] } },
+          { value: 5, itemStyle: { color: '#991b1b', borderRadius: [0, 6, 6, 0] } },
+          { value: 3, itemStyle: { color: '#7f1d1d', borderRadius: [0, 6, 6, 0] } },
+          { value: 2, itemStyle: { color: '#450a0a', borderRadius: [0, 6, 6, 0] } }
+        ],
+        label: { show: true, position: 'inside', fontWeight: 700, color: '#fff', fontSize: 11, formatter: function(p) { return p.value + 'm'; } },
+        barWidth: '50%'
+      }
+    ]
+  });
+
+  // 2. Alert Flow (funnel showing alert routing by severity)
+  var alertChart = echarts.init(document.getElementById('alertFlow'));
+  alertChart.setOption({
+    title: { text: 'Alert Volume by Severity Level', left: 'center', textStyle: { fontSize: 16, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'item', formatter: '{b}: ~{c} alerts/month' },
+    series: [{
+      name: 'Alert Volume',
+      type: 'funnel',
+      left: '10%',
+      top: 60,
+      bottom: 20,
+      width: '80%',
+      min: 2,
+      max: 300,
+      minSize: '15%',
+      maxSize: '100%',
+      sort: 'descending',
+      gap: 4,
+      label: { show: true, position: 'inside', formatter: '{b}\n~{c}/mo', fontSize: 13, fontWeight: 600, color: '#fff' },
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      data: [
+        { value: 300, name: 'Dashboard (Low)', itemStyle: { color: '#94a3b8' } },
+        { value: 60, name: 'Discord (Medium)', itemStyle: { color: '#2563eb' } },
+        { value: 22, name: 'Discord+Email (High)', itemStyle: { color: '#f59e0b' } },
+        { value: 2, name: 'SMS+Discord (Critical)', itemStyle: { color: '#dc2626' } }
+      ]
+    }]
+  });
+
+  // 3. Performance Tracking Dashboard
+  var perfChart = echarts.init(document.getElementById('perfDashboard'));
+  var weeks = [];
+  for (var w = 1; w <= 16; w++) weeks.push('W' + w);
+  var hitRates = [62, 58, 65, 60, 55, 63, 68, 61, 57, 64, 66, 59, 62, 70, 58, 65];
+  var uniqueTickers = [42, 38, 45, 40, 35, 41, 48, 39, 36, 43, 47, 37, 44, 50, 38, 46];
+  perfChart.setOption({
+    title: { text: 'Scanner Performance — 16 Week Tracking', left: 'center', textStyle: { fontSize: 16, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Hit Rate (%)', 'Unique Tickers'], bottom: 0 },
+    grid: { left: '8%', right: '8%', top: 60, bottom: 50, containLabel: true },
+    xAxis: { type: 'category', data: weeks, axisLabel: { fontWeight: 600 } },
+    yAxis: [
+      { type: 'value', name: 'Hit Rate (%)', min: 40, max: 80, axisLabel: { formatter: '{value}%' } },
+      { type: 'value', name: 'Unique Tickers', min: 20, max: 60, splitLine: { show: false } }
+    ],
+    series: [
+      {
+        name: 'Hit Rate (%)',
+        type: 'line',
+        data: hitRates,
+        smooth: true,
+        lineStyle: { color: '#dc2626', width: 3 },
+        itemStyle: { color: '#dc2626' },
+        areaStyle: { color: 'rgba(220,38,38,0.08)' },
+        markLine: {
+          data: [
+            { yAxis: 55, label: { formatter: 'Min 55%', fontWeight: 700, color: '#f59e0b' }, lineStyle: { color: '#f59e0b', type: 'dashed' } },
+            { yAxis: 65, label: { formatter: 'Target 65%', fontWeight: 700, color: '#10b981' }, lineStyle: { color: '#10b981', type: 'dashed' } }
+          ]
+        }
+      },
+      {
+        name: 'Unique Tickers',
+        type: 'bar',
+        yAxisIndex: 1,
+        data: uniqueTickers,
+        itemStyle: { color: 'rgba(37,99,235,0.4)', borderRadius: [4, 4, 0, 0] }
+      }
+    ]
+  });
+
+  // 4. Improvement Flywheel (pie chart — weekly time allocation)
+  var flyChart = echarts.init(document.getElementById('flywheelChart'));
+  flyChart.setOption({
+    title: { text: 'Production Scanner — Weekly Time Investment', left: 'center', textStyle: { fontSize: 16, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}h ({d}%)' },
+    series: [{
+      name: 'Time',
+      type: 'pie',
+      radius: ['35%', '65%'],
+      center: ['50%', '55%'],
+      avoidLabelOverlap: true,
+      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+      label: { fontWeight: 600, fontSize: 12, formatter: '{b}\n{c}h' },
+      data: [
+        { value: 0.5, name: 'Scanner Maintenance', itemStyle: { color: '#dc2626' } },
+        { value: 1.0, name: 'Morning Review', itemStyle: { color: '#b91c1c' } },
+        { value: 1.5, name: 'Trade Execution', itemStyle: { color: '#2563eb' } },
+        { value: 1.0, name: 'Weekly Retrospective', itemStyle: { color: '#10b981' } },
+        { value: 0.5, name: 'A/B Testing', itemStyle: { color: '#9333ea' } },
+        { value: 0.5, name: 'Data Quality Checks', itemStyle: { color: '#f59e0b' } }
+      ]
+    }]
+  });
+
+  window.addEventListener('resize', function() {
+    archChart.resize();
+    alertChart.resize();
+    perfChart.resize();
+    flyChart.resize();
+  });
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Signals & Screeners — From Data to Alpha | Build Your Own Trading Terminal with AI — Part 3/6 | Market Watch</title>
+ <meta name="description" content="Build Your Own Trading Terminal with AI — Part 3/6: Technical indicators from scratch, screener DSL engine, pattern detection, composite scoring, backtesting framework.">
+ <meta property="og:title" content="Signals & Screeners — From Data to Alpha | Trading Terminal 3/6 | Market Watch">
+ <meta property="og:description" content="Build RSI, MACD, Bollinger from scratch. Create a custom screener engine with scoring and backtesting.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-terminal/part3-signals/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-orange{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.2)}.section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}.compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:#fff;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}.code-block{background:#0f172a;color:#e2e8f0;padding:1.5rem;border-radius:12px;margin:1.5rem 0;overflow-x:auto;font-family:'Fira Code','Cascadia Code','JetBrains Mono',monospace;font-size:.85rem;line-height:1.7}.code-block .code-label{display:block;color:#94a3b8;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;font-weight:600;font-family:Inter,sans-serif}.code-block .kw{color:#c084fc}.code-block .str{color:#86efac}.code-block .cm{color:#64748b}.code-block .fn{color:#67e8f9}.code-block .num{color:#fbbf24}.code-block .op{color:#f472b6}.takeaway-box{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #059669;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#047857;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(5,150,105,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#059669;margin-top:.2rem;flex-shrink:0}.next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(5,150,105,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}.step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}.step-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #059669}.step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}.step-number{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#059669,#047857);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:#fff;margin:0 auto .75rem}.step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}.step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}.formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#6ee7b7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.hero-badge{font-size:.7rem;padding:.35rem .75rem}.next-cta{flex-direction:column;text-align:center}.step-grid{grid-template-columns:1fr 1fr}.code-block{font-size:.75rem;padding:1rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.hero-badge{font-size:.65rem;padding:.3rem .6rem}.hero-badges{gap:.4rem;margin-top:1rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-terminal"></i> Build Your Own Trading Terminal with AI — Part 3 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Signals & Screeners — From Data to Alpha</h1>
+  <p class="hero-subtitle">Data without interpretation is noise. In this part, we build technical indicators from scratch, create a DSL-based screener engine, implement pattern detection, and validate everything with walk-forward backtesting.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-chart-line"></i> Technical Indicators</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-filter"></i> Screener DSL</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-magnifying-glass-chart"></i> Pattern Detection</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-flask"></i> Backtesting</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-terminal/part2-data-pipeline/" class="series-arrow" title="Data Pipeline"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build Your Own Trading Terminal with AI</span><div class="series-steps"><a href="/series/trading-terminal/part1-architecture/" class="series-step" title="Architecture"><span class="series-num">1</span><span class="series-label">Architecture</span></a><a href="/series/trading-terminal/part2-data-pipeline/" class="series-step" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/trading-terminal/part3-signals/" class="series-step current" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/trading-terminal/part4-dashboard/" class="series-step" title="Dashboard"><span class="series-num">4</span><span class="series-label">Dashboard</span></a><a href="/series/trading-terminal/part5-ai-layer/" class="series-step" title="AI Layer"><span class="series-num">5</span><span class="series-label">AI Layer</span></a><a href="/series/trading-terminal/part6-deployment/" class="series-step" title="Deployment"><span class="series-num">6</span><span class="series-label">Deployment</span></a></div><span class="series-counter">3/6</span><a href="/series/trading-terminal/part4-dashboard/" class="series-arrow" title="Dashboard"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#indicators" class="fnav-item" data-section="indicators"><i class="fas fa-bookmark"></i><span>Technical Indicators</span></a><a href="#screener" class="fnav-item" data-section="screener"><i class="fas fa-bookmark"></i><span>Screener Engine</span></a><a href="#patterns" class="fnav-item" data-section="patterns"><i class="fas fa-bookmark"></i><span>Pattern Detection</span></a><a href="#scoring" class="fnav-item" data-section="scoring"><i class="fas fa-bookmark"></i><span>Composite Scoring</span></a><a href="#backtest" class="fnav-item" data-section="backtest"><i class="fas fa-bookmark"></i><span>Backtesting</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var ca=null;var obs=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var m=sections.find(function(s){return s.el===entry.target;});if(m){if(ca)ca.item.classList.remove('active');m.item.classList.add('active');ca=m;label.textContent=m.item.querySelector('span').textContent;}}});},{rootMargin:'-15% 0px -65% 0px',threshold:0});sections.forEach(function(s){obs.observe(s.el);});if(sections.length>0){sections[0].item.classList.add('active');ca=sections[0];label.textContent=sections[0].item.querySelector('span').textContent;}})();</script>
+
+<div class="container">
+
+<!-- SECTION 1: TECHNICAL INDICATORS -->
+<div class="section-divider" id="indicators"><i class="fa-solid fa-chart-line" style="color:#059669;"></i> Technical Indicators from Scratch</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#059669;"></i> Building Your Indicator Library</h2>
+
+  <p>Most traders use indicators as black boxes — they plug in RSI(14) without understanding the math. Building indicators from scratch gives you three advantages: (1) you can <strong>customize parameters</strong> beyond what TradingView allows, (2) you can <strong>combine them</strong> into composite signals, and (3) you understand <strong>exactly what you're measuring</strong>.</p>
+
+  <h3><i class="fa-solid fa-wave-square" style="color:#2563eb;"></i> RSI — Relative Strength Index</h3>
+
+  <div class="formula-box">
+    <div class="formula-label">RSI Formula</div>
+    RSI = 100 - (100 / (1 + <span class="formula-highlight">RS</span>)) &nbsp;&nbsp;where RS = <span class="formula-highlight">Avg Gain</span> / <span class="formula-highlight">Avg Loss</span>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python — RSI Implementation (Wilder's Smoothing)</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="kw">def</span> <span class="fn">rsi</span>(close: pd.Series, period: <span class="fn">int</span> = <span class="num">14</span>) -&gt; pd.Series:
+    <span class="str">"""Relative Strength Index using Wilder's smoothing.
+
+    This matches TradingView's RSI exactly (not SMA-based).
+    """</span>
+    delta = close.diff()
+    gain = delta.where(delta &gt; <span class="num">0</span>, <span class="num">0.0</span>)
+    loss = (-delta).where(delta &lt; <span class="num">0</span>, <span class="num">0.0</span>)
+
+    <span class="cm"># Wilder's smoothing (exponential with alpha = 1/period)</span>
+    avg_gain = gain.ewm(alpha=<span class="num">1</span>/period, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=<span class="num">1</span>/period, min_periods=period).mean()
+
+    rs = avg_gain / avg_loss
+    <span class="kw">return</span> <span class="num">100</span> - (<span class="num">100</span> / (<span class="num">1</span> + rs))
+
+<span class="kw">def</span> <span class="fn">rsi_signal</span>(close: pd.Series, period: <span class="fn">int</span> = <span class="num">14</span>) -&gt; pd.Series:
+    <span class="str">"""Generate buy/sell signals from RSI."""</span>
+    r = rsi(close, period)
+    signal = pd.Series(<span class="num">0</span>, index=close.index)
+    signal[r &lt; <span class="num">30</span>] = <span class="num">1</span>    <span class="cm"># Oversold = buy signal</span>
+    signal[r &gt; <span class="num">70</span>] = -<span class="num">1</span>   <span class="cm"># Overbought = sell signal</span>
+    <span class="kw">return</span> signal
+  </div>
+
+  <h3><i class="fa-solid fa-arrows-left-right" style="color:#9333ea;"></i> MACD — Moving Average Convergence Divergence</h3>
+
+  <div class="code-block">
+    <span class="code-label">Python — MACD with Signal Line and Histogram</span>
+<span class="kw">def</span> <span class="fn">macd</span>(
+    close: pd.Series,
+    fast: <span class="fn">int</span> = <span class="num">12</span>,
+    slow: <span class="fn">int</span> = <span class="num">26</span>,
+    signal_period: <span class="fn">int</span> = <span class="num">9</span>
+) -&gt; pd.DataFrame:
+    <span class="str">"""MACD line, signal line, and histogram."""</span>
+    ema_fast = close.ewm(span=fast, adjust=<span class="kw">False</span>).mean()
+    ema_slow = close.ewm(span=slow, adjust=<span class="kw">False</span>).mean()
+
+    macd_line = ema_fast - ema_slow
+    signal_line = macd_line.ewm(span=signal_period, adjust=<span class="kw">False</span>).mean()
+    histogram = macd_line - signal_line
+
+    <span class="kw">return</span> pd.DataFrame({
+        <span class="str">"macd"</span>: macd_line,
+        <span class="str">"signal"</span>: signal_line,
+        <span class="str">"histogram"</span>: histogram,
+    })
+
+<span class="kw">def</span> <span class="fn">macd_crossover</span>(close: pd.Series) -&gt; pd.Series:
+    <span class="str">"""Detect MACD crossover signals."""</span>
+    m = macd(close)
+    prev_hist = m[<span class="str">"histogram"</span>].shift(<span class="num">1</span>)
+    curr_hist = m[<span class="str">"histogram"</span>]
+
+    signal = pd.Series(<span class="num">0</span>, index=close.index)
+    signal[(prev_hist &lt; <span class="num">0</span>) &amp; (curr_hist &gt; <span class="num">0</span>)] = <span class="num">1</span>   <span class="cm"># Bullish cross</span>
+    signal[(prev_hist &gt; <span class="num">0</span>) &amp; (curr_hist &lt; <span class="num">0</span>)] = -<span class="num">1</span>  <span class="cm"># Bearish cross</span>
+    <span class="kw">return</span> signal
+  </div>
+
+  <h3><i class="fa-solid fa-chart-area" style="color:#f59e0b;"></i> Bollinger Bands, ATR, and OBV</h3>
+
+  <div class="code-block">
+    <span class="code-label">Python — Bollinger Bands, ATR, OBV</span>
+<span class="kw">def</span> <span class="fn">bollinger_bands</span>(close: pd.Series, period: <span class="fn">int</span> = <span class="num">20</span>, std: <span class="fn">float</span> = <span class="num">2.0</span>):
+    <span class="str">"""Bollinger Bands: middle, upper, lower, %B, bandwidth."""</span>
+    sma = close.rolling(period).mean()
+    rolling_std = close.rolling(period).std()
+    upper = sma + std * rolling_std
+    lower = sma - std * rolling_std
+    pct_b = (close - lower) / (upper - lower)
+    bandwidth = (upper - lower) / sma
+    <span class="kw">return</span> pd.DataFrame({
+        <span class="str">"bb_mid"</span>: sma, <span class="str">"bb_upper"</span>: upper,
+        <span class="str">"bb_lower"</span>: lower, <span class="str">"bb_pctb"</span>: pct_b,
+        <span class="str">"bb_bw"</span>: bandwidth
+    })
+
+<span class="kw">def</span> <span class="fn">atr</span>(high: pd.Series, low: pd.Series, close: pd.Series, period: <span class="fn">int</span> = <span class="num">14</span>):
+    <span class="str">"""Average True Range — measures volatility."""</span>
+    tr1 = high - low
+    tr2 = (high - close.shift(<span class="num">1</span>)).abs()
+    tr3 = (low - close.shift(<span class="num">1</span>)).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=<span class="num">1</span>).max(axis=<span class="num">1</span>)
+    <span class="kw">return</span> tr.ewm(alpha=<span class="num">1</span>/period, min_periods=period).mean()
+
+<span class="kw">def</span> <span class="fn">obv</span>(close: pd.Series, volume: pd.Series):
+    <span class="str">"""On-Balance Volume — cumulative volume pressure."""</span>
+    direction = np.sign(close.diff())
+    <span class="kw">return</span> (volume * direction).cumsum()
+  </div>
+
+  <div id="chart-indicators" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#059669;"></i> The Indicator Trap</h4>
+    <p style="margin:0;">More indicators does not mean better signals. The #1 mistake: stacking 10 indicators that all measure <strong>the same thing</strong> (momentum). RSI, Stochastics, CCI, Williams %R — they're all momentum oscillators. Using all four gives you the illusion of confluence when you really have one signal repeated four times. Use <strong>one indicator per category</strong>: one momentum (RSI), one trend (MACD or EMA), one volatility (ATR or Bollinger), one volume (OBV).</p>
+  </div>
+</div>
+
+<!-- SECTION 2: SCREENER ENGINE -->
+<div class="section-divider" id="screener"><i class="fa-solid fa-filter" style="color:#2563eb;"></i> Building a Screener Engine</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-filter" style="color:#2563eb;"></i> The DSL-Based Screener</h2>
+
+  <p>A screener is just a <strong>filter pipeline</strong> — you define conditions, and the engine returns symbols that match all of them. The key insight: build a <strong>Domain-Specific Language (DSL)</strong> so you can express complex filters in a readable format:</p>
+
+  <div class="code-block">
+    <span class="code-label">DSL — Screener Filter Examples</span>
+<span class="cm"># Oversold bounce setup</span>
+<span class="str">rsi(14) &lt; 35</span>
+<span class="str">close &gt; ema(200)</span>
+<span class="str">volume &gt; sma_volume(20) * 1.5</span>
+<span class="str">sector != "Utilities"</span>
+
+<span class="cm"># Breakout momentum</span>
+<span class="str">close &gt; high(52w)</span>
+<span class="str">rsi(14) &gt; 55 AND rsi(14) &lt; 75</span>
+<span class="str">macd_histogram &gt; 0</span>
+<span class="str">atr(14) / close &gt; 0.02</span>
+
+<span class="cm"># Mean reversion play</span>
+<span class="str">bb_pctb(20,2) &lt; 0.1</span>
+<span class="str">rsi(14) &lt; 30</span>
+<span class="str">close &gt; ema(50)</span>
+<span class="str">insider_buys(90d) &gt; 0</span>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python — Screener Engine Core</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> typing <span class="kw">import</span> Callable
+
+<span class="op">@</span>dataclass
+<span class="kw">class</span> <span class="fn">Filter</span>:
+    <span class="str">"""A single screening condition."""</span>
+    name: <span class="fn">str</span>
+    fn: Callable[[pd.DataFrame], pd.Series]  <span class="cm"># returns boolean mask</span>
+    weight: <span class="fn">float</span> = <span class="num">1.0</span>
+
+<span class="kw">class</span> <span class="fn">ScreenerEngine</span>:
+    <span class="str">"""DSL-based stock screener with scoring."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, db):
+        self.db = db
+        self.filters: <span class="fn">list</span>[Filter] = []
+        self.universe: <span class="fn">list</span>[<span class="fn">str</span>] = []
+
+    <span class="kw">def</span> <span class="fn">set_universe</span>(self, symbols: <span class="fn">list</span>[<span class="fn">str</span>]):
+        self.universe = symbols
+        <span class="kw">return</span> self
+
+    <span class="kw">def</span> <span class="fn">add_filter</span>(self, name: <span class="fn">str</span>, fn, weight: <span class="fn">float</span> = <span class="num">1.0</span>):
+        self.filters.append(Filter(name=name, fn=fn, weight=weight))
+        <span class="kw">return</span> self
+
+    <span class="kw">async def</span> <span class="fn">run</span>(self, top_n: <span class="fn">int</span> = <span class="num">20</span>) -&gt; pd.DataFrame:
+        <span class="str">"""Execute all filters and return scored results."""</span>
+        <span class="cm"># Load data for entire universe</span>
+        data = <span class="kw">await</span> self.db.get_bars(self.universe, period=<span class="str">"1Y"</span>)
+
+        <span class="cm"># Compute indicators for each symbol</span>
+        results = []
+        <span class="kw">for</span> sym <span class="kw">in</span> self.universe:
+            df = data[data[<span class="str">"symbol"</span>] == sym].copy()
+            <span class="kw">if</span> <span class="fn">len</span>(df) &lt; <span class="num">50</span>:
+                <span class="kw">continue</span>
+
+            <span class="cm"># Apply each filter, track pass/fail</span>
+            score = <span class="num">0</span>
+            passes = <span class="num">0</span>
+            details = {}
+
+            <span class="kw">for</span> f <span class="kw">in</span> self.filters:
+                <span class="kw">try</span>:
+                    mask = f.fn(df)
+                    passed = <span class="fn">bool</span>(mask.iloc[-<span class="num">1</span>])
+                    <span class="kw">if</span> passed:
+                        score += f.weight
+                        passes += <span class="num">1</span>
+                    details[f.name] = passed
+                <span class="kw">except</span>:
+                    details[f.name] = <span class="kw">None</span>
+
+            <span class="kw">if</span> passes == <span class="fn">len</span>(self.filters):  <span class="cm"># all filters pass</span>
+                results.append({
+                    <span class="str">"symbol"</span>: sym,
+                    <span class="str">"score"</span>: score,
+                    <span class="str">"close"</span>: df[<span class="str">"close"</span>].iloc[-<span class="num">1</span>],
+                    **details
+                })
+
+        <span class="kw">return</span> (pd.DataFrame(results)
+                .sort_values(<span class="str">"score"</span>, ascending=<span class="kw">False</span>)
+                .head(top_n))
+
+<span class="cm"># Usage</span>
+screener = ScreenerEngine(db)
+screener.set_universe(sp500_symbols)
+screener.add_filter(<span class="str">"RSI oversold"</span>, <span class="kw">lambda</span> df: rsi(df[<span class="str">"close"</span>]) &lt; <span class="num">35</span>, weight=<span class="num">2.0</span>)
+screener.add_filter(<span class="str">"Above 200 EMA"</span>, <span class="kw">lambda</span> df: df[<span class="str">"close"</span>] &gt; df[<span class="str">"close"</span>].ewm(span=<span class="num">200</span>).mean(), weight=<span class="num">1.5</span>)
+screener.add_filter(<span class="str">"Volume surge"</span>, <span class="kw">lambda</span> df: df[<span class="str">"volume"</span>] &gt; df[<span class="str">"volume"</span>].rolling(<span class="num">20</span>).mean() * <span class="num">1.5</span>)
+results = <span class="kw">await</span> screener.run(top_n=<span class="num">10</span>)
+  </div>
+</div>
+
+<!-- SECTION 3: PATTERN DETECTION -->
+<div class="section-divider" id="patterns"><i class="fa-solid fa-magnifying-glass-chart" style="color:#9333ea;"></i> Pattern Detection</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass-chart" style="color:#9333ea;"></i> Detecting Breakouts, Support/Resistance, Volume Anomalies</h2>
+
+  <p>Pattern detection takes you beyond simple indicator thresholds. You're looking for <strong>structural changes</strong> in price behavior — breakouts from ranges, tests of key levels, and volume spikes that signal institutional activity.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Support/Resistance Detection</span>
+<span class="kw">def</span> <span class="fn">find_support_resistance</span>(
+    df: pd.DataFrame,
+    lookback: <span class="fn">int</span> = <span class="num">120</span>,
+    touches: <span class="fn">int</span> = <span class="num">3</span>,
+    tolerance: <span class="fn">float</span> = <span class="num">0.02</span>
+) -&gt; <span class="fn">dict</span>:
+    <span class="str">"""Find support/resistance levels from price history.
+
+    A level is valid if price touches it >= `touches` times
+    within `tolerance` (2% default).
+    """</span>
+    recent = df.tail(lookback)
+    highs = recent[<span class="str">"high"</span>].values
+    lows = recent[<span class="str">"low"</span>].values
+    closes = recent[<span class="str">"close"</span>].values
+
+    <span class="cm"># Find local pivots (swing highs and lows)</span>
+    pivot_highs = []
+    pivot_lows = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, <span class="fn">len</span>(recent) - <span class="num">2</span>):
+        <span class="kw">if</span> highs[i] &gt; highs[i-<span class="num">1</span>] <span class="kw">and</span> highs[i] &gt; highs[i+<span class="num">1</span>]:
+            pivot_highs.append(highs[i])
+        <span class="kw">if</span> lows[i] &lt; lows[i-<span class="num">1</span>] <span class="kw">and</span> lows[i] &lt; lows[i+<span class="num">1</span>]:
+            pivot_lows.append(lows[i])
+
+    <span class="cm"># Cluster pivots into levels</span>
+    <span class="kw">def</span> <span class="fn">cluster</span>(values, tol):
+        <span class="kw">if not</span> values: <span class="kw">return</span> []
+        sorted_v = <span class="fn">sorted</span>(values)
+        clusters = [[sorted_v[<span class="num">0</span>]]]
+        <span class="kw">for</span> v <span class="kw">in</span> sorted_v[<span class="num">1</span>:]:
+            <span class="kw">if</span> <span class="fn">abs</span>(v - np.mean(clusters[-<span class="num">1</span>])) / np.mean(clusters[-<span class="num">1</span>]) &lt; tol:
+                clusters[-<span class="num">1</span>].append(v)
+            <span class="kw">else</span>:
+                clusters.append([v])
+        <span class="kw">return</span> [
+            {<span class="str">"level"</span>: np.mean(c), <span class="str">"touches"</span>: <span class="fn">len</span>(c), <span class="str">"strength"</span>: <span class="fn">len</span>(c) / lookback}
+            <span class="kw">for</span> c <span class="kw">in</span> clusters <span class="kw">if</span> <span class="fn">len</span>(c) &gt;= touches
+        ]
+
+    current_price = closes[-<span class="num">1</span>]
+    resistance = [l <span class="kw">for</span> l <span class="kw">in</span> cluster(pivot_highs, tolerance) <span class="kw">if</span> l[<span class="str">"level"</span>] &gt; current_price]
+    support = [l <span class="kw">for</span> l <span class="kw">in</span> cluster(pivot_lows, tolerance) <span class="kw">if</span> l[<span class="str">"level"</span>] &lt; current_price]
+
+    <span class="kw">return</span> {<span class="str">"support"</span>: support, <span class="str">"resistance"</span>: resistance, <span class="str">"price"</span>: current_price}
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python — Breakout Detection</span>
+<span class="kw">def</span> <span class="fn">detect_breakout</span>(
+    df: pd.DataFrame,
+    consolidation_days: <span class="fn">int</span> = <span class="num">20</span>,
+    volume_multiplier: <span class="fn">float</span> = <span class="num">2.0</span>,
+    range_threshold: <span class="fn">float</span> = <span class="num">0.08</span>  <span class="cm"># 8% range = tight consolidation</span>
+) -&gt; <span class="fn">dict</span> | <span class="kw">None</span>:
+    <span class="str">"""Detect breakout from consolidation range."""</span>
+    recent = df.tail(consolidation_days + <span class="num">1</span>)
+    consolidation = recent.iloc[:-<span class="num">1</span>]
+    today = recent.iloc[-<span class="num">1</span>]
+
+    <span class="cm"># Check if consolidation range is tight enough</span>
+    range_high = consolidation[<span class="str">"high"</span>].max()
+    range_low = consolidation[<span class="str">"low"</span>].min()
+    range_pct = (range_high - range_low) / range_low
+
+    <span class="kw">if</span> range_pct &gt; range_threshold:
+        <span class="kw">return</span> <span class="kw">None</span>  <span class="cm"># Not consolidating</span>
+
+    avg_vol = consolidation[<span class="str">"volume"</span>].mean()
+
+    <span class="cm"># Bullish breakout</span>
+    <span class="kw">if</span> today[<span class="str">"close"</span>] &gt; range_high <span class="kw">and</span> today[<span class="str">"volume"</span>] &gt; avg_vol * volume_multiplier:
+        <span class="kw">return</span> {
+            <span class="str">"type"</span>: <span class="str">"bullish_breakout"</span>,
+            <span class="str">"entry"</span>: today[<span class="str">"close"</span>],
+            <span class="str">"stop"</span>: range_low,
+            <span class="str">"target"</span>: today[<span class="str">"close"</span>] + (range_high - range_low),
+            <span class="str">"volume_ratio"</span>: today[<span class="str">"volume"</span>] / avg_vol,
+        }
+
+    <span class="kw">return</span> <span class="kw">None</span>
+  </div>
+
+  <div id="chart-patterns" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- SECTION 4: COMPOSITE SCORING -->
+<div class="section-divider" id="scoring"><i class="fa-solid fa-star" style="color:#f59e0b;"></i> Composite Scoring</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#f59e0b;"></i> From Signals to Scores — Weighting and Ranking</h2>
+
+  <p>Individual indicators are noisy. The magic happens when you <strong>combine multiple independent signals</strong> into a composite score. This is exactly what professional quant shops do — they call it "alpha combination."</p>
+
+  <div class="code-block">
+    <span class="code-label">Python — Composite Signal Scorer</span>
+<span class="kw">class</span> <span class="fn">CompositeScorer</span>:
+    <span class="str">"""Multi-signal scoring engine with category weighting."""</span>
+
+    CATEGORIES = {
+        <span class="str">"momentum"</span>: <span class="num">0.25</span>,    <span class="cm"># RSI, Stochastics</span>
+        <span class="str">"trend"</span>: <span class="num">0.30</span>,        <span class="cm"># EMA cross, MACD, ADX</span>
+        <span class="str">"volatility"</span>: <span class="num">0.15</span>,   <span class="cm"># ATR squeeze, Bollinger %B</span>
+        <span class="str">"volume"</span>: <span class="num">0.15</span>,       <span class="cm"># OBV trend, volume spike</span>
+        <span class="str">"fundamental"</span>: <span class="num">0.15</span>,  <span class="cm"># Insider buys, earnings surprise</span>
+    }
+
+    <span class="kw">def</span> <span class="fn">score</span>(self, df: pd.DataFrame) -&gt; <span class="fn">dict</span>:
+        scores = {}
+
+        <span class="cm"># Momentum (0-100)</span>
+        r = rsi(df[<span class="str">"close"</span>]).iloc[-<span class="num">1</span>]
+        scores[<span class="str">"momentum"</span>] = <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(<span class="num">100</span>,
+            (<span class="num">70</span> - <span class="fn">abs</span>(r - <span class="num">50</span>)) * <span class="num">2.5</span>  <span class="cm"># Peak at RSI 50, fade at extremes</span>
+        ))
+
+        <span class="cm"># Trend (0-100)</span>
+        m = macd(df[<span class="str">"close"</span>])
+        ema50 = df[<span class="str">"close"</span>].ewm(span=<span class="num">50</span>).mean().iloc[-<span class="num">1</span>]
+        ema200 = df[<span class="str">"close"</span>].ewm(span=<span class="num">200</span>).mean().iloc[-<span class="num">1</span>]
+        price = df[<span class="str">"close"</span>].iloc[-<span class="num">1</span>]
+
+        trend_score = <span class="num">0</span>
+        <span class="kw">if</span> price &gt; ema200: trend_score += <span class="num">40</span>
+        <span class="kw">if</span> price &gt; ema50: trend_score += <span class="num">30</span>
+        <span class="kw">if</span> m[<span class="str">"histogram"</span>].iloc[-<span class="num">1</span>] &gt; <span class="num">0</span>: trend_score += <span class="num">30</span>
+        scores[<span class="str">"trend"</span>] = trend_score
+
+        <span class="cm"># Volatility (0-100) — prefer moderate volatility</span>
+        bb = bollinger_bands(df[<span class="str">"close"</span>])
+        bw = bb[<span class="str">"bb_bw"</span>].iloc[-<span class="num">1</span>]
+        scores[<span class="str">"volatility"</span>] = <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(<span class="num">100</span>,
+            <span class="num">100</span> - <span class="fn">abs</span>(bw - <span class="num">0.08</span>) * <span class="num">500</span>
+        ))
+
+        <span class="cm"># Volume (0-100)</span>
+        vol_ratio = df[<span class="str">"volume"</span>].iloc[-<span class="num">1</span>] / df[<span class="str">"volume"</span>].rolling(<span class="num">20</span>).mean().iloc[-<span class="num">1</span>]
+        scores[<span class="str">"volume"</span>] = <span class="fn">min</span>(<span class="num">100</span>, vol_ratio * <span class="num">50</span>)
+
+        <span class="cm"># Weighted composite</span>
+        composite = <span class="fn">sum</span>(
+            scores[cat] * weight
+            <span class="kw">for</span> cat, weight <span class="kw">in</span> self.CATEGORIES.items()
+            <span class="kw">if</span> cat <span class="kw">in</span> scores
+        )
+
+        <span class="kw">return</span> {
+            <span class="str">"composite"</span>: <span class="fn">round</span>(composite, <span class="num">1</span>),
+            <span class="str">"components"</span>: scores,
+            <span class="str">"grade"</span>: self._grade(composite),
+        }
+
+    <span class="kw">def</span> <span class="fn">_grade</span>(self, score: <span class="fn">float</span>) -&gt; <span class="fn">str</span>:
+        <span class="kw">if</span> score &gt;= <span class="num">85</span>: <span class="kw">return</span> <span class="str">"A+"</span>
+        <span class="kw">if</span> score &gt;= <span class="num">75</span>: <span class="kw">return</span> <span class="str">"A"</span>
+        <span class="kw">if</span> score &gt;= <span class="num">65</span>: <span class="kw">return</span> <span class="str">"B+"</span>
+        <span class="kw">if</span> score &gt;= <span class="num">55</span>: <span class="kw">return</span> <span class="str">"B"</span>
+        <span class="kw">return</span> <span class="str">"C"</span>
+  </div>
+
+  <div id="chart-scoring" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- SECTION 5: BACKTESTING -->
+<div class="section-divider" id="backtest"><i class="fa-solid fa-flask" style="color:#ef4444;"></i> Backtesting Your Signals</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#ef4444;"></i> Walk-Forward Backtesting</h2>
+
+  <p>A signal that hasn't been backtested is just a guess. Walk-forward validation is the gold standard — it simulates what would have happened if you'd been trading this signal in real time, with no look-ahead bias.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#059669;"></i> Why Walk-Forward, Not Simple Backtest?</h4>
+    <p style="margin:0;">A simple backtest optimizes parameters on the full history, then tests on the same data — <strong>guaranteed overfitting</strong>. Walk-forward splits your data into rolling windows: optimize on window 1, test on window 2, then slide forward. Repeat. If the signal works across <strong>multiple out-of-sample windows</strong>, it's likely real, not curve-fitted.</p>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python — Walk-Forward Backtester</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+
+<span class="op">@</span>dataclass
+<span class="kw">class</span> <span class="fn">Trade</span>:
+    symbol: <span class="fn">str</span>
+    entry_date: <span class="fn">str</span>
+    entry_price: <span class="fn">float</span>
+    exit_date: <span class="fn">str</span> = <span class="str">""</span>
+    exit_price: <span class="fn">float</span> = <span class="num">0.0</span>
+    pnl_pct: <span class="fn">float</span> = <span class="num">0.0</span>
+    hit_tp: <span class="fn">bool</span> = <span class="kw">False</span>
+    hit_stop: <span class="fn">bool</span> = <span class="kw">False</span>
+
+<span class="kw">class</span> <span class="fn">WalkForwardBacktester</span>:
+    <span class="str">"""Walk-forward backtest with fixed R/R."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, stop_pct: <span class="fn">float</span> = <span class="num">0.05</span>, tp_pct: <span class="fn">float</span> = <span class="num">0.10</span>, max_hold: <span class="fn">int</span> = <span class="num">20</span>):
+        self.stop_pct = stop_pct
+        self.tp_pct = tp_pct
+        self.max_hold = max_hold
+
+    <span class="kw">def</span> <span class="fn">backtest</span>(self, df: pd.DataFrame, signals: pd.Series) -&gt; <span class="fn">list</span>[Trade]:
+        <span class="str">"""Run backtest on buy signals (1 = buy, 0 = no signal)."""</span>
+        trades = []
+        i = <span class="num">0</span>
+
+        <span class="kw">while</span> i &lt; <span class="fn">len</span>(df):
+            <span class="kw">if</span> signals.iloc[i] != <span class="num">1</span>:
+                i += <span class="num">1</span>
+                <span class="kw">continue</span>
+
+            entry = df.iloc[i]
+            stop = entry[<span class="str">"close"</span>] * (<span class="num">1</span> - self.stop_pct)
+            target = entry[<span class="str">"close"</span>] * (<span class="num">1</span> + self.tp_pct)
+
+            trade = Trade(
+                symbol=entry.get(<span class="str">"symbol"</span>, <span class="str">""</span>),
+                entry_date=<span class="fn">str</span>(df.index[i]),
+                entry_price=entry[<span class="str">"close"</span>],
+            )
+
+            <span class="cm"># Simulate forward</span>
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + <span class="num">1</span>, <span class="fn">min</span>(i + self.max_hold, <span class="fn">len</span>(df))):
+                bar = df.iloc[j]
+                <span class="kw">if</span> bar[<span class="str">"low"</span>] &lt;= stop:
+                    trade.exit_price = stop
+                    trade.hit_stop = <span class="kw">True</span>
+                    <span class="kw">break</span>
+                <span class="kw">if</span> bar[<span class="str">"high"</span>] &gt;= target:
+                    trade.exit_price = target
+                    trade.hit_tp = <span class="kw">True</span>
+                    <span class="kw">break</span>
+            <span class="kw">else</span>:
+                trade.exit_price = df.iloc[<span class="fn">min</span>(i+self.max_hold, <span class="fn">len</span>(df)-<span class="num">1</span>)][<span class="str">"close"</span>]
+
+            trade.exit_date = <span class="fn">str</span>(df.index[j <span class="kw">if</span> <span class="str">'j'</span> <span class="kw">in</span> <span class="fn">dir</span>() <span class="kw">else</span> i])
+            trade.pnl_pct = (trade.exit_price - trade.entry_price) / trade.entry_price
+            trades.append(trade)
+            i = j + <span class="num">1</span> <span class="kw">if</span> trade.hit_tp <span class="kw">or</span> trade.hit_stop <span class="kw">else</span> i + self.max_hold
+
+        <span class="kw">return</span> trades
+
+    <span class="kw">def</span> <span class="fn">summary</span>(self, trades: <span class="fn">list</span>[Trade]) -&gt; <span class="fn">dict</span>:
+        <span class="kw">if not</span> trades: <span class="kw">return</span> {}
+        wins = [t <span class="kw">for</span> t <span class="kw">in</span> trades <span class="kw">if</span> t.pnl_pct &gt; <span class="num">0</span>]
+        <span class="kw">return</span> {
+            <span class="str">"total_trades"</span>: <span class="fn">len</span>(trades),
+            <span class="str">"win_rate"</span>: <span class="fn">len</span>(wins) / <span class="fn">len</span>(trades),
+            <span class="str">"avg_pnl"</span>: np.mean([t.pnl_pct <span class="kw">for</span> t <span class="kw">in</span> trades]),
+            <span class="str">"hit_tp_rate"</span>: <span class="fn">sum</span>(t.hit_tp <span class="kw">for</span> t <span class="kw">in</span> trades) / <span class="fn">len</span>(trades),
+            <span class="str">"hit_stop_rate"</span>: <span class="fn">sum</span>(t.hit_stop <span class="kw">for</span> t <span class="kw">in</span> trades) / <span class="fn">len</span>(trades),
+            <span class="str">"max_drawdown"</span>: self._max_drawdown(trades),
+        }
+  </div>
+
+  <div id="chart-equity" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Backtest Pitfalls</h4>
+    <p style="margin:0;"><strong>Survivorship bias:</strong> Your S&P 500 list today doesn't include companies that got delisted since 2020. <strong>Look-ahead bias:</strong> Using future data to make past decisions. <strong>Transaction costs:</strong> Always include slippage (0.05-0.1%) and commissions. A signal that returns 0.5% per trade looks great until costs eat 0.15%.</p>
+  </div>
+</div>
+
+<!-- TAKEAWAY + CTA -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#059669;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark"></i> Key Takeaways — Part 3</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Build indicators from scratch (RSI, MACD, Bollinger, ATR, OBV) to understand them deeply and customize freely.</li>
+    <li><i class="fa-solid fa-check"></i> Use one indicator per category (momentum, trend, volatility, volume) — stacking similar indicators creates false confluence.</li>
+    <li><i class="fa-solid fa-check"></i> Build a DSL-based screener engine with filter chains, weighted scoring, and ranked output.</li>
+    <li><i class="fa-solid fa-check"></i> Pattern detection (breakouts, S/R levels, volume anomalies) provides structural signals beyond simple indicator thresholds.</li>
+    <li><i class="fa-solid fa-check"></i> Composite scoring with category weighting turns noisy signals into reliable grades (A+ to C).</li>
+    <li><i class="fa-solid fa-check"></i> Always validate with walk-forward backtesting. Include transaction costs and check for survivorship/look-ahead bias.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-terminal/part4-dashboard/" class="next-cta">
+  <div>
+    <div class="next-label">Part 4 of 6</div>
+    <div class="next-title">Dashboard — Real-Time Visualization <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">Build Your Own Trading Terminal with AI</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Complete 6-part series — From architecture to production deployment</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#059669; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Back to Home</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-terminal/part2-data-pipeline/" class="series-arrow" title="Data Pipeline"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build Your Own Trading Terminal with AI</span><div class="series-steps"><a href="/series/trading-terminal/part1-architecture/" class="series-step" title="Architecture"><span class="series-num">1</span><span class="series-label">Architecture</span></a><a href="/series/trading-terminal/part2-data-pipeline/" class="series-step" title="Data Pipeline"><span class="series-num">2</span><span class="series-label">Data Pipeline</span></a><a href="/series/trading-terminal/part3-signals/" class="series-step current" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/trading-terminal/part4-dashboard/" class="series-step" title="Dashboard"><span class="series-num">4</span><span class="series-label">Dashboard</span></a><a href="/series/trading-terminal/part5-ai-layer/" class="series-step" title="AI Layer"><span class="series-num">5</span><span class="series-label">AI Layer</span></a><a href="/series/trading-terminal/part6-deployment/" class="series-step" title="Deployment"><span class="series-num">6</span><span class="series-label">Deployment</span></a></div><span class="series-counter">3/6</span><a href="/series/trading-terminal/part4-dashboard/" class="series-arrow" title="Dashboard"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Indicator Comparison (Radar)
+var c1 = echarts.init(document.getElementById('chart-indicators'));
+c1.setOption({
+  title: { text: 'Indicator Categories — Coverage Map', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, textStyle: { fontSize: 10 } },
+  radar: {
+    indicator: [
+      { name: 'Trend Detection', max: 10 },
+      { name: 'Reversal Signal', max: 10 },
+      { name: 'Volatility Info', max: 10 },
+      { name: 'Volume Confirm', max: 10 },
+      { name: 'Timing Precision', max: 10 },
+      { name: 'Low Noise', max: 10 }
+    ],
+    radius: '55%',
+    axisName: { fontSize: 10 }
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [4, 8, 2, 1, 7, 5], name: 'RSI', lineStyle: { color: '#059669', width: 2 }, areaStyle: { color: 'rgba(5,150,105,0.08)' }, itemStyle: { color: '#059669' } },
+      { value: [9, 6, 3, 1, 5, 7], name: 'MACD', lineStyle: { color: '#2563eb', width: 2 }, areaStyle: { color: 'rgba(37,99,235,0.08)' }, itemStyle: { color: '#2563eb' } },
+      { value: [3, 7, 9, 1, 6, 4], name: 'Bollinger', lineStyle: { color: '#9333ea', width: 2 }, areaStyle: { color: 'rgba(147,51,234,0.08)' }, itemStyle: { color: '#9333ea' } },
+      { value: [2, 3, 9, 2, 3, 8], name: 'ATR', lineStyle: { color: '#f59e0b', width: 2 }, areaStyle: { color: 'rgba(245,158,11,0.08)' }, itemStyle: { color: '#f59e0b' } },
+      { value: [5, 4, 1, 10, 4, 6], name: 'OBV', lineStyle: { color: '#ef4444', width: 2 }, areaStyle: { color: 'rgba(239,68,68,0.08)' }, itemStyle: { color: '#ef4444' } }
+    ]
+  }]
+});
+
+// Chart 2: Pattern Detection Illustration
+var c2 = echarts.init(document.getElementById('chart-patterns'));
+var days = []; for(var i=1;i<=60;i++) days.push('D'+i);
+var prices = [100,101,99,102,103,101,104,106,105,107,108,106,107,105,103,104,105,106,105,104,103,104,105,104,105,106,105,104,105,106,105,104,105,106,105,105,106,105,104,105,106,105,106,105,106,107,108,109,111,113,115,114,116,118,117,119,121,120,122,124];
+c2.setOption({
+  title: { text: 'Breakout Pattern Detection Example', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  grid: { left: '3%', right: '4%', bottom: '8%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: days, axisLabel: { fontSize: 9, interval: 9 } },
+  yAxis: { type: 'value', min: 97, axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Price', type: 'line', data: prices, lineStyle: { color: '#0f172a', width: 2 }, itemStyle: { color: '#0f172a' }, symbol: 'none' },
+    { name: 'Resistance', type: 'line', data: prices.map(function(v,i){return i>=15&&i<=45?107:null}), lineStyle: { color: '#ef4444', width: 2, type: 'dashed' }, symbol: 'none' },
+    { name: 'Support', type: 'line', data: prices.map(function(v,i){return i>=15&&i<=45?103:null}), lineStyle: { color: '#059669', width: 2, type: 'dashed' }, symbol: 'none' },
+    { name: 'Breakout Zone', type: 'line', data: prices.map(function(v,i){return i>=45?v:null}), lineStyle: { color: '#2563eb', width: 3 }, areaStyle: { color: 'rgba(37,99,235,0.1)' }, symbol: 'none' }
+  ]
+});
+
+// Chart 3: Composite Score Radar for Sample Stock
+var c3 = echarts.init(document.getElementById('chart-scoring'));
+c3.setOption({
+  title: { text: 'Composite Score — NVDA Example', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: 'Momentum', max: 100 },
+      { name: 'Trend', max: 100 },
+      { name: 'Volatility', max: 100 },
+      { name: 'Volume', max: 100 },
+      { name: 'Fundamental', max: 100 }
+    ],
+    radius: '60%',
+    axisName: { fontSize: 11 }
+  },
+  series: [{
+    type: 'radar',
+    data: [{
+      value: [72, 95, 58, 85, 80],
+      name: 'NVDA (Score: 82.3 / A)',
+      lineStyle: { color: '#059669', width: 3 },
+      areaStyle: { color: 'rgba(5,150,105,0.15)' },
+      itemStyle: { color: '#059669' },
+      label: { show: true, formatter: '{c}', fontSize: 11, fontWeight: 700 }
+    }]
+  }]
+});
+
+// Chart 4: Equity Curve
+var c4 = echarts.init(document.getElementById('chart-equity'));
+var tradeNums = []; for(var i=1;i<=50;i++) tradeNums.push(i);
+var equity = [10000]; var pnls = [];
+for(var i=1;i<50;i++){
+  var pnl = (Math.random()>0.47 ? 1 : -1) * (Math.random()*300+50);
+  equity.push(Math.round(equity[i-1]+pnl));
+  pnls.push(Math.round(pnl));
+}
+pnls.push(0);
+c4.setOption({
+  title: { text: 'Walk-Forward Backtest — Equity Curve (50 Trades)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: tradeNums, name: 'Trade #', axisLabel: { fontSize: 10 } },
+  yAxis: [
+    { type: 'value', name: '$', axisLabel: { fontSize: 11 } },
+    { type: 'value', name: 'P&L', axisLabel: { fontSize: 10 }, splitLine: { show: false } }
+  ],
+  series: [
+    { name: 'Equity', type: 'line', data: equity, lineStyle: { color: '#059669', width: 2 }, areaStyle: { color: 'rgba(5,150,105,0.1)' }, itemStyle: { color: '#059669' }, symbol: 'none' },
+    { name: 'Trade P&L', type: 'bar', yAxisIndex: 1, data: pnls.map(function(v){ return { value: v, itemStyle: { color: v >= 0 ? '#10b981' : '#ef4444' } }; }) }
+  ]
+});
+
+window.addEventListener('resize', function() { c1.resize(); c2.resize(); c3.resize(); c4.resize(); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

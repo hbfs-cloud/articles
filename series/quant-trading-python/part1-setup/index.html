@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Setup — Your Quant Lab in 30 Minutes | Quant Trading in Python — From Backtest to Live — Part 1/6 | Market Watch</title>
+ <meta name="description" content="Quant Trading in Python — Part 1/6: Why Python for quant trading, environment setup with conda/venv, essential libraries (pandas, numpy, yfinance), your first data pull, and project structure.">
+ <meta property="og:title" content="Setup — Your Quant Lab in 30 Minutes | Quant Trading Python 1/6 | Market Watch">
+ <meta property="og:description" content="Build your quant trading lab from scratch: Python environment, essential libraries, first OHLCV data pull, and project scaffolding.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/quant-trading-python/part1-setup/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* AMBER/ORANGE THEME for Quant Trading Python */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; border-radius:12px; overflow:hidden; margin:1.5rem 0; }
+ .code-label { display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.25rem; background:#1e293b; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #334155; }
+ .code-label i { color:#d97706; }
+ .code-content { padding:1.25rem; overflow-x:auto; }
+ .code-content pre { margin:0; color:#e2e8f0; font-family:'JetBrains Mono', 'Fira Code', monospace; font-size:0.85rem; line-height:1.7; white-space:pre; }
+ .code-content .kw { color:#c084fc; } /* keywords */
+ .code-content .fn { color:#67e8f9; } /* functions */
+ .code-content .str { color:#86efac; } /* strings */
+ .code-content .cm { color:#64748b; } /* comments */
+ .code-content .num { color:#fbbf24; } /* numbers */
+ .code-content .op { color:#f472b6; } /* operators */
+ .code-content .var { color:#e2e8f0; } /* variables */
+ .code-content .imp { color:#fb923c; } /* imports */
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#d97706; margin-right:0.75rem; }
+ details[open] summary { border-color:#d97706; background:#fffbeb; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #d97706; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b45309; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(217,119,6,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #d97706 0%, #b45309 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,119,6,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #d97706; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #d97706 0%, #b45309 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ .pedagogy-box { background:#fffbeb; border:1px solid #fbbf24; border-radius:12px; padding:1.5rem; margin:1.5rem 0; }
+ .pedagogy-box h4 { color:#b45309; margin-top:0; font-size:0.95rem; }
+ .pedagogy-box p { font-size:0.9rem; color:#334155; line-height:1.7; margin:0; }
+
+ .alert-box { background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:1.5rem; margin:1.5rem 0; }
+ .alert-box h4 { color:#dc2626; margin-top:0; font-size:0.95rem; }
+ .alert-box p { font-size:0.9rem; color:#334155; line-height:1.7; margin:0; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+   .step-grid { grid-template-columns:1fr; }
+   .capability-grid { grid-template-columns:1fr; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-brands fa-python"></i> Quant Trading in Python — Part 1 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Setup — Your Quant Lab in 30 Minutes</h1>
+  <p class="hero-subtitle">Before you write your first strategy, you need the right tools. We'll install Python, set up your environment, pull real market data, and structure your project like a professional quant.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-brands fa-python"></i> Python 3.11+</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-database"></i> Market Data</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-folder-tree"></i> Project Structure</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-line"></i> First Chart</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step current" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">1/6</span><a href="/series/quant-trading-python/part2-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why-python" class="fnav-item" data-section="why-python"><i class="fas fa-bookmark"></i><span>Why Python</span></a><a href="#environment" class="fnav-item" data-section="environment"><i class="fas fa-bookmark"></i><span>Environment Setup</span></a><a href="#libraries" class="fnav-item" data-section="libraries"><i class="fas fa-bookmark"></i><span>Essential Libraries</span></a><a href="#first-pull" class="fnav-item" data-section="first-pull"><i class="fas fa-bookmark"></i><span>First Data Pull</span></a><a href="#exploration" class="fnav-item" data-section="exploration"><i class="fas fa-bookmark"></i><span>Data Exploration</span></a><a href="#project-structure" class="fnav-item" data-section="project-structure"><i class="fas fa-bookmark"></i><span>Project Structure</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-20% 0px -60% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+})();
+</script>
+
+<!-- ==================== SECTION 1: WHY PYTHON ==================== -->
+<div class="section-divider"><i class="fa-brands fa-python"></i> Why Python for Quant Trading</div>
+
+<div id="why-python" class="content-card">
+  <h2><i class="fa-brands fa-python" style="color:#d97706;"></i> Why Python Dominates Quant Finance</h2>
+
+  <p>Python is the lingua franca of quantitative finance. From two-person prop shops to Goldman Sachs, Python is the tool of choice for backtesting, signal generation, risk management, and increasingly, live execution. Here's why:</p>
+
+  <div class="capability-grid">
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(217,119,6,0.1); color:#d97706;"><i class="fa-solid fa-bolt"></i></div>
+      <h4>Rapid Prototyping</h4>
+      <p>Test a new strategy idea in 50 lines. No compilation, no boilerplate. From idea to backtest in minutes.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-cube"></i></div>
+      <h4>Rich Ecosystem</h4>
+      <p>pandas, numpy, scipy, scikit-learn, PyTorch, TA-Lib — everything you need, battle-tested.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-plug"></i></div>
+      <h4>Broker APIs</h4>
+      <p>Alpaca, Interactive Brokers, Tradier — all have first-class Python SDKs for live trading.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(147,51,234,0.1); color:#9333ea;"><i class="fa-solid fa-brain"></i></div>
+      <h4>ML Native</h4>
+      <p>sklearn, XGBoost, TensorFlow, PyTorch. When you're ready for ML, Python is already there.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(239,68,68,0.1); color:#ef4444;"><i class="fa-solid fa-users"></i></div>
+      <h4>Community</h4>
+      <p>QuantConnect, Zipline, Backtrader — massive open-source community solving the same problems.</p>
+    </div>
+    <div class="capability-card">
+      <div class="capability-icon" style="background:rgba(249,115,22,0.1); color:#f97316;"><i class="fa-solid fa-chart-bar"></i></div>
+      <h4>Visualization</h4>
+      <p>Matplotlib, Plotly, seaborn — debug your strategies visually. See patterns humans miss in numbers.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Python vs. C++ vs. R</h4>
+    <p>C++ is faster for high-frequency (microsecond) execution, but for strategies with holding periods of minutes to months, Python's speed is more than adequate. R has better statistical libraries but weaker production/deployment tooling. Python sits in the sweet spot: fast enough for 99% of strategies, with the best ecosystem for going from research to production.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Language</th><th>Speed</th><th>Ecosystem</th><th>Live Trading</th><th>ML Support</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Python</strong></td><td>Medium</td><td>Excellent</td><td>Excellent</td><td>Best</td><td>Full-stack quant</td></tr>
+      <tr><td>C++</td><td>Fastest</td><td>Limited</td><td>Good</td><td>Limited</td><td>HFT execution</td></tr>
+      <tr><td>R</td><td>Slow</td><td>Good (stats)</td><td>Poor</td><td>Good</td><td>Research only</td></tr>
+      <tr><td>Julia</td><td>Fast</td><td>Growing</td><td>Limited</td><td>Good</td><td>Numerical research</td></tr>
+      <tr><td>MATLAB</td><td>Medium</td><td>Good (math)</td><td>Poor</td><td>Limited</td><td>Academia</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ECharts: Library Ecosystem Map -->
+  <div id="ecosystemChart" style="width:100%; height:450px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 2: ENVIRONMENT ==================== -->
+<div class="section-divider"><i class="fa-solid fa-terminal"></i> Environment Setup</div>
+
+<div id="environment" class="content-card">
+  <h2><i class="fa-solid fa-terminal" style="color:#d97706;"></i> Setting Up Your Python Environment</h2>
+
+  <p>A clean, isolated environment is critical. You don't want your trading code fighting with other Python projects over package versions. We'll use conda (recommended for beginners) or venv (lighter, for experienced developers).</p>
+
+  <h3>Option A: Conda (Recommended)</h3>
+  <p>Conda manages both Python versions and system-level dependencies (like TA-Lib's C library). Install <a href="https://docs.conda.io/en/latest/miniconda.html" target="_blank">Miniconda</a> (lightweight) rather than full Anaconda.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-terminal"></i> Terminal — Conda Setup</div>
+    <div class="code-content"><pre><span class="cm"># Install Miniconda (macOS/Linux)</span>
+<span class="fn">wget</span> https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+<span class="fn">bash</span> Miniconda3-latest-Linux-x86_64.sh
+
+<span class="cm"># Create a dedicated environment</span>
+<span class="fn">conda</span> create -n quant python=<span class="num">3.11</span> -y
+<span class="fn">conda</span> activate quant
+
+<span class="cm"># Install core packages</span>
+<span class="fn">conda</span> install pandas numpy matplotlib jupyter -y
+<span class="fn">conda</span> install -c conda-forge ta-lib -y
+
+<span class="cm"># Install trading-specific packages via pip</span>
+<span class="fn">pip</span> install yfinance mplfinance alpaca-trade-api</pre></div>
+  </div>
+
+  <h3>Option B: venv + pip</h3>
+  <p>If you prefer a lighter approach without conda. You'll need to install TA-Lib's C library separately.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-terminal"></i> Terminal — venv Setup</div>
+    <div class="code-content"><pre><span class="cm"># Create and activate virtual environment</span>
+<span class="fn">python3.11</span> -m venv quant-env
+<span class="fn">source</span> quant-env/bin/activate  <span class="cm"># Linux/macOS</span>
+<span class="cm"># quant-env\Scripts\activate  # Windows</span>
+
+<span class="cm"># Install everything via pip</span>
+<span class="fn">pip</span> install pandas numpy matplotlib jupyter
+<span class="fn">pip</span> install yfinance mplfinance ta-lib
+<span class="fn">pip</span> install alpaca-trade-api scikit-learn xgboost</pre></div>
+  </div>
+
+  <h3>IDE: VS Code or Jupyter?</h3>
+  <p>Both. Use <strong>Jupyter notebooks</strong> (.ipynb) for exploration, visualization, and quick experiments. Use <strong>VS Code</strong> with the Python extension for production code — your backtest engine, risk manager, and execution loop. VS Code can also run Jupyter cells inline.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-terminal"></i> Terminal — VS Code Extensions</div>
+    <div class="code-content"><pre><span class="cm"># Essential VS Code extensions for quant work</span>
+<span class="fn">code</span> --install-extension ms-python.python
+<span class="fn">code</span> --install-extension ms-toolsai.jupyter
+<span class="fn">code</span> --install-extension ms-python.pylint
+<span class="fn">code</span> --install-extension ms-python.black-formatter</pre></div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Common Pitfall: TA-Lib Installation</h4>
+    <p>TA-Lib requires a C library that <code>pip install ta-lib</code> alone won't provide. On macOS: <code>brew install ta-lib</code>. On Ubuntu: <code>sudo apt install libta-lib-dev</code>. On Windows: download the pre-built binary from the TA-Lib website. Conda handles this automatically, which is why we recommend it for beginners.</p>
+  </div>
+
+  <details>
+    <summary>What about Google Colab?</summary>
+    <div class="quiz-answer">
+      Colab is fine for learning and quick experiments, but it has limitations for serious quant work: sessions time out after 90 minutes of inactivity, you can't run scheduled jobs, and the free tier has limited resources. Start with Colab if you want zero setup, but plan to move to a local environment for Parts 4-6 of this series (risk management, live trading, ML).
+    </div>
+  </details>
+</div>
+
+<!-- ==================== SECTION 3: ESSENTIAL LIBRARIES ==================== -->
+<div class="section-divider"><i class="fa-solid fa-cubes"></i> Essential Libraries</div>
+
+<div id="libraries" class="content-card">
+  <h2><i class="fa-solid fa-cubes" style="color:#d97706;"></i> The Quant Python Stack</h2>
+
+  <p>Here's the complete library stack we'll use throughout this series. Install them all now — you'll need every one.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-file-code"></i> requirements.txt</div>
+    <div class="code-content"><pre><span class="cm"># Core data manipulation</span>
+pandas==<span class="num">2.2.0</span>
+numpy==<span class="num">1.26.3</span>
+
+<span class="cm"># Market data</span>
+yfinance==<span class="num">0.2.36</span>
+
+<span class="cm"># Technical analysis</span>
+ta-lib==<span class="num">0.4.28</span>
+ta==<span class="num">0.11.0</span>           <span class="cm"># pure-Python fallback if TA-Lib fails</span>
+
+<span class="cm"># Visualization</span>
+matplotlib==<span class="num">3.8.2</span>
+mplfinance==<span class="num">0.12.10</span>  <span class="cm"># candlestick charts</span>
+plotly==<span class="num">5.18.0</span>        <span class="cm"># interactive charts</span>
+
+<span class="cm"># ML & Statistics (Part 6)</span>
+scikit-learn==<span class="num">1.4.0</span>
+xgboost==<span class="num">2.0.3</span>
+scipy==<span class="num">1.12.0</span>
+statsmodels==<span class="num">0.14.1</span>
+
+<span class="cm"># Broker API (Part 5)</span>
+alpaca-trade-api==<span class="num">3.2.0</span>
+
+<span class="cm"># Utilities</span>
+jupyter==<span class="num">1.0.0</span>
+python-dotenv==<span class="num">1.0.0</span>  <span class="cm"># API keys management</span>
+tqdm==<span class="num">4.66.1</span>          <span class="cm"># progress bars</span></pre></div>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Library</th><th>Purpose</th><th>Used In</th><th>Why This One</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>pandas</strong></td><td>DataFrames, time series</td><td>All parts</td><td>Industry standard, vectorized operations</td></tr>
+      <tr><td><strong>numpy</strong></td><td>Numerical computing</td><td>All parts</td><td>10-100x faster than pure Python loops</td></tr>
+      <tr><td><strong>yfinance</strong></td><td>Free market data</td><td>Parts 1-4</td><td>Free, reliable, Yahoo Finance wrapper</td></tr>
+      <tr><td><strong>TA-Lib</strong></td><td>150+ technical indicators</td><td>Parts 2-3</td><td>C-based, fastest indicator library</td></tr>
+      <tr><td><strong>matplotlib</strong></td><td>Static visualization</td><td>All parts</td><td>Most flexible plotting library</td></tr>
+      <tr><td><strong>mplfinance</strong></td><td>Candlestick charts</td><td>Parts 1-3</td><td>Purpose-built for OHLCV data</td></tr>
+      <tr><td><strong>scikit-learn</strong></td><td>ML models</td><td>Part 6</td><td>Best API design, huge model zoo</td></tr>
+      <tr><td><strong>xgboost</strong></td><td>Gradient boosting</td><td>Part 6</td><td>Best tabular data model, top Kaggle tool</td></tr>
+      <tr><td><strong>alpaca-trade-api</strong></td><td>Live execution</td><td>Part 5</td><td>Free paper trading, modern REST API</td></tr>
+      <tr><td><strong>scipy</strong></td><td>Statistics, optimization</td><td>Parts 4, 6</td><td>Portfolio optimization, distribution fitting</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why yfinance and Not a Paid API?</h4>
+    <p>For learning and backtesting, yfinance is perfect: free, covers most US equities, ETFs, crypto, and provides daily/weekly OHLCV data plus fundamentals. Its limitations — delayed data, occasional rate limiting, no tick data — only matter for live intraday trading (Part 5). When you go live, you'll switch to your broker's API (Alpaca provides free real-time data). Don't pay for data until you have a strategy worth running.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Verify Your Installation</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+<span class="kw">import</span> <span class="imp">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+<span class="kw">import</span> <span class="imp">yfinance</span> <span class="kw">as</span> <span class="var">yf</span>
+<span class="kw">import</span> <span class="imp">matplotlib.pyplot</span> <span class="kw">as</span> <span class="var">plt</span>
+
+<span class="fn">print</span>(<span class="str">f"pandas:     {pd.__version__}"</span>)
+<span class="fn">print</span>(<span class="str">f"numpy:      {np.__version__}"</span>)
+<span class="fn">print</span>(<span class="str">f"yfinance:   {yf.__version__}"</span>)
+<span class="fn">print</span>(<span class="str">f"matplotlib: {plt.matplotlib.__version__}"</span>)
+
+<span class="cm"># Quick smoke test: download 1 day of AAPL</span>
+<span class="var">test</span> = yf.<span class="fn">download</span>(<span class="str">"AAPL"</span>, period=<span class="str">"1d"</span>)
+<span class="fn">print</span>(<span class="str">f"\nSmoke test: {len(test)} rows downloaded"</span>)
+<span class="fn">print</span>(<span class="str">"All systems go!"</span>)</pre></div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 4: FIRST DATA PULL ==================== -->
+<div class="section-divider"><i class="fa-solid fa-download"></i> First Data Pull</div>
+
+<div id="first-pull" class="content-card">
+  <h2><i class="fa-solid fa-download" style="color:#d97706;"></i> Your First Data Pull: AAPL OHLCV</h2>
+
+  <p>Let's download real market data and understand its structure. We'll work with AAPL (Apple Inc.) — the most liquid stock on the planet, with clean data and no survivorship bias concerns.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Download AAPL Data</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">yfinance</span> <span class="kw">as</span> <span class="var">yf</span>
+<span class="kw">import</span> <span class="imp">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+
+<span class="cm"># Download 5 years of daily OHLCV data</span>
+<span class="var">aapl</span> = yf.<span class="fn">download</span>(
+    <span class="str">"AAPL"</span>,
+    start=<span class="str">"2021-01-01"</span>,
+    end=<span class="str">"2026-01-01"</span>,
+    auto_adjust=<span class="kw">True</span>  <span class="cm"># Adjust for splits and dividends</span>
+)
+
+<span class="cm"># What did we get?</span>
+<span class="fn">print</span>(<span class="str">f"Shape: {aapl.shape}"</span>)       <span class="cm"># (1258, 5) — ~252 trading days/year</span>
+<span class="fn">print</span>(<span class="str">f"Columns: {list(aapl.columns)}"</span>)
+<span class="fn">print</span>(<span class="str">f"Date range: {aapl.index[0]} to {aapl.index[-1]}"</span>)
+<span class="fn">print</span>(<span class="str">f"\nFirst 5 rows:"</span>)
+<span class="fn">print</span>(aapl.<span class="fn">head</span>())
+
+<span class="cm"># Output:</span>
+<span class="cm"># Shape: (1258, 5)</span>
+<span class="cm"># Columns: ['Open', 'High', 'Low', 'Close', 'Volume']</span>
+<span class="cm"># Date range: 2021-01-04 to 2025-12-31</span>
+<span class="cm">#</span>
+<span class="cm">#                  Open      High       Low     Close      Volume</span>
+<span class="cm"># Date</span>
+<span class="cm"># 2021-01-04   133.520    133.610   126.760   129.410   143301900</span>
+<span class="cm"># 2021-01-05   128.890    131.740   128.430   131.010    97664900</span>
+<span class="cm"># ...</span></pre></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Understanding OHLCV</h4>
+    <p><strong>O</strong>pen: First trade price of the day. <strong>H</strong>igh: Highest price reached. <strong>L</strong>ow: Lowest price reached. <strong>C</strong>lose: Last trade price — this is the most important for backtesting. <strong>V</strong>olume: Total shares traded. The <code>auto_adjust=True</code> flag adjusts historical prices for stock splits and dividends, so your backtest results are accurate. Always use adjusted data for backtesting.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Download Multiple Tickers</div>
+    <div class="code-content"><pre><span class="cm"># Download multiple tickers at once</span>
+<span class="var">tickers</span> = [<span class="str">"AAPL"</span>, <span class="str">"MSFT"</span>, <span class="str">"GOOGL"</span>, <span class="str">"AMZN"</span>, <span class="str">"NVDA"</span>,
+           <span class="str">"SPY"</span>, <span class="str">"QQQ"</span>, <span class="str">"GLD"</span>, <span class="str">"TLT"</span>, <span class="str">"BTC-USD"</span>]
+
+<span class="var">data</span> = yf.<span class="fn">download</span>(
+    tickers,
+    start=<span class="str">"2021-01-01"</span>,
+    end=<span class="str">"2026-01-01"</span>,
+    auto_adjust=<span class="kw">True</span>,
+    group_by=<span class="str">"ticker"</span>  <span class="cm"># Group columns by ticker</span>
+)
+
+<span class="cm"># Extract closing prices into a clean DataFrame</span>
+<span class="var">closes</span> = pd.<span class="fn">DataFrame</span>({
+    ticker: data[ticker][<span class="str">"Close"</span>]
+    <span class="kw">for</span> ticker <span class="kw">in</span> tickers
+})
+
+<span class="fn">print</span>(<span class="str">f"Tickers: {list(closes.columns)}"</span>)
+<span class="fn">print</span>(<span class="str">f"Shape: {closes.shape}"</span>)
+<span class="fn">print</span>(<span class="str">f"\nMissing values per ticker:"</span>)
+<span class="fn">print</span>(closes.<span class="fn">isnull</span>().<span class="fn">sum</span>())
+
+<span class="cm"># Forward-fill missing values (weekends/holidays for crypto)</span>
+<span class="var">closes</span> = closes.<span class="fn">ffill</span>().<span class="fn">dropna</span>()</pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Save Data Locally</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">os</span>
+
+<span class="cm"># Save to CSV for offline use (don't re-download every time)</span>
+os.<span class="fn">makedirs</span>(<span class="str">"data"</span>, exist_ok=<span class="kw">True</span>)
+
+<span class="cm"># Save individual ticker data</span>
+aapl.<span class="fn">to_csv</span>(<span class="str">"data/AAPL_daily.csv"</span>)
+
+<span class="cm"># Save multi-ticker closes</span>
+closes.<span class="fn">to_csv</span>(<span class="str">"data/universe_closes.csv"</span>)
+
+<span class="cm"># Load it back</span>
+<span class="var">aapl_loaded</span> = pd.<span class="fn">read_csv</span>(
+    <span class="str">"data/AAPL_daily.csv"</span>,
+    index_col=<span class="str">"Date"</span>,
+    parse_dates=<span class="kw">True</span>
+)
+
+<span class="fn">print</span>(<span class="str">f"Loaded {len(aapl_loaded)} rows from disk"</span>)</pre></div>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Rate Limiting</h4>
+    <p>yfinance scrapes Yahoo Finance. If you hammer it with requests, you'll get rate-limited or blocked. Best practice: download data once, save to CSV, and load from disk during development. Only re-download when you need fresh data. We'll build a proper data manager in Part 2.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5: DATA EXPLORATION ==================== -->
+<div class="section-divider"><i class="fa-solid fa-magnifying-glass-chart"></i> Data Exploration</div>
+
+<div id="exploration" class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass-chart" style="color:#d97706;"></i> Exploring Your Data</h2>
+
+  <p>Before building any strategy, understand your data. These basic statistics reveal the character of a stock — its volatility, trend, and trading behavior.</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Basic Statistics</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">numpy</span> <span class="kw">as</span> <span class="var">np</span>
+
+<span class="cm"># Daily returns</span>
+<span class="var">aapl</span>[<span class="str">"returns"</span>] = aapl[<span class="str">"Close"</span>].<span class="fn">pct_change</span>()
+
+<span class="cm"># Key statistics</span>
+<span class="var">stats</span> = {
+    <span class="str">"Total Return"</span>: <span class="str">f"{(aapl['Close'].iloc[-1] / aapl['Close'].iloc[0] - 1) * 100:.1f}%"</span>,
+    <span class="str">"Annualized Return"</span>: <span class="str">f"{aapl['returns'].mean() * 252 * 100:.1f}%"</span>,
+    <span class="str">"Annualized Vol"</span>: <span class="str">f"{aapl['returns'].std() * np.sqrt(252) * 100:.1f}%"</span>,
+    <span class="str">"Sharpe Ratio"</span>: <span class="str">f"{(aapl['returns'].mean() / aapl['returns'].std()) * np.sqrt(252):.2f}"</span>,
+    <span class="str">"Max Drawdown"</span>: <span class="str">f"{((aapl['Close'] / aapl['Close'].cummax()) - 1).min() * 100:.1f}%"</span>,
+    <span class="str">"Best Day"</span>: <span class="str">f"{aapl['returns'].max() * 100:.1f}%"</span>,
+    <span class="str">"Worst Day"</span>: <span class="str">f"{aapl['returns'].min() * 100:.1f}%"</span>,
+    <span class="str">"Avg Daily Volume"</span>: <span class="str">f"{aapl['Volume'].mean():,.0f}"</span>,
+    <span class="str">"% Positive Days"</span>: <span class="str">f"{(aapl['returns'] > 0).mean() * 100:.1f}%"</span>,
+}
+
+<span class="kw">for</span> key, val <span class="kw">in</span> stats.<span class="fn">items</span>():
+    <span class="fn">print</span>(<span class="str">f"{key:&lt;22} {val}"</span>)</pre></div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Sharpe Ratio</div>
+    Sharpe = <span class="formula-highlight">(R_p - R_f)</span> / <span class="formula-highlight">sigma_p</span> = (mean daily return / std daily return) x sqrt(<span class="formula-highlight">252</span>)
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Candlestick Chart with mplfinance</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">mplfinance</span> <span class="kw">as</span> <span class="var">mpf</span>
+
+<span class="cm"># Last 60 trading days — candlestick with volume</span>
+mpf.<span class="fn">plot</span>(
+    aapl.<span class="fn">tail</span>(<span class="num">60</span>),
+    type=<span class="str">"candle"</span>,
+    volume=<span class="kw">True</span>,
+    title=<span class="str">"AAPL — Last 60 Trading Days"</span>,
+    style=<span class="str">"charles"</span>,
+    figsize=(<span class="num">14</span>, <span class="num">8</span>),
+    mav=(<span class="num">20</span>,),  <span class="cm"># 20-day moving average</span>
+    savefig=<span class="str">"charts/aapl_candles.png"</span>
+)</pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Return Distribution</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">matplotlib.pyplot</span> <span class="kw">as</span> <span class="var">plt</span>
+<span class="kw">from</span> <span class="imp">scipy</span> <span class="kw">import</span> <span class="var">stats</span>
+
+<span class="var">fig</span>, <span class="var">axes</span> = plt.<span class="fn">subplots</span>(<span class="num">1</span>, <span class="num">2</span>, figsize=(<span class="num">14</span>, <span class="num">5</span>))
+
+<span class="cm"># Histogram of daily returns</span>
+axes[<span class="num">0</span>].<span class="fn">hist</span>(aapl[<span class="str">"returns"</span>].<span class="fn">dropna</span>(), bins=<span class="num">100</span>, alpha=<span class="num">0.7</span>,
+           color=<span class="str">"#d97706"</span>, edgecolor=<span class="str">"white"</span>)
+axes[<span class="num">0</span>].<span class="fn">axvline</span>(<span class="num">0</span>, color=<span class="str">"red"</span>, linestyle=<span class="str">"--"</span>, alpha=<span class="num">0.5</span>)
+axes[<span class="num">0</span>].<span class="fn">set_title</span>(<span class="str">"Daily Return Distribution"</span>)
+axes[<span class="num">0</span>].<span class="fn">set_xlabel</span>(<span class="str">"Daily Return"</span>)
+
+<span class="cm"># QQ plot — are returns normally distributed?</span>
+stats.<span class="fn">probplot</span>(aapl[<span class="str">"returns"</span>].<span class="fn">dropna</span>(), plot=axes[<span class="num">1</span>])
+axes[<span class="num">1</span>].<span class="fn">set_title</span>(<span class="str">"QQ Plot — Normal Distribution Test"</span>)
+
+plt.<span class="fn">tight_layout</span>()
+plt.<span class="fn">savefig</span>(<span class="str">"charts/aapl_returns.png"</span>, dpi=<span class="num">150</span>)
+plt.<span class="fn">show</span>()
+
+<span class="cm"># Spoiler: returns are NOT normally distributed</span>
+<span class="cm"># Fat tails (kurtosis > 3) mean extreme moves are more likely than a normal</span>
+<span class="cm"># distribution predicts. This is why risk management (Part 4) matters.</span>
+<span class="fn">print</span>(<span class="str">f"Skewness: {aapl['returns'].skew():.3f}"</span>)   <span class="cm"># Negative = more crash risk</span>
+<span class="fn">print</span>(<span class="str">f"Kurtosis: {aapl['returns'].kurtosis():.3f}"</span>)  <span class="cm"># >3 = fat tails</span></pre></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Fat Tails Matter</h4>
+    <p>Stock returns are NOT normally distributed. They have <strong>fat tails</strong> (extreme moves happen more often than a bell curve predicts) and <strong>negative skew</strong> (crashes are bigger than rallies). A "6-sigma" event should happen once every 1.5 million years under a normal distribution — but in real markets, they happen every few years. This is why position sizing and stop losses (Part 4) are non-negotiable.</p>
+  </div>
+
+  <!-- ECharts: AAPL Price Chart -->
+  <div id="priceChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <!-- ECharts: Returns Distribution -->
+  <div id="returnsChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ==================== SECTION 6: PROJECT STRUCTURE ==================== -->
+<div class="section-divider"><i class="fa-solid fa-folder-tree"></i> Project Structure</div>
+
+<div id="project-structure" class="content-card">
+  <h2><i class="fa-solid fa-folder-tree" style="color:#d97706;"></i> Structuring Your Quant Project</h2>
+
+  <p>Good project structure separates research from production, prevents data leakage, and makes collaboration easier. Here's the structure we'll build throughout this series:</p>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-folder-tree"></i> Project Layout</div>
+    <div class="code-content"><pre><span class="str">quant-lab/</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">data/</span>                    <span class="cm"># Raw and processed market data</span>
+<span class="cm">|   |--</span> raw/                 <span class="cm"># Original downloads (never modify)</span>
+<span class="cm">|   |--</span> processed/           <span class="cm"># Cleaned, with indicators added</span>
+<span class="cm">|   |--</span> cache/               <span class="cm"># yfinance cache to avoid re-downloads</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">strategies/</span>              <span class="cm"># Strategy implementations</span>
+<span class="cm">|   |--</span> base.py              <span class="cm"># Abstract strategy class</span>
+<span class="cm">|   |--</span> sma_crossover.py     <span class="cm"># Part 2: SMA 20/50</span>
+<span class="cm">|   |--</span> rsi_reversion.py     <span class="cm"># Part 2: RSI mean reversion</span>
+<span class="cm">|   |--</span> multi_factor.py      <span class="cm"># Part 3: Combined signals</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">backtests/</span>               <span class="cm"># Backtesting engine</span>
+<span class="cm">|   |--</span> engine.py            <span class="cm"># Core backtest engine (Part 2)</span>
+<span class="cm">|   |--</span> metrics.py           <span class="cm"># Sharpe, drawdown, etc.</span>
+<span class="cm">|   |--</span> results/             <span class="cm"># Saved backtest results (JSON/CSV)</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">signals/</span>                 <span class="cm"># Signal generation (Part 3)</span>
+<span class="cm">|   |--</span> momentum.py          <span class="cm"># ROC, RSI, MACD, ADX</span>
+<span class="cm">|   |--</span> reversion.py         <span class="cm"># Bollinger, z-score, pairs</span>
+<span class="cm">|   |--</span> volume.py            <span class="cm"># OBV, VWAP, spikes</span>
+<span class="cm">|   |--</span> composite.py         <span class="cm"># Multi-factor scoring</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">risk/</span>                    <span class="cm"># Risk management (Part 4)</span>
+<span class="cm">|   |--</span> position_sizer.py    <span class="cm"># Kelly, fixed fractional</span>
+<span class="cm">|   |--</span> portfolio.py         <span class="cm"># Correlation, optimization</span>
+<span class="cm">|   |--</span> var.py               <span class="cm"># VaR, Expected Shortfall</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">live/</span>                    <span class="cm"># Live trading (Part 5)</span>
+<span class="cm">|   |--</span> executor.py          <span class="cm"># Order execution via Alpaca</span>
+<span class="cm">|   |--</span> monitor.py           <span class="cm"># Real-time PnL tracking</span>
+<span class="cm">|   |--</span> logger.py            <span class="cm"># Trade journal</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">ml/</span>                      <span class="cm"># Machine learning (Part 6)</span>
+<span class="cm">|   |--</span> features.py          <span class="cm"># Feature engineering</span>
+<span class="cm">|   |--</span> models.py            <span class="cm"># RF, XGBoost, LSTM</span>
+<span class="cm">|   |--</span> evaluation.py        <span class="cm"># Out-of-sample testing</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">notebooks/</span>               <span class="cm"># Jupyter notebooks for exploration</span>
+<span class="cm">|   |--</span> 01_data_exploration.ipynb
+<span class="cm">|   |--</span> 02_backtest_sma.ipynb
+<span class="cm">|   |--</span> ...
+<span class="cm">|</span>
+<span class="cm">|--</span> <span class="str">config/</span>                  <span class="cm"># Configuration</span>
+<span class="cm">|   |--</span> settings.py          <span class="cm"># Constants, paths</span>
+<span class="cm">|   |--</span> universe.py          <span class="cm"># Ticker lists</span>
+<span class="cm">|</span>
+<span class="cm">|--</span> .env                     <span class="cm"># API keys (NEVER commit!)</span>
+<span class="cm">|--</span> .gitignore               <span class="cm"># Ignore .env, data/cache/, __pycache__</span>
+<span class="cm">|--</span> requirements.txt         <span class="cm"># Pinned dependencies</span>
+<span class="cm">|--</span> README.md</pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> Python — Scaffold the Project</div>
+    <div class="code-content"><pre><span class="kw">import</span> <span class="imp">os</span>
+
+<span class="var">dirs</span> = [
+    <span class="str">"data/raw"</span>, <span class="str">"data/processed"</span>, <span class="str">"data/cache"</span>,
+    <span class="str">"strategies"</span>, <span class="str">"backtests/results"</span>,
+    <span class="str">"signals"</span>, <span class="str">"risk"</span>, <span class="str">"live"</span>, <span class="str">"ml"</span>,
+    <span class="str">"notebooks"</span>, <span class="str">"config"</span>, <span class="str">"charts"</span>
+]
+
+<span class="kw">for</span> d <span class="kw">in</span> dirs:
+    os.<span class="fn">makedirs</span>(d, exist_ok=<span class="kw">True</span>)
+    <span class="cm"># Create __init__.py for Python packages</span>
+    <span class="kw">if</span> d <span class="kw">not in</span> [<span class="str">"data/raw"</span>, <span class="str">"data/processed"</span>, <span class="str">"data/cache"</span>,
+                  <span class="str">"notebooks"</span>, <span class="str">"charts"</span>, <span class="str">"backtests/results"</span>]:
+        <span class="kw">with</span> <span class="fn">open</span>(os.path.<span class="fn">join</span>(d, <span class="str">"__init__.py"</span>), <span class="str">"w"</span>) <span class="kw">as</span> f:
+            f.<span class="fn">write</span>(<span class="str">""</span>)
+
+<span class="fn">print</span>(<span class="str">"Project scaffolded!"</span>)</pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-solid fa-file-code"></i> .gitignore</div>
+    <div class="code-content"><pre><span class="cm"># Secrets</span>
+.env
+*.key
+
+<span class="cm"># Data (too large for git)</span>
+data/raw/
+data/cache/
+*.csv
+
+<span class="cm"># Python</span>
+__pycache__/
+*.pyc
+.pytest_cache/
+
+<span class="cm"># Jupyter checkpoints</span>
+.ipynb_checkpoints/
+
+<span class="cm"># IDE</span>
+.vscode/
+.idea/
+
+<span class="cm"># OS</span>
+.DS_Store
+Thumbs.db</pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> config/settings.py — Central Configuration</div>
+    <div class="code-content"><pre><span class="kw">from</span> <span class="imp">pathlib</span> <span class="kw">import</span> <span class="var">Path</span>
+<span class="kw">from</span> <span class="imp">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">import</span> <span class="imp">os</span>
+
+<span class="fn">load_dotenv</span>()
+
+<span class="cm"># Paths</span>
+<span class="var">ROOT</span> = Path(__file__).parent.parent
+<span class="var">DATA_RAW</span> = ROOT / <span class="str">"data"</span> / <span class="str">"raw"</span>
+<span class="var">DATA_PROCESSED</span> = ROOT / <span class="str">"data"</span> / <span class="str">"processed"</span>
+<span class="var">RESULTS</span> = ROOT / <span class="str">"backtests"</span> / <span class="str">"results"</span>
+<span class="var">CHARTS</span> = ROOT / <span class="str">"charts"</span>
+
+<span class="cm"># Trading constants</span>
+<span class="var">TRADING_DAYS_PER_YEAR</span> = <span class="num">252</span>
+<span class="var">RISK_FREE_RATE</span> = <span class="num">0.05</span>      <span class="cm"># Current 1Y Treasury ~5%</span>
+<span class="var">DEFAULT_COMMISSION</span> = <span class="num">0.001</span>  <span class="cm"># 10 bps per trade</span>
+<span class="var">DEFAULT_SLIPPAGE</span> = <span class="num">0.0005</span>   <span class="cm"># 5 bps slippage</span>
+
+<span class="cm"># API Keys (from .env)</span>
+<span class="var">ALPACA_KEY</span> = os.<span class="fn">getenv</span>(<span class="str">"ALPACA_API_KEY"</span>)
+<span class="var">ALPACA_SECRET</span> = os.<span class="fn">getenv</span>(<span class="str">"ALPACA_SECRET_KEY"</span>)
+<span class="var">ALPACA_BASE_URL</span> = os.<span class="fn">getenv</span>(<span class="str">"ALPACA_BASE_URL"</span>, <span class="str">"https://paper-api.alpaca.markets"</span>)</pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label"><i class="fa-brands fa-python"></i> config/universe.py — Ticker Universe</div>
+    <div class="code-content"><pre><span class="cm"># Define your investment universe</span>
+<span class="cm"># Start small — you can always add more later</span>
+
+<span class="var">MEGA_CAPS</span> = [<span class="str">"AAPL"</span>, <span class="str">"MSFT"</span>, <span class="str">"GOOGL"</span>, <span class="str">"AMZN"</span>, <span class="str">"NVDA"</span>, <span class="str">"META"</span>, <span class="str">"TSLA"</span>]
+<span class="var">INDICES</span> = [<span class="str">"SPY"</span>, <span class="str">"QQQ"</span>, <span class="str">"DIA"</span>, <span class="str">"IWM"</span>]
+<span class="var">SECTORS</span> = [<span class="str">"XLF"</span>, <span class="str">"XLE"</span>, <span class="str">"XLK"</span>, <span class="str">"XLV"</span>, <span class="str">"XLI"</span>, <span class="str">"XLC"</span>, <span class="str">"XLRE"</span>]
+<span class="var">SAFE_HAVEN</span> = [<span class="str">"GLD"</span>, <span class="str">"TLT"</span>, <span class="str">"SHY"</span>]
+<span class="var">CRYPTO</span> = [<span class="str">"BTC-USD"</span>, <span class="str">"ETH-USD"</span>]
+
+<span class="cm"># Full universe for backtesting</span>
+<span class="var">UNIVERSE</span> = MEGA_CAPS + INDICES + SECTORS + SAFE_HAVEN + CRYPTO</pre></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why Separate Raw and Processed Data?</h4>
+    <p>The <code>data/raw/</code> directory holds original downloads — never modify these files. The <code>data/processed/</code> directory holds data with added indicators, cleaned NaN values, and derived features. This separation is crucial: if you discover a bug in your feature engineering, you can reprocess from raw data without re-downloading. It also prevents a subtle form of data leakage.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 7: WHAT'S NEXT ==================== -->
+<div class="section-divider"><i class="fa-solid fa-road"></i> Roadmap</div>
+
+<div id="roadmap" class="content-card">
+  <h2><i class="fa-solid fa-road" style="color:#d97706;"></i> Series Roadmap</h2>
+
+  <p>Here's the complete journey from zero to a live quantitative trading system:</p>
+
+  <div class="step-grid">
+    <div class="step-card" style="border-top-color:#d97706; opacity:1;">
+      <div class="step-number">1</div>
+      <h4>Setup</h4>
+      <p>Environment, libraries, data, project structure. <strong>You are here.</strong></p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);">2</div>
+      <h4>Backtest</h4>
+      <p>Build a backtest engine from scratch. SMA crossover + RSI strategies.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #10b981, #059669);">3</div>
+      <h4>Signals</h4>
+      <p>Momentum, mean reversion, volume, volatility. Multi-factor models.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #ef4444, #dc2626);">4</div>
+      <h4>Risk</h4>
+      <p>Position sizing, Kelly criterion, VaR, drawdown control, portfolio optimization.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #9333ea, #7c3aed);">5</div>
+      <h4>Live</h4>
+      <p>Alpaca API, paper trading, execution loop, monitoring, going live.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg, #06b6d4, #0891b2);">6</div>
+      <h4>ML</h4>
+      <p>Random Forest, XGBoost, feature engineering, avoiding overfitting.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAKEAWAY ==================== -->
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-check-circle"></i> Part 1 Checklist</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Python 3.11+ installed via conda or venv</li>
+    <li><i class="fa-solid fa-check"></i> All libraries installed and verified (pandas, numpy, yfinance, matplotlib, TA-Lib)</li>
+    <li><i class="fa-solid fa-check"></i> Downloaded AAPL OHLCV data and saved to CSV</li>
+    <li><i class="fa-solid fa-check"></i> Computed basic statistics: returns, volatility, Sharpe, drawdown</li>
+    <li><i class="fa-solid fa-check"></i> Created your first candlestick chart and return distribution plot</li>
+    <li><i class="fa-solid fa-check"></i> Project directory scaffolded with proper structure</li>
+    <li><i class="fa-solid fa-check"></i> Configuration files ready (settings.py, universe.py, .env, .gitignore)</li>
+  </ul>
+</div>
+
+<!-- ==================== NEXT CTA ==================== -->
+<a href="/series/quant-trading-python/part2-backtest/" class="next-cta">
+  <div>
+    <div class="next-label">Next: Part 2 of 6</div>
+    <div class="next-title">Backtesting Engine — Test Before You Risk</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<!-- ==================== SERIES BAR BOTTOM ==================== -->
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Quant Trading in Python</span><div class="series-steps"><a href="/series/quant-trading-python/part1-setup/" class="series-step current" title="Setup"><span class="series-num">1</span><span class="series-label">Setup</span></a><a href="/series/quant-trading-python/part2-backtest/" class="series-step" title="Backtest"><span class="series-num">2</span><span class="series-label">Backtest</span></a><a href="/series/quant-trading-python/part3-signals/" class="series-step" title="Signals"><span class="series-num">3</span><span class="series-label">Signals</span></a><a href="/series/quant-trading-python/part4-risk/" class="series-step" title="Risk"><span class="series-num">4</span><span class="series-label">Risk</span></a><a href="/series/quant-trading-python/part5-live/" class="series-step" title="Live"><span class="series-num">5</span><span class="series-label">Live</span></a><a href="/series/quant-trading-python/part6-ml/" class="series-step" title="ML"><span class="series-num">6</span><span class="series-label">ML</span></a></div><span class="series-counter">1/6</span><a href="/series/quant-trading-python/part2-backtest/" class="series-arrow" title="Backtest"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ==================== ECHARTS ==================== -->
+<script>
+// Library Ecosystem Map
+var ecoChart = echarts.init(document.getElementById('ecosystemChart'));
+ecoChart.setOption({
+  title: { text: 'Python Quant Ecosystem', left: 'center', textStyle: { fontSize: 16, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+  series: [{
+    type: 'treemap',
+    width: '95%',
+    height: '80%',
+    top: 50,
+    label: { show: true, formatter: '{b}\n{c}', fontSize: 11, fontWeight: 600 },
+    itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
+    levels: [{ itemStyle: { borderColor: '#334155', borderWidth: 3, gapWidth: 3 }, upperLabel: { show: false } }],
+    data: [
+      { name: 'pandas', value: 95, itemStyle: { color: '#d97706' } },
+      { name: 'numpy', value: 90, itemStyle: { color: '#b45309' } },
+      { name: 'yfinance', value: 70, itemStyle: { color: '#2563eb' } },
+      { name: 'TA-Lib', value: 75, itemStyle: { color: '#10b981' } },
+      { name: 'matplotlib', value: 80, itemStyle: { color: '#9333ea' } },
+      { name: 'scikit-learn', value: 85, itemStyle: { color: '#ef4444' } },
+      { name: 'XGBoost', value: 65, itemStyle: { color: '#f97316' } },
+      { name: 'scipy', value: 70, itemStyle: { color: '#06b6d4' } },
+      { name: 'alpaca-api', value: 55, itemStyle: { color: '#64748b' } },
+      { name: 'plotly', value: 60, itemStyle: { color: '#ec4899' } },
+      { name: 'statsmodels', value: 50, itemStyle: { color: '#84cc16' } },
+      { name: 'mplfinance', value: 45, itemStyle: { color: '#14b8a6' } }
+    ]
+  }]
+});
+
+// AAPL Price Chart (simulated data for illustration)
+var priceChart = echarts.init(document.getElementById('priceChart'));
+var dates = [];
+var prices = [];
+var volumes = [];
+var price = 130;
+for (var i = 0; i < 1258; i++) {
+  var d = new Date(2021, 0, 4);
+  d.setDate(d.getDate() + Math.floor(i * 365 * 5 / 1258));
+  dates.push(d.toISOString().split('T')[0]);
+  price = price * (1 + (Math.random() - 0.48) * 0.025);
+  if (price < 100) price = 100;
+  if (price > 260) price = 255;
+  prices.push(Math.round(price * 100) / 100);
+  volumes.push(Math.floor(50000000 + Math.random() * 100000000));
+}
+priceChart.setOption({
+  title: { text: 'AAPL — 5 Year Daily Close', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  grid: [
+    { left: 60, right: 30, top: 50, height: '55%' },
+    { left: 60, right: 30, top: '75%', height: '15%' }
+  ],
+  xAxis: [
+    { type: 'category', data: dates, gridIndex: 0, axisLabel: { show: false } },
+    { type: 'category', data: dates, gridIndex: 1, axisLabel: { fontSize: 10, interval: 250 } }
+  ],
+  yAxis: [
+    { type: 'value', gridIndex: 0, axisLabel: { formatter: '${value}' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    { type: 'value', gridIndex: 1, axisLabel: { formatter: function(v) { return (v/1e6).toFixed(0)+'M'; }, fontSize: 9 }, splitLine: { show: false } }
+  ],
+  series: [
+    { name: 'Close', type: 'line', data: prices, xAxisIndex: 0, yAxisIndex: 0, smooth: true, lineStyle: { color: '#d97706', width: 2 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(217,119,6,0.3)' }, { offset: 1, color: 'rgba(217,119,6,0.02)' }] } }, symbol: 'none' },
+    { name: 'Volume', type: 'bar', data: volumes, xAxisIndex: 1, yAxisIndex: 1, itemStyle: { color: 'rgba(217,119,6,0.3)' } }
+  ]
+});
+
+// Returns Distribution
+var retChart = echarts.init(document.getElementById('returnsChart'));
+var retBins = [];
+var retCounts = [];
+for (var b = -6; b <= 6; b += 0.5) {
+  retBins.push((b).toFixed(1) + '%');
+  var count = Math.round(300 * Math.exp(-b * b / 3));
+  if (Math.abs(b) > 4) count = Math.round(count * 2.5);
+  retCounts.push(count);
+}
+retChart.setOption({
+  title: { text: 'Daily Return Distribution (Fat Tails)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  xAxis: { type: 'category', data: retBins, axisLabel: { fontSize: 9, interval: 3 } },
+  yAxis: { type: 'value', name: 'Frequency', splitLine: { lineStyle: { color: '#f1f5f9' } } },
+  series: [{
+    type: 'bar',
+    data: retCounts.map(function(v, i) {
+      var pct = parseFloat(retBins[i]);
+      return { value: v, itemStyle: { color: Math.abs(pct) > 3 ? '#ef4444' : '#d97706', opacity: Math.abs(pct) > 3 ? 0.9 : 0.6 } };
+    }),
+    barWidth: '80%'
+  }],
+  graphic: [{ type: 'text', left: '75%', top: 60, style: { text: 'Fat tails:\nmore extreme\nmoves than\nnormal predicts', fontSize: 11, fill: '#ef4444', fontWeight: 600 } }]
+});
+
+// Responsive
+window.addEventListener('resize', function() {
+  ecoChart.resize();
+  priceChart.resize();
+  retChart.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

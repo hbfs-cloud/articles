@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,formation,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Building a Filter Language — Your Scanner's Brain | Build a Stock Scanner — Part 2/6 | Market Watch</title>
+ <meta name="description" content="Build a Stock Scanner series — Part 2/6: Design a DSL for scanner filters. Build expression evaluators, implement 4 classic strategies (contraction, momentum, breakout, mean reversion), and test filter pass rates.">
+ <meta property="og:title" content="Building a Filter Language | Build a Scanner 2/6 | Market Watch">
+ <meta property="og:description" content="Why hardcoded filters fail. Build a flexible DSL with 4 strategies: volatility contraction, momentum, breakout, and mean reversion.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/build-a-scanner/part2-dsl-filters/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b91c1c; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+
+ .code-block { background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; }
+ .code-block pre { margin:0; color:#e2e8f0; font-family:'JetBrains Mono','Fira Code',monospace; font-size:0.85rem; line-height:1.6; }
+ .code-label { display:inline-block; background:#dc2626; color:white; padding:0.2rem 0.75rem; border-radius:6px 6px 0 0; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:-1px; position:relative; z-index:1; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#f87171; }
+ .code-block .string { color:#34d399; }
+ .code-block .number { color:#fbbf24; }
+ .code-block .function { color:#60a5fa; }
+ .code-block .decorator { color:#c084fc; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.2rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#f87171; }
+
+ .strategy-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-left:4px solid #dc2626; }
+ .strategy-card h4 { margin-top:0; color:#0f172a; font-size:1.1rem; }
+ .strategy-card .strategy-tag { display:inline-block; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase; margin-bottom:0.75rem; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-crosshairs"></i> Build a Stock Scanner Series — Part 2 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Building a Filter Language — Your Scanner's Brain</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">Hardcoded filters break every time the market changes. A DSL (Domain-Specific Language) lets you write, swap, and combine filter expressions on the fly. We build one from scratch with 4 battle-tested strategies.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-code"></i> DSL Architecture</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-filter"></i> 4 Strategies</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Technical Indicators</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-flask"></i> Pass Rate Testing</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part1-philosophy/" class="series-arrow" title="Philosophy"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step current" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">2/6</span><a href="/series/build-a-scanner/part3-scoring/" class="series-arrow" title="Scoring"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why-dsl" class="fnav-item" data-section="why-dsl"><i class="fas fa-question-circle"></i><span>Why a DSL?</span></a><a href="#vocabulary" class="fnav-item" data-section="vocabulary"><i class="fas fa-book"></i><span>Filter Vocabulary</span></a><a href="#evaluator" class="fnav-item" data-section="evaluator"><i class="fas fa-cogs"></i><span>Expression Evaluator</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fas fa-chess"></i><span>4 Strategies</span></a><a href="#testing" class="fnav-item" data-section="testing"><i class="fas fa-vial"></i><span>Testing Filters</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- WHY A DSL                                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="why-dsl"><i class="fa-solid fa-question-circle" style="color:#dc2626;"></i> Why a DSL?</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-code" style="color:#dc2626;"></i> Why Hardcoded Filters Suck</h2>
+
+  <p>Consider how most people build a screener in Python:</p>
+
+  <div class="code-label">Python — The Hardcoded Approach</div>
+  <div class="code-block"><pre><span class="comment"># This works... until it doesn't</span>
+<span class="keyword">def</span> <span class="function">screen_oversold</span>(stock):
+    <span class="keyword">return</span> (
+        stock.rsi_14 < <span class="number">30</span>
+        <span class="keyword">and</span> stock.volume > stock.avg_volume_20 * <span class="number">1.5</span>
+        <span class="keyword">and</span> stock.close > stock.ema_200
+    )
+
+<span class="comment"># New strategy? Write another function.</span>
+<span class="comment"># Tweak thresholds? Edit the code and redeploy.</span>
+<span class="comment"># A/B test two filter sets? Copy-paste and pray.</span></pre>
+  </div>
+
+  <p>This approach has three fatal problems:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Problem</th><th>Impact</th><th>DSL Solution</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Rigid</strong></td>
+        <td>Every threshold change requires code modification and redeployment</td>
+        <td>Filters are strings — change them via config file, database, or API</td>
+      </tr>
+      <tr>
+        <td><strong>Non-composable</strong></td>
+        <td>Combining filters requires writing new functions for every combination</td>
+        <td>Expressions combine naturally: <code>filter_a AND filter_b</code></td>
+      </tr>
+      <tr>
+        <td><strong>Not regime-swappable</strong></td>
+        <td>Cannot change strategy weights at runtime based on market conditions</td>
+        <td>Store filter sets per regime, activate the right one each morning</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>A DSL (Domain-Specific Language) solves all three. Instead of writing Python functions, you write <strong>expressions</strong> that get evaluated against each stock's data. The expressions are just strings — you can store them in config files, swap them at runtime, and combine them programmatically.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">DSL Expression Example</div>
+    <span class="formula-highlight">rsi</span>(14) &lt; 30 <span class="formula-highlight">AND</span> volume &gt; <span class="formula-highlight">avg_vol</span>(20) * 1.5 <span class="formula-highlight">AND</span> close &gt; <span class="formula-highlight">ema</span>(200)
+  </div>
+
+  <p>This expression is readable, testable, and — critically — <strong>swappable</strong>. You can have a JSON file with four strategy definitions, each containing a filter expression. Every morning, the regime detector picks which strategies to weight heavily, and the scanner loads the corresponding filter expressions. No code changes required.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- FILTER VOCABULARY                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="vocabulary"><i class="fa-solid fa-book" style="color:#2563eb;"></i> Filter Vocabulary</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-book" style="color:#2563eb;"></i> Designing Your Filter Vocabulary</h2>
+
+  <p>Before building the evaluator, you need to define what your DSL can express. Think of this as the "dictionary" of your filter language. Every variable and function you support must be computable from your data.</p>
+
+  <h3>Price Series Variables</h3>
+  <table class="compare-table">
+    <thead><tr><th>Variable</th><th>Description</th><th>Computation</th></tr></thead>
+    <tbody>
+      <tr><td><code>close</code></td><td>Latest adjusted close price</td><td>Direct from data</td></tr>
+      <tr><td><code>open</code></td><td>Latest open price</td><td>Direct from data</td></tr>
+      <tr><td><code>high</code></td><td>Latest session high</td><td>Direct from data</td></tr>
+      <tr><td><code>low</code></td><td>Latest session low</td><td>Direct from data</td></tr>
+      <tr><td><code>volume</code></td><td>Latest session volume</td><td>Direct from data</td></tr>
+      <tr><td><code>typical</code></td><td>Typical price: (H+L+C)/3</td><td>(high + low + close) / 3</td></tr>
+      <tr><td><code>range_pct</code></td><td>Daily range as % of close</td><td>(high - low) / close</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Moving Averages & Crossovers</h3>
+  <table class="compare-table">
+    <thead><tr><th>Function</th><th>Description</th><th>Parameters</th></tr></thead>
+    <tbody>
+      <tr><td><code>ema(N)</code></td><td>Exponential Moving Average</td><td>N = period (20, 50, 200)</td></tr>
+      <tr><td><code>sma(N)</code></td><td>Simple Moving Average</td><td>N = period</td></tr>
+      <tr><td><code>ema_cross_up(fast, slow)</code></td><td>EMA fast just crossed above slow</td><td>fast=20, slow=50 typical</td></tr>
+      <tr><td><code>ema_cross_down(fast, slow)</code></td><td>EMA fast just crossed below slow</td><td>Same</td></tr>
+      <tr><td><code>price_above_ema(N)</code></td><td>Close &gt; EMA(N)</td><td>Convenience alias</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Momentum & Oscillators</h3>
+  <table class="compare-table">
+    <thead><tr><th>Function</th><th>Description</th><th>Typical Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>rsi(N)</code></td><td>Relative Strength Index</td><td>&lt;30 oversold, &gt;70 overbought</td></tr>
+      <tr><td><code>macd_hist()</code></td><td>MACD histogram value</td><td>Positive = bullish momentum</td></tr>
+      <tr><td><code>adx(N)</code></td><td>Average Directional Index</td><td>&gt;25 trending, &lt;20 ranging</td></tr>
+      <tr><td><code>roc(N)</code></td><td>Rate of Change (N bars)</td><td>Momentum magnitude</td></tr>
+      <tr><td><code>stoch_k(N)</code></td><td>Stochastic %K</td><td>&lt;20 oversold, &gt;80 overbought</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Volatility</h3>
+  <table class="compare-table">
+    <thead><tr><th>Function</th><th>Description</th><th>Why It Matters</th></tr></thead>
+    <tbody>
+      <tr><td><code>atr(N)</code></td><td>Average True Range</td><td>Absolute volatility for stop placement</td></tr>
+      <tr><td><code>atr_pct(N)</code></td><td>ATR as % of price</td><td>Normalized volatility for comparison across stocks</td></tr>
+      <tr><td><code>bbw(N)</code></td><td>Bollinger Band Width</td><td>Low = contraction (pre-breakout), High = expansion</td></tr>
+      <tr><td><code>bb_upper(N)</code></td><td>Upper Bollinger Band</td><td>Resistance zone</td></tr>
+      <tr><td><code>bb_lower(N)</code></td><td>Lower Bollinger Band</td><td>Support zone</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Volume Analysis</h3>
+  <table class="compare-table">
+    <thead><tr><th>Function</th><th>Description</th><th>Signal</th></tr></thead>
+    <tbody>
+      <tr><td><code>avg_vol(N)</code></td><td>Average volume over N days</td><td>Baseline for spike detection</td></tr>
+      <tr><td><code>vol_ratio(N)</code></td><td>volume / avg_vol(N)</td><td>&gt;1.5 = notable, &gt;2.0 = spike</td></tr>
+      <tr><td><code>obv_slope(N)</code></td><td>On-Balance Volume trend</td><td>Positive = accumulation</td></tr>
+      <tr><td><code>vwap()</code></td><td>Volume-Weighted Avg Price</td><td>Above VWAP = bullish intraday</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Extremes & Patterns</h3>
+  <table class="compare-table">
+    <thead><tr><th>Function</th><th>Description</th><th>Use Case</th></tr></thead>
+    <tbody>
+      <tr><td><code>highest(series, N)</code></td><td>Highest value of series over N bars</td><td>Breakout detection</td></tr>
+      <tr><td><code>lowest(series, N)</code></td><td>Lowest value of series over N bars</td><td>Support / breakdown</td></tr>
+      <tr><td><code>pct_from_high(N)</code></td><td>% below N-bar high</td><td>Pullback depth</td></tr>
+      <tr><td><code>pct_from_low(N)</code></td><td>% above N-bar low</td><td>Recovery strength</td></tr>
+      <tr><td><code>near_breakout(N, pct)</code></td><td>Within pct% of N-bar high</td><td>Pre-breakout detection</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Context Variables</h3>
+  <table class="compare-table">
+    <thead><tr><th>Variable</th><th>Description</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><code>sector</code></td><td>GICS sector name</td><td>Reference data</td></tr>
+      <tr><td><code>market_cap</code></td><td>Market capitalization</td><td>Quote data</td></tr>
+      <tr><td><code>days_to_earnings</code></td><td>Trading days until next earnings</td><td>Calendar</td></tr>
+      <tr><td><code>avg_spread_pct</code></td><td>Average bid-ask spread %</td><td>Quote data</td></tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: Variable Categories -->
+  <div id="chart-vocabulary" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- EXPRESSION EVALUATOR                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="evaluator"><i class="fa-solid fa-cogs" style="color:#9333ea;"></i> Building the Expression Evaluator</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-cogs" style="color:#9333ea;"></i> From String to Signal</h2>
+
+  <p>The evaluator is the engine that takes a filter expression (a string) and evaluates it to True or False for each stock. There are two approaches:</p>
+
+  <h3>Approach 1: Safe Eval with Pandas</h3>
+  <p>The simplest approach uses Python's <code>pandas.eval()</code> or <code>numexpr</code> for fast, safe evaluation of mathematical expressions against DataFrames.</p>
+
+  <div class="code-label">Python — Pandas Eval Approach</div>
+  <div class="code-block"><pre><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="keyword">class</span> <span class="function">IndicatorEngine</span>:
+    <span class="string">"""Pre-compute all indicators for the universe."""</span>
+
+    <span class="keyword">def</span> <span class="function">compute</span>(self, df):
+        <span class="string">"""df: DataFrame with OHLCV columns, one row per stock (latest bar).
+        Returns DataFrame with all indicator columns added."""</span>
+
+        <span class="comment"># Moving Averages (pre-computed from bar history)</span>
+        <span class="comment"># These would be computed from full history, stored as latest value</span>
+        <span class="comment"># df['ema_20'], df['ema_50'], df['ema_200'] already present</span>
+
+        <span class="comment"># RSI</span>
+        <span class="comment"># df['rsi_14'] already computed from bar history</span>
+
+        <span class="comment"># Bollinger Band Width</span>
+        df[<span class="string">'bbw_20'</span>] = (df[<span class="string">'bb_upper_20'</span>] - df[<span class="string">'bb_lower_20'</span>]) / df[<span class="string">'sma_20'</span>]
+
+        <span class="comment"># ATR as percentage of price</span>
+        df[<span class="string">'atr_pct_14'</span>] = df[<span class="string">'atr_14'</span>] / df[<span class="string">'close'</span>]
+
+        <span class="comment"># Volume ratio</span>
+        df[<span class="string">'vol_ratio_20'</span>] = df[<span class="string">'volume'</span>] / df[<span class="string">'avg_vol_20'</span>]
+
+        <span class="comment"># Breakout proximity</span>
+        df[<span class="string">'pct_from_high_20'</span>] = (df[<span class="string">'highest_20'</span>] - df[<span class="string">'close'</span>]) / df[<span class="string">'highest_20'</span>]
+
+        <span class="keyword">return</span> df
+
+
+<span class="keyword">class</span> <span class="function">FilterEvaluator</span>:
+    <span class="string">"""Evaluate DSL expressions against stock data."""</span>
+
+    <span class="keyword">def</span> <span class="function">evaluate</span>(self, df, expression):
+        <span class="string">"""Evaluate a filter expression.
+
+        expression: e.g. 'rsi_14 < 30 and vol_ratio_20 > 1.5'
+        Returns: boolean Series (True for stocks that pass)
+        """</span>
+        <span class="comment"># pandas.eval handles AND/OR/comparison safely</span>
+        <span class="keyword">try</span>:
+            mask = df.eval(expression)
+            <span class="keyword">return</span> mask
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            print(<span class="string">f"Filter error: {e}"</span>)
+            <span class="keyword">return</span> pd.Series(<span class="number">False</span>, index=df.index)</pre>
+  </div>
+
+  <h3>Approach 2: Custom AST Parser</h3>
+  <p>For more complex expressions — especially those with custom functions like <code>near_breakout(20, 0.02)</code> — you need a proper expression parser. Python's <code>ast</code> module provides safe parsing.</p>
+
+  <div class="code-label">Python — AST-Based Evaluator</div>
+  <div class="code-block"><pre><span class="keyword">import</span> ast
+<span class="keyword">import</span> operator
+
+<span class="keyword">class</span> <span class="function">SafeExprEvaluator</span>:
+    <span class="string">"""Safely evaluate expressions with custom functions."""</span>
+
+    OPERATORS = {
+        ast.Lt: operator.lt, ast.Gt: operator.gt,
+        ast.LtE: operator.le, ast.GtE: operator.ge,
+        ast.Eq: operator.eq, ast.NotEq: operator.ne,
+        ast.Add: operator.add, ast.Sub: operator.sub,
+        ast.Mult: operator.mul, ast.Div: operator.truediv,
+        ast.And: <span class="keyword">lambda</span> a, b: a & b,
+        ast.Or: <span class="keyword">lambda</span> a, b: a | b,
+    }
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, stock_data):
+        <span class="comment"># stock_data: dict of variable_name -> value</span>
+        self.data = stock_data
+        self.functions = {
+            <span class="string">'ema'</span>: self._ema,
+            <span class="string">'sma'</span>: self._sma,
+            <span class="string">'rsi'</span>: self._rsi,
+            <span class="string">'atr_pct'</span>: self._atr_pct,
+            <span class="string">'avg_vol'</span>: self._avg_vol,
+            <span class="string">'highest'</span>: self._highest,
+            <span class="string">'near_breakout'</span>: self._near_breakout,
+        }
+
+    <span class="keyword">def</span> <span class="function">_ema</span>(self, period):
+        <span class="keyword">return</span> self.data.get(<span class="string">f'ema_{period}'</span>, <span class="number">0</span>)
+
+    <span class="keyword">def</span> <span class="function">_rsi</span>(self, period):
+        <span class="keyword">return</span> self.data.get(<span class="string">f'rsi_{period}'</span>, <span class="number">50</span>)
+
+    <span class="keyword">def</span> <span class="function">_near_breakout</span>(self, lookback, threshold):
+        high_n = self.data.get(<span class="string">f'highest_{lookback}'</span>, <span class="number">0</span>)
+        close = self.data[<span class="string">'close'</span>]
+        <span class="keyword">if</span> high_n == <span class="number">0</span>: <span class="keyword">return</span> <span class="number">False</span>
+        <span class="keyword">return</span> (high_n - close) / high_n <= threshold
+
+    <span class="keyword">def</span> <span class="function">evaluate</span>(self, expression):
+        <span class="string">"""Parse and evaluate a filter expression safely."""</span>
+        tree = ast.parse(expression, mode=<span class="string">'eval'</span>)
+        <span class="keyword">return</span> self._eval_node(tree.body)
+
+    <span class="keyword">def</span> <span class="function">_eval_node</span>(self, node):
+        <span class="comment"># Recursively evaluate AST nodes</span>
+        <span class="comment"># ... (handles Name, Call, Compare, BoolOp, etc.)</span>
+        <span class="keyword">pass</span>  <span class="comment"># Full implementation ~80 lines</span></pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Which Approach to Choose?</h4>
+    <p><strong>Pandas eval</strong> is great for simple expressions using pre-computed columns. It is fast (vectorized) and handles 90% of use cases. <strong>AST parsing</strong> is needed when you want custom functions like <code>near_breakout(20, 0.02)</code> that cannot be expressed as simple column operations. In practice, most production scanners use a hybrid: pre-compute indicators into columns, then use pandas eval for the filter logic.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 4 STRATEGIES                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="strategies"><i class="fa-solid fa-chess" style="color:#f97316;"></i> Four Classic Strategies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chess" style="color:#f97316;"></i> Strategy-Specific Filters</h2>
+
+  <p>Your scanner should run multiple strategies simultaneously, each with its own filter expression. Here are four battle-tested strategies that cover the main market regimes:</p>
+
+  <!-- Strategy 1: Volatility Contraction -->
+  <div class="strategy-card">
+    <span class="strategy-tag" style="background:rgba(147,51,234,0.1); color:#9333ea;">Pre-Breakout</span>
+    <h4><i class="fa-solid fa-compress-alt" style="color:#9333ea;"></i> Strategy 1: Volatility Contraction</h4>
+    <p>Finds stocks where volatility has squeezed to unusually low levels, suggesting an imminent directional move. Think of it as a coiled spring — the tighter the squeeze, the bigger the eventual move.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Filter Expression</div>
+      bbw_20 &lt; <span class="formula-highlight">sma</span>(bbw_20, 20) <span class="formula-highlight">AND</span> rsi_14 &gt; 45 <span class="formula-highlight">AND</span> atr_pct_14 &lt; 0.03 <span class="formula-highlight">AND</span> close &gt; ema_200
+    </div>
+
+    <p><strong>Logic:</strong> Bollinger Band Width below its own 20-day average (squeeze), RSI neutral-to-bullish (not dumping), ATR under 3% of price (low volatility), and above the 200-day EMA (uptrend context). This filter finds the "quiet before the storm" — stocks that are consolidating in an uptrend.</p>
+
+    <p><strong>Best regime:</strong> Neutral to Risk-On. In Risk-Off, contraction often precedes breakdown, not breakout.</p>
+  </div>
+
+  <!-- Strategy 2: Momentum Expansion -->
+  <div class="strategy-card">
+    <span class="strategy-tag" style="background:rgba(16,185,129,0.1); color:#10b981;">Trend Following</span>
+    <h4><i class="fa-solid fa-rocket" style="color:#10b981;"></i> Strategy 2: Momentum Expansion</h4>
+    <p>Identifies stocks in strong uptrends with expanding momentum. The "ride the wave" strategy — you are buying strength, not weakness.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Filter Expression</div>
+      ema_20 &gt; ema_50 <span class="formula-highlight">AND</span> ema_50 &gt; ema_200 <span class="formula-highlight">AND</span> rsi_14 &gt; 55 <span class="formula-highlight">AND</span> rsi_14 &lt; 80 <span class="formula-highlight">AND</span> vol_ratio_20 &gt; 1.2
+    </div>
+
+    <p><strong>Logic:</strong> Perfect EMA alignment (20 > 50 > 200 = strong uptrend), RSI in the bullish sweet spot (55-80, not overbought), and volume confirmation above average. This is the textbook trend-following setup.</p>
+
+    <p><strong>Best regime:</strong> Risk-On. This strategy gets destroyed in Risk-Off environments — you are buying momentum into a falling market.</p>
+  </div>
+
+  <!-- Strategy 3: Breakout -->
+  <div class="strategy-card">
+    <span class="strategy-tag" style="background:rgba(37,99,235,0.1); color:#2563eb;">Breakout</span>
+    <h4><i class="fa-solid fa-arrow-up-right-dots" style="color:#2563eb;"></i> Strategy 3: Breakout</h4>
+    <p>Catches stocks making new highs with volume confirmation. The highest-reward, lowest-win-rate strategy — when it works, it works big.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Filter Expression</div>
+      close &gt;= highest_20 <span class="formula-highlight">AND</span> vol_ratio_20 &gt; 1.5 <span class="formula-highlight">AND</span> rsi_14 &gt; 55 <span class="formula-highlight">AND</span> adx_14 &gt; 20
+    </div>
+
+    <p><strong>Logic:</strong> Price at or above the 20-day high (breakout), volume 50% above average (real demand, not a head-fake), RSI confirming bullish momentum, and ADX indicating a trending (not ranging) market. The ADX filter is critical — breakouts in ranging markets have a terrible hit rate.</p>
+
+    <p><strong>Best regime:</strong> Risk-On to early Recovery. Breakouts in Risk-Off are almost always bull traps.</p>
+  </div>
+
+  <!-- Strategy 4: Mean Reversion -->
+  <div class="strategy-card">
+    <span class="strategy-tag" style="background:rgba(220,38,38,0.1); color:#dc2626;">Mean Reversion</span>
+    <h4><i class="fa-solid fa-arrow-turn-down" style="color:#dc2626;"></i> Strategy 4: Mean Reversion (Oversold Bounce)</h4>
+    <p>Finds quality stocks that have sold off too far, too fast. You are buying fear and selling the recovery. The bread-and-butter strategy for risk-off environments.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Filter Expression</div>
+      rsi_14 &lt; 35 <span class="formula-highlight">AND</span> vol_ratio_20 &gt; 2.0 <span class="formula-highlight">AND</span> close &gt; ema_200 <span class="formula-highlight">AND</span> pct_from_high_20 &gt; 0.08
+    </div>
+
+    <p><strong>Logic:</strong> RSI oversold below 35, heavy volume (capitulation selling), but still above the 200-EMA (the long-term trend is intact), and pulled back at least 8% from the 20-day high. The EMA(200) filter is the key — it ensures you are buying a pullback in an uptrend, not catching a falling knife in a downtrend.</p>
+
+    <p><strong>Best regime:</strong> Any regime, but especially Risk-Off and early Recovery. This is the "buy the dip when the trend is still up" strategy.</p>
+  </div>
+
+  <!-- EChart: Strategy Comparison Radar -->
+  <div id="chart-strategies" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <h3>Putting It Together: The Strategy Registry</h3>
+
+  <div class="code-label">Python — Strategy Registry</div>
+  <div class="code-block"><pre><span class="keyword">import</span> json
+
+<span class="keyword">class</span> <span class="function">StrategyRegistry</span>:
+    <span class="string">"""Load and manage filter strategies from config."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, config_path=<span class="string">"strategies.json"</span>):
+        <span class="keyword">with</span> open(config_path) <span class="keyword">as</span> f:
+            self.strategies = json.load(f)
+
+    <span class="keyword">def</span> <span class="function">get_filter</span>(self, strategy_name):
+        <span class="string">"""Return the filter expression for a strategy."""</span>
+        <span class="keyword">return</span> self.strategies[strategy_name][<span class="string">"filter"</span>]
+
+    <span class="keyword">def</span> <span class="function">get_active</span>(self, regime):
+        <span class="string">"""Return strategies active for the current regime."""</span>
+        <span class="keyword">return</span> {
+            name: strat
+            <span class="keyword">for</span> name, strat <span class="keyword">in</span> self.strategies.items()
+            <span class="keyword">if</span> regime <span class="keyword">in</span> strat[<span class="string">"regimes"</span>]
+        }
+
+
+<span class="comment"># strategies.json</span>
+<span class="comment"># {</span>
+<span class="comment">#   "contraction": {</span>
+<span class="comment">#     "filter": "bbw_20 < sma_bbw_20 and rsi_14 > 45 and atr_pct_14 < 0.03",</span>
+<span class="comment">#     "regimes": ["risk_on", "neutral", "recovery"],</span>
+<span class="comment">#     "weight": { "risk_on": 20, "neutral": 30, "risk_off": 5 }</span>
+<span class="comment">#   },</span>
+<span class="comment">#   "momentum": {</span>
+<span class="comment">#     "filter": "ema_20 > ema_50 and ema_50 > ema_200 and rsi_14 > 55",</span>
+<span class="comment">#     "regimes": ["risk_on", "recovery"],</span>
+<span class="comment">#     "weight": { "risk_on": 45, "neutral": 20, "risk_off": 5 }</span>
+<span class="comment">#   },</span>
+<span class="comment">#   ...</span>
+<span class="comment"># }</span></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TESTING FILTERS                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="testing"><i class="fa-solid fa-vial" style="color:#10b981;"></i> Testing Your Filters</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-vial" style="color:#10b981;"></i> The Pass Rate Problem</h2>
+
+  <p>How do you know if your filter is good? There is a simple diagnostic: <strong>the pass rate</strong>. Run your filter against the entire universe and count how many stocks pass.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Pass Rate</th><th>Diagnosis</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><strong>&lt; 1%</strong> (0-5 stocks)</td><td>Too tight. You are missing good setups. Possibly an impossible combination of criteria.</td><td>Relax thresholds or remove one criterion</td></tr>
+      <tr><td><strong>1-5%</strong> (5-25 stocks)</td><td>Ideal for most strategies. Enough candidates to score and rank, few enough to be meaningful.</td><td>Perfect zone</td></tr>
+      <tr><td><strong>5-15%</strong> (25-75 stocks)</td><td>Borderline. Your scoring engine will need to do heavy lifting to differentiate.</td><td>Consider adding one more filter criterion</td></tr>
+      <tr><td><strong>&gt; 15%</strong> (75+ stocks)</td><td>Too loose. Your filter is not filtering. The signal-to-noise ratio is poor.</td><td>Add criteria or tighten thresholds significantly</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-label">Python — Pass Rate Diagnostics</div>
+  <div class="code-block"><pre><span class="keyword">def</span> <span class="function">diagnose_filter</span>(evaluator, universe_df, expression, strategy_name):
+    <span class="string">"""Run a filter and print diagnostics."""</span>
+    mask = evaluator.evaluate(universe_df, expression)
+    passed = mask.sum()
+    total = len(universe_df)
+    rate = passed / total * <span class="number">100</span>
+
+    print(<span class="string">f"\n{'='*50}"</span>)
+    print(<span class="string">f"Strategy: {strategy_name}"</span>)
+    print(<span class="string">f"Expression: {expression}"</span>)
+    print(<span class="string">f"Universe: {total} stocks"</span>)
+    print(<span class="string">f"Passed: {passed} ({rate:.1f}%)"</span>)
+
+    <span class="keyword">if</span> rate < <span class="number">1</span>:
+        print(<span class="string">"[WARN] Too tight - consider relaxing thresholds"</span>)
+    <span class="keyword">elif</span> rate > <span class="number">15</span>:
+        print(<span class="string">"[WARN] Too loose - add criteria or tighten"</span>)
+    <span class="keyword">else</span>:
+        print(<span class="string">"[OK] Pass rate in healthy range"</span>)
+
+    <span class="comment"># Show sector distribution of passed stocks</span>
+    <span class="keyword">if</span> passed > <span class="number">0</span>:
+        sectors = universe_df[mask][<span class="string">'sector'</span>].value_counts()
+        print(<span class="string">f"\nSector distribution:"</span>)
+        <span class="keyword">for</span> sector, count <span class="keyword">in</span> sectors.head(<span class="number">5</span>).items():
+            print(<span class="string">f"  {sector}: {count}"</span>)
+
+    <span class="keyword">return</span> universe_df[mask]</pre>
+  </div>
+
+  <!-- EChart: Pass Rate by Strategy -->
+  <div id="chart-passrate" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3>Filter Overlap Analysis</h3>
+  <p>Another important diagnostic is how much your filters overlap. If two strategies pass the same stocks, they are not providing independent signals — you are effectively running one strategy, not two.</p>
+
+  <!-- EChart: Filter Overlap Heatmap -->
+  <div id="chart-overlap" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Watch for Over-Optimization</h4>
+    <p>It is tempting to keep tweaking thresholds until your filter produces exactly 10 stocks on today's data. This is curve-fitting. Your filter should produce consistent, reasonable pass rates across different market conditions. Test it on 6 months of historical data, not just today.</p>
+  </div>
+
+  <h3>The Complete Filter Pipeline</h3>
+
+  <div class="code-label">Python — Full Pipeline</div>
+  <div class="code-block"><pre><span class="keyword">class</span> <span class="function">ScannerPipeline</span>:
+    <span class="string">"""Complete filter pipeline: load, compute, filter, report."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.indicators = IndicatorEngine()
+        self.evaluator = FilterEvaluator()
+        self.strategies = StrategyRegistry()
+
+    <span class="keyword">def</span> <span class="function">run</span>(self, universe_df, regime):
+        <span class="string">"""Run all active strategies for the current regime."""</span>
+
+        <span class="comment"># Step 1: Compute all indicators</span>
+        df = self.indicators.compute(universe_df)
+
+        <span class="comment"># Step 2: Get active strategies for this regime</span>
+        active = self.strategies.get_active(regime)
+        print(<span class="string">f"Regime: {regime} -> {len(active)} active strategies"</span>)
+
+        <span class="comment"># Step 3: Run each filter</span>
+        all_candidates = {}
+        <span class="keyword">for</span> name, strat <span class="keyword">in</span> active.items():
+            passed = self.evaluator.evaluate(df, strat[<span class="string">"filter"</span>])
+            candidates = df[passed].copy()
+            candidates[<span class="string">"strategy"</span>] = name
+            candidates[<span class="string">"strategy_weight"</span>] = strat[<span class="string">"weight"</span>][regime]
+            all_candidates[name] = candidates
+            print(<span class="string">f"  {name}: {len(candidates)} candidates"</span>)
+
+        <span class="comment"># Step 4: Merge and deduplicate</span>
+        merged = pd.concat(all_candidates.values())
+        <span class="comment"># If a stock appears in multiple strategies, keep the one</span>
+        <span class="comment"># with the highest strategy weight (best regime fit)</span>
+        merged = merged.sort_values(<span class="string">"strategy_weight"</span>, ascending=<span class="number">False</span>)
+        merged = merged.drop_duplicates(subset=[<span class="string">"ticker"</span>], keep=<span class="string">"first"</span>)
+
+        print(<span class="string">f"\nTotal unique candidates: {len(merged)}"</span>)
+        <span class="keyword">return</span> merged
+
+
+<span class="comment"># Usage</span>
+pipeline = ScannerPipeline()
+candidates = pipeline.run(universe_df, regime=<span class="string">"risk_on"</span>)
+<span class="comment"># -> Next step: scoring (Part 3)</span></pre>
+  </div>
+
+  <!-- EChart: Filter Results by Regime -->
+  <div id="chart-regime-results" style="width:100%; height:380px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY                                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 2</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Use a DSL for filters, not hardcoded functions. Filters should be strings you can swap via configuration.</li>
+    <li><i class="fa-solid fa-check"></i> Your vocabulary should cover price, moving averages, momentum, volatility, volume, and context variables.</li>
+    <li><i class="fa-solid fa-check"></i> Four strategies cover most market conditions: contraction, momentum, breakout, and mean reversion.</li>
+    <li><i class="fa-solid fa-check"></i> Each strategy has a "best regime" — running momentum in a crash is destructive.</li>
+    <li><i class="fa-solid fa-check"></i> Test pass rates: aim for 1-5% of your universe. Too loose = noise, too tight = missed opportunities.</li>
+    <li><i class="fa-solid fa-check"></i> Check filter overlap: if two strategies always pass the same stocks, they are not independent.</li>
+  </ul>
+</div>
+
+<a href="/series/build-a-scanner/part3-scoring/" class="next-cta">
+  <div>
+    <div class="next-label">Part 3 of 6</div>
+    <div class="next-title">Composite Scoring — Ranking from Noise to Signal <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/build-a-scanner/part1-philosophy/" class="series-arrow" title="Philosophy"><i class="fas fa-chevron-left"></i></a><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step current" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">2/6</span><a href="/series/build-a-scanner/part3-scoring/" class="series-arrow" title="Scoring"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Vocabulary Categories (Treemap)
+var chartVocab = echarts.init(document.getElementById('chart-vocabulary'));
+chartVocab.setOption({
+  title: { text: 'DSL Vocabulary — Indicator Categories', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { formatter: '{b}: {c} variables' },
+  series: [{
+    type: 'treemap',
+    top: 50,
+    data: [
+      { name: 'Price Series', value: 7, itemStyle: { color: '#dc2626' }, children: [
+        { name: 'close', value: 1 }, { name: 'open', value: 1 }, { name: 'high', value: 1 },
+        { name: 'low', value: 1 }, { name: 'volume', value: 1 }, { name: 'typical', value: 1 }, { name: 'range_pct', value: 1 }
+      ]},
+      { name: 'Moving Averages', value: 5, itemStyle: { color: '#2563eb' }, children: [
+        { name: 'ema(N)', value: 1 }, { name: 'sma(N)', value: 1 }, { name: 'ema_cross_up', value: 1 },
+        { name: 'ema_cross_down', value: 1 }, { name: 'price_above_ema', value: 1 }
+      ]},
+      { name: 'Momentum', value: 5, itemStyle: { color: '#10b981' }, children: [
+        { name: 'rsi(N)', value: 1 }, { name: 'macd_hist', value: 1 }, { name: 'adx(N)', value: 1 },
+        { name: 'roc(N)', value: 1 }, { name: 'stoch_k', value: 1 }
+      ]},
+      { name: 'Volatility', value: 5, itemStyle: { color: '#9333ea' }, children: [
+        { name: 'atr(N)', value: 1 }, { name: 'atr_pct(N)', value: 1 }, { name: 'bbw(N)', value: 1 },
+        { name: 'bb_upper', value: 1 }, { name: 'bb_lower', value: 1 }
+      ]},
+      { name: 'Volume', value: 4, itemStyle: { color: '#f97316' }, children: [
+        { name: 'avg_vol(N)', value: 1 }, { name: 'vol_ratio', value: 1 }, { name: 'obv_slope', value: 1 }, { name: 'vwap', value: 1 }
+      ]},
+      { name: 'Extremes', value: 4, itemStyle: { color: '#d97706' }, children: [
+        { name: 'highest', value: 1 }, { name: 'lowest', value: 1 }, { name: 'pct_from_high', value: 1 }, { name: 'near_breakout', value: 1 }
+      ]},
+      { name: 'Context', value: 4, itemStyle: { color: '#64748b' }, children: [
+        { name: 'sector', value: 1 }, { name: 'market_cap', value: 1 }, { name: 'days_to_earnings', value: 1 }, { name: 'avg_spread_pct', value: 1 }
+      ]}
+    ],
+    label: { fontSize: 11, fontWeight: 600 },
+    breadcrumb: { show: false }
+  }]
+});
+
+// Chart 2: Strategy Comparison Radar
+var chartStrategies = echarts.init(document.getElementById('chart-strategies'));
+chartStrategies.setOption({
+  title: { text: 'Strategy Characteristics Comparison', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['Contraction', 'Momentum', 'Breakout', 'Mean Reversion'], textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Win Rate', max: 100 },
+      { name: 'Avg R/R', max: 5 },
+      { name: 'Trade Frequency', max: 100 },
+      { name: 'Risk-On Fit', max: 10 },
+      { name: 'Risk-Off Fit', max: 10 },
+      { name: 'Holding Period', max: 30 }
+    ],
+    radius: '55%'
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [52, 2.5, 30, 7, 3, 12], name: 'Contraction', lineStyle: { color: '#9333ea' }, itemStyle: { color: '#9333ea' } },
+      { value: [55, 2.0, 45, 9, 1, 8], name: 'Momentum', lineStyle: { color: '#10b981' }, itemStyle: { color: '#10b981' } },
+      { value: [38, 3.5, 20, 8, 2, 5], name: 'Breakout', lineStyle: { color: '#2563eb' }, itemStyle: { color: '#2563eb' } },
+      { value: [60, 1.8, 35, 4, 8, 6], name: 'Mean Reversion', lineStyle: { color: '#dc2626' }, itemStyle: { color: '#dc2626' } }
+    ]
+  }]
+});
+
+// Chart 3: Pass Rate by Strategy (Bar)
+var chartPassrate = echarts.init(document.getElementById('chart-passrate'));
+chartPassrate.setOption({
+  title: { text: 'Typical Pass Rates by Strategy (500-Stock Universe)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + ': ' + p[0].value + ' stocks (' + (p[0].value/5).toFixed(1) + '%)'; } },
+  grid: { left: '3%', right: '4%', bottom: '12%', top: '15%', containLabel: true },
+  xAxis: { type: 'category', data: ['Contraction', 'Momentum', 'Breakout', 'Mean Reversion', 'All Combined'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Stocks Passing', axisLabel: { fontSize: 11 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 18, itemStyle: { color: '#9333ea', borderRadius: [6,6,0,0] } },
+      { value: 25, itemStyle: { color: '#10b981', borderRadius: [6,6,0,0] } },
+      { value: 12, itemStyle: { color: '#2563eb', borderRadius: [6,6,0,0] } },
+      { value: 15, itemStyle: { color: '#dc2626', borderRadius: [6,6,0,0] } },
+      { value: 55, itemStyle: { color: '#0f172a', borderRadius: [6,6,0,0] } }
+    ],
+    label: { show: true, position: 'top', fontSize: 11, fontWeight: 600 }
+  }]
+});
+
+// Chart 4: Filter Overlap Heatmap
+var chartOverlap = echarts.init(document.getElementById('chart-overlap'));
+var strategies = ['Contraction', 'Momentum', 'Breakout', 'Mean Rev.'];
+var overlapData = [[0,0,100],[0,1,12],[0,2,8],[0,3,5],[1,0,12],[1,1,100],[1,2,35],[1,3,3],[2,0,8],[2,1,35],[2,2,100],[2,3,2],[3,0,5],[3,1,3],[3,2,2],[3,3,100]];
+chartOverlap.setOption({
+  title: { text: 'Filter Overlap Between Strategies (%)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { formatter: function(p) { return strategies[p.value[0]] + ' vs ' + strategies[p.value[1]] + ': ' + p.value[2] + '% overlap'; } },
+  grid: { left: '15%', right: '15%', top: 60, bottom: 40 },
+  xAxis: { type: 'category', data: strategies, axisLabel: { fontSize: 11 }, splitArea: { show: true } },
+  yAxis: { type: 'category', data: strategies, axisLabel: { fontSize: 11 }, splitArea: { show: true } },
+  visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#fee2e2', '#fca5a5', '#dc2626', '#7f1d1d'] }, textStyle: { fontSize: 10 } },
+  series: [{ type: 'heatmap', data: overlapData, label: { show: true, fontSize: 11, fontWeight: 600 } }]
+});
+
+// Chart 5: Filter Results by Regime
+var chartRegimeResults = echarts.init(document.getElementById('chart-regime-results'));
+chartRegimeResults.setOption({
+  title: { text: 'Filter Candidates by Market Regime', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Risk-On', 'Recovery', 'Neutral', 'Early Risk-Off', 'Risk-Off'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', name: 'Candidates', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Contraction', type: 'bar', stack: 'total', data: [15, 12, 20, 10, 5], itemStyle: { color: '#9333ea' } },
+    { name: 'Momentum', type: 'bar', stack: 'total', data: [30, 20, 15, 5, 2], itemStyle: { color: '#10b981' } },
+    { name: 'Breakout', type: 'bar', stack: 'total', data: [18, 10, 8, 3, 1], itemStyle: { color: '#2563eb' } },
+    { name: 'Mean Reversion', type: 'bar', stack: 'total', data: [5, 8, 12, 25, 35], itemStyle: { color: '#dc2626' } }
+  ]
+});
+
+window.addEventListener('resize', function() { [chartVocab,chartStrategies,chartPassrate,chartOverlap,chartRegimeResults].forEach(function(c){c.resize();}); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

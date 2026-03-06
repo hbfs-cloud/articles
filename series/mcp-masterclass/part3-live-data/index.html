@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Connecting Live Data — APIs, Scraping & Databases | MCP from A to Z — Part 3/5 | Market Watch</title>
+ <meta name="description" content="MCP Masterclass Part 3/5: Connect real data sources to your MCP server — REST APIs, web scraping with cheerio, database queries, file system access, caching strategies, and error handling.">
+ <meta property="og:title" content="Connecting Live Data | MCP Masterclass 3/5 | Market Watch">
+ <meta property="og:description" content="Build MCP tools that fetch from APIs, scrape the web, query databases, and handle errors gracefully.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/mcp-masterclass/part3-live-data/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-violet { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; position:relative; }
+ .code-block pre { margin:0; color:#e2e8f0; font-family:'Fira Code', 'Courier New', monospace; font-size:0.85rem; line-height:1.7; white-space:pre; }
+ .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; background:#1e293b; padding:0.2rem 0.6rem; border-radius:6px; }
+ .code-block .kw { color:#c084fc; } .code-block .str { color:#86efac; } .code-block .cm { color:#64748b; } .code-block .fn { color:#67e8f9; } .code-block .num { color:#fbbf24; } .code-block .op { color:#f472b6; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#6d28d9; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#a78bfa; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #7c3aed; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+ details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) { .hero-section { padding:2.5rem 1rem 5rem; } .hero-section h1 { font-size:1.8rem !important; } .next-cta { flex-direction:column; text-align:center; } .step-grid { grid-template-columns:1fr 1fr; } }
+ @media (max-width:480px) { .hero-section h1 { font-size:1.4rem !important; } .hero-section { padding:2rem 1rem 4rem; } .hero-badges { gap:0.4rem; margin-top:1rem; } }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a><div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> MCP Masterclass — Part 3 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Connecting Live Data — APIs, Scraping & Databases</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto; color:#64748b; font-size:1.05rem; line-height:1.7;">Your MCP server works — now let's connect it to the real world. REST APIs, web scraping, SQL databases, file systems. Plus: caching, rate limiting, error handling, and retry strategies that make your tools production-ready.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-cloud"></i> REST APIs</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-spider"></i> Web Scraping</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-database"></i> SQL Databases</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bolt"></i> Caching</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/mcp-masterclass/part2-first-server/" class="series-arrow" title="First Server"><i class="fas fa-chevron-left"></i></a><span class="series-title">MCP from A to Z</span><div class="series-steps"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-step" title="What is MCP?"><span class="series-num">1</span><span class="series-label">What is MCP?</span></a><a href="/series/mcp-masterclass/part2-first-server/" class="series-step" title="First Server"><span class="series-num">2</span><span class="series-label">First Server</span></a><a href="/series/mcp-masterclass/part3-live-data/" class="series-step current" title="Live Data"><span class="series-num">3</span><span class="series-label">Live Data</span></a><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-step" title="Multi-Tool"><span class="series-num">4</span><span class="series-label">Multi-Tool</span></a><a href="/series/mcp-masterclass/part5-market-watch/" class="series-step" title="Case Study"><span class="series-num">5</span><span class="series-label">Case Study</span></a></div><span class="series-counter">3/5</span><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-arrow" title="Multi-Tool"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#rest-apis" class="fnav-item" data-section="rest-apis"><i class="fas fa-bookmark"></i><span>REST APIs</span></a><a href="#financial-data" class="fnav-item" data-section="financial-data"><i class="fas fa-bookmark"></i><span>Financial Data</span></a><a href="#scraping" class="fnav-item" data-section="scraping"><i class="fas fa-bookmark"></i><span>Web Scraping</span></a><a href="#databases" class="fnav-item" data-section="databases"><i class="fas fa-bookmark"></i><span>Databases</span></a><a href="#files" class="fnav-item" data-section="files"><i class="fas fa-bookmark"></i><span>File System</span></a><a href="#caching" class="fnav-item" data-section="caching"><i class="fas fa-bookmark"></i><span>Caching & Errors</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),off=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-off,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.classList.remove('active');match.item.classList.add('active');currentActive=match.item;if(!isOpen)label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-20% 0px -70% 0px'});sections.forEach(function(s){observer.observe(s.el);});})();
+</script>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: REST APIs                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-cloud"></i> Data Source #1</div>
+
+<div id="rest-apis" class="content-card">
+  <h2><i class="fa-solid fa-cloud" style="color:#7c3aed; margin-right:0.5rem;"></i> Fetching from REST APIs</h2>
+
+  <p>Most MCP tools connect to REST APIs. The pattern is always the same: construct URL, add auth headers, make the request, parse the response, handle errors. Let's build a robust, reusable API client.</p>
+
+  <h3>The Universal API Helper</h3>
+
+  <div class="code-block">
+    <span class="code-label">lib/api-client.js</span>
+<pre>
+<span class="cm">// Reusable API client with timeout, retries, and error handling</span>
+
+<span class="kw">export async function</span> <span class="fn">fetchAPI</span>(url, options = {}) {
+  <span class="kw">const</span> {
+    headers = {},
+    timeout = <span class="num">10000</span>,       <span class="cm">// 10s default timeout</span>
+    retries = <span class="num">2</span>,            <span class="cm">// Retry twice on failure</span>
+    retryDelay = <span class="num">1000</span>,      <span class="cm">// 1s between retries</span>
+  } = options;
+
+  <span class="kw">for</span> (<span class="kw">let</span> attempt = <span class="num">0</span>; attempt <= retries; attempt++) {
+    <span class="kw">try</span> {
+      <span class="kw">const</span> controller = <span class="kw">new</span> AbortController();
+      <span class="kw">const</span> timer = <span class="fn">setTimeout</span>(() => controller.<span class="fn">abort</span>(), timeout);
+
+      <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(url, {
+        headers: { <span class="str">"Accept"</span>: <span class="str">"application/json"</span>, ...headers },
+        signal: controller.signal
+      });
+
+      <span class="fn">clearTimeout</span>(timer);
+
+      <span class="kw">if</span> (res.status === <span class="num">429</span>) {
+        <span class="cm">// Rate limited — wait and retry</span>
+        <span class="kw">const</span> wait = parseInt(res.headers.<span class="fn">get</span>(<span class="str">"Retry-After"</span>) || <span class="str">"5"</span>) * <span class="num">1000</span>;
+        <span class="kw">await new</span> Promise(r => <span class="fn">setTimeout</span>(r, wait));
+        <span class="kw">continue</span>;
+      }
+
+      <span class="kw">if</span> (!res.ok) {
+        <span class="kw">throw new</span> Error(<span class="str">`HTTP ${res.status}: ${res.statusText}`</span>);
+      }
+
+      <span class="kw">return await</span> res.<span class="fn">json</span>();
+    } <span class="kw">catch</span> (err) {
+      <span class="kw">if</span> (attempt === retries) <span class="kw">throw</span> err;
+      <span class="kw">await new</span> Promise(r => <span class="fn">setTimeout</span>(r, retryDelay * (attempt + <span class="num">1</span>)));
+    }
+  }
+}
+</pre>
+  </div>
+
+  <p>This helper handles the three most common API issues: <strong>timeouts</strong> (AbortController), <strong>rate limiting</strong> (429 + Retry-After), and <strong>transient failures</strong> (exponential backoff retries).</p>
+
+  <h3>Adding Authentication</h3>
+
+  <div class="code-block">
+    <span class="code-label">Authentication Patterns</span>
+<pre>
+<span class="cm">// Pattern 1: API Key in query string</span>
+<span class="kw">const</span> url = <span class="str">`https://api.example.com/data?apikey=${process.env.API_KEY}`</span>;
+
+<span class="cm">// Pattern 2: API Key in header</span>
+<span class="kw">await</span> <span class="fn">fetchAPI</span>(url, {
+  headers: { <span class="str">"X-API-Key"</span>: process.env.API_KEY }
+});
+
+<span class="cm">// Pattern 3: Bearer token (OAuth)</span>
+<span class="kw">await</span> <span class="fn">fetchAPI</span>(url, {
+  headers: { <span class="str">"Authorization"</span>: <span class="str">`Bearer ${process.env.TOKEN}`</span> }
+});
+
+<span class="cm">// Pattern 4: Basic auth</span>
+<span class="kw">const</span> creds = Buffer.<span class="fn">from</span>(<span class="str">`${user}:${pass}`</span>).<span class="fn">toString</span>(<span class="str">"base64"</span>);
+<span class="kw">await</span> <span class="fn">fetchAPI</span>(url, {
+  headers: { <span class="str">"Authorization"</span>: <span class="str">`Basic ${creds}`</span> }
+});
+</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-key" style="color:#f59e0b; margin-right:0.5rem;"></i> Environment Variables are Sacred</h4>
+    <p>Never hardcode API keys in your MCP server code. Always use <code>process.env.VARIABLE_NAME</code> and pass keys through the <code>"env"</code> field in <code>.mcp.json</code>. This keeps secrets out of version control and allows different users to use their own keys.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: FINANCIAL DATA                                     -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-chart-line"></i> Data Source #2</div>
+
+<div id="financial-data" class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#7c3aed; margin-right:0.5rem;"></i> Financial Data APIs</h2>
+
+  <p>Financial data is one of the most valuable use cases for MCP. Let's build tools that fetch stock quotes, crypto prices, and economic indicators from popular free APIs.</p>
+
+  <h3>Tool #1: Stock Quote (Yahoo Finance via RapidAPI)</h3>
+
+  <div class="code-block">
+    <span class="code-label">tools/stock-quote.js</span>
+<pre>
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">"zod"</span>;
+<span class="kw">import</span> { fetchAPI } <span class="kw">from</span> <span class="str">"../lib/api-client.js"</span>;
+
+<span class="kw">export function</span> <span class="fn">registerStockTools</span>(server) {
+  <span class="kw">const</span> RAPID_KEY = process.env.RAPIDAPI_KEY;
+
+  server.<span class="fn">tool</span>(
+    <span class="str">"get_stock_quote"</span>,
+    <span class="str">"Get real-time stock quote with price, change, volume, and key metrics"</span>,
+    {
+      symbol: z.<span class="fn">string</span>()
+        .<span class="fn">toUpperCase</span>()
+        .<span class="fn">describe</span>(<span class="str">"Stock ticker (e.g., AAPL, MSFT, TSLA)"</span>),
+      include_extended: z.<span class="fn">boolean</span>()
+        .<span class="fn">optional</span>().<span class="fn">default</span>(<span class="kw">false</span>)
+        .<span class="fn">describe</span>(<span class="str">"Include pre/post market data"</span>)
+    },
+    <span class="kw">async</span> ({ symbol, include_extended }) => {
+      <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchAPI</span>(
+        <span class="str">`https://yahoo-finance15.p.rapidapi.com/api/v1/markets/quote?ticker=${symbol}`</span>,
+        { headers: { <span class="str">"x-rapidapi-key"</span>: RAPID_KEY } }
+      );
+
+      <span class="kw">const</span> q = data.body;
+      <span class="kw">const</span> result = {
+        symbol: q.symbol,
+        name: q.shortName,
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        changePercent: <span class="str">`${q.regularMarketChangePercent.toFixed(2)}%`</span>,
+        volume: q.regularMarketVolume,
+        marketCap: q.marketCap,
+        peRatio: q.trailingPE,
+        fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
+        fiftyTwoWeekLow: q.fiftyTwoWeekLow
+      };
+
+      <span class="kw">if</span> (include_extended && q.preMarketPrice) {
+        result.preMarket = q.preMarketPrice;
+        result.afterHours = q.postMarketPrice;
+      }
+
+      <span class="kw">return</span> { content: [{ type: <span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>(result, <span class="kw">null</span>, <span class="num">2</span>) }] };
+    }
+  );
+}
+</pre>
+  </div>
+
+  <h3>Tool #2: Crypto Prices (CoinGecko — Free, No Key)</h3>
+
+  <div class="code-block">
+    <span class="code-label">tools/crypto.js</span>
+<pre>
+<span class="kw">export function</span> <span class="fn">registerCryptoTools</span>(server) {
+  server.<span class="fn">tool</span>(
+    <span class="str">"get_crypto_price"</span>,
+    <span class="str">"Get cryptocurrency price, market cap, and 24h stats"</span>,
+    {
+      coin: z.<span class="fn">string</span>().<span class="fn">toLowerCase</span>()
+        .<span class="fn">describe</span>(<span class="str">"Coin ID (e.g., bitcoin, ethereum, solana)"</span>),
+      currency: z.<span class="fn">enum</span>([<span class="str">"usd"</span>, <span class="str">"eur"</span>, <span class="str">"gbp"</span>])
+        .<span class="fn">optional</span>().<span class="fn">default</span>(<span class="str">"usd"</span>)
+        .<span class="fn">describe</span>(<span class="str">"Fiat currency for prices"</span>)
+    },
+    <span class="kw">async</span> ({ coin, currency }) => {
+      <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchAPI</span>(
+        <span class="str">`https://api.coingecko.com/api/v3/coins/${coin}`</span>
+        + <span class="str">`?localization=false&tickers=false&community_data=false`</span>
+      );
+
+      <span class="kw">return</span> { content: [{ type: <span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>({
+        name: data.name,
+        symbol: data.symbol.<span class="fn">toUpperCase</span>(),
+        price: data.market_data.current_price[currency],
+        change_24h: <span class="str">`${data.market_data.price_change_percentage_24h.toFixed(2)}%`</span>,
+        market_cap: data.market_data.market_cap[currency],
+        volume_24h: data.market_data.total_volume[currency],
+        ath: data.market_data.ath[currency],
+        ath_change: <span class="str">`${data.market_data.ath_change_percentage[currency].toFixed(1)}%`</span>
+      }, <span class="kw">null</span>, <span class="num">2</span>) }] };
+    }
+  );
+}
+</pre>
+  </div>
+
+  <div id="chart-datasources" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>API</th><th>Free Tier</th><th>Auth</th><th>Rate Limit</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>CoinGecko</strong></td><td>Unlimited</td><td>None</td><td>30/min</td><td>Crypto prices</td></tr>
+      <tr><td><strong>Alpha Vantage</strong></td><td>25 req/day</td><td>API key</td><td>5/min</td><td>Stock fundamentals</td></tr>
+      <tr><td><strong>Yahoo Finance</strong></td><td>500/month</td><td>RapidAPI key</td><td>5/sec</td><td>Real-time quotes</td></tr>
+      <tr><td><strong>Finnhub</strong></td><td>60 req/min</td><td>API key</td><td>60/min</td><td>News, earnings</td></tr>
+      <tr><td><strong>FRED (Fed)</strong></td><td>Unlimited</td><td>API key</td><td>120/min</td><td>Economic indicators</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: WEB SCRAPING                                       -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-spider"></i> Data Source #3</div>
+
+<div id="scraping" class="content-card">
+  <h2><i class="fa-solid fa-spider" style="color:#7c3aed; margin-right:0.5rem;"></i> Web Scraping with Cheerio</h2>
+
+  <p>When there's no API, scraping is the answer. <strong>Cheerio</strong> is a lightweight HTML parser that uses jQuery syntax. It's perfect for MCP servers because it's fast, has no browser overhead, and works server-side.</p>
+
+  <div class="code-block">
+    <span class="code-label">Terminal</span>
+<pre>
+npm install cheerio
+</pre>
+  </div>
+
+  <h3>Tool: Scrape Headlines from a News Site</h3>
+
+  <div class="code-block">
+    <span class="code-label">tools/scraper.js</span>
+<pre>
+<span class="kw">import</span> * <span class="kw">as</span> cheerio <span class="kw">from</span> <span class="str">"cheerio"</span>;
+
+<span class="kw">export function</span> <span class="fn">registerScraperTools</span>(server) {
+  server.<span class="fn">tool</span>(
+    <span class="str">"scrape_headlines"</span>,
+    <span class="str">"Scrape top headlines from a financial news site"</span>,
+    {
+      source: z.<span class="fn">enum</span>([<span class="str">"reuters"</span>, <span class="str">"bloomberg"</span>, <span class="str">"cnbc"</span>])
+        .<span class="fn">describe</span>(<span class="str">"News source to scrape"</span>),
+      limit: z.<span class="fn">number</span>().<span class="fn">min</span>(<span class="num">1</span>).<span class="fn">max</span>(<span class="num">20</span>).<span class="fn">optional</span>().<span class="fn">default</span>(<span class="num">10</span>)
+        .<span class="fn">describe</span>(<span class="str">"Number of headlines"</span>)
+    },
+    <span class="kw">async</span> ({ source, limit }) => {
+      <span class="kw">const</span> urls = {
+        reuters: <span class="str">"https://www.reuters.com/markets/"</span>,
+        bloomberg: <span class="str">"https://www.bloomberg.com/markets"</span>,
+        cnbc: <span class="str">"https://www.cnbc.com/world/?region=world"</span>
+      };
+
+      <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(urls[source], {
+        headers: {
+          <span class="str">"User-Agent"</span>: <span class="str">"Mozilla/5.0 (compatible; MCPBot/1.0)"</span>
+        }
+      });
+      <span class="kw">const</span> html = <span class="kw">await</span> res.<span class="fn">text</span>();
+      <span class="kw">const</span> $ = cheerio.<span class="fn">load</span>(html);
+
+      <span class="kw">const</span> headlines = [];
+      $(<span class="str">"h3, [data-testid='Heading'] a, .Card-title"</span>).<span class="fn">each</span>((i, el) => {
+        <span class="kw">if</span> (headlines.length >= limit) <span class="kw">return false</span>;
+        <span class="kw">const</span> text = $(el).<span class="fn">text</span>().<span class="fn">trim</span>();
+        <span class="kw">const</span> link = $(el).<span class="fn">closest</span>(<span class="str">"a"</span>).<span class="fn">attr</span>(<span class="str">"href"</span>) || $(el).<span class="fn">find</span>(<span class="str">"a"</span>).<span class="fn">attr</span>(<span class="str">"href"</span>);
+        <span class="kw">if</span> (text.length > <span class="num">10</span>) {
+          headlines.<span class="fn">push</span>({ title: text, url: link || <span class="str">""</span> });
+        }
+      });
+
+      <span class="kw">return</span> { content: [{ type: <span class="str">"text"</span>,
+        text: JSON.<span class="fn">stringify</span>({ source, count: headlines.length, headlines }, <span class="kw">null</span>, <span class="num">2</span>)
+      }] };
+    }
+  );
+}
+</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:0.5rem;"></i> Web Scraping Ethics & Pitfalls</h4>
+    <p><strong>Rate limit yourself.</strong> Add delays between requests. A good rule: max 1 request per second per domain.</p>
+    <p><strong>Respect robots.txt.</strong> Check <code>site.com/robots.txt</code> before scraping. Many financial sites disallow bot access.</p>
+    <p><strong>Selectors break.</strong> Websites change their HTML structure frequently. Use data attributes (<code>[data-testid]</code>) when available — they're more stable than CSS classes.</p>
+    <p><strong>Prefer APIs.</strong> Scraping should be a last resort. If an API exists (even paid), it's more reliable and ethical.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: DATABASES                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-database"></i> Data Source #4</div>
+
+<div id="databases" class="content-card">
+  <h2><i class="fa-solid fa-database" style="color:#7c3aed; margin-right:0.5rem;"></i> Database Connections</h2>
+
+  <p>Connecting MCP to a database is incredibly powerful — the AI can query data directly, analyze schemas, and even generate reports. Let's implement tools for SQLite (local) and PostgreSQL (remote).</p>
+
+  <h3>SQLite — Zero-Config Local Database</h3>
+
+  <div class="code-block">
+    <span class="code-label">tools/sqlite.js</span>
+<pre>
+<span class="kw">import</span> Database <span class="kw">from</span> <span class="str">"better-sqlite3"</span>;
+
+<span class="kw">export function</span> <span class="fn">registerSQLiteTools</span>(server) {
+  <span class="kw">const</span> dbPath = process.env.SQLITE_DB || <span class="str">"./data.db"</span>;
+  <span class="kw">const</span> db = <span class="kw">new</span> <span class="fn">Database</span>(dbPath, { readonly: <span class="kw">true</span> });
+
+  server.<span class="fn">tool</span>(
+    <span class="str">"query_database"</span>,
+    <span class="str">"Execute a read-only SQL query against the SQLite database"</span>,
+    {
+      sql: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"SQL SELECT query (read-only)"</span>),
+      limit: z.<span class="fn">number</span>().<span class="fn">optional</span>().<span class="fn">default</span>(<span class="num">50</span>)
+        .<span class="fn">describe</span>(<span class="str">"Max rows to return (default 50)"</span>)
+    },
+    <span class="kw">async</span> ({ sql, limit }) => {
+      <span class="cm">// Safety: only allow SELECT statements</span>
+      <span class="kw">const</span> normalized = sql.<span class="fn">trim</span>().<span class="fn">toUpperCase</span>();
+      <span class="kw">if</span> (!normalized.<span class="fn">startsWith</span>(<span class="str">"SELECT"</span>) && !normalized.<span class="fn">startsWith</span>(<span class="str">"WITH"</span>)) {
+        <span class="kw">return</span> { content: [{ type: <span class="str">"text"</span>,
+          text: <span class="str">"Error: Only SELECT and WITH (CTE) queries are allowed."</span>
+        }], isError: <span class="kw">true</span> };
+      }
+
+      <span class="kw">try</span> {
+        <span class="kw">const</span> safeSql = sql.<span class="fn">replace</span>(<span class="str">/;\s*$/</span>, <span class="str">""</span>) + <span class="str">` LIMIT ${limit}`</span>;
+        <span class="kw">const</span> rows = db.<span class="fn">prepare</span>(safeSql).<span class="fn">all</span>();
+        <span class="kw">return</span> { content: [{ type: <span class="str">"text"</span>,
+          text: JSON.<span class="fn">stringify</span>({ rowCount: rows.length, rows }, <span class="kw">null</span>, <span class="num">2</span>)
+        }] };
+      } <span class="kw">catch</span> (err) {
+        <span class="kw">return</span> { content: [{ type: <span class="str">"text"</span>,
+          text: <span class="str">`SQL Error: ${err.message}`</span>
+        }], isError: <span class="kw">true</span> };
+      }
+    }
+  );
+
+  <span class="cm">// Resource: Database schema</span>
+  server.<span class="fn">resource</span>(<span class="str">"schema"</span>, <span class="str">"db://schema"</span>,
+    { description: <span class="str">"Database table schemas"</span>, mimeType: <span class="str">"application/json"</span> },
+    <span class="kw">async</span> () => {
+      <span class="kw">const</span> tables = db.<span class="fn">prepare</span>(
+        <span class="str">"SELECT name, sql FROM sqlite_master WHERE type='table'"</span>
+      ).<span class="fn">all</span>();
+      <span class="kw">return</span> { contents: [{ uri: <span class="str">"db://schema"</span>,
+        mimeType: <span class="str">"application/json"</span>,
+        text: JSON.<span class="fn">stringify</span>(tables, <span class="kw">null</span>, <span class="num">2</span>)
+      }] };
+    }
+  );
+}
+</pre>
+  </div>
+
+  <h3>DuckDB — Analytics on Files</h3>
+
+  <div class="code-block">
+    <span class="code-label">tools/duckdb.js</span>
+<pre>
+<span class="kw">import</span> duckdb <span class="kw">from</span> <span class="str">"duckdb"</span>;
+
+<span class="kw">export function</span> <span class="fn">registerDuckDBTools</span>(server) {
+  <span class="kw">const</span> db = <span class="kw">new</span> duckdb.Database(<span class="str">":memory:"</span>);
+
+  server.<span class="fn">tool</span>(
+    <span class="str">"analyze_csv"</span>,
+    <span class="str">"Run SQL analytics on a CSV/Parquet file using DuckDB"</span>,
+    {
+      file: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"Path to CSV or Parquet file"</span>),
+      query: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"SQL query (use 'data' as table name)"</span>)
+    },
+    <span class="kw">async</span> ({ file, query }) => {
+      <span class="kw">return new</span> Promise((resolve, reject) => {
+        <span class="kw">const</span> conn = db.<span class="fn">connect</span>();
+        <span class="cm">// Auto-detect file format</span>
+        <span class="kw">const</span> viewSQL = file.<span class="fn">endsWith</span>(<span class="str">".parquet"</span>)
+          ? <span class="str">`CREATE OR REPLACE VIEW data AS SELECT * FROM '${file}'`</span>
+          : <span class="str">`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('${file}')`</span>;
+
+        conn.<span class="fn">run</span>(viewSQL, () => {
+          conn.<span class="fn">all</span>(query, (err, rows) => {
+            <span class="kw">if</span> (err) resolve({ content: [{ type:<span class="str">"text"</span>, text:<span class="str">`Error: ${err.message}`</span> }], isError:<span class="kw">true</span> });
+            <span class="kw">else</span> resolve({ content: [{ type:<span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>(rows, <span class="kw">null</span>, <span class="num">2</span>) }] });
+          });
+        });
+      });
+    }
+  );
+}
+</pre>
+  </div>
+
+  <div id="chart-db-comparison" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: FILE SYSTEM                                        -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-folder-open"></i> Data Source #5</div>
+
+<div id="files" class="content-card">
+  <h2><i class="fa-solid fa-folder-open" style="color:#7c3aed; margin-right:0.5rem;"></i> File System Access</h2>
+
+  <p>Reading local files is one of the simplest yet most useful MCP capabilities. JSON configs, CSV exports, log files, Excel reports — all can be exposed as tools or resources.</p>
+
+  <div class="code-block">
+    <span class="code-label">tools/filesystem.js</span>
+<pre>
+<span class="kw">import</span> { readFile, readdir, stat } <span class="kw">from</span> <span class="str">"node:fs/promises"</span>;
+<span class="kw">import</span> { join, extname } <span class="kw">from</span> <span class="str">"node:path"</span>;
+
+<span class="kw">export function</span> <span class="fn">registerFileTools</span>(server) {
+  <span class="kw">const</span> ROOT = process.env.DATA_DIR || <span class="str">"./data"</span>;
+
+  server.<span class="fn">tool</span>(
+    <span class="str">"read_file"</span>,
+    <span class="str">"Read a JSON, CSV, or text file from the data directory"</span>,
+    {
+      path: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"Relative path within data directory"</span>)
+    },
+    <span class="kw">async</span> ({ path }) => {
+      <span class="cm">// Security: prevent directory traversal</span>
+      <span class="kw">if</span> (path.<span class="fn">includes</span>(<span class="str">".."</span>)) {
+        <span class="kw">return</span> { content: [{ type:<span class="str">"text"</span>, text:<span class="str">"Error: Path traversal not allowed"</span> }], isError:<span class="kw">true</span> };
+      }
+
+      <span class="kw">const</span> fullPath = <span class="fn">join</span>(ROOT, path);
+      <span class="kw">const</span> content = <span class="kw">await</span> <span class="fn">readFile</span>(fullPath, <span class="str">"utf-8"</span>);
+
+      <span class="cm">// Parse JSON automatically</span>
+      <span class="kw">if</span> (<span class="fn">extname</span>(path) === <span class="str">".json"</span>) {
+        <span class="kw">const</span> parsed = JSON.<span class="fn">parse</span>(content);
+        <span class="kw">return</span> { content: [{ type:<span class="str">"text"</span>,
+          text: JSON.<span class="fn">stringify</span>(parsed, <span class="kw">null</span>, <span class="num">2</span>)
+        }] };
+      }
+
+      <span class="kw">return</span> { content: [{ type:<span class="str">"text"</span>, text: content }] };
+    }
+  );
+
+  <span class="cm">// Resource: List available files</span>
+  server.<span class="fn">resource</span>(<span class="str">"files"</span>, <span class="str">"files://list"</span>,
+    { description: <span class="str">"List available data files"</span> },
+    <span class="kw">async</span> () => {
+      <span class="kw">const</span> entries = <span class="kw">await</span> <span class="fn">readdir</span>(ROOT, { recursive: <span class="kw">true</span> });
+      <span class="kw">return</span> { contents: [{ uri:<span class="str">"files://list"</span>, mimeType:<span class="str">"application/json"</span>,
+        text: JSON.<span class="fn">stringify</span>(entries)
+      }] };
+    }
+  );
+}
+</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-shield-halved" style="color:#ef4444; margin-right:0.5rem;"></i> Security: Path Traversal</h4>
+    <p>Always validate file paths to prevent directory traversal attacks. A malicious AI (or prompt injection) could try <code>../../etc/passwd</code>. Block <code>..</code> in paths, use <code>path.resolve()</code> and verify the resolved path starts with your allowed root directory. The MCP SDK doesn't enforce this — it's your responsibility.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: CACHING & ERROR HANDLING                           -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-bolt"></i> Production Patterns</div>
+
+<div id="caching" class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#7c3aed; margin-right:0.5rem;"></i> Caching, Rate Limiting & Error Handling</h2>
+
+  <p>Production MCP servers need three things that toy examples skip: caching (don't re-fetch identical data), rate limiting (don't get banned), and graceful error handling (don't crash the agent).</p>
+
+  <h3>In-Memory TTL Cache</h3>
+
+  <div class="code-block">
+    <span class="code-label">lib/cache.js</span>
+<pre>
+<span class="kw">export class</span> <span class="fn">TTLCache</span> {
+  <span class="fn">constructor</span>(defaultTTL = <span class="num">60000</span>) { <span class="cm">// 60s default</span>
+    <span class="kw">this</span>.cache = <span class="kw">new</span> Map();
+    <span class="kw">this</span>.defaultTTL = defaultTTL;
+  }
+
+  <span class="fn">get</span>(key) {
+    <span class="kw">const</span> entry = <span class="kw">this</span>.cache.<span class="fn">get</span>(key);
+    <span class="kw">if</span> (!entry) <span class="kw">return null</span>;
+    <span class="kw">if</span> (Date.<span class="fn">now</span>() > entry.expires) {
+      <span class="kw">this</span>.cache.<span class="fn">delete</span>(key);
+      <span class="kw">return null</span>;
+    }
+    <span class="kw">return</span> entry.value;
+  }
+
+  <span class="fn">set</span>(key, value, ttl = <span class="kw">this</span>.defaultTTL) {
+    <span class="kw">this</span>.cache.<span class="fn">set</span>(key, {
+      value,
+      expires: Date.<span class="fn">now</span>() + ttl
+    });
+  }
+
+  <span class="fn">wrap</span>(key, fn, ttl) {
+    <span class="kw">return async</span> (...args) => {
+      <span class="kw">const</span> cached = <span class="kw">this</span>.<span class="fn">get</span>(key);
+      <span class="kw">if</span> (cached) <span class="kw">return</span> cached;
+      <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">fn</span>(...args);
+      <span class="kw">this</span>.<span class="fn">set</span>(key, result, ttl);
+      <span class="kw">return</span> result;
+    };
+  }
+}
+</pre>
+  </div>
+
+  <h3>Using the Cache in Tools</h3>
+
+  <div class="code-block">
+    <span class="code-label">Usage</span>
+<pre>
+<span class="kw">const</span> cache = <span class="kw">new</span> <span class="fn">TTLCache</span>(<span class="num">300000</span>); <span class="cm">// 5 min default</span>
+
+server.<span class="fn">tool</span>(<span class="str">"get_stock_quote"</span>, <span class="str">"..."</span>, { symbol: z.<span class="fn">string</span>() },
+  <span class="kw">async</span> ({ symbol }) => {
+    <span class="kw">const</span> cacheKey = <span class="str">`quote:${symbol}`</span>;
+    <span class="kw">let</span> data = cache.<span class="fn">get</span>(cacheKey);
+
+    <span class="kw">if</span> (!data) {
+      data = <span class="kw">await</span> <span class="fn">fetchAPI</span>(<span class="str">`.../${symbol}`</span>);
+      cache.<span class="fn">set</span>(cacheKey, data, <span class="num">60000</span>); <span class="cm">// Cache 60s for real-time data</span>
+    }
+
+    <span class="kw">return</span> { content: [{ type:<span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>(data) }] };
+  }
+);
+</pre>
+  </div>
+
+  <h3>Caching Strategy by Data Type</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Data Type</th><th>TTL</th><th>Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Real-time quotes</td><td>30-60s</td><td>Changes every second during market hours</td></tr>
+      <tr><td>Daily bars/history</td><td>1 hour</td><td>Only updates once per day after close</td></tr>
+      <tr><td>Fundamentals</td><td>6 hours</td><td>Changes quarterly (earnings)</td></tr>
+      <tr><td>News headlines</td><td>5 min</td><td>Frequent updates, but repetition is fine</td></tr>
+      <tr><td>Static reference data</td><td>24 hours</td><td>Ticker lists, exchange info rarely change</td></tr>
+      <tr><td>Database schemas</td><td>1 hour</td><td>Only changes on migrations</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-latency" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3>Graceful Error Handling Pattern</h3>
+
+  <div class="code-block">
+    <span class="code-label">lib/safe-tool.js</span>
+<pre>
+<span class="cm">// Wrapper that catches all errors and returns MCP-formatted error responses</span>
+<span class="kw">export function</span> <span class="fn">safeTool</span>(handler) {
+  <span class="kw">return async</span> (params) => {
+    <span class="kw">try</span> {
+      <span class="kw">return await</span> <span class="fn">handler</span>(params);
+    } <span class="kw">catch</span> (error) {
+      <span class="kw">const</span> message = error.name === <span class="str">"AbortError"</span>
+        ? <span class="str">"Request timed out. The API may be slow or unreachable."</span>
+        : error.message.<span class="fn">includes</span>(<span class="str">"429"</span>)
+        ? <span class="str">"Rate limited. Please wait a moment and try again."</span>
+        : error.message.<span class="fn">includes</span>(<span class="str">"ENOTFOUND"</span>)
+        ? <span class="str">"Cannot reach the API. Check your network connection."</span>
+        : <span class="str">`Error: ${error.message}`</span>;
+
+      <span class="kw">return</span> {
+        content: [{ type: <span class="str">"text"</span>, text: message }],
+        isError: <span class="kw">true</span>
+      };
+    }
+  };
+}
+
+<span class="cm">// Usage</span>
+server.<span class="fn">tool</span>(<span class="str">"get_quote"</span>, <span class="str">"..."</span>, { symbol: z.<span class="fn">string</span>() },
+  <span class="fn">safeTool</span>(<span class="kw">async</span> ({ symbol }) => {
+    <span class="cm">// Your logic here — any thrown error is caught and formatted</span>
+  })
+);
+</pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-brain"></i> Knowledge Check</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#7c3aed; margin-right:0.5rem;"></i> Quick Quiz</h2>
+
+  <details>
+    <summary>Why should you use AbortController with fetch in MCP tools?</summary>
+    <div class="quiz-answer">MCP tool calls have an implicit timeout (the AI host won't wait forever). If your API call hangs, the entire tool call times out with an unhelpful error. <code>AbortController</code> lets you set an explicit timeout (e.g., 10s) and throw a meaningful error message that tells the AI what happened.</div>
+  </details>
+
+  <details>
+    <summary>What's the security risk of a database query tool, and how do you mitigate it?</summary>
+    <div class="quiz-answer">The main risk is <strong>SQL injection / destructive queries</strong>. An AI (or prompt injection) could attempt <code>DROP TABLE</code> or <code>DELETE FROM</code>. Mitigations: (1) Open the database as <strong>read-only</strong>, (2) Only allow <code>SELECT</code>/<code>WITH</code> statements, (3) Add a <code>LIMIT</code> clause to prevent memory exhaustion, (4) Use a separate read-only database user with restricted permissions.</div>
+  </details>
+
+  <details>
+    <summary>When should you cache for 30 seconds vs 6 hours?</summary>
+    <div class="quiz-answer"><strong>30s</strong> for real-time data (stock quotes, crypto prices) — stale-but-not-stale enough for conversational use. <strong>6h</strong> for slowly-changing data (company fundamentals, analyst ratings) that only updates quarterly. The rule: cache TTL should match the data's natural update frequency.</div>
+  </details>
+
+  <details>
+    <summary>Why use cheerio instead of a headless browser (Puppeteer) for scraping?</summary>
+    <div class="quiz-answer"><strong>Performance.</strong> Cheerio parses HTML in memory (~5ms) vs Puppeteer launching a full Chrome instance (~2-5 seconds). For MCP tools that need to respond quickly, Cheerio is ideal for static HTML. Use Puppeteer only when JavaScript rendering is required (SPAs, dynamic content).</div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 3</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Build a reusable API client with timeout (AbortController), retries, and rate-limit handling (429).</li>
+    <li><i class="fa-solid fa-check"></i> Financial APIs: CoinGecko (free crypto), Alpha Vantage (stocks), FRED (economics).</li>
+    <li><i class="fa-solid fa-check"></i> Web scraping with Cheerio: fast, lightweight, jQuery-syntax. Prefer APIs when available.</li>
+    <li><i class="fa-solid fa-check"></i> Database tools: open as read-only, whitelist SELECT, always LIMIT, expose schema as a resource.</li>
+    <li><i class="fa-solid fa-check"></i> TTL cache: 30-60s for real-time, hours for static. In-memory Map is enough for most servers.</li>
+    <li><i class="fa-solid fa-check"></i> Wrap all tool handlers in error-catching middleware that returns <code>isError: true</code>.</li>
+  </ul>
+</div>
+
+<a href="/series/mcp-masterclass/part4-multi-tool/" class="next-cta">
+  <div>
+    <div class="next-label">Part 4 of 5</div>
+    <div class="next-title">Multi-Tool Servers — Building a Real Platform <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">MCP from A to Z — Supercharging AI with Live Data</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Complete series in 5 parts &mdash; From protocol theory to production deployment</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#7c3aed; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Back to Home</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/mcp-masterclass/part2-first-server/" class="series-arrow" title="First Server"><i class="fas fa-chevron-left"></i></a><span class="series-title">MCP from A to Z</span><div class="series-steps"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-step" title="What is MCP?"><span class="series-num">1</span><span class="series-label">What is MCP?</span></a><a href="/series/mcp-masterclass/part2-first-server/" class="series-step" title="First Server"><span class="series-num">2</span><span class="series-label">First Server</span></a><a href="/series/mcp-masterclass/part3-live-data/" class="series-step current" title="Live Data"><span class="series-num">3</span><span class="series-label">Live Data</span></a><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-step" title="Multi-Tool"><span class="series-num">4</span><span class="series-label">Multi-Tool</span></a><a href="/series/mcp-masterclass/part5-market-watch/" class="series-step" title="Case Study"><span class="series-num">5</span><span class="series-label">Case Study</span></a></div><span class="series-counter">3/5</span><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-arrow" title="Multi-Tool"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. All rights reserved.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Data Sources Comparison
+var chartDS = echarts.init(document.getElementById('chart-datasources'));
+chartDS.setOption({
+  title: { text: 'Financial API Comparison — Free Tier Limits', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['CoinGecko', 'Finnhub', 'FRED', 'Alpha Vantage', 'Yahoo\n(RapidAPI)'], axisLabel: { fontSize: 11, interval: 0 } },
+  yAxis: { type: 'value', name: 'Requests / Day', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Daily Limit', type: 'bar', data: [
+      { value: 43200, itemStyle: { color: '#10b981' } },
+      { value: 86400, itemStyle: { color: '#3b82f6' } },
+      { value: 172800, itemStyle: { color: '#7c3aed' } },
+      { value: 25, itemStyle: { color: '#f59e0b' } },
+      { value: 500, itemStyle: { color: '#ef4444' } }
+    ], barWidth: '50%', label: { show: true, position: 'top', fontWeight: 700, fontSize: 11, formatter: function(p) { return p.value >= 1000 ? (p.value/1000).toFixed(0)+'K' : p.value; } } }
+  ]
+});
+
+// Chart 2: Database Performance
+var chartDB = echarts.init(document.getElementById('chart-db-comparison'));
+chartDB.setOption({
+  title: { text: 'Database Engine Performance for MCP', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Query Speed', max: 10 },
+      { name: 'Setup Ease', max: 10 },
+      { name: 'Analytics', max: 10 },
+      { name: 'Concurrency', max: 10 },
+      { name: 'File Support', max: 10 },
+      { name: 'Memory Use', max: 10 }
+    ],
+    radius: '55%',
+    axisName: { fontSize: 11, fontWeight: 600 }
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [8, 10, 4, 3, 2, 9], name: 'SQLite', lineStyle: { color: '#3b82f6', width: 2 }, areaStyle: { color: 'rgba(59,130,246,0.12)' }, itemStyle: { color: '#3b82f6' } },
+      { value: [9, 5, 6, 10, 3, 5], name: 'PostgreSQL', lineStyle: { color: '#10b981', width: 2 }, areaStyle: { color: 'rgba(16,185,129,0.12)' }, itemStyle: { color: '#10b981' } },
+      { value: [10, 8, 10, 4, 10, 6], name: 'DuckDB', lineStyle: { color: '#7c3aed', width: 2 }, areaStyle: { color: 'rgba(124,58,237,0.12)' }, itemStyle: { color: '#7c3aed' } }
+    ]
+  }]
+});
+
+// Chart 3: Latency Benchmarks
+var chartLatency = echarts.init(document.getElementById('chart-latency'));
+chartLatency.setOption({
+  title: { text: 'MCP Tool Response Time — Cached vs Uncached', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Stock Quote', 'Crypto Price', 'News Scrape', 'DB Query', 'File Read'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Latency (ms)', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Uncached', type: 'bar', data: [450, 320, 1200, 80, 15], itemStyle: { color: '#ef4444' }, barGap: '10%' },
+    { name: 'Cached', type: 'bar', data: [2, 2, 2, 2, 15], itemStyle: { color: '#10b981' } }
+  ]
+});
+
+window.addEventListener('resize', function() { chartDS.resize(); chartDB.resize(); chartLatency.resize(); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

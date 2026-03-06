@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Building Your Aggregator — One API to Rule Them All | Finance APIs — The Ultimate Guide — Part 5/5 | Market Watch</title>
+ <meta name="description" content="Finance APIs Series — Part 5/5: Build a unified data aggregator over multiple financial APIs. Rate limit management, caching, data normalization, failover, MCP integration, and a complete Docker-ready project.">
+ <meta property="og:title" content="Building Your Aggregator | Finance APIs 5/5 | Market Watch">
+ <meta property="og:description" content="The final chapter: build a production aggregator that unifies price, fundamental, sentiment, and options data from 5+ sources with caching, failover, and MCP integration.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/finance-apis/part5-aggregator/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #e0f2fe 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-sky { background:rgba(2,132,199,0.1); color:#0284c7; border:1px solid rgba(2,132,199,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code','Cascadia Code',monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; font-family:Inter,sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#c084fc; }
+ .code-block .string { color:#86efac; }
+ .code-block .function { color:#7dd3fc; }
+ .code-block .number { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border:1px solid #0284c7; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0369a1; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(2,132,199,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0284c7; margin-top:0.2rem; flex-shrink:0; }
+
+ .pedagogy-box { background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border:1px solid #7dd3fc; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .pedagogy-box h4 { color:#0284c7; margin-top:0; display:flex; align-items:center; gap:0.5rem; }
+
+ .api-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-left:4px solid #0284c7; transition:all 0.3s; }
+ .api-card:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .api-card h3 { margin-top:0; color:#0f172a; font-size:1.2rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0284c7; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.1rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#7dd3fc; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0284c7; margin-right:0.75rem; }
+ details[open] summary { border-color:#0284c7; background:#e0f2fe; border-radius:12px 12px 0 0; }
+ details .detail-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .compare-table { font-size:0.75rem; }
+   .compare-table th, .compare-table td { padding:0.5rem; }
+   .formula-box { font-size:0.9rem; padding:1rem; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .code-block { font-size:0.75rem; padding:1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> Finance APIs Series — Part 5 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Building Your Aggregator — One API to Rule Them All</h1>
+  <p class="hero-subtitle">The capstone project: build a production-grade data aggregator that unifies price, fundamental, sentiment, and options data from 5+ sources. Rate limiting, caching, failover, MCP integration, and Docker deployment.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-sky"><i class="fa-solid fa-layer-group"></i> Unified API</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-database"></i> Cache Layer</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Failover</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-robot"></i> MCP Server</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/finance-apis/part4-options-derivatives/" class="series-arrow" title="Options"><i class="fas fa-chevron-left"></i></a><span class="series-title">Finance APIs — The Ultimate Guide</span><div class="series-steps"><a href="/series/finance-apis/part1-price-data/" class="series-step" title="Price Data"><span class="series-num">1</span><span class="series-label">Price Data</span></a><a href="/series/finance-apis/part2-fundamentals/" class="series-step" title="Fundamentals"><span class="series-num">2</span><span class="series-label">Fundamentals</span></a><a href="/series/finance-apis/part3-sentiment/" class="series-step" title="Sentiment"><span class="series-num">3</span><span class="series-label">Sentiment</span></a><a href="/series/finance-apis/part4-options-derivatives/" class="series-step" title="Options"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/finance-apis/part5-aggregator/" class="series-step current" title="Aggregator"><span class="series-num">5</span><span class="series-label">Aggregator</span></a></div><span class="series-counter">5/5</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-sitemap"></i><span>Architecture</span></a><a href="#ratelimit" class="fnav-item" data-section="ratelimit"><i class="fas fa-gauge-high"></i><span>Rate Limiting</span></a><a href="#caching" class="fnav-item" data-section="caching"><i class="fas fa-database"></i><span>Caching</span></a><a href="#normalization" class="fnav-item" data-section="normalization"><i class="fas fa-arrows-rotate"></i><span>Normalization</span></a><a href="#failover" class="fnav-item" data-section="failover"><i class="fas fa-shield-halved"></i><span>Failover</span></a><a href="#mcp" class="fnav-item" data-section="mcp"><i class="fas fa-robot"></i><span>MCP Integration</span></a><a href="#docker" class="fnav-item" data-section="docker"><i class="fab fa-docker"></i><span>Docker Deploy</span></a><a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-star"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<!-- ===== ARCHITECTURE ===== -->
+<div class="section-divider"><i class="fa-solid fa-sitemap"></i> System Architecture</div>
+
+<div id="architecture" class="content-card">
+  <h2><i class="fa-solid fa-sitemap" style="color:#0284c7; margin-right:0.5rem;"></i> The Aggregator Architecture</h2>
+  <p>The goal: a single unified API that abstracts away the complexity of 5+ data providers. Your application code calls <code>aggregator.get_quote("AAPL")</code> and doesn't care whether the data comes from Polygon, Finnhub, or a local cache.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Providers Layer</h4>
+      <p>Adapters for each API (Yahoo, Polygon, Finnhub, FMP, StockTwits). Handles authentication and response parsing.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Rate Limiter</h4>
+      <p>Token bucket per provider. Queues requests when limits are hit. Round-robin across providers.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Cache Layer</h4>
+      <p>Redis for hot data (quotes, 60s TTL). SQLite for cold data (daily bars, financials, infinite TTL).</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Normalizer</h4>
+      <p>Unified schema across all providers. Consistent field names, data types, and timestamps.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">5</div>
+      <h4>Failover</h4>
+      <p>Primary &rarr; fallback &rarr; cache hierarchy. Automatic retry with exponential backoff.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">6</div>
+      <h4>MCP Server</h4>
+      <p>Expose the aggregator as an MCP server for AI agents (Claude, GPT, etc.).</p>
+    </div>
+  </div>
+
+  <h3>Data Flow Architecture</h3>
+  <div id="architectureChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The Market Watch Approach</h4>
+    <p>This is exactly how <strong>articles.market-watch.xyz</strong> works. Our MCP Gateway aggregates data from multiple providers through a unified interface. When Claude generates an analysis article, it calls <code>GetInstruments</code> or <code>QueryData</code> — a single function that internally routes to the best available provider, with automatic failover and caching. The articles you read on this site are powered by this exact architecture.</p>
+  </div>
+</div>
+
+<!-- ===== RATE LIMITING ===== -->
+<div class="section-divider"><i class="fa-solid fa-gauge-high"></i> Rate Limit Management</div>
+
+<div id="ratelimit" class="content-card">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#0284c7; margin-right:0.5rem;"></i> Rate Limit Management</h2>
+  <p>Every API has rate limits. The aggregator must respect them while maximizing throughput. Here's a production token bucket implementation:</p>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> time
+<span class="keyword">import</span> asyncio
+<span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass, field
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict
+
+<span class="keyword">@dataclass</span>
+<span class="keyword">class</span> <span class="function">TokenBucket</span>:
+    <span class="string">"""Token bucket rate limiter."""</span>
+    capacity: <span class="function">int</span>          <span class="comment"># Max tokens</span>
+    refill_rate: <span class="function">float</span>     <span class="comment"># Tokens per second</span>
+    tokens: <span class="function">float</span> = field(init=<span class="keyword">False</span>)
+    last_refill: <span class="function">float</span> = field(init=<span class="keyword">False</span>)
+
+    <span class="keyword">def</span> <span class="function">__post_init__</span>(self):
+        self.tokens = self.capacity
+        self.last_refill = time.monotonic()
+
+    <span class="keyword">def</span> <span class="function">_refill</span>(self):
+        now = time.monotonic()
+        elapsed = now - self.last_refill
+        self.tokens = <span class="function">min</span>(self.capacity, self.tokens + elapsed * self.refill_rate)
+        self.last_refill = now
+
+    <span class="keyword">async def</span> <span class="function">acquire</span>(self, tokens=<span class="number">1</span>):
+        <span class="string">"""Wait until tokens are available, then consume."""</span>
+        <span class="keyword">while True</span>:
+            self._refill()
+            <span class="keyword">if</span> self.tokens >= tokens:
+                self.tokens -= tokens
+                <span class="keyword">return True</span>
+            <span class="comment"># Wait for tokens to refill</span>
+            wait_time = (tokens - self.tokens) / self.refill_rate
+            <span class="keyword">await</span> asyncio.sleep(wait_time)
+
+<span class="keyword">class</span> <span class="function">RateLimitManager</span>:
+    <span class="string">"""Manage rate limits for multiple API providers."""</span>
+
+    LIMITS = {
+        <span class="string">"yahoo"</span>: TokenBucket(capacity=<span class="number">30</span>, refill_rate=<span class="number">0.5</span>),       <span class="comment"># ~30 req/min</span>
+        <span class="string">"polygon"</span>: TokenBucket(capacity=<span class="number">5</span>, refill_rate=<span class="number">5</span>/<span class="number">60</span>),        <span class="comment"># 5 req/min (free)</span>
+        <span class="string">"finnhub"</span>: TokenBucket(capacity=<span class="number">60</span>, refill_rate=<span class="number">1</span>),          <span class="comment"># 60 req/min</span>
+        <span class="string">"fmp"</span>: TokenBucket(capacity=<span class="number">5</span>, refill_rate=<span class="number">250</span>/(<span class="number">24</span>*<span class="number">3600</span>)),   <span class="comment"># 250 req/day</span>
+        <span class="string">"twelvedata"</span>: TokenBucket(capacity=<span class="number">8</span>, refill_rate=<span class="number">800</span>/(<span class="number">24</span>*<span class="number">3600</span>)), <span class="comment"># 800 req/day</span>
+        <span class="string">"stocktwits"</span>: TokenBucket(capacity=<span class="number">200</span>, refill_rate=<span class="number">200</span>/<span class="number">3600</span>),  <span class="comment"># 200 req/hr</span>
+    }
+
+    <span class="keyword">async def</span> <span class="function">acquire</span>(self, provider: <span class="function">str</span>):
+        bucket = self.LIMITS.get(provider)
+        <span class="keyword">if</span> bucket:
+            <span class="keyword">await</span> bucket.acquire()
+
+    <span class="keyword">def</span> <span class="function">available_tokens</span>(self, provider: <span class="function">str</span>) -> <span class="function">float</span>:
+        bucket = self.LIMITS.get(provider)
+        <span class="keyword">if</span> bucket:
+            bucket._refill()
+            <span class="keyword">return</span> bucket.tokens
+        <span class="keyword">return</span> <span class="number">0</span></pre>
+  </div>
+
+  <h3>Round-Robin Provider Selection</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">class</span> <span class="function">ProviderRouter</span>:
+    <span class="string">"""Select the best available provider based on rate limits and data type."""</span>
+
+    PROVIDER_PRIORITY = {
+        <span class="string">"quote"</span>: [<span class="string">"finnhub"</span>, <span class="string">"polygon"</span>, <span class="string">"twelvedata"</span>, <span class="string">"yahoo"</span>],
+        <span class="string">"bars_daily"</span>: [<span class="string">"yahoo"</span>, <span class="string">"polygon"</span>, <span class="string">"twelvedata"</span>],
+        <span class="string">"bars_intraday"</span>: [<span class="string">"polygon"</span>, <span class="string">"twelvedata"</span>, <span class="string">"finnhub"</span>],
+        <span class="string">"financials"</span>: [<span class="string">"fmp"</span>, <span class="string">"yahoo"</span>],
+        <span class="string">"sentiment"</span>: [<span class="string">"stocktwits"</span>, <span class="string">"finnhub"</span>],
+        <span class="string">"options"</span>: [<span class="string">"yahoo"</span>, <span class="string">"polygon"</span>],
+    }
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, rate_manager: RateLimitManager):
+        self.rate_manager = rate_manager
+
+    <span class="keyword">def</span> <span class="function">select</span>(self, data_type: <span class="function">str</span>) -> <span class="function">str</span>:
+        <span class="string">"""Pick the provider with the most available tokens."""</span>
+        providers = self.PROVIDER_PRIORITY.get(data_type, [<span class="string">"yahoo"</span>])
+        best = <span class="keyword">None</span>
+        best_tokens = -<span class="number">1</span>
+
+        <span class="keyword">for</span> p <span class="keyword">in</span> providers:
+            tokens = self.rate_manager.available_tokens(p)
+            <span class="keyword">if</span> tokens > best_tokens:
+                best = p
+                best_tokens = tokens
+
+        <span class="keyword">return</span> best <span class="keyword">or</span> providers[<span class="number">0</span>]</pre>
+  </div>
+</div>
+
+<!-- ===== CACHING ===== -->
+<div class="section-divider"><i class="fa-solid fa-database"></i> Caching Layer</div>
+
+<div id="caching" class="content-card">
+  <h2><i class="fa-solid fa-database" style="color:#0284c7; margin-right:0.5rem;"></i> Two-Tier Caching Strategy</h2>
+
+  <div class="formula-box">
+    <div class="formula-label">Cache Strategy</div>
+    <span class="formula-highlight">Hot</span> (Redis, 60s TTL): Quotes, real-time data &nbsp;&mdash;&nbsp; <span class="formula-highlight">Cold</span> (SQLite, infinite): Daily bars, financials
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> json
+<span class="keyword">import</span> sqlite3
+<span class="keyword">import</span> hashlib
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta
+<span class="keyword">from</span> typing <span class="keyword">import</span> Optional, Any
+
+<span class="keyword">class</span> <span class="function">CacheLayer</span>:
+    <span class="string">"""Two-tier cache: in-memory (hot) + SQLite (cold)."""</span>
+
+    TTL_CONFIG = {
+        <span class="string">"quote"</span>: <span class="number">60</span>,               <span class="comment"># 60 seconds</span>
+        <span class="string">"bars_intraday"</span>: <span class="number">300</span>,      <span class="comment"># 5 minutes</span>
+        <span class="string">"bars_daily"</span>: <span class="number">86400</span>,       <span class="comment"># 24 hours (daily bars don't change after close)</span>
+        <span class="string">"financials"</span>: <span class="number">604800</span>,      <span class="comment"># 7 days (quarterly data)</span>
+        <span class="string">"sentiment"</span>: <span class="number">300</span>,          <span class="comment"># 5 minutes</span>
+        <span class="string">"options"</span>: <span class="number">120</span>,             <span class="comment"># 2 minutes</span>
+        <span class="string">"insider"</span>: <span class="number">86400</span>,          <span class="comment"># 24 hours</span>
+    }
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, db_path=<span class="string">"cache.db"</span>):
+        <span class="comment"># Hot cache (in-memory dict, replace with Redis in production)</span>
+        self.hot = {}
+        <span class="comment"># Cold cache (SQLite)</span>
+        self.db = sqlite3.connect(db_path)
+        self.db.execute(<span class="string">"""
+            CREATE TABLE IF NOT EXISTS cache (
+                key TEXT PRIMARY KEY,
+                data TEXT,
+                data_type TEXT,
+                created_at REAL,
+                ttl INTEGER
+            )
+        """</span>)
+
+    <span class="keyword">def</span> <span class="function">_key</span>(self, data_type, symbol, **kwargs):
+        raw = <span class="string">f"{data_type}:{symbol}:{json.dumps(kwargs, sort_keys=True)}"</span>
+        <span class="keyword">return</span> hashlib.md5(raw.encode()).hexdigest()
+
+    <span class="keyword">def</span> <span class="function">get</span>(self, data_type: <span class="function">str</span>, symbol: <span class="function">str</span>, **kwargs) -> Optional[Any]:
+        key = self._key(data_type, symbol, **kwargs)
+        ttl = self.TTL_CONFIG.get(data_type, <span class="number">300</span>)
+        now = datetime.now().timestamp()
+
+        <span class="comment"># Check hot cache first</span>
+        <span class="keyword">if</span> key <span class="keyword">in</span> self.hot:
+            entry = self.hot[key]
+            <span class="keyword">if</span> now - entry[<span class="string">"created_at"</span>] < ttl:
+                <span class="keyword">return</span> entry[<span class="string">"data"</span>]
+
+        <span class="comment"># Check cold cache</span>
+        row = self.db.execute(
+            <span class="string">"SELECT data, created_at, ttl FROM cache WHERE key = ?"</span>, (key,)
+        ).fetchone()
+
+        <span class="keyword">if</span> row <span class="keyword">and</span> (now - row[<span class="number">1</span>]) < row[<span class="number">2</span>]:
+            data = json.loads(row[<span class="number">0</span>])
+            <span class="comment"># Promote to hot cache</span>
+            self.hot[key] = {<span class="string">"data"</span>: data, <span class="string">"created_at"</span>: row[<span class="number">1</span>]}
+            <span class="keyword">return</span> data
+
+        <span class="keyword">return None</span>
+
+    <span class="keyword">def</span> <span class="function">set</span>(self, data_type: <span class="function">str</span>, symbol: <span class="function">str</span>, data: Any, **kwargs):
+        key = self._key(data_type, symbol, **kwargs)
+        ttl = self.TTL_CONFIG.get(data_type, <span class="number">300</span>)
+        now = datetime.now().timestamp()
+
+        <span class="comment"># Write to both caches</span>
+        self.hot[key] = {<span class="string">"data"</span>: data, <span class="string">"created_at"</span>: now}
+        self.db.execute(
+            <span class="string">"INSERT OR REPLACE INTO cache VALUES (?, ?, ?, ?, ?)"</span>,
+            (key, json.dumps(data), data_type, now, ttl)
+        )
+        self.db.commit()</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> When to Use Redis vs. SQLite</h4>
+    <p><strong>SQLite</strong> is perfect for single-machine deployments — zero configuration, file-based, and handles millions of rows with sub-millisecond reads. Use it for the aggregator's local cache.</p>
+    <p><strong>Redis</strong> is needed when you have multiple instances of the aggregator (horizontal scaling) or when you need pub/sub for real-time updates. For a single-machine setup, SQLite + an in-memory dict is simpler and faster.</p>
+  </div>
+</div>
+
+<!-- ===== NORMALIZATION ===== -->
+<div class="section-divider"><i class="fa-solid fa-arrows-rotate"></i> Data Normalization</div>
+
+<div id="normalization" class="content-card">
+  <h2><i class="fa-solid fa-arrows-rotate" style="color:#0284c7; margin-right:0.5rem;"></i> Unified Schema</h2>
+  <p>Different providers return data in wildly different formats. The normalizer converts everything to a consistent schema:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Yahoo</th>
+        <th>Polygon</th>
+        <th>Finnhub</th>
+        <th>Normalized</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Price</td><td>regularMarketPrice</td><td>lastTrade.p</td><td>c</td><td><strong>price</strong></td></tr>
+      <tr><td>Change %</td><td>regularMarketChangePercent</td><td>todaysChangePerc</td><td>dp</td><td><strong>change_pct</strong></td></tr>
+      <tr><td>Volume</td><td>regularMarketVolume</td><td>day.v</td><td>v (missing)</td><td><strong>volume</strong></td></tr>
+      <tr><td>Open</td><td>regularMarketOpen</td><td>day.o</td><td>o</td><td><strong>open</strong></td></tr>
+      <tr><td>High</td><td>regularMarketDayHigh</td><td>day.h</td><td>h</td><td><strong>high</strong></td></tr>
+      <tr><td>Low</td><td>regularMarketDayLow</td><td>day.l</td><td>l</td><td><strong>low</strong></td></tr>
+      <tr><td>Timestamp</td><td>regularMarketTime (unix)</td><td>updated (ns)</td><td>t (unix)</td><td><strong>timestamp</strong> (ISO)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">from</span> dataclasses <span class="keyword">import</span> dataclass, asdict
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">from</span> typing <span class="keyword">import</span> Optional
+
+<span class="keyword">@dataclass</span>
+<span class="keyword">class</span> <span class="function">Quote</span>:
+    <span class="string">"""Normalized quote — same structure regardless of source."""</span>
+    symbol: <span class="function">str</span>
+    price: <span class="function">float</span>
+    open: <span class="function">float</span>
+    high: <span class="function">float</span>
+    low: <span class="function">float</span>
+    close: <span class="function">float</span>
+    volume: <span class="function">int</span>
+    change_pct: <span class="function">float</span>
+    timestamp: <span class="function">str</span>
+    source: <span class="function">str</span>
+
+<span class="keyword">class</span> <span class="function">Normalizer</span>:
+    <span class="string">"""Convert provider-specific responses to unified schema."""</span>
+
+    <span class="keyword">@staticmethod</span>
+    <span class="keyword">def</span> <span class="function">normalize_quote</span>(raw: <span class="function">dict</span>, source: <span class="function">str</span>, symbol: <span class="function">str</span>) -> Quote:
+        <span class="keyword">if</span> source == <span class="string">"yahoo"</span>:
+            <span class="keyword">return</span> Quote(
+                symbol=symbol, price=raw.get(<span class="string">"regularMarketPrice"</span>, <span class="number">0</span>),
+                open=raw.get(<span class="string">"regularMarketOpen"</span>, <span class="number">0</span>),
+                high=raw.get(<span class="string">"regularMarketDayHigh"</span>, <span class="number">0</span>),
+                low=raw.get(<span class="string">"regularMarketDayLow"</span>, <span class="number">0</span>),
+                close=raw.get(<span class="string">"regularMarketPreviousClose"</span>, <span class="number">0</span>),
+                volume=raw.get(<span class="string">"regularMarketVolume"</span>, <span class="number">0</span>),
+                change_pct=raw.get(<span class="string">"regularMarketChangePercent"</span>, <span class="number">0</span>),
+                timestamp=datetime.now().isoformat(), source=source
+            )
+        <span class="keyword">elif</span> source == <span class="string">"finnhub"</span>:
+            <span class="keyword">return</span> Quote(
+                symbol=symbol, price=raw.get(<span class="string">"c"</span>, <span class="number">0</span>),
+                open=raw.get(<span class="string">"o"</span>, <span class="number">0</span>), high=raw.get(<span class="string">"h"</span>, <span class="number">0</span>),
+                low=raw.get(<span class="string">"l"</span>, <span class="number">0</span>), close=raw.get(<span class="string">"pc"</span>, <span class="number">0</span>),
+                volume=<span class="number">0</span>,  <span class="comment"># Finnhub quote doesn't include volume</span>
+                change_pct=raw.get(<span class="string">"dp"</span>, <span class="number">0</span>),
+                timestamp=datetime.fromtimestamp(raw.get(<span class="string">"t"</span>, <span class="number">0</span>)).isoformat(),
+                source=source
+            )
+        <span class="keyword">elif</span> source == <span class="string">"polygon"</span>:
+            tick = raw.get(<span class="string">"ticker"</span>, {})
+            <span class="keyword">return</span> Quote(
+                symbol=symbol, price=tick.get(<span class="string">"lastTrade"</span>, {}).get(<span class="string">"p"</span>, <span class="number">0</span>),
+                open=tick.get(<span class="string">"day"</span>, {}).get(<span class="string">"o"</span>, <span class="number">0</span>),
+                high=tick.get(<span class="string">"day"</span>, {}).get(<span class="string">"h"</span>, <span class="number">0</span>),
+                low=tick.get(<span class="string">"day"</span>, {}).get(<span class="string">"l"</span>, <span class="number">0</span>),
+                close=tick.get(<span class="string">"prevDay"</span>, {}).get(<span class="string">"c"</span>, <span class="number">0</span>),
+                volume=tick.get(<span class="string">"day"</span>, {}).get(<span class="string">"v"</span>, <span class="number">0</span>),
+                change_pct=tick.get(<span class="string">"todaysChangePerc"</span>, <span class="number">0</span>),
+                timestamp=datetime.now().isoformat(), source=source
+            )
+        <span class="keyword">raise</span> ValueError(<span class="string">f"Unknown source: {source}"</span>)</pre>
+  </div>
+</div>
+
+<!-- ===== FAILOVER ===== -->
+<div class="section-divider"><i class="fa-solid fa-shield-halved"></i> Failover Strategy</div>
+
+<div id="failover" class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#0284c7; margin-right:0.5rem;"></i> Failover &amp; Resilience</h2>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> asyncio
+<span class="keyword">import</span> logging
+
+logger = logging.getLogger(<span class="string">"aggregator"</span>)
+
+<span class="keyword">class</span> <span class="function">FinanceAggregator</span>:
+    <span class="string">"""The main aggregator — unified API over multiple providers."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self):
+        self.cache = CacheLayer()
+        self.rate_manager = RateLimitManager()
+        self.router = ProviderRouter(self.rate_manager)
+        self.normalizer = Normalizer()
+        self.providers = {
+            <span class="string">"yahoo"</span>: YahooProvider(),
+            <span class="string">"polygon"</span>: PolygonProvider(<span class="string">"POLYGON_KEY"</span>),
+            <span class="string">"finnhub"</span>: FinnhubProvider(<span class="string">"FINNHUB_KEY"</span>),
+            <span class="string">"fmp"</span>: FMPProvider(<span class="string">"FMP_KEY"</span>),
+            <span class="string">"stocktwits"</span>: StockTwitsProvider(),
+        }
+        self.health = {p: <span class="keyword">True</span> <span class="keyword">for</span> p <span class="keyword">in</span> self.providers}
+
+    <span class="keyword">async def</span> <span class="function">get_quote</span>(self, symbol: <span class="function">str</span>) -> Quote:
+        <span class="string">"""Get a quote with failover: cache -> primary -> fallback -> stale cache."""</span>
+
+        <span class="comment"># 1. Check cache</span>
+        cached = self.cache.get(<span class="string">"quote"</span>, symbol)
+        <span class="keyword">if</span> cached:
+            <span class="keyword">return</span> Quote(**cached)
+
+        <span class="comment"># 2. Try providers in priority order</span>
+        providers = [<span class="string">"finnhub"</span>, <span class="string">"polygon"</span>, <span class="string">"yahoo"</span>]
+        <span class="keyword">for</span> provider_name <span class="keyword">in</span> providers:
+            <span class="keyword">if not</span> self.health[provider_name]:
+                <span class="keyword">continue</span>
+
+            <span class="keyword">try</span>:
+                <span class="keyword">await</span> self.rate_manager.acquire(provider_name)
+                provider = self.providers[provider_name]
+                raw = provider.get_quote(symbol)
+                quote = self.normalizer.normalize_quote(raw, provider_name, symbol)
+
+                <span class="comment"># Cache the result</span>
+                self.cache.set(<span class="string">"quote"</span>, symbol, asdict(quote))
+                self.health[provider_name] = <span class="keyword">True</span>
+                <span class="keyword">return</span> quote
+
+            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+                logger.warning(<span class="string">f"{provider_name} failed for {symbol}: {e}"</span>)
+                self.health[provider_name] = <span class="keyword">False</span>
+                <span class="comment"># Schedule health check in 60s</span>
+                asyncio.get_event_loop().call_later(<span class="number">60</span>, self._reset_health, provider_name)
+
+        <span class="comment"># 3. Last resort: stale cache (ignore TTL)</span>
+        stale = self.cache.get(<span class="string">"quote"</span>, symbol)  <span class="comment"># Would need a force_stale param</span>
+        <span class="keyword">if</span> stale:
+            logger.warning(<span class="string">f"Serving stale cache for {symbol}"</span>)
+            <span class="keyword">return</span> Quote(**stale)
+
+        <span class="keyword">raise</span> Exception(<span class="string">f"All providers failed for {symbol}"</span>)
+
+    <span class="keyword">def</span> <span class="function">_reset_health</span>(self, provider):
+        self.health[provider] = <span class="keyword">True</span>
+        logger.info(<span class="string">f"Reset health for {provider}"</span>)</pre>
+  </div>
+
+  <h3>Cost Optimization</h3>
+  <div id="costChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>Monthly Cost</th>
+        <th>Coverage</th>
+        <th>Real-Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Free Stack</strong></td>
+        <td>$0</td>
+        <td>Yahoo + Finnhub + FMP + StockTwits</td>
+        <td>Finnhub WS only</td>
+      </tr>
+      <tr>
+        <td><strong>Budget Pro</strong></td>
+        <td>$49</td>
+        <td>+ Polygon Starter ($29) + EODHD ($20)</td>
+        <td>SIP feed + global</td>
+      </tr>
+      <tr>
+        <td><strong>Full Production</strong></td>
+        <td>$319</td>
+        <td>+ Polygon Business ($199) + UW ($40) + Benzinga ($199)</td>
+        <td>Full OPRA + news</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== MCP INTEGRATION ===== -->
+<div class="section-divider"><i class="fa-solid fa-robot"></i> MCP Server Integration</div>
+
+<div id="mcp" class="content-card">
+  <h2><i class="fa-solid fa-robot" style="color:#0284c7; margin-right:0.5rem;"></i> Exposing Your Aggregator as an MCP Server</h2>
+  <p>The <strong>Model Context Protocol (MCP)</strong> lets AI agents (Claude, GPT, etc.) call your aggregator as a tool. This is how Market Watch's MCP Gateway works — Claude can call <code>GetMarketOverview</code> or <code>QueryData</code> to get real-time market data during article generation.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> What Is MCP?</h4>
+    <p><strong>MCP (Model Context Protocol)</strong> is an open standard by Anthropic that lets AI models interact with external tools and data sources. An MCP server exposes "tools" (functions) that an AI can call. By wrapping your aggregator as an MCP server, any AI agent can query live market data, run screeners, or fetch financials — just by describing what they need in natural language.</p>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">from</span> mcp.server <span class="keyword">import</span> Server
+<span class="keyword">from</span> mcp.types <span class="keyword">import</span> Tool, TextContent
+
+<span class="comment"># Initialize MCP server</span>
+server = Server(<span class="string">"finance-aggregator"</span>)
+
+<span class="comment"># Initialize our aggregator</span>
+aggregator = FinanceAggregator()
+
+<span class="keyword">@server</span>.tool()
+<span class="keyword">async def</span> <span class="function">get_quote</span>(symbol: <span class="function">str</span>) -> <span class="function">str</span>:
+    <span class="string">"""Get real-time quote for a stock symbol.
+
+    Args:
+        symbol: Stock ticker (e.g., AAPL, MSFT, TSLA)
+
+    Returns:
+        JSON with price, change, volume, and source
+    """</span>
+    quote = <span class="keyword">await</span> aggregator.get_quote(symbol)
+    <span class="keyword">return</span> json.dumps(asdict(quote), indent=<span class="number">2</span>)
+
+<span class="keyword">@server</span>.tool()
+<span class="keyword">async def</span> <span class="function">get_bars</span>(symbol: <span class="function">str</span>, period: <span class="function">str</span> = <span class="string">"1y"</span>, interval: <span class="function">str</span> = <span class="string">"1d"</span>) -> <span class="function">str</span>:
+    <span class="string">"""Get historical OHLCV bars for a stock.
+
+    Args:
+        symbol: Stock ticker
+        period: Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 5y)
+        interval: Bar interval (1m, 5m, 1h, 1d)
+
+    Returns:
+        JSON array of {date, open, high, low, close, volume}
+    """</span>
+    bars = <span class="keyword">await</span> aggregator.get_bars(symbol, period, interval)
+    <span class="keyword">return</span> json.dumps([asdict(b) <span class="keyword">for</span> b <span class="keyword">in</span> bars])
+
+<span class="keyword">@server</span>.tool()
+<span class="keyword">async def</span> <span class="function">get_financials</span>(symbol: <span class="function">str</span>, statement: <span class="function">str</span> = <span class="string">"income"</span>) -> <span class="function">str</span>:
+    <span class="string">"""Get financial statements for a company.
+
+    Args:
+        symbol: Stock ticker
+        statement: Type (income, balance, cashflow, ratios)
+
+    Returns:
+        JSON with quarterly/annual financial data
+    """</span>
+    data = <span class="keyword">await</span> aggregator.get_financials(symbol, statement)
+    <span class="keyword">return</span> json.dumps(data)
+
+<span class="keyword">@server</span>.tool()
+<span class="keyword">async def</span> <span class="function">get_sentiment</span>(symbol: <span class="function">str</span>) -> <span class="function">str</span>:
+    <span class="string">"""Get multi-source sentiment analysis for a stock.
+
+    Args:
+        symbol: Stock ticker
+
+    Returns:
+        JSON with composite sentiment, individual source scores, and convergence
+    """</span>
+    sentiment = <span class="keyword">await</span> aggregator.get_sentiment(symbol)
+    <span class="keyword">return</span> json.dumps(sentiment)
+
+<span class="keyword">@server</span>.tool()
+<span class="keyword">async def</span> <span class="function">market_overview</span>() -> <span class="function">str</span>:
+    <span class="string">"""Get a complete market overview: indices, sectors, commodities, crypto, rates.
+
+    Returns:
+        JSON with market snapshot across all asset classes
+    """</span>
+    overview = <span class="keyword">await</span> aggregator.get_market_overview()
+    <span class="keyword">return</span> json.dumps(overview)
+
+<span class="comment"># Run the server</span>
+<span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
+    <span class="keyword">import</span> asyncio
+    asyncio.run(server.run())</pre>
+  </div>
+
+  <h3>MCP Configuration (claude_desktop_config.json)</h3>
+  <div class="code-block">
+    <span class="code-label">JSON</span>
+<pre>{
+  <span class="string">"mcpServers"</span>: {
+    <span class="string">"finance-aggregator"</span>: {
+      <span class="string">"command"</span>: <span class="string">"python"</span>,
+      <span class="string">"args"</span>: [<span class="string">"path/to/mcp_server.py"</span>],
+      <span class="string">"env"</span>: {
+        <span class="string">"POLYGON_KEY"</span>: <span class="string">"your_key"</span>,
+        <span class="string">"FINNHUB_KEY"</span>: <span class="string">"your_key"</span>,
+        <span class="string">"FMP_KEY"</span>: <span class="string">"your_key"</span>
+      }
+    }
+  }
+}</pre>
+  </div>
+</div>
+
+<!-- ===== DOCKER ===== -->
+<div class="section-divider"><i class="fa-brands fa-docker"></i> Docker Deployment</div>
+
+<div id="docker" class="content-card">
+  <h2><i class="fa-brands fa-docker" style="color:#0284c7; margin-right:0.5rem;"></i> Docker Setup</h2>
+
+  <div class="code-block">
+    <span class="code-label">Dockerfile</span>
+<pre><span class="keyword">FROM</span> python:3.12-slim
+
+<span class="keyword">WORKDIR</span> /app
+
+<span class="comment"># Install dependencies</span>
+<span class="keyword">COPY</span> requirements.txt .
+<span class="keyword">RUN</span> pip install --no-cache-dir -r requirements.txt
+
+<span class="comment"># Copy application</span>
+<span class="keyword">COPY</span> . .
+
+<span class="comment"># Create data directory for SQLite cache</span>
+<span class="keyword">RUN</span> mkdir -p /data
+
+<span class="comment"># Environment variables</span>
+<span class="keyword">ENV</span> CACHE_DB=/data/cache.db
+<span class="keyword">ENV</span> LOG_LEVEL=INFO
+
+<span class="comment"># Expose MCP server port</span>
+<span class="keyword">EXPOSE</span> 8080
+
+<span class="keyword">CMD</span> ["python", "mcp_server.py"]</pre>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">docker-compose.yml</span>
+<pre><span class="keyword">version</span>: <span class="string">'3.8'</span>
+
+<span class="keyword">services</span>:
+  <span class="function">aggregator</span>:
+    build: .
+    ports:
+      - <span class="string">"8080:8080"</span>
+    environment:
+      - POLYGON_KEY=${POLYGON_KEY}
+      - FINNHUB_KEY=${FINNHUB_KEY}
+      - FMP_KEY=${FMP_KEY}
+    volumes:
+      - cache_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [<span class="string">"CMD"</span>, <span class="string">"curl"</span>, <span class="string">"-f"</span>, <span class="string">"http://localhost:8080/health"</span>]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  <span class="function">redis</span>:
+    image: redis:7-alpine
+    ports:
+      - <span class="string">"6379:6379"</span>
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+<span class="keyword">volumes</span>:
+  cache_data:
+  redis_data:</pre>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">requirements.txt</span>
+<pre>yfinance>=0.2.31
+requests>=2.31.0
+aiohttp>=3.9.0
+redis>=5.0.0
+mcp>=0.1.0
+scipy>=1.11.0
+numpy>=1.26.0
+pandas>=2.1.0
+praw>=7.7.0
+pytrends>=4.9.0
+finnhub-python>=2.4.0</pre>
+  </div>
+
+  <h3>Monitoring: API Health Dashboard</h3>
+  <div id="healthChart" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ===== TAKEAWAYS ===== -->
+<div class="section-divider"><i class="fa-solid fa-star"></i> Series Conclusion</div>
+
+<div id="takeaways" class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#0284c7; margin-right:0.5rem;"></i> Key Takeaways — The Complete Series</h2>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-trophy"></i> What You've Learned</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Part 1 — Price Data:</strong> Yahoo Finance for free history, Finnhub for real-time WebSocket, Polygon.io for production SIP data. Always build an abstraction layer.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Part 2 — Fundamentals:</strong> SEC EDGAR is the source of truth (free). FMP and SimFin for standardized financials. QuiverQuant for unique alternative data.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Part 3 — Sentiment:</strong> StockTwits + ApeWisdom for free social sentiment. Google Trends as a retail attention proxy. Always aggregate multiple sources.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Part 4 — Options:</strong> yfinance for free chains, Tradier for real-time, Polygon.io for OPRA. Build your own Greeks calculator with Black-Scholes.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Part 5 — Aggregator:</strong> Token bucket rate limiting, two-tier caching, unified schema normalization, failover hierarchy, and MCP integration for AI agents.</li>
+    </ul>
+  </div>
+
+  <h3>The Complete Free Stack</h3>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Data Type</th>
+        <th>Free Provider</th>
+        <th>Rate Limit</th>
+        <th>What You Get</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Historical OHLCV</td><td>Yahoo Finance</td><td>~2K req/hr</td><td>20+ years, global, adjusted</td></tr>
+      <tr><td>Real-Time Quotes</td><td>Finnhub</td><td>60 req/min</td><td>WebSocket + REST, US stocks</td></tr>
+      <tr><td>Technical Indicators</td><td>Twelve Data</td><td>800 req/day</td><td>100+ indicators, global</td></tr>
+      <tr><td>Financials</td><td>FMP</td><td>250 req/day</td><td>Income, balance, cashflow, ratios</td></tr>
+      <tr><td>SEC Filings</td><td>SEC EDGAR</td><td>10 req/sec</td><td>All filings, XBRL, full-text search</td></tr>
+      <tr><td>Social Sentiment</td><td>StockTwits</td><td>200 req/hr</td><td>Messages, sentiment tags, trending</td></tr>
+      <tr><td>Reddit Mentions</td><td>ApeWisdom</td><td>Unlimited</td><td>WSB rankings, mention counts</td></tr>
+      <tr><td>Search Interest</td><td>Google Trends</td><td>Unlimited</td><td>Search volume index</td></tr>
+      <tr><td>Options Chains</td><td>Yahoo Finance</td><td>~2K req/hr</td><td>Chains, IV, volume, OI</td></tr>
+      <tr><td>Congress Trades</td><td>QuiverQuant</td><td>Generous</td><td>STOCK Act disclosures</td></tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Total Cost of the Free Stack</div>
+    10 data sources &times; $0/month = <span class="formula-highlight">$0/month</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-rocket"></i> What to Build Next</h4>
+    <p>You now have the knowledge to build any financial data application. Here are some project ideas:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-chart-line" style="color:#0284c7;"></i> <strong>Personal stock dashboard</strong> — Real-time portfolio tracker with sentiment overlay</li>
+      <li><i class="fa-solid fa-magnifying-glass" style="color:#0284c7;"></i> <strong>Options scanner</strong> — Detect unusual volume and IV spikes across the market</li>
+      <li><i class="fa-solid fa-robot" style="color:#0284c7;"></i> <strong>AI research assistant</strong> — MCP server that Claude can query for live market data</li>
+      <li><i class="fa-solid fa-bell" style="color:#0284c7;"></i> <strong>Alert system</strong> — Monitor insider buys, sentiment shifts, and technical breakouts</li>
+      <li><i class="fa-solid fa-brain" style="color:#0284c7;"></i> <strong>Backtesting engine</strong> — Test fundamental + technical + sentiment strategies</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary>How does the Market Watch MCP Gateway work?</summary>
+    <div class="detail-answer">
+      <p>The Market Watch MCP Gateway (<code>mcp__market-watch__*</code> tools) is essentially a production version of the aggregator described in this series. It provides 58+ data types through a unified interface: quotes, bars, financials, sentiment, options, earnings, analyst actions, insider transactions, and more. When Claude generates the daily briefing or a stock analysis, it calls these MCP tools to get live market data — the exact same architecture you've learned in this series.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>What if I want to sell my aggregator as a service?</summary>
+    <div class="detail-answer">
+      <p>If you're redistributing data, you need proper data licensing. Yahoo Finance explicitly forbids redistribution. SEC EDGAR data is public domain. For a commercial product, you'll need Polygon.io ($199/mo minimum for redistribution rights), or a direct exchange data license. The aggregator architecture works the same — you just swap in licensed providers.</p>
+    </div>
+  </details>
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Architecture Flow Chart (Sankey-style)
+  var archChart = echarts.init(document.getElementById('architectureChart'));
+  archChart.setOption({
+    tooltip: { trigger: 'item' },
+    series: [{
+      type: 'sankey',
+      layout: 'none',
+      emphasis: { focus: 'adjacency' },
+      nodeAlign: 'left',
+      data: [
+        { name: 'Yahoo', itemStyle: { color: '#6001d2' } },
+        { name: 'Polygon', itemStyle: { color: '#0284c7' } },
+        { name: 'Finnhub', itemStyle: { color: '#10b981' } },
+        { name: 'FMP', itemStyle: { color: '#f97316' } },
+        { name: 'StockTwits', itemStyle: { color: '#1da1f2' } },
+        { name: 'Rate Limiter', itemStyle: { color: '#64748b' } },
+        { name: 'Normalizer', itemStyle: { color: '#7c3aed' } },
+        { name: 'Cache', itemStyle: { color: '#dc2626' } },
+        { name: 'MCP Server', itemStyle: { color: '#0f172a' } },
+        { name: 'AI Agents', itemStyle: { color: '#0369a1' } },
+        { name: 'Your App', itemStyle: { color: '#16a34a' } }
+      ],
+      links: [
+        { source: 'Yahoo', target: 'Rate Limiter', value: 5 },
+        { source: 'Polygon', target: 'Rate Limiter', value: 4 },
+        { source: 'Finnhub', target: 'Rate Limiter', value: 4 },
+        { source: 'FMP', target: 'Rate Limiter', value: 3 },
+        { source: 'StockTwits', target: 'Rate Limiter', value: 2 },
+        { source: 'Rate Limiter', target: 'Normalizer', value: 18 },
+        { source: 'Normalizer', target: 'Cache', value: 18 },
+        { source: 'Cache', target: 'MCP Server', value: 10 },
+        { source: 'Cache', target: 'Your App', value: 8 },
+        { source: 'MCP Server', target: 'AI Agents', value: 10 }
+      ]
+    }]
+  });
+
+  // Cost Optimization Chart
+  var costChart = echarts.init(document.getElementById('costChart'));
+  costChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Without Aggregator', 'With Aggregator (Free Stack)', 'With Aggregator (Budget)'], bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+    xAxis: { type: 'category', data: ['Month 1', 'Month 2', 'Month 3', 'Month 6', 'Month 12'] },
+    yAxis: { type: 'value', name: 'Cumulative Cost ($)', axisLabel: { formatter: '${value}' } },
+    series: [
+      { name: 'Without Aggregator', type: 'line', data: [199, 398, 597, 1194, 2388], lineStyle: { color: '#ef4444' }, itemStyle: { color: '#ef4444' }, areaStyle: { color: 'rgba(239,68,68,0.1)' } },
+      { name: 'With Aggregator (Free Stack)', type: 'line', data: [0, 0, 0, 0, 0], lineStyle: { color: '#10b981' }, itemStyle: { color: '#10b981' } },
+      { name: 'With Aggregator (Budget)', type: 'line', data: [49, 98, 147, 294, 588], lineStyle: { color: '#0284c7' }, itemStyle: { color: '#0284c7' }, areaStyle: { color: 'rgba(2,132,199,0.1)' } }
+    ]
+  });
+
+  // API Health Dashboard
+  var healthChart = echarts.init(document.getElementById('healthChart'));
+  healthChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Yahoo', 'Polygon', 'Finnhub', 'FMP', 'StockTwits'], bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+    xAxis: { type: 'category', data: ['00:00', '04:00', '08:00', '09:30', '10:00', '12:00', '14:00', '16:00', '18:00', '22:00'] },
+    yAxis: { type: 'value', name: 'Response Time (ms)', max: 500 },
+    series: [
+      { name: 'Yahoo', type: 'line', data: [120, 115, 135, 180, 165, 150, 145, 200, 130, 110], smooth: true, lineStyle: { color: '#6001d2' }, itemStyle: { color: '#6001d2' } },
+      { name: 'Polygon', type: 'line', data: [45, 40, 50, 65, 60, 55, 50, 70, 45, 40], smooth: true, lineStyle: { color: '#0284c7' }, itemStyle: { color: '#0284c7' } },
+      { name: 'Finnhub', type: 'line', data: [80, 75, 95, 120, 110, 100, 95, 130, 85, 70], smooth: true, lineStyle: { color: '#10b981' }, itemStyle: { color: '#10b981' } },
+      { name: 'FMP', type: 'line', data: [150, 140, 160, 220, 200, 180, 170, 250, 160, 145], smooth: true, lineStyle: { color: '#f97316' }, itemStyle: { color: '#f97316' } },
+      { name: 'StockTwits', type: 'line', data: [200, 180, 210, 300, 280, 250, 240, 350, 220, 190], smooth: true, lineStyle: { color: '#1da1f2' }, itemStyle: { color: '#1da1f2' } }
+    ]
+  });
+
+  window.addEventListener('resize', function() { archChart.resize(); costChart.resize(); healthChart.resize(); });
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

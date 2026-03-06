@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Fundamentals APIs — Financials, Filings &amp; Company Data | Finance APIs — The Ultimate Guide — Part 2/5 | Market Watch</title>
+ <meta name="description" content="Finance APIs Series — Part 2/5: Complete guide to fundamentals APIs — SEC EDGAR, Financial Modeling Prep, Fintel, SimFin, WhaleWisdom, QuiverQuant. Free and paid sources for income statements, balance sheets, 13F filings, and insider transactions.">
+ <meta property="og:title" content="Fundamentals APIs — Financials, Filings &amp; Company Data | Finance APIs 2/5 | Market Watch">
+ <meta property="og:description" content="Every API for financial statements, SEC filings, institutional ownership, and company data — compared with code examples.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/finance-apis/part2-fundamentals/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #e0f2fe 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-sky { background:rgba(2,132,199,0.1); color:#0284c7; border:1px solid rgba(2,132,199,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', 'Cascadia Code', monospace; font-size:0.85rem; line-height:1.7; position:relative; }
+ .code-block .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:0.1em; font-family:Inter, sans-serif; font-weight:700; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#c084fc; }
+ .code-block .string { color:#86efac; }
+ .code-block .function { color:#7dd3fc; }
+ .code-block .number { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border:1px solid #0284c7; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0369a1; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(2,132,199,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0284c7; margin-top:0.2rem; flex-shrink:0; }
+
+ .pedagogy-box { background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border:1px solid #7dd3fc; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .pedagogy-box h4 { color:#0284c7; margin-top:0; display:flex; align-items:center; gap:0.5rem; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(2,132,199,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .api-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-left:4px solid #0284c7; transition:all 0.3s; }
+ .api-card:hover { transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .api-card h3 { margin-top:0; color:#0f172a; font-size:1.2rem; }
+ .api-card .api-meta { display:flex; gap:0.75rem; flex-wrap:wrap; margin:0.75rem 0; }
+ .api-card .api-tag { font-size:0.7rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:99px; text-transform:uppercase; letter-spacing:0.05em; }
+ .api-tag-free { background:#f0fdf4; color:#16a34a; border:1px solid #86efac; }
+ .api-tag-paid { background:#fef3c7; color:#d97706; border:1px solid #fcd34d; }
+ .api-tag-freemium { background:#e0f2fe; color:#0284c7; border:1px solid #7dd3fc; }
+
+ .pros-cons { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0; }
+ .pros-cons ul { list-style:none; padding:0; margin:0; }
+ .pros-cons li { padding:0.3rem 0; font-size:0.85rem; display:flex; align-items:flex-start; gap:0.5rem; }
+ .pros h4 { color:#16a34a; margin:0 0 0.5rem; font-size:0.85rem; }
+ .cons h4 { color:#dc2626; margin:0 0 0.5rem; font-size:0.85rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0284c7; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0284c7; margin-right:0.75rem; }
+ details[open] summary { border-color:#0284c7; background:#e0f2fe; border-radius:12px 12px 0 0; }
+ details .detail-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .pros-cons { grid-template-columns:1fr; }
+   .compare-table { font-size:0.75rem; }
+   .compare-table th, .compare-table td { padding:0.5rem; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .code-block { font-size:0.75rem; padding:1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> Finance APIs Series — Part 2 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Fundamentals APIs — Financials, Filings &amp; Company Data</h1>
+  <p class="hero-subtitle">Every source for income statements, balance sheets, SEC filings, institutional ownership, and insider transactions. From the 100% free SEC EDGAR to premium 13F trackers.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-sky"><i class="fa-solid fa-file-invoice-dollar"></i> SEC EDGAR</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-building-columns"></i> 13F Filings</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-dollar-sign"></i> Free Sources</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-user-secret"></i> Insider Trades</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/finance-apis/part1-price-data/" class="series-arrow" title="Price Data"><i class="fas fa-chevron-left"></i></a><span class="series-title">Finance APIs — The Ultimate Guide</span><div class="series-steps"><a href="/series/finance-apis/part1-price-data/" class="series-step" title="Price Data"><span class="series-num">1</span><span class="series-label">Price Data</span></a><a href="/series/finance-apis/part2-fundamentals/" class="series-step current" title="Fundamentals"><span class="series-num">2</span><span class="series-label">Fundamentals</span></a><a href="/series/finance-apis/part3-sentiment/" class="series-step" title="Sentiment"><span class="series-num">3</span><span class="series-label">Sentiment</span></a><a href="/series/finance-apis/part4-options-derivatives/" class="series-step" title="Options"><span class="series-num">4</span><span class="series-label">Options</span></a><a href="/series/finance-apis/part5-aggregator/" class="series-step" title="Aggregator"><span class="series-num">5</span><span class="series-label">Aggregator</span></a></div><span class="series-counter">2/5</span><a href="/series/finance-apis/part3-sentiment/" class="series-arrow" title="Sentiment"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-map"></i><span>Overview</span></a><a href="#edgar" class="fnav-item" data-section="edgar"><i class="fas fa-landmark"></i><span>SEC EDGAR</span></a><a href="#fmp" class="fnav-item" data-section="fmp"><i class="fas fa-chart-bar"></i><span>Financial Modeling Prep</span></a><a href="#ownership" class="fnav-item" data-section="ownership"><i class="fas fa-users"></i><span>Ownership &amp; Insiders</span></a><a href="#alternative" class="fnav-item" data-section="alternative"><i class="fas fa-flask"></i><span>Alternative Data</span></a><a href="#comparison" class="fnav-item" data-section="comparison"><i class="fas fa-table"></i><span>Comparison</span></a><a href="#code" class="fnav-item" data-section="code"><i class="fas fa-code"></i><span>Code Examples</span></a><a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-star"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<!-- ===== OVERVIEW ===== -->
+<div class="section-divider"><i class="fa-solid fa-map"></i> The Fundamentals Landscape</div>
+
+<div id="overview" class="content-card">
+  <h2><i class="fa-solid fa-map" style="color:#0284c7; margin-right:0.5rem;"></i> Why Fundamentals Data Matters</h2>
+  <p>Price data tells you <em>what</em> happened. Fundamentals tell you <em>why</em>. Revenue growth, profit margins, debt levels, insider buying, institutional positioning — these are the building blocks of value investing, factor models, and every earnings-based trading strategy.</p>
+  <p>The good news: unlike real-time price data, most fundamental data is <strong>publicly available for free</strong>. The SEC mandates that every public company file standardized financial reports, and all of this data is accessible through EDGAR. The paid APIs add convenience — they parse, standardize, and deliver it through clean REST endpoints.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> The Three Financial Statements</h4>
+    <p>Every public company files three core financial statements:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-file-invoice-dollar" style="color:#0284c7;"></i> <strong>Income Statement</strong> — Revenue, costs, and profits over a period (quarterly/annual). Key metrics: Revenue, Gross Profit, Operating Income, Net Income, EPS.</li>
+      <li><i class="fa-solid fa-scale-balanced" style="color:#0284c7;"></i> <strong>Balance Sheet</strong> — Assets, liabilities, and equity at a point in time. Key metrics: Total Assets, Total Debt, Cash, Shareholders' Equity, Book Value.</li>
+      <li><i class="fa-solid fa-money-bill-transfer" style="color:#0284c7;"></i> <strong>Cash Flow Statement</strong> — Cash generated and spent over a period. Key metrics: Operating Cash Flow, CapEx, Free Cash Flow, Dividends Paid.</li>
+    </ul>
+  </div>
+
+  <h3>Types of Fundamental Data</h3>
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Financial Statements</h4>
+      <p>Income, balance sheet, cash flow. Quarterly (10-Q) and annual (10-K). The core of fundamental analysis.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>SEC Filings</h4>
+      <p>10-K, 10-Q, 8-K, proxy statements, registration statements. Full text + structured XBRL data.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Institutional Ownership</h4>
+      <p>13F filings: what hedge funds and institutions own. Updated quarterly, 45-day delay.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Insider Transactions</h4>
+      <p>Form 4 filings: CEO/CFO/director buys and sells. Strong signal — insiders buy for one reason only.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEC EDGAR ===== -->
+<div class="section-divider"><i class="fa-solid fa-landmark"></i> Government Sources</div>
+
+<div id="edgar" class="content-card">
+  <h2><i class="fa-solid fa-landmark" style="color:#0284c7; margin-right:0.5rem;"></i> SEC EDGAR — The Ultimate Free Source</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-landmark" style="color:#1e3a5f; margin-right:0.5rem;"></i> SEC EDGAR (Electronic Data Gathering, Analysis, and Retrieval)</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">100% Free</span>
+      <span class="api-tag api-tag-free">No API Key</span>
+      <span class="api-tag api-tag-free">Government Source</span>
+    </div>
+    <p>EDGAR is the SEC's filing system. Every document that every public company has ever filed with the SEC lives here — 10-Ks, 10-Qs, 8-Ks, proxy statements, insider transaction forms, 13F filings. It's the <strong>authoritative source of truth</strong> for all US public company data. The new EDGAR API provides structured JSON access to company facts, filings, and XBRL data.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 100% free, unlimited access</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Authoritative (it IS the source)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Full-text search across all filings</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> XBRL structured data (machine-readable)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> New JSON API (company facts endpoint)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Historical data back to 1993</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Rate limit: 10 requests/second</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Data is raw — requires parsing</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> XBRL taxonomy varies by company</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No standardized financials</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> UI is from the 1990s</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>The New EDGAR API — Company Facts</h3>
+  <p>In 2022, the SEC launched a modern JSON API for structured company data. The <code>/api/xbrl/companyfacts/</code> endpoint provides every XBRL fact ever filed by a company — revenue, net income, EPS, assets, and hundreds more metrics, all in clean JSON.</p>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># EDGAR requires a User-Agent header with your email</span>
+headers = {<span class="string">"User-Agent"</span>: <span class="string">"YourApp/1.0 (your@email.com)"</span>}
+
+<span class="comment"># Get all XBRL facts for Apple (CIK = 0000320193)</span>
+url = <span class="string">"https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json"</span>
+data = requests.get(url, headers=headers).json()
+
+<span class="comment"># Extract revenue (us-gaap:Revenues or RevenueFromContractWithCustomerExcludingAssessedTax)</span>
+revenue_facts = data[<span class="string">"facts"</span>][<span class="string">"us-gaap"</span>][<span class="string">"RevenueFromContractWithCustomerExcludingAssessedTax"</span>]
+units = revenue_facts[<span class="string">"units"</span>][<span class="string">"USD"</span>]
+
+<span class="comment"># Filter for 10-K annual filings only</span>
+annual = [u <span class="keyword">for</span> u <span class="keyword">in</span> units <span class="keyword">if</span> u[<span class="string">"form"</span>] == <span class="string">"10-K"</span>]
+<span class="keyword">for</span> a <span class="keyword">in</span> annual[-<span class="number">5</span>:]:
+    <span class="function">print</span>(<span class="string">f"  {a['end']}: ${a['val']/1e9:.1f}B"</span>)
+
+<span class="comment"># Output:
+# 2021-09-25: $365.8B
+# 2022-09-24: $394.3B
+# 2023-09-30: $383.3B
+# 2024-09-28: $391.0B
+# 2025-09-27: $410.2B</span></pre>
+  </div>
+
+  <h3>Full-Text Search (EFTS)</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="comment"># Search all filings for a keyword</span>
+search_url = <span class="string">"https://efts.sec.gov/LATEST/search-index?q=\"artificial intelligence\"&dateRange=custom&startdt=2025-01-01&enddt=2026-03-06&forms=10-K"</span>
+results = requests.get(search_url, headers=headers).json()
+
+<span class="function">print</span>(<span class="string">f"Found {results['hits']['total']['value']} 10-K filings mentioning 'artificial intelligence'"</span>)
+<span class="keyword">for</span> hit <span class="keyword">in</span> results[<span class="string">"hits"</span>][<span class="string">"hits"</span>][:<span class="number">5</span>]:
+    <span class="function">print</span>(<span class="string">f"  {hit['_source']['display_names'][0]} — {hit['_source']['file_date']}"</span>)</pre>
+  </div>
+
+  <h3>Insider Transactions (Form 4)</h3>
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="comment"># Get recent insider filings for Apple</span>
+filings_url = <span class="string">"https://data.sec.gov/submissions/CIK0000320193.json"</span>
+company = requests.get(filings_url, headers=headers).json()
+
+<span class="comment"># Filter for Form 4 (insider transactions)</span>
+recent = company[<span class="string">"filings"</span>][<span class="string">"recent"</span>]
+form4_indices = [i <span class="keyword">for</span> i, f <span class="keyword">in</span> <span class="function">enumerate</span>(recent[<span class="string">"form"</span>]) <span class="keyword">if</span> f == <span class="string">"4"</span>]
+
+<span class="keyword">for</span> i <span class="keyword">in</span> form4_indices[:<span class="number">5</span>]:
+    <span class="function">print</span>(<span class="string">f"  {recent['filingDate'][i]} — {recent['primaryDocument'][i]}"</span>)</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> CIK Numbers</h4>
+    <p>EDGAR uses <strong>CIK (Central Index Key)</strong> numbers, not ticker symbols. To look up a CIK: <code>https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=apple&CIK=&type=&dateb=&owner=include&count=10&search_text=&action=getcompany</code>. Or use the company tickers JSON: <code>https://www.sec.gov/files/company_tickers.json</code> which maps every ticker to its CIK.</p>
+  </div>
+</div>
+
+<!-- ===== FINANCIAL MODELING PREP & SIMFIN ===== -->
+<div class="section-divider"><i class="fa-solid fa-chart-bar"></i> Standardized Financials</div>
+
+<div id="fmp" class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#0284c7; margin-right:0.5rem;"></i> Standardized Financial Statement APIs</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-chart-pie" style="color:#10b981; margin-right:0.5rem;"></i> Financial Modeling Prep (FMP)</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Freemium</span>
+      <span class="api-tag api-tag-free">250 req/day Free</span>
+      <span class="api-tag api-tag-paid">$15-65/mo</span>
+    </div>
+    <p>FMP takes the raw SEC data and standardizes it into clean, consistent JSON. Their free tier gives you 250 API calls per day — enough to build a serious screener. They cover income statements, balance sheets, cash flows, ratios, DCF models, and more for 13,000+ stocks.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 250 req/day free (generous)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Standardized financials (consistent keys)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Financial ratios pre-calculated</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> DCF models built in</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> 13,000+ stocks globally</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Good documentation</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Historical depth limited on free</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Occasional data quality issues</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Batch endpoints paid only</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+
+FMP_KEY = <span class="string">"YOUR_FMP_KEY"</span>
+base = <span class="string">"https://financialmodelingprep.com/api/v3"</span>
+
+<span class="comment"># Income Statement (quarterly)</span>
+income = requests.get(<span class="string">f"{base}/income-statement/AAPL?period=quarter&limit=8&apikey={FMP_KEY}"</span>).json()
+<span class="keyword">for</span> q <span class="keyword">in</span> income[:<span class="number">4</span>]:
+    <span class="function">print</span>(<span class="string">f"  {q['date']} — Revenue: ${q['revenue']/1e9:.1f}B, Net Income: ${q['netIncome']/1e9:.1f}B"</span>)
+
+<span class="comment"># Balance Sheet (annual)</span>
+balance = requests.get(<span class="string">f"{base}/balance-sheet-statement/AAPL?limit=5&apikey={FMP_KEY}"</span>).json()
+
+<span class="comment"># Key Financial Ratios</span>
+ratios = requests.get(<span class="string">f"{base}/ratios/AAPL?limit=5&apikey={FMP_KEY}"</span>).json()
+<span class="keyword">for</span> r <span class="keyword">in</span> ratios[:<span class="number">3</span>]:
+    <span class="function">print</span>(<span class="string">f"  {r['date']} — P/E: {r['priceEarningsRatio']:.1f}, ROE: {r['returnOnEquity']:.1%}"</span>)
+
+<span class="comment"># DCF (Discounted Cash Flow) valuation</span>
+dcf = requests.get(<span class="string">f"{base}/discounted-cash-flow/AAPL?apikey={FMP_KEY}"</span>).json()
+<span class="function">print</span>(<span class="string">f"  DCF value: ${dcf[0]['dcf']:.2f} vs Market: ${dcf[0]['Stock Price']:.2f}"</span>)</pre>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-table" style="color:#2563eb; margin-right:0.5rem;"></i> SimFin</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free Bulk Download</span>
+      <span class="api-tag api-tag-freemium">API $10/mo</span>
+    </div>
+    <p>SimFin takes a unique approach: they offer <strong>free bulk CSV downloads</strong> of standardized financials for 5,000+ US stocks. No API key needed — just download the files. They also have a Python library (<code>simfin</code>) that handles the downloading and caching automatically. The paid API tier adds real-time access and more history.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free bulk CSV downloads</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Excellent Python library</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Truly standardized (same columns for all companies)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Great for backtesting fundamental strategies</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> US stocks only</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Bulk data updated monthly (not real-time)</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> ~5,000 stocks (not comprehensive)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> simfin <span class="keyword">as</span> sf
+
+<span class="comment"># Set your API key (free) and data directory</span>
+sf.set_api_key(<span class="string">"free"</span>)
+sf.set_data_dir(<span class="string">"~/simfin_data/"</span>)
+
+<span class="comment"># Download and cache income statements (annual)</span>
+df_income = sf.load_income(variant=<span class="string">"annual"</span>, market=<span class="string">"us"</span>)
+
+<span class="comment"># Filter for Apple</span>
+aapl = df_income.loc[<span class="string">"AAPL"</span>]
+<span class="function">print</span>(aapl[[<span class="string">"Revenue"</span>, <span class="string">"Net Income"</span>, <span class="string">"Shares (Diluted)"</span>]].tail())
+
+<span class="comment"># Download balance sheets</span>
+df_balance = sf.load_balance(variant=<span class="string">"quarterly"</span>, market=<span class="string">"us"</span>)
+
+<span class="comment"># Download cash flow statements</span>
+df_cashflow = sf.load_cashflow(variant=<span class="string">"annual"</span>, market=<span class="string">"us"</span>)
+
+<span class="comment"># Calculate Free Cash Flow for all companies</span>
+df_cashflow[<span class="string">"FCF"</span>] = df_cashflow[<span class="string">"Net Cash from Operating Activities"</span>] + df_cashflow[<span class="string">"Net Cash from Investing Activities"</span>]</pre>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-globe" style="color:#9333ea; margin-right:0.5rem;"></i> Macrotrends</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free (Web)</span>
+    </div>
+    <p>Macrotrends.net isn't an API — it's a website with 15+ years of historical fundamentals for every major stock. The site is scraping-friendly (simple HTML tables) and provides data that would cost $100+/month from a commercial API: revenue, EPS, margins, P/E ratios, book value, and more. Many quantitative traders use Macrotrends as their historical fundamental data source.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Revenue &amp; EPS</strong> — 15+ years quarterly, with analyst estimates</li>
+      <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Margins</strong> — Gross, operating, net margins over time</li>
+      <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Valuation</strong> — P/E, P/S, P/B, EV/EBITDA historical</li>
+      <li><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> <strong>Balance Sheet</strong> — Cash, debt, equity, assets over time</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== OWNERSHIP & INSIDERS ===== -->
+<div class="section-divider"><i class="fa-solid fa-users"></i> Institutional Ownership &amp; Insider Transactions</div>
+
+<div id="ownership" class="content-card">
+  <h2><i class="fa-solid fa-users" style="color:#0284c7; margin-right:0.5rem;"></i> Who Owns What — 13F &amp; Insider Data</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-building-columns" style="color:#0284c7; margin-right:0.5rem;"></i> Fintel</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-paid">$40-100/mo</span>
+    </div>
+    <p>Fintel is the premium source for institutional ownership data. They parse every 13F filing and provide searchable, sortable data on what hedge funds, mutual funds, and institutions own. They also track short interest, insider transactions, and unusual institutional activity. Their "Insider Score" aggregates insider buying signals.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Most comprehensive 13F database</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Short interest data (hard to find free)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Insider buying/selling scores</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Institutional activity alerts</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> API access on higher plans only</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> 13F data is inherently 45-day delayed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-whale" style="color:#2563eb; margin-right:0.5rem;"></i> WhaleWisdom</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-freemium">Freemium</span>
+      <span class="api-tag api-tag-paid">$15-50/mo</span>
+    </div>
+    <p>WhaleWisdom focuses specifically on 13F tracking. Their free tier lets you view the top 50 holders of any stock and the latest portfolio of any institution. The paid tiers add historical comparisons, portfolio change alerts, and the ability to clone any fund's portfolio. Their "WhaleScore" ranks stocks by hedge fund consensus.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Free tier for basic 13F lookup</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Portfolio cloning feature</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> WhaleScore ranking system</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Historical portfolio evolution</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> No API on free tier</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> US-only</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> 45-day filing delay (inherent to 13F)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The 13F Delay Problem</h4>
+    <p>13F filings are due <strong>45 days after the end of each quarter</strong>. This means that when you see a Q4 filing in mid-February, the data reflects positions as of December 31st — <strong>45 days stale</strong>. Hedge funds know this and sometimes use "13F window dressing" to manipulate their reported positions. Always treat 13F data as directional (trend of positions), not as a real-time snapshot.</p>
+  </div>
+</div>
+
+<!-- ===== ALTERNATIVE DATA ===== -->
+<div class="section-divider"><i class="fa-solid fa-flask"></i> Alternative Data Sources</div>
+
+<div id="alternative" class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#0284c7; margin-right:0.5rem;"></i> Alternative &amp; Unconventional Data</h2>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-landmark-dome" style="color:#dc2626; margin-right:0.5rem;"></i> QuiverQuant</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">Free</span>
+      <span class="api-tag api-tag-free">Open Source</span>
+    </div>
+    <p>QuiverQuant is an incredible free resource that tracks alternative data no one else aggregates: <strong>Congressional stock trades</strong> (STOCK Act disclosures), lobbying expenditures, government contracts, patent filings, and Wikipedia page views. The "Congress Trading" dataset alone has generated multiple viral research papers showing that members of Congress consistently outperform the S&P 500.</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4><i class="fa-solid fa-thumbs-up"></i> Pros</h4>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Completely free with API access</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Congressional trades (unique dataset)</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Government contracts data</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Patent filings by company</li>
+          <li><i class="fa-solid fa-check" style="color:#16a34a;"></i> Wikipedia page views as proxy for interest</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4><i class="fa-solid fa-thumbs-down"></i> Cons</h4>
+        <ul>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Congressional data has 45-day delay</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> US-only</li>
+          <li><i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Smaller dataset than commercial providers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+
+<span class="comment"># QuiverQuant — Congressional Trading</span>
+headers = {<span class="string">"Authorization"</span>: <span class="string">f"Bearer {QUIVER_KEY}"</span>}
+
+<span class="comment"># Recent congressional trades</span>
+congress = requests.get(<span class="string">"https://api.quiverquant.com/beta/historical/congresstrading/AAPL"</span>, headers=headers).json()
+<span class="keyword">for</span> t <span class="keyword">in</span> congress[:<span class="number">5</span>]:
+    <span class="function">print</span>(<span class="string">f"  {t['TransactionDate']} — {t['Representative']} ({t['Party']}) — {t['Transaction']} ${t['Range']}"</span>)
+
+<span class="comment"># Government contracts</span>
+contracts = requests.get(<span class="string">"https://api.quiverquant.com/beta/historical/govcontracts/MSFT"</span>, headers=headers).json()
+
+<span class="comment"># Patent filings</span>
+patents = requests.get(<span class="string">"https://api.quiverquant.com/beta/historical/patents/GOOGL"</span>, headers=headers).json()</pre>
+  </div>
+
+  <div class="api-card">
+    <h3><i class="fa-solid fa-file-code" style="color:#f97316; margin-right:0.5rem;"></i> SEC API (New EDGAR API)</h3>
+    <div class="api-meta">
+      <span class="api-tag api-tag-free">100% Free</span>
+      <span class="api-tag api-tag-free">JSON Format</span>
+    </div>
+    <p>The SEC's newest API provides structured company data in clean JSON format. The <code>/submissions/</code> endpoint gives you filing history, and the <code>/companyfacts/</code> endpoint provides standardized XBRL data. Unlike the old EDGAR full-text search, this API returns machine-readable data ready for analysis.</p>
+  </div>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> requests
+
+headers = {<span class="string">"User-Agent"</span>: <span class="string">"YourApp/1.0 (your@email.com)"</span>}
+
+<span class="comment"># Company search by ticker -> CIK mapping</span>
+tickers = requests.get(<span class="string">"https://www.sec.gov/files/company_tickers.json"</span>, headers=headers).json()
+<span class="comment"># Find CIK for any ticker</span>
+ticker_map = {v[<span class="string">"ticker"</span>]: v[<span class="string">"cik_str"</span>] <span class="keyword">for</span> v <span class="keyword">in</span> tickers.values()}
+aapl_cik = ticker_map[<span class="string">"AAPL"</span>]  <span class="comment"># 320193</span>
+
+<span class="comment"># Get all submissions/filings</span>
+submissions = requests.get(<span class="string">f"https://data.sec.gov/submissions/CIK{str(aapl_cik).zfill(10)}.json"</span>, headers=headers).json()
+<span class="function">print</span>(<span class="string">f"Company: {submissions['name']}"</span>)
+<span class="function">print</span>(<span class="string">f"SIC: {submissions['sic']} — {submissions['sicDescription']}"</span>)
+
+<span class="comment"># Recent filings</span>
+recent = submissions[<span class="string">"filings"</span>][<span class="string">"recent"</span>]
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">5</span>):
+    <span class="function">print</span>(<span class="string">f"  {recent['filingDate'][i]} — {recent['form'][i]} — {recent['primaryDocument'][i]}"</span>)</pre>
+  </div>
+</div>
+
+<!-- ===== COMPARISON ===== -->
+<div class="section-divider"><i class="fa-solid fa-table"></i> Comparison</div>
+
+<div id="comparison" class="content-card">
+  <h2><i class="fa-solid fa-table" style="color:#0284c7; margin-right:0.5rem;"></i> Fundamentals API Comparison</h2>
+
+  <div style="overflow-x:auto;">
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Price</th>
+        <th>Financials</th>
+        <th>13F / Ownership</th>
+        <th>Insiders</th>
+        <th>Alt Data</th>
+        <th>API Quality</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>SEC EDGAR</strong></td>
+        <td>Free</td>
+        <td>Raw XBRL</td>
+        <td>Yes (raw)</td>
+        <td>Yes (Form 4)</td>
+        <td>No</td>
+        <td>Good (new API)</td>
+      </tr>
+      <tr>
+        <td><strong>Financial Modeling Prep</strong></td>
+        <td>Free / $15+</td>
+        <td>Standardized</td>
+        <td>Limited</td>
+        <td>Limited</td>
+        <td>No</td>
+        <td>Good</td>
+      </tr>
+      <tr>
+        <td><strong>SimFin</strong></td>
+        <td>Free / $10</td>
+        <td>Standardized</td>
+        <td>No</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Excellent (Python)</td>
+      </tr>
+      <tr>
+        <td><strong>Fintel</strong></td>
+        <td>$40+</td>
+        <td>No</td>
+        <td>Best-in-class</td>
+        <td>Yes + Score</td>
+        <td>Short Interest</td>
+        <td>Good</td>
+      </tr>
+      <tr>
+        <td><strong>WhaleWisdom</strong></td>
+        <td>Free / $15+</td>
+        <td>No</td>
+        <td>Excellent</td>
+        <td>Limited</td>
+        <td>WhaleScore</td>
+        <td>Web-only free</td>
+      </tr>
+      <tr>
+        <td><strong>QuiverQuant</strong></td>
+        <td>Free</td>
+        <td>No</td>
+        <td>Limited</td>
+        <td>No</td>
+        <td>Congress, Patents</td>
+        <td>Good</td>
+      </tr>
+      <tr>
+        <td><strong>Macrotrends</strong></td>
+        <td>Free (web)</td>
+        <td>15+ years</td>
+        <td>No</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Scraping only</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Coverage by Metric</h3>
+  <div id="coverageChart" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <h3>Decision Matrix</h3>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Use Case</th>
+        <th>Best Choice</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Building a stock screener</strong></td>
+        <td>FMP (free tier)</td>
+        <td>250 req/day, standardized financials + ratios + DCF</td>
+      </tr>
+      <tr>
+        <td><strong>Backtesting value strategies</strong></td>
+        <td>SimFin (free bulk)</td>
+        <td>Download all financials as CSV, consistent schema</td>
+      </tr>
+      <tr>
+        <td><strong>Tracking smart money</strong></td>
+        <td>Fintel ($40/mo)</td>
+        <td>Best 13F database + insider scores + short interest</td>
+      </tr>
+      <tr>
+        <td><strong>Following Congress trades</strong></td>
+        <td>QuiverQuant (free)</td>
+        <td>Only source that aggregates STOCK Act disclosures</td>
+      </tr>
+      <tr>
+        <td><strong>Full-text filing search</strong></td>
+        <td>SEC EDGAR (free)</td>
+        <td>EFTS search across all filings, mentions of keywords</td>
+      </tr>
+      <tr>
+        <td><strong>Quick fundamental lookup</strong></td>
+        <td>Macrotrends (free)</td>
+        <td>No API key, 15+ years history, simple HTML tables</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== CODE ===== -->
+<div class="section-divider"><i class="fa-solid fa-code"></i> Building a Financial Database</div>
+
+<div id="code" class="content-card">
+  <h2><i class="fa-solid fa-code" style="color:#0284c7; margin-right:0.5rem;"></i> Building a Local Financial Database</h2>
+  <p>The smartest approach is to download fundamental data once and store it locally. Here's how to build a SQLite-based financial database using free sources:</p>
+
+  <div class="code-block">
+    <span class="code-label">Python</span>
+<pre><span class="keyword">import</span> sqlite3
+<span class="keyword">import</span> requests
+<span class="keyword">import</span> json
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">class</span> <span class="function">FinancialDB</span>:
+    <span class="string">"""Local SQLite database for fundamental data."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, db_path=<span class="string">"financials.db"</span>):
+        self.conn = sqlite3.connect(db_path)
+        self._create_tables()
+
+    <span class="keyword">def</span> <span class="function">_create_tables</span>(self):
+        self.conn.executescript(<span class="string">"""
+        CREATE TABLE IF NOT EXISTS income_statements (
+            ticker TEXT, date TEXT, period TEXT,
+            revenue REAL, gross_profit REAL, operating_income REAL,
+            net_income REAL, eps REAL, shares_outstanding REAL,
+            PRIMARY KEY (ticker, date, period)
+        );
+        CREATE TABLE IF NOT EXISTS balance_sheets (
+            ticker TEXT, date TEXT,
+            total_assets REAL, total_liabilities REAL,
+            total_equity REAL, cash REAL, total_debt REAL,
+            PRIMARY KEY (ticker, date)
+        );
+        CREATE TABLE IF NOT EXISTS insider_trades (
+            ticker TEXT, date TEXT, insider_name TEXT,
+            transaction_type TEXT, shares REAL, price REAL,
+            value REAL
+        );
+        """</span>)
+
+    <span class="keyword">def</span> <span class="function">load_from_fmp</span>(self, ticker, api_key):
+        <span class="string">"""Load financials from Financial Modeling Prep."""</span>
+        base = <span class="string">"https://financialmodelingprep.com/api/v3"</span>
+
+        <span class="comment"># Income statements</span>
+        income = requests.get(
+            <span class="string">f"{base}/income-statement/{ticker}?limit=20&apikey={api_key}"</span>
+        ).json()
+
+        <span class="keyword">for</span> q <span class="keyword">in</span> income:
+            self.conn.execute(
+                <span class="string">"INSERT OR REPLACE INTO income_statements VALUES (?,?,?,?,?,?,?,?,?)"</span>,
+                (ticker, q[<span class="string">"date"</span>], q[<span class="string">"period"</span>], q[<span class="string">"revenue"</span>],
+                 q[<span class="string">"grossProfit"</span>], q[<span class="string">"operatingIncome"</span>],
+                 q[<span class="string">"netIncome"</span>], q[<span class="string">"eps"</span>], q[<span class="string">"weightedAverageShsOut"</span>])
+            )
+        self.conn.commit()
+
+    <span class="keyword">def</span> <span class="function">load_from_edgar</span>(self, ticker, cik):
+        <span class="string">"""Load from SEC EDGAR Company Facts (free, no key)."""</span>
+        headers = {<span class="string">"User-Agent"</span>: <span class="string">"FinDB/1.0 (your@email.com)"</span>}
+        url = <span class="string">f"https://data.sec.gov/api/xbrl/companyfacts/CIK{str(cik).zfill(10)}.json"</span>
+        data = requests.get(url, headers=headers).json()
+
+        <span class="comment"># Extract revenue</span>
+        <span class="keyword">for</span> key <span class="keyword">in</span> [<span class="string">"Revenues"</span>, <span class="string">"RevenueFromContractWithCustomerExcludingAssessedTax"</span>]:
+            <span class="keyword">if</span> key <span class="keyword">in</span> data[<span class="string">"facts"</span>].get(<span class="string">"us-gaap"</span>, {}):
+                units = data[<span class="string">"facts"</span>][<span class="string">"us-gaap"</span>][key][<span class="string">"units"</span>][<span class="string">"USD"</span>]
+                <span class="keyword">for</span> u <span class="keyword">in</span> units:
+                    <span class="keyword">if</span> u[<span class="string">"form"</span>] <span class="keyword">in</span> (<span class="string">"10-K"</span>, <span class="string">"10-Q"</span>):
+                        self.conn.execute(
+                            <span class="string">"INSERT OR REPLACE INTO income_statements (ticker, date, period, revenue) VALUES (?,?,?,?)"</span>,
+                            (ticker, u[<span class="string">"end"</span>], <span class="string">"FY"</span> <span class="keyword">if</span> u[<span class="string">"form"</span>] == <span class="string">"10-K"</span> <span class="keyword">else</span> <span class="string">"Q"</span>, u[<span class="string">"val"</span>])
+                        )
+                <span class="keyword">break</span>
+        self.conn.commit()
+
+    <span class="keyword">def</span> <span class="function">query</span>(self, sql):
+        <span class="keyword">return</span> self.conn.execute(sql).fetchall()
+
+<span class="comment"># Usage</span>
+db = FinancialDB()
+db.load_from_fmp(<span class="string">"AAPL"</span>, <span class="string">"YOUR_FMP_KEY"</span>)
+db.load_from_fmp(<span class="string">"MSFT"</span>, <span class="string">"YOUR_FMP_KEY"</span>)
+
+<span class="comment"># Compare revenue growth</span>
+results = db.query(<span class="string">"""
+    SELECT ticker, date, revenue/1e9 as revenue_bn
+    FROM income_statements
+    WHERE period = 'FY' AND ticker IN ('AAPL', 'MSFT')
+    ORDER BY ticker, date DESC LIMIT 10
+"""</span>)
+<span class="keyword">for</span> r <span class="keyword">in</span> results:
+    <span class="function">print</span>(<span class="string">f"  {r[0]} — {r[1]} — ${r[2]:.1f}B"</span>)</pre>
+  </div>
+</div>
+
+<!-- ===== TAKEAWAYS ===== -->
+<div class="section-divider"><i class="fa-solid fa-star"></i> Key Takeaways</div>
+
+<div id="takeaways" class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#0284c7; margin-right:0.5rem;"></i> Key Takeaways</h2>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> What You Should Remember</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check-circle"></i> <strong>SEC EDGAR is the source of truth</strong> — all other providers ultimately derive their data from EDGAR filings. Learn the EDGAR API and you'll never be locked into a vendor.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>FMP is the best free fundamentals API</strong> — 250 req/day with standardized income/balance/cashflow statements, ratios, and DCF models.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>SimFin for backtesting</strong> — free bulk CSV downloads with truly standardized schemas across all companies. Perfect for fundamental factor research.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Insider buying is the strongest signal</strong> — executives buy their own stock for one reason: they believe it will go up. Track Form 4 filings via EDGAR or Fintel.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>13F data is 45 days stale</strong> — never trade based on 13F filings alone. Use them for trend analysis and conviction confirmation.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>QuiverQuant is a hidden gem</strong> — free Congressional trading data has been shown to outperform the S&P 500. Unique alternative data source.</li>
+      <li><i class="fa-solid fa-check-circle"></i> <strong>Build a local database</strong> — download fundamental data once and cache it. Financial statements don't change retroactively.</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary>How do I handle companies that change their XBRL taxonomy?</summary>
+    <div class="detail-answer">
+      <p>This is the biggest pain point with EDGAR data. Revenue might be filed under "Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", or "SalesRevenueNet" depending on the company and the year. The solution is to maintain a mapping table of equivalent XBRL tags. SimFin and FMP handle this for you — they've already built the mapping. If you're using EDGAR directly, start with the most common tags and add fallbacks.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Which API should I use for international fundamentals?</summary>
+    <div class="detail-answer">
+      <p>Most free sources are US-only. For international fundamentals: <strong>FMP</strong> covers 13,000+ stocks globally including European and Asian markets. <strong>EODHD</strong> ($20/mo) provides fundamentals for 60+ exchanges. For EU specifically, the European Single Electronic Format (ESEF) is the equivalent of EDGAR XBRL, but it's much harder to work with.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ===== NEXT CTA ===== -->
+<a href="/series/finance-apis/part3-sentiment/" class="next-cta">
+  <div>
+    <div class="next-label">Next in Series — Part 3</div>
+    <div class="next-title">Sentiment &amp; Social APIs — StockTwits, Reddit, Twitter</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Coverage Heatmap Chart
+  var coverageChart = echarts.init(document.getElementById('coverageChart'));
+  var sources = ['EDGAR', 'FMP', 'SimFin', 'Fintel', 'WhaleWisdom', 'QuiverQuant', 'Macrotrends'];
+  var metrics = ['Income Stmt', 'Balance Sheet', 'Cash Flow', 'Ratios', '13F Ownership', 'Insiders', 'Short Interest', 'Alt Data'];
+  var data = [
+    // EDGAR
+    [0,0,8],[0,1,8],[0,2,8],[0,3,2],[0,4,8],[0,5,8],[0,6,0],[0,7,0],
+    // FMP
+    [1,0,9],[1,1,9],[1,2,9],[1,3,10],[1,4,3],[1,5,3],[1,6,0],[1,7,0],
+    // SimFin
+    [2,0,9],[2,1,9],[2,2,9],[2,3,5],[2,4,0],[2,5,0],[2,6,0],[2,7,0],
+    // Fintel
+    [3,0,0],[3,1,0],[3,2,0],[3,3,0],[3,4,10],[3,5,9],[3,6,10],[3,7,3],
+    // WhaleWisdom
+    [4,0,0],[4,1,0],[4,2,0],[4,3,0],[4,4,9],[4,5,3],[4,6,0],[4,7,3],
+    // QuiverQuant
+    [5,0,0],[5,1,0],[5,2,0],[5,3,0],[5,4,3],[5,5,0],[5,6,0],[5,7,10],
+    // Macrotrends
+    [6,0,8],[6,1,8],[6,2,7],[6,3,8],[6,4,0],[6,5,0],[6,6,0],[6,7,0]
+  ];
+  coverageChart.setOption({
+    tooltip: { position: 'top', formatter: function(p) { return sources[p.data[0]] + ' / ' + metrics[p.data[1]] + ': ' + p.data[2] + '/10'; } },
+    grid: { left: '15%', right: '5%', top: '5%', bottom: '15%' },
+    xAxis: { type: 'category', data: metrics, axisLabel: { rotate: 30, fontSize: 11 }, splitArea: { show: true } },
+    yAxis: { type: 'category', data: sources, axisLabel: { fontSize: 11 }, splitArea: { show: true } },
+    visualMap: { min: 0, max: 10, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#f1f5f9', '#bae6fd', '#0284c7', '#0369a1'] } },
+    series: [{ type: 'heatmap', data: data, label: { show: true, fontSize: 11 }, emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } } }]
+  });
+
+  window.addEventListener('resize', function() { coverageChart.resize(); });
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

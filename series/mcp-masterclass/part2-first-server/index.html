@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,ai,formation" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Your First MCP Server — Hello World to Production | MCP from A to Z — Part 2/5 | Market Watch</title>
+ <meta name="description" content="MCP Masterclass Part 2/5: Build your first MCP server from scratch with Node.js and the official SDK. Setup, tools, resources, testing with MCP Inspector, and connecting to Claude Code.">
+ <meta property="og:title" content="Your First MCP Server | MCP Masterclass 2/5 | Market Watch">
+ <meta property="og:description" content="Step-by-step guide to building, testing, and deploying your first MCP server with Node.js.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/mcp-masterclass/part2-first-server/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-violet { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .code-block { background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; position:relative; }
+ .code-block pre { margin:0; color:#e2e8f0; font-family:'Fira Code', 'Courier New', monospace; font-size:0.85rem; line-height:1.7; white-space:pre; }
+ .code-label { position:absolute; top:0.5rem; right:0.75rem; font-size:0.65rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; background:#1e293b; padding:0.2rem 0.6rem; border-radius:6px; }
+ .code-block .kw { color:#c084fc; } .code-block .str { color:#86efac; } .code-block .cm { color:#64748b; } .code-block .fn { color:#67e8f9; } .code-block .num { color:#fbbf24; } .code-block .op { color:#f472b6; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#6d28d9; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #7c3aed; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#a78bfa; }
+
+ .file-tree { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.5rem 2rem; margin:1.5rem 0; font-family:'Fira Code', monospace; font-size:0.85rem; line-height:2; color:#334155; }
+ .file-tree .folder { color:#7c3aed; font-weight:700; }
+ .file-tree .file { color:#334155; }
+ .file-tree .comment { color:#94a3b8; font-style:italic; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+ details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-plug"></i> MCP Masterclass — Part 2 of 5</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Your First MCP Server — Hello World to Production</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto; color:#64748b; font-size:1.05rem; line-height:1.7;">Time to get your hands dirty. In this part, you'll build a complete MCP server from scratch using Node.js and the official SDK. You'll define tools with Zod validation, expose resources, test with MCP Inspector, and connect everything to Claude Code.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-code"></i> Hands-On Code</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-brands fa-node-js"></i> Node.js SDK</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-vial"></i> MCP Inspector</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-plug"></i> Claude Code</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-arrow" title="What is MCP?"><i class="fas fa-chevron-left"></i></a><span class="series-title">MCP from A to Z</span><div class="series-steps"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-step" title="What is MCP?"><span class="series-num">1</span><span class="series-label">What is MCP?</span></a><a href="/series/mcp-masterclass/part2-first-server/" class="series-step current" title="First Server"><span class="series-num">2</span><span class="series-label">First Server</span></a><a href="/series/mcp-masterclass/part3-live-data/" class="series-step" title="Live Data"><span class="series-num">3</span><span class="series-label">Live Data</span></a><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-step" title="Multi-Tool"><span class="series-num">4</span><span class="series-label">Multi-Tool</span></a><a href="/series/mcp-masterclass/part5-market-watch/" class="series-step" title="Case Study"><span class="series-num">5</span><span class="series-label">Case Study</span></a></div><span class="series-counter">2/5</span><a href="/series/mcp-masterclass/part3-live-data/" class="series-arrow" title="Live Data"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#setup" class="fnav-item" data-section="setup"><i class="fas fa-bookmark"></i><span>Project Setup</span></a><a href="#first-tool" class="fnav-item" data-section="first-tool"><i class="fas fa-bookmark"></i><span>First Tool</span></a><a href="#zod-validation" class="fnav-item" data-section="zod-validation"><i class="fas fa-bookmark"></i><span>Zod Validation</span></a><a href="#resources" class="fnav-item" data-section="resources"><i class="fas fa-bookmark"></i><span>Resources</span></a><a href="#testing" class="fnav-item" data-section="testing"><i class="fas fa-bookmark"></i><span>Testing</span></a><a href="#connect" class="fnav-item" data-section="connect"><i class="fas fa-bookmark"></i><span>Connect to Claude</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn'), menu = document.getElementById('fnavMenu'), icon = document.getElementById('fnavIcon'), label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item'), sections = [], isOpen = false;
+  items.forEach(function(item) { var id = item.getAttribute('data-section'), el = document.getElementById(id); if (el) sections.push({ id:id, el:el, item:item }); });
+  function toggle() { isOpen = !isOpen; menu.classList.toggle('open', isOpen); fab.classList.toggle('open', isOpen); icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars'; }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) { if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) { item.addEventListener('click', function(e) { e.preventDefault(); var id = this.getAttribute('data-section'), target = document.getElementById(id); if (target) { var bb = document.querySelector('.brand-bar'), off = (bb ? bb.offsetHeight : 56) + 20; window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - off, behavior: 'smooth' }); } if (isOpen) toggle(); }); });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) { entries.forEach(function(entry) { if (entry.isIntersecting) { var match = sections.find(function(s) { return s.el === entry.target; }); if (match) { if (currentActive) currentActive.classList.remove('active'); match.item.classList.add('active'); currentActive = match.item; if (!isOpen) label.textContent = match.item.querySelector('span').textContent; } } }); }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+})();
+</script>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: PROJECT SETUP                                      -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-folder-plus"></i> Getting Started</div>
+
+<div id="setup" class="content-card">
+  <h2><i class="fa-solid fa-folder-plus" style="color:#7c3aed; margin-right:0.5rem;"></i> Project Setup</h2>
+
+  <p>Let's build a weather MCP server — a classic first project that demonstrates all the core concepts. By the end of this section, you'll have a working server that any MCP host can connect to.</p>
+
+  <h3>Prerequisites</h3>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Node.js 18+ (<code>node --version</code> to check)</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> npm or yarn package manager</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> A code editor (VS Code, Cursor, etc.)</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> A free API key from <a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap</a></li>
+  </ul>
+
+  <h3>Step 1: Initialize the Project</h3>
+
+  <div class="code-block">
+    <span class="code-label">Terminal</span>
+<pre>
+<span class="cm"># Create project directory</span>
+mkdir weather-mcp-server
+cd weather-mcp-server
+
+<span class="cm"># Initialize npm project</span>
+npm init -y
+
+<span class="cm"># Install the MCP SDK and Zod for validation</span>
+npm install @modelcontextprotocol/sdk zod
+
+<span class="cm"># Install dev dependencies</span>
+npm install -D typescript @types/node
+
+<span class="cm"># Initialize TypeScript (optional but recommended)</span>
+npx tsc --init
+</pre>
+  </div>
+
+  <h3>Step 2: Project Structure</h3>
+
+  <div class="file-tree">
+    <span class="folder">weather-mcp-server/</span><br>
+    &nbsp;&nbsp;<span class="file">package.json</span> <span class="comment">— project config, bin entry</span><br>
+    &nbsp;&nbsp;<span class="file">index.js</span> <span class="comment">— main server file (all the logic)</span><br>
+    &nbsp;&nbsp;<span class="file">.mcp.json</span> <span class="comment">— MCP configuration for Claude Code</span><br>
+    &nbsp;&nbsp;<span class="folder">node_modules/</span> <span class="comment">— dependencies</span>
+  </div>
+
+  <h3>Step 3: Configure package.json</h3>
+
+  <div class="code-block">
+    <span class="code-label">package.json</span>
+<pre>
+{
+  <span class="str">"name"</span>: <span class="str">"weather-mcp-server"</span>,
+  <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,
+  <span class="str">"description"</span>: <span class="str">"MCP server for weather data"</span>,
+  <span class="str">"main"</span>: <span class="str">"index.js"</span>,
+  <span class="str">"type"</span>: <span class="str">"module"</span>,
+  <span class="str">"bin"</span>: {
+    <span class="str">"weather-mcp"</span>: <span class="str">"./index.js"</span>
+  },
+  <span class="str">"scripts"</span>: {
+    <span class="str">"start"</span>: <span class="str">"node index.js"</span>
+  },
+  <span class="str">"dependencies"</span>: {
+    <span class="str">"@modelcontextprotocol/sdk"</span>: <span class="str">"^1.12.0"</span>,
+    <span class="str">"zod"</span>: <span class="str">"^3.23.0"</span>
+  }
+}
+</pre>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b; margin-right:0.5rem;"></i> Why <code>"type": "module"</code>?</h4>
+    <p>The MCP SDK uses ES modules (<code>import</code>/<code>export</code>) rather than CommonJS (<code>require</code>). Setting <code>"type": "module"</code> in package.json tells Node.js to treat <code>.js</code> files as ES modules. This is the modern standard and what the SDK expects.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: FIRST TOOL                                         -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-wrench"></i> Building Tools</div>
+
+<div id="first-tool" class="content-card">
+  <h2><i class="fa-solid fa-wrench" style="color:#7c3aed; margin-right:0.5rem;"></i> Your First Tool — get_weather</h2>
+
+  <p>A tool in MCP is a function that the AI can call. Let's build a <code>get_weather</code> tool that fetches current weather data from the OpenWeatherMap API.</p>
+
+  <h3>The Complete Server</h3>
+
+  <div class="code-block">
+    <span class="code-label">index.js</span>
+<pre>
+<span class="kw">#!/usr/bin/env node</span>
+
+<span class="kw">import</span> { McpServer } <span class="kw">from</span> <span class="str">"@modelcontextprotocol/sdk/server/mcp.js"</span>;
+<span class="kw">import</span> { StdioServerTransport } <span class="kw">from</span> <span class="str">"@modelcontextprotocol/sdk/server/stdio.js"</span>;
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">"zod"</span>;
+
+<span class="cm">// ─── Create the MCP Server ─────────────────────────────────</span>
+<span class="kw">const</span> server = <span class="kw">new</span> <span class="fn">McpServer</span>({
+  name: <span class="str">"weather-server"</span>,
+  version: <span class="str">"1.0.0"</span>,
+  description: <span class="str">"Get current weather data for any city"</span>
+});
+
+<span class="cm">// ─── Helper: Fetch weather from OpenWeatherMap ─────────────</span>
+<span class="kw">const</span> API_KEY = process.env.WEATHER_API_KEY || <span class="str">"your-api-key"</span>;
+
+<span class="kw">async function</span> <span class="fn">fetchWeather</span>(city) {
+  <span class="kw">const</span> url = <span class="str">`https://api.openweathermap.org/data/2.5/weather`</span>
+    + <span class="str">`?q=${encodeURIComponent(city)}`</span>
+    + <span class="str">`&appid=${API_KEY}`</span>
+    + <span class="str">`&units=metric`</span>;
+
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(url);
+  <span class="kw">if</span> (!res.ok) {
+    <span class="kw">throw new</span> Error(<span class="str">`Weather API error: ${res.status} ${res.statusText}`</span>);
+  }
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="cm">// ─── Tool: get_weather ──────────────────────────────────────</span>
+server.<span class="fn">tool</span>(
+  <span class="str">"get_weather"</span>,
+  <span class="str">"Get current weather for a city (temperature, conditions, humidity, wind)"</span>,
+  {
+    city: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"City name (e.g., 'Paris', 'New York', 'Tokyo')"</span>)
+  },
+  <span class="kw">async</span> ({ city }) => {
+    <span class="kw">try</span> {
+      <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchWeather</span>(city);
+
+      <span class="kw">const</span> result = {
+        city: data.name,
+        country: data.sys.country,
+        temperature: <span class="str">`${data.main.temp}°C`</span>,
+        feels_like: <span class="str">`${data.main.feels_like}°C`</span>,
+        condition: data.weather[<span class="num">0</span>].description,
+        humidity: <span class="str">`${data.main.humidity}%`</span>,
+        wind: <span class="str">`${data.wind.speed} m/s`</span>,
+        pressure: <span class="str">`${data.main.pressure} hPa`</span>
+      };
+
+      <span class="kw">return</span> {
+        content: [{
+          type: <span class="str">"text"</span>,
+          text: JSON.<span class="fn">stringify</span>(result, <span class="kw">null</span>, <span class="num">2</span>)
+        }]
+      };
+    } <span class="kw">catch</span> (error) {
+      <span class="kw">return</span> {
+        content: [{
+          type: <span class="str">"text"</span>,
+          text: <span class="str">`Error fetching weather for ${city}: ${error.message}`</span>
+        }],
+        isError: <span class="kw">true</span>
+      };
+    }
+  }
+);
+
+<span class="cm">// ─── Start the server ───────────────────────────────────────</span>
+<span class="kw">const</span> transport = <span class="kw">new</span> <span class="fn">StdioServerTransport</span>();
+<span class="kw">await</span> server.<span class="fn">connect</span>(transport);
+</pre>
+  </div>
+
+  <p>Let's break down what's happening:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Create Server</h4>
+      <p><code>new McpServer()</code> initializes the server with name, version, and description</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Define Tool</h4>
+      <p><code>server.tool()</code> registers a tool with name, description, params, and handler</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Handle Call</h4>
+      <p>The async handler fetches data and returns MCP-formatted content</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Connect</h4>
+      <p><code>StdioServerTransport</code> wires up stdin/stdout communication</p>
+    </div>
+  </div>
+
+  <div id="chart-request-flow" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#f59e0b; margin-right:0.5rem;"></i> The Return Format</h4>
+    <p>Every tool must return an object with a <code>content</code> array. Each item has a <code>type</code> (usually <code>"text"</code>) and the actual data. You can also return <code>isError: true</code> to signal failure. The AI model uses this to understand what happened and respond appropriately.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: ZOD VALIDATION                                     -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-shield-halved"></i> Input Validation</div>
+
+<div id="zod-validation" class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#7c3aed; margin-right:0.5rem;"></i> Zod Validation — Making Tools Robust</h2>
+
+  <p>Zod is the recommended validation library for MCP tool parameters. It provides runtime type checking and automatic JSON Schema generation — the AI model sees a well-structured schema that helps it understand what parameters to provide.</p>
+
+  <h3>Basic Types</h3>
+
+  <div class="code-block">
+    <span class="code-label">Zod Schemas</span>
+<pre>
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">"zod"</span>;
+
+<span class="cm">// String with description (shown to the AI)</span>
+z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"Stock ticker symbol"</span>)
+
+<span class="cm">// Number with constraints</span>
+z.<span class="fn">number</span>().<span class="fn">min</span>(<span class="num">1</span>).<span class="fn">max</span>(<span class="num">100</span>).<span class="fn">describe</span>(<span class="str">"Number of results to return"</span>)
+
+<span class="cm">// Enum — AI sees the valid options</span>
+z.<span class="fn">enum</span>([<span class="str">"celsius"</span>, <span class="str">"fahrenheit"</span>]).<span class="fn">describe</span>(<span class="str">"Temperature unit"</span>)
+
+<span class="cm">// Optional with default</span>
+z.<span class="fn">string</span>().<span class="fn">optional</span>().<span class="fn">default</span>(<span class="str">"en"</span>).<span class="fn">describe</span>(<span class="str">"Language code"</span>)
+
+<span class="cm">// Boolean</span>
+z.<span class="fn">boolean</span>().<span class="fn">optional</span>().<span class="fn">default</span>(<span class="kw">false</span>).<span class="fn">describe</span>(<span class="str">"Include forecast"</span>)
+
+<span class="cm">// Array</span>
+z.<span class="fn">array</span>(z.<span class="fn">string</span>()).<span class="fn">describe</span>(<span class="str">"List of city names"</span>)
+</pre>
+  </div>
+
+  <h3>Advanced Example: Multi-Parameter Tool</h3>
+
+  <div class="code-block">
+    <span class="code-label">index.js — Enhanced Tool</span>
+<pre>
+server.<span class="fn">tool</span>(
+  <span class="str">"get_forecast"</span>,
+  <span class="str">"Get weather forecast for a city for the next N days"</span>,
+  {
+    city: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"City name"</span>),
+    days: z.<span class="fn">number</span>()
+      .<span class="fn">min</span>(<span class="num">1</span>).<span class="fn">max</span>(<span class="num">7</span>)
+      .<span class="fn">optional</span>()
+      .<span class="fn">default</span>(<span class="num">3</span>)
+      .<span class="fn">describe</span>(<span class="str">"Number of forecast days (1-7, default 3)"</span>),
+    units: z.<span class="fn">enum</span>([<span class="str">"metric"</span>, <span class="str">"imperial"</span>])
+      .<span class="fn">optional</span>()
+      .<span class="fn">default</span>(<span class="str">"metric"</span>)
+      .<span class="fn">describe</span>(<span class="str">"Temperature units"</span>)
+  },
+  <span class="kw">async</span> ({ city, days, units }) => {
+    <span class="kw">const</span> url = <span class="str">`https://api.openweathermap.org/data/2.5/forecast`</span>
+      + <span class="str">`?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=${units}`</span>
+      + <span class="str">`&cnt=${days * 8}`</span>; <span class="cm">// API returns 3-hour intervals</span>
+
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(url);
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+    <span class="cm">// Group by day and pick noon forecast</span>
+    <span class="kw">const</span> daily = data.list
+      .<span class="fn">filter</span>(item => item.dt_txt.<span class="fn">includes</span>(<span class="str">"12:00:00"</span>))
+      .<span class="fn">slice</span>(<span class="num">0</span>, days)
+      .<span class="fn">map</span>(item => ({
+        date: item.dt_txt.<span class="fn">split</span>(<span class="str">" "</span>)[<span class="num">0</span>],
+        temp: item.main.temp,
+        condition: item.weather[<span class="num">0</span>].description,
+        humidity: item.main.humidity
+      }));
+
+    <span class="kw">return</span> {
+      content: [{ type: <span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>({ city, forecast: daily }, <span class="kw">null</span>, <span class="num">2</span>) }]
+    };
+  }
+);
+</pre>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Zod Type</th>
+        <th>JSON Schema Output</th>
+        <th>AI Sees</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>z.string()</code></td><td><code>{"type":"string"}</code></td><td>Expects a text value</td></tr>
+      <tr><td><code>z.number().min(1).max(10)</code></td><td><code>{"type":"number","minimum":1,"maximum":10}</code></td><td>Number between 1 and 10</td></tr>
+      <tr><td><code>z.enum(["a","b"])</code></td><td><code>{"type":"string","enum":["a","b"]}</code></td><td>Must be "a" or "b"</td></tr>
+      <tr><td><code>z.boolean().optional()</code></td><td><code>{"type":"boolean"}</code> (not required)</td><td>Optional true/false</td></tr>
+      <tr><td><code>z.array(z.string())</code></td><td><code>{"type":"array","items":{"type":"string"}}</code></td><td>List of strings</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#7c3aed; margin-right:0.5rem;"></i> Why Descriptions Matter</h4>
+    <p>The <code>.describe()</code> method is not just documentation — it's <strong>instructions for the AI</strong>. The model reads these descriptions to understand what each parameter expects. A good description like <code>"Stock ticker symbol (e.g., AAPL, MSFT)"</code> dramatically improves the AI's ability to use your tool correctly. Think of descriptions as your API documentation for an AI reader.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: RESOURCES                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-folder-open"></i> Exposing Data</div>
+
+<div id="resources" class="content-card">
+  <h2><i class="fa-solid fa-folder-open" style="color:#7c3aed; margin-right:0.5rem;"></i> Resources — Giving AI Read Access to Data</h2>
+
+  <p>Resources are the second MCP primitive. Unlike tools (which perform actions), resources provide <strong>read-only data</strong> that the AI can access. They use URI-based addressing, similar to REST APIs.</p>
+
+  <h3>Static Resource</h3>
+
+  <div class="code-block">
+    <span class="code-label">index.js — Adding Resources</span>
+<pre>
+<span class="cm">// ─── Resource: Supported cities list ────────────────────────</span>
+server.<span class="fn">resource</span>(
+  <span class="str">"cities"</span>,
+  <span class="str">"weather://cities"</span>,
+  { description: <span class="str">"List of popular cities with weather stations"</span>, mimeType: <span class="str">"application/json"</span> },
+  <span class="kw">async</span> () => ({
+    contents: [{
+      uri: <span class="str">"weather://cities"</span>,
+      mimeType: <span class="str">"application/json"</span>,
+      text: JSON.<span class="fn">stringify</span>([
+        { name: <span class="str">"London"</span>, country: <span class="str">"GB"</span>, lat: <span class="num">51.51</span>, lon: <span class="num">-0.13</span> },
+        { name: <span class="str">"New York"</span>, country: <span class="str">"US"</span>, lat: <span class="num">40.71</span>, lon: <span class="num">-74.01</span> },
+        { name: <span class="str">"Tokyo"</span>, country: <span class="str">"JP"</span>, lat: <span class="num">35.69</span>, lon: <span class="num">139.69</span> },
+        { name: <span class="str">"Paris"</span>, country: <span class="str">"FR"</span>, lat: <span class="num">48.86</span>, lon: <span class="num">2.35</span> },
+        { name: <span class="str">"Sydney"</span>, country: <span class="str">"AU"</span>, lat: <span class="num">-33.87</span>, lon: <span class="num">151.21</span> }
+      ], <span class="kw">null</span>, <span class="num">2</span>)
+    }]
+  })
+);
+</pre>
+  </div>
+
+  <h3>Dynamic Resource Template</h3>
+
+  <div class="code-block">
+    <span class="code-label">index.js — Resource Template</span>
+<pre>
+<span class="cm">// ─── Resource Template: Weather by city ─────────────────────</span>
+server.<span class="fn">resource</span>(
+  <span class="str">"city-weather"</span>,
+  <span class="str">"weather://city/{cityName}"</span>,
+  { description: <span class="str">"Current weather for a specific city"</span>, mimeType: <span class="str">"application/json"</span> },
+  <span class="kw">async</span> (uri, { cityName }) => {
+    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchWeather</span>(cityName);
+    <span class="kw">return</span> {
+      contents: [{
+        uri: uri.href,
+        mimeType: <span class="str">"application/json"</span>,
+        text: JSON.<span class="fn">stringify</span>({
+          city: data.name,
+          temp: data.main.temp,
+          condition: data.weather[<span class="num">0</span>].description
+        }, <span class="kw">null</span>, <span class="num">2</span>)
+      }]
+    };
+  }
+);
+</pre>
+  </div>
+
+  <p>With this template, the AI (or host) can request <code>weather://city/Paris</code>, <code>weather://city/Tokyo</code>, etc. The <code>{cityName}</code> placeholder is extracted from the URI and passed to the handler.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Tools</th>
+        <th>Resources</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Initiated by</strong></td><td>AI model autonomously</td><td>Application/user explicitly</td></tr>
+      <tr><td><strong>Side effects</strong></td><td>Can modify state</td><td>Read-only</td></tr>
+      <tr><td><strong>Addressing</strong></td><td>By name + parameters</td><td>By URI</td></tr>
+      <tr><td><strong>Use case</strong></td><td>Actions (fetch, create, update)</td><td>Context (config, schema, docs)</td></tr>
+      <tr><td><strong>Caching</strong></td><td>Typically no</td><td>Can be cached/subscribed</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: TESTING                                            -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-vial"></i> Testing</div>
+
+<div id="testing" class="content-card">
+  <h2><i class="fa-solid fa-vial" style="color:#7c3aed; margin-right:0.5rem;"></i> Testing with MCP Inspector</h2>
+
+  <p>Before connecting to an AI host, you should test your server in isolation. The <strong>MCP Inspector</strong> is the official debugging tool — it connects to your server and lets you interactively browse tools, call them, and inspect responses.</p>
+
+  <h3>Running the Inspector</h3>
+
+  <div class="code-block">
+    <span class="code-label">Terminal</span>
+<pre>
+<span class="cm"># Run MCP Inspector against your server</span>
+npx @modelcontextprotocol/inspector node index.js
+
+<span class="cm"># With environment variables</span>
+WEATHER_API_KEY=abc123 npx @modelcontextprotocol/inspector node index.js
+</pre>
+  </div>
+
+  <p>The Inspector opens a web UI where you can:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Browse tools</strong>: See all registered tools with their schemas</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Call tools</strong>: Fill in parameters and execute tool calls</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Browse resources</strong>: List and read all available resources</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>View prompts</strong>: List and test prompt templates</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Inspect JSON-RPC</strong>: See raw protocol messages</li>
+  </ul>
+
+  <h3>Manual Testing with stdio</h3>
+
+  <p>You can also test by piping JSON-RPC messages directly:</p>
+
+  <div class="code-block">
+    <span class="code-label">Terminal — Manual Test</span>
+<pre>
+<span class="cm"># Send an initialize request</span>
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
+  WEATHER_API_KEY=abc123 node index.js
+
+<span class="cm"># Expected: JSON response with server capabilities</span>
+</pre>
+  </div>
+
+  <div id="chart-testing" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-bug" style="color:#ef4444; margin-right:0.5rem;"></i> Common Debugging Issues</h4>
+    <p><strong>Server exits immediately:</strong> Make sure you have <code>await server.connect(transport)</code> at the end. Without it, the process exits.</p>
+    <p><strong>"Module not found" error:</strong> Check that <code>"type": "module"</code> is in package.json and imports use the full path (e.g., <code>"@modelcontextprotocol/sdk/server/mcp.js"</code>).</p>
+    <p><strong>Tool not showing up:</strong> Ensure you register tools <em>before</em> calling <code>server.connect()</code>.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: CONNECTING TO CLAUDE CODE                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-plug"></i> Going Live</div>
+
+<div id="connect" class="content-card">
+  <h2><i class="fa-solid fa-plug" style="color:#7c3aed; margin-right:0.5rem;"></i> Connecting to Claude Code</h2>
+
+  <p>Now the exciting part — connecting your server to a real AI host. Claude Code reads its MCP configuration from a <code>.mcp.json</code> file in your project root.</p>
+
+  <h3>Step 1: Create .mcp.json</h3>
+
+  <div class="code-block">
+    <span class="code-label">.mcp.json</span>
+<pre>
+{
+  <span class="str">"mcpServers"</span>: {
+    <span class="str">"weather"</span>: {
+      <span class="str">"command"</span>: <span class="str">"node"</span>,
+      <span class="str">"args"</span>: [<span class="str">"./weather-mcp-server/index.js"</span>],
+      <span class="str">"env"</span>: {
+        <span class="str">"WEATHER_API_KEY"</span>: <span class="str">"your-actual-api-key"</span>
+      }
+    }
+  }
+}
+</pre>
+  </div>
+
+  <h3>Step 2: Verify Connection</h3>
+
+  <div class="code-block">
+    <span class="code-label">Terminal</span>
+<pre>
+<span class="cm"># Start Claude Code in your project directory</span>
+claude
+
+<span class="cm"># Claude will automatically detect .mcp.json and connect to your server</span>
+<span class="cm"># You'll see: "Connected to MCP server: weather (1 tool, 2 resources)"</span>
+
+<span class="cm"># Now just ask naturally:</span>
+> What's the weather in Paris right now?
+
+<span class="cm"># Claude will call your get_weather tool and format the response!</span>
+</pre>
+  </div>
+
+  <h3>Step 3: Use It!</h3>
+
+  <p>Once connected, Claude can use your tools seamlessly. Here's what a real interaction looks like:</p>
+
+  <div class="code-block">
+    <span class="code-label">Claude Code Session</span>
+<pre>
+<span class="cm">Human:</span> What's the weather like in Tokyo and London? Compare them.
+
+<span class="cm">Claude:</span> Let me check the weather in both cities.
+
+<span class="cm">[Calling tool: get_weather with {"city": "Tokyo"}]</span>
+<span class="cm">[Calling tool: get_weather with {"city": "London"}]</span>
+
+Here's the comparison:
+
+| City   | Temp   | Condition       | Humidity | Wind    |
+|--------|--------|-----------------|----------|---------|
+| Tokyo  | 22°C   | scattered clouds| 65%      | 3.5 m/s |
+| London | 14°C   | light rain      | 82%      | 5.1 m/s |
+
+Tokyo is significantly warmer at 22°C compared to London's 14°C.
+London is experiencing rain with higher humidity (82% vs 65%).
+</pre>
+  </div>
+
+  <h3>Configuration for Other AI Tools</h3>
+
+  <p>The same server works with any MCP host. Here's how to configure it for different tools:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Host</th>
+        <th>Config File</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Claude Code</strong></td><td><code>.mcp.json</code></td><td>Project root</td></tr>
+      <tr><td><strong>Claude Desktop</strong></td><td><code>claude_desktop_config.json</code></td><td><code>~/Library/Application Support/Claude/</code></td></tr>
+      <tr><td><strong>Cursor</strong></td><td><code>.cursor/mcp.json</code></td><td>Project root</td></tr>
+      <tr><td><strong>Windsurf</strong></td><td><code>.windsurf/mcp.json</code></td><td>Project root</td></tr>
+      <tr><td><strong>VS Code</strong></td><td><code>.vscode/mcp.json</code></td><td>Project root</td></tr>
+    </tbody>
+  </table>
+
+  <p>The config format is identical across all hosts — same server, same tools, just different file paths.</p>
+
+  <div id="chart-hosts" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: FULL CODE                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-file-code"></i> Complete Reference</div>
+
+<div id="full-code" class="content-card">
+  <h2><i class="fa-solid fa-file-code" style="color:#7c3aed; margin-right:0.5rem;"></i> Complete Server Code</h2>
+
+  <p>Here's the complete, production-ready weather MCP server with both tools and resources:</p>
+
+  <div class="code-block">
+    <span class="code-label">index.js — Complete Server (70 lines)</span>
+<pre>
+<span class="kw">#!/usr/bin/env node</span>
+<span class="kw">import</span> { McpServer } <span class="kw">from</span> <span class="str">"@modelcontextprotocol/sdk/server/mcp.js"</span>;
+<span class="kw">import</span> { StdioServerTransport } <span class="kw">from</span> <span class="str">"@modelcontextprotocol/sdk/server/stdio.js"</span>;
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">"zod"</span>;
+
+<span class="kw">const</span> API_KEY = process.env.WEATHER_API_KEY;
+<span class="kw">if</span> (!API_KEY) { console.<span class="fn">error</span>(<span class="str">"WEATHER_API_KEY required"</span>); process.<span class="fn">exit</span>(<span class="num">1</span>); }
+
+<span class="kw">const</span> server = <span class="kw">new</span> <span class="fn">McpServer</span>({
+  name: <span class="str">"weather-server"</span>,
+  version: <span class="str">"1.0.0"</span>,
+  description: <span class="str">"Weather data via OpenWeatherMap API"</span>
+});
+
+<span class="kw">async function</span> <span class="fn">callWeatherAPI</span>(endpoint, params) {
+  <span class="kw">const</span> qs = <span class="kw">new</span> URLSearchParams({ ...params, appid: API_KEY, units: <span class="str">"metric"</span> });
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`https://api.openweathermap.org/data/2.5/${endpoint}?${qs}`</span>);
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> Error(<span class="str">`API ${res.status}: ${res.statusText}`</span>);
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="cm">// Tool: Current weather</span>
+server.<span class="fn">tool</span>(<span class="str">"get_weather"</span>, <span class="str">"Get current weather for a city"</span>, {
+  city: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"City name (e.g., Paris, Tokyo)"</span>)
+}, <span class="kw">async</span> ({ city }) => {
+  <span class="kw">const</span> d = <span class="kw">await</span> <span class="fn">callWeatherAPI</span>(<span class="str">"weather"</span>, { q: city });
+  <span class="kw">return</span> { content: [{ type:<span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>({
+    city: d.name, country: d.sys.country,
+    temp: <span class="str">`${d.main.temp}°C`</span>, feels_like: <span class="str">`${d.main.feels_like}°C`</span>,
+    condition: d.weather[<span class="num">0</span>].description,
+    humidity: <span class="str">`${d.main.humidity}%`</span>, wind: <span class="str">`${d.wind.speed} m/s`</span>
+  }, <span class="kw">null</span>, <span class="num">2</span>) }] };
+});
+
+<span class="cm">// Tool: Forecast</span>
+server.<span class="fn">tool</span>(<span class="str">"get_forecast"</span>, <span class="str">"Get N-day weather forecast"</span>, {
+  city: z.<span class="fn">string</span>().<span class="fn">describe</span>(<span class="str">"City name"</span>),
+  days: z.<span class="fn">number</span>().<span class="fn">min</span>(<span class="num">1</span>).<span class="fn">max</span>(<span class="num">7</span>).<span class="fn">optional</span>().<span class="fn">default</span>(<span class="num">3</span>).<span class="fn">describe</span>(<span class="str">"Forecast days (1-7)"</span>)
+}, <span class="kw">async</span> ({ city, days }) => {
+  <span class="kw">const</span> d = <span class="kw">await</span> <span class="fn">callWeatherAPI</span>(<span class="str">"forecast"</span>, { q: city, cnt: days * <span class="num">8</span> });
+  <span class="kw">const</span> daily = d.list.<span class="fn">filter</span>(i => i.dt_txt.<span class="fn">includes</span>(<span class="str">"12:00"</span>)).<span class="fn">slice</span>(<span class="num">0</span>, days);
+  <span class="kw">return</span> { content: [{ type:<span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>(daily.<span class="fn">map</span>(i => ({
+    date: i.dt_txt.<span class="fn">split</span>(<span class="str">" "</span>)[<span class="num">0</span>], temp: i.main.temp,
+    condition: i.weather[<span class="num">0</span>].description
+  })), <span class="kw">null</span>, <span class="num">2</span>) }] };
+});
+
+<span class="cm">// Resource: City list</span>
+server.<span class="fn">resource</span>(<span class="str">"cities"</span>, <span class="str">"weather://cities"</span>,
+  { description: <span class="str">"Supported cities"</span>, mimeType: <span class="str">"application/json"</span> },
+  <span class="kw">async</span> () => ({ contents: [{ uri: <span class="str">"weather://cities"</span>, mimeType: <span class="str">"application/json"</span>,
+    text: JSON.<span class="fn">stringify</span>([<span class="str">"London"</span>,<span class="str">"New York"</span>,<span class="str">"Tokyo"</span>,<span class="str">"Paris"</span>,<span class="str">"Sydney"</span>,<span class="str">"Dubai"</span>,<span class="str">"Singapore"</span>])
+  }] })
+);
+
+<span class="cm">// Start</span>
+<span class="kw">await</span> server.<span class="fn">connect</span>(<span class="kw">new</span> <span class="fn">StdioServerTransport</span>());
+</pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+
+<div class="section-divider"><i class="fa-solid fa-brain"></i> Knowledge Check</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#7c3aed; margin-right:0.5rem;"></i> Quick Quiz</h2>
+
+  <details>
+    <summary>What are the two imports needed for a basic stdio MCP server?</summary>
+    <div class="quiz-answer"><code>McpServer</code> from <code>@modelcontextprotocol/sdk/server/mcp.js</code> (the server instance) and <code>StdioServerTransport</code> from <code>@modelcontextprotocol/sdk/server/stdio.js</code> (the communication layer).</div>
+  </details>
+
+  <details>
+    <summary>Why do we use Zod instead of plain JSON Schema for tool parameters?</summary>
+    <div class="quiz-answer">Zod provides <strong>runtime validation</strong> (catches bad input before your handler runs), <strong>TypeScript inference</strong> (your handler gets typed parameters), and <strong>automatic JSON Schema generation</strong> (the SDK converts Zod schemas to JSON Schema for the AI). Plus, <code>.describe()</code> adds human-readable descriptions that the AI uses to understand parameters.</div>
+  </details>
+
+  <details>
+    <summary>What's the difference between a resource and a resource template?</summary>
+    <div class="quiz-answer">A <strong>resource</strong> has a fixed URI (e.g., <code>weather://cities</code>) — always returns the same data. A <strong>resource template</strong> has a URI with placeholders (e.g., <code>weather://city/{cityName}</code>) — the placeholder is filled at request time, allowing dynamic data per entity.</div>
+  </details>
+
+  <details>
+    <summary>What's the return format for MCP tools?</summary>
+    <div class="quiz-answer">An object with a <code>content</code> array of content items. Each item has <code>type</code> (usually <code>"text"</code>) and <code>text</code> (the data). Optionally include <code>isError: true</code> to signal failure. Example: <code>{ content: [{ type: "text", text: "result" }] }</code></div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY + CTA                                                -->
+<!-- ============================================================ -->
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 2</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> An MCP server needs just 3 things: <code>McpServer</code>, <code>StdioServerTransport</code>, and tool/resource definitions.</li>
+    <li><i class="fa-solid fa-check"></i> <code>server.tool(name, description, zodSchema, handler)</code> registers a tool the AI can call.</li>
+    <li><i class="fa-solid fa-check"></i> Zod provides runtime validation + JSON Schema generation + TypeScript types.</li>
+    <li><i class="fa-solid fa-check"></i> Resources expose read-only data via URIs; resource templates support dynamic URIs.</li>
+    <li><i class="fa-solid fa-check"></i> MCP Inspector is the essential debugging tool — always test before connecting to a host.</li>
+    <li><i class="fa-solid fa-check"></i> <code>.mcp.json</code> configures Claude Code; similar files exist for Cursor, Windsurf, VS Code.</li>
+  </ul>
+</div>
+
+<a href="/series/mcp-masterclass/part3-live-data/" class="next-cta">
+  <div>
+    <div class="next-label">Part 3 of 5</div>
+    <div class="next-title">Connecting Live Data — APIs, Scraping & Databases <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:16px; padding:2rem; margin:2rem 0; text-align:center;">
+  <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem;">MCP from A to Z — Supercharging AI with Live Data</p>
+  <p style="color:#e2e8f0; font-size:0.95rem; margin:0;">Complete series in 5 parts &mdash; From protocol theory to production deployment</p>
+  <a href="/" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#7c3aed; color:white; border-radius:99px; text-decoration:none; font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-house" style="margin-right:0.4rem;"></i> Back to Home</a>
+</div>
+
+</div><!-- /container -->
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-arrow" title="What is MCP?"><i class="fas fa-chevron-left"></i></a><span class="series-title">MCP from A to Z</span><div class="series-steps"><a href="/series/mcp-masterclass/part1-what-is-mcp/" class="series-step" title="What is MCP?"><span class="series-num">1</span><span class="series-label">What is MCP?</span></a><a href="/series/mcp-masterclass/part2-first-server/" class="series-step current" title="First Server"><span class="series-num">2</span><span class="series-label">First Server</span></a><a href="/series/mcp-masterclass/part3-live-data/" class="series-step" title="Live Data"><span class="series-num">3</span><span class="series-label">Live Data</span></a><a href="/series/mcp-masterclass/part4-multi-tool/" class="series-step" title="Multi-Tool"><span class="series-num">4</span><span class="series-label">Multi-Tool</span></a><a href="/series/mcp-masterclass/part5-market-watch/" class="series-step" title="Case Study"><span class="series-num">5</span><span class="series-label">Case Study</span></a></div><span class="series-counter">2/5</span><a href="/series/mcp-masterclass/part3-live-data/" class="series-arrow" title="Live Data"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. All rights reserved.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Request/Response Flow (Funnel)
+var chartFlow = echarts.init(document.getElementById('chart-request-flow'));
+chartFlow.setOption({
+  title: { text: 'MCP Tool Call — Request/Response Flow', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c}ms' },
+  series: [{
+    type: 'funnel',
+    left: '10%', width: '80%', top: '18%', bottom: '8%',
+    min: 0, max: 100,
+    sort: 'descending',
+    gap: 4,
+    label: { show: true, position: 'inside', fontSize: 12, fontWeight: 600, color: '#fff' },
+    data: [
+      { value: 100, name: 'User Message', itemStyle: { color: '#7c3aed' } },
+      { value: 85, name: 'AI Decides to Call Tool', itemStyle: { color: '#8b5cf6' } },
+      { value: 70, name: 'JSON-RPC Request Sent', itemStyle: { color: '#2563eb' } },
+      { value: 55, name: 'Server Executes Handler', itemStyle: { color: '#10b981' } },
+      { value: 40, name: 'API Call + Processing', itemStyle: { color: '#f59e0b' } },
+      { value: 30, name: 'Result Returned to AI', itemStyle: { color: '#06b6d4' } },
+      { value: 20, name: 'AI Formats Response', itemStyle: { color: '#ec4899' } }
+    ]
+  }]
+});
+
+// Chart 2: Testing Methods Comparison
+var chartTesting = echarts.init(document.getElementById('chart-testing'));
+chartTesting.setOption({
+  title: { text: 'Testing Methods — Speed vs Coverage', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item' },
+  grid: { left: '12%', right: '8%', bottom: '12%', top: '18%' },
+  xAxis: { type: 'value', name: 'Coverage (%)', nameLocation: 'center', nameGap: 30, min: 0, max: 100 },
+  yAxis: { type: 'value', name: 'Speed (tests/min)', nameLocation: 'center', nameGap: 40, min: 0, max: 120 },
+  series: [{
+    type: 'scatter',
+    symbolSize: function(val) { return val[2] * 3; },
+    data: [
+      { value: [30, 100, 10], name: 'Manual stdio' },
+      { value: [70, 60, 15], name: 'MCP Inspector' },
+      { value: [90, 20, 12], name: 'Integration Test' },
+      { value: [50, 80, 14], name: 'Unit Tests' }
+    ],
+    label: { show: true, formatter: function(p) { return p.data.name; }, fontSize: 11, fontWeight: 600, position: 'top' },
+    itemStyle: { color: '#7c3aed' }
+  }]
+});
+
+// Chart 3: Host Popularity
+var chartHosts = echarts.init(document.getElementById('chart-hosts'));
+chartHosts.setOption({
+  title: { text: 'MCP Host Popularity (Developer Usage)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { left: '3%', right: '4%', bottom: '3%', top: '18%', containLabel: true },
+  xAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+  yAxis: { type: 'category', data: ['Zed', 'Codex CLI', 'Gemini CLI', 'VS Code', 'Windsurf', 'Claude Desktop', 'Cursor', 'Claude Code'], axisLabel: { fontSize: 12 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 5, itemStyle: { color: '#94a3b8' } },
+      { value: 8, itemStyle: { color: '#64748b' } },
+      { value: 12, itemStyle: { color: '#3b82f6' } },
+      { value: 18, itemStyle: { color: '#2563eb' } },
+      { value: 22, itemStyle: { color: '#06b6d4' } },
+      { value: 30, itemStyle: { color: '#8b5cf6' } },
+      { value: 35, itemStyle: { color: '#10b981' } },
+      { value: 42, itemStyle: { color: '#7c3aed' } }
+    ],
+    label: { show: true, position: 'right', formatter: '{c}%', fontWeight: 700 },
+    barWidth: '60%'
+  }]
+});
+
+window.addEventListener('resize', function() { chartFlow.resize(); chartTesting.resize(); chartHosts.resize(); });
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

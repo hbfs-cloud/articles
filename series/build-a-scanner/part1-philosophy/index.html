@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="tech,formation,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Scanner Philosophy — Why Most Screeners Fail | Build a Stock Scanner — Part 1/6 | Market Watch</title>
+ <meta name="description" content="Build a Stock Scanner series — Part 1/6: Why most screeners fail, the 4 pillars of a real scanner (Filter, Score, Rank, Validate), universe curation, data quality, and institutional-grade architecture.">
+ <meta property="og:title" content="Scanner Philosophy — Why Most Screeners Fail | Build a Scanner 1/6 | Market Watch">
+ <meta property="og:description" content="Why Finviz and TradingView screeners aren't enough. Learn the 4 pillars of a scanner that actually generates alpha.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/build-a-scanner/part1-philosophy/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* CRIMSON SCANNER THEME */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-orange { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border:1px solid #dc2626; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b91c1c; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(220,38,38,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#dc2626; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(220,38,38,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #dc2626; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#f87171; }
+
+ .code-block { background:#0f172a; border-radius:12px; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; }
+ .code-block pre { margin:0; color:#e2e8f0; font-family:'JetBrains Mono', 'Fira Code', monospace; font-size:0.85rem; line-height:1.6; }
+ .code-label { display:inline-block; background:#dc2626; color:white; padding:0.2rem 0.75rem; border-radius:6px 6px 0 0; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:-1px; position:relative; z-index:1; }
+ .code-block .comment { color:#64748b; }
+ .code-block .keyword { color:#f87171; }
+ .code-block .string { color:#34d399; }
+ .code-block .number { color:#fbbf24; }
+ .code-block .function { color:#60a5fa; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .step-grid { grid-template-columns:1fr; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-crosshairs"></i> Build a Stock Scanner Series — Part 1 of 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Scanner Philosophy — Why Most Screeners Fail</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">Everyone uses stock screeners. Almost nobody profits from them. The difference between a Finviz filter and an institutional scanner is four pillars: Filter, Score, Rank, Validate. This is where we start building yours.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-crosshairs"></i> Scanner Architecture</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-filter"></i> 4 Pillars</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-database"></i> Data Quality</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-chart-bar"></i> Hit Rate Analysis</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step current" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">1/6</span><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-arrow" title="DSL & Filters"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#paradox" class="fnav-item" data-section="paradox"><i class="fas fa-exclamation-triangle"></i><span>The Screener Paradox</span></a><a href="#pillars" class="fnav-item" data-section="pillars"><i class="fas fa-columns"></i><span>The 4 Pillars</span></a><a href="#institutional" class="fnav-item" data-section="institutional"><i class="fas fa-building"></i><span>Institutional Edge</span></a><a href="#universe" class="fnav-item" data-section="universe"><i class="fas fa-globe"></i><span>Universe Problem</span></a><a href="#data" class="fnav-item" data-section="data"><i class="fas fa-database"></i><span>Data Quality</span></a><a href="#pipeline" class="fnav-item" data-section="pipeline"><i class="fas fa-project-diagram"></i><span>The Pipeline</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- THE SCREENER PARADOX                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="paradox"><i class="fa-solid fa-exclamation-triangle" style="color:#dc2626;"></i> The Screener Paradox</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-exclamation-triangle" style="color:#dc2626;"></i> Why Most Screeners Fail</h2>
+
+  <p>Here is a stat that should bother you: <strong>over 90% of retail traders who use stock screeners lose money</strong>. Not because screening is a bad idea — it is, in fact, the foundation of every systematic trading approach — but because the way most people screen is fundamentally broken.</p>
+
+  <p>The typical retail workflow looks like this:</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-user" style="color:#dc2626;"></i> The Retail Screener Workflow</h4>
+    <ol>
+      <li>Open Finviz or TradingView screener</li>
+      <li>Set a few filters: RSI &lt; 30, volume &gt; 1M, market cap &gt; $1B</li>
+      <li>Get 47 results</li>
+      <li>Pick the one with the coolest chart</li>
+      <li>Buy it</li>
+      <li>Lose money</li>
+      <li>Blame the screener</li>
+    </ol>
+    <p>The problem is not the screener. The problem is that <strong>filtering is only 25% of the job</strong>. The other 75% — scoring, ranking, and validation — is where the edge lives.</p>
+  </div>
+
+  <p>Think about what a basic screener does: it applies binary pass/fail filters to a universe of stocks. RSI below 30? Pass. Volume above 1 million? Pass. That is it. No ranking, no scoring, no context about whether the market is in a bull run or a crash. A stock that barely passes every filter gets treated the same as one that crushes every metric.</p>
+
+  <p>The result is a flat list of "candidates" with zero signal about which ones are actually worth trading. You are left making the final decision based on gut feel, chart pattern recognition (which is notoriously unreliable), or whatever the latest Reddit thread says.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Core Problem</h4>
+    <p>A screener that only filters is like a search engine that only matches keywords without ranking results. Google became Google because of PageRank — the scoring algorithm. Your scanner needs the same thing.</p>
+  </div>
+
+  <!-- EChart: Basic vs Advanced Scanner Hit Rate -->
+  <div id="chart-hitrate" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3>The Three Fatal Flaws</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Flaw</th>
+        <th>What Happens</th>
+        <th>The Fix</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>No Scoring</strong></td>
+        <td>All results treated equally. A stock at RSI 29 is "passed" just like RSI 15 (which is much more oversold)</td>
+        <td>Composite scoring that quantifies HOW MUCH a stock passes each criterion</td>
+      </tr>
+      <tr>
+        <td><strong>No Regime Awareness</strong></td>
+        <td>Momentum filters in a bear market = buying the dip into a crash. Oversold filters in a bull market = missing the trend</td>
+        <td>Detect the market regime FIRST, then select which strategy to weight heavily</td>
+      </tr>
+      <tr>
+        <td><strong>No Validation</strong></td>
+        <td>No way to know if your filters historically produce profitable trades. You are flying blind</td>
+        <td>Backtest every scanner output. Track hit rates by strategy. Kill what does not work</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE 4 PILLARS                                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pillars"><i class="fa-solid fa-columns" style="color:#2563eb;"></i> The 4 Pillars of a Real Scanner</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-columns" style="color:#2563eb;"></i> Filter, Score, Rank, Validate</h2>
+
+  <p>A scanner that actually generates alpha is built on four pillars. Each one is necessary. Skip any one and your scanner is a random number generator with a nice UI.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Filter</h4>
+      <p>Apply technical and fundamental criteria to reduce 10,000 stocks to 50-100 candidates. Use a flexible DSL, not hardcoded rules.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Score</h4>
+      <p>Assign a composite score (0-100) to each candidate based on multiple weighted factors. Boost for catalysts, penalize for risks.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Rank</h4>
+      <p>Sort by score. Take only the top 10. Enforce diversification: no more than 2 from the same sector, mix geographies.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Validate</h4>
+      <p>Backtest historically. Track live results with weekly retrospectives. Kill strategies with hit rates below 40%.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">The Scanner Equation</div>
+    <span class="formula-highlight">Alpha</span> = Filter(universe) <span class="formula-highlight">+</span> Score(candidates) <span class="formula-highlight">+</span> Rank(scored) <span class="formula-highlight">+</span> Validate(results)
+  </div>
+
+  <!-- EChart: The Filter Funnel -->
+  <div id="chart-funnel" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <p>Notice how each stage dramatically reduces the number of stocks. The funnel is doing the heavy lifting for you — transforming thousands of names into a handful of high-conviction setups that you can actually research and trade.</p>
+
+  <h3>Why Each Pillar Matters</h3>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-filter" style="color:#dc2626;"></i> Pillar 1: Filter — The Gatekeeper</h4>
+    <p>Filters are the first pass. They exist to <strong>eliminate</strong>, not to select. A good filter removes 95% of the universe in milliseconds. The key insight: filters should be strategy-specific. A momentum strategy and a mean-reversion strategy need completely different filters — they are looking for opposite things.</p>
+    <p>This is why you need a DSL (Domain-Specific Language) for your filters instead of hardcoded rules. In Part 2, we will build one that lets you swap filter sets instantly based on what the market is doing.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-ranking-star" style="color:#f59e0b;"></i> Pillar 2: Score — The Differentiator</h4>
+    <p>Once you have 50-100 candidates that passed the filter, you need to answer: <strong>which ones are the best?</strong> A composite scoring system assigns points for technical strength, momentum, risk profile, and catalyst proximity. It also penalizes for red flags: insider selling, dilution risk, high short interest with no catalyst.</p>
+    <p>The scoring system is the brain of your scanner. We build it in Part 3.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-sort-amount-down" style="color:#10b981;"></i> Pillar 3: Rank — The Selector</h4>
+    <p>Ranking is not just sorting by score. It includes <strong>diversification constraints</strong>: you do not want 10 tech stocks, even if they all score 95/100. Real ranking enforces sector limits, geographic diversity, and beta balance. It also applies regime-weighted strategy preferences — if the market is risk-off, you want more defensive setups at the top.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-flask" style="color:#9333ea;"></i> Pillar 4: Validate — The Truth Machine</h4>
+    <p>A scanner without validation is faith-based trading. You must track every output: did the entry trigger? Did it hit TP1? Did it stop out? Over time, you build a statistical picture of your scanner's edge (or lack thereof). In Part 5, we build a backtesting engine. In Part 6, we build a live retrospective system.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- INSTITUTIONAL EDGE                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="institutional"><i class="fa-solid fa-building" style="color:#9333ea;"></i> The Institutional Edge</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building" style="color:#9333ea;"></i> What Institutional Scanners Do Differently</h2>
+
+  <p>Hedge funds and prop desks do not use Finviz. They build custom systems that incorporate layers of intelligence retail traders never see. Here is what separates a $50B fund's scanner from a retail screener:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Retail Screener</th>
+        <th>Institutional Scanner</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Filters</strong></td>
+        <td>Static (RSI &lt; 30, P/E &lt; 20)</td>
+        <td>Dynamic DSL with regime-dependent parameters</td>
+      </tr>
+      <tr>
+        <td><strong>Scoring</strong></td>
+        <td>None — binary pass/fail</td>
+        <td>Multi-factor composite (technical + catalyst + risk)</td>
+      </tr>
+      <tr>
+        <td><strong>Regime</strong></td>
+        <td>None — same filters in bull and bear</td>
+        <td>Auto-detects regime, shifts strategy weights daily</td>
+      </tr>
+      <tr>
+        <td><strong>Data</strong></td>
+        <td>EOD prices, maybe 1 year</td>
+        <td>200+ days OHLCV, splits-adjusted, with volume profile</td>
+      </tr>
+      <tr>
+        <td><strong>Catalysts</strong></td>
+        <td>None</td>
+        <td>Insider buys, SEC filings, analyst upgrades, earnings dates</td>
+      </tr>
+      <tr>
+        <td><strong>Risk Layer</strong></td>
+        <td>None</td>
+        <td>Cost-to-borrow, dilution detection, sector correlation</td>
+      </tr>
+      <tr>
+        <td><strong>Validation</strong></td>
+        <td>None — "trust the process"</td>
+        <td>Backtested, live-tracked with weekly retrospectives</td>
+      </tr>
+      <tr>
+        <td><strong>Output</strong></td>
+        <td>Flat list of tickers</td>
+        <td>Scored, ranked, with entry/stop/target and catalyst calendar</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>The good news: <strong>you can build most of this yourself</strong>. The data is available (often free or cheap). The computation is trivial for modern hardware. The only barrier is knowledge — which is exactly what this series provides.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Key Insight</h4>
+    <p>The institutional edge is not proprietary data or faster computers. It is <strong>process</strong>. A systematic, multi-layered approach that removes emotion and replaces it with statistics. That is exactly what we are building.</p>
+  </div>
+
+  <!-- EChart: Institutional vs Retail Scanner Radar -->
+  <div id="chart-radar" style="width:100%; height:420px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE UNIVERSE PROBLEM                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="universe"><i class="fa-solid fa-globe" style="color:#10b981;"></i> The Universe Problem</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-globe" style="color:#10b981;"></i> Scanning 10,000 vs. Curating 500</h2>
+
+  <p>The first decision you make when building a scanner is also the most consequential: <strong>what is your universe?</strong></p>
+
+  <p>There are over 10,000 stocks listed on US exchanges alone. Add international markets and you are looking at 40,000+. Scanning all of them is technically possible but practically terrible. Here is why:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <strong>Noise explosion:</strong> Most small-cap stocks have no institutional ownership, thin volume, and unreliable technical signals. Your scanner will drown in false positives.</li>
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <strong>Data quality nightmare:</strong> Many micro-caps have incorrect splits, missing data, or stale prices. Your indicators will compute garbage.</li>
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <strong>Execution impossible:</strong> Even if you find a great setup in a $20M market cap stock, the spread is 2% and you can not get filled without moving the price.</li>
+    <li><i class="fa-solid fa-xmark" style="color:#ef4444;"></i> <strong>Survivorship bias:</strong> If you only scan currently listed stocks, you miss the ones that went to zero — making your backtest look better than reality.</li>
+  </ul>
+
+  <h3>The Curated Universe Approach</h3>
+
+  <p>Instead of scanning everything, institutional scanners work with a <strong>curated universe</strong> of 300-800 quality names that meet minimum criteria:</p>
+
+  <div class="code-label">Python</div>
+  <div class="code-block"><pre><span class="comment"># Universe selection criteria</span>
+<span class="keyword">def</span> <span class="function">build_universe</span>(all_stocks):
+    <span class="string">"""Filter to quality names only."""</span>
+    universe = []
+    <span class="keyword">for</span> stock <span class="keyword">in</span> all_stocks:
+        <span class="keyword">if</span> (
+            stock.market_cap > <span class="number">500_000_000</span>      <span class="comment"># $500M+ market cap</span>
+            <span class="keyword">and</span> stock.avg_volume_20d > <span class="number">500_000</span>  <span class="comment"># 500K avg daily volume</span>
+            <span class="keyword">and</span> stock.price > <span class="number">5.0</span>              <span class="comment"># No penny stocks</span>
+            <span class="keyword">and</span> stock.listed_years >= <span class="number">2</span>        <span class="comment"># At least 2 years listed</span>
+            <span class="keyword">and</span> stock.has_options                <span class="comment"># Options available (liquidity proxy)</span>
+        ):
+            universe.append(stock)
+    <span class="keyword">return</span> universe  <span class="comment"># Typically 400-800 stocks</span></pre>
+  </div>
+
+  <p>This is not just about speed — though scanning 500 stocks is 20x faster than scanning 10,000. It is about <strong>signal quality</strong>. Every stock in your universe should be one you could actually trade: liquid enough to enter and exit, large enough that technical analysis works, and with clean enough data to compute reliable indicators.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Universe Size</th>
+        <th>Typical Pass Count</th>
+        <th>Signal Quality</th>
+        <th>Processing Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>10,000+ (full US)</td>
+        <td>150-300</td>
+        <td>Low — many false positives from illiquid/micro-cap stocks</td>
+        <td>30-60 seconds</td>
+      </tr>
+      <tr>
+        <td>2,000 (mid/large cap)</td>
+        <td>40-80</td>
+        <td>Medium — still some noise from edge cases</td>
+        <td>5-10 seconds</td>
+      </tr>
+      <tr>
+        <td>500 (curated quality)</td>
+        <td>15-30</td>
+        <td>High — every candidate is tradeable</td>
+        <td>1-2 seconds</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="didactic-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#10b981;"></i> The Multi-Market Expansion</h4>
+    <p>Once your scanner works for US stocks, you can expand geographically. Add 50-100 European names (DAX, CAC 40, FTSE 100 components), 30-50 Asian names (Nikkei, HSI components), and ETFs (sector, commodity, bond). Your total universe grows to 600-800, but every name is quality. This is what we cover in Part 6.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DATA QUALITY                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="data"><i class="fa-solid fa-database" style="color:#f97316;"></i> Data Quality</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-database" style="color:#f97316;"></i> The "Bar Quality" Problem</h2>
+
+  <p>Your scanner is only as good as its data. This sounds obvious, but the number of scanners built on bad data is staggering. Here are the data problems you must solve before writing a single filter:</p>
+
+  <h3>1. Splits and Dividends</h3>
+  <p>When a stock splits 4:1, the historical price drops by 75% overnight — but that is not a real price move. If your scanner sees AAPL at $40 in 2019 and $175 in 2024, it looks like a 337% gain. But AAPL had a 4:1 split in August 2020, so the actual gain is different. <strong>You must use split-adjusted data.</strong></p>
+
+  <div class="code-label">Python</div>
+  <div class="code-block"><pre><span class="comment"># Always use adjusted close prices</span>
+<span class="keyword">import</span> yfinance <span class="keyword">as</span> yf
+
+<span class="comment"># WRONG: unadjusted prices include split artifacts</span>
+<span class="comment"># data = yf.download("AAPL", period="2y")["Close"]</span>
+
+<span class="comment"># RIGHT: adjusted prices account for splits and dividends</span>
+data = yf.download(<span class="string">"AAPL"</span>, period=<span class="string">"2y"</span>, auto_adjust=<span class="number">True</span>)
+close = data[<span class="string">"Close"</span>]
+volume = data[<span class="string">"Volume"</span>]
+
+<span class="comment"># Verify: no single-day drops > 30% (split artifact check)</span>
+daily_returns = close.pct_change()
+<span class="keyword">assert</span> (daily_returns.abs() < <span class="number">0.50</span>).all(), <span class="string">"Possible unadjusted split detected"</span></pre>
+  </div>
+
+  <h3>2. Minimum History Requirement</h3>
+  <p>Your indicators need history. An EMA(200) needs at least 200 bars to be meaningful. A Bollinger Band Width comparison needs at least 20 bars of BBW history, which itself needs 20 bars of price — so 40 bars minimum. A volume spike detection comparing current volume to 20-day average needs 20 bars.</p>
+
+  <p><strong>Rule of thumb: require 252 trading days (1 year) minimum, prefer 504 days (2 years).</strong> Anything less and your indicators are unreliable in the early bars.</p>
+
+  <h3>3. Delistings and Survivorship Bias</h3>
+  <p>If you only scan currently listed stocks and backtest against the same list, you have survivorship bias. The stocks that went bankrupt, got delisted, or merged out of existence are invisible in your data. Your backtest will overestimate returns because it never saw the losers.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-skull-crossbones"></i> Survivorship Bias Example</h4>
+    <p>In 2008, a momentum scanner on today's S&P 500 would have found many "survivors" that recovered beautifully from the crash. But back in 2008, the S&P 500 had different members — Lehman Brothers, Washington Mutual, Bear Stearns were all in it. A scanner that never saw these blow-ups would massively overestimate its performance.</p>
+  </div>
+
+  <h3>4. Volume Data Integrity</h3>
+  <p>Volume is critical for confirmation signals, but volume data has its own problems:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Dark pool volume</strong> is not included in exchange-reported volume. Real institutional buying may not show up in your data.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Ex-dividend dates</strong> cause volume spikes that are not real demand signals.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Options expiration</strong> (monthly OpEx, quarterly) inflates volume due to hedging.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Index rebalancing</strong> (quarterly) causes non-organic volume in added/removed stocks.</li>
+  </ul>
+
+  <div class="code-label">Python</div>
+  <div class="code-block"><pre><span class="comment"># Data quality validation pipeline</span>
+<span class="keyword">def</span> <span class="function">validate_bar_data</span>(df, ticker):
+    <span class="string">"""Check data quality before feeding to scanner."""</span>
+    issues = []
+
+    <span class="comment"># 1. Minimum history</span>
+    <span class="keyword">if</span> len(df) < <span class="number">252</span>:
+        issues.append(<span class="string">f"Only {len(df)} bars (need 252+)"</span>)
+
+    <span class="comment"># 2. Missing data</span>
+    missing_pct = df.isnull().sum().max() / len(df) * <span class="number">100</span>
+    <span class="keyword">if</span> missing_pct > <span class="number">2</span>:
+        issues.append(<span class="string">f"{missing_pct:.1f}% missing data"</span>)
+
+    <span class="comment"># 3. Suspicious returns (unadjusted splits?)</span>
+    max_daily = df[<span class="string">"close"</span>].pct_change().abs().max()
+    <span class="keyword">if</span> max_daily > <span class="number">0.50</span>:
+        issues.append(<span class="string">f"Suspicious {max_daily:.0%} daily move"</span>)
+
+    <span class="comment"># 4. Volume sanity</span>
+    zero_vol_days = (df[<span class="string">"volume"</span>] == <span class="number">0</span>).sum()
+    <span class="keyword">if</span> zero_vol_days > <span class="number">5</span>:
+        issues.append(<span class="string">f"{zero_vol_days} zero-volume days"</span>)
+
+    <span class="keyword">if</span> issues:
+        print(<span class="string">f"[WARN] {ticker}: {', '.join(issues)}"</span>)
+        <span class="keyword">return</span> <span class="number">False</span>
+    <span class="keyword">return</span> <span class="number">True</span></pre>
+  </div>
+
+  <!-- EChart: Data Quality Impact -->
+  <div id="chart-dataquality" style="width:100%; height:350px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE PIPELINE                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pipeline"><i class="fa-solid fa-project-diagram" style="color:#dc2626;"></i> The Complete Pipeline</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-project-diagram" style="color:#dc2626;"></i> Scanner Architecture Overview</h2>
+
+  <p>Now let us put it all together. Here is the complete pipeline that we will build over the next five parts of this series:</p>
+
+  <!-- EChart: Pipeline Flowchart -->
+  <div id="chart-pipeline" style="width:100%; height:500px; margin:2rem 0;"></div>
+
+  <h3>The Daily Cycle</h3>
+  <p>A production scanner runs on a daily cycle. Every morning (or evening, depending on your market), the following happens:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-sun" style="font-size:0.8rem;"></i></div>
+      <h4>6:00 AM</h4>
+      <p><strong>Regime Detection.</strong> Check SPY, VIX, DXY, TLT, HYG/LQD, BTC. Determine if the market is Risk-On, Neutral, or Risk-Off. Adjust strategy weights accordingly.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-database" style="font-size:0.8rem;"></i></div>
+      <h4>6:05 AM</h4>
+      <p><strong>Data Refresh.</strong> Pull latest OHLCV for your 500-stock universe. Validate data quality. Compute all indicators (EMAs, RSI, MACD, ATR, BBW).</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-filter" style="font-size:0.8rem;"></i></div>
+      <h4>6:10 AM</h4>
+      <p><strong>Filter.</strong> Run 4 strategy-specific DSL filters against the universe. Each filter produces 15-30 candidates. Deduplicate and merge.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-calculator" style="font-size:0.8rem;"></i></div>
+      <h4>6:15 AM</h4>
+      <p><strong>Score & Rank.</strong> Apply composite scoring to all candidates. Add catalyst boosts (insider buys, earnings). Penalize risks (dilution, high CTB). Sort by regime-weighted score. Select top 10.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-bullseye" style="font-size:0.8rem;"></i></div>
+      <h4>6:20 AM</h4>
+      <p><strong>Enrich.</strong> For each of the 10 finalists: compute ATR-based entry/stop/target levels. Pull analyst targets, insider activity, earnings dates. Build the trade card.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-paper-plane" style="font-size:0.8rem;"></i></div>
+      <h4>6:25 AM</h4>
+      <p><strong>Publish.</strong> Generate the morning report. Send alerts via Telegram/Discord. Log everything for the retrospective.</p>
+    </div>
+  </div>
+
+  <p>The entire process takes under 30 minutes, most of which is data fetching. The computation itself is measured in seconds. This is achievable on a $5/month VPS — you do not need a Bloomberg terminal.</p>
+
+  <h3>Scanner is Not a Strategy</h3>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Critical Distinction</h4>
+    <p>A scanner finds candidates. <strong>You</strong> make the trade decision. The scanner says "here are 10 stocks that meet my criteria, ranked by score, with entry/stop/target levels." But the final call — whether to actually enter the trade — is yours.</p>
+    <p>Why? Because the scanner does not know about:</p>
+    <ul>
+      <li>Breaking news that just hit 5 minutes ago</li>
+      <li>Your portfolio's current exposure (already 3 tech positions? skip the 4th)</li>
+      <li>Liquidity conditions at the exact moment of entry</li>
+      <li>Your risk tolerance and current P&L state</li>
+    </ul>
+    <p>The scanner narrows 500 stocks to 10 high-probability candidates. That is a 98% reduction in your decision space. But the last 2% is human judgment, and it should stay that way.</p>
+  </div>
+
+  <h3>What We Will Build in This Series</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Part</th>
+        <th>What You Build</th>
+        <th>Key Concept</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Philosophy</strong> (this article)</td>
+        <td>Mental model for scanner architecture</td>
+        <td>Filter + Score + Rank + Validate</td>
+      </tr>
+      <tr>
+        <td><strong>2. DSL & Filters</strong></td>
+        <td>A flexible filter language with 4 strategies</td>
+        <td>Expression evaluation, strategy-specific filters</td>
+      </tr>
+      <tr>
+        <td><strong>3. Scoring</strong></td>
+        <td>Multi-factor scoring with boosts and penalties</td>
+        <td>Composite scoring, catalyst integration, risk detection</td>
+      </tr>
+      <tr>
+        <td><strong>4. Regime Detection</strong></td>
+        <td>Auto-adaptive regime detector with 6 indicators</td>
+        <td>Market regime, dynamic strategy weighting</td>
+      </tr>
+      <tr>
+        <td><strong>5. Backtesting</strong></td>
+        <td>Historical validation engine with walk-forward testing</td>
+        <td>Win rate, profit factor, overfitting avoidance</td>
+      </tr>
+      <tr>
+        <td><strong>6. Production</strong></td>
+        <td>Live daily pipeline with alerts and retrospectives</td>
+        <td>ATR-based levels, multi-market, cost optimization</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY                                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#dc2626;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 1</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Most screeners fail because they only filter. A real scanner filters, scores, ranks, and validates.</li>
+    <li><i class="fa-solid fa-check"></i> The institutional edge is not data or speed — it is process. Systematic, multi-layered, regime-aware.</li>
+    <li><i class="fa-solid fa-check"></i> Curate your universe: 500 quality names beats 10,000 noisy ones. Every stock must be tradeable.</li>
+    <li><i class="fa-solid fa-check"></i> Data quality is non-negotiable: split-adjusted, 252+ bars, validated volume, survivorship-aware.</li>
+    <li><i class="fa-solid fa-check"></i> A scanner finds candidates. You make the trade decision. It reduces your search space by 98%.</li>
+    <li><i class="fa-solid fa-check"></i> The daily cycle takes 25 minutes and runs on a $5/month server. No Bloomberg terminal needed.</li>
+  </ul>
+</div>
+
+<a href="/series/build-a-scanner/part2-dsl-filters/" class="next-cta">
+  <div>
+    <div class="next-label">Part 2 of 6</div>
+    <div class="next-title">Building a Filter Language — Your Scanner's Brain <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Build a Stock Scanner That Actually Works</span><div class="series-steps"><a href="/series/build-a-scanner/part1-philosophy/" class="series-step current" title="Philosophy"><span class="series-num">1</span><span class="series-label">Philosophy</span></a><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-step" title="DSL & Filters"><span class="series-num">2</span><span class="series-label">DSL & Filters</span></a><a href="/series/build-a-scanner/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a><a href="/series/build-a-scanner/part4-regime/" class="series-step" title="Regime"><span class="series-num">4</span><span class="series-label">Regime</span></a><a href="/series/build-a-scanner/part5-backtest/" class="series-step" title="Backtest"><span class="series-num">5</span><span class="series-label">Backtest</span></a><a href="/series/build-a-scanner/part6-production/" class="series-step" title="Production"><span class="series-num">6</span><span class="series-label">Production</span></a></div><span class="series-counter">1/6</span><a href="/series/build-a-scanner/part2-dsl-filters/" class="series-arrow" title="DSL & Filters"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: Basic vs Advanced Scanner Hit Rate
+var chartHitrate = echarts.init(document.getElementById('chart-hitrate'));
+chartHitrate.setOption({
+  title: { text: 'Scanner Hit Rate Comparison', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['TP1 Hit Rate', 'TP2 Hit Rate', 'Avg R/R', 'Profit Factor', 'Sharpe Ratio'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Basic Screener (Finviz-style)', type: 'bar', data: [32, 15, 0.9, 0.8, 0.3], itemStyle: { color: '#94a3b8', borderRadius: [4,4,0,0] } },
+    { name: 'Scored + Regime-Aware Scanner', type: 'bar', data: [58, 35, 2.1, 1.8, 1.2], itemStyle: { color: '#dc2626', borderRadius: [4,4,0,0] } }
+  ]
+});
+
+// Chart 2: The Filter Funnel
+var chartFunnel = echarts.init(document.getElementById('chart-funnel'));
+chartFunnel.setOption({
+  title: { text: 'The Scanner Funnel — From Universe to Setups', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c} stocks' },
+  series: [{
+    type: 'funnel',
+    left: '10%', right: '10%', top: 60, bottom: 20,
+    width: '80%',
+    min: 0, max: 10000,
+    minSize: '10%', maxSize: '100%',
+    sort: 'descending',
+    gap: 4,
+    label: { show: true, position: 'inside', formatter: '{b}\n{c} stocks', fontSize: 12, fontWeight: 600, color: '#fff' },
+    emphasis: { label: { fontSize: 14 } },
+    data: [
+      { value: 10000, name: 'Full Market', itemStyle: { color: '#94a3b8' } },
+      { value: 500, name: 'Curated Universe', itemStyle: { color: '#64748b' } },
+      { value: 80, name: 'Filter Pass', itemStyle: { color: '#f97316' } },
+      { value: 30, name: 'Scored > 70', itemStyle: { color: '#dc2626' } },
+      { value: 10, name: 'Top 10 Ranked', itemStyle: { color: '#7f1d1d' } }
+    ]
+  }]
+});
+
+// Chart 3: Institutional vs Retail Radar
+var chartRadar = echarts.init(document.getElementById('chart-radar'));
+chartRadar.setOption({
+  title: { text: 'Scanner Capabilities — Retail vs Institutional', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['Retail Screener', 'Institutional Scanner', 'What We Build'], textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Filter Flexibility', max: 10 },
+      { name: 'Scoring Depth', max: 10 },
+      { name: 'Regime Awareness', max: 10 },
+      { name: 'Data Quality', max: 10 },
+      { name: 'Catalyst Integration', max: 10 },
+      { name: 'Risk Detection', max: 10 },
+      { name: 'Validation/Backtest', max: 10 },
+      { name: 'Output Quality', max: 10 }
+    ],
+    radius: '60%'
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [3, 1, 0, 4, 1, 0, 0, 2], name: 'Retail Screener', lineStyle: { color: '#94a3b8' }, areaStyle: { color: 'rgba(148,163,184,0.15)' }, itemStyle: { color: '#94a3b8' } },
+      { value: [9, 9, 9, 9, 8, 9, 9, 9], name: 'Institutional Scanner', lineStyle: { color: '#1e293b' }, areaStyle: { color: 'rgba(30,41,59,0.1)' }, itemStyle: { color: '#1e293b' } },
+      { value: [8, 8, 8, 7, 7, 7, 8, 8], name: 'What We Build', lineStyle: { color: '#dc2626', width: 2 }, areaStyle: { color: 'rgba(220,38,38,0.15)' }, itemStyle: { color: '#dc2626' } }
+    ]
+  }]
+});
+
+// Chart 4: Data Quality Impact on Returns
+var chartDataquality = echarts.init(document.getElementById('chart-dataquality'));
+chartDataquality.setOption({
+  title: { text: 'Impact of Data Quality on Backtest Accuracy', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['No Adjustment', 'Split-Adjusted', '+ Survivorship Fix', '+ Volume Validation', 'Full Quality Pipeline'], axisLabel: { fontSize: 10, rotate: 15 } },
+  yAxis: [
+    { type: 'value', name: 'Reported Return %', axisLabel: { fontSize: 11 } },
+    { type: 'value', name: 'Actual Return %', axisLabel: { fontSize: 11 } }
+  ],
+  series: [
+    { name: 'Reported (Backtest)', type: 'bar', data: [42, 35, 28, 26, 24], itemStyle: { color: '#94a3b8', borderRadius: [4,4,0,0] } },
+    { name: 'Actual (Live)', type: 'bar', data: [8, 14, 18, 21, 23], itemStyle: { color: '#dc2626', borderRadius: [4,4,0,0] } }
+  ]
+});
+
+// Chart 5: Pipeline Flowchart (Graph)
+var chartPipeline = echarts.init(document.getElementById('chart-pipeline'));
+chartPipeline.setOption({
+  title: { text: 'Scanner Pipeline Architecture', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  series: [{
+    type: 'graph',
+    layout: 'none',
+    symbolSize: 60,
+    roam: false,
+    label: { show: true, fontSize: 10, fontWeight: 600 },
+    edgeSymbol: ['circle', 'arrow'],
+    edgeSymbolSize: [4, 10],
+    lineStyle: { color: '#94a3b8', width: 2, curveness: 0 },
+    data: [
+      { name: 'Market\nData', x: 100, y: 50, symbolSize: 55, itemStyle: { color: '#64748b' } },
+      { name: 'Regime\nDetector', x: 300, y: 50, symbolSize: 55, itemStyle: { color: '#9333ea' } },
+      { name: 'Strategy\nWeights', x: 300, y: 180, symbolSize: 55, itemStyle: { color: '#9333ea' } },
+      { name: 'Universe\n(500)', x: 100, y: 180, symbolSize: 55, itemStyle: { color: '#64748b' } },
+      { name: 'Filter\nDSL', x: 100, y: 310, symbolSize: 55, itemStyle: { color: '#f97316' } },
+      { name: 'Candidates\n(50-80)', x: 300, y: 310, symbolSize: 55, itemStyle: { color: '#f97316' } },
+      { name: 'Scoring\nEngine', x: 500, y: 310, symbolSize: 55, itemStyle: { color: '#dc2626' } },
+      { name: 'Rank &\nSelect', x: 500, y: 180, symbolSize: 55, itemStyle: { color: '#dc2626' } },
+      { name: 'Top 10\nSetups', x: 500, y: 50, symbolSize: 55, itemStyle: { color: '#15803d' } },
+      { name: 'Backtest\nValidation', x: 700, y: 180, symbolSize: 55, itemStyle: { color: '#1e293b' } },
+      { name: 'Live\nRetro', x: 700, y: 50, symbolSize: 55, itemStyle: { color: '#1e293b' } }
+    ],
+    links: [
+      { source: 'Market\nData', target: 'Regime\nDetector' },
+      { source: 'Regime\nDetector', target: 'Strategy\nWeights' },
+      { source: 'Universe\n(500)', target: 'Filter\nDSL' },
+      { source: 'Strategy\nWeights', target: 'Filter\nDSL', lineStyle: { type: 'dashed' } },
+      { source: 'Filter\nDSL', target: 'Candidates\n(50-80)' },
+      { source: 'Candidates\n(50-80)', target: 'Scoring\nEngine' },
+      { source: 'Strategy\nWeights', target: 'Scoring\nEngine', lineStyle: { type: 'dashed' } },
+      { source: 'Scoring\nEngine', target: 'Rank &\nSelect' },
+      { source: 'Rank &\nSelect', target: 'Top 10\nSetups' },
+      { source: 'Top 10\nSetups', target: 'Live\nRetro' },
+      { source: 'Top 10\nSetups', target: 'Backtest\nValidation' },
+      { source: 'Backtest\nValidation', target: 'Live\nRetro' }
+    ]
+  }]
+});
+
+// Resize all charts on window resize
+window.addEventListener('resize', function() {
+  chartHitrate.resize();
+  chartFunnel.resize();
+  chartRadar.resize();
+  chartDataquality.resize();
+  chartPipeline.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
