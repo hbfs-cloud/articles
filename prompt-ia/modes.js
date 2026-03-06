@@ -58,7 +58,7 @@
       desc: isFR
         ? 'Transforme ton IA en desk de trading complet. Chaque matin, il fetch les picks A+, analyse le marché, surveille tes positions, et génère des alertes en temps réel.'
         : 'Turn your AI into a full trading desk. Every morning it fetches A+ picks, analyzes the market, monitors positions, and generates real-time alerts.',
-      files: ['CLAUDE.md', 'watchlist.json', 'README.md']
+      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md']
     },
     {
       id: 'scanner-sniper',
@@ -68,7 +68,7 @@
       desc: isFR
         ? 'L\'IA récupère les 10 meilleurs setups du scanner Market Watch, fait une analyse multi-source approfondie de chacun, et génère un plan de trade détaillé.'
         : 'The AI fetches today\'s top 10 scanner picks, runs deep multi-source analysis on each, and generates detailed trade plans.',
-      files: ['CLAUDE.md', 'README.md']
+      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md']
     },
     {
       id: 'portfolio-sentinel',
@@ -78,7 +78,7 @@
       desc: isFR
         ? 'Surveille ton portefeuille en continu : corrélations, drawdown, concentration sectorielle, Greek exposure. Alerte si un seuil de risque est franchi.'
         : 'Continuously monitors your portfolio: correlations, drawdown, sector concentration, Greek exposure. Alerts when risk thresholds are breached.',
-      files: ['CLAUDE.md', 'portfolio.json', 'README.md']
+      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'portfolio.json', 'README.md']
     },
     {
       id: 'earnings-analyst',
@@ -88,7 +88,7 @@
       desc: isFR
         ? 'Suit le calendrier des earnings, analyse le consensus vs whisper, pricing des options pré-earnings, et fait l\'analyse beat/miss en post-earnings.'
         : 'Tracks the earnings calendar, analyzes consensus vs whisper numbers, pre-earnings options pricing, and runs beat/miss analysis post-earnings.',
-      files: ['CLAUDE.md', 'earnings-watchlist.json', 'README.md']
+      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'earnings-watchlist.json', 'README.md']
     },
     {
       id: 'news-reactor',
@@ -98,7 +98,7 @@
       desc: isFR
         ? 'Surveille les news en continu pour ta watchlist. Classe chaque news (market-moving vs bruit), analyse l\'impact, et génère des alertes actionnables.'
         : 'Monitors news continuously for your watchlist. Classifies each story (market-moving vs noise), analyzes impact, and generates actionable alerts.',
-      files: ['CLAUDE.md', 'README.md']
+      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'README.md']
     },
     {
       id: 'alert-architect',
@@ -108,7 +108,7 @@
       desc: isFR
         ? 'Définis des règles d\'alerte complexes : "Si RSI < 30 ET VIX > 25 ET insider buy détecté → Telegram + analyse complète". Multi-actifs, multi-timeframe.'
         : 'Define complex alert rules: "If RSI < 30 AND VIX > 25 AND insider buy detected → Telegram + full analysis". Multi-asset, multi-timeframe.',
-      files: ['CLAUDE.md', 'alerts-config.json', 'README.md']
+      files: ['CLAUDE.md', '.mcp.json', 'mcp-server/', 'alerts-config.json', 'README.md']
     }
   ];
 
@@ -514,6 +514,132 @@ Say: "Start monitoring" or "Check alert conditions"
   };
 
   // ═══════════════════════════════════════
+  // MCP SERVER FILES (embedded for ZIP)
+  // ═══════════════════════════════════════
+  var MCP_SERVER_INDEX = [
+    '#!/usr/bin/env node',
+    '',
+    '/**',
+    ' * Market Watch MCP Server',
+    ' * Exposes live Market Watch data to AI agents (Claude Code, Cursor, etc.)',
+    ' * Data is fetched from articles.market-watch.xyz static JSON endpoints.',
+    ' */',
+    '',
+    "import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';",
+    "import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';",
+    "import { z } from 'zod';",
+    '',
+    "const BASE_URL = 'https://articles.market-watch.xyz';",
+    'const DATA_URL = `${BASE_URL}/data`;',
+    'const MCP_URL = `${BASE_URL}/mcp`;',
+    '',
+    'async function fetchJSON(url) {',
+    '  const res = await fetch(url);',
+    '  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);',
+    '  return res.json();',
+    '}',
+    '',
+    'async function fetchWatchlist() {',
+    '  return fetchJSON(`${MCP_URL}/watchlist.json`);',
+    '}',
+    '',
+    'async function fetchTabData(tab) {',
+    '  return fetchJSON(`${DATA_URL}/${tab}.json`);',
+    '}',
+    '',
+    'function extractCardInfo(html) {',
+    '  const titleMatch = html.match(/<h2[^>]*>(.*?)<\\/h2>/s);',
+    '  const descMatch = html.match(/<p[^>]*>(.*?)<\\/p>/s);',
+    '  const hrefMatch = html.match(/href="([^"]+)"/);',
+    '  const dateMatch = html.match(/report-card-meta[^>]*>([^<]+)/);',
+    '  const tagsMatch = html.match(/data-tags="([^"]*)"/);',
+    '  return {',
+    "    title: titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '',",
+    "    description: descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim() : '',",
+    "    href: hrefMatch ? hrefMatch[1] : '',",
+    "    date: dateMatch ? dateMatch[1].trim() : '',",
+    "    tags: tagsMatch ? tagsMatch[1] : ''",
+    '  };',
+    '}',
+    '',
+    "const server = new McpServer({ name: 'market-watch', version: '1.0.0' });",
+    '',
+    "server.tool('get_watchlist', \"Get today's A+ scanner picks with entry/stop/TP levels, market regime, and alerts.\", {}, async () => {",
+    '  const data = await fetchWatchlist();',
+    "  return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };",
+    '});',
+    '',
+    "server.tool('get_market_regime', 'Get current market regime (Risk-On/Risk-Off), VIX, DXY, S&P 500, fear/greed.', {}, async () => {",
+    '  const data = await fetchWatchlist();',
+    "  return { content: [{ type: 'text', text: JSON.stringify({ regime: data.regime, vix: data.vix, dxy: data.dxy, us10y: data.us10y, spx: data.spx, fear_greed: data.fear_greed, alerts: data.alerts, updated: data.updated }, null, 2) }] };",
+    '});',
+    '',
+    "server.tool('get_pick_detail', 'Get detailed info on a specific scanner pick by ticker.', { ticker: z.string().describe('Ticker symbol (e.g. AAPL, GLD)') }, async ({ ticker }) => {",
+    '  const data = await fetchWatchlist();',
+    '  const pick = data.picks.find(p => p.ticker.toUpperCase() === ticker.toUpperCase());',
+    '  if (!pick) return { content: [{ type: \'text\', text: `Ticker ${ticker} not found. Available: ${data.picks.map(p => p.ticker).join(\', \')}` }] };',
+    "  return { content: [{ type: 'text', text: JSON.stringify({ ...pick, regime: data.regime, updated: data.updated }, null, 2) }] };",
+    '});',
+    '',
+    "server.tool('search_articles', 'Search Market Watch articles by ticker or keyword.', { query: z.string(), tab: z.string().optional() }, async ({ query, tab }) => {",
+    "  const tabs = tab ? [tab] : ['analyses', 'daily', 'weekly', 'scanner', 'tech', 'series'];",
+    '  const results = [];',
+    '  const q = query.toLowerCase();',
+    '  for (const t of tabs) {',
+    '    try {',
+    '      const cards = await fetchTabData(t);',
+    '      for (const html of cards) {',
+    '        if (html.toLowerCase().includes(q)) results.push({ tab: t, ...extractCardInfo(html) });',
+    '      }',
+    '    } catch (e) {}',
+    '  }',
+    '  return { content: [{ type: \'text\', text: results.length > 0 ? JSON.stringify(results.slice(0, 20), null, 2) : `No articles found for "${query}"` }] };',
+    '});',
+    '',
+    "server.tool('get_article_list', 'List latest articles by type.', { tab: z.enum(['daily', 'weekly', 'analyses', 'scanner', 'tech', 'series']), limit: z.number().optional() }, async ({ tab, limit }) => {",
+    '  const cards = await fetchTabData(tab);',
+    '  const articles = cards.slice(0, limit || 10).map(html => extractCardInfo(html));',
+    "  return { content: [{ type: 'text', text: JSON.stringify({ tab, count: cards.length, showing: articles.length, articles }, null, 2) }] };",
+    '});',
+    '',
+    "server.resource('watchlist', 'marketwatch://watchlist', { description: 'Current A+ picks watchlist', mimeType: 'application/json' }, async () => {",
+    '  const data = await fetchWatchlist();',
+    "  return { contents: [{ uri: 'marketwatch://watchlist', mimeType: 'application/json', text: JSON.stringify(data, null, 2) }] };",
+    '});',
+    '',
+    "server.resource('articles-{tab}', new ResourceTemplate('marketwatch://articles/{tab}', { list: undefined }), { description: 'Articles by tab', mimeType: 'application/json' }, async (uri, { tab }) => {",
+    '  const cards = await fetchTabData(tab);',
+    '  const articles = cards.slice(0, 20).map(html => extractCardInfo(html));',
+    "  return { contents: [{ uri: uri.href, mimeType: 'application/json', text: JSON.stringify({ tab, count: cards.length, articles }, null, 2) }] };",
+    '});',
+    '',
+    'const transport = new StdioServerTransport();',
+    'await server.connect(transport);'
+  ].join('\n');
+
+  var MCP_SERVER_PKG = JSON.stringify({
+    name: "market-watch-mcp",
+    version: "1.0.0",
+    description: "Market Watch MCP Server — Live scanner picks & articles for AI agents",
+    type: "module",
+    main: "index.js",
+    bin: { "mw-mcp": "./index.js" },
+    scripts: { start: "node index.js" },
+    dependencies: { "@modelcontextprotocol/sdk": "^1.27.1" }
+  }, null, 2);
+
+  var MCP_DOT_JSON = function(serverPath) {
+    return JSON.stringify({
+      mcpServers: {
+        "market-watch": {
+          command: "node",
+          args: [serverPath]
+        }
+      }
+    }, null, 2);
+  };
+
+  // ═══════════════════════════════════════
   // README TEMPLATE
   // ═══════════════════════════════════════
   function generateReadme(workflow, tickers) {
@@ -522,34 +648,55 @@ Say: "Start monitoring" or "Check alert conditions"
 
 ${wf.desc}
 
-## Quick Start
+## Quick Start (3 steps)
 
-### Claude Code
 \`\`\`bash
-cd ${workflow}
+# 1. Install the MCP server (one time only)
+cd mcp-server && npm install && cd ..
+
+# 2. Launch Claude Code
 claude
-# Say: "Run the morning scan" or "Start monitoring"
+
+# 3. Say one of these:
+#    "Run the morning scan"
+#    "Analyze today's picks"
+#    "Start monitoring"
 \`\`\`
+
+That's it. Claude Code auto-detects \`.mcp.json\` and loads the Market Watch MCP server.
+The server fetches **live data** from articles.market-watch.xyz (updated daily at 23:00 UTC).
+
+## What's Inside
+
+| File | Purpose |
+|------|---------|
+| \`CLAUDE.md\` | AI agent configuration (the brain) |
+| \`.cursorrules\` | Same config, auto-detected by Cursor |
+| \`.mcp.json\` | MCP server config for Claude Code |
+| \`mcp-server/index.js\` | The MCP server (fetches live data) |
+| \`mcp-server/package.json\` | Server dependencies |
+| \`README.md\` | This file |
+${workflow === 'portfolio-sentinel' ? '| `portfolio.json` | Your portfolio holdings (edit this) |\n' : ''}${workflow === 'earnings-analyst' ? '| `earnings-watchlist.json` | Tickers to track for earnings |\n' : ''}${workflow === 'alert-architect' ? '| `alerts-config.json` | Alert rules configuration |\n' : ''}
+## MCP Server — Available Tools
+
+| Tool | Description |
+|------|-------------|
+| \`get_watchlist\` | Today's A+ scanner picks with entry/stop/TP |
+| \`get_market_regime\` | Current regime, VIX, DXY, fear/greed |
+| \`get_pick_detail\` | Deep info on a specific pick by ticker |
+| \`search_articles\` | Search 250+ published analyses |
+| \`get_article_list\` | List latest articles by type |
+
+## Alternative Setup (Cursor, ChatGPT, Gemini)
 
 ### Cursor
-1. Open this folder in Cursor
-2. The .cursorrules file auto-configures the AI
-3. Ask: "Run the workflow"
+1. Open this folder in Cursor → \`.cursorrules\` is auto-detected
+2. Ask: "Run the workflow"
 
-### Other AI Tools
-1. Copy the contents of CLAUDE.md
-2. Paste as system prompt in ChatGPT, Gemini, etc.
-
-## Files
-- \`CLAUDE.md\` — AI agent configuration (the brain)
-- \`README.md\` — This file
-${workflow === 'portfolio-sentinel' ? '- `portfolio.json` — Your portfolio holdings (edit this)\n' : ''}${workflow === 'earnings-analyst' ? '- `earnings-watchlist.json` — Tickers to track for earnings\n' : ''}${workflow === 'alert-architect' ? '- `alerts-config.json` — Alert rules configuration\n' : ''}
-## Data Source
-This agent fetches live data from:
-\`\`\`
-https://articles.market-watch.xyz/mcp/watchlist.json
-\`\`\`
-Updated daily at 23:00 UTC with the latest A+ scanner picks.
+### ChatGPT / Gemini / Other
+1. Copy the contents of \`CLAUDE.md\`
+2. Paste as system prompt
+3. The AI will fetch data from \`https://articles.market-watch.xyz/mcp/watchlist.json\`
 
 ## Powered by Market Watch
 https://articles.market-watch.xyz
@@ -570,6 +717,9 @@ https://articles.market-watch.xyz
     var files = [
       { name: 'CLAUDE.md', content: claudeMd },
       { name: '.cursorrules', content: claudeMd },
+      { name: '.mcp.json', content: MCP_DOT_JSON('./mcp-server/index.js') },
+      { name: 'mcp-server/index.js', content: MCP_SERVER_INDEX },
+      { name: 'mcp-server/package.json', content: MCP_SERVER_PKG },
       { name: 'README.md', content: readme }
     ];
 
@@ -701,9 +851,9 @@ https://articles.market-watch.xyz
     html += '<button class="action-btn" onclick="window._downloadAgent()"><i class="fa-solid fa-download"></i> ' + L.download + '</button>';
     html += '</div>';
     html += '<div class="wf-howto"><div class="pedagogy-box"><h4><i class="fa-solid fa-graduation-cap"></i> ' + L.howTo + '</h4>';
-    html += '<ol><li><strong>Claude Code:</strong> ' + (isFR ? 'Décompresse le ZIP dans un dossier → <code>cd dossier && claude</code> → "Run the morning scan"' : 'Unzip into a folder → <code>cd folder && claude</code> → "Run the morning scan"') + '</li>';
-    html += '<li><strong>Cursor:</strong> ' + (isFR ? 'Ouvre le dossier dans Cursor (le .cursorrules est auto-détecté)' : 'Open the folder in Cursor (.cursorrules is auto-detected)') + '</li>';
-    html += '<li><strong>ChatGPT/Gemini:</strong> ' + (isFR ? 'Copie le CLAUDE.md et colle-le comme prompt système' : 'Copy the CLAUDE.md and paste as system prompt') + '</li></ol>';
+    html += '<ol><li>' + (isFR ? 'Décompresse le ZIP → <code>cd mcp-server && npm install && cd ..</code>' : 'Unzip → <code>cd mcp-server && npm install && cd ..</code>') + '</li>';
+    html += '<li><strong>Claude Code:</strong> <code>claude</code> ' + (isFR ? '(le MCP server est auto-détecté via .mcp.json)' : '(MCP server auto-detected via .mcp.json)') + '</li>';
+    html += '<li><strong>Cursor:</strong> ' + (isFR ? 'Ouvre le dossier dans Cursor (.cursorrules auto-détecté)' : 'Open folder in Cursor (.cursorrules auto-detected)') + '</li></ol>';
     html += '</div></div></div>';
 
     panel.innerHTML = html;
@@ -866,8 +1016,8 @@ https://articles.market-watch.xyz
     html += '<button class="action-btn" onclick="window._downloadFactory()"><i class="fa-solid fa-download"></i> ' + L.download + '</button>';
     html += '</div>';
     html += '<div class="wf-howto"><div class="pedagogy-box"><h4><i class="fa-solid fa-graduation-cap"></i> ' + L.howTo + '</h4>';
-    html += '<ol><li>' + (isFR ? 'Télécharge le projet ZIP' : 'Download the project ZIP') + '</li>';
-    html += '<li><code>cd alert-system && claude</code></li>';
+    html += '<ol><li>' + (isFR ? 'Décompresse le ZIP → <code>cd mcp-server && npm install && cd ..</code>' : 'Unzip → <code>cd mcp-server && npm install && cd ..</code>') + '</li>';
+    html += '<li><code>claude</code> ' + (isFR ? '(MCP auto-détecté)' : '(MCP auto-detected)') + '</li>';
     html += '<li>"Start monitoring my alerts"</li></ol>';
     html += '</div></div></div>';
 
@@ -997,6 +1147,9 @@ Say: "Start monitoring" or "Check conditions now"
     var files = [
       { name: 'CLAUDE.md', content: claudeMd },
       { name: '.cursorrules', content: claudeMd },
+      { name: '.mcp.json', content: MCP_DOT_JSON('./mcp-server/index.js') },
+      { name: 'mcp-server/index.js', content: MCP_SERVER_INDEX },
+      { name: 'mcp-server/package.json', content: MCP_SERVER_PKG },
       { name: 'README.md', content: readme },
       { name: 'alerts-config.json', content: JSON.stringify({
         tickers: (tickers || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean),
