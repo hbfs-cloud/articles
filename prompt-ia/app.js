@@ -9,9 +9,9 @@
   // ── LANGUAGE DETECTION ──
   var params = new URLSearchParams(location.search);
   var CURRENT_LANG = params.get('lang') || 'en';
-  if (['fr','en','ar'].indexOf(CURRENT_LANG) === -1) CURRENT_LANG = 'en';
+  if (['fr','en','ar','es','zh'].indexOf(CURRENT_LANG) === -1) CURRENT_LANG = 'en';
 
-  var L = LANG.ui[CURRENT_LANG];
+  var L = LANG.ui[CURRENT_LANG] || LANG.ui.en;
 
   // ── APPLY LANGUAGE TO PAGE ──
   function applyLang() {
@@ -114,14 +114,14 @@
 
   function renderAllControls() {
     var c = LANG.chips;
-    renderSelect('intentSelect', c.intent[CURRENT_LANG]);
-    renderSelect('assetSelect', c.asset[CURRENT_LANG]);
+    renderSelect('intentSelect', c.intent[CURRENT_LANG] || c.intent.en);
+    renderSelect('assetSelect', c.asset[CURRENT_LANG] || c.asset.en);
     renderSelect('aiSelect', c.ai);
-    renderSelect('levelSelect', c.level[CURRENT_LANG]);
-    renderSelect('formatSelect', c.format[CURRENT_LANG]);
-    renderSelect('langSelect', c.reportLang[CURRENT_LANG]);
-    renderSelect('focusSelect', c.focus[CURRENT_LANG]);
-    renderSelect('scheduleSelect', c.schedule[CURRENT_LANG]);
+    renderSelect('levelSelect', c.level[CURRENT_LANG] || c.level.en);
+    renderSelect('formatSelect', c.format[CURRENT_LANG] || c.format.en);
+    renderSelect('langSelect', c.reportLang[CURRENT_LANG] || c.reportLang.en);
+    renderSelect('focusSelect', c.focus[CURRENT_LANG] || c.focus.en);
+    renderSelect('scheduleSelect', c.schedule[CURRENT_LANG] || c.schedule.en);
   }
 
   // ── GET VALUES ──
@@ -156,7 +156,7 @@
   }
 
   function updateAssetBadge(type) {
-    var labels = LANG.assetBadgeLabels[CURRENT_LANG];
+    var labels = LANG.assetBadgeLabels[CURRENT_LANG] || LANG.assetBadgeLabels.en;
     var area = document.getElementById('assetBadgeArea');
     if (type && type !== 'stock') {
       area.innerHTML = '<span class="asset-badge ' + type + '"><i class="fa-solid fa-tag"></i> ' + (labels[type] || type) + '</span>';
@@ -433,7 +433,9 @@
   var smartLinkLabels = {
     fr: { ecoCalendar:'Calendrier éco' },
     en: { ecoCalendar:'Eco calendar' },
-    ar: { ecoCalendar:'تقويم اقتصادي' }
+    ar: { ecoCalendar:'تقويم اقتصادي' },
+    es: { ecoCalendar:'Calendario económico' },
+    zh: { ecoCalendar:'经济日历' }
   };
 
   function getSmartLinks(ticker, assetType) {
@@ -454,7 +456,7 @@
       links.push({ icon:'fa-solid fa-newspaper', label:'ForexFactory', url:'https://www.forexfactory.com/calendar' });
       links.push({ icon:'fa-solid fa-landmark', label:'Fed', url:'https://www.federalreserve.gov/' });
     } else if (assetType === 'macro') {
-      links.push({ icon:'fa-solid fa-calendar', label:smartLinkLabels[CURRENT_LANG].ecoCalendar, url:'https://www.forexfactory.com/calendar' });
+      links.push({ icon:'fa-solid fa-calendar', label:(smartLinkLabels[CURRENT_LANG] || smartLinkLabels.en).ecoCalendar, url:'https://www.forexfactory.com/calendar' });
       links.push({ icon:'fa-solid fa-landmark', label:'Fed', url:'https://www.federalreserve.gov/' });
       links.push({ icon:'fa-solid fa-newspaper', label:'Bloomberg', url:'https://www.bloomberg.com/markets' });
       links.push({ icon:'fa-solid fa-chart-line', label:'TradingView', url:'https://www.tradingview.com/' });
@@ -815,12 +817,16 @@
   var promptLangInstr = {
     fr: 'LANGUE : FRANÇAIS\nRédige en français. Accents obligatoires.',
     en: 'LANGUAGE: ENGLISH\nWrite in professional financial English.',
-    ar: 'اللغة: العربية\nاكتب التحليل بالعربية الفصحى.'
+    ar: 'اللغة: العربية\nاكتب التحليل بالعربية الفصحى.',
+    es: 'IDIOMA: ESPAÑOL\nEscribe en español financiero profesional.',
+    zh: '语言：中文\n使用专业金融中文撰写分析报告。'
   };
   var promptAssetLabels = {
     fr: { stock:'Action', biotech:'Biotech', crypto:'Crypto', etf:'ETF', forex:'Forex', commodity:'Matière première', index:'Indice', macro:'Macro' },
     en: { stock:'Stock', biotech:'Biotech', crypto:'Crypto', etf:'ETF', forex:'Forex', commodity:'Commodity', index:'Index', macro:'Macro' },
-    ar: { stock:'سهم', biotech:'بيوتك', crypto:'كريبتو', etf:'ETF', forex:'فوركس', commodity:'سلعة', index:'مؤشر', macro:'ماكرو' }
+    ar: { stock:'سهم', biotech:'بيوتك', crypto:'كريبتو', etf:'ETF', forex:'فوركس', commodity:'سلعة', index:'مؤشر', macro:'ماكرو' },
+    es: { stock:'Acción', biotech:'Biotech', crypto:'Crypto', etf:'ETF', forex:'Forex', commodity:'Materia prima', index:'Índice', macro:'Macro' },
+    zh: { stock:'股票', biotech:'生物科技', crypto:'加密货币', etf:'ETF', forex:'外汇', commodity:'大宗商品', index:'指数', macro:'宏观' }
   };
   var promptMiscLabels = {
     fr: {
@@ -954,7 +960,7 @@
 
       document.getElementById('promptOutput').textContent = prompt;
       document.getElementById('outputTarget').innerHTML = '<i class="fa-solid fa-robot"></i> ' + (aiLabels[primaryAi] || primaryAi);
-      var badgeLabels = LANG.assetBadgeLabels[CURRENT_LANG];
+      var badgeLabels = LANG.assetBadgeLabels[CURRENT_LANG] || LANG.assetBadgeLabels.en;
       document.getElementById('outputAsset').innerHTML = '<i class="fa-solid fa-tag"></i> ' + (badgeLabels[assetType] || '');
       document.getElementById('outputChars').innerHTML = '<i class="fa-solid fa-text-width"></i> ' + prompt.length.toLocaleString() + ' chars';
 
@@ -1175,7 +1181,7 @@
   function renderLibrary() {
     // Tabs
     var tabsEl = document.getElementById('libTabs');
-    var tabs = LANG.libTabs[CURRENT_LANG];
+    var tabs = LANG.libTabs[CURRENT_LANG] || LANG.libTabs.en;
     tabsEl.innerHTML = '';
     tabs.forEach(function(t, i) {
       var btn = document.createElement('div');
@@ -1209,9 +1215,8 @@
 
       var bodyHtml = '';
       if (isStub) {
-        var stubMsg = CURRENT_LANG === 'fr' ? 'Bientôt disponible — restez connecté !' :
-                      CURRENT_LANG === 'ar' ? 'قريبًا — ابقَ على اتصال!' :
-                      'Coming soon — stay tuned!';
+        var stubMsgs = { fr:'Bientôt disponible — restez connecté !', ar:'قريبًا — ابقَ على اتصال!', es:'Próximamente — ¡mantente atento!', zh:'即将推出，敬请期待！', en:'Coming soon — stay tuned!' };
+        var stubMsg = stubMsgs[CURRENT_LANG] || stubMsgs.en;
         bodyHtml = '<p class="prompt-lib-desc" style="opacity:.5;font-style:italic">' + stubMsg + '</p>';
       } else {
         bodyHtml = (desc ? '<p class="prompt-lib-desc">' + desc + '</p>' : '') +
@@ -1318,8 +1323,8 @@
   // ── INIT ──
   applyLang();
   renderAllControls();
-  renderTemplateSelect('thesisTemplateSelect', LANG.thesisTemplates[CURRENT_LANG], 'thesisInput', L.thesisTemplatePh);
-  renderTemplateSelect('catalystTemplateSelect', LANG.catalystTemplates[CURRENT_LANG], 'catalystInput', L.catalystTemplatePh);
+  renderTemplateSelect('thesisTemplateSelect', LANG.thesisTemplates[CURRENT_LANG] || LANG.thesisTemplates.en, 'thesisInput', L.thesisTemplatePh);
+  renderTemplateSelect('catalystTemplateSelect', LANG.catalystTemplates[CURRENT_LANG] || LANG.catalystTemplates.en, 'catalystInput', L.catalystTemplatePh);
   renderLibrary();
 
   // Auto-open prompt from URL

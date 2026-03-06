@@ -5,7 +5,9 @@ var LANG = {
   meta: {
     fr: { title:'Prompt IA | Market Watch', desc:'Generateur de mega-prompts d\'analyse financiere — Collez le prompt dans ChatGPT, Claude, Grok ou Perplexity et obtenez une analyse institutionnelle complete.', ogTitle:'Prompt IA | Market Watch', ogDesc:'Generez un mega-prompt d\'analyse financiere adapte a votre IA, langue et niveau.' },
     en: { title:'AI Prompt | Market Watch', desc:'Financial analysis mega-prompt generator — Paste the prompt into ChatGPT, Claude, Grok or Perplexity and get a complete institutional-grade analysis.', ogTitle:'AI Prompt | Market Watch', ogDesc:'Generate a financial analysis mega-prompt tailored to your AI, language and skill level.' },
-    ar: { title:'\u0628\u0631\u0648\u0645\u064a\u062a IA | Market Watch', desc:'\u0645\u0648\u0644\u0651\u062f \u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0642\u062f\u0651\u0645\u0629 \u2014 \u0627\u0644\u0635\u0642 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a \u0641\u064a ChatGPT \u0623\u0648 Claude \u0623\u0648 Grok \u0623\u0648 Perplexity \u0648\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u062a\u062d\u0644\u064a\u0644 \u0645\u0624\u0633\u0633\u064a \u0634\u0627\u0645\u0644.', ogTitle:'\u0628\u0631\u0648\u0645\u064a\u062a IA | Market Watch', ogDesc:'\u0623\u0646\u0634\u0626 \u0628\u0631\u0648\u0645\u0628\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u064f\u062d\u0633\u064e\u0646 \u062d\u0633\u0628 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0648\u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0633\u062a\u0648\u0649.' }
+    ar: { title:'\u0628\u0631\u0648\u0645\u064a\u062a IA | Market Watch', desc:'\u0645\u0648\u0644\u0651\u062f \u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0642\u062f\u0651\u0645\u0629 \u2014 \u0627\u0644\u0635\u0642 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a \u0641\u064a ChatGPT \u0623\u0648 Claude \u0623\u0648 Grok \u0623\u0648 Perplexity \u0648\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u062a\u062d\u0644\u064a\u0644 \u0645\u0624\u0633\u0633\u064a \u0634\u0627\u0645\u0644.', ogTitle:'\u0628\u0631\u0648\u0645\u064a\u062a IA | Market Watch', ogDesc:'\u0623\u0646\u0634\u0626 \u0628\u0631\u0648\u0645\u0628\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u064f\u062d\u0633\u064e\u0646 \u062d\u0633\u0628 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0648\u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0633\u062a\u0648\u0649.' },
+    es: { title:'Prompt IA | Market Watch', desc:'Generador de mega-prompts de análisis financiero — Pega el prompt en ChatGPT, Claude, Grok o Perplexity y obtén un análisis institucional completo.', ogTitle:'Prompt IA | Market Watch', ogDesc:'Genera un mega-prompt de análisis financiero adaptado a tu IA, idioma y nivel.' },
+    zh: { title:'AI 提示词 | Market Watch', desc:'金融分析超级提示词生成器 — 将提示词粘贴到 ChatGPT、Claude、Grok 或 Perplexity，获取机构级完整分析。', ogTitle:'AI 提示词 | Market Watch', ogDesc:'生成适合您的AI、语言和水平的金融分析超级提示词。' }
   },
   ui: {
     fr: {
@@ -232,6 +234,156 @@ var LANG = {
       modeLibLabel: '\u0627\u0644\u0645\u0643\u062a\u0628\u0629',
       modeLibSub: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062c\u0627\u0647\u0632\u0629',
       libIntro: '👇 انقر على أي برومبت للتوسيع والنسخ'
+    },
+    es: {
+      heroTitle: 'Prompt IA',
+      heroSub: 'Mega-prompt de análisis financiero en un clic — optimizado para ChatGPT, Claude, Grok, Perplexity',
+      homeTitle: 'Inicio',
+      generate: 'Generar',
+      generating: 'Generando...',
+      generateFull: 'Generar Prompt',
+      intentLabel: 'Intención',
+      customize: 'Personalizar',
+      assetType: 'Tipo de activo',
+      targetAi: 'IA objetivo',
+      aiHint: 'Auto = IA recomendada según contexto',
+      level: 'Nivel',
+      format: 'Formato',
+      reportLang: 'Idioma del informe',
+      focus: 'Enfoque',
+      thesis: 'Tesis',
+      thesisOpt: '— opcional',
+      thesisPlaceholder: 'Describa su hipótesis o seleccione una plantilla...',
+      catalysts: 'Catalizadores',
+      catalystOpt: '— opcional',
+      catalystPlaceholder: 'Ej: Resultados el 1 de mayo, rumor de adquisición...',
+      thesisTemplatePh: 'Seleccione una plantilla de tesis...',
+      catalystTemplatePh: 'Seleccione una plantilla de catalizador...',
+      outputTitle: 'Prompt principal',
+      copy: 'Copiar',
+      copied: 'Copiado',
+      newBtn: 'Nuevo',
+      advToggle: 'Personalizar',
+      libTitle: 'Biblioteca',
+      libCount: '51 prompts probados',
+      libOpen: 'Abrir',
+      libClose: 'Cerrar',
+      copiedMsg: '¡Prompt copiado!',
+      copiedSub: 'Pégalo en ',
+      copyAiDefault: 'tu IA',
+      shareCopied: '¡Enlace copiado!',
+      openIn: 'Abrir en ',
+      otherAi: 'Otra IA',
+      compTitle: 'Prompts complementarios',
+      disclaimer: 'La IA es un asistente, no un oráculo. Siempre verifique en fuentes primarias.',
+      learnMore: 'Saber más',
+      footer: '&copy; 2026 Market Watch. Datos vía MarketWatch Gateway. Esto no es asesoría financiera.',
+      truncNote: '[Prompt truncado — pegue la versión completa con el botón Copiar]',
+      heroToolLabel: 'Herramienta interactiva',
+      badgeMulti: 'Multi-activo',
+      badgeAi: 'IA recomendada',
+      badgeAntiH: 'Anti-alucinación',
+      howTitle: 'Cómo funciona',
+      step1Title: 'Ticker + Intención',
+      step1Desc: 'AAPL, BTC-USD, EUR/USD...',
+      step2Title: 'Generar',
+      step2Desc: 'Prompt principal + complementarios',
+      step3Title: 'Pegar',
+      step3Desc: 'En la IA recomendada',
+      genTitle: 'Generador',
+      libDividerTitle: 'Biblioteca de Prompts',
+      libDesc: 'Prompts probados y optimizados de nuestras series educativas. Haga clic para expandir y copiar.',
+      aiDividerTitle: '¿Qué IA para qué uso?',
+      aiCompareTitle: 'Fortalezas y debilidades de las IA',
+      aiCompareDesc: 'El generador recomienda automáticamente la mejor IA.',
+      aiColAi: 'IA',
+      aiColStr: 'Fortalezas',
+      aiColWeak: 'Debilidades',
+      resDividerTitle: 'Saber más',
+      resTitle: 'Series educativas',
+      scheduleLabel: 'Auto-ejecución',
+      scheduleOpt: '— opcional',
+      scheduleHint: 'La IA recibirá instrucciones para repetir este análisis a la frecuencia elegida',
+      modeCustomLabel: 'Prompt personalizado',
+      modeCustomSub: 'Ticker + IA = mega-prompt',
+      modeLibLabel: 'Biblioteca',
+      modeLibSub: 'Prompts listos para usar',
+      libIntro: '👇 Haga clic en cualquier prompt para expandir y copiar'
+    },
+    zh: {
+      heroTitle: 'AI 提示词',
+      heroSub: '一键生成金融分析超级提示词 — 为 ChatGPT、Claude、Grok、Perplexity 优化',
+      homeTitle: '首页',
+      generate: '生成',
+      generating: '生成中...',
+      generateFull: '生成提示词',
+      intentLabel: '意图',
+      customize: '自定义',
+      assetType: '资产类型',
+      targetAi: '目标AI',
+      aiHint: 'Auto = 根据上下文推荐AI',
+      level: '级别',
+      format: '格式',
+      reportLang: '报告语言',
+      focus: '重点',
+      thesis: '论点',
+      thesisOpt: '— 可选',
+      thesisPlaceholder: '描述您的假设或选择模板...',
+      catalysts: '催化剂',
+      catalystOpt: '— 可选',
+      catalystPlaceholder: '例：5月1日财报，收购传闻...',
+      thesisTemplatePh: '选择论点模板...',
+      catalystTemplatePh: '选择催化剂模板...',
+      outputTitle: '主提示词',
+      copy: '复制',
+      copied: '已复制',
+      newBtn: '新建',
+      advToggle: '自定义',
+      libTitle: '提示词库',
+      libCount: '51个已测试提示词',
+      libOpen: '展开',
+      libClose: '收起',
+      copiedMsg: '提示词已复制！',
+      copiedSub: '粘贴到 ',
+      copyAiDefault: '您的AI',
+      shareCopied: '链接已复制！',
+      openIn: '在以下打开 ',
+      otherAi: '其他AI',
+      compTitle: '补充提示词',
+      disclaimer: 'AI是助手，不是神谕。请始终在一手来源上核实。',
+      learnMore: '了解更多',
+      footer: '&copy; 2026 Market Watch. 数据来自 MarketWatch Gateway. 本内容不构成投资建议。',
+      truncNote: '[提示词已截断 — 请通过复制按钮粘贴完整版]',
+      heroToolLabel: '互动工具',
+      badgeMulti: '多资产',
+      badgeAi: 'AI推荐',
+      badgeAntiH: '防幻觉',
+      howTitle: '使用方法',
+      step1Title: '代码 + 意图',
+      step1Desc: 'AAPL, BTC-USD, EUR/USD...',
+      step2Title: '生成',
+      step2Desc: '主提示词 + 补充',
+      step3Title: '粘贴',
+      step3Desc: '到推荐的AI中',
+      genTitle: '生成器',
+      libDividerTitle: '提示词库',
+      libDesc: '经过测试和优化的提示词。点击展开后复制。',
+      aiDividerTitle: '哪种AI适合哪种用途？',
+      aiCompareTitle: 'AI优劣对比',
+      aiCompareDesc: '生成器自动推荐最佳AI。',
+      aiColAi: 'AI',
+      aiColStr: '优势',
+      aiColWeak: '劣势',
+      resDividerTitle: '了解更多',
+      resTitle: '教育系列',
+      scheduleLabel: '自动运行',
+      scheduleOpt: '— 可选',
+      scheduleHint: 'AI将按所选频率重复此分析',
+      modeCustomLabel: '自定义提示词',
+      modeCustomSub: '代码 + AI = 超级提示词',
+      modeLibLabel: '提示词库',
+      modeLibSub: '即用提示词',
+      libIntro: '👇 点击任意提示词展开并复制'
     }
   },
   chips: {
@@ -271,6 +423,30 @@ var LANG = {
         { value:'scan', icon:'fa-solid fa-binoculars', label:'أفضل الفرص اليوم' },
         { value:'learn', icon:'fa-solid fa-graduation-cap', label:'علّمني كالمحترفين' },
         { value:'macro', icon:'fa-solid fa-globe', label:'نظرة ماكرو على السوق' }
+      ],
+      es: [
+        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'Análisis completo alcista y bajista' },
+        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'¿Debería comprar ahora?' },
+        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'¿Es momento de vender?' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'Preparar resultados' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'Evaluar el dividendo' },
+        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'¿Oportunidad de short?' },
+        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'Proteger mi portafolio' },
+        { value:'scan', icon:'fa-solid fa-binoculars', label:'Encontrar los mejores setups' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'Enséñame como un profesional' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'Vista macro del mercado' }
+      ],
+      zh: [
+        { value:'inform', icon:'fa-solid fa-magnifying-glass', label:'完整多空分析' },
+        { value:'buy', icon:'fa-solid fa-cart-shopping', label:'现在应该买入吗？' },
+        { value:'sell', icon:'fa-solid fa-hand-holding-dollar', label:'是否该卖出？' },
+        { value:'earnings', icon:'fa-solid fa-chart-bar', label:'财报分析' },
+        { value:'dividend', icon:'fa-solid fa-coins', label:'评估分红' },
+        { value:'short', icon:'fa-solid fa-arrow-trend-down', label:'做空机会？' },
+        { value:'hedge', icon:'fa-solid fa-shield-halved', label:'保护我的投资组合' },
+        { value:'scan', icon:'fa-solid fa-binoculars', label:'寻找最佳交易机会' },
+        { value:'learn', icon:'fa-solid fa-graduation-cap', label:'像专业人士一样教我' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'宏观市场概览' }
       ]
     },
     asset: {
@@ -303,6 +479,26 @@ var LANG = {
         { value:'commodity', icon:'fa-solid fa-oil-well', label:'\u0633\u0644\u0639\u0629' },
         { value:'index', icon:'fa-solid fa-chart-pie', label:'\u0645\u0624\u0634\u0631' },
         { value:'macro', icon:'fa-solid fa-globe', label:'\u0645\u0627\u0643\u0631\u0648' }
+      ],
+      es: [
+        { value:'stock', icon:'fa-solid fa-building', label:'Acción' },
+        { value:'biotech', icon:'fa-solid fa-dna', label:'Biotech' },
+        { value:'crypto', icon:'fa-brands fa-bitcoin', label:'Crypto' },
+        { value:'etf', icon:'fa-solid fa-layer-group', label:'ETF' },
+        { value:'forex', icon:'fa-solid fa-money-bill-transfer', label:'Forex' },
+        { value:'commodity', icon:'fa-solid fa-oil-well', label:'Materia prima' },
+        { value:'index', icon:'fa-solid fa-chart-pie', label:'Índice' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'Macro' }
+      ],
+      zh: [
+        { value:'stock', icon:'fa-solid fa-building', label:'股票' },
+        { value:'biotech', icon:'fa-solid fa-dna', label:'生物科技' },
+        { value:'crypto', icon:'fa-brands fa-bitcoin', label:'加密货币' },
+        { value:'etf', icon:'fa-solid fa-layer-group', label:'ETF' },
+        { value:'forex', icon:'fa-solid fa-money-bill-transfer', label:'外汇' },
+        { value:'commodity', icon:'fa-solid fa-oil-well', label:'大宗商品' },
+        { value:'index', icon:'fa-solid fa-chart-pie', label:'指数' },
+        { value:'macro', icon:'fa-solid fa-globe', label:'宏观' }
       ]
     },
     level: {
@@ -320,6 +516,16 @@ var LANG = {
         { value:'beginner', icon:'fa-solid fa-seedling', label:'\u0645\u0628\u062a\u062f\u0626' },
         { value:'intermediate', icon:'fa-solid fa-chart-simple', label:'\u0645\u062a\u0648\u0633\u0637', selected:true },
         { value:'expert', icon:'fa-solid fa-brain', label:'\u062e\u0628\u064a\u0631' }
+      ],
+      es: [
+        { value:'beginner', icon:'fa-solid fa-seedling', label:'Principiante' },
+        { value:'intermediate', icon:'fa-solid fa-chart-simple', label:'Intermedio', selected:true },
+        { value:'expert', icon:'fa-solid fa-brain', label:'Experto' }
+      ],
+      zh: [
+        { value:'beginner', icon:'fa-solid fa-seedling', label:'初级' },
+        { value:'intermediate', icon:'fa-solid fa-chart-simple', label:'中级', selected:true },
+        { value:'expert', icon:'fa-solid fa-brain', label:'高级' }
       ]
     },
     format: {
@@ -340,23 +546,55 @@ var LANG = {
         { value:'concise', icon:'fa-solid fa-compress', label:'\u0645\u062e\u062a\u0635\u0631' },
         { value:'telegram', icon:'fa-brands fa-telegram', label:'Telegram' },
         { value:'twitter', icon:'fa-brands fa-x-twitter', label:'X' }
+      ],
+      es: [
+        { value:'detailed', icon:'fa-solid fa-file-alt', label:'Detallado', selected:true },
+        { value:'concise', icon:'fa-solid fa-compress', label:'Conciso' },
+        { value:'telegram', icon:'fa-brands fa-telegram', label:'Telegram' },
+        { value:'twitter', icon:'fa-brands fa-x-twitter', label:'X' }
+      ],
+      zh: [
+        { value:'detailed', icon:'fa-solid fa-file-alt', label:'详细', selected:true },
+        { value:'concise', icon:'fa-solid fa-compress', label:'简洁' },
+        { value:'telegram', icon:'fa-brands fa-telegram', label:'Telegram' },
+        { value:'twitter', icon:'fa-brands fa-x-twitter', label:'X' }
       ]
     },
     reportLang: {
       fr: [
         { value:'fr', icon:'fa-solid fa-flag', label:'FR', selected:true },
         { value:'en', icon:'fa-solid fa-flag', label:'EN' },
-        { value:'ar', icon:'fa-solid fa-flag', label:'AR' }
+        { value:'ar', icon:'fa-solid fa-flag', label:'AR' },
+        { value:'es', icon:'fa-solid fa-flag', label:'ES' },
+        { value:'zh', icon:'fa-solid fa-flag', label:'ZH' }
       ],
       en: [
-        { value:'fr', icon:'fa-solid fa-flag', label:'FR' },
         { value:'en', icon:'fa-solid fa-flag', label:'EN', selected:true },
-        { value:'ar', icon:'fa-solid fa-flag', label:'AR' }
+        { value:'fr', icon:'fa-solid fa-flag', label:'FR' },
+        { value:'ar', icon:'fa-solid fa-flag', label:'AR' },
+        { value:'es', icon:'fa-solid fa-flag', label:'ES' },
+        { value:'zh', icon:'fa-solid fa-flag', label:'ZH' }
       ],
       ar: [
-        { value:'fr', icon:'fa-solid fa-flag', label:'FR' },
+        { value:'ar', icon:'fa-solid fa-flag', label:'AR', selected:true },
         { value:'en', icon:'fa-solid fa-flag', label:'EN' },
-        { value:'ar', icon:'fa-solid fa-flag', label:'AR', selected:true }
+        { value:'fr', icon:'fa-solid fa-flag', label:'FR' },
+        { value:'es', icon:'fa-solid fa-flag', label:'ES' },
+        { value:'zh', icon:'fa-solid fa-flag', label:'ZH' }
+      ],
+      es: [
+        { value:'es', icon:'fa-solid fa-flag', label:'ES', selected:true },
+        { value:'en', icon:'fa-solid fa-flag', label:'EN' },
+        { value:'fr', icon:'fa-solid fa-flag', label:'FR' },
+        { value:'ar', icon:'fa-solid fa-flag', label:'AR' },
+        { value:'zh', icon:'fa-solid fa-flag', label:'ZH' }
+      ],
+      zh: [
+        { value:'zh', icon:'fa-solid fa-flag', label:'ZH', selected:true },
+        { value:'en', icon:'fa-solid fa-flag', label:'EN' },
+        { value:'fr', icon:'fa-solid fa-flag', label:'FR' },
+        { value:'ar', icon:'fa-solid fa-flag', label:'AR' },
+        { value:'es', icon:'fa-solid fa-flag', label:'ES' }
       ]
     },
     focus: {
@@ -385,6 +623,22 @@ var LANG = {
         { value:'risk', icon:'fa-solid fa-triangle-exclamation', label:'\u0645\u062e\u0627\u0637\u0631' },
         { value:'trade', icon:'fa-solid fa-bullseye', label:'\u062a\u062f\u0627\u0648\u0644' },
         { value:'sharia', icon:'fa-solid fa-mosque', label:'\u0634\u0631\u064a\u0639\u0629' }
+      ],
+      es: [
+        { value:'all', icon:'fa-solid fa-layer-group', label:'Completo', selected:true },
+        { value:'technical', icon:'fa-solid fa-chart-area', label:'Técnico' },
+        { value:'fundamental', icon:'fa-solid fa-building-columns', label:'Fundamental' },
+        { value:'sentiment', icon:'fa-solid fa-users', label:'Sentimiento' },
+        { value:'risk', icon:'fa-solid fa-triangle-exclamation', label:'Riesgos' },
+        { value:'trade', icon:'fa-solid fa-bullseye', label:'Trade' }
+      ],
+      zh: [
+        { value:'all', icon:'fa-solid fa-layer-group', label:'完整', selected:true },
+        { value:'technical', icon:'fa-solid fa-chart-area', label:'技术分析' },
+        { value:'fundamental', icon:'fa-solid fa-building-columns', label:'基本面' },
+        { value:'sentiment', icon:'fa-solid fa-users', label:'情绪' },
+        { value:'risk', icon:'fa-solid fa-triangle-exclamation', label:'风险' },
+        { value:'trade', icon:'fa-solid fa-bullseye', label:'交易' }
       ]
     },
     schedule: {
@@ -411,6 +665,22 @@ var LANG = {
         { value:'biweekly', label:'نصف شهري' },
         { value:'monthly', label:'شهري' },
         { value:'earnings', label:'قبل كل أرباح' }
+      ],
+      es: [
+        { value:'none', label:'Desactivado' },
+        { value:'daily', label:'Diario' },
+        { value:'weekly', label:'Semanal' },
+        { value:'biweekly', label:'Quincenal' },
+        { value:'monthly', label:'Mensual' },
+        { value:'earnings', label:'Antes de cada resultado' }
+      ],
+      zh: [
+        { value:'none', label:'关闭' },
+        { value:'daily', label:'每日' },
+        { value:'weekly', label:'每周' },
+        { value:'biweekly', label:'两周一次' },
+        { value:'monthly', label:'每月' },
+        { value:'earnings', label:'每次财报前' }
       ]
     },
     ai: [
@@ -450,12 +720,32 @@ var LANG = {
       { cat:'crypto', label:'\u0643\u0631\u064a\u0628\u062a\u0648' },
       { cat:'macro', label:'\u0645\u0627\u0643\u0631\u0648' },
       { cat:'special', label:'\u062e\u0627\u0635' }
+    ],
+    es: [
+      { cat:'all', label:'Todos' },
+      { cat:'essential', label:'Esencial' },
+      { cat:'stock', label:'Stock-Picking' },
+      { cat:'portfolio', label:'Portafolio' },
+      { cat:'crypto', label:'Crypto' },
+      { cat:'macro', label:'Macro' },
+      { cat:'special', label:'Especial' }
+    ],
+    zh: [
+      { cat:'all', label:'全部' },
+      { cat:'essential', label:'必备' },
+      { cat:'stock', label:'选股' },
+      { cat:'portfolio', label:'投资组合' },
+      { cat:'crypto', label:'加密货币' },
+      { cat:'macro', label:'宏观' },
+      { cat:'special', label:'特殊' }
     ]
   },
   assetBadgeLabels: {
     fr: { stock:'Action', biotech:'Biotech', crypto:'Crypto', etf:'ETF', forex:'Forex', commodity:'Mat. 1\u00e8re', index:'Indice', macro:'Macro' },
     en: { stock:'Stock', biotech:'Biotech', crypto:'Crypto', etf:'ETF', forex:'Forex', commodity:'Commodity', index:'Index', macro:'Macro' },
-    ar: { stock:'\u0633\u0647\u0645', biotech:'\u0628\u064a\u0648\u062a\u0643', crypto:'\u0643\u0631\u064a\u0628\u062a\u0648', etf:'ETF', forex:'\u0641\u0648\u0631\u0643\u0633', commodity:'\u0633\u0644\u0639\u0629', index:'\u0645\u0624\u0634\u0631', macro:'\u0645\u0627\u0643\u0631\u0648' }
+    ar: { stock:'\u0633\u0647\u0645', biotech:'\u0628\u064a\u0648\u062a\u0643', crypto:'\u0643\u0631\u064a\u0628\u062a\u0648', etf:'ETF', forex:'\u0641\u0648\u0631\u0643\u0633', commodity:'\u0633\u0644\u0639\u0629', index:'\u0645\u0624\u0634\u0631', macro:'\u0645\u0627\u0643\u0631\u0648' },
+    es: { stock:'Acción', biotech:'Biotech', crypto:'Crypto', etf:'ETF', forex:'Forex', commodity:'Materia prima', index:'Índice', macro:'Macro' },
+    zh: { stock:'股票', biotech:'生物科技', crypto:'加密货币', etf:'ETF', forex:'外汇', commodity:'大宗商品', index:'指数', macro:'宏观' }
   },
   thesisTemplates: {
     fr: [
@@ -484,6 +774,24 @@ var LANG = {
       { icon:'fa-coins', label:'\u062a\u0648\u0632\u064a\u0639\u0627\u062a', text:'\u0623\u0647\u062a\u0645 \u0628\u0647\u0630\u0627 \u0627\u0644\u0633\u0647\u0645 \u0628\u0633\u0628\u0628 \u062a\u0648\u0632\u064a\u0639\u0627\u062a\u0647. \u0623\u0631\u064a\u062f \u062a\u0642\u064a\u064a\u0645 \u0627\u0633\u062a\u062f\u0627\u0645\u0629 \u0627\u0644\u062a\u0648\u0632\u064a\u0639\u0627\u062a \u0648\u0627\u0644\u0642\u0648\u0629 \u0627\u0644\u0645\u0627\u0644\u064a\u0629.' },
       { icon:'fa-bolt', label:'Short squeeze', text:'\u0646\u0633\u0628\u0629 \u0627\u0644\u0628\u064a\u0639 \u0639\u0644\u0649 \u0627\u0644\u0645\u0643\u0634\u0648\u0641 \u0645\u0631\u062a\u0641\u0639\u0629 \u0648CTB \u064a\u062a\u0632\u0627\u064a\u062f. \u0623\u0631\u064a\u062f \u062a\u0642\u064a\u064a\u0645 \u0625\u0645\u0643\u0627\u0646\u064a\u0629 short squeeze.' },
       { icon:'fa-compass', label:'\u0627\u0643\u062a\u0634\u0627\u0641', text:'\u0623\u0643\u062a\u0634\u0641 \u0647\u0630\u0627 \u0627\u0644\u0633\u0647\u0645 \u0648\u0623\u0631\u064a\u062f \u062a\u062d\u0644\u064a\u0644\u064b\u0627 \u0634\u0627\u0645\u0644\u064b\u0627 \u0644\u0641\u0647\u0645 \u0646\u0645\u0648\u0630\u062c \u0627\u0644\u0639\u0645\u0644 \u0648\u0627\u0644\u062a\u0642\u064a\u064a\u0645 \u0648\u0627\u0644\u0645\u062e\u0627\u0637\u0631.' }
+    ],
+    es: [
+      { icon:'fa-arrow-trend-up', label:'Rebote técnico', text:'La acción parece sobrevendida tras una corrección reciente. Los indicadores técnicos (RSI < 30, divergencia MACD alcista) sugieren un rebote inminente.' },
+      { icon:'fa-gem', label:'Valor oculto', text:'Creo que el mercado infravalora esta empresa. El P/E está por debajo del promedio sectorial y los fundamentales son sólidos.' },
+      { icon:'fa-microchip', label:'Crecimiento IA', text:'La empresa está posicionada en el tema de inteligencia artificial. Quiero evaluar si el crecimiento esperado justifica la valoración.' },
+      { icon:'fa-chart-bar', label:'Pre-resultados', text:'Los resultados se acercan. Quiero analizar las expectativas del mercado y determinar si hay una oportunidad.' },
+      { icon:'fa-coins', label:'Dividendo', text:'Me interesa esta acción por su dividendo. Quiero evaluar la sostenibilidad del dividendo y la solidez financiera.' },
+      { icon:'fa-bolt', label:'Short squeeze', text:'El short interest es alto y el CTB está subiendo. Quiero evaluar el potencial de short squeeze.' },
+      { icon:'fa-compass', label:'Descubrimiento', text:'Estoy descubriendo esta acción y quiero un análisis completo para entender el modelo de negocio, la valoración y los riesgos.' }
+    ],
+    zh: [
+      { icon:'fa-arrow-trend-up', label:'技术反弹', text:'该股在近期回调后似乎超卖。技术指标（RSI < 30，MACD 看涨背离）暗示即将反弹。' },
+      { icon:'fa-gem', label:'隐藏价值', text:'我认为市场低估了这家公司。市盈率低于行业平均水平，基本面稳固。' },
+      { icon:'fa-microchip', label:'AI增长', text:'公司处于人工智能赛道。我想评估预期增长是否能支撑当前估值。' },
+      { icon:'fa-chart-bar', label:'财报前', text:'财报即将发布。我想分析市场预期并判断是否存在机会。' },
+      { icon:'fa-coins', label:'分红', text:'我对这只股票的分红感兴趣。我想评估分红的可持续性和财务实力。' },
+      { icon:'fa-bolt', label:'轧空', text:'空头比例较高，借券成本在上升。我想评估轧空的潜力。' },
+      { icon:'fa-compass', label:'初次了解', text:'我第一次了解这只股票，想要全面分析以理解商业模式、估值和风险。' }
     ]
   },
   catalystTemplates: {
@@ -528,6 +836,34 @@ var LANG = {
       { icon:'fa-user-tie', label:'شراء المطلعين', text:'شراء كبير من مسؤول تنفيذي أو عضو مجلس إدارة' },
       { icon:'fa-arrow-right-arrow-left', label:'دوران قطاعي', text:'دوران رأس المال نحو هذا القطاع (تدفقات ETF)' },
       { icon:'fa-earth-americas', label:'جيوسياسية', text:'حدث جيوسياسي يؤثر على السهم (تعريفات، عقوبات، حرب، انتخابات)' }
+    ],
+    es: [
+      { icon:'fa-chart-bar', label:'Resultados', text:'Próximos resultados (fecha estimada)' },
+      { icon:'fa-flask', label:'FDA / Resultados clínicos', text:'Decisión FDA / resultados Fase III esperados' },
+      { icon:'fa-handshake', label:'Adquisición / M&A', text:'Rumor de adquisición / oferta potencial' },
+      { icon:'fa-rocket', label:'Lanzamiento de producto', text:'Lanzamiento de un nuevo producto / servicio importante' },
+      { icon:'fa-gavel', label:'Regulación', text:'Cambio regulatorio / decisión judicial esperada' },
+      { icon:'fa-landmark', label:'FOMC / Fed', text:'Reunión FOMC / decisión de tasa de interés' },
+      { icon:'fa-building', label:'Asociación estratégica', text:'Asociación con una gran empresa (GAFAM, Fortune 500, etc.)' },
+      { icon:'fa-file-contract', label:'Contrato gubernamental', text:'Orden gubernamental importante / contrato institucional' },
+      { icon:'fa-scissors', label:'Stock split', text:'Stock split anunciado o próximo' },
+      { icon:'fa-user-tie', label:'Compra de insiders', text:'Compra significativa de ejecutivo o miembro del consejo' },
+      { icon:'fa-arrow-right-arrow-left', label:'Rotación sectorial', text:'Rotación de capital hacia este sector (flujos ETF, amplitud)' },
+      { icon:'fa-earth-americas', label:'Geopolítica', text:'Evento geopolítico que impacta la acción (aranceles, sanciones, guerra, elecciones)' }
+    ],
+    zh: [
+      { icon:'fa-chart-bar', label:'财报', text:'即将发布的财报（预估日期）' },
+      { icon:'fa-flask', label:'FDA / 临床结果', text:'FDA 决定 / 三期临床结果预期' },
+      { icon:'fa-handshake', label:'收购 / M&A', text:'收购传闻 / 潜在收购要约' },
+      { icon:'fa-rocket', label:'产品发布', text:'重大新产品 / 服务发布' },
+      { icon:'fa-gavel', label:'监管', text:'监管变化 / 预期法院裁决' },
+      { icon:'fa-landmark', label:'FOMC / 美联储', text:'FOMC 会议 / 利率决定' },
+      { icon:'fa-building', label:'战略合作', text:'与大型企业（GAFAM、Fortune 500 等）建立合作' },
+      { icon:'fa-file-contract', label:'政府合同', text:'重大政府订单 / 机构合同' },
+      { icon:'fa-scissors', label:'拆股', text:'已宣布或即将拆股' },
+      { icon:'fa-user-tie', label:'内部人购买', text:'高管或董事会成员大量买入' },
+      { icon:'fa-arrow-right-arrow-left', label:'板块轮动', text:'资金流入该板块（ETF 资金流、市场广度）' },
+      { icon:'fa-earth-americas', label:'地缘政治', text:'影响股价的地缘政治事件（关税、制裁、战争、选举）' }
     ]
   }
 };

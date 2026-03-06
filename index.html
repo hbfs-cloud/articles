@@ -140,27 +140,31 @@
       background: #1d4ed8;
     }
 
-    /* ===== LANGUAGE SELECT (same style as market-watch.xyz) ===== */
-    .lang-select-wrap {
-      display: inline-flex;
+    /* ===== TOP BAR (search + lang) ===== */
+    .top-bar {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.5rem;
+      z-index: 50;
+      display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 1rem;
     }
 
     .lang-select {
       appearance: none;
       -webkit-appearance: none;
-      background: rgba(15, 23, 42, 0.05);
-      border: 1px solid rgba(15, 23, 42, 0.12);
-      border-radius: 8px;
-      padding: 6px 32px 6px 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 32px 8px 12px;
       font-size: 0.85rem;
       font-weight: 600;
       font-family: "Inter", sans-serif;
       color: var(--text-primary);
       cursor: pointer;
       transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 10px center;
@@ -168,7 +172,7 @@
 
     .lang-select:hover {
       border-color: var(--accent);
-      background-color: rgba(37, 99, 235, 0.04);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
     }
 
     .lang-select:focus {
@@ -176,6 +180,7 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
+
 
     .report-card-meta {
       color: var(--text-muted);
@@ -634,10 +639,6 @@
 
     /* Search Dialog */
     .search-trigger {
-      position: fixed;
-      top: 1.25rem;
-      right: 1.5rem;
-      z-index: 50;
       background: white;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
@@ -874,13 +875,16 @@
         padding: 0 1rem;
       }
 
-      .lang-select-wrap {
-        margin-top: 0.5rem;
+      .top-bar {
+        top: 0.75rem;
+        right: 0.75rem;
+        gap: 6px;
       }
 
       .lang-select {
-        font-size: 0.8rem;
-        padding: 5px 28px 5px 10px;
+        font-size: 0.75rem;
+        padding: 6px 26px 6px 8px;
+        border-radius: 8px;
       }
 
       .report-card {
@@ -1438,8 +1442,6 @@
         align-items: center;
         justify-content: center;
         font-size: 0;
-        top: 0.75rem;
-        right: 0.75rem;
       }
 
       .search-trigger i {
@@ -1538,12 +1540,22 @@
       style="display: none; visibility: hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <!-- Search Trigger -->
-  <button class="search-trigger" onclick="openSearch()">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span data-i18n="search.trigger">Rechercher...</span>
-    <kbd>⌘K</kbd>
-  </button>
+  <!-- Top Bar: Language + Search -->
+  <div class="top-bar">
+    <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+      <option value="all">🌐 All</option>
+      <option value="en">🇺🇸 EN</option>
+      <option value="fr">🇫🇷 FR</option>
+      <option value="ar">🇸🇦 AR</option>
+      <option value="es">🇪🇸 ES</option>
+      <option value="zh">🇨🇳 ZH</option>
+    </select>
+    <button class="search-trigger" onclick="openSearch()">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <span data-i18n="search.trigger">Rechercher...</span>
+      <kbd>⌘K</kbd>
+    </button>
+  </div>
 
   <div class="hero-section">
     <a href="#" class="brand" style="
@@ -1565,15 +1577,6 @@
         Analyses hebdomadaires approfondies sur la Macro, les Actions, Métaux
         et Cryptos. Clair, actionnable, sans bruit.
       </p>
-      <div class="lang-select-wrap">
-        <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
-          <option value="en">🇺🇸 English</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="ar">🇸🇦 العربية</option>
-          <option value="es">🇪🇸 Español</option>
-          <option value="zh">🇨🇳 中文</option>
-        </select>
-      </div>
     </div>
   </div>
 
@@ -2630,7 +2633,14 @@
           }
         }
 
-        var isVisible = gradeMatch && tagMatch && confMatch && timeMatch;
+        // Language match
+        var langMatch = true;
+        if (typeof currentLangFilter !== 'undefined' && currentLangFilter !== 'all') {
+          var langs = typeof detectCardLangs === 'function' ? detectCardLangs(card) : ['fr'];
+          langMatch = langs.indexOf(currentLangFilter) !== -1;
+        }
+
+        var isVisible = gradeMatch && tagMatch && confMatch && timeMatch && langMatch;
         card.style.display = isVisible ? "" : "none";
         if (isVisible) count++;
       });
@@ -2644,34 +2654,31 @@
       var el = document.getElementById("filterCount");
       if (el) el.textContent = count + " analyse" + (count > 1 ? "s" : "");
 
-      // Tag filter on other tabs (if tags active)
-      if (activeTags.length) {
-        ["tab-weekly", "tab-daily", "tab-scanner", "tab-series", "tab-tech"].forEach(
-          function (tabId) {
-            document
-              .querySelectorAll("#" + tabId + " .report-card[data-tags]")
-              .forEach(function (card) {
-                var cardTags = card.dataset.tags.split(",");
-                var match = activeTags.every(function (t) {
+      // Tag + lang filter on other tabs
+      ["tab-weekly", "tab-daily", "tab-scanner", "tab-series", "tab-tech"].forEach(
+        function (tabId) {
+          document
+            .querySelectorAll("#" + tabId + " .report-card[data-tags]")
+            .forEach(function (card) {
+              var tagMatch = true;
+              if (activeTags.length) {
+                var cardTags = (card.dataset.tags || "").split(",");
+                tagMatch = activeTags.every(function (t) {
                   return cardTags.indexOf(t) !== -1;
                 });
-                card.style.display = match ? "" : "none";
-              });
-          },
-        );
-      } else {
-        ["tab-weekly", "tab-daily", "tab-scanner", "tab-series", "tab-tech"].forEach(
-          function (tabId) {
-            document
-              .querySelectorAll("#" + tabId + " .report-card[data-tags]")
-              .forEach(function (card) {
-                card.style.display = "";
-              });
-          },
-        );
-      }
+              }
+              var langMatch = true;
+              if (typeof currentLangFilter !== 'undefined' && currentLangFilter !== 'all') {
+                var langs = typeof detectCardLangs === 'function' ? detectCardLangs(card) : ['fr'];
+                langMatch = langs.indexOf(currentLangFilter) !== -1;
+              }
+              card.style.display = (tagMatch && langMatch) ? "" : "none";
+            });
+        },
+      );
 
       updateContextBar();
+      if (typeof updateTabCounts === 'function') updateTabCounts();
     }
 
     // Helper to parse dates like "4 Mars 2026" or "25 Février 2026"
@@ -3649,11 +3656,19 @@
       return (translations[defaultLang] || {})[key] || '';
     }
 
+    // Current language filter (separate from UI lang)
+    var currentLangFilter = 'all';
+
     function setLang(lang) {
-      if (!translations[lang]) lang = defaultLang;
+      currentLangFilter = lang;
       localStorage.setItem('mw-lang', lang);
-      document.documentElement.lang = lang;
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+      // UI translation uses the actual language (or English for "all")
+      var uiLang = (lang === 'all') ? 'en' : lang;
+      if (!translations[uiLang]) uiLang = defaultLang;
+
+      document.documentElement.lang = uiLang;
+      document.documentElement.dir = uiLang === 'ar' ? 'rtl' : 'ltr';
 
       // Update select value
       var sel = document.getElementById('langSelect');
@@ -3662,14 +3677,14 @@
       // Apply translations to all data-i18n elements
       document.querySelectorAll('[data-i18n]').forEach(function(el) {
         var key = el.getAttribute('data-i18n');
-        var val = resolve(lang, key);
+        var val = resolve(uiLang, key);
         if (val) el.textContent = val;
       });
 
       // Apply placeholder translations
       document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
         var key = el.getAttribute('data-i18n-placeholder');
-        var val = resolve(lang, key);
+        var val = resolve(uiLang, key);
         if (val) el.placeholder = val;
       });
 
@@ -3681,13 +3696,64 @@
         document.head.appendChild(style);
       }
       var noResultsTexts = { fr: 'Aucun résultat', en: 'No results', ar: 'لا توجد نتائج', es: 'Sin resultados', zh: '无结果' };
-      var noResultsText = noResultsTexts[lang] || noResultsTexts.en;
+      var noResultsText = noResultsTexts[uiLang] || noResultsTexts.en;
       style.textContent = '.search-results:empty::after { content: "' + noResultsText + '"; }';
+
+      // Apply language filter to cards via applyAllFilters
+      if (typeof applyAllFilters === 'function') {
+        applyAllFilters();
+      }
+      // Also update tab counters for all tabs
+      updateTabCounts();
     }
 
-    // Init from stored preference or browser language
+    // Detect available languages for a card from its link hrefs
+    function detectCardLangs(card) {
+      if (card.dataset.lang) return card.dataset.lang.split(',');
+      var langs = new Set();
+      var links = card.querySelectorAll('a[href]');
+      links.forEach(function(a) {
+        var href = a.href || '';
+        var text = a.textContent || '';
+        if (/\/fr\//.test(href) || /🇫🇷/.test(text)) langs.add('fr');
+        if (/\/en\//.test(href) || /🇬🇧/.test(text) || /🇺🇸/.test(text)) langs.add('en');
+        if (/\/ar\//.test(href) || /🇸🇦/.test(text)) langs.add('ar');
+        if (/\/es\//.test(href) || /🇪🇸/.test(text)) langs.add('es');
+        if (/\/zh\//.test(href) || /🇨🇳/.test(text)) langs.add('zh');
+      });
+      if (langs.size === 0) {
+        var text = card.textContent || '';
+        if (/Lire|Rapport|Analyse|Voir|Briefing/.test(text)) langs.add('fr');
+        if (/Read|Report|Analysis|View/.test(text)) langs.add('en');
+      }
+      if (langs.size === 0) langs.add('fr');
+      card.dataset.lang = Array.from(langs).join(',');
+      return Array.from(langs);
+    }
+
+    // Update tab counters based on visible cards
+    function updateTabCounts() {
+      ['weekly', 'daily', 'analyses', 'scanner', 'tech', 'series'].forEach(function(tab) {
+        var panel = document.getElementById('tab-' + tab);
+        if (!panel) return;
+        var cards = panel.querySelectorAll('.report-card');
+        var visible = 0;
+        cards.forEach(function(c) { if (c.style.display !== 'none') visible++; });
+        var countEl = document.getElementById(tab + 'Count');
+        if (countEl) {
+          if (currentLangFilter === 'all' && typeof activeTags !== 'undefined' && !activeTags.length) {
+            var state = typeof tabState !== 'undefined' ? tabState[tab] : null;
+            if (state && state.data) countEl.textContent = state.data.length;
+          } else {
+            countEl.textContent = visible;
+          }
+        }
+      });
+    }
+
+    // Init from stored preference
     (function() {
-      var stored = localStorage.getItem('mw-lang') || 'en';
+      var stored = localStorage.getItem('mw-lang') || 'all';
       setLang(stored);
     })();
   </script>
