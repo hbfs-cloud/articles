@@ -83,10 +83,8 @@ var LANG = {
       modeCustomSub: 'Ticker + IA = méga-prompt',
       modeLibLabel: 'Bibliothèque',
       modeLibSub: 'Prompts prêts à l\'emploi',
-      modeAgentLabel: 'Agent',
-      modeAgentSub: 'Workflows IA + MCP',
-      modeFactoryLabel: 'Alertes',
-      modeFactorySub: 'Créateur d\'alertes',
+      modeAgentLabel: 'Agent IA',
+      modeAgentSub: 'Briefing + Analyse via MCP',
       libIntro: '👇 Cliquez sur un prompt pour le déplier et le copier'
     },
     en: {
@@ -162,10 +160,8 @@ var LANG = {
       modeCustomSub: 'Ticker + AI = mega-prompt',
       modeLibLabel: 'Library',
       modeLibSub: 'Ready-to-use prompts',
-      modeAgentLabel: 'Agent',
-      modeAgentSub: 'AI workflows + MCP',
-      modeFactoryLabel: 'Alerts',
-      modeFactorySub: 'Smart alert builder',
+      modeAgentLabel: 'AI Agent',
+      modeAgentSub: 'Briefing + Analysis via MCP',
       libIntro: '👇 Click any prompt to expand and copy'
     },
     ar: {
@@ -241,10 +237,8 @@ var LANG = {
       modeCustomSub: '\u0631\u0645\u0632 + \u0630\u0643\u0627\u0621 = \u0628\u0631\u0648\u0645\u0628\u062a \u0636\u062e\u0645',
       modeLibLabel: '\u0627\u0644\u0645\u0643\u062a\u0628\u0629',
       modeLibSub: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062c\u0627\u0647\u0632\u0629',
-      modeAgentLabel: '\u0648\u0643\u064a\u0644',
-      modeAgentSub: 'MCP + \u0633\u064a\u0631 \u0639\u0645\u0644 \u0627\u0644\u0630\u0643\u0627\u0621',
-      modeFactoryLabel: '\u062a\u0646\u0628\u064a\u0647\u0627\u062a',
-      modeFactorySub: '\u0645\u0646\u0634\u0626 \u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0630\u0643\u064a\u0629',
+      modeAgentLabel: '\u0648\u0643\u064a\u0644 \u0630\u0643\u064a',
+      modeAgentSub: '\u0645\u0644\u062e\u0635 + \u062a\u062d\u0644\u064a\u0644 \u0639\u0628\u0631 MCP',
       libIntro: '👇 انقر على أي برومبت للتوسيع والنسخ'
     },
     es: {
@@ -320,10 +314,8 @@ var LANG = {
       modeCustomSub: 'Ticker + IA = mega-prompt',
       modeLibLabel: 'Biblioteca',
       modeLibSub: 'Prompts listos para usar',
-      modeAgentLabel: 'Agente',
-      modeAgentSub: 'Flujos IA + MCP',
-      modeFactoryLabel: 'Alertas',
-      modeFactorySub: 'Constructor de alertas',
+      modeAgentLabel: 'Agente IA',
+      modeAgentSub: 'Briefing + Análisis via MCP',
       libIntro: '👇 Haga clic en cualquier prompt para expandir y copiar'
     },
     zh: {
@@ -399,10 +391,8 @@ var LANG = {
       modeCustomSub: '代码 + AI = 超级提示词',
       modeLibLabel: '提示词库',
       modeLibSub: '即用提示词',
-      modeAgentLabel: '代理',
-      modeAgentSub: 'AI 工作流 + MCP',
-      modeFactoryLabel: '警报',
-      modeFactorySub: '智能警报构建器',
+      modeAgentLabel: 'AI 代理',
+      modeAgentSub: '简报 + 分析 via MCP',
       libIntro: '👇 点击任意提示词展开并复制'
     }
   },

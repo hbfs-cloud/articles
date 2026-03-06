@@ -79,8 +79,8 @@
     .generating{position:relative;overflow:hidden}
     .generating::after{content:'';position:absolute;top:0;left:-100%;width:200%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1.5s infinite}
 
-    /* ── MODE SWITCHER — 4 buttons ── */
-    .mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem}
+    /* ── MODE SWITCHER — 3 buttons ── */
+    .mode-switcher{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem}
     .mode-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;transition:all .25s;font-family:'Inter',sans-serif;animation:slideUp .4s ease both}
     .mode-btn:nth-child(1){animation-delay:.05s}
     .mode-btn:nth-child(2){animation-delay:.12s}
@@ -232,8 +232,32 @@
     .share-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
     .share-toast i{color:#6366f1}
 
+    /* ── LIVE PREVIEW ── */
+    .live-preview-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.25rem;box-shadow:0 8px 30px -8px rgba(0,0,0,.07);animation:slideUp .4s ease both}
+    .live-preview-header{display:flex;align-items:center;justify-content:space-between}
+    .live-preview-header h3{font-size:.88rem;font-weight:800;margin:0;display:flex;align-items:center;gap:6px;color:#0f172a}
+    .live-preview-header h3 i{color:#10b981}
+    .live-preview-sub{font-size:.72rem;color:#64748b;margin:.3rem 0 .75rem;line-height:1.5}
+    .live-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+    .live-metric{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.6rem .5rem;text-align:center}
+    .live-metric-label{display:block;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em}
+    .live-metric-value{display:block;font-size:.95rem;font-weight:800;color:#0f172a;margin-top:2px}
+    .live-picks-title{font-size:.72rem;font-weight:700;color:#475569;margin-bottom:.4rem;display:flex;align-items:center;gap:5px}
+    .live-picks-title i{color:#6366f1}
+    .live-picks{display:flex;flex-direction:column;gap:.4rem}
+    .live-pick{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.65rem .75rem}
+    .live-pick-header{display:flex;align-items:center;justify-content:space-between}
+    .live-pick-ticker{font-size:.88rem;font-weight:800;color:#0f172a}
+    .live-pick-score{font-size:.7rem;font-weight:700;color:#6366f1;background:#eef2ff;padding:2px 8px;border-radius:6px}
+    .live-pick-strategy{font-size:.68rem;color:#64748b;margin-top:2px}
+    .live-pick-levels{display:flex;gap:.75rem;margin-top:.35rem;font-size:.68rem;color:#475569;flex-wrap:wrap}
+    .live-pick-levels strong{color:#0f172a}
+    .live-pick-catalyst{font-size:.64rem;color:#6366f1;margin-top:.25rem;font-weight:500}
+    .live-updated{font-size:.62rem;color:#94a3b8;text-align:right;margin-top:.5rem}
+
     /* ── WORKFLOW CARDS (Agent Mode) ── */
     .wf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem}
+    .wf-grid-2{grid-template-columns:1fr 1fr}
     .wf-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all .25s;background:#fff;font-family:'Inter',sans-serif;text-align:center}
     .wf-card:hover{border-color:#a5b4fc;background:#f5f3ff;transform:translateY(-2px);box-shadow:0 6px 20px rgba(99,102,241,.08)}
     .wf-card.active{border-color:#6366f1;background:#eef2ff;box-shadow:0 4px 16px rgba(99,102,241,.12)}
@@ -374,9 +398,13 @@
       .focus-chips{gap:4px}
       .focus-chip{padding:4px 9px;font-size:.68rem}
       .wf-grid{grid-template-columns:1fr 1fr}
+      .wf-grid-2{grid-template-columns:1fr 1fr}
       .wf-icon{font-size:1.2rem}
       .wf-title{font-size:.7rem}
       .wf-sub{font-size:.56rem}
+      .live-metrics{grid-template-columns:repeat(2,1fr)}
+      .live-pick-levels{gap:.4rem}
+      .mode-switcher{grid-template-columns:1fr 1fr 1fr}
     }
   </style>
 </head>
@@ -431,11 +459,7 @@
         <span class="mode-btn-label">🤖 <span id="modeAgentLabel">Agent</span></span>
         <span class="mode-btn-sub" id="modeAgentSub">AI workflows + MCP</span>
       </button>
-      <button class="mode-btn" data-mode="factory" id="modeFactoryBtn" type="button">
-        <span class="mode-btn-icon"><i class="fa-solid fa-bolt"></i></span>
-        <span class="mode-btn-label">⚡ <span id="modeFactoryLabel">Alerts</span></span>
-        <span class="mode-btn-sub" id="modeFactorySub">Smart alert builder</span>
-      </button>
+      <!-- Factory mode merged into Agent -->
     </div>
 
     <!-- ═══ MODE: CUSTOM ═══ -->
@@ -598,10 +622,10 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="/assets/core.js"></script>
-  <script src="/prompt-ia/lang.js?v=15"></script>
-  <script src="/prompt-ia/library.js?v=15"></script>
-  <script src="/prompt-ia/app.js?v=15"></script>
-  <script src="/prompt-ia/modes.js?v=15"></script>
+  <script src="/prompt-ia/lang.js?v=16"></script>
+  <script src="/prompt-ia/library.js?v=16"></script>
+  <script src="/prompt-ia/app.js?v=16"></script>
+  <script src="/prompt-ia/modes.js?v=16"></script>
 <script src="/assets/tag-renderer.js"></script>
 </body>
 </html>

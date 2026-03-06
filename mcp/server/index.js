@@ -7,11 +7,13 @@
  * Data is fetched from articles.market-watch.xyz static JSON endpoints.
  *
  * Tools:
- *   - get_watchlist     → Today's A+ scanner picks with entry/stop/TP
- *   - get_market_regime → Current regime, VIX, DXY, fear/greed
- *   - get_pick_detail   → Detailed info on a specific pick
- *   - search_articles   → Search published analyses by ticker or keyword
- *   - get_article_list  → List latest articles by type (daily, weekly, scanner, analyses)
+ *   - get_watchlist          → Today's A+ scanner picks with entry/stop/TP
+ *   - get_market_regime      → Current regime, VIX, DXY, fear/greed
+ *   - get_pick_detail        → Detailed info on a specific pick
+ *   - get_scanner_performance → Scanner hit rates, best/worst picks, strategy breakdown
+ *   - get_earnings_calendar  → Upcoming earnings + macro events this week
+ *   - search_articles        → Search published analyses by ticker or keyword
+ *   - get_article_list       → List latest articles by type
  *
  * Resources:
  *   - marketwatch://watchlist          → Current watchlist JSON
@@ -82,7 +84,7 @@ function extractCardInfo(html) {
 
 const server = new McpServer({
   name: 'market-watch',
-  version: '1.0.0'
+  version: '1.1.0'
 });
 
 // ── TOOL: get_watchlist ──
@@ -150,6 +152,38 @@ server.tool(
       content: [{
         type: 'text',
         text: JSON.stringify({ ...pick, regime: data.regime, updated: data.updated }, null, 2)
+      }]
+    };
+  }
+);
+
+// ── TOOL: get_scanner_performance ──
+server.tool(
+  'get_scanner_performance',
+  'Get scanner historical performance: hit rates, best/worst picks, strategy breakdown, recent scan results. Updated weekly.',
+  {},
+  async () => {
+    const data = await fetchJSON(`${MCP_URL}/scanner-performance.json`);
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify(data, null, 2)
+      }]
+    };
+  }
+);
+
+// ── TOOL: get_earnings_calendar ──
+server.tool(
+  'get_earnings_calendar',
+  'Get upcoming earnings reports and macro events for the current week. Includes EPS estimates, revenue estimates, and implied moves.',
+  {},
+  async () => {
+    const data = await fetchJSON(`${MCP_URL}/earnings-calendar.json`);
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify(data, null, 2)
       }]
     };
   }
