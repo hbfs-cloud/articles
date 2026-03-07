@@ -634,6 +634,85 @@ server.tool(
 );
 
 // ────────────────────────────────────
+// PROMPT LIBRARY TOOLS
+// ────────────────────────────────────
+
+// Load prompt library from prompt-ia/library.js
+let promptLibrary = [];
+try {
+  const libPath = resolve(__dirname, '../../prompt-ia/library.js');
+  if (existsSync(libPath)) {
+    const raw = readFileSync(libPath, 'utf8');
+    // Extract the LIBRARY array from "var LIBRARY = [...];"
+    const match = raw.match(/var\s+LIBRARY\s*=\s*(\[[\s\S]*\]);?\s*$/);
+    if (match) {
+      promptLibrary = new Function('return ' + match[1])();
+    }
+  }
+} catch { /* prompt library unavailable */ }
+
+server.tool(
+  'get_prompts',
+  `List or search the Market Watch Prompt Library (${promptLibrary.length} expert prompts for trading/investing). Categories: essential, stock, portfolio, macro, crypto, special. Each prompt is a battle-tested template you can fill in with your ticker/data and use directly.`,
+  {
+    category: z.string().optional().describe('Filter by category: essential, stock, portfolio, macro, crypto, special'),
+    search:   z.string().optional().describe('Search prompts by keyword (matches title and description)'),
+    lang:     z.string().optional().describe('Language for titles/descriptions: en (default), fr, ar')
+  },
+  async ({ category, search, lang }) => {
+    const l = lang || 'en';
+    let results = promptLibrary;
+    if (category) {
+      results = results.filter(p => p.cat === category);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      results = results.filter(p => {
+        const title = (p.title[l] || p.title.en || '').toLowerCase();
+        const desc = (p.desc[l] || p.desc.en || '').toLowerCase();
+        const code = (p.code[l] || p.code.en || '').toLowerCase();
+        return title.includes(q) || desc.includes(q) || code.includes(q);
+      });
+    }
+    const list = results.map(p => ({
+      num: p.num,
+      category: p.cat,
+      title: p.title[l] || p.title.en,
+      description: p.desc[l] || p.desc.en
+    }));
+    return { content: [{ type: 'text', text: JSON.stringify({ total: promptLibrary.length, matching: list.length, prompts: list }, null, 2) }] };
+  }
+);
+
+server.tool(
+  'get_prompt',
+  'Get a specific prompt from the Market Watch Prompt Library by number. Returns the full prompt template ready to use — just fill in the [PLACEHOLDERS] with your data.',
+  {
+    num:  z.number().describe('Prompt number (1-50)'),
+    lang: z.string().optional().describe('Language: en (default), fr, ar')
+  },
+  async ({ num, lang }) => {
+    const l = lang || 'en';
+    const prompt = promptLibrary.find(p => p.num === num);
+    if (!prompt) {
+      return { content: [{ type: 'text', text: `Prompt #${num} not found. Use get_prompts to see available prompts (1-${promptLibrary.length}).` }] };
+    }
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          num: prompt.num,
+          category: prompt.cat,
+          title: prompt.title[l] || prompt.title.en,
+          description: prompt.desc[l] || prompt.desc.en,
+          prompt: prompt.code[l] || prompt.code.en
+        }, null, 2)
+      }]
+    };
+  }
+);
+
+// ────────────────────────────────────
 // UNIVERSE TOOL
 // ────────────────────────────────────
 
