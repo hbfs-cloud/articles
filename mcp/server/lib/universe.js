@@ -61,15 +61,22 @@ const COUNTRY_CODES = {
 };
 
 // ─── Crypto universe (hardcoded — StockAnalysis doesn't list crypto) ──────────
-// Yahoo Finance symbols for top crypto pairs
+// Binance USDT perpetual pairs — use binance.getMultiTicker() for quotes
 
 const CRYPTO_SYMBOLS = [
-  'BTC-USD','ETH-USD','BNB-USD','SOL-USD','XRP-USD','DOGE-USD',
-  'ADA-USD','AVAX-USD','DOT-USD','LINK-USD','LTC-USD',
-  'BCH-USD','UNI-USD','ATOM-USD','APT-USD','ARB-USD',
-  'SUI-USD','TRX-USD','SHIB-USD','TON-USD','PEPE-USD',
-  'INJ-USD','SEI-USD','WLD-USD','JUP-USD'
+  'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','DOGEUSDT',
+  'ADAUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','LTCUSDT',
+  'BCHUSDT','UNIUSDT','ATOMUSDT','APTUSDT','ARBUSDT',
+  'SUIUSDT','TRXUSDT','SHIBUSDT','TONUSDT','PEPEUSDT',
+  'INJUSDT','SEIUSDT','WLDUSDT','JUPUSDT'
 ];
+
+/**
+ * Returns true if the symbol is a Binance crypto pair (ends with USDT/BUSD/USDC).
+ */
+export function isCrypto(symbol) {
+  return /^[A-Z0-9]+(USDT|BUSD|USDC|BTC|ETH|BNB)$/i.test(symbol);
+}
 
 // ─── Universe definitions ─────────────────────────────────────────────────────
 // Each entry: { type, countries[], minDolVol, minMcap?, maxMcap?, cap? }

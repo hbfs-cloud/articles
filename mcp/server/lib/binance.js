@@ -72,6 +72,39 @@ export async function getTicker(symbol) {
 }
 
 // ══════════════════════════════════════
+// REST — Batch Ticker (multiple symbols)
+// ══════════════════════════════════════
+
+export async function getMultiTicker(symbols) {
+  const syms = symbols.map(s => s.toUpperCase());
+  const key  = `binance:multi:${syms.join(',')}`;
+  const cached = cache.get(key);
+  if (cached) return cached;
+
+  const url = `${REST}/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(syms))}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Binance ${res.status}`);
+  const data = await res.json();
+
+  const result = data.map(t => ({
+    symbol:           t.symbol,
+    price:            parseFloat(t.lastPrice),
+    change:           parseFloat(t.priceChange),
+    changePct:        parseFloat(t.priceChangePercent),
+    high:             parseFloat(t.highPrice),
+    low:              parseFloat(t.lowPrice),
+    open:             parseFloat(t.openPrice),
+    volume:           parseFloat(t.volume),        // base asset volume
+    quoteVolume:      parseFloat(t.quoteVolume),   // USD volume
+    trades:           t.count,
+    weightedAvgPrice: parseFloat(t.weightedAvgPrice),
+  }));
+
+  cache.set(key, result, 15);
+  return result;
+}
+
+// ══════════════════════════════════════
 // REST — Order Book (depth)
 // ══════════════════════════════════════
 

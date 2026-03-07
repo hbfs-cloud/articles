@@ -24,6 +24,7 @@
  */
 
 import * as yahoo from './yahoo.js';
+import * as binance from './binance.js';
 import * as universe from './universe.js';
 import * as regime from './regime.js';
 import { getStorage } from './storage.js';
@@ -137,9 +138,45 @@ export function compileDSL(expr) {
 }
 
 // ═══════════════════════════════════════════════════════
-// QUOTE NORMALISER
-// Maps Yahoo quote response to DSL fields
+// QUOTE NORMALISERS
+// Both map their source format to DSL fields
 // ═══════════════════════════════════════════════════════
+
+function normaliseBinanceTicker(t) {
+  const price   = t.price || 0;
+  const prev    = price - (t.change || 0);
+  return {
+    symbol:        t.symbol,
+    name:          t.symbol,
+    price,
+    open:          t.open    || null,
+    high:          t.high    || null,
+    low:           t.low     || null,
+    previousClose: prev      || null,
+    changePct:     t.changePct || 0,
+    volume:        t.quoteVolume || 0,   // USD volume for comparability
+    avgvol3m:      null,
+    avgvol10d:     null,
+    rvol:          null,
+    marketCapM:    null,
+    pe:            null,
+    forwardPe:     null,
+    beta:          null,
+    ema50:         price,   // requires bars — fallback to current price
+    ema200:        price,
+    high52w:       t.high   || price,
+    low52w:        t.low    || price,
+    pctFromHigh:   null,
+    pctFromLow:    null,
+    aboveEma50:    1,
+    aboveEma200:   1,
+    rsi14:         null,    // filled if bars=true
+    atr14:         null,
+    exchange:      'BINANCE',
+    marketState:   'REGULAR',
+    source:        'binance',
+  };
+}
 
 function normaliseQuote(q) {
   const price   = q.price || 0;
@@ -289,23 +326,31 @@ export async function run(options = {}) {
     }
   }
 
-  // 4. Batch-fetch quotes (chunks of 50 to respect Yahoo limits)
-  const CHUNK = 50;
-  const rawQuotes = [];
-  for (let i = 0; i < symbols.length; i += CHUNK) {
-    const chunk = symbols.slice(i, i + CHUNK);
+  // 4. Fetch quotes — route by source (Binance for crypto, Yahoo for equities)
+  const cryptoSyms = symbols.filter(s => universe.isCrypto(s));
+  const equitySyms = symbols.filter(s => !universe.isCrypto(s));
+  const normalised = [];
+
+  // 4a. Binance batch (single request, no chunking needed)
+  if (cryptoSyms.length) {
     try {
-      const quotes = await yahoo.getQuotes(chunk);
-      rawQuotes.push(...quotes);
-    } catch {
-      // partial failure — skip chunk
-    }
+      const tickers = await binance.getMultiTicker(cryptoSyms);
+      normalised.push(...tickers.map(normaliseBinanceTicker));
+    } catch { /* skip on Binance error */ }
   }
 
-  // 5. Normalise
-  const quotes = rawQuotes
-    .filter(q => q.price && q.price > 0)
-    .map(normaliseQuote);
+  // 4b. Yahoo parallel (chunked — one request per symbol internally)
+  const CHUNK = 50;
+  for (let i = 0; i < equitySyms.length; i += CHUNK) {
+    const chunk = equitySyms.slice(i, i + CHUNK);
+    try {
+      const raw = await yahoo.getQuotes(chunk);
+      normalised.push(...raw.filter(q => q.price > 0).map(normaliseQuote));
+    } catch { /* partial failure — skip chunk */ }
+  }
+
+  // 5. Already normalised — just filter valid prices
+  const quotes = normalised.filter(q => q.price && q.price > 0);
 
   // 6. Apply DSL filter
   let filtered = quotes;
@@ -322,11 +367,19 @@ export async function run(options = {}) {
     await Promise.allSettled(
       candidates.map(async q => {
         try {
-          const barData = await yahoo.getBars(q.symbol, '1d', '3mo');
-          runStorage.save(q.symbol, '1d', barData.bars, 'yahoo');
-          const closes = barData.bars.map(b => b.close);
+          let bars;
+          if (universe.isCrypto(q.symbol)) {
+            const data = await binance.getBars(q.symbol, '1d', 90);
+            bars = data.bars;
+            runStorage.save(q.symbol, '1d', bars, 'binance');
+          } else {
+            const data = await yahoo.getBars(q.symbol, '1d', '3mo');
+            bars = data.bars;
+            runStorage.save(q.symbol, '1d', bars, 'yahoo');
+          }
+          const closes = bars.map(b => b.close);
           q.rsi14 = calcRSI(closes);
-          q.atr14 = calcATR(barData.bars);
+          q.atr14 = calcATR(bars);
         } catch { /* leave null */ }
       })
     );
@@ -429,11 +482,13 @@ export async function backtest(options = {}) {
           return;
         }
 
-        // Not cached or stale — fetch from Yahoo and persist
-        const { bars } = await yahoo.getBars(sym, '1d', '1y');
-        if (bars.length > 20) {
-          allBars[sym] = bars;
-          storage.save(sym, '1d', bars, 'yahoo');
+        // Not cached or stale — fetch from appropriate source and persist
+        if (universe.isCrypto(sym)) {
+          const { bars } = await binance.getBars(sym, '1d', 365);
+          if (bars.length > 20) { allBars[sym] = bars; storage.save(sym, '1d', bars, 'binance'); }
+        } else {
+          const { bars } = await yahoo.getBars(sym, '1d', '1y');
+          if (bars.length > 20) { allBars[sym] = bars; storage.save(sym, '1d', bars, 'yahoo'); }
         }
       } catch { /* skip */ }
     })

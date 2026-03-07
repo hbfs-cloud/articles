@@ -39,6 +39,7 @@ section('Loading modules');
 const { default: Database } = await import('better-sqlite3');
 const cache       = await import('./lib/cache.js');
 const yahoo       = await import('./lib/yahoo.js');
+const binance     = await import('./lib/binance.js');
 const { BarsStorage, getStorage } = await import('./lib/storage.js');
 const screener    = await import('./lib/screener.js');
 const universe    = await import('./lib/universe.js');
@@ -156,7 +157,41 @@ await test('cleanOldIntraday removes stale bars', () => {
 // Clean up test DB
 try { unlinkSync(TEST_DB); } catch {}
 
-// ─── 3. Yahoo Finance ─────────────────────────────────────────────────────────
+// ─── 3. Binance ───────────────────────────────────────────
+
+section('Binance (lib/binance.js)');
+
+await test('getTicker returns price for BTCUSDT', async () => {
+  const t = await binance.getTicker('BTCUSDT');
+  assert.ok(t.price > 0, `Price is ${t.price}`);
+  assert.ok(typeof t.changePct === 'number');
+  assert.ok(t.quoteVolume > 0);
+});
+
+await test('getMultiTicker returns data for multiple crypto', async () => {
+  const tickers = await binance.getMultiTicker(['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
+  assert.equal(tickers.length, 3);
+  assert.ok(tickers.every(t => t.price > 0));
+});
+
+await test('getBars returns daily bars for BTCUSDT', async () => {
+  const { bars } = await binance.getBars('BTCUSDT', '1d', 30);
+  assert.ok(bars.length >= 25, `Expected >= 25 bars, got ${bars.length}`);
+  assert.ok(bars[0].close > 0);
+  assert.ok(bars[0].time);
+});
+
+await test('screener run() with crypto universe uses Binance', async () => {
+  const result = await screener.run({
+    universe: 'BTCUSDT,ETHUSDT,SOLUSDT',
+    filter:   'change1d > -50',
+    limit:    5
+  });
+  assert.ok(result.picks.length > 0, 'No picks for crypto screener');
+  assert.ok(result.picks[0].exchange === 'BINANCE', `Expected BINANCE exchange, got ${result.picks[0].exchange}`);
+});
+
+// ─── 3b. Yahoo Finance ─────────────────────────────────────────────────────────
 
 section('Yahoo Finance (lib/yahoo.js)');
 
@@ -351,11 +386,20 @@ await test('get("eu") returns Yahoo-compatible symbols (.DE, .PA, .AS etc.)', as
   assert.ok(hasSuffix, 'No Yahoo-format EU symbols found');
 });
 
-await test('get("crypto") returns 25 hardcoded Yahoo crypto symbols', async () => {
+await test('get("crypto") returns 25 Binance USDT symbols', async () => {
   const syms = await universe.get('crypto');
   assert.equal(syms.length, 25);
-  assert.ok(syms.includes('BTC-USD'));
-  assert.ok(syms.includes('ETH-USD'));
+  assert.ok(syms.includes('BTCUSDT'), 'Missing BTCUSDT');
+  assert.ok(syms.includes('ETHUSDT'), 'Missing ETHUSDT');
+  assert.ok(syms.every(s => s.endsWith('USDT')), 'All crypto should be USDT pairs');
+});
+
+await test('isCrypto() detects Binance symbols correctly', () => {
+  assert.ok(universe.isCrypto('BTCUSDT'));
+  assert.ok(universe.isCrypto('ETHUSDT'));
+  assert.ok(!universe.isCrypto('AAPL'));
+  assert.ok(!universe.isCrypto('SPY'));
+  assert.ok(!universe.isCrypto('SAP.DE'));
 });
 
 await test('saToYahoo converts SA format correctly', () => {
