@@ -43,6 +43,9 @@ const tagMeta = {
     singer: { labels: { fr: "Singer", en: "Singer", ar: "Singer" }, cat: "theme" },
     opensource: { labels: { fr: "Open-Source", en: "Open-Source", ar: "مصدر مفتوح" }, cat: "theme" },
     
+    // Special (cat: "special")
+    "special-edition": { labels: { fr: "Édition Spéciale", en: "Special Edition", ar: "إصدار خاص" }, cat: "special" },
+
     // Content (cat: "content")
     "trade-idea": { labels: { fr: "Idée de Trade", en: "Trade Idea", ar: "فكرة تداول" }, cat: "content" },
     formation: { labels: { fr: "Formation", en: "Learning", ar: "تدريب" }, cat: "content" },
