@@ -1,211 +1,362 @@
 /**
- * Universe management
- * Pre-built symbol lists for US/EU/APAC/ETF/Crypto
- * + Yahoo Finance dynamic screener integration
+ * Universe management — Dynamic via StockAnalysis.com API
+ *
+ * Replaces static hardcoded lists with live data from StockAnalysis.com,
+ * covering 15,000+ stocks and ETFs across all major markets.
+ *
+ * Features:
+ *  - Daily disk cache (date-stamped JSON, auto-cleaned after 3 days)
+ *  - Rich metadata: sector, marketCap, dollarVolume, RSI, MAs, exchange, ISIN
+ *  - Configurable minDolVol filter (default 500K)
+ *  - Supports US, EU (GB/DE/FR/NL/IT/ES/SE/CH/...), APAC (JP/KR/HK/AU/...)
+ *
+ * API reference (same pattern as systematic-tss staticdata.go):
+ *   Stocks: https://stockanalysis.com/api/screener/s/bd/{fields}.json[?c=CC]
+ *   ETFs:   https://stockanalysis.com/api/screener/e/bd/{fields}.json[?c=CC]
+ *   Response: { data: { data: { "AAPL": { n, marketCap, sector, ... } } } }
  */
 
 import * as cache from './cache.js';
+import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from 'fs';
+import { resolve, dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
-const YF_SEARCH    = 'https://query1.finance.yahoo.com/v1/finance/search';
-const YF_SCREENER  = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved';
-const HEADERS      = { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' };
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const CACHE_DIR  = resolve(__dirname, '../../data/cache/stockanalysis');
 
-// ═══════════════════════════════════════════════════════
-// PRE-BUILT UNIVERSES
-// ═══════════════════════════════════════════════════════
+// ─── StockAnalysis API ────────────────────────────────────────────────────────
 
-export const UNIVERSES = {
+const SA_BASE = 'https://stockanalysis.com/api/screener';
 
-  // S&P 500 + Nasdaq 100 representative — 200 symbols
-  us_large: [
-    'AAPL','MSFT','NVDA','AMZN','GOOGL','META','LLY','AVGO','TSLA','JPM',
-    'V','UNH','XOM','WMT','MA','PG','JNJ','COST','HD','BAC',
-    'NFLX','MRK','CRM','ABBV','CVX','AMD','TMO','ORCL','ACN','LIN',
-    'MCD','ADBE','PEP','NOW','DHR','GE','AXP','ISRG','QCOM','TXN',
-    'BKNG','IBM','NEE','UBER','MS','PM','RTX','T','BX','AMGN',
-    'SPGI','GS','SYK','GILD','BLK','ETN','ELV','C','PFE','DE',
-    'SCHW','VRTX','MDT','TMUS','CB','INTC','REGN','MMC','BSX','PANW',
-    'CI','TT','ADP','INTU','MU','LRCX','ADI','KKR','SHW','BA',
-    'FI','CMG','KLAC','SNPS','PGR','AMAT','ITW','ICE','PLD','HCA',
-    'DUK','EOG','WM','SO','CDNS','ORLY','ZTS','MCO','RCL','MAR',
-    'PYPL','MNST','CSX','NOC','CTAS','APH','EMR','TDG','USB','CMI',
-    'MPC','TFC','NSC','PH','NKE','ODFL','ECL','AON','FTNT','PCAR',
-    'GWW','CARR','WELL','KMI','OXY','CL','FDX','PAYX','AJG','SPG',
-    'RSG','IDXX','NXPI','HES','MCK','HLT','SRE','TJX','AFL','ROST',
-    'BDX','MCHP','GLW','EW','VRSK','WEC','YUM','PPG','ROK','LHX',
-    'DG','KR','HSY','VICI','AMT','CCI','PSA','SBAC','EQIX','LULU',
-    'APP','AXON','CRWD','SNOW','PLTR','SQ','COIN','MSTR','ARM','SMCI',
-    'TTD','HIMS','DDOG','HOOD','RBLX','NET','CFLT','GTLB','BILL','ZS'
-  ],
+// Fields requested from the stock screener
+const SA_STOCK_FIELDS = [
+  'n','marketCap','sector','industry','dollarVolume','avgVol',
+  'close','high52','low52','ma50','ma200','rsi',
+  'beta','exchange','country','isin','currency','marketCapCat'
+].join('+');
 
-  // Russell 2000 representative — 60 symbols
-  us_mid: [
-    'DECK','EXP','SAIA','EXPO','LBRT','CELH','GMED','AAON','CSWI','STEP',
-    'MGEE','SITE','TGTX','PRGS','HALO','ALKS','NTNX','SFM','CHRD','WHD',
-    'UFPI','BCPC','CALM','PLXS','MDGL','OSCR','RXO','TMHC','NVT','BLBD',
-    'ROIC','HRI','AMSF','SKYW','CAKE','CPNG','PLMR','MLAB','ALRM','VRRM',
-    'FOUR','BIRK','CVNA','RIVN','LCID','JOBY','ACMR','PCTY','GTLS','FLNC'
-  ],
+// Fields requested from the ETF screener
+const SA_ETF_FIELDS = [
+  'n','assetClass','etfCategory','etfCountry','etfRegion',
+  'exchange','dollarVolume','avgVol','close'
+].join('+');
 
-  // STOXX 600 representative — 65 symbols
-  eu: [
-    // Netherlands
-    'ASML.AS','HEIA.AS','INGA.AS','PHIA.AS','UNA.AS',
-    // Germany
-    'SAP.DE','SIE.DE','BAYN.DE','BMW.DE','VOW3.DE','BAS.DE','MUV2.DE',
-    'DTE.DE','ADS.DE','EOAN.DE','MBG.DE','DBKN.DE','ALV.DE','IFX.DE',
-    // France
-    'MC.PA','OR.PA','TTE.PA','SAN.PA','BNP.PA','AIR.PA',
-    'BN.PA','RI.PA','STM.PA','VIE.PA','LR.PA','PUB.PA','CA.PA',
-    // Switzerland
-    'NESN.SW','NOVN.SW','ROG.SW','ABBN.SW','ZURN.SW','SOON.SW',
-    // UK
-    'BP.L','SHEL.L','HSBA.L','LLOY.L','RIO.L','GSK.L','AZN.L',
-    'ULVR.L','RR.L','BA.L','REL.L','PRU.L','NG.L','NWG.L',
-    'VOD.L','WPP.L','IMB.L','TSCO.L','LSEG.L','STAN.L','BARC.L',
-    // Italy
-    'ENI.MI','ENEL.MI','ISP.MI','UCG.MI','ATL.MI',
-    // Spain
-    'ITX.MC','BBVA.MC','SAN.MC','IBE.MC','REP.MC',
-    // Sweden
-    'ERICB.ST','VOLVA.ST','SKF-B.ST','ALFA.ST'
-  ],
-
-  // APAC — 50 symbols
-  apac: [
-    // Japan (TSE)
-    '7203.T','6758.T','9984.T','6861.T','8306.T','6501.T','9432.T',
-    '7267.T','4063.T','6954.T','8058.T','8316.T','9433.T','7974.T',
-    '4661.T','6367.T','6902.T','8411.T','7832.T','9022.T',
-    // Korea
-    '005930.KS','000660.KS','373220.KS','207940.KS','005490.KS',
-    // Taiwan
-    '2330.TW','2454.TW','2317.TW','2303.TW',
-    // Hong Kong / China H
-    '700.HK','9988.HK','1299.HK','939.HK','2318.HK','941.HK',
-    '388.HK','1398.HK','2628.HK','3988.HK',
-    // Australia (ASX)
-    'BHP.AX','CBA.AX','CSL.AX','NAB.AX','WBC.AX','ANZ.AX','RIO.AX','WDS.AX'
-  ],
-
-  // Major ETFs — 55 symbols
-  etf: [
-    // Broad market
-    'SPY','QQQ','IWM','DIA','VTI','VOO','VT',
-    // International
-    'VEA','VWO','EFA','EEM','FXI','EWJ','EWG','EWQ','EWU','EWY','EWT','EWH','MCHI','VGK','EZU',
-    // US Sectors
-    'XLF','XLE','XLK','XLV','XLI','XLC','XLY','XLP','XLRE','XLB','XLU',
-    // Commodities
-    'GLD','SLV','GDX','GDXJ','USO','UNG',
-    // Bonds
-    'TLT','IEF','SHY','HYG','LQD','EMB',
-    // Thematic
-    'ARKK','IBB','XBI','SOXX','SMH','KWEB','JETS','HACK','BOTZ','ICLN','TAN','PAVE','ITB','KRE',
-    // Inverse/hedge
-    'SH','SQQQ','UVXY'
-  ],
-
-  // Crypto via Yahoo Finance — 25 pairs
-  crypto: [
-    'BTC-USD','ETH-USD','BNB-USD','SOL-USD','XRP-USD','DOGE-USD',
-    'ADA-USD','AVAX-USD','DOT-USD','LINK-USD','LTC-USD',
-    'BCH-USD','UNI-USD','ATOM-USD','APT-USD','ARB-USD',
-    'SUI-USD','TRX-USD','SHIB-USD','TON-USD','PEPE-USD',
-    'INJ-USD','SEI-USD','WLD-USD','JUP-USD'
-  ]
+const SA_HEADERS = {
+  'User-Agent':  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  'Accept':      'application/json',
+  'Referer':     'https://stockanalysis.com/'
 };
 
-// Composite aliases
-UNIVERSES.us   = [...UNIVERSES.us_large, ...UNIVERSES.us_mid];
-UNIVERSES.all  = [...UNIVERSES.us_large, ...UNIVERSES.us_mid, ...UNIVERSES.eu, ...UNIVERSES.apac, ...UNIVERSES.etf];
+// ─── Country code mapping ─────────────────────────────────────────────────────
+// SA uses ISO 3166-1 alpha-2; US = no param (or empty string)
 
-// ═══════════════════════════════════════════════════════
-// METADATA
-// ═══════════════════════════════════════════════════════
+const COUNTRY_CODES = {
+  us: '', uk: 'GB', gb: 'GB',
+  de: 'DE', fr: 'FR', nl: 'NL', it: 'IT', es: 'ES',
+  se: 'SE', ch: 'CH', no: 'NO', dk: 'DK', fi: 'FI',
+  be: 'BE', at: 'AT', pt: 'PT', ie: 'IE', pl: 'PL',
+  jp: 'JP', kr: 'KR', hk: 'HK', au: 'AU', sg: 'SG',
+  tw: 'TW', cn: 'CN', in: 'IN', nz: 'NZ',
+  ca: 'CA', br: 'BR', mx: 'MX', za: 'ZA',
+};
 
-export function get(name) {
-  return UNIVERSES[name.toLowerCase()] || [];
+// ─── Universe definitions ─────────────────────────────────────────────────────
+// Each entry: { type, countries[], minDolVol, minMcap?, maxMcap? }
+
+const UNIVERSE_CONFIG = {
+  // US stocks
+  us:       { type: 'stock', countries: ['us'], minDolVol: 500_000 },
+  us_large: { type: 'stock', countries: ['us'], minDolVol: 10_000_000, minMcap: 2_000 },
+  us_mid:   { type: 'stock', countries: ['us'], minDolVol: 1_000_000,  minMcap: 300,  maxMcap: 10_000 },
+  us_small: { type: 'stock', countries: ['us'], minDolVol: 500_000,    maxMcap: 2_000 },
+
+  // Europe — main markets combined
+  eu:       { type: 'stock', countries: ['gb','de','fr','nl','it','es','se','ch','be','at','no','dk','fi','pt'], minDolVol: 500_000 },
+  eu_large: { type: 'stock', countries: ['gb','de','fr','nl','it','es','se','ch'], minDolVol: 2_000_000, minMcap: 1_000 },
+  uk:       { type: 'stock', countries: ['gb'], minDolVol: 500_000 },
+  de:       { type: 'stock', countries: ['de'], minDolVol: 500_000 },
+  fr:       { type: 'stock', countries: ['fr'], minDolVol: 500_000 },
+  ch:       { type: 'stock', countries: ['ch'], minDolVol: 500_000 },
+
+  // APAC
+  apac:     { type: 'stock', countries: ['jp','kr','hk','au','sg','tw','cn','in'], minDolVol: 1_000_000 },
+  jp:       { type: 'stock', countries: ['jp'], minDolVol: 1_000_000 },
+  kr:       { type: 'stock', countries: ['kr'], minDolVol: 1_000_000 },
+  au:       { type: 'stock', countries: ['au'], minDolVol: 500_000 },
+  hk:       { type: 'stock', countries: ['hk'], minDolVol: 1_000_000 },
+
+  // ETFs
+  etf:      { type: 'etf',   countries: ['us'], minDolVol: 1_000_000 },
+  etf_eu:   { type: 'etf',   countries: ['gb','de','fr'], minDolVol: 500_000 },
+
+  // Combined
+  all:      { type: 'both',  countries: ['us','gb','de','fr','nl','jp','kr','hk','au'], minDolVol: 1_000_000 },
+};
+
+// ─── Disk cache helpers ───────────────────────────────────────────────────────
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
 }
 
+function diskCachePath(type, country) {
+  const dir = join(CACHE_DIR, type, country || 'us');
+  mkdirSync(dir, { recursive: true });
+  return join(dir, `tickers-${todayStr()}.json`);
+}
+
+function readDiskCache(type, country) {
+  const p = diskCachePath(type, country);
+  if (!existsSync(p)) return null;
+  try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+}
+
+function writeDiskCache(type, country, data) {
+  const p = diskCachePath(type, country);
+  try { writeFileSync(p, JSON.stringify(data), 'utf8'); } catch { /* ignore */ }
+}
+
+// Remove disk cache files older than maxAgeDays (run once per process)
+let _cleanedUp = false;
+function cleanOldCaches(maxAgeDays = 3) {
+  if (_cleanedUp) return;
+  _cleanedUp = true;
+  const cutoff = Date.now() - maxAgeDays * 86_400_000;
+  try {
+    const walk = (dir) => {
+      if (!existsSync(dir)) return;
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const p = join(dir, entry.name);
+        if (entry.isDirectory()) { walk(p); continue; }
+        if (!entry.name.startsWith('tickers-')) continue;
+        const dateStr = entry.name.replace('tickers-', '').replace('.json', '');
+        if (new Date(dateStr).getTime() < cutoff) {
+          try { unlinkSync(p); } catch { /* ignore */ }
+        }
+      }
+    };
+    walk(CACHE_DIR);
+  } catch { /* non-fatal */ }
+}
+
+// ─── StockAnalysis fetch ──────────────────────────────────────────────────────
+
+async function fetchFromSA(type, country) {
+  cleanOldCaches();
+
+  const memKey = `sa:${type}:${country || 'us'}`;
+  const memCached = cache.get(memKey);
+  if (memCached) return memCached;
+
+  const disk = readDiskCache(type, country);
+  if (disk) {
+    cache.set(memKey, disk, 3600);
+    return disk;
+  }
+
+  const cc  = COUNTRY_CODES[country] ?? (country?.length === 2 ? country.toUpperCase() : '');
+  const qs  = cc ? `?c=${cc}` : '';
+  const url = type === 'etf'
+    ? `${SA_BASE}/e/bd/${SA_ETF_FIELDS}.json${qs}`
+    : `${SA_BASE}/s/bd/${SA_STOCK_FIELDS}.json${qs}`;
+
+  let res;
+  try {
+    res = await fetch(url, { headers: SA_HEADERS, signal: AbortSignal.timeout(20_000) });
+  } catch (e) {
+    console.error(`[universe] SA fetch failed (${type}/${country || 'us'}): ${e.message}`);
+    return {};
+  }
+
+  if (!res.ok) {
+    console.error(`[universe] SA HTTP ${res.status} for ${url}`);
+    return {};
+  }
+
+  let json;
+  try { json = await res.json(); } catch { return {}; }
+
+  // Response shape: { data: { data: { "AAPL": { n, marketCap, ... }, ... } } }
+  const raw = json?.data?.data ?? {};
+  const result = {};
+
+  for (const [sym, f] of Object.entries(raw)) {
+    result[sym.toUpperCase()] = {
+      symbol:       sym.toUpperCase(),
+      name:         f.n         ?? sym,
+      sector:       f.sector    ?? null,
+      industry:     f.industry  ?? null,
+      marketCap:    f.marketCap ?? null,   // $M
+      marketCapCat: f.marketCapCat ?? null,
+      dollarVolume: f.dollarVolume ?? null,
+      avgVol:       f.avgVol    ?? null,
+      close:        f.close     ?? null,
+      high52:       f.high52    ?? null,
+      low52:        f.low52     ?? null,
+      ma50:         f.ma50      ?? null,
+      ma200:        f.ma200     ?? null,
+      rsi:          f.rsi       ?? null,
+      beta:         f.beta      ?? null,
+      exchange:     f.exchange  ?? null,
+      country:      f.country   ?? null,
+      isin:         f.isin      ?? null,
+      currency:     f.currency  ?? null,
+      // ETF-specific
+      assetClass:   f.assetClass   ?? null,
+      etfCategory:  f.etfCategory  ?? null,
+      etfCountry:   f.etfCountry   ?? null,
+      etfRegion:    f.etfRegion    ?? null,
+      type:         type === 'etf' ? 'ETF' : 'EQUITY',
+    };
+  }
+
+  cache.set(memKey, result, 3600);
+  writeDiskCache(type, country, result);
+  return result;
+}
+
+// ─── Build universe (multi-country merge + filter) ────────────────────────────
+
+async function buildUniverse(config) {
+  const { type, countries, minDolVol = 0, minMcap = null, maxMcap = null } = config;
+  const types = type === 'both' ? ['stock', 'etf'] : [type];
+  const merged = {};
+
+  // Fetch all countries in parallel
+  await Promise.allSettled(
+    types.flatMap(t => countries.map(async c => {
+      const data = await fetchFromSA(t, c);
+      Object.assign(merged, data);
+    }))
+  );
+
+  // Filter
+  const filtered = {};
+  for (const [sym, meta] of Object.entries(merged)) {
+    if (minDolVol && (meta.dollarVolume ?? 0) < minDolVol) continue;
+    if (minMcap   && (meta.marketCap   ?? 0) < minMcap)   continue;
+    if (maxMcap   && (meta.marketCap   ?? Infinity) > maxMcap) continue;
+    filtered[sym] = meta;
+  }
+  return filtered;
+}
+
+// ─── In-memory universe cache ─────────────────────────────────────────────────
+
+const _built = new Map();
+
+async function getBuilt(name) {
+  if (_built.has(name)) return _built.get(name);
+
+  const config = UNIVERSE_CONFIG[name.toLowerCase()];
+  if (!config) return {};
+
+  const data = await buildUniverse(config);
+  _built.set(name, data);
+
+  // Expire in-memory at midnight (so next day picks up fresh SA data)
+  const msToMidnight = new Date().setHours(24, 0, 0, 0) - Date.now();
+  setTimeout(() => _built.delete(name), msToMidnight).unref?.();
+
+  return data;
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Get symbol array for a universe, sorted by dollarVolume desc.
+ * @param {string} name  Universe key (us, us_large, eu, apac, etf, all, …)
+ * @returns {Promise<string[]>}
+ */
+export async function get(name) {
+  const meta = await getBuilt(name);
+  return Object.values(meta)
+    .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0))
+    .map(m => m.symbol);
+}
+
+/**
+ * Get full metadata objects for a universe, sorted by dollarVolume desc.
+ * @param {string} name  Universe key
+ * @returns {Promise<object[]>}
+ */
+export async function getWithMeta(name) {
+  const meta = await getBuilt(name);
+  return Object.values(meta)
+    .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0));
+}
+
+/**
+ * List all configured universes. Returns live counts for already-cached ones.
+ */
 export function list() {
-  return Object.entries(UNIVERSES)
-    .filter(([k]) => !['us', 'all'].includes(k))
-    .map(([key, syms]) => ({
-      key,
-      count: syms.length,
-      sample: syms.slice(0, 6).join(', ')
-    }));
+  return Object.entries(UNIVERSE_CONFIG).map(([key, cfg]) => ({
+    key,
+    type:      cfg.type,
+    countries: cfg.countries,
+    count:     _built.has(key) ? Object.keys(_built.get(key)).length : null,
+    minDolVol: cfg.minDolVol,
+  }));
 }
 
-// ═══════════════════════════════════════════════════════
-// DYNAMIC — Yahoo Finance search
-// ═══════════════════════════════════════════════════════
+/**
+ * Pre-fetch a specific country (stocks or ETFs) and warm the cache.
+ */
+export async function fetchCountry(country, type = 'stock') {
+  return fetchFromSA(type, country);
+}
+
+// ─── Yahoo Finance dynamic screeners (compatibility) ─────────────────────────
+
+const YF_SCREENER = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved';
+const YF_SEARCH   = 'https://query1.finance.yahoo.com/v1/finance/search';
+const YF_HEADERS  = { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' };
+
+export const YF_SCREENER_IDS = {
+  most_actives:      'most_actives',
+  day_gainers:       'day_gainers',
+  day_losers:        'day_losers',
+  undervalued_large: 'undervalued_large_caps',
+  growth_tech:       'growth_technology_stocks',
+  aggressive_small:  'aggressive_small_caps',
+  high_yield_bond:   'high_yield_bond'
+};
 
 export async function searchTickers(query, type = null, count = 20) {
   const cacheKey = `universe:search:${query}:${type}`;
-  const cached = cache.get(cacheKey);
+  const cached   = cache.get(cacheKey);
   if (cached) return cached;
 
   const url = `${YF_SEARCH}?q=${encodeURIComponent(query)}&quotesCount=${count}&newsCount=0`;
-  const res = await fetch(url, { headers: HEADERS });
-  if (!res.ok) return [];
+  const res = await fetch(url, { headers: YF_HEADERS }).catch(() => null);
+  if (!res?.ok) return [];
 
-  const data = await res.json();
+  const data    = await res.json();
   const results = (data.quotes || [])
     .filter(q => !type || q.quoteType?.toLowerCase() === type.toLowerCase())
     .map(q => ({
-      symbol: q.symbol,
-      name: q.shortname || q.longname,
+      symbol:   q.symbol,
+      name:     q.shortname || q.longname,
       exchange: q.exchange,
-      type: q.quoteType,
-      region: exchangeToRegion(q.exchange)
+      type:     q.quoteType,
     }));
 
   cache.set(cacheKey, results, 3600);
   return results;
 }
 
-// ═══════════════════════════════════════════════════════
-// DYNAMIC — Yahoo Finance predefined screeners
-// ═══════════════════════════════════════════════════════
-
-export const YF_SCREENER_IDS = {
-  most_actives:        'most_actives',
-  day_gainers:         'day_gainers',
-  day_losers:          'day_losers',
-  undervalued_large:   'undervalued_large_caps',
-  growth_tech:         'growth_technology_stocks',
-  aggressive_small:    'aggressive_small_caps',
-  high_yield_bond:     'high_yield_bond'
-};
-
 export async function fetchYahooScreener(scrId, count = 50) {
   const cacheKey = `universe:screener:${scrId}:${count}`;
-  const cached = cache.get(cacheKey);
+  const cached   = cache.get(cacheKey);
   if (cached) return cached;
 
   const url = `${YF_SCREENER}?scrIds=${scrId}&count=${count}&start=0`;
-  const res = await fetch(url, { headers: HEADERS });
-  if (!res.ok) return [];
+  const res = await fetch(url, { headers: YF_HEADERS }).catch(() => null);
+  if (!res?.ok) return [];
 
-  const data = await res.json();
-  const symbols = (data.finance?.result?.[0]?.quotes || [])
-    .map(q => q.symbol)
-    .filter(Boolean);
+  const data    = await res.json();
+  const symbols = (data.finance?.result?.[0]?.quotes || []).map(q => q.symbol).filter(Boolean);
 
   cache.set(cacheKey, symbols, 600);
   return symbols;
-}
-
-// ═══════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════
-
-function exchangeToRegion(exchange = '') {
-  const eu   = ['PAR','XET','AMS','LSE','MIL','MCE','STO','OSL','CPH','HEL','BRU','LIS','VIE'];
-  const apac = ['TKS','KSC','TAI','HKG','ASX','NSE','BSE','SHH','SHZ','NGM'];
-  if (eu.some(e => exchange.includes(e)))   return 'EU';
-  if (apac.some(e => exchange.includes(e))) return 'APAC';
-  return 'US';
 }

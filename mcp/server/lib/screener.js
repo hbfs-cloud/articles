@@ -259,7 +259,7 @@ export async function run(options = {}) {
   if (univName.includes(',')) {
     symbols = univName.split(',').map(s => s.trim().toUpperCase());
   } else {
-    symbols = universe.get(univName);
+    symbols = await universe.get(univName);
     if (!symbols.length) {
       // Try as Yahoo predefined screener ID
       symbols = await universe.fetchYahooScreener(univName, 100);
@@ -389,7 +389,7 @@ export async function backtest(options = {}) {
   } = options;
 
   const univName = options.universe || 'us_large';
-  const symbols  = universe.get(univName);
+  const symbols  = await universe.get(univName);
   if (!symbols.length) throw new Error(`Unknown universe: "${univName}"`);
 
   const compiled = compileDSL(filter);
