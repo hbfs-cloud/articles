@@ -11,12 +11,19 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hidden}
 
-/* ══════ TICKER TAPE MODE ══════ */
-.tape{display:flex;align-items:center;height:38px;background:linear-gradient(135deg,#0f172a,#1e293b);overflow:hidden;position:relative}
-.tape-brand{display:flex;align-items:center;gap:5px;padding:0 12px;flex-shrink:0;border-right:1px solid #334155;height:100%;cursor:pointer;text-decoration:none}
+/* ══════ TICKER TAPE MODE — DARK (default) ══════ */
+.tape{display:flex;align-items:center;height:38px;overflow:hidden;position:relative}
+.tape--dark{background:linear-gradient(135deg,#0f172a,#1e293b)}
+.tape--light{background:#f1f5f9}
+.tape-brand{display:flex;align-items:center;gap:5px;padding:0 12px;flex-shrink:0;height:100%;cursor:pointer;text-decoration:none}
+.tape--dark .tape-brand{border-right:1px solid #334155}
+.tape--light .tape-brand{border-right:1px solid #cbd5e1}
 .tape-brand img{height:18px}
-.tape-brand span{font-size:.6rem;font-weight:800;color:#e2e8f0;letter-spacing:.04em}
-.tape-regime{display:flex;align-items:center;gap:5px;padding:0 12px;flex-shrink:0;border-right:1px solid #334155;height:100%}
+.tape--dark .tape-brand span{font-size:.6rem;font-weight:800;color:#e2e8f0;letter-spacing:.04em}
+.tape--light .tape-brand span{font-size:.6rem;font-weight:800;color:#334155;letter-spacing:.04em}
+.tape-regime{display:flex;align-items:center;gap:5px;padding:0 12px;flex-shrink:0;height:100%}
+.tape--dark .tape-regime{border-right:1px solid #334155}
+.tape--light .tape-regime{border-right:1px solid #cbd5e1}
 .tape-regime-dot{width:6px;height:6px;border-radius:50%;animation:pulse-dot 2s infinite}
 .tape-regime-label{font-size:.58rem;font-weight:700;color:#94a3b8;text-transform:uppercase}
 .tape-regime-value{font-size:.62rem;font-weight:800}
@@ -24,19 +31,32 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
 .tape-track{display:flex;overflow:hidden;flex:1;height:100%;position:relative}
 .tape-scroll{display:flex;animation:tape-scroll var(--duration,60s) linear infinite;height:100%}
 .tape-scroll:hover{animation-play-state:paused}
-.tape-item{display:flex;align-items:center;gap:8px;padding:0 16px;height:100%;flex-shrink:0;border-right:1px solid #1e293b;cursor:default;transition:background .2s}
-.tape-item:hover{background:rgba(99,102,241,.12)}
+.tape-item{display:flex;align-items:center;gap:8px;padding:0 16px;height:100%;flex-shrink:0;cursor:pointer;transition:background .2s;text-decoration:none}
+.tape--dark .tape-item{border-right:1px solid #1e293b}
+.tape--dark .tape-item:hover{background:rgba(99,102,241,.12)}
+.tape--light .tape-item{border-right:1px solid #e2e8f0}
+.tape--light .tape-item:hover{background:rgba(99,102,241,.08)}
 .tape-logo{width:18px;height:18px;border-radius:4px;object-fit:cover}
-.tape-ticker{font-size:.72rem;font-weight:800;color:#f1f5f9}
+.tape--dark .tape-ticker{font-size:.72rem;font-weight:800;color:#f1f5f9}
+.tape--light .tape-ticker{font-size:.72rem;font-weight:800;color:#0f172a}
 .tape-flag{font-size:.6rem}
-.tape-strat{font-size:.52rem;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.15);padding:1px 5px;border-radius:3px}
-.tape-entry{font-size:.62rem;color:#94a3b8}
-.tape-entry strong{color:#e2e8f0}
-.tape-rr{font-size:.58rem;font-weight:800;color:#34d399}
-.tape-score{font-size:.58rem;font-weight:800;color:#818cf8;background:rgba(129,140,248,.12);padding:1px 5px;border-radius:3px}
-.tape-actions{display:flex;align-items:center;gap:2px;padding:0 8px;flex-shrink:0;border-left:1px solid #334155;height:100%}
-.tape-btn{background:none;border:none;color:#64748b;cursor:pointer;padding:4px 6px;font-size:.68rem;transition:color .2s;border-radius:4px}
-.tape-btn:hover{color:#e2e8f0;background:rgba(255,255,255,.06)}
+.tape--dark .tape-strat{font-size:.52rem;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.15);padding:1px 5px;border-radius:3px}
+.tape--light .tape-strat{font-size:.52rem;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);padding:1px 5px;border-radius:3px}
+.tape--dark .tape-entry{font-size:.62rem;color:#94a3b8}
+.tape--dark .tape-entry strong{color:#e2e8f0}
+.tape--light .tape-entry{font-size:.62rem;color:#64748b}
+.tape--light .tape-entry strong{color:#0f172a}
+.tape--dark .tape-rr{font-size:.58rem;font-weight:800;color:#34d399}
+.tape--light .tape-rr{font-size:.58rem;font-weight:800;color:#059669}
+.tape--dark .tape-score{font-size:.58rem;font-weight:800;color:#818cf8;background:rgba(129,140,248,.12);padding:1px 5px;border-radius:3px}
+.tape--light .tape-score{font-size:.58rem;font-weight:800;color:#6366f1;background:rgba(99,102,241,.08);padding:1px 5px;border-radius:3px}
+.tape-actions{display:flex;align-items:center;gap:2px;padding:0 8px;flex-shrink:0;height:100%}
+.tape--dark .tape-actions{border-left:1px solid #334155}
+.tape--light .tape-actions{border-left:1px solid #cbd5e1}
+.tape--dark .tape-btn{background:none;border:none;color:#64748b;cursor:pointer;padding:4px 6px;font-size:.68rem;transition:color .2s;border-radius:4px}
+.tape--dark .tape-btn:hover{color:#e2e8f0;background:rgba(255,255,255,.06)}
+.tape--light .tape-btn{background:none;border:none;color:#94a3b8;cursor:pointer;padding:4px 6px;font-size:.68rem;transition:color .2s;border-radius:4px}
+.tape--light .tape-btn:hover{color:#6366f1;background:rgba(99,102,241,.08)}
 @keyframes tape-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
 /* ══════ VERTICAL LIST MODE ══════ */
@@ -51,7 +71,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
 .vlist-btn{background:none;border:1px solid #e2e8f0;color:#64748b;cursor:pointer;padding:3px 7px;font-size:.6rem;border-radius:5px;transition:all .15s}
 .vlist-btn:hover{color:#6366f1;border-color:#a5b4fc;background:#eef2ff}
 .vlist-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.vp{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;transition:border-color .15s}
+.vp{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;transition:border-color .15s;cursor:pointer;text-decoration:none;display:block;color:inherit}
 .vp:hover{border-color:#a5b4fc}
 .vp-top{display:flex;align-items:center;gap:6px}
 .vp-logo{width:24px;height:24px;border-radius:6px;object-fit:cover;border:1px solid #f1f5f9;flex-shrink:0}
@@ -84,16 +104,35 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
 .toast{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#0f172a;color:#e2e8f0;font-size:.7rem;font-weight:600;padding:8px 18px;border-radius:8px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
 .toast.show{opacity:1}
 
-/* ══════ EMBED MODAL ══════ */
-.embed-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
-.embed-dialog{background:#fff;border-radius:16px;padding:20px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.embed-dialog h3{font-size:.9rem;margin-bottom:12px;color:#0f172a}
-.embed-dialog label{font-size:.65rem;font-weight:600;color:#64748b;display:block;margin-bottom:4px}
-.embed-dialog textarea{width:100%;font-family:'Inter',monospace;font-size:.62rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px;resize:none;color:#334155;margin-bottom:10px}
-.embed-dialog .embed-btns{display:flex;gap:6px;justify-content:flex-end}
-.embed-dialog button{font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;border:none}
-.embed-dialog .btn-copy{background:#6366f1;color:#fff}
-.embed-dialog .btn-close{background:#f1f5f9;color:#475569}
+/* ══════ EMBED PAGE MODE ══════ */
+.embed-page{background:#f8fafc;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.embed-box{background:#fff;border-radius:16px;padding:28px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.08);border:1px solid #e2e8f0}
+.embed-box h2{font-size:1.1rem;font-weight:800;color:#0f172a;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.embed-box .embed-sub{font-size:.72rem;color:#64748b;margin-bottom:20px}
+.embed-section{margin-bottom:18px}
+.embed-section h3{font-size:.78rem;font-weight:700;color:#334155;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.embed-section h3 i{color:#6366f1}
+.embed-preview{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px;overflow:hidden}
+.embed-code{width:100%;font-family:'Inter',monospace;font-size:.62rem;background:#0f172a;color:#a5b4fc;border:none;border-radius:8px;padding:12px;resize:none;line-height:1.5}
+.embed-copy-btn{display:inline-flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;border:none;background:#6366f1;color:#fff;transition:background .2s}
+.embed-copy-btn:hover{background:#4f46e5}
+.embed-options{display:flex;gap:8px;margin-bottom:14px}
+.embed-opt{flex:1;padding:10px;border:2px solid #e2e8f0;border-radius:10px;cursor:pointer;text-align:center;transition:all .2s;background:#fff}
+.embed-opt:hover{border-color:#a5b4fc}
+.embed-opt.active{border-color:#6366f1;background:#eef2ff}
+.embed-opt i{font-size:1.2rem;color:#6366f1;display:block;margin-bottom:4px}
+.embed-opt span{font-size:.65rem;font-weight:700;color:#334155}
+.embed-opt small{display:block;font-size:.5rem;color:#94a3b8;margin-top:2px}
+.embed-theme-row{display:flex;gap:8px;margin-bottom:14px}
+.embed-theme{flex:1;padding:8px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;text-align:center;transition:all .2s}
+.embed-theme:hover{border-color:#a5b4fc}
+.embed-theme.active{border-color:#6366f1}
+.embed-theme-swatch{height:20px;border-radius:4px;margin-bottom:4px}
+.embed-theme span{font-size:.58rem;font-weight:700;color:#334155}
+.embed-brand{text-align:center;margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0}
+.embed-brand a{display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:700;color:#94a3b8;text-decoration:none}
+.embed-brand a:hover{color:#6366f1}
+.embed-brand img{height:14px;opacity:.5}
 
 @media(max-width:600px){
   .vlist-grid{grid-template-columns:1fr}
@@ -111,7 +150,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
   var URL = 'https://articles.market-watch.xyz/mcp/watchlist.json';
   var FLAGS = { US: '\ud83c\uddfa\ud83c\uddf8', EU: '\ud83c\uddea\ud83c\uddfa', APAC: '\ud83c\udf0f', ETF: '\ud83d\udcca' };
   var params = new URLSearchParams(location.search);
-  var mode = params.get('mode') || 'tape'; // tape | vertical
+  var mode = params.get('mode') || 'tape'; // tape | vertical | embed
+  var theme = params.get('theme') || 'dark'; // dark | light
+  var bg = params.get('bg') || ''; // custom background hex (no #)
+
+  function yahooUrl(ticker) {
+    return 'https://finance.yahoo.com/quote/' + encodeURIComponent(ticker) + '/';
+  }
 
   function regimeColor(r) {
     if (!r) return '#64748b';
@@ -136,7 +181,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
     lines.push('');
     lines.push('\ud83c\udf21\ufe0f Regime: *' + data.regime + '* | VIX: ' + data.vix + ' | SPX: ' + (data.spx||'').toLocaleString() + ' | F&G: ' + data.fear_greed + '/100');
     lines.push('');
-    sorted.forEach(function(p, i) {
+    sorted.forEach(function(p) {
       var flag = FLAGS[p.region] || '';
       var t = isETF(p) ? '\ud83d\udcca' : '\ud83c\udfe2';
       lines.push(flag + ' *' + p.ticker + '* ' + t + ' | ' + p.strategy + ' | Score: ' + p.score + '/100');
@@ -150,29 +195,24 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
     navigator.clipboard.writeText(text).then(function(){ toast('Copied! Paste in Telegram / Discord'); });
   }
 
-  function showEmbed() {
-    var tickerCode = '<iframe src="https://articles.market-watch.xyz/widget/?mode=tape" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
-    var verticalCode = '<iframe src="https://articles.market-watch.xyz/widget/?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
-    var h = '<div class="embed-overlay" id="embedOverlay" onclick="if(event.target===this)this.remove()">';
-    h += '<div class="embed-dialog">';
-    h += '<h3><i class="fa-solid fa-code"></i> Embed Widget</h3>';
-    h += '<label>Ticker Tape (horizontal)</label>';
-    h += '<textarea rows="2" id="embedTape" readonly>' + tickerCode.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
-    h += '<label>Watchlist (vertical)</label>';
-    h += '<textarea rows="2" id="embedVert" readonly>' + verticalCode.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
-    h += '<div class="embed-btns">';
-    h += '<button class="btn-close" onclick="this.closest(\'.embed-overlay\').remove()">Close</button>';
-    h += '<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById(\'embedTape\').value);this.textContent=\'Copied!\'">Copy Tape</button>';
-    h += '<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById(\'embedVert\').value);this.textContent=\'Copied!\'">Copy List</button>';
-    h += '</div></div></div>';
-    document.body.insertAdjacentHTML('beforeend', h);
+  function openEmbedModal() {
+    // If inside an iframe, ask the parent to show the modal
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'mw-embed-modal' }, '*');
+    } else {
+      // Standalone: redirect to embed page
+      window.location.href = '/widget/?mode=embed';
+    }
   }
-  window._showEmbed = showEmbed;
+  window._openEmbed = openEmbedModal;
 
   function renderTape(data) {
     var root = document.getElementById('root');
     var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
-    var h = '<div class="tape">';
+    var themeClass = theme === 'light' ? 'tape--light' : 'tape--dark';
+    var h = '<div class="tape ' + themeClass + '"';
+    if (bg) h += ' style="background:#' + bg + '"';
+    h += '>';
     // brand
     h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="tape-brand">';
     h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW">';
@@ -186,7 +226,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
     for (var dup = 0; dup < 2; dup++) {
       sorted.forEach(function(p) {
         var flag = FLAGS[p.region] || '';
-        h += '<div class="tape-item">';
+        h += '<a href="' + yahooUrl(p.ticker) + '" target="_blank" class="tape-item">';
         h += '<img src="https://assets.parqet.com/logos/symbol/' + p.ticker + '?format=jpg" alt="" class="tape-logo" onerror="this.style.display=\'none\'">';
         h += '<span class="tape-ticker">' + p.ticker + '</span>';
         h += '<span class="tape-flag">' + flag + '</span>';
@@ -194,19 +234,19 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
         h += '<span class="tape-entry">$<strong>' + p.entry + '</strong></span>';
         h += '<span class="tape-rr">R:R ' + p.rr + '</span>';
         h += '<span class="tape-score">' + p.score + '</span>';
-        h += '</div>';
+        h += '</a>';
       });
     }
     h += '</div></div>';
     // actions
     h += '<div class="tape-actions">';
     h += '<button class="tape-btn" title="Copy for Telegram/Discord" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
-    h += '<button class="tape-btn" title="Embed" onclick="window._showEmbed()"><i class="fa-solid fa-code"></i></button>';
+    h += '<button class="tape-btn" title="Embed" onclick="window._openEmbed()"><i class="fa-solid fa-code"></i></button>';
     h += '<a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank" class="tape-btn" title="Full Report"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
     h += '</div>';
     h += '</div>';
     root.innerHTML = h;
-    // set animation duration based on items
+    // set animation duration
     var scrollEl = root.querySelector('.tape-scroll');
     if (scrollEl) {
       var dur = Math.max(30, sorted.length * 5);
@@ -226,14 +266,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
     h += '<span class="vlist-regime" style="background:' + regimeColor(data.regime) + '22;color:' + regimeColor(data.regime) + '">' + (data.regime || '?') + '</span>';
     h += '<div class="vlist-actions">';
     h += '<button class="vlist-btn" title="Copy" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
-    h += '<button class="vlist-btn" title="Embed" onclick="window._showEmbed()"><i class="fa-solid fa-code"></i></button>';
+    h += '<button class="vlist-btn" title="Embed" onclick="window._openEmbed()"><i class="fa-solid fa-code"></i></button>';
     h += '</div></div></div>';
     // grid
     h += '<div class="vlist-grid">';
     sorted.forEach(function(p) {
       var flag = FLAGS[p.region] || '';
       var tp = typeLabel(p).toLowerCase();
-      h += '<div class="vp">';
+      h += '<a href="' + yahooUrl(p.ticker) + '" target="_blank" class="vp">';
       h += '<div class="vp-top">';
       h += '<img src="https://assets.parqet.com/logos/symbol/' + p.ticker + '?format=jpg" alt="" class="vp-logo" onerror="this.style.display=\'none\'">';
       h += '<div class="vp-info"><div class="vp-row1">';
@@ -251,7 +291,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
       h += '<div class="vp-lv"><span class="vp-lv-label">TP2</span><span class="vp-lv-val tp">$' + (p.tp2 || '-') + '</span></div>';
       h += '</div>';
       if (p.catalyst) h += '<div class="vp-cat"><i class="fa-solid fa-bolt" style="color:#6366f1;font-size:.42rem"></i> ' + p.catalyst + '</div>';
-      h += '</div>';
+      h += '</a>';
     });
     h += '</div>';
     // footer
@@ -261,9 +301,108 @@ body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hi
     root.innerHTML = h;
   }
 
+  function renderEmbedPage(data) {
+    document.body.style.overflow = 'auto';
+    var root = document.getElementById('root');
+    var tapeCodeDark = '<iframe src="https://articles.market-watch.xyz/widget/?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
+    var tapeCodeLight = '<iframe src="https://articles.market-watch.xyz/widget/?mode=tape&theme=light" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
+    var verticalCode = '<iframe src="https://articles.market-watch.xyz/widget/?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
+
+    var h = '<div class="embed-page">';
+    h += '<div class="embed-box">';
+    h += '<h2><i class="fa-solid fa-code" style="color:#6366f1"></i> Embed A+ Picks Widget</h2>';
+    h += '<p class="embed-sub">Add the Market Watch A+ Picks widget to your website. Choose a layout and theme below.</p>';
+
+    // Layout choice
+    h += '<div class="embed-options">';
+    h += '<div class="embed-opt active" id="optTape" onclick="selectLayout(\'tape\')">';
+    h += '<i class="fa-solid fa-bars-staggered"></i><span>Ticker Tape</span><small>Horizontal scrolling bar</small></div>';
+    h += '<div class="embed-opt" id="optVert" onclick="selectLayout(\'vertical\')">';
+    h += '<i class="fa-solid fa-grip"></i><span>Watchlist</span><small>Vertical card grid</small></div>';
+    h += '</div>';
+
+    // Theme choice (only for tape)
+    h += '<div id="themeSection">';
+    h += '<h3 style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:8px"><i class="fa-solid fa-palette" style="color:#6366f1"></i> Theme</h3>';
+    h += '<div class="embed-theme-row">';
+    h += '<div class="embed-theme active" id="themeDark" onclick="selectTheme(\'dark\')">';
+    h += '<div class="embed-theme-swatch" style="background:linear-gradient(135deg,#0f172a,#1e293b)"></div>';
+    h += '<span>Dark</span></div>';
+    h += '<div class="embed-theme" id="themeLight" onclick="selectTheme(\'light\')">';
+    h += '<div class="embed-theme-swatch" style="background:#f1f5f9;border:1px solid #e2e8f0"></div>';
+    h += '<span>Light</span></div>';
+    h += '</div></div>';
+
+    // Preview
+    h += '<div class="embed-section">';
+    h += '<h3><i class="fa-solid fa-eye"></i> Preview</h3>';
+    h += '<div class="embed-preview" id="embedPreview">';
+    h += '<iframe src="/widget/?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" id="previewFrame"></iframe>';
+    h += '</div></div>';
+
+    // Code
+    h += '<div class="embed-section">';
+    h += '<h3><i class="fa-solid fa-terminal"></i> Embed Code</h3>';
+    h += '<textarea class="embed-code" rows="3" id="embedCode" readonly>' + tapeCodeDark.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
+    h += '<button class="embed-copy-btn" onclick="copyEmbedCode()"><i class="fa-solid fa-copy"></i> Copy Code</button>';
+    h += '</div>';
+
+    // Brand
+    h += '<div class="embed-brand"><a href="https://articles.market-watch.xyz/" target="_blank">';
+    h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW"> Market Watch</a></div>';
+
+    h += '</div></div>';
+    root.innerHTML = h;
+
+    // embed page logic
+    var currentLayout = 'tape';
+    var currentTheme = 'dark';
+    var codes = {
+      tape: { dark: tapeCodeDark, light: tapeCodeLight },
+      vertical: verticalCode
+    };
+
+    window.selectLayout = function(layout) {
+      currentLayout = layout;
+      document.getElementById('optTape').className = 'embed-opt' + (layout === 'tape' ? ' active' : '');
+      document.getElementById('optVert').className = 'embed-opt' + (layout === 'vertical' ? ' active' : '');
+      document.getElementById('themeSection').style.display = layout === 'tape' ? '' : 'none';
+      updateEmbedPreview();
+    };
+    window.selectTheme = function(t) {
+      currentTheme = t;
+      document.getElementById('themeDark').className = 'embed-theme' + (t === 'dark' ? ' active' : '');
+      document.getElementById('themeLight').className = 'embed-theme' + (t === 'light' ? ' active' : '');
+      updateEmbedPreview();
+    };
+    window.copyEmbedCode = function() {
+      var code = document.getElementById('embedCode').value;
+      navigator.clipboard.writeText(code).then(function(){
+        toast('Embed code copied!');
+      });
+    };
+
+    function updateEmbedPreview() {
+      var code, previewSrc, previewStyle;
+      if (currentLayout === 'tape') {
+        code = codes.tape[currentTheme];
+        previewSrc = '/widget/?mode=tape&theme=' + currentTheme;
+        previewStyle = 'width:100%;height:38px;border:none;';
+      } else {
+        code = codes.vertical;
+        previewSrc = '/widget/?mode=vertical';
+        previewStyle = 'width:100%;height:400px;border:none;border-radius:8px;';
+      }
+      document.getElementById('embedCode').value = code;
+      document.getElementById('previewFrame').src = previewSrc;
+      document.getElementById('previewFrame').style.cssText = previewStyle;
+    }
+  }
+
   fetch(URL).then(function(r){ return r.json(); }).then(function(data){
     window._copyChat = function(){ copyForChat(data); };
-    if (mode === 'vertical') renderVertical(data);
+    if (mode === 'embed') renderEmbedPage(data);
+    else if (mode === 'vertical') renderVertical(data);
     else renderTape(data);
   }).catch(function(){
     document.getElementById('root').innerHTML = '<div style="text-align:center;padding:12px;color:#94a3b8;font-size:.7rem">Unable to load data</div>';
