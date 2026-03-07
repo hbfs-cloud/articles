@@ -42,6 +42,9 @@ import * as journal from './lib/journal.js';
 import * as news from './lib/news.js';
 import * as regime from './lib/regime.js';
 import * as cache from './lib/cache.js';
+import * as universe from './lib/universe.js';
+import * as screener from './lib/screener.js';
+import { getStorage } from './lib/storage.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -467,6 +470,225 @@ server.tool(
     const cards = await fetchJSON(`${BASE_URL}/data/${tab}.json`);
     const articles = cards.slice(0, limit || 10).map(html => extractCardInfo(html));
     return { content: [{ type: 'text', text: JSON.stringify({ tab, count: cards.length, articles }, null, 2) }] };
+  }
+);
+
+// ────────────────────────────────────
+// UNIVERSE TOOL
+// ────────────────────────────────────
+
+server.tool(
+  'get_universe',
+  'List available symbol universes (US large/mid, EU, APAC, ETF, Crypto) or search for specific tickers by keyword. Also supports Yahoo Finance predefined screeners (most_actives, day_gainers, day_losers, undervalued_large, growth_tech).',
+  {
+    list:   z.boolean().optional().describe('List all available universes with symbol counts (default: true if no other param)'),
+    name:   z.string().optional().describe('Universe name: us_large, us_mid, us, eu, apac, etf, crypto, all'),
+    search: z.string().optional().describe('Search Yahoo Finance for tickers matching a keyword (e.g. "semiconductor", "EV battery")'),
+    yahoo_screener: z.string().optional().describe('Yahoo predefined screener: most_actives, day_gainers, day_losers, undervalued_large, growth_tech')
+  },
+  async ({ list, name, search, yahoo_screener }) => {
+    if (yahoo_screener) {
+      const ids = universe.YF_SCREENER_IDS;
+      const id  = ids[yahoo_screener] || yahoo_screener;
+      const syms = await universe.fetchYahooScreener(id, 100);
+      return { content: [{ type: 'text', text: JSON.stringify({ screener: yahoo_screener, count: syms.length, symbols: syms }, null, 2) }] };
+    }
+    if (search) {
+      const results = await universe.searchTickers(search, null, 30);
+      return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+    }
+    if (name) {
+      const syms = universe.get(name);
+      return { content: [{ type: 'text', text: JSON.stringify({ universe: name, count: syms.length, symbols: syms }, null, 2) }] };
+    }
+    return { content: [{ type: 'text', text: JSON.stringify(universe.list(), null, 2) }] };
+  }
+);
+
+// ────────────────────────────────────
+// SCREENER TOOL
+// ────────────────────────────────────
+
+server.tool(
+  'run_screener',
+  `Run a DSL screener across US, EU, APAC, ETF, or Crypto universes. Uses regime-aware scoring.
+
+DSL syntax examples:
+  change1d > 2.0 AND volume > avgvol3m * 1.5     # Momentum
+  rsi14 < 30 AND price > low52w * 1.05            # Oversold bounce (requires bars=true)
+  pct_from_high > -5 AND rvol > 2.0              # Near-52w-high breakout
+  price > ema200 AND change1d > 1.0              # Uptrend continuation
+  change1d < -3 AND rvol > 2.0                   # Dump screener (for shorts / RISK-OFF)
+  pe < 20 AND above_ema200 = 1 AND rvol > 1.5   # Value + momentum
+
+Available fields: price, change1d, volume, avgvol3m, avgvol10d, rvol, marketcap ($M),
+pe, forward_pe, beta, ema50, ema200, high52w, low52w, pct_from_high, pct_from_low,
+above_ema50, above_ema200, rsi14 (bars=true only), atr14 (bars=true only)`,
+  {
+    universe: z.string().optional().describe('Universe: us_large, us_mid, us, eu, apac, etf, crypto, all — or comma-separated symbols'),
+    filter:   z.string().optional().describe('DSL filter expression (see tool description for syntax)'),
+    sort:     z.string().optional().describe('Sort by: score (default), change, volume, rvol, rsi'),
+    limit:    z.number().optional().describe('Max results (default: 20)'),
+    bars:     z.boolean().optional().describe('Fetch bars to compute RSI/ATR (slower but enables rsi14/atr14 conditions)'),
+    regime:   z.string().optional().describe('Override regime: RISK-ON, EARLY RISK-ON, NEUTRAL, EARLY RISK-OFF, RISK-OFF')
+  },
+  async (params) => {
+    const result = await screener.run({
+      universe:       params.universe || 'us_large',
+      filter:         params.filter   || '',
+      sort:           params.sort     || 'score',
+      limit:          params.limit    || 20,
+      bars:           params.bars     || false,
+      regimeOverride: params.regime   || null
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+// ────────────────────────────────────
+// BACKTEST TOOL
+// ────────────────────────────────────
+
+server.tool(
+  'backtest_screener',
+  `Backtest a DSL screener against historical bars. Fetches 1-year bars for the universe, walks through history, applies the filter at each bar, then tracks forward returns.
+
+Returns: hit rate, avg return, best/worst trade, grade (A+ to D), per-trade details.
+Use optimize_screener to auto-tune thresholds for best grade.`,
+  {
+    universe:  z.string().optional().describe('Universe (keep small for speed: us_large, eu, etf)'),
+    filter:    z.string().describe('DSL filter expression'),
+    hold_days: z.number().optional().describe('Holding period in trading days (default: 10)'),
+    tp_pct:    z.number().optional().describe('Take-profit % from entry (default: 5)'),
+    stop_pct:  z.number().optional().describe('Stop-loss % from entry, negative (default: -3)')
+  },
+  async (params) => {
+    const result = await screener.backtest({
+      universe:  params.universe  || 'us_large',
+      filter:    params.filter,
+      hold_days: params.hold_days || 10,
+      tp_pct:    params.tp_pct    || 5,
+      stop_pct:  params.stop_pct  || -3
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+// ────────────────────────────────────
+// AUTO-OPTIMIZE TOOL
+// ────────────────────────────────────
+
+server.tool(
+  'optimize_screener',
+  `Auto-tune screener thresholds using grid search + backtest. Replace numeric thresholds with $PARAM_NAME placeholders, provide a range of values to test, and the engine finds the best combination.
+
+Example:
+  filter: "rsi14 < $RSI_THRESH AND change1d > $CHANGE_MIN AND volume > avgvol3m * $VOL_MULT"
+  param_ranges: { "RSI_THRESH": [25,30,35,40], "CHANGE_MIN": [0.5,1.0,1.5], "VOL_MULT": [1.5,2.0,2.5] }
+
+Returns best parameter set by composite score (hit rate × avg return).`,
+  {
+    universe:     z.string().optional().describe('Universe name (default: us_large)'),
+    filter:       z.string().describe('DSL filter with $PARAM_NAME placeholders'),
+    param_ranges: z.record(z.array(z.number())).describe('Object mapping param names to arrays of values to test'),
+    hold_days:    z.number().optional().describe('Holding period (default: 10)'),
+    tp_pct:       z.number().optional().describe('Take-profit % (default: 5)'),
+    stop_pct:     z.number().optional().describe('Stop-loss % (default: -3)')
+  },
+  async (params) => {
+    const result = await screener.optimize({
+      universe:     params.universe     || 'us_large',
+      filter:       params.filter,
+      param_ranges: params.param_ranges,
+      hold_days:    params.hold_days    || 10,
+      tp_pct:       params.tp_pct       || 5,
+      stop_pct:     params.stop_pct     || -3
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+// ────────────────────────────────────
+// BAR STORAGE TOOLS
+// ────────────────────────────────────
+
+server.tool(
+  'save_bars',
+  'Save OHLCV bars for one or more symbols to local SQLite storage for offline analysis and backtesting. Supports Yahoo Finance (stocks/ETFs) and Binance (crypto).',
+  {
+    symbols:  z.string().describe('Comma-separated symbols (e.g. "AAPL,MSFT,NVDA" or "BTCUSDT,ETHUSDT")'),
+    interval: z.string().optional().describe('Bar interval: 1d, 1h, 15m (default: 1d)'),
+    range:    z.string().optional().describe('History range: 1mo,3mo,6mo,1y,2y,5y (default: 1y)'),
+    source:   z.string().optional().describe('Source: yahoo or binance (default: yahoo)')
+  },
+  async ({ symbols, interval, range, source }) => {
+    const storage = getStorage();
+    const syms    = symbols.split(',').map(s => s.trim().toUpperCase());
+    const intv    = interval || '1d';
+    const rng     = range    || '1y';
+    const src     = source   || 'yahoo';
+
+    const results = [];
+    for (const sym of syms) {
+      try {
+        let bars;
+        if (src === 'binance') {
+          const data = await binance.getBars(sym, intv, rng === '1y' ? 365 : 100);
+          bars = data.bars;
+        } else {
+          const data = await yahoo.getBars(sym, intv, rng);
+          bars = data.bars;
+        }
+        const saved = storage.save(sym, intv, bars, src);
+        results.push({ symbol: sym, saved, from: bars[0]?.time, to: bars[bars.length - 1]?.time });
+      } catch (e) {
+        results.push({ symbol: sym, error: e.message });
+      }
+    }
+
+    return { content: [{ type: 'text', text: JSON.stringify({ results, catalog: storage.storageStats() }, null, 2) }] };
+  }
+);
+
+server.tool(
+  'get_cached_bars',
+  'Retrieve locally cached bars. Also supports CSV and NDJSON export (NDJSON is Parquet-compatible via DuckDB).',
+  {
+    symbol:   z.string().describe('Symbol (e.g. AAPL, BTCUSDT)'),
+    interval: z.string().optional().describe('Interval (default: 1d)'),
+    format:   z.string().optional().describe('Output format: json, csv, ndjson (default: json)'),
+    from:     z.string().optional().describe('Start date YYYY-MM-DD'),
+    to:       z.string().optional().describe('End date YYYY-MM-DD')
+  },
+  async ({ symbol, interval, format, from, to }) => {
+    const storage = getStorage();
+    const intv    = interval || '1d';
+    const fmt     = format   || 'json';
+
+    if (fmt === 'csv') {
+      const csv = storage.exportCSV(symbol.toUpperCase(), intv);
+      return { content: [{ type: 'text', text: csv || `No cached bars for ${symbol} ${intv}` }] };
+    }
+    if (fmt === 'ndjson') {
+      const ndjson = storage.exportNDJSON(symbol.toUpperCase(), intv);
+      const cmd    = storage.parquetCommand(symbol.toUpperCase(), intv);
+      return { content: [{ type: 'text', text: ndjson ? `${ndjson}\n\n# To convert to Parquet:\n# ${cmd}` : `No cached bars for ${symbol} ${intv}` }] };
+    }
+
+    const bars = storage.get(symbol.toUpperCase(), intv, { from, to });
+    return { content: [{ type: 'text', text: JSON.stringify({ symbol: symbol.toUpperCase(), interval: intv, count: bars.length, bars }, null, 2) }] };
+  }
+);
+
+server.tool(
+  'storage_catalog',
+  'Show all locally cached symbols with bar counts, date ranges, and storage stats.',
+  {},
+  async () => {
+    const storage = getStorage();
+    const catalog = storage.catalog();
+    const stats   = storage.storageStats();
+    return { content: [{ type: 'text', text: JSON.stringify({ stats, catalog }, null, 2) }] };
   }
 );
 
