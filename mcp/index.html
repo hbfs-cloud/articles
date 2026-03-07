@@ -510,7 +510,237 @@ Always include the disclaimer:
 </div>
 
 <!-- ============================================== -->
-<!-- SECTION 7 : FAQ                                -->
+<!-- SECTION 7 : MCP SERVER V2 (DOWNLOADABLE)       -->
+<!-- ============================================== -->
+<div id="mcp-server" class="content-card">
+    <h2><i class="fa-solid fa-server" style="color:#3b82f6;"></i> MCP Server v2 — Full Local Install</h2>
+
+    <p>Go beyond the static watchlist. The <strong>downloadable MCP Server v2</strong> runs on your machine and gives your AI agent direct access to live market data, smart alerts, a trade journal, SEC filings, and more &mdash; all through 22 tools via the Model Context Protocol.</p>
+
+    <div class="alert-box" style="background:#eff6ff; border-color:#3b82f6;">
+        <strong><i class="fas fa-circle-info"></i> Free &amp; Open Source</strong> &mdash; No API keys required. Uses Yahoo Finance public endpoints and Binance public API. All data stays local on your machine.
+    </div>
+
+    <h3>What's Included</h3>
+    <div class="workflow-grid">
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-chart-line" style="color:#3b82f6;"></i></div>
+            <div class="wf-title">Yahoo Finance</div>
+            <div class="wf-desc">Real-time quotes, daily/intraday bars, options chains, financials, earnings, key stats, insider transactions, institutional holders, news.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fab fa-bitcoin" style="color:#f59e0b;"></i></div>
+            <div class="wf-title">Binance Crypto</div>
+            <div class="wf-desc">REST bars &amp; ticker for 500+ pairs. WebSocket for real-time streams (trades, klines, depth). Auto-reconnect.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-bell" style="color:#ef4444;"></i></div>
+            <div class="wf-title">Multi-Channel Alerts</div>
+            <div class="wf-desc">Desktop notifications, Slack (Block Kit), Discord (embeds), Telegram (Markdown). Entry zone, stop hit, TP hit, RVOL spike, news, regime change.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-book" style="color:#10b981;"></i></div>
+            <div class="wf-title">Trade Journal</div>
+            <div class="wf-desc">SQLite-backed journal. Log entries/exits, auto-calculate P&amp;L &amp; R-multiple. Stats: win rate, profit factor, max drawdown, by strategy.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-file-contract" style="color:#6366f1;"></i></div>
+            <div class="wf-title">SEC EDGAR</div>
+            <div class="wf-desc">Real-time SEC filings (10-K, 10-Q, 8-K, S-3), insider transactions (Form 4), institutional holdings (13F). Filing alerts on your watchlist.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-gauge-high" style="color:#dc2626;"></i></div>
+            <div class="wf-title">Market Regime</div>
+            <div class="wf-desc">Auto-detect regime (Risk-On/Off/Neutral/Crisis) using VIX, TNX, SPY, IWM, GLD, TLT, HYG. Alerts on regime changes.</div>
+        </div>
+    </div>
+
+    <h3>Installation</h3>
+    <div class="code-label">Terminal</div>
+    <pre><code># 1. Clone the repo
+git clone https://github.com/hbfs-cloud/articles.git
+cd articles/mcp/server
+
+# 2. Install dependencies
+npm install
+
+# 3. Run the setup wizard
+node setup.js
+
+# 4. Start the MCP server
+node index.js
+
+# 5. (Optional) Launch the admin dashboard
+node dashboard.js   # Opens http://localhost:3847</code></pre>
+
+    <h3>Add to Claude Code</h3>
+    <div class="code-label">~/.claude.json</div>
+    <pre><code>{
+  "mcpServers": {
+    "market-watch-local": {
+      "command": "node",
+      "args": ["/path/to/articles/mcp/server/index.js"]
+    }
+  }
+}</code></pre>
+
+    <h3>22 Available Tools</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr><th>Category</th><th>Tools</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Yahoo Finance</strong></td><td><code>get_quote</code>, <code>get_chart</code>, <code>get_options</code>, <code>get_financials</code>, <code>get_news</code></td><td>Quotes, OHLCV bars, options chains, balance sheet, income, news</td></tr>
+                <tr><td><strong>Binance</strong></td><td><code>get_crypto_quote</code>, <code>get_crypto_chart</code>, <code>get_orderbook</code></td><td>Crypto quotes, klines, order book depth</td></tr>
+                <tr><td><strong>Watchlist</strong></td><td><code>get_watchlist</code>, <code>sync_watchlist</code>, <code>add_to_watchlist</code>, <code>get_market_regime</code></td><td>Auto-sync from scanner, custom tickers, regime detection</td></tr>
+                <tr><td><strong>Alerts</strong></td><td><code>create_alert</code>, <code>list_alerts</code>, <code>delete_alert</code>, <code>get_alert_history</code></td><td>Multi-condition alerts with throttling and history</td></tr>
+                <tr><td><strong>SEC / News</strong></td><td><code>get_sec_filings</code>, <code>get_insider_activity</code>, <code>get_upcoming_earnings</code></td><td>EDGAR filings, Form 4, earnings calendar</td></tr>
+                <tr><td><strong>Journal</strong></td><td><code>log_trade</code>, <code>close_trade</code>, <code>get_trades</code>, <code>get_journal_stats</code></td><td>Trade logging, P&amp;L tracking, performance analytics</td></tr>
+                <tr><td><strong>Articles</strong></td><td><code>search_articles</code>, <code>get_article_list</code></td><td>Search 270+ published analyses and reports</td></tr>
+                <tr><td><strong>Status</strong></td><td><code>mw_status</code></td><td>Server health, uptime, cache stats</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Admin Dashboard</h3>
+    <p>The built-in dashboard runs on <code>localhost:3847</code> and provides a visual interface for managing your trading setup &mdash; no JSON editing needed.</p>
+    <div class="workflow-grid">
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-tachometer-alt" style="color:#3b82f6;"></i></div>
+            <div class="wf-title">Overview</div>
+            <div class="wf-desc">Server health, active alerts, recent trades, market regime gauge, watchlist summary.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-list-check" style="color:#10b981;"></i></div>
+            <div class="wf-title">Watchlist</div>
+            <div class="wf-desc">Live prices, P&amp;L tracking, distance to entry/stop/TP, add/remove tickers.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-bell" style="color:#f59e0b;"></i></div>
+            <div class="wf-title">Alerts</div>
+            <div class="wf-desc">Create, edit, pause, delete alerts. View trigger history. Test notifications.</div>
+        </div>
+        <div class="workflow-card">
+            <div class="wf-icon"><i class="fas fa-chart-pie" style="color:#6366f1;"></i></div>
+            <div class="wf-title">Journal</div>
+            <div class="wf-desc">Trade log, equity curve, win rate, profit factor, stats by strategy, calendar view.</div>
+        </div>
+    </div>
+
+    <h3>Configuration</h3>
+    <p>The setup wizard (<code>node setup.js</code>) creates a <code>config.yaml</code> file. You can also edit it manually:</p>
+    <div class="code-label">config.yaml (excerpt)</div>
+    <pre><code>notifications:
+  slack:
+    enabled: true
+    webhook_url: "https://hooks.slack.com/services/..."
+  discord:
+    enabled: true
+    webhook_url: "https://discord.com/api/webhooks/..."
+  telegram:
+    enabled: true
+    bot_token: "123456:ABC..."
+    chat_id: "-100..."
+
+watchlist:
+  auto_sync: true          # Auto-fetch from scanner
+  sync_interval: 3600      # Check every hour
+  custom_tickers: ["NVDA", "TSLA", "BTC-USD"]
+
+alerts:
+  check_interval: 15       # Check every 15 seconds
+  throttle_minutes: 30     # Min time between repeat alerts</code></pre>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 8 : BROWSER EXTENSION                  -->
+<!-- ============================================== -->
+<div id="extension" class="content-card">
+    <h2><i class="fa-solid fa-puzzle-piece" style="color:#3b82f6;"></i> Browser Extension (Chrome / Firefox)</h2>
+
+    <p>The Market Watch extension connects your browser to the MCP server. It uses your <strong>existing sessions</strong> on Yahoo Finance, StockTwits, Reddit, TradingView, Finviz, and DeepSeek &mdash; no additional API keys or logins needed.</p>
+
+    <div class="alert-box" style="background:#eff6ff; border-color:#3b82f6;">
+        <strong><i class="fas fa-shield-halved"></i> Privacy First</strong> &mdash; The extension only activates on finance sites you visit. It reads data from pages you're already logged into. No data is sent to any third party &mdash; everything goes to your local MCP server.
+    </div>
+
+    <h3>Supported Sites</h3>
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr><th>Site</th><th>Data Extracted</th><th>How It Works</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong><i class="fas fa-chart-line" style="color:#6366f1;"></i> Yahoo Finance</strong></td><td>Quotes, financials, options, insider trades, news</td><td>Reads from page DOM when you visit a ticker page</td></tr>
+                <tr><td><strong><i class="fas fa-chart-bar" style="color:#2563eb;"></i> TradingView</strong></td><td>Chart data, indicators, watchlist</td><td>Captures chart state and technical readings</td></tr>
+                <tr><td><strong><i class="fas fa-table" style="color:#0d9488;"></i> Finviz</strong></td><td>Screener results, heatmaps, fundamentals</td><td>Parses screener tables and stock pages</td></tr>
+                <tr><td><strong><i class="fas fa-comments" style="color:#f59e0b;"></i> StockTwits</strong></td><td>Sentiment, trending tickers, message volume</td><td>Reads sentiment gauge and message feed</td></tr>
+                <tr><td><strong><i class="fab fa-reddit" style="color:#ef4444;"></i> Reddit</strong></td><td>WSB/stocks sentiment, ticker mentions</td><td>Scans posts in r/wallstreetbets, r/stocks, r/investing</td></tr>
+                <tr><td><strong><i class="fas fa-robot" style="color:#10b981;"></i> DeepSeek</strong></td><td>Free AI analysis</td><td>Injects analysis prompts into chat.deepseek.com using your session</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Installation</h3>
+    <div class="code-label">Chrome (Developer Mode)</div>
+    <pre><code># 1. Open Chrome Extensions
+chrome://extensions/
+
+# 2. Enable "Developer mode" (top right toggle)
+
+# 3. Click "Load unpacked"
+
+# 4. Select the folder:
+articles/mcp/extension/
+
+# 5. Pin the MW extension in your toolbar
+# 6. Click it to configure your MCP server URL (default: localhost:3847)</code></pre>
+
+    <h3>How It Works</h3>
+    <div class="flow-diagram">
+        <div class="flow-box">
+            <i class="fas fa-globe"></i>
+            <strong>You Browse</strong>
+            <small>Yahoo, Finviz, etc.</small>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-box">
+            <i class="fas fa-puzzle-piece"></i>
+            <strong>Extension</strong>
+            <small>Reads page data</small>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-box">
+            <i class="fas fa-server"></i>
+            <strong>MCP Server</strong>
+            <small>localhost:3847</small>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-box">
+            <i class="fas fa-robot"></i>
+            <strong>Your AI</strong>
+            <small>Claude, Cursor...</small>
+        </div>
+    </div>
+
+    <h3>Popup Features</h3>
+    <ul>
+        <li><i class="fas fa-eye" style="color:#3b82f6;"></i> <strong>Watchlist overview</strong> &mdash; Live prices, distance to entry/stop, regime badge</li>
+        <li><i class="fas fa-bell" style="color:#3b82f6;"></i> <strong>Alert manager</strong> &mdash; Create and manage alerts directly from the popup</li>
+        <li><i class="fas fa-plus-circle" style="color:#3b82f6;"></i> <strong>Quick trade log</strong> &mdash; Log entries/exits to your journal with one click</li>
+        <li><i class="fas fa-robot" style="color:#3b82f6;"></i> <strong>DeepSeek analysis</strong> &mdash; One-click deep analysis using free DeepSeek (via browser, not API)</li>
+        <li><i class="fas fa-link" style="color:#3b82f6;"></i> <strong>MCP status</strong> &mdash; Connection indicator, server health, data freshness</li>
+    </ul>
+
+    <div class="pedagogy-box">
+        <strong><i class="fas fa-lightbulb"></i> DeepSeek Integration</strong>
+        <p style="margin-top:0.5rem;">The extension uses your existing DeepSeek session at <code>chat.deepseek.com</code> (free, no API key). When you click "Analyze with DeepSeek", the extension opens a tab, injects a pre-built analysis prompt with your ticker data, and reads the response. This gives you free AI-powered analysis for every ticker on your watchlist.</p>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 9 : FAQ                                -->
 <!-- ============================================== -->
 <div id="faq" class="content-card">
     <h2><i class="fa-solid fa-circle-question" style="color:#3b82f6;"></i> FAQ</h2>
@@ -567,6 +797,8 @@ Always include the disclaimer:
             <a href="#workflows" class="fnav-item" data-section="workflows"><i class="fas fa-diagram-project"></i><span>Workflows</span></a>
             <a href="#alerts" class="fnav-item" data-section="alerts"><i class="fas fa-bell"></i><span>Smart Alerts</span></a>
             <a href="#setup" class="fnav-item" data-section="setup"><i class="fas fa-wrench"></i><span>AI Setup</span></a>
+            <a href="#mcp-server" class="fnav-item" data-section="mcp-server"><i class="fas fa-server"></i><span>MCP Server v2</span></a>
+            <a href="#extension" class="fnav-item" data-section="extension"><i class="fas fa-puzzle-piece"></i><span>Extension</span></a>
         </div>
         <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
             <i class="fas fa-bars" id="fnavIcon"></i>
