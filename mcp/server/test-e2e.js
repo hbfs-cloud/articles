@@ -41,7 +41,9 @@ const cache        = await import('./lib/cache.js');
 const yahoo        = await import('./lib/yahoo.js');
 const binance      = await import('./lib/binance.js');
 const bvc          = await import('./lib/bvc.js');
-const alertEngine  = await import('./lib/alert-engine.js');
+const alertEngine   = await import('./lib/alert-engine.js');
+const patternEngine = await import('./lib/pattern-engine.js');
+const tickEnricher  = await import('./lib/tick-enricher.js');
 const { stream: yahooWS } = await import('./lib/yahoo-ws.js');
 const { BarsStorage, getStorage } = await import('./lib/storage.js');
 const screener    = await import('./lib/screener.js');
@@ -586,6 +588,139 @@ await test('status() has expected shape', () => {
   assert.ok(typeof s.total   === 'number');
   assert.ok(typeof s.active  === 'number');
   assert.ok(Array.isArray(s.recentErrors));
+});
+
+// ─── Pattern Engine ───────────────────────────────────────────────────────────
+
+section('Pattern Engine (lib/pattern-engine.js)');
+
+// Generate 100 synthetic daily bars (uptrend into breakout)
+function syntheticBars(n = 100, trend = 0.001) {
+  const bars = [];
+  let price = 100;
+  for (let i = 0; i < n; i++) {
+    const open  = price;
+    const close = +(open * (1 + (Math.random() - 0.48) * 0.02 + trend)).toFixed(2);
+    const high  = +(Math.max(open, close) * (1 + Math.random() * 0.005)).toFixed(2);
+    const low   = +(Math.min(open, close) * (1 - Math.random() * 0.005)).toFixed(2);
+    const vol   = Math.round(1e6 * (1 + Math.random()));
+    bars.push({ time: new Date(Date.now() - (n - i) * 86400000).toISOString(), open, high, low, close, volume: vol });
+    price = close;
+  }
+  return bars;
+}
+
+const BARS = syntheticBars(120);
+const BARS_DOWN = syntheticBars(120, -0.001);
+
+await test('breakoutScore returns 0-100', () => {
+  const s = patternEngine.breakoutScore(BARS);
+  assert.ok(s !== null, 'Should return a value');
+  assert.ok(s >= 0 && s <= 100, `Out of range: ${s}`);
+});
+
+await test('reversalScore returns 0-100', () => {
+  const s = patternEngine.reversalScore(BARS_DOWN);
+  assert.ok(s !== null);
+  assert.ok(s >= 0 && s <= 100, `Out of range: ${s}`);
+});
+
+await test('squeezeScore returns 0-100', () => {
+  // Create flat bars for squeeze
+  const flat = syntheticBars(60, 0);
+  const s = patternEngine.squeezeScore(flat);
+  assert.ok(s !== null);
+  assert.ok(s >= 0 && s <= 100);
+});
+
+await test('volAcceleration returns ratio', () => {
+  const v = patternEngine.volAcceleration(BARS);
+  assert.ok(v !== null);
+  assert.ok(v > 0, `Expected positive ratio, got ${v}`);
+});
+
+await test('rollingVwap returns price-level value', () => {
+  const vwap = patternEngine.rollingVwap(BARS, 10);
+  const last = BARS[BARS.length - 1].close;
+  assert.ok(vwap !== null);
+  assert.ok(Math.abs(vwap - last) / last < 0.1, `VWAP ${vwap} too far from price ${last}`);
+});
+
+await test('detectDoubleTop returns shape', () => {
+  const r = patternEngine.detectDoubleTop(BARS);
+  assert.ok(typeof r.detected === 'boolean');
+  assert.ok(typeof r.score === 'number');
+});
+
+await test('detectDoubleBottom returns shape', () => {
+  const r = patternEngine.detectDoubleBottom(BARS_DOWN);
+  assert.ok(typeof r.detected === 'boolean');
+  assert.ok(r.score >= 0 && r.score <= 100);
+});
+
+await test('detectBreakout returns shape', () => {
+  const r = patternEngine.detectBreakout(BARS);
+  assert.ok(typeof r.detected === 'boolean');
+  assert.ok('level' in r && 'volumeRatio' in r);
+});
+
+await test('enrichBars returns all expected fields', () => {
+  const e = patternEngine.enrichBars(BARS, { price: BARS[BARS.length - 1].close });
+  assert.ok('breakoutScore'  in e, 'Missing breakoutScore');
+  assert.ok('reversalScore'  in e, 'Missing reversalScore');
+  assert.ok('squeezeScore'   in e, 'Missing squeezeScore');
+  assert.ok('volAccel'       in e, 'Missing volAccel');
+  assert.ok('vwap'           in e, 'Missing vwap');
+  assert.ok('distVwap'       in e, 'Missing distVwap');
+  assert.ok('patterns'       in e, 'Missing patterns');
+  assert.ok('enrichedAt'     in e, 'Missing enrichedAt');
+  assert.ok(Array.isArray(e.patterns));
+});
+
+await test('enrichBars scores are in 0-100 range', () => {
+  const e = patternEngine.enrichBars(BARS);
+  for (const field of ['breakoutScore','reversalScore','squeezeScore']) {
+    const v = e[field];
+    if (v !== null) assert.ok(v >= 0 && v <= 100, `${field}=${v} out of range`);
+  }
+});
+
+// ─── Tick Enricher ────────────────────────────────────────────────────────────
+
+section('Tick Enricher (lib/tick-enricher.js)');
+
+await test('status() returns expected shape', () => {
+  const s = tickEnricher.status();
+  assert.ok(typeof s.trackedCount  === 'number');
+  assert.ok(typeof s.enrichedCount === 'number');
+  assert.ok(Array.isArray(s.trackedTickers));
+  assert.ok(Array.isArray(s.recentErrors));
+});
+
+await test('track() and getEnrichment() (live — fetches bars)', async () => {
+  tickEnricher.track('SPY');
+  await tickEnricher.runNow();
+  const e = tickEnricher.getEnrichment('SPY');
+  // After runNow, SPY should be enriched (has 2y of bars)
+  assert.ok('breakoutScore' in e, `SPY not enriched: ${JSON.stringify(e)}`);
+  assert.ok(e.breakoutScore >= 0 && e.breakoutScore <= 100);
+});
+
+await test('alert tick() uses enriched pattern scores', async () => {
+  // Create an alert on breakoutScore
+  const a = alertEngine.createAlert({
+    ticker:   'SPY',
+    name:     'SPY breakout',
+    when:     'breakout_score > 0',  // should always be true for SPY
+    channels: [],
+    throttle: 0,
+  });
+  const spyEnrich = tickEnricher.getEnrichment('SPY');
+  const q = { price: 500, changePct: 0.5, rvol: 1.2, ...spyEnrich };
+  const quotes = new Map([['SPY', q]]);
+  const triggered = await alertEngine.tick(quotes, new Map());
+  assert.ok(triggered.some(ev => ev.alertId === a.id), 'Alert on breakout_score should fire when score > 0');
+  alertEngine.deleteAlert(a.id);
 });
 
 // ─── Yahoo WebSocket ──────────────────────────────────────────────────────────

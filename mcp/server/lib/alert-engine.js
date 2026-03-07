@@ -24,6 +24,7 @@
  */
 
 import * as cache from './cache.js';
+import { getEnrichment, track } from './tick-enricher.js';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -238,6 +239,8 @@ export function createAlert(opts) {
   };
 
   _alerts.set(id, alert);
+  // Auto-track ticker for background enrichment (pattern scores)
+  if (alert.ticker) track(alert.ticker);
   return toPublic(alert);
 }
 
@@ -352,9 +355,11 @@ export async function tick(quotesMap, prevMap = {}) {
     const prev = prevMap  instanceof Map ? prevMap.get(alert.ticker)  : prevMap[alert.ticker];
     if (!raw) continue;
 
-    // Enrich with alert context (entry/stop/tp + derived drawdown/gain)
-    const q = enrichQuote(raw, alert);
-    const p = prev ? enrichQuote(prev, alert) : null;
+    // Merge pattern scores from tick-enricher (non-blocking — returns {} if not ready)
+    const patternData = getEnrichment(alert.ticker);
+    // Enrich with alert context (entry/stop/tp + derived drawdown/gain + pattern scores)
+    const q = enrichQuote({ ...raw, ...patternData }, alert);
+    const p = prev ? enrichQuote({ ...prev, ...patternData }, alert) : null;
 
     // Throttle check
     if (isThrottled(alert)) continue;

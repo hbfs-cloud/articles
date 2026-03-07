@@ -49,6 +49,7 @@ import * as screener from './lib/screener.js';
 import * as bvc from './lib/bvc.js';
 import { getStorage } from './lib/storage.js';
 import * as barsWorker from './lib/bars-worker.js';
+import * as tickEnricher from './lib/tick-enricher.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -407,6 +408,41 @@ server.tool(
 // ────────────────────────────────────
 // YAHOO WEBSOCKET TOOLS
 // ────────────────────────────────────
+
+server.tool(
+  'enricher_status',
+  'Status of the background pattern enricher: last run, tracked tickers, enriched count, errors.',
+  {},
+  async () => {
+    return { content: [{ type: 'text', text: JSON.stringify(tickEnricher.status(), null, 2) }] };
+  }
+);
+
+server.tool(
+  'get_patterns',
+  'Get computed pattern scores for a ticker: breakout_score, reversal_score, squeeze_score, VWAP, double top/bottom detection.',
+  {
+    symbol:   z.string().describe('Ticker symbol'),
+    refresh:  z.boolean().optional().describe('Force immediate re-enrichment (default false)'),
+  },
+  async ({ symbol, refresh }) => {
+    const sym = symbol.toUpperCase();
+    tickEnricher.track(sym);
+    if (refresh) {
+      // Synchronous single-ticker enrichment
+      const storage = getStorage();
+      const bars = storage.get(sym, '1d');
+      if (bars.length >= 5) {
+        const { enrichBars } = await import('./lib/pattern-engine.js');
+        const quote = (await yahoo.getQuotes([sym]).catch(() => []))[0] ?? {};
+        const result = enrichBars(bars, quote);
+        return { content: [{ type: 'text', text: JSON.stringify({ symbol: sym, ...result }, null, 2) }] };
+      }
+    }
+    const data = tickEnricher.getEnrichment(sym);
+    return { content: [{ type: 'text', text: JSON.stringify({ symbol: sym, ...data }, null, 2) }] };
+  }
+);
 
 server.tool(
   'alert_errors',
@@ -1013,6 +1049,15 @@ if (config.alerts?.enabled !== false) {
 
 // Start background bars worker (Parquet export + intraday cleanup every 6h)
 barsWorker.start(config.bars?.worker_interval_ms || 6 * 3600_000);
+
+// Start pattern enricher (breakout/reversal/squeeze scores every 5min)
+// Pre-seed with watchlist tickers so alerts are ready on first tick
+{
+  const wl = watchlist.get();
+  const wlTickers = (wl?.picks || []).map(p => p.ticker).concat(wl?.custom?.map(c => c.ticker) || []);
+  if (wlTickers.length) tickEnricher.track(wlTickers);
+  tickEnricher.start(config.alerts?.enricher_interval_ms || 5 * 60_000);
+}
 
 // Connect MCP transport
 const transport = new StdioServerTransport();
