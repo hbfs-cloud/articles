@@ -37,6 +37,8 @@ import { fileURLToPath } from 'url';
 import * as yahoo from './lib/yahoo.js';
 import * as binance from './lib/binance.js';
 import * as alerts from './lib/alerts.js';
+import * as alertEngine from './lib/alert-engine.js';
+import { stream as yahooWS } from './lib/yahoo-ws.js';
 import * as watchlist from './lib/watchlist.js';
 import * as journal from './lib/journal.js';
 import * as news from './lib/news.js';
@@ -68,6 +70,7 @@ if (existsSync(configPath)) {
 // ═══════════════════════════════════════
 
 alerts.configure(config);
+alertEngine.configure(config);
 await journal.init(config.journal?.db_path || resolve(__dirname, 'data/journal.db'));
 
 // Static data fallback
@@ -267,58 +270,177 @@ server.tool(
 );
 
 // ────────────────────────────────────
-// ALERTS TOOLS
+// ALERT ENGINE — DSL-BASED ALERTS
 // ────────────────────────────────────
 
 server.tool(
   'create_alert',
-  'Create a price/volume/news alert with multi-channel notifications.',
+  [
+    'Create an intelligent DSL alert for any ticker. Fires on Discord/Telegram/desktop.',
+    '',
+    'DSL examples:',
+    '  "price crosses_above ema50"          — breakout above 50-day MA',
+    '  "price crosses_below ema200"          — breaks major support',
+    '  "rsi14 crosses_below 30"             — enters oversold',
+    '  "rsi14 crosses_above 70"             — enters overbought',
+    '  "price touches 52w_high"             — within 0.5% of ATH',
+    '  "rvol >= 2 AND changePct > 2"        — high volume + momentum',
+    '  "drawdown > 5"                        — loss vs entry > 5%',
+    '  "gain > 10"                           — profit target +10%',
+    '  "price crosses_below stop"            — stop loss hit',
+    '  "price crosses_above tp1"             — TP1 reached',
+  ].join('\n'),
   {
-    ticker: z.string().describe('Ticker symbol'),
-    type: z.enum(['entry', 'stop', 'tp', 'price_above', 'price_below', 'rvol', 'vwap_reclaim', 'news', 'volume_spike']).describe('Alert type'),
-    value: z.number().optional().describe('Price or threshold value'),
-    message: z.string().optional().describe('Custom alert message'),
-    channels: z.array(z.string()).optional().describe('Notification channels: desktop, slack, discord, telegram')
+    ticker:   z.string().describe('Ticker (AAPL, BTCUSDT, ATW…)'),
+    name:     z.string().describe('Human label, e.g. "AAPL breakout above EMA50"'),
+    when:     z.string().describe('DSL expression evaluated on each price tick'),
+    channels: z.array(z.string()).optional().describe('["discord","telegram","desktop","slack"]'),
+    once:     z.boolean().optional().describe('Disable after first trigger (default false)'),
+    throttle: z.number().optional().describe('Cooldown in seconds between re-triggers (default 300)'),
+    message:  z.string().optional().describe('Custom notification message (auto-generated if omitted)'),
+    entry:    z.number().optional().describe('Entry price — enables drawdown/gain fields in DSL'),
+    stop:     z.number().optional().describe('Stop loss level'),
+    tp1:      z.number().optional().describe('Take profit 1'),
+    tp2:      z.number().optional().describe('Take profit 2'),
   },
   async (params) => {
-    const alert = alerts.createAlert({
-      ...params,
-      condition: ['stop', 'price_below'].includes(params.type) ? 'below' : ['tp', 'price_above'].includes(params.type) ? 'above' : 'near'
-    });
-    return { content: [{ type: 'text', text: JSON.stringify(alert, null, 2) }] };
+    try {
+      const alert = alertEngine.createAlert(params);
+      // Subscribe ticker to Yahoo WS for real-time evaluation
+      if (!yahooWS.isConnected()) yahooWS.connect();
+      yahooWS.subscribe([params.ticker]);
+      return { content: [{ type: 'text', text: JSON.stringify(alert, null, 2) }] };
+    } catch (e) {
+      return { content: [{ type: 'text', text: `Error: ${e.message}` }] };
+    }
   }
 );
 
 server.tool(
   'list_alerts',
-  'List all active alerts, optionally filtered by ticker or status.',
+  'List all DSL alerts (active, paused, triggered). Filter by ticker or status.',
   {
     ticker: z.string().optional().describe('Filter by ticker'),
-    status: z.string().optional().describe('Filter by status: active, paused, triggered')
+    status: z.string().optional().describe('active | paused | triggered'),
   },
   async (params) => {
-    const list = alerts.listAlerts(params);
-    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+    const list = alertEngine.listAlerts(params);
+    const st   = alertEngine.status();
+    return { content: [{ type: 'text', text: JSON.stringify({ status: st, alerts: list }, null, 2) }] };
   }
 );
 
 server.tool(
   'delete_alert',
-  'Delete an alert by ID.',
-  { id: z.number().describe('Alert ID') },
+  'Delete a DSL alert by ID.',
+  { id: z.number().describe('Alert ID (from list_alerts)') },
   async ({ id }) => {
-    const ok = alerts.deleteAlert(id);
-    return { content: [{ type: 'text', text: ok ? 'Alert deleted' : 'Alert not found' }] };
+    const ok = alertEngine.deleteAlert(id);
+    return { content: [{ type: 'text', text: ok ? `Alert #${id} deleted.` : `Alert #${id} not found.` }] };
   }
 );
 
 server.tool(
-  'get_alert_history',
-  'Get history of triggered alerts.',
-  { limit: z.number().optional().describe('Max results (default: 50)') },
+  'pause_alert',
+  'Pause or resume a DSL alert.',
+  {
+    id:     z.number().describe('Alert ID'),
+    action: z.enum(['pause', 'resume']).describe('pause or resume'),
+  },
+  async ({ id, action }) => {
+    const a = action === 'pause' ? alertEngine.pauseAlert(id) : alertEngine.resumeAlert(id);
+    return { content: [{ type: 'text', text: JSON.stringify(a ?? `Alert #${id} not found`, null, 2) }] };
+  }
+);
+
+server.tool(
+  'alert_history',
+  'Get the last N triggered alert events.',
+  { limit: z.number().optional().describe('Max results (default 50)') },
   async ({ limit }) => {
-    const hist = alerts.getHistory(limit || 50);
-    return { content: [{ type: 'text', text: JSON.stringify(hist, null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(alertEngine.alertHistory(limit || 50), null, 2) }] };
+  }
+);
+
+server.tool(
+  'test_alert_dsl',
+  'Dry-run a DSL expression against a live quote to validate it before creating an alert.',
+  {
+    ticker: z.string().describe('Ticker symbol'),
+    when:   z.string().describe('DSL expression to test'),
+    entry:  z.number().optional().describe('Entry price for drawdown/gain context'),
+  },
+  async ({ ticker, when, entry }) => {
+    const { fn, ok, error, js } = alertEngine.compileAlertDSL(when);
+    if (!ok) return { content: [{ type: 'text', text: `DSL error: ${error}\nCompiled: ${js}` }] };
+
+    // Get live quote
+    let quote = null;
+    try {
+      const raw = await yahoo.getQuotes([ticker.toUpperCase()]);
+      if (raw.length) {
+        quote = raw[0];
+        if (entry) {
+          quote.entry    = entry;
+          quote.drawdown = (quote.price - entry) / entry * 100;
+          quote.gain     = quote.drawdown;
+        }
+      }
+    } catch { /* quote unavailable */ }
+
+    const result = quote ? fn(quote, null) : null;
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          dsl:    when,
+          compiled_js: js,
+          ticker,
+          quote:  quote ? { price: quote.price, changePct: quote.changePct, rvol: quote.rvol, ema50: quote.ema50, ema200: quote.ema200, rsi14: quote.rsi14 } : null,
+          would_fire: result,
+        }, null, 2)
+      }]
+    };
+  }
+);
+
+// ────────────────────────────────────
+// YAHOO WEBSOCKET TOOLS
+// ────────────────────────────────────
+
+server.tool(
+  'alert_errors',
+  'Get recent DSL evaluation errors — never fails silently. Shows what went wrong and which alert caused it.',
+  {},
+  async () => {
+    return { content: [{ type: 'text', text: JSON.stringify(alertEngine.getErrors(), null, 2) }] };
+  }
+);
+
+server.tool(
+  'yahoo_ws_subscribe',
+  'Subscribe tickers to Yahoo Finance WebSocket for real-time price streaming. Alerts are evaluated on each tick.',
+  {
+    symbols: z.string().describe('Comma-separated tickers (e.g. "AAPL,MSFT,NVDA")'),
+  },
+  async ({ symbols }) => {
+    const syms = symbols.split(',').map(s => s.trim().toUpperCase());
+    if (!yahooWS.isConnected()) yahooWS.connect();
+    yahooWS.subscribe(syms);
+    // Give it 2 seconds to receive first quotes
+    await new Promise(r => setTimeout(r, 2000));
+    return { content: [{ type: 'text', text: JSON.stringify(yahooWS.status(), null, 2) }] };
+  }
+);
+
+server.tool(
+  'yahoo_ws_status',
+  'Get Yahoo Finance WebSocket status: connection state, subscriptions, live quotes received.',
+  {},
+  async () => {
+    const st     = yahooWS.status();
+    const quotes = yahooWS.allQuotes();
+    return { content: [{ type: 'text', text: JSON.stringify({ ws: st, liveQuotes: quotes }, null, 2) }] };
   }
 );
 
@@ -797,7 +919,7 @@ server.tool(
           },
           watchlist: wlStatus,
           regime: currentRegime?.regime || 'Not yet detected',
-          alerts: { total: alertList.length, active: alertList.filter(a => a.status === 'active').length },
+          alerts: alertEngine.status(),
           journal: { totalTrades: journalStats.totalTrades || 0, winRate: journalStats.winRate || null },
           cache: cacheStats
         }, null, 2)
@@ -836,12 +958,54 @@ server.resource(
 // START
 // ═══════════════════════════════════════
 
-// Auto-sync watchlist on startup
+// Auto-sync watchlist on startup + auto-create DSL alerts for scanner picks
 try {
-  await watchlist.sync(config.watchlist?.sync_url);
+  const wl = await watchlist.sync(config.watchlist?.sync_url);
+  if (wl?.picks?.length) alertEngine.createWatchlistAlerts(wl);
 } catch { /* will sync later */ }
 
-// Start monitoring if configured
+// Yahoo WebSocket → alert engine tick
+// Real-time: alerts are evaluated on every WS quote event
+// Fallback polling: also evaluated in the monitoring loop below
+{
+  const prevQuotes = new Map();
+
+  yahooWS.on('quote', async (quote, prev) => {
+    try {
+      const sym = quote.id;
+      if (!sym) return;
+      // Normalise the raw protobuf quote to match screener format
+      const q = {
+        symbol:        sym,
+        price:         quote.price         ?? 0,
+        open:          quote.open          ?? null,
+        high:          quote.dayHigh       ?? null,
+        low:           quote.dayLow        ?? null,
+        previousClose: quote.previousClose ?? null,
+        change:        quote.change        ?? null,
+        changePct:     quote.changePercent ?? 0,
+        volume:        quote.dayVolume     ?? 0,
+        rvol:          null,  // not available from WS
+        ema50:         null,  // not available from WS
+        ema200:        null,
+        bid:           quote.bid           ?? null,
+        ask:           quote.ask           ?? null,
+      };
+      const prevQ = prevQuotes.get(sym) ?? null;
+      const quotesMap = new Map([[sym, q]]);
+      const prevMap   = prevQ ? new Map([[sym, prevQ]]) : new Map();
+      prevQuotes.set(sym, q);
+      await alertEngine.tick(quotesMap, prevMap);
+    } catch (e) {
+      console.error('[AlertTick] Error:', e.message);
+    }
+  });
+
+  yahooWS.on('error', (e) => console.error('[YahooWS] Stream error:', e.message));
+}
+
+// Polling fallback: monitor watchlist every 15s (enriched with ema50/200/rvol)
+// Also feeds alert engine in case WS is not connected
 if (config.alerts?.enabled !== false) {
   const interval = (config.sources?.yahoo?.polling_interval || 15) * 1000;
   watchlist.startMonitoring(interval).catch(() => {});

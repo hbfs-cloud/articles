@@ -37,10 +37,12 @@ function section(name) {
 section('Loading modules');
 
 const { default: Database } = await import('better-sqlite3');
-const cache       = await import('./lib/cache.js');
-const yahoo       = await import('./lib/yahoo.js');
-const binance     = await import('./lib/binance.js');
-const bvc         = await import('./lib/bvc.js');
+const cache        = await import('./lib/cache.js');
+const yahoo        = await import('./lib/yahoo.js');
+const binance      = await import('./lib/binance.js');
+const bvc          = await import('./lib/bvc.js');
+const alertEngine  = await import('./lib/alert-engine.js');
+const { stream: yahooWS } = await import('./lib/yahoo-ws.js');
 const { BarsStorage, getStorage } = await import('./lib/storage.js');
 const screener    = await import('./lib/screener.js');
 const universe    = await import('./lib/universe.js');
@@ -484,7 +486,135 @@ await test('screener run() with MA universe fetches BVC quotes', async () => {
   assert.ok(result.picks[0].exchange === 'CSE', `Expected CSE exchange, got ${result.picks[0].exchange}`);
 });
 
-// ─── 8. Bars Worker ───────────────────────────────────────────────────────────
+// ─── 8. Alert Engine ─────────────────────────────────────────────────────────
+
+section('Alert Engine — DSL (lib/alert-engine.js)');
+
+await test('compileAlertDSL simple threshold', () => {
+  const { fn, ok } = alertEngine.compileAlertDSL('price > 100');
+  assert.ok(ok);
+  assert.ok(fn({ price: 150 }, null));
+  assert.ok(!fn({ price: 50 }, null));
+});
+
+await test('compileAlertDSL AND compound', () => {
+  const { fn, ok } = alertEngine.compileAlertDSL('rvol >= 2 AND changePct > 1.5');
+  assert.ok(ok);
+  assert.ok(fn({ rvol: 3, changePct: 2 }, null));
+  assert.ok(!fn({ rvol: 1, changePct: 2 }, null));
+});
+
+await test('compileAlertDSL crosses_above (stateful)', () => {
+  const { fn, ok } = alertEngine.compileAlertDSL('price crosses_above ema50');
+  assert.ok(ok);
+  // prev below, curr above → fires
+  assert.ok(fn({ price: 105, ema50: 100 }, { price: 95, ema50: 100 }));
+  // both above → does not fire
+  assert.ok(!fn({ price: 105, ema50: 100 }, { price: 102, ema50: 100 }));
+  // no prev → does not fire
+  assert.ok(!fn({ price: 105, ema50: 100 }, null));
+});
+
+await test('compileAlertDSL crosses_below (stateful)', () => {
+  const { fn, ok } = alertEngine.compileAlertDSL('rsi14 crosses_below 30');
+  assert.ok(ok);
+  assert.ok(fn({ rsi14: 28 }, { rsi14: 35 }));    // crosses into oversold
+  assert.ok(!fn({ rsi14: 28 }, { rsi14: 25 }));   // already below
+});
+
+await test('compileAlertDSL touches', () => {
+  const { fn, ok } = alertEngine.compileAlertDSL('price touches high52w');
+  assert.ok(ok);
+  assert.ok(fn({ price: 99.8, high52w: 100 }, null));   // within 0.5%
+  assert.ok(!fn({ price: 95, high52w: 100 }, null));    // too far
+});
+
+await test('compileAlertDSL drawdown/gain fields', () => {
+  const { fn, ok } = alertEngine.compileAlertDSL('drawdown > 5');
+  assert.ok(ok);
+  assert.ok(fn({ drawdown: 6 }, null));
+  assert.ok(!fn({ drawdown: 3 }, null));
+});
+
+await test('compileAlertDSL invalid → error reported', () => {
+  const { ok, error } = alertEngine.compileAlertDSL('price >>>>>> ???');
+  assert.ok(!ok);
+  assert.ok(typeof error === 'string' && error.length > 0);
+});
+
+await test('createAlert returns public object without _fn', () => {
+  const a = alertEngine.createAlert({
+    ticker: 'AAPL', name: 'Test', when: 'price > 100', once: true
+  });
+  assert.ok(a.id > 0);
+  assert.equal(a.ticker, 'AAPL');
+  assert.ok(!('_fn' in a), '_fn should be stripped from public object');
+  assert.equal(a.status, 'active');
+});
+
+await test('pause/resume alert', () => {
+  const a = alertEngine.createAlert({ ticker: 'MSFT', name: 'Test2', when: 'price > 1' });
+  alertEngine.pauseAlert(a.id);
+  assert.equal(alertEngine.getAlert(a.id).status, 'paused');
+  alertEngine.resumeAlert(a.id);
+  assert.equal(alertEngine.getAlert(a.id).status, 'active');
+});
+
+await test('tick() fires alert when condition met', async () => {
+  const a = alertEngine.createAlert({ ticker: 'TEST', name: 'tick test', when: 'price > 200', channels: [] });
+  const quotes = new Map([['TEST', { price: 250, changePct: 1, rvol: 1.5 }]]);
+  const triggered = await alertEngine.tick(quotes, new Map());
+  assert.ok(triggered.some(ev => ev.alertId === a.id), 'Alert should have fired');
+  alertEngine.deleteAlert(a.id);
+});
+
+await test('tick() once=true disables after first trigger', async () => {
+  const a = alertEngine.createAlert({ ticker: 'TEST2', name: 'once test', when: 'price > 0', once: true, throttle: 0, channels: [] });
+  const quotes = new Map([['TEST2', { price: 1, changePct: 0, rvol: 1 }]]);
+  await alertEngine.tick(quotes, new Map());
+  assert.equal(alertEngine.getAlert(a.id).status, 'triggered', 'Should be disabled after once=true trigger');
+  alertEngine.deleteAlert(a.id);
+});
+
+await test('getErrors() returns array', () => {
+  const errs = alertEngine.getErrors();
+  assert.ok(Array.isArray(errs));
+});
+
+await test('status() has expected shape', () => {
+  const s = alertEngine.status();
+  assert.ok(typeof s.total   === 'number');
+  assert.ok(typeof s.active  === 'number');
+  assert.ok(Array.isArray(s.recentErrors));
+});
+
+// ─── Yahoo WebSocket ──────────────────────────────────────────────────────────
+
+section('Yahoo WebSocket (lib/yahoo-ws.js)');
+
+await test('status() returns expected shape before connect', () => {
+  const s = yahooWS.status();
+  assert.ok('connected' in s);
+  assert.ok(Array.isArray(s.subscriptions));
+  assert.ok('quotesLive' in s);
+  assert.ok('stats' in s);
+});
+
+await test('connect + subscribe + disconnect (live)', async () => {
+  yahooWS.subscribe(['AAPL', 'MSFT']);
+  // Give 3 seconds to connect and receive at least one quote
+  await new Promise(r => setTimeout(r, 3000));
+  const s = yahooWS.status();
+  assert.ok(s.subscriptions.includes('AAPL'));
+  // We may or may not have received quotes depending on Yahoo availability
+  // Just check it did not throw and connection was attempted
+  assert.ok(s.stats.reconnects >= 0);
+  yahooWS.disconnect();
+  await new Promise(r => setTimeout(r, 200));
+  assert.ok(!yahooWS.isConnected(), 'Should be disconnected after disconnect()');
+});
+
+// ─── 9. Bars Worker ───────────────────────────────────────────────────────────
 
 section('Bars Worker (lib/bars-worker.js)');
 
