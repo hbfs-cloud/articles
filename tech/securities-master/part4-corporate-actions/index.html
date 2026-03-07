@@ -1,192 +1,1219 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="us,tech" data-tab="tech">
+<html lang="fr" data-tags="corporate-actions,splits,dividends,sql,postgresql,finance,quant,tech" data-tab="tech">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corporate Actions & Mathematics | Building a Securities Master — Part 4/6 | Market Watch</title>
-    <meta name="description"
-        content="Part 4/6: Corporate Actions. Fixing stock splits, dividends, and calculating cumulative multipliers in SQL to maintain continuous ML feature integrity.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Corporate Actions &amp; Mathématiques d'Ajustement | Building a Securities Master — Part 4/6 | Market Watch</title>
+    <meta name="description" content="Building a Securities Master — Part 4/6 : Splits, dividendes, fusions, spin-offs. Calcul des facteurs d'ajustement cumulatifs avec EXP(SUM(LN())) en SQL, intégration dbt Gold, et sources de données institutionnelles.">
+
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-            margin: 0;
-        } .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
         .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
+            padding: 4rem 2rem 8rem;
+            background: linear-gradient(180deg, #fefce8 0%, #f8fafc 100%);
             text-align: center;
         }
+        .hero-date { font-size:.85rem; font-weight:700; color:#ca8a04; text-transform:uppercase; letter-spacing:.1em; margin-bottom:1rem; }
+        .hero-badges { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+        .hero-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border-radius:99px; font-size:.8rem; font-weight:700; }
+        .hero-badge-amber  { background:rgba(202,138,4,.1);  color:#ca8a04; border:1px solid rgba(202,138,4,.2); }
+        .hero-badge-teal   { background:rgba(13,148,136,.1); color:#0d9488; border:1px solid rgba(13,148,136,.2); }
+        .hero-badge-red    { background:rgba(239,68,68,.1);  color:#dc2626; border:1px solid rgba(239,68,68,.2); }
+        .hero-badge-blue   { background:rgba(59,130,246,.1); color:#3b82f6; border:1px solid rgba(59,130,246,.2); }
 
-        h2 {
-            font-size: 1.8rem;
-            color: #0f172a;
-            margin-top: 2.5rem;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
+        .section-divider {
+            display:flex; align-items:center; gap:1rem;
+            margin:3rem 0 2rem; color:#94a3b8;
+            font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
         }
+        .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
 
-        pre[class*="language-"] {
-            background: #042f2e !important;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            overflow-x: auto;
+        pre[class*="language-"],code[class*="language-"] {
+            background:#042f2e !important; border:1px solid #115e59; border-radius:12px;
+            font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.6;
         }
+        pre[class*="language-"] { padding:1.5rem; margin:0; overflow-x:auto; }
+        code[class*="language-"] { border:none; }
+        .code-label { display:block; font-size:.65rem; color:#0d9488; text-transform:uppercase; letter-spacing:.05em; font-family:'Inter',sans-serif; font-weight:700; margin-bottom:.5rem; }
+        .code-block-wrapper { margin:1.5rem 0; }
+        .inline-code { font-family:'JetBrains Mono',monospace; background:#f1f5f9; color:#0f766e; padding:.2em .4em; border-radius:4px; font-size:.9em; border:1px solid #e2e8f0; }
 
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            color: #0d9488;
-            background: #ccfbf1;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-        }
+        /* Corporate action type cards */
+        .ca-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1.25rem; margin:2rem 0; }
+        .ca-card { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; position:relative; overflow:hidden; }
+        .ca-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:5px; }
+        .ca-split::before  { background:linear-gradient(90deg,#6366f1,#8b5cf6); }
+        .ca-div::before    { background:linear-gradient(90deg,#059669,#10b981); }
+        .ca-spin::before   { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+        .ca-merge::before  { background:linear-gradient(90deg,#ef4444,#f97316); }
+        .ca-delist::before { background:linear-gradient(90deg,#64748b,#94a3b8); }
+        .ca-card h4 { margin:.5rem 0 .75rem; font-size:1rem; display:flex; align-items:center; gap:.5rem; }
+        .ca-split h4  { color:#6366f1; }
+        .ca-div h4    { color:#059669; }
+        .ca-spin h4   { color:#f59e0b; }
+        .ca-merge h4  { color:#ef4444; }
+        .ca-delist h4 { color:#64748b; }
+        .ca-card p { font-size:.85rem; color:#475569; line-height:1.5; margin:0; }
+        .ca-badge { display:inline-block; margin-top:.5rem; padding:.2rem .6rem; border-radius:99px; font-size:.7rem; font-weight:700; }
+        .ca-split .ca-badge  { background:#ede9fe; color:#6366f1; }
+        .ca-div .ca-badge    { background:#d1fae5; color:#059669; }
+        .ca-spin .ca-badge   { background:#fef9c3; color:#ca8a04; }
+        .ca-merge .ca-badge  { background:#fee2e2; color:#dc2626; }
+        .ca-delist .ca-badge { background:#f1f5f9; color:#64748b; }
 
-        .takeaway-box {
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-            border: 1px solid #0d9488;
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
+        /* Decision / info cards */
+        .decision-card { background:#f8fafc; border-left:4px solid #0d9488; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; border-radius:0 12px 12px 0; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .decision-card h4 { color:#0f766e; margin:0 0 .5rem; font-size:1rem; display:flex; align-items:center; gap:.5rem; }
+        .decision-card.warning { border-left-color:#f59e0b; }
+        .decision-card.warning h4 { color:#b45309; }
+        .decision-card.danger { border-left-color:#ef4444; }
+        .decision-card.danger h4 { color:#b91c1c; }
 
-        .footer-bar {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-        }
+        /* Formula box */
+        .formula-box { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:1.5rem 2rem; margin:1.5rem 0; font-family:'JetBrains Mono',monospace; font-size:.95rem; line-height:1.8; text-align:center; border:1px solid #1e293b; }
+        .formula-box .formula-label { font-size:.7rem; color:#64748b; text-transform:uppercase; letter-spacing:.1em; margin-bottom:.75rem; font-family:'Inter',sans-serif; }
+        .formula-box .formula-main  { font-size:1.15rem; color:#34d399; font-weight:600; }
+        .formula-box .formula-sub   { font-size:.8rem; color:#94a3b8; margin-top:.5rem; }
+
+        /* Step cards */
+        .step-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin:2rem 0; }
+        .step-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:.5rem; }
+        .step-num { width:32px; height:32px; background:#ca8a04; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; flex-shrink:0; }
+        .step-title { font-weight:700; color:#0f172a; font-size:.95rem; }
+        .step-desc { font-size:.85rem; color:#64748b; line-height:1.5; }
+
+        /* Pedagogy & alert */
+        .pedagogy-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .pedagogy-box h4 { color:#1d4ed8; margin:0 0 .5rem; display:flex; align-items:center; gap:.5rem; }
+        .alert-box { background:#fefce8; border:1px solid #fde047; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .alert-box h4 { color:#ca8a04; margin:0 0 .5rem; display:flex; align-items:center; gap:.5rem; }
+
+        /* Takeaway */
+        .takeaway-box { background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%); border:1px solid #ca8a04; border-radius:16px; padding:2rem; margin:3rem 0; }
+        .takeaway-box h3 { color:#b45309; margin-top:0; display:flex; align-items:center; gap:.5rem; }
+        .takeaway-list { list-style:none; padding:0; margin:1rem 0; }
+        .takeaway-list li { display:flex; gap:.75rem; border-bottom:1px solid rgba(202,138,4,.15); padding:.75rem 0; }
+        .takeaway-list li:last-child { border-bottom:none; }
+
+        /* Next CTA */
+        .next-cta { display:flex; align-items:center; gap:1.5rem; background:linear-gradient(135deg,#0d9488,#0891b2); border-radius:16px; padding:2rem; margin:2rem 0; text-decoration:none; transition:transform .2s; }
+        .next-cta:hover { transform:translateY(-2px); box-shadow:0 10px 30px -5px rgba(13,148,136,.4); }
+        .next-cta-icon { font-size:2.5rem; flex-shrink:0; }
+        .next-cta-text h3 { color:white; margin:0 0 .25rem; font-size:1.1rem; }
+        .next-cta-text p  { color:rgba(255,255,255,.85); margin:0; font-size:.9rem; }
+        .next-cta-arrow { margin-left:auto; color:white; font-size:1.5rem; flex-shrink:0; }
+
+        /* Compare table */
+        .compare-table { width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:.88rem; }
+        .compare-table th { background:#0f172a; color:#e2e8f0; padding:.75rem 1rem; text-align:left; font-weight:700; }
+        .compare-table td { padding:.75rem 1rem; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:top; }
+        .compare-table tr:hover td { background:#f8fafc; }
+        .compare-table .highlight td { background:#fefce8; font-weight:600; color:#b45309; }
+
+        /* Chart container */
+        .chart-container { margin:2rem 0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; }
+        .chart-title { background:#f8fafc; padding:.75rem 1.25rem; font-size:.85rem; font-weight:700; color:#64748b; border-bottom:1px solid #e2e8f0; }
+
+        /* Quiz */
+        .quiz-item { margin-bottom:1.5rem; }
+        .quiz-item summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; font-weight:600; color:#0f172a; list-style:none; display:flex; align-items:center; gap:.75rem; transition:background .2s; }
+        .quiz-item summary:hover { background:#fefce8; }
+        .quiz-item summary::before { content:'❓'; font-size:1rem; }
+        .quiz-item[open] summary { background:#fefce8; border-color:#ca8a04; border-radius:10px 10px 0 0; }
+        .quiz-answer { padding:1rem 1.25rem; border:1px solid #ca8a04; border-top:none; border-radius:0 0 10px 10px; background:white; color:#334155; line-height:1.7; }
+        .quiz-answer strong { color:#b45309; }
+
+        /* FAB */
+        .fnav { position:fixed; bottom:2rem; right:2rem; z-index:1000; }
+        .fnav-menu { position:absolute; bottom:60px; right:0; background:white; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 20px 40px -10px rgba(0,0,0,.15); overflow:hidden; min-width:210px; display:none; flex-direction:column; }
+        .fnav-menu.open { display:flex; }
+        .fnav-item { display:flex; align-items:center; gap:.75rem; padding:.75rem 1.25rem; text-decoration:none; color:#334155; font-size:.85rem; font-weight:500; border-bottom:1px solid #f1f5f9; transition:background .15s; }
+        .fnav-item:last-child { border-bottom:none; }
+        .fnav-item:hover { background:#fefce8; color:#ca8a04; }
+        .fnav-item i { width:16px; text-align:center; color:#ca8a04; }
+        .fnav-btn { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#ca8a04,#f59e0b); border:none; cursor:pointer; color:white; font-size:1.2rem; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px -4px rgba(202,138,4,.5); transition:transform .2s; }
+        .fnav-btn:hover { transform:scale(1.08); }
     </style>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-    </head>
+</head>
 
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+    <!-- Brand Bar -->
     <nav class="brand-bar">
-    <div class="brand-bar-inner">
-      <a href="/" class="brand-logo">
-        <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
-      </a>
-      <div class="brand-actions">
-        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
-      </div>
-    </div>
-  </nav><div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
-    
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Corporate Actions: Mathematical
-            Reality</h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            To the AI Finance Agent, a 4-for-1 stock split looks exactly like a 75% market crash. We must engineer
-            retroactive mathematical adjustments (CRAS) in SQL to preserve the machine learning algorithms' momentum
-            features.
+    <!-- Hero -->
+    <header class="hero-section">
+        <div class="hero-date"><i class="fa-solid fa-building-columns" style="margin-right:.4rem;"></i> Building a Securities Master &mdash; Part 4 de 6</div>
+        <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:820px;">
+            Corporate Actions &amp; Mathématiques d'Ajustement
+        </h1>
+        <p style="font-size:1.15rem; color:#64748b; max-width:760px; margin:0 auto; line-height:1.7;">
+            Pour un modèle IA, un split 4-pour-1 ressemble à un crash de 75%. Maîtrisez la taxonomie complète des corporate actions, le calcul des facteurs cumulatifs <code>EXP(SUM(LN()))</code>, et leur intégration dans la couche Gold dbt.
         </p>
-    </div>
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part3-transforms/" class="series-arrow" title="Part3 Transforms"><i class="fas fa-chevron-left"></i></a><span class="series-title">Series</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="./" class="series-step current" title="."><span class="series-num">4</span><span class="series-label">.</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">4/6</span><a href="../part5-dashboards/" class="series-arrow" title="Part5 Dashboards"><i class="fas fa-chevron-right"></i></a></div></div>
+        <div class="hero-badges">
+            <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-scissors"></i> Stock Splits</span>
+            <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-coins"></i> Dividendes</span>
+            <span class="hero-badge hero-badge-red"><i class="fa-solid fa-code-merge"></i> Fusions &amp; Spin-offs</span>
+            <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calculator"></i> CRAF SQL</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+    </header>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <h2><i class="fa-solid fa-scissors" style="color:#0d9488"></i> The Illusion of The Crash</h2>
-        <p>In August 2020, Apple (AAPL) executed a 4-for-1 stock split. The price went from roughly $500 on Friday to
-            $125 on Monday. If our Go <code>opportunity-analyzer</code> looks purely at unadjusted closing prices, the
-            resulting momentum (-75% return) guarantees a massive "Sell/Short" signal, triggering catastrophic live
-            trading execution.</p>
-
-        <h2><i class="fa-solid fa-calculator" style="color:#0d9488"></i> Calculating Cumulative Adjustment Factors</h2>
-        <p>Instead of destructively overwriting the database history, we append a new pipeline step calculating the
-            <strong>Cumulative Ratio Factor (CRAS)</strong>. This guarantees our Execution Engine (Part 6) still knows
-            exactly what physical price level to send Limit Orders at today, while our AI (Part 5) reads perfectly
-            continuous "Adjusted" features.</p>
-
-        <pre><code class="language-sql">-- models/silver/fct_corporate_actions
-WITH splits AS (
-    SELECT symbol, ex_date, split_ratio FROM raw_zone.corporate_actions WHERE type = 'SPLIT'
-),
-cumulative_factors AS (
-    SELECT 
-        symbol,
-        ex_date,
-        -- EXP(SUM(LN(factor))) is the mathematically stable way to do cumulative products in SQL
-        EXP(SUM(LN(split_ratio)) OVER (
-            PARTITION BY symbol 
-            ORDER BY ex_date DESC
-            ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
-        )) AS cumulative_split_factor
-    FROM splits
-)
-SELECT * FROM cumulative_factors;
-</code></pre>
-        <p>By joining this factor to the Gold Mart (Part 3), the AI Agent successfully computes that a historical $100
-            price, subjected to a cumulative 4x split, is mathematically equivalent to $25 today. The AI’s RSI and
-            Bollinger Bands algorithms continue uninterrupted.</p>
-
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#0f766e;"><i class="fa-solid fa-flag-checkered"></i> Conclusion</h3>
-            <p>Our database now maps the raw reality of the exchange alongside the mathematically continuous reality
-                required by neural networks. No biases exist.</p>
-            <a href="../part5-dashboards/"
-                style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#0d9488; color:white; text-decoration:none; border-radius:8px; font-weight:600;">Next:
-                AI Dashboards & MCP &rarr;</a>
+    <!-- Series Bar -->
+    <div class="series-bar">
+        <div class="series-bar-inner">
+            <a href="../part3-transforms/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="../part3-transforms/" class="series-step"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="./" class="series-step current"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="../part5-dashboards/" class="series-step"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="../part6-operations/" class="series-step"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">4/6</span>
+            <a href="../part5-dashboards/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
         </div>
     </div>
-    <div class="article-footer">&copy; 2026 Market Watch.</div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+
+    <!-- FAB -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-play-circle"></i><span>Le Problème</span></a>
+            <a href="#taxonomy" class="fnav-item" data-section="taxonomy"><i class="fas fa-sitemap"></i><span>Taxonomie</span></a>
+            <a href="#splits" class="fnav-item" data-section="splits"><i class="fas fa-scissors"></i><span>Splits</span></a>
+            <a href="#dividends" class="fnav-item" data-section="dividends"><i class="fas fa-coins"></i><span>Dividendes</span></a>
+            <a href="#spinoffs-mergers" class="fnav-item" data-section="spinoffs-mergers"><i class="fas fa-code-merge"></i><span>Spin-offs &amp; Fusions</span></a>
+            <a href="#gold-integration" class="fnav-item" data-section="gold-integration"><i class="fas fa-crown"></i><span>Intégration Gold</span></a>
+            <a href="#data-sources" class="fnav-item" data-section="data-sources"><i class="fas fa-database"></i><span>Sources de Données</span></a>
+            <a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-circle-question"></i><span>Quiz</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <div class="container" style="max-width:920px; margin:-3rem auto 0; padding:2rem; background:white; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.05); position:relative;">
+
+        <!-- ============================================================ -->
+        <!-- INTRO                                                         -->
+        <!-- ============================================================ -->
+        <div id="intro">
+            <p style="font-size:1.1rem; line-height:1.8; color:#334155;">
+                Dans les parties précédentes, nous avons construit un pipeline robuste : les données OHLCV arrivent proprement en Silver, les snapshots SCD2 tracent l'historique des attributs. Mais notre <strong>backtester</strong> et notre <strong>moteur IA</strong> vont encore perdre de l'argent. Pourquoi ? Parce que le prix unadjusté d'Apple est passé de ~$500 à ~$125 du jour au lendemain en août 2020 — sans que rien ne change fondamentalement.
+            </p>
+
+            <div class="decision-card danger">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le Crash Fantôme d'Apple — Août 2020</h4>
+                <p style="color:#334155; margin:0 0 .75rem;">
+                    Apple (AAPL) a exécuté un split 4-pour-1 le 31 août 2020. Le prix clôture à ~$499 le vendredi 28 août. Le lundi 31 août, il ouvre à ~$127. Si votre algorithme de momentum calcule un rendement sur 3 jours : <strong>(127 - 499) / 499 = -74.5%</strong>. Signal de vente catastrophique généré automatiquement.
+                </p>
+                <p style="color:#334155; margin:0;">
+                    Sans ajustement, tous vos indicateurs techniques (RSI, Bollinger Bands, SMA crossovers) sont corrompus sur toute la période précédant le split. Votre backtester croit avoir découvert une opportunité de short fantastique. Un fonds qui tradait sur des données unadjustées a perdu des millions ainsi.
+                </p>
+            </div>
+        </div>
+
+        <!-- EChart: Split illusion -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-chart-line" style="color:#ca8a04;"></i> AAPL — Prix unadjusté vs. ajusté autour du split 4:1 d'août 2020</div>
+            <div id="splitIllusionChart" style="height:320px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAXONOMY                                                      -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="taxonomy"><i class="fa-solid fa-sitemap" style="color:#ca8a04;"></i> Taxonomie Complète</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-list" style="color:#ca8a04;"></i> Les 5 Familles de Corporate Actions</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Chaque type de corporate action a un impact mathématique différent sur les prix historiques. Les ignorer ou les traiter incorrectement est la principale source de biais de look-ahead dans les backtests institutionnels.
+        </p>
+
+        <div class="ca-grid">
+            <div class="ca-card ca-split">
+                <h4><i class="fa-solid fa-scissors"></i> Stock Split</h4>
+                <p>Division du nombre d'actions. Prix ajusté = prix / ratio. Les actions existantes sont multipliées, la valeur totale reste identique.</p>
+                <div>
+                    <span class="ca-badge">Exemple : AAPL 4:1 (2020)</span><br>
+                    <span class="ca-badge" style="margin-top:.3rem;">TSLA 3:1 (2022)</span>
+                </div>
+            </div>
+            <div class="ca-card ca-div">
+                <h4><i class="fa-solid fa-coins"></i> Dividende Cash</h4>
+                <p>Distribution de cash aux actionnaires. Le prix ex-dividende baisse du montant du dividende. Ajustement rétroactif de l'historique.</p>
+                <div>
+                    <span class="ca-badge">Exemple : MSFT 0.75$/action</span><br>
+                    <span class="ca-badge" style="margin-top:.3rem;">Dividende trimestriel</span>
+                </div>
+            </div>
+            <div class="ca-card ca-spin">
+                <h4><i class="fa-solid fa-arrow-turn-up"></i> Spin-off</h4>
+                <p>Scission d'une filiale en société indépendante. L'action mère perd de la valeur ; une nouvelle action naît. Deux séries de prix à gérer simultanément.</p>
+                <div>
+                    <span class="ca-badge">Exemple : PayPal / eBay (2015)</span><br>
+                    <span class="ca-badge" style="margin-top:.3rem;">Kyndryl / IBM (2021)</span>
+                </div>
+            </div>
+            <div class="ca-card ca-merge">
+                <h4><i class="fa-solid fa-code-merge"></i> Fusion / Acquisition</h4>
+                <p>Un ticker cesse d'exister et est absorbé par un autre. Les actionnaires reçoivent des actions de l'acquéreur, du cash, ou un mélange des deux.</p>
+                <div>
+                    <span class="ca-badge">Exemple : Twitter → X (2022)</span><br>
+                    <span class="ca-badge" style="margin-top:.3rem;">Activision → MSFT (2023)</span>
+                </div>
+            </div>
+            <div class="ca-card ca-delist">
+                <h4><i class="fa-solid fa-ban"></i> Delisting</h4>
+                <p>L'action est retirée de la cote. Faillite, privatisation, ou retrait volontaire. Le dernier prix valide est préservé mais l'action n'est plus tradable.</p>
+                <div>
+                    <span class="ca-badge">Exemple : SVB Financial (2023)</span><br>
+                    <span class="ca-badge" style="margin-top:.3rem;">Bais de Survivorship</span>
+                </div>
+            </div>
+        </div>
+
+        <table class="compare-table" style="margin-top:1.5rem;">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Impact Prix</th>
+                    <th>Facteur d'Ajustement</th>
+                    <th>Direction</th>
+                    <th>Fréquence</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Split N:1</strong></td>
+                    <td>Prix ÷ N</td>
+                    <td>1/N (ex: 1/4 pour 4:1)</td>
+                    <td>Prix baisse, volume monte</td>
+                    <td>Rare (&lt;1/an)</td>
+                </tr>
+                <tr>
+                    <td><strong>Reverse Split 1:N</strong></td>
+                    <td>Prix × N</td>
+                    <td>N (ex: 10 pour 1:10)</td>
+                    <td>Prix monte, volume baisse</td>
+                    <td>Très rare</td>
+                </tr>
+                <tr>
+                    <td><strong>Dividende Cash D$</strong></td>
+                    <td>Prix − D</td>
+                    <td>(P − D) / P</td>
+                    <td>Prix légèrement baisse</td>
+                    <td>Trimestriel à annuel</td>
+                </tr>
+                <tr class="highlight">
+                    <td><strong>Dividende + Split</strong></td>
+                    <td>Combiné</td>
+                    <td>Facteur composite</td>
+                    <td>Les deux effets</td>
+                    <td>Voir Yahoo CRAF</td>
+                </tr>
+                <tr>
+                    <td><strong>Spin-off (ratio r)</strong></td>
+                    <td>Prix × (1 − r)</td>
+                    <td>(1 − valeur_spin/prix)</td>
+                    <td>Prix mère baisse</td>
+                    <td>Très rare</td>
+                </tr>
+                <tr>
+                    <td><strong>Fusion (tout cash)</strong></td>
+                    <td>Série arrêtée</td>
+                    <td>N/A (dernier prix)</td>
+                    <td>Delisting</td>
+                    <td>Variable</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ============================================================ -->
+        <!-- SPLITS                                                        -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="splits"><i class="fa-solid fa-scissors" style="color:#6366f1;"></i> Stock Splits</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-calculator" style="color:#6366f1;"></i> Calcul des Facteurs d'Ajustement Cumulatifs</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            La clé de l'ajustement de splits est le <strong>Cumulative Ratio Adjustment Factor (CRAF)</strong>. Pour chaque barre historique, nous calculons le produit cumulatif de tous les ratios de splits qui se sont produits <em>après</em> cette date. Si Apple a fait un split 2:1 en 2014 et 4:1 en 2020, un prix de 1990 doit être divisé par 2 × 4 = 8.
+        </p>
+
+        <div class="formula-box">
+            <div class="formula-label">Produit cumulatif de ratios — Formule SQL stable</div>
+            <div class="formula-main">CRAF(date) = EXP( SUM( LN(split_ratio) ) OVER (ORDER BY ex_date DESC ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) )</div>
+            <div class="formula-sub">Équivalent à ∏(ratios après date) — EXP/LN évite les erreurs de floating point des produits itératifs</div>
+        </div>
+
+        <div class="pedagogy-box">
+            <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi EXP(SUM(LN(x))) au lieu d'un simple produit ?</h4>
+            <p style="color:#1e3a5f; margin:0; line-height:1.7;">
+                SQL n'a pas de fonction <span class="inline-code">PRODUCT()</span> analogue à <span class="inline-code">SUM()</span>. Une approche naïve avec une CTE récursive ou des self-joins est inefficace et sujette aux erreurs de floating point sur des longues séries (30+ ans). La transformation logarithmique convertit un produit en somme : <span class="inline-code">ln(a × b × c) = ln(a) + ln(b) + ln(c)</span>. La fonction <span class="inline-code">SUM()</span> fenêtrée est native, optimisée, et numériquement stable. L'exponentiation inverse (<span class="inline-code">EXP</span>) reconvertit en produit. C'est la même technique utilisée pour calculer les rendements composés et les annualisations de volatilité.
+            </p>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Calcul du CRAF (Cumulative Ratio Adjustment Factor)</span>
+            <pre><code class="language-sql">-- Table de référence des corporate actions
+-- Ingérée par le tap Go de la Partie 2 depuis Yahoo Finance / Polygon.io
+CREATE TABLE IF NOT EXISTS raw_zone.corporate_actions (
+    id              BIGSERIAL PRIMARY KEY,
+    symbol          VARCHAR(20) NOT NULL,
+    isin            CHAR(12),
+    ex_date         DATE        NOT NULL,    -- Date ex-action (premier jour SANS droit)
+    record_date     DATE,                    -- Date d'enregistrement
+    ca_type         VARCHAR(20) NOT NULL,    -- 'SPLIT', 'DIVIDEND', 'SPINOFF', 'MERGER'
+    -- Pour les splits : ratio = nb nouvelles actions / nb anciennes actions
+    -- Split 4:1 → ratio = 4.0 (le dénominateur d'ajustement du prix)
+    split_ratio     NUMERIC(10,6),
+    -- Pour les dividendes : montant en devise de l'action
+    dividend_amount NUMERIC(14,6),
+    dividend_currency CHAR(3),
+    -- Commentaire éditorial
+    description     TEXT,
+    provider_name   VARCHAR(50)  NOT NULL,
+    ingested_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index pour les jointures de fenêtre temporelle
+CREATE INDEX idx_ca_symbol_date ON raw_zone.corporate_actions (symbol, ex_date DESC);
+CREATE INDEX idx_ca_type        ON raw_zone.corporate_actions (ca_type, ex_date DESC);</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/silver/fct_split_adjustment_factors.sql</span>
+            <pre><code class="language-sql">{{ config(
+    materialized='table',
+    tags=['silver', 'corporate_actions']
+) }}
+
+WITH splits AS (
+    SELECT
+        symbol,
+        ex_date,
+        split_ratio,
+        -- Validation : ratio doit être positif et non-nul
+        CASE
+            WHEN split_ratio IS NULL OR split_ratio <= 0 THEN NULL
+            ELSE split_ratio
+        END AS validated_ratio
+    FROM {{ source('raw_zone', 'corporate_actions') }}
+    WHERE ca_type = 'SPLIT'
+      AND split_ratio IS NOT NULL
+      AND split_ratio > 0
+),
+
+-- Calcul du facteur cumulatif pour chaque événement
+-- La fenêtre DESC + UNBOUNDED FOLLOWING signifie :
+--   "pour ce split ET tous les splits FUTURS" = ajustement rétroactif
+cumulative_factors AS (
+    SELECT
+        symbol,
+        ex_date,
+        split_ratio,
+
+        -- CRAF = produit de TOUS les ratios >= ex_date (splits futurs inclus)
+        -- EXP(SUM(LN())) = produit cumulatif, numériquement stable
+        EXP(SUM(LN(validated_ratio)) OVER (
+            PARTITION BY symbol
+            ORDER BY ex_date DESC
+            ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+        )) AS craf_from_this_event,
+
+        -- Facteur d'ajustement AVANT cette date (pour ajuster les prix historiques)
+        -- Pour les dates < ex_date, diviser par ce facteur
+        EXP(SUM(LN(validated_ratio)) OVER (
+            PARTITION BY symbol
+            ORDER BY ex_date ASC
+            ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+        )) AS craf_for_historical_prices
+
+    FROM splits
+    WHERE validated_ratio IS NOT NULL
+)
+
+SELECT
+    symbol,
+    ex_date,
+    split_ratio,
+    craf_from_this_event,
+    craf_for_historical_prices,
+    -- Prix ajusté = prix brut / craf_for_historical_prices
+    -- C'est ce facteur qui s'applique à toutes les barres AVANT ex_date
+    ROUND(1.0 / craf_for_historical_prices, 8) AS price_adjustment_multiplier
+FROM cumulative_factors
+ORDER BY symbol, ex_date ASC</code></pre>
+        </div>
+
+        <p style="color:#334155; line-height:1.7;">
+            Maintenant, un modèle dbt peut joindre ce facteur aux barres Silver pour produire les prix ajustés :
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Application du CRAF aux prix historiques (vue d'exemple)</span>
+            <pre><code class="language-sql">-- Comment appliquer le facteur d'ajustement à une barre historique
+-- Utilisé en couche Gold (voir section suivante)
+
+WITH bars AS (
+    SELECT symbol, trade_date, open_price, high_price, low_price,
+           close_price, adj_close_price, volume
+    FROM silver_zone.fct_market_data_daily
+),
+
+-- Pour chaque barre, trouver le facteur d'ajustement cumulatif
+-- = produit de tous les splits qui se sont produits APRÈS trade_date
+split_factors AS (
+    SELECT
+        b.symbol,
+        b.trade_date,
+        -- COALESCE(factor, 1.0) = si pas de split après cette date → facteur = 1
+        COALESCE(
+            EXP(SUM(LN(ca.split_ratio)) FILTER (WHERE ca.ex_date > b.trade_date)),
+            1.0
+        ) AS cumulative_split_factor
+    FROM bars b
+    LEFT JOIN raw_zone.corporate_actions ca
+           ON ca.symbol = b.symbol
+          AND ca.ca_type = 'SPLIT'
+          AND ca.ex_date > b.trade_date
+    GROUP BY b.symbol, b.trade_date
+)
+
+-- Prix ajusté = prix brut / facteur cumulatif des splits FUTURS
+SELECT
+    b.symbol,
+    b.trade_date,
+    b.close_price                                          AS close_unadjusted,
+    ROUND(b.close_price / sf.cumulative_split_factor, 4)  AS close_split_adjusted,
+
+    -- Yahoo Finance "Adj Close" inclut déjà les dividendes ET les splits
+    -- Pour un backtester total return, utiliser adj_close_price directement
+    b.adj_close_price                                      AS close_total_return_adjusted,
+
+    -- Volumes ajustés en sens inverse : un split 4:1 × volume × 4
+    ROUND(b.volume * sf.cumulative_split_factor)           AS volume_adjusted,
+
+    sf.cumulative_split_factor
+
+FROM bars b
+JOIN split_factors sf USING (symbol, trade_date)</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DIVIDENDS                                                     -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="dividends"><i class="fa-solid fa-coins" style="color:#059669;"></i> Dividendes</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-hand-holding-dollar" style="color:#059669;"></i> Ajustement des Dividendes : Total Return vs. Price Return</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            L'ajustement des dividendes est plus subtil que les splits. Le prix baisse le jour ex-dividende du montant du dividende, mais cela représente un <em>transfert de richesse</em> aux actionnaires — pas une perte. Un backtester qui ne réintègre pas les dividendes sous-estime systématiquement le rendement total, particulièrement sur les actions à haut rendement ou sur les longues périodes.
+        </p>
+
+        <div class="formula-box">
+            <div class="formula-label">Facteur d'ajustement dividende (Dividend Adjustment Factor)</div>
+            <div class="formula-main">DAF(t) = (P_ex − D) / P_ex = 1 − (D / P_ex)</div>
+            <div class="formula-sub">P_ex = prix de clôture le jour précédant ex-date | D = montant du dividende | DAF &lt; 1 toujours</div>
+        </div>
+
+        <p style="color:#334155; line-height:1.7;">
+            Les facteurs dividendes s'appliquent de la même façon que les splits : cumulativement sur toute la période précédant chaque ex-date.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/silver/fct_dividend_adjustment_factors.sql</span>
+            <pre><code class="language-sql">{{ config(materialized='table', tags=['silver', 'corporate_actions']) }}
+
+WITH dividends AS (
+    SELECT
+        ca.symbol,
+        ca.ex_date,
+        ca.dividend_amount,
+
+        -- Prix de clôture la veille de l'ex-date (T-1)
+        -- C'est le prix "cum-dividend" — avant que la bourse retire le dividende
+        LAG(b.close_price, 0) OVER (
+            PARTITION BY b.symbol
+            ORDER BY b.trade_date
+        ) AS close_price_day_before
+
+    FROM {{ source('raw_zone', 'corporate_actions') }} ca
+    JOIN {{ ref('fct_market_data_daily') }} b
+      ON b.symbol = ca.symbol
+      -- Clôture de la veille de l'ex-date
+     AND b.trade_date = ca.ex_date - INTERVAL '1 day'
+    WHERE ca.ca_type = 'DIVIDEND'
+      AND ca.dividend_amount > 0
+),
+
+-- Dividend Adjustment Factor = (P_cum - D) / P_cum
+daf_computed AS (
+    SELECT
+        symbol,
+        ex_date,
+        dividend_amount,
+        close_price_day_before,
+        CASE
+            WHEN close_price_day_before > 0 THEN
+                (close_price_day_before - dividend_amount) / close_price_day_before
+            ELSE NULL
+        END AS daf_single_event     -- Facteur pour CET événement uniquement
+    FROM dividends
+    WHERE close_price_day_before IS NOT NULL
+      AND close_price_day_before > dividend_amount  -- sanity: dividende < prix
+),
+
+-- CRAF des dividendes : produit cumulatif de tous les DAF FUTURS
+-- (même logique que pour les splits)
+cumulative_daf AS (
+    SELECT
+        symbol,
+        ex_date,
+        dividend_amount,
+        daf_single_event,
+
+        EXP(SUM(LN(NULLIF(daf_single_event, 0))) OVER (
+            PARTITION BY symbol
+            ORDER BY ex_date ASC
+            ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+        )) AS cumulative_daf
+
+    FROM daf_computed
+    WHERE daf_single_event IS NOT NULL
+      AND daf_single_event > 0
+      AND daf_single_event < 1       -- Doit être entre 0 et 1
+)
+
+SELECT
+    symbol,
+    ex_date,
+    dividend_amount,
+    ROUND(daf_single_event::NUMERIC, 8)  AS daf_single,
+    ROUND(cumulative_daf::NUMERIC, 8)    AS cumulative_daf,
+    -- Prix ajusté total return = prix brut × cumulative_daf
+    -- (multiplier < 1 → ajuste les prix historiques à la baisse)
+    cumulative_daf                       AS price_multiplier_for_history
+FROM cumulative_daf
+ORDER BY symbol, ex_date ASC</code></pre>
+        </div>
+
+        <div class="decision-card">
+            <h4><i class="fa-solid fa-lightbulb"></i> Yahoo Finance "Adj Close" : Total Return déjà calculé</h4>
+            <p style="color:#334155; margin:0 0 .75rem;">
+                Bonne nouvelle : Yahoo Finance calcule déjà <span class="inline-code">Adj Close</span> en intégrant à la fois les splits <em>et</em> les dividendes (Total Return). Si votre tap Yahoo ingère correctement le champ <span class="inline-code">Adj Close</span> (fait en Partie 2), vous avez les prix total return directement.
+            </p>
+            <p style="color:#334155; margin:0;">
+                Quand calculer manuellement ? Quand vous utilisez des providers qui n'ajustent pas (BVC, certaines APIs crypto), ou quand vous voulez un contrôle granulaire de l'ajustement (ex: exclure les dividendes spéciaux, inclure uniquement les dividendes ordinaires).
+            </p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SPIN-OFFS & MERGERS                                          -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="spinoffs-mergers"><i class="fa-solid fa-code-merge" style="color:#ef4444;"></i> Spin-offs &amp; Fusions</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-shuffle" style="color:#ef4444;"></i> Événements Complexes : Spin-offs et Fusions</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Les spin-offs et fusions sont les corporate actions les plus complexes à gérer en base de données. Elles impliquent la création ou la disparition d'identifiants de titres — ce qui remet en cause notre stratégie ISIN/ticker.
+        </p>
+
+        <h3 style="color:#0f172a;">Spin-off : IBM scinde Kyndryl (2021)</h3>
+
+        <p style="color:#334155; line-height:1.7;">
+            Le 3 novembre 2021, IBM (ISIN US4592001014) a scindé sa division Infrastructure Services en une société indépendante : Kyndryl Holdings (ISIN US50155Q1004). Chaque actionnaire IBM a reçu 1 action KD pour 5 actions IBM. Le prix IBM a baissé d'environ $134 → $120 à l'ex-date.
+        </p>
+
+        <div class="step-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-title">Créer le nouvel instrument</div>
+                <div class="step-desc">Kyndryl (KD) est inséré dans <span class="inline-code">dim_instruments</span> avec <span class="inline-code">valid_from = ex_date</span>, ISIN = US50155Q1004.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-title">Calculer le ratio</div>
+                <div class="step-desc">Valeur du spin-off / valeur IBM avant ex-date. Facteur IBM = (120/134) ≈ 0.896.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-title">Ajuster IBM historique</div>
+                <div class="step-desc">Multiplier tous les prix IBM avant ex-date par le facteur spin-off ≈ 0.896 pour continuité.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div class="step-title">Démarrer KD à ex-date</div>
+                <div class="step-desc">La série de prix KD commence à l'ex-date. Pas d'historique avant. is_tradable passe de FALSE à TRUE.</div>
+            </div>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Enregistrement d'un spin-off dans la table corporate_actions</span>
+            <pre><code class="language-sql">-- Enregistrement du spin-off IBM → Kyndryl
+INSERT INTO raw_zone.corporate_actions (
+    symbol, isin, ex_date, record_date, ca_type,
+    split_ratio, description, provider_name
+) VALUES
+-- L'événement affecte IBM (action mère)
+(
+    'IBM',
+    'US4592001014',
+    '2021-11-03',   -- ex-date (premier jour ex-spin-off)
+    '2021-11-01',
+    'SPINOFF',
+    0.8955,         -- facteur d'ajustement : (120.05 / 134.04) = 0.8956
+    'IBM spins off infrastructure services as Kyndryl Holdings (KD). '
+    'Ratio: 1 KD share per 5 IBM shares. '
+    'IBM price adjustment factor: ~0.896',
+    'MANUAL_REVIEW'
+),
+-- Naissance du nouvel instrument Kyndryl
+-- (géré via le snapshot SCD2 de dim_instruments en Partie 3)
+(
+    'KD',
+    'US50155Q1004',
+    '2021-11-03',
+    '2021-11-01',
+    'SPINOFF_NEW',  -- Type custom : nouvel instrument issu d'un spin-off
+    NULL,
+    'Kyndryl Holdings first trading day. Spun off from IBM. '
+    'Opening price ~$28.10. is_tradable changes from FALSE to TRUE.',
+    'MANUAL_REVIEW'
+);</code></pre>
+        </div>
+
+        <h3 style="color:#0f172a;">Fusion : Gestion du Ticker Survivant</h3>
+
+        <p style="color:#334155; line-height:1.7;">
+            Pour une fusion tout-cash (ex: Microsoft acquiert Activision Blizzard — ATVI), la procédure est plus simple : la série de prix ATVI se termine à la date de clôture de la transaction. Le ticker ATVI est marqué <span class="inline-code">is_tradable = FALSE</span> via le mécanisme SCD2 de la Partie 3.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Clôture d'une série après fusion tout-cash</span>
+            <pre><code class="language-sql">-- Fusion Microsoft / Activision Blizzard — clôture ATVI (octobre 2023)
+INSERT INTO raw_zone.corporate_actions (
+    symbol, isin, ex_date, ca_type, dividend_amount, description, provider_name
+) VALUES (
+    'ATVI',
+    'US00507V1098',
+    '2023-10-13',   -- Dernier jour de trading ATVI
+    'MERGER',
+    95.00,          -- Rachat tout-cash à $95/action par Microsoft
+    'Microsoft acquires Activision Blizzard in all-cash deal. '
+    'ATVI shareholders receive $95.00/share in cash. '
+    'ATVI delisted after market close. Last price: $94.98.',
+    'MANUAL_REVIEW'
+);
+
+-- Le tap Meltano détectera que ATVI disparaît de l'API Yahoo
+-- Le snapshot dbt (Partie 3) avec invalidate_hard_deletes=true
+-- fermera automatiquement la ligne :
+--   dbt_valid_to = 2023-10-13
+--   is_tradable  = FALSE (propagé depuis la source)</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- GOLD INTEGRATION                                             -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="gold-integration"><i class="fa-solid fa-crown" style="color:#ca8a04;"></i> Intégration dans la Couche Gold</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-layer-group" style="color:#ca8a04;"></i> Intégrer les Ajustements dans le Mart Gold</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Toutes les tables de facteurs calculées en Silver sont maintenant combinées dans le mart Gold. Le mart expose directement les prix ajustés — les utilisateurs en aval (backtester, agent IA, dashboard) n'ont jamais à gérer les facteurs eux-mêmes.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/gold/mart_adjusted_prices.sql</span>
+            <pre><code class="language-sql">{{ config(
+    materialized='table',
+    tags=['gold', 'corporate_actions', 'ai_marts'],
+    post_hook="ANALYZE {{ this }}"
+) }}
+
+WITH bars AS (
+    SELECT
+        symbol, trade_date,
+        open_price, high_price, low_price, close_price,
+        adj_close_price,   -- Yahoo Total Return (splits + dividendes)
+        volume
+    FROM {{ ref('fct_market_data_daily') }}
+),
+
+-- Facteurs de splits par (symbol, trade_date)
+-- Pour chaque barre, on veut le produit des splits APRÈS cette date
+split_factors_by_bar AS (
+    SELECT
+        b.symbol,
+        b.trade_date,
+        COALESCE(
+            EXP(
+                SUM(LN(ca.split_ratio))
+                FILTER (WHERE ca.ex_date > b.trade_date AND ca.split_ratio > 0)
+            ),
+            1.0
+        ) AS cumulative_split_factor
+
+    FROM bars b
+    LEFT JOIN {{ source('raw_zone', 'corporate_actions') }} ca
+           ON ca.symbol = b.symbol
+          AND ca.ca_type = 'SPLIT'
+    GROUP BY b.symbol, b.trade_date
+),
+
+-- Facteurs de dividendes par (symbol, trade_date)
+div_factors_by_bar AS (
+    SELECT
+        b.symbol,
+        b.trade_date,
+        COALESCE(
+            EXP(
+                SUM(LN(NULLIF(daf.cumulative_daf, 0)))
+                FILTER (WHERE daf.ex_date > b.trade_date)
+            ),
+            1.0
+        ) AS cumulative_div_factor
+
+    FROM bars b
+    LEFT JOIN {{ ref('fct_dividend_adjustment_factors') }} daf
+           ON daf.symbol = b.symbol
+    GROUP BY b.symbol, b.trade_date
+)
+
+SELECT
+    b.symbol,
+    b.trade_date,
+
+    -- ═══ Prix BRUTS ═══
+    b.open_price                                                AS open_raw,
+    b.high_price                                                AS high_raw,
+    b.low_price                                                 AS low_raw,
+    b.close_price                                               AS close_raw,
+    b.volume                                                    AS volume_raw,
+
+    -- ═══ Ajustement splits uniquement ═══
+    ROUND(b.open_price  / sf.cumulative_split_factor, 4)       AS open_split_adj,
+    ROUND(b.high_price  / sf.cumulative_split_factor, 4)       AS high_split_adj,
+    ROUND(b.low_price   / sf.cumulative_split_factor, 4)       AS low_split_adj,
+    ROUND(b.close_price / sf.cumulative_split_factor, 4)       AS close_split_adj,
+    ROUND(b.volume      * sf.cumulative_split_factor)          AS volume_split_adj,
+
+    -- ═══ Ajustement Total Return (splits + dividendes) ═══
+    -- Option A : Yahoo Adj Close (recommandé si source Yahoo)
+    b.adj_close_price                                          AS close_total_return_yahoo,
+
+    -- Option B : Calcul manuel (pour providers sans Adj Close)
+    ROUND(b.close_price / sf.cumulative_split_factor
+                        * df.cumulative_div_factor, 4)         AS close_total_return_manual,
+
+    -- ═══ Métadonnées d'ajustement ═══
+    sf.cumulative_split_factor,
+    df.cumulative_div_factor,
+    ROUND((sf.cumulative_split_factor * (1 / NULLIF(df.cumulative_div_factor, 0)))::NUMERIC, 6)
+                                                               AS combined_adjustment_factor
+
+FROM bars b
+JOIN split_factors_by_bar sf USING (symbol, trade_date)
+JOIN div_factors_by_bar   df USING (symbol, trade_date)</code></pre>
+        </div>
+
+        <div class="alert-box">
+            <h4><i class="fa-solid fa-triangle-exclamation"></i> Attention : Ne jamais mélanger prix ajustés et bruts dans le même backtest</h4>
+            <p style="color:#334155; margin:0;">
+                Un backtest qui calcule le signal sur <span class="inline-code">close_total_return_adj</span> mais soumet les ordres sur <span class="inline-code">close_raw</span> aura un historique de performance irréel. Utilisez soit les prix ajustés pour les signaux <em>et</em> les ordres simulés, soit gardez les bruts partout. La convention institutionnelle : signaux sur Total Return Adj, ordres live sur Raw (le prix réel du marché).
+            </p>
+        </div>
+
+        <h3 style="color:#0f172a;">Vérification de l'Ajustement</h3>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Vérification des ajustements AAPL autour du split août 2020</span>
+            <pre><code class="language-sql">-- Validation : vérifier que les prix ajustés sont continus autour du split 4:1 AAPL
+-- Le prix ajusté ne devrait pas avoir de "saut" le 31 août 2020
+
+SELECT
+    trade_date,
+    close_raw,
+    close_split_adj,
+    -- Rendement journalier sur prix bruts (INCORRECT : montre le crash fantôme)
+    ROUND(
+        (close_raw - LAG(close_raw) OVER (ORDER BY trade_date)) /
+        NULLIF(LAG(close_raw) OVER (ORDER BY trade_date), 0) * 100,
+        2
+    ) AS daily_return_raw_pct,
+    -- Rendement journalier sur prix ajustés (CORRECT : continuité maintenue)
+    ROUND(
+        (close_split_adj - LAG(close_split_adj) OVER (ORDER BY trade_date)) /
+        NULLIF(LAG(close_split_adj) OVER (ORDER BY trade_date), 0) * 100,
+        2
+    ) AS daily_return_adj_pct,
+    cumulative_split_factor
+
+FROM gold_zone.mart_adjusted_prices
+WHERE symbol = 'AAPL'
+  AND trade_date BETWEEN '2020-08-25' AND '2020-09-04'
+ORDER BY trade_date;
+
+-- Résultat attendu :
+-- trade_date | close_raw | close_split_adj | daily_return_raw_pct | daily_return_adj_pct
+-- 2020-08-28 |   499.23  |    124.81       | +1.2%                | +1.2%   ← normal
+-- 2020-08-31 |   129.04  |    129.04       | -74.2% ← CRASH FANTÔME | +3.4% ← CORRECT
+-- 2020-09-01 |   134.18  |    134.18       | +3.9%                | +3.9%   ← normal
+
+-- Si daily_return_adj_pct montre aussi -74% : le facteur n'est pas appliqué correctement.</code></pre>
+        </div>
+
+        <!-- EChart: Adjustment factors timeline -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-chart-bar" style="color:#ca8a04;"></i> Facteurs d'ajustement cumulatifs — Apple (AAPL) sur 15 ans</div>
+            <div id="crafChart" style="height:320px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DATA SOURCES                                                  -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="data-sources"><i class="fa-solid fa-database" style="color:#0d9488;"></i> Sources de Données</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-satellite-dish" style="color:#0d9488;"></i> Sources de Données pour les Corporate Actions</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            La qualité de vos ajustements dépend directement de la qualité de votre source de corporate actions. Un split mal daté génère des barres mal ajustées sur des années entières.
+        </p>
+
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>Source</th>
+                    <th>Coût</th>
+                    <th>Splits</th>
+                    <th>Dividendes</th>
+                    <th>Spin-offs</th>
+                    <th>Fiabilité</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Yahoo Finance API</strong></td>
+                    <td>Gratuit</td>
+                    <td>✅ Adj Close auto</td>
+                    <td>✅ Adj Close auto</td>
+                    <td>⚠️ Partiel</td>
+                    <td>Bonne pour US</td>
+                </tr>
+                <tr>
+                    <td><strong>Polygon.io</strong></td>
+                    <td>$29+/mois</td>
+                    <td>✅ Endpoint dédié</td>
+                    <td>✅ Endpoint dédié</td>
+                    <td>✅ Bon coverage</td>
+                    <td>Très bonne</td>
+                </tr>
+                <tr>
+                    <td><strong>OpenFIGI / OPENFIGI API</strong></td>
+                    <td>Gratuit</td>
+                    <td>❌ Non</td>
+                    <td>❌ Non</td>
+                    <td>✅ Mapping ISIN</td>
+                    <td>Excellente (ISIN)</td>
+                </tr>
+                <tr class="highlight">
+                    <td><strong>Refinitiv / LSEG</strong></td>
+                    <td>$1000+/mois</td>
+                    <td>✅ Complet</td>
+                    <td>✅ Complet</td>
+                    <td>✅ Complet</td>
+                    <td>Institutionnelle</td>
+                </tr>
+                <tr>
+                    <td><strong>QuantLib + manuel</strong></td>
+                    <td>Gratuit + temps</td>
+                    <td>✅ Manuel</td>
+                    <td>✅ Manuel</td>
+                    <td>✅ Manuel</td>
+                    <td>Dépend de vous</td>
+                </tr>
+                <tr>
+                    <td><strong>BVC (Casablanca)</strong></td>
+                    <td>Gratuit</td>
+                    <td>⚠️ Sparse</td>
+                    <td>✅ Corporate actions publiées</td>
+                    <td>⚠️ Rare</td>
+                    <td>Bonne pour MAD</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">yaml — Tap Meltano pour Polygon.io Corporate Actions</span>
+            <pre><code class="language-yaml">plugins:
+  extractors:
+    - name: tap-polygon-corporate-actions
+      namespace: tap_polygon_corporate_actions
+      pip_url: tap-polygon
+      config:
+        api_key: $POLYGON_API_KEY
+        start_date: "1990-01-01"
+        tickers_list: "{{ env_var('SECURITIES_UNIVERSE') }}"   # Liste des tickers à surveiller
+
+      streams:
+        - name: stock_splits
+          endpoint: v3/reference/splits
+          # Polygon retourne : ticker, ex_date, split_from, split_to
+          # ratio = split_to / split_from (ex: 4:1 → ratio=4)
+
+        - name: dividends
+          endpoint: v3/reference/dividends
+          # Polygon retourne : ticker, ex_dividend_date, cash_amount, declaration_date
+
+      select:
+        - stock_splits.*
+        - dividends.*</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAKEAWAY                                                     -->
+        <!-- ============================================================ -->
+        <div class="takeaway-box">
+            <h3><i class="fa-solid fa-flag-checkered"></i> Points Clés de la Partie 4</h3>
+            <ul class="takeaway-list">
+                <li>
+                    <i class="fa-solid fa-check" style="color:#ca8a04; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>5 familles de corporate actions</strong> : splits, dividendes, spin-offs, fusions, delistings — chacune avec un impact mathématique distinct sur les prix et volumes historiques.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#ca8a04; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>EXP(SUM(LN(ratio)))</strong> est le pattern SQL correct pour les produits cumulatifs. Numériquement stable, utilise les fonctions fenêtre natives de PostgreSQL, pas de CTE récursif.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#ca8a04; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Yahoo Adj Close</strong> fournit le Total Return (splits + dividendes) gratuitement pour les marchés US. Pour les providers sans Adj Close (BVC, Binance), calculer manuellement avec les DAF.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#ca8a04; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Spin-offs et fusions</strong> impliquent la naissance/mort de tickers — gérés via le mécanisme SCD2 de la Partie 3 (<span class="inline-code">dbt snapshot</span> + <span class="inline-code">invalidate_hard_deletes</span>).</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#ca8a04; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span>La règle d'or : <strong>ne jamais mélanger prix ajustés et bruts</strong> dans un même backtest. Signaux sur Total Return Adj, ordres live sur Raw price.</span>
+                </li>
+            </ul>
+            <p style="margin-top:1.5rem; font-weight:600; color:#b45309;">
+                Le Securities Master est maintenant mathématiquement correct. Les modèles IA peuvent calculer des indicateurs continus sur 30 ans sans artefacts. Dans la Partie 5, nous exposons ces données via un serveur MCP et des dashboards Evidence.dev.
+            </p>
+        </div>
+
+        <a href="../part5-dashboards/" class="next-cta">
+            <div class="next-cta-icon">🤖</div>
+            <div class="next-cta-text">
+                <h3>Partie 5 — Interface IA : MCP &amp; Dashboards Evidence.dev</h3>
+                <p>Exposer le Securities Master aux LLMs via Model Context Protocol et construire des dashboards BI-as-code.</p>
+            </div>
+            <div class="next-cta-arrow"><i class="fas fa-arrow-right"></i></div>
+        </a>
+
+        <!-- ============================================================ -->
+        <!-- QUIZ                                                          -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#ca8a04;"></i> Auto-Évaluation</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-graduation-cap" style="color:#ca8a04;"></i> Quiz : Corporate Actions &amp; Ajustements</h2>
+        <p style="color:#64748b;">Cliquez sur chaque question pour révéler la réponse.</p>
+
+        <details class="quiz-item">
+            <summary>Pourquoi un split 4-pour-1 génère-t-il un faux signal de vente dans un algorithme de momentum ?</summary>
+            <div class="quiz-answer">
+                <strong>Le prix nominal chute de ~75% sans destruction de valeur réelle.</strong> Avant le split, Apple clôture à $499. Après le split 4:1, chaque actionnaire détient 4× plus d'actions valant $125 chacune. Valeur totale : identique. Mais un algorithme qui calcule le rendement 1 jour : (125 − 499)/499 = −74.5% interprétera cela comme un crash catastrophique et générera un signal SELL/SHORT massif. Sans ajustement des prix historiques, la continuité mathématique est brisée et tous les indicateurs techniques (RSI, MACD, SMA, Bollinger Bands) sont corrompus pour toute la période précédant le split.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Expliquez mathématiquement pourquoi EXP(SUM(LN(x))) est équivalent à un produit cumulatif.</summary>
+            <div class="quiz-answer">
+                <strong>Propriété fondamentale des logarithmes : ln(a × b × c) = ln(a) + ln(b) + ln(c).</strong> Donc : a × b × c = EXP(ln(a) + ln(b) + ln(c)) = EXP(SUM des LN). SQL ne dispose pas d'une fonction PRODUCT() fenêtrée native, mais possède SUM() fenêtrée. La transformation logarithmique convertit le produit en somme — calculable par SUM(). L'exponentiation inverse reconvertit. En pratique : si Apple a eu un split 2:1 en 2014 (ratio=2) et 4:1 en 2020 (ratio=4), le CRAF pour 2010 = EXP(LN(2) + LN(4)) = EXP(LN(8)) = 8. Prix 2010 ajusté = prix_brut / 8.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Quelle est la différence entre "Price Return Adjusted" et "Total Return Adjusted" pour un backtester ?</summary>
+            <div class="quiz-answer">
+                <strong>Price Return Adjusted inclut uniquement les splits. Total Return Adjusted inclut splits ET dividendes réinvestis.</strong> Pour un backtester de momentum sur actions à faibles dividendes (tech), la différence est minime sur 1-2 ans. Sur des actions à haut dividende (utilities, REITs) ou sur 20+ ans, la différence est massive : les dividendes représentent 40-60% du rendement total historique du S&amp;P 500. Un backtest qui ignore les dividendes sous-estime systématiquement la performance des stratégies buy-and-hold et des stratégies de revenus. Yahoo Finance "Adj Close" intègre les deux (Total Return). Pour construire un indice ou un benchmark cohérent, toujours utiliser Total Return.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Comment le Securities Master gère-t-il un spin-off qui crée un nouveau ticker ?</summary>
+            <div class="quiz-answer">
+                <strong>En combinant trois mécanismes :</strong> (1) La table <span class="inline-code">corporate_actions</span> enregistre l'événement spin-off avec le facteur d'ajustement de l'action mère. (2) Le nouveau ticker (ex: KD pour Kyndryl) est inséré dans la source Bronze avec <span class="inline-code">ingested_at = ex_date</span>. Le snapshot dbt de la Partie 3 crée automatiquement une nouvelle ligne dans <span class="inline-code">dim_instruments_snapshot</span> avec <span class="inline-code">dbt_valid_from = ex_date</span> et <span class="inline-code">is_tradable = TRUE</span>. (3) L'action mère (IBM) voit ses prix historiques multipliés par le facteur spin-off dans le mart Gold. La série de prix KD commence à ex-date sans historique antérieur — ce qui est mathématiquement correct.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Dans quel sens le volume est-il ajusté lors d'un split, et pourquoi ?</summary>
+            <div class="quiz-answer">
+                <strong>En sens inverse du prix : volume_ajusté = volume_brut × facteur_split.</strong> Un split 4:1 multiplie le nombre d'actions en circulation par 4. Pour maintenir la continuité des indicateurs de liquidité (ADV, volume $ = volume × prix), le volume historique doit aussi être multiplié par 4. Ainsi : volume_ajusté × close_split_adj = volume_brut × close_brut = dollar volume constant. Si on n'ajustait pas le volume, le Dollar Volume semblerait avoir chuté de 75% au moment du split — ce qui donnerait l'illusion d'une forte baisse de liquidité.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Pourquoi le Dividend Adjustment Factor (DAF) est-il toujours strictement inférieur à 1 ?</summary>
+            <div class="quiz-answer">
+                <strong>Parce que le prix ex-dividende est toujours inférieur au prix cum-dividende.</strong> La formule DAF = (P_ex − D) / P_ex = 1 − (D/P_ex). Comme D &gt; 0 et P_ex &gt; 0, DAF est toujours &lt; 1. Physiquement : le dividende est un transfert de richesse de la société aux actionnaires. La valeur boursière de la société diminue du montant distribué à l'ex-date. Pour rendre l'historique continu (comme si le dividende avait été réinvesti dans l'action), les prix antérieurs à l'ex-date sont multipliés par DAF — les ramenant à la baisse pour correspondre au niveau post-dividende. Un DAF = 0.99 pour un dividende de 1% est typique d'une action à dividende modéré.
+            </div>
+        </details>
+
+    </div><!-- /.container -->
+
+    <!-- Series Bar (bottom) -->
+    <div class="series-bar" style="margin-top:3rem;">
+        <div class="series-bar-inner">
+            <a href="../part3-transforms/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="../part3-transforms/" class="series-step"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="./" class="series-step current"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="../part5-dashboards/" class="series-step"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="../part6-operations/" class="series-step"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">4/6</span>
+            <a href="../part5-dashboards/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
     <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
 
-  
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part3-transforms/" class="series-arrow" title="Part3 Transforms"><i class="fas fa-chevron-left"></i></a><span class="series-title">Series</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="./" class="series-step current" title="."><span class="series-num">4</span><span class="series-label">.</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">4/6</span><a href="../part5-dashboards/" class="series-arrow" title="Part5 Dashboards"><i class="fas fa-chevron-right"></i></a></div></div>
-<footer class="article-footer">
-    &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
-    Ceci n'est pas un conseil financier.
-    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
-  </footer><script src="/assets/tag-renderer.js"></script>
+    <script>
+    // ── FAB ──────────────────────────────────────────────────────────────────
+    (function() {
+        var btn = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        if (!btn || !menu) return;
+        btn.addEventListener('click', function(e) { e.stopPropagation(); menu.classList.toggle('open'); });
+        document.addEventListener('click', function() { menu.classList.remove('open'); });
+        menu.addEventListener('click', function() { menu.classList.remove('open'); });
+    })();
+
+    // ── ECharts : Split Illusion ──────────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('splitIllusionChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+
+        // Simulated AAPL prices around the Aug 2020 4:1 split
+        var dates = ['Aug 24','Aug 25','Aug 26','Aug 27','Aug 28',
+                     'Aug 31','Sep 1','Sep 2','Sep 3','Sep 4'];
+        var rawPrices     = [503, 497, 499, 504, 499, 129, 134, 131, 120, 120];
+        var adjPrices     = [125.75, 124.25, 124.75, 126.0, 124.75, 129, 134, 131, 120, 120];
+
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', formatter: function(p) {
+                var s = p[0].axisValue + '<br>';
+                p.forEach(function(d) { s += d.marker + d.seriesName + ': $' + d.value + '<br>'; });
+                return s;
+            }},
+            legend: { data: ['Prix Brut (Unadjusted)', 'Prix Ajusté (Split-Adj)'], bottom: 0 },
+            grid: { top: 30, left: 70, right: 30, bottom: 50 },
+            xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10 } },
+            yAxis: { type: 'value', name: 'Prix ($)', axisLabel: { fontSize: 10 } },
+            series: [
+                {
+                    name: 'Prix Brut (Unadjusted)',
+                    type: 'line', data: rawPrices,
+                    lineStyle: { color: '#ef4444', width: 2 },
+                    itemStyle: { color: '#ef4444' },
+                    markLine: { data: [{ xAxis: 'Aug 31', label: { formatter: '← Split 4:1', color: '#ef4444' } }] }
+                },
+                {
+                    name: 'Prix Ajusté (Split-Adj)',
+                    type: 'line', data: adjPrices,
+                    lineStyle: { color: '#0d9488', width: 2 },
+                    itemStyle: { color: '#0d9488' }
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ── ECharts : CRAF Timeline ───────────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('crafChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+
+        var years = ['2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'];
+        // AAPL historical splits: 7:1 in 2014, 4:1 in 2020
+        // CRAF looking forward from each year:
+        // Before 2014: factor = 7 * 4 = 28
+        // 2014-2019: factor = 4 (only the 2020 split ahead)
+        // 2020+: factor = 1 (no more splits)
+        var craf = [28, 28, 28, 28, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1];
+        var adjMultiplier = craf.map(function(f) { return +(1/f).toFixed(4); });
+
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['Facteur Split Cumulatif', 'Multiplicateur Prix (1/CRAF)'], bottom: 0 },
+            grid: { top: 30, left: 70, right: 60, bottom: 50 },
+            xAxis: { type: 'category', data: years, axisLabel: { fontSize: 10 } },
+            yAxis: [
+                { type: 'value', name: 'CRAF', position: 'left', axisLabel: { fontSize: 10 } },
+                { type: 'value', name: 'Multiplicateur', position: 'right', axisLabel: { fontSize: 10 } }
+            ],
+            series: [
+                {
+                    name: 'Facteur Split Cumulatif',
+                    type: 'bar', yAxisIndex: 0, data: craf,
+                    itemStyle: { color: function(p) { return p.data > 4 ? '#6366f1' : p.data > 1 ? '#f59e0b' : '#0d9488'; }, borderRadius: [4,4,0,0] },
+                    label: { show: true, position: 'top', fontSize: 10, formatter: '{c}×' }
+                },
+                {
+                    name: 'Multiplicateur Prix (1/CRAF)',
+                    type: 'line', yAxisIndex: 1, data: adjMultiplier,
+                    lineStyle: { color: '#ef4444', width: 2 },
+                    itemStyle: { color: '#ef4444' }
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+    </script>
 </body>
-
 </html>

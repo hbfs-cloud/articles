@@ -1,209 +1,140 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="us,tech" data-tab="tech">
+<html lang="en" data-tags="us,tech,data-engineering,go,meltano,postgresql" data-tab="tech">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pipelines & Ingestion | Building a Securities Master — Part 2/6 | Market Watch</title>
-    <meta name="description"
-        content="Part 2/6: Writing high-concurrency custom Go extractors. Packaging Go with Meltano in Docker. Orchestrating the DAG with Apache Airflow on HashiCorp Nomad.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipelines — Go Taps, Meltano &amp; Nomad | Building a Securities Master — Part 2/6 | Market Watch</title>
+  <meta name="description"
+    content="Building a Securities Master series — Part 2/6: Custom Go Singer taps for high-concurrency ingestion, Meltano EL pipelines, Docker packaging, and Nomad periodic orchestration.">
+  <meta property="og:title" content="Pipelines — Go Taps, Meltano &amp; Nomad | Building a Securities Master — Part 2/6 | Market Watch">
+  <meta property="og:description" content="Python cannot ingest 100,000 tickers concurrently. Learn to write custom Go Singer taps, package them with Meltano, and orchestrate nightly runs with HashiCorp Nomad.">
+  <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/tech/securities-master/part2-pipelines/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="https://market-watch.xyz/favicon.ico">
 
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet">
+  <script>(function (w, d, s, l, i) {
+      w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+      var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+      j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+      f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-            margin: 0;
-        } .series-link.upcoming {
-            opacity: 0.5;
-            pointer-events: none;
-        }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
-            text-align: center;
-        }
+  <style>
+    pre[class*="language-"], code[class*="language-"] {
+      background: #042f2e !important; border: 1px solid #115e59; border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6;
+    }
+    pre[class*="language-"] { padding: 1.5rem; margin: 0; overflow-x: auto; }
+    code[class*="language-"] { border: none; }
+    .code-label { display: block; font-size: 0.65rem; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 0.5rem; }
+    .code-block-wrapper { margin: 1.5rem 0; }
+  </style>
 
-        .hero-date {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #0d9488;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 1rem;
-        }
+  <link rel="stylesheet" href="/assets/report.css">
 
-        .hero-title {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #0f172a;
-            margin: 0 0 1rem;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-top: -3rem;
-            position: relative;
-        }
-
-        h2 {
-            font-size: 1.8rem;
-            color: #0f172a;
-            margin-top: 2.5rem;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        h3 {
-            font-size: 1.3rem;
-            color: #334155;
-            margin-top: 2rem;
-        }
-
-        p {
-            line-height: 1.7;
-            color: #475569;
-            font-size: 1.05rem;
-        }
-
-        pre[class*="language-"] {
-            background: #042f2e !important;
-            border: 1px solid #115e59;
-            border-radius: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            overflow-x: auto;
-        }
-
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            color: #0d9488;
-            background: #ccfbf1;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-
-        .takeaway-box {
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-            border: 1px solid #0d9488;
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .takeaway-box h3 {
-            color: #0f766e;
-            margin-top: 0;
-        }
-
-        .download-card {
-            background: #f8fafc;
-            border: 1px dashed #94a3b8;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .download-card-info h4 {
-            margin: 0 0 0.5rem 0;
-            color: #0f172a;
-            font-size: 1.1rem;
-        }
-
-        .download-card-info p {
-            margin: 0;
-            color: #64748b;
-            font-size: 0.9rem;
-            max-width: 500px;
-            line-height: 1.5;
-        }
-
-        .download-btn {
-            background: #0d9488;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            white-space: nowrap;
-        }
-
-        .download-btn:hover {
-            background: #0f766e;
-        }
-
-        .footer-bar {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-            font-size: 0.8rem;
-        }
-    </style>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-    </head>
+  <style>
+    .series-link.upcoming { opacity: 0.5; pointer-events: none; }
+    .hero-section { padding: 4rem 2rem 8rem; background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align: center; }
+    .hero-date { font-size: 0.85rem; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+    .hero-badges { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700; }
+    .hero-badge-teal { background: rgba(13,148,136,0.1); color: #0d9488; border: 1px solid rgba(13,148,136,0.2); }
+    .hero-badge-blue { background: rgba(37,99,235,0.1); color: #2563eb; border: 1px solid rgba(37,99,235,0.2); }
+    .hero-badge-red { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+    .hero-badge-orange { background: rgba(249,115,22,0.1); color: #f97316; border: 1px solid rgba(249,115,22,0.2); }
+    .hero-badge-purple { background: rgba(147,51,234,0.1); color: #9333ea; border: 1px solid rgba(147,51,234,0.2); }
+    .section-divider { display: flex; align-items: center; gap: 1rem; margin: 3rem 0 2rem; color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+    .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin: 2rem 0; }
+    .compare-table th { background: #1e293b; color: white; padding: 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .compare-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
+    .compare-table tr:nth-child(even) td { background: #f8fafc; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-winner { background: #f0fdfa !important; }
+    .compare-winner td { font-weight: 700; color: #0d9488; }
+    .formula-box { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1.5rem 2rem; border-radius: 12px; margin: 1.5rem 0; text-align: center; font-size: 1.2rem; font-weight: 700; }
+    .formula-box .formula-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; font-weight: 600; display: block; }
+    .formula-box .formula-highlight { color: #5eead4; }
+    .takeaway-box { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border: 1px solid #0d9488; border-radius: 16px; padding: 2rem; margin: 2rem 0; }
+    .takeaway-box h3 { color: #0f766e; margin-top: 0; }
+    .takeaway-list { list-style: none; padding: 0; margin: 0; }
+    .takeaway-list li { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; font-size: 0.95rem; color: #334155; line-height: 1.6; border-bottom: 1px solid rgba(13,148,136,0.15); }
+    .takeaway-list li:last-child { border-bottom: none; }
+    .takeaway-list li i { color: #0d9488; margin-top: 0.2rem; flex-shrink: 0; }
+    .takeaway-list li code { font-size: 0.8rem; background: rgba(13,148,136,0.1); padding: 0.1rem 0.4rem; border-radius: 4px; color: #0f766e; }
+    .next-cta { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; border-radius: 16px; margin: 2rem 0; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; }
+    .next-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(13,148,136,0.3); }
+    .next-cta .next-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.85; }
+    .next-cta .next-title { font-size: 1.25rem; font-weight: 800; }
+    .next-cta i { font-size: 1.5rem; }
+    .step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0; }
+    .step-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; text-align: center; transition: all 0.3s; border-top: 4px solid #0d9488; }
+    .step-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -8px rgba(0,0,0,0.12); }
+    .step-number { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: white; margin: 0 auto 0.75rem; }
+    .step-card h4 { font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem; }
+    .step-card p { font-size: 0.85rem; color: #64748b; line-height: 1.5; margin: 0; }
+    .decision-card { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+    .decision-card h4 { color: #0f766e; margin: 0 0 0.5rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+    .decision-card p { font-size: 0.9rem; color: #334155; margin: 0; line-height: 1.6; }
+    .checklist { list-style: none; padding: 0; margin: 1.5rem 0; }
+    .checklist li { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0; font-size: 0.95rem; color: #334155; line-height: 1.5; }
+    .checklist li i { margin-top: 0.15rem; flex-shrink: 0; }
+    details { margin: 0.75rem 0; }
+    details summary { cursor: pointer; padding: 1rem 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-weight: 700; color: #0f172a; font-size: 0.95rem; transition: all 0.2s; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before { content: '\f059'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #0d9488; margin-right: 0.75rem; }
+    details[open] summary { border-color: #0d9488; background: #f0fdfa; border-radius: 12px 12px 0 0; }
+    details .quiz-answer { padding: 1rem 1.25rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 0 0 12px 12px; font-size: 0.9rem; color: #334155; line-height: 1.7; }
+    .singer-msg { background: #0f172a; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 0.75rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; color: #e2e8f0; border-left: 4px solid #0d9488; overflow-x: auto; }
+    .msg-type { color: #5eead4; font-weight: 700; }
+    .msg-key { color: #93c5fd; }
+    .msg-val { color: #86efac; }
+    .msg-num { color: #fbbf24; }
+    .msg-comment { color: #475569; font-style: italic; }
+    .source-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .source-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden; }
+    .source-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .source-card.yahoo::before { background: #7c3aed; }
+    .source-card.bvc::before { background: #dc2626; }
+    .source-card.binance::before { background: #ca8a04; }
+    .source-card.stockanalysis::before { background: #0d9488; }
+    .source-card h4 { margin: 0 0 0.5rem; font-size: 0.95rem; font-weight: 700; color: #0f172a; }
+    .source-card .source-meta { font-size: 0.82rem; color: #64748b; line-height: 1.7; }
+    .source-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-right: 0.25rem; margin-bottom: 0.25rem; }
+    @media (max-width:768px) {
+      .hero-section { padding: 2.5rem 1rem 5rem; }
+      .hero-section h1 { font-size: 1.8rem !important; }
+      .formula-box { font-size: 1rem; padding: 1rem 1.25rem; }
+      .next-cta { flex-direction: column; text-align: center; }
+      .step-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width:480px) {
+      .hero-section h1 { font-size: 1.4rem !important; }
+      .step-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
 
 <body>
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-    <nav class="brand-bar">
+  <nav class="brand-bar">
     <div class="brand-bar-inner">
       <a href="/" class="brand-logo">
         <img src="/logo.svg" alt="" width="36" height="36">
@@ -213,387 +144,1424 @@
         <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
       </div>
     </div>
-  </nav><div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+  </nav>
 
-    
-
-    <div class="hero-section">
-        <div class="hero-date">Part 2 of 6</div>
-        <h1 class="hero-title">High-Velocity Ingestion: <br>Go, Meltano, and Airflow on Nomad</h1>
-        <p style="color:#475569; font-size:1.1rem; max-width:800px; margin:0 auto;">
-            Python cannot scale to fetch 100,000 instruments concurrently. We tackle ingestion with custom Go
-            Extractors, package them into Meltano Docker images, and orchestrate complex ETL DAGs using Apache Airflow
-            on HashiCorp Nomad.
-        </p>
+  <div class="hero-section">
+    <div class="hero-date"><i class="fa-brands fa-golang" style="margin-right:0.4rem;"></i> Building a Securities Master &mdash; Part 2 of 6</div>
+    <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:900px;">
+      Pipelines &mdash; Go Taps, Meltano &amp; Nomad Orchestration</h1>
+    <p style="font-size:1.15rem; color:#64748b; max-width:800px; margin:0 auto; line-height:1.7;">
+      Python cannot ingest 100,000 tickers concurrently without hitting the GIL wall. Learn to write custom Go Singer taps,
+      package them inside Meltano, and orchestrate nightly pipelines with HashiCorp Nomad &mdash; from raw API chaos to
+      a validated PostgreSQL raw zone in under 10 minutes.</p>
+    <div class="hero-badges">
+      <span class="hero-badge" style="border-color:#00ADD8;color:#00ADD8;background:rgba(0,173,216,0.1);"><i class="fa-brands fa-golang"></i> Go Concurrency</span>
+      <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-pipe-section"></i> Singer Protocol</span>
+      <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-box"></i> Meltano EL</span>
+      <span class="hero-badge hero-badge-red"><i class="fa-solid fa-server"></i> Nomad Batch Jobs</span>
+      <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-droplet"></i> Incremental Extraction</span>
+      <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-elephant"></i> Raw Zone PostgreSQL</span>
     </div>
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part1-foundations/" class="series-arrow" title="Part1 Foundations"><i class="fas fa-chevron-left"></i></a><span class="series-title">Securities
-            Master</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="./" class="series-step current" title="."><span class="series-num">2</span><span class="series-label">.</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">2/6</span><a href="../part3-transforms/" class="series-arrow" title="Part3 Transforms"><i class="fas fa-chevron-right"></i></a></div></div>
+    <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center;"></div>
+  </div>
 
-    <div class="container">
-        <p>In <strong>Part 1</strong>, we defined what a point-in-time correct architecture looks like, specifically
-            engineered to feed our <strong>AI Strategy Agent</strong>. The system relies on a Go-based
-            <code>opportunity-analyzer</code> finding top momentum candidates, followed by Python cluster algorithms
-            finding actionable discriminants. However, observing tier-1 hedge fund codebases reveals massive complexity.
-            We must model
-            <code>EQUITY</code>, <code>ETF</code>, <code>FUTURE</code>, <code>CRYPTO</code>, and more across completely
-            independent Multi-Allocation strategies (e.g. US Stocks, EU Stocks, Global ETFs).
-        </p>
+  <div class="series-bar"><div class="series-bar-inner">
+    <a href="../part1-foundations/" class="series-arrow" title="Part 1 — Foundations"><i class="fas fa-chevron-left"></i></a>
+    <span class="series-title">Securities Master</span>
+    <div class="series-steps">
+      <a href="../part1-foundations/" class="series-step" title="Foundations"><span class="series-num">1</span><span class="series-label">Foundations</span></a>
+      <a href="./" class="series-step current" title="Pipelines"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+      <a href="../part3-transforms/" class="series-step" title="Transforms"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+      <a href="../part4-corporate-actions/" class="series-step" title="Corporate Actions"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+      <a href="../part5-dashboards/" class="series-step" title="AI Interface"><span class="series-num">5</span><span class="series-label">AI Interface</span></a>
+      <a href="../part6-operations/" class="series-step" title="Operations"><span class="series-num">6</span><span class="series-label">Operations</span></a>
+    </div>
+    <span class="series-counter">2/6</span>
+    <a href="../part3-transforms/" class="series-arrow" title="Part 3 — Transforms"><i class="fas fa-chevron-right"></i></a>
+  </div></div>
 
-        <p>When ingesting data for this massive universe across multiple disparate providers (Yahoo Finance,
-            StockAnalysis, Casablanca Bourse, Binance, FRED), standard Python ELT loops (like Airbyte or basic Python
-            Singer Taps) fail due to execution speed and Global Interpreter Lock (GIL) networking bottlenecks.</p>
+  <div class="container">
 
-        <p>Our hedge-fund grade solution involves:</p>
-        <ol>
-            <li><strong>Raw Zone Database Schema</strong> (dump first, transform later).</li>
-            <li><strong>Custom Go Meltano Extractor</strong> handling parallel symbol lists without GIL locks.</li>
-            <li><strong>Multi-Allocation Aware DAGs</strong>: Fetching entirely isolated data lakes per strategy (e.g.
-                <code>sync_eu_stocks</code> vs <code>sync_crypto</code>).
-            </li>
-            <li><strong>Workflow Orchestration</strong> with Apache Airflow firing highly isolated Docker containers
-                physically executed on HashiCorp Nomad compute nodes.</li>
-        </ol>
+    <!-- ============================================================ -->
+    <!-- SECTION 1: WHY PYTHON FAILS                                   -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="python-problem"><i class="fa-solid fa-triangle-exclamation" style="color:#0d9488;"></i> The Python Bottleneck</div>
 
-        <!-- ========================================== -->
-        <h2><i class="fa-solid fa-code"></i> The Raw PostgreSQL Schema</h2>
-        <p>In the Modern Data Stack paradigm (ELT), we extract and load purely raw data first. Complex joins and SCD
-            Type 2 logic are handled by dbt subsequently. Our raw ingestion tables are optimized for ultra-fast
-            <code>COPY</code> commands.
-        </p>
+    <div class="content-card">
+      <h2><i class="fa-solid fa-stopwatch" style="color:#0d9488;"></i> 5.5 Hours vs. 7 Minutes</h2>
 
-        <pre><code class="language-sql">-- raw_zone.instruments
+      <p>In Part 1 we designed a securities master covering <strong>~30,000 instruments</strong> across equities, ETFs, futures,
+        and crypto. Ingesting that universe daily is a throughput problem&mdash;and the naive Python approach fails spectacularly.</p>
+
+      <p>Consider a standard Python ELT loop calling the Yahoo Finance API for each ticker:</p>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Python — Sequential Ingestion (naive)</div>
+        <pre><code class="language-python">import requests
+
+symbols = load_universe()  # 10,000 symbols
+
+for sym in symbols:
+    resp = requests.get(f"https://query2.finance.yahoo.com/v8/finance/chart/{sym}")
+    store(resp.json())      # ~2s per symbol (network round-trip + parsing)
+
+# Total: 10,000 × 2s = 20,000s ≈ 5.5 hours
+# The market opens at 09:30. Your data is stale by noon.</code></pre>
+      </div>
+
+      <p>The "obvious" fix is <code>asyncio</code>. But Python's Global Interpreter Lock (GIL) means only one thread
+        of Python bytecode can run at a time. <code>asyncio</code> releases the GIL during IO, so concurrent
+        coroutines help&mdash;but it requires <em>every library in your call chain</em> to be async-native. Most
+        financial libraries (requests, yfinance, psycopg2, TA-Lib) use blocking C extensions that cannot yield to the
+        event loop. You end up either blocking the entire event loop or spawning heavyweight OS processes.</p>
+
+      <div class="formula-box">
+        <div class="formula-label">Daily Throughput at 50 Workers</div>
+        Python asyncio: <span class="formula-highlight">~400 symbols/min</span>
+        &nbsp;&nbsp;&mdash;&nbsp;&nbsp;
+        Go goroutines: <span class="formula-highlight">~3,000 symbols/min</span>
+        &nbsp;&nbsp;&mdash;&nbsp;&nbsp;
+        Speedup: <span class="formula-highlight">7.5&times;</span>
+      </div>
+
+      <p>Go solves this at the language level. Goroutines are multiplexed onto OS threads by the Go runtime scheduler.
+        There is no GIL. A Go goroutine starts at ~2 KB of stack; 50,000 concurrent goroutines cost ~100 MB of RAM.
+        The equivalent in Python threads would require ~400 GB.</p>
+
+      <div id="chartThroughput" style="width:100%;height:320px;margin:1.5rem 0;"></div>
+
+      <div class="step-grid">
+        <div class="step-card">
+          <div class="step-number"><i class="fa-solid fa-lock"></i></div>
+          <h4>Python GIL</h4>
+          <p>Only one thread runs Python bytecode at a time. True IO parallelism requires multiprocessing (8 MB/process).</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number"><i class="fa-brands fa-golang"></i></div>
+          <h4>Go Goroutines</h4>
+          <p>Start at 2 KB. Runtime schedules 50,000 of them. No GIL. Channels for safe cross-goroutine communication.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number"><i class="fa-solid fa-music"></i></div>
+          <h4>Singer Protocol</h4>
+          <p>JSON to stdout. Language-agnostic contract. Meltano pipes it to PostgreSQL. Go writes, Python loads.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number"><i class="fa-solid fa-server"></i></div>
+          <h4>Nomad Batch</h4>
+          <p>One Docker container per allocation. Isolated retries. No Airflow overhead. Native periodic cron semantics.</p>
+        </div>
+      </div>
+
+      <div class="decision-card">
+        <h4><i class="fa-solid fa-lightbulb"></i> Why not Python asyncio + aiohttp?</h4>
+        <p>You can get reasonable throughput for pure HTTP with async Python. But the moment you add custom CSV parsing
+          (BVC format), binary WebSocket streams (Binance), or exception handling that doesn't leak coroutines, the
+          complexity becomes unmanageable. Go's type system, <code>sync.WaitGroup</code>, and buffered channels make
+          concurrent pipelines trivial to reason about. The resulting 8 MB static binary starts in milliseconds&mdash;ideal
+          for Nomad ephemeral batch jobs where startup time is billed against your SLO.</p>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 2: RAW ZONE SCHEMA                                    -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="raw-zone"><i class="fa-solid fa-database" style="color:#0d9488;"></i> Raw Zone Schema</div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-inbox" style="color:#0d9488;"></i> Dump First, Transform Later</h2>
+
+      <p>The ELT philosophy is deliberately humble: <em>never transform data you haven't persisted first</em>. If a dbt
+        model has a bug, fix the SQL and re-run&mdash;the raw data is still there. In classic ETL, a transform bug before
+        loading means re-hitting the API. The raw zone in PostgreSQL is optimized for one thing: <strong>fast bulk
+        inserts via <code>COPY</code></strong>. No foreign keys, no complex triggers. Just land the data.</p>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">SQL — raw_zone schema creation</div>
+        <pre><code class="language-sql">CREATE SCHEMA raw_zone;
+
+-- ─── Reference data: instrument metadata from any provider ────────────────────
 CREATE TABLE raw_zone.instruments (
-    external_id VARCHAR(100),       -- e.g. BVC Drupal ID, Yahoo ticker
-    provider_name VARCHAR(50),      -- 'YAHOO', 'BVC', 'STOCKANALYSIS'
-    symbol VARCHAR(50), 
-    isin VARCHAR(20),
-    instrument_type VARCHAR(50),    -- 'EQUITY', 'CRYPTO', 'OPTIONVOL'
-    
-    raw_payload JSONB,              -- Store the exact API response for audit
-    ingested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id              BIGSERIAL    PRIMARY KEY,
+    provider_name   VARCHAR(50)  NOT NULL,   -- 'YAHOO', 'BVC', 'STOCKANALYSIS', 'BINANCE'
+    external_id     VARCHAR(100),            -- provider-native ID (BVC Drupal node, Yahoo ticker)
+    symbol          VARCHAR(50),
+    isin            VARCHAR(12),
+    instrument_type VARCHAR(50),             -- 'EQUITY', 'CRYPTO', 'ETF', 'FUTURE'
+    raw_payload     JSONB        NOT NULL,   -- exact API response, verbatim
+    ingested_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+
+    -- Idempotency: re-running the tap on the same day is a no-op
+    CONSTRAINT uq_raw_instrument UNIQUE (provider_name, external_id, ingested_at::date)
 );
 
--- raw_zone.market_data
+CREATE INDEX idx_raw_instr_provider ON raw_zone.instruments (provider_name, ingested_at DESC);
+CREATE INDEX idx_raw_instr_isin     ON raw_zone.instruments (isin) WHERE isin IS NOT NULL;
+
+-- ─── OHLCV time-series — partitioned by year for parallel COPY ────────────────
 CREATE TABLE raw_zone.market_data (
-    provider_name VARCHAR(50) NOT NULL,
-    symbol VARCHAR(50) NOT NULL,
-    trade_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    
-    open_price NUMERIC(20, 8),
-    high_price NUMERIC(20, 8),
-    low_price NUMERIC(20, 8),
-    close_price NUMERIC(20, 8),
-    adj_close NUMERIC(20, 8),
-    volume NUMERIC(20, 8),
-    
-    ingested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    provider_name  VARCHAR(50)  NOT NULL,
+    symbol         VARCHAR(50)  NOT NULL,
+    trade_date     DATE         NOT NULL,   -- DATE not TIMESTAMP: avoids TZ drift bugs
+    open_price     NUMERIC(20,8),
+    high_price     NUMERIC(20,8),
+    low_price      NUMERIC(20,8),
+    close_price    NUMERIC(20,8),
+    adj_close      NUMERIC(20,8),
+    volume         NUMERIC(20,8),
+    raw_payload    JSONB,                   -- full JSON kept for debugging
+    ingested_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
     PRIMARY KEY (provider_name, symbol, trade_date)
-) PARTITION BY LIST (EXTRACT(YEAR FROM trade_date));
--- Note: Sub-partitioning per provider is recommended for massive datasets.
-</code></pre>
+) PARTITION BY RANGE (trade_date);
 
-        <!-- ========================================== -->
-        <h2><i class="fa-brands fa-golang"></i> Custom Meltano Tap in Go</h2>
-        <p>Go’s concurrency model is unmatched for IO-bound work like fetching thousands of tickers simultaneously. To
-            integrate smoothly with Meltano, we make our Go binary speak the <strong>Singer Protocol</strong>. It
-            communicates purely through standard output (<code>stdout</code>) using JSON messages: <code>SCHEMA</code>
-            (to define the PostgreSQL table), and <code>RECORD</code> (the actual data payload).</p>
+-- Year partitions (Go partition manager auto-creates future ones — see Part 1)
+CREATE TABLE raw_zone.market_data_y2000 PARTITION OF raw_zone.market_data
+    FOR VALUES FROM ('2000-01-01') TO ('2001-01-01');
+-- ... remaining year partitions created by partition_manager.go
 
-        <p>Below is a concrete implementation snippet showing how we handle Yahoo Finance JSON parsing and Casablanca
-            (BVC) API pagination within a concurrent semantic.</p>
+-- ─── Watermarks: Singer STATE persisted per (provider, stream) ─────────────────
+-- Meltano writes these after each successful run; the Go tap reads them on startup
+CREATE TABLE raw_zone.watermarks (
+    provider_name   VARCHAR(50)   NOT NULL,
+    stream_name     VARCHAR(100)  NOT NULL,
+    bookmark_value  TEXT          NOT NULL,   -- ISO-8601 date or opaque cursor token
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    PRIMARY KEY (provider_name, stream_name)
+);</code></pre>
+      </div>
 
-        <pre><code class="language-go">// tap-marketdata/main.go
-package main
+      <div class="decision-card">
+        <h4><i class="fa-solid fa-lightbulb"></i> Why <code>DATE</code> not <code>TIMESTAMPTZ</code> for <code>trade_date</code>?</h4>
+        <p>Providers disagree on timezone representation. Yahoo Finance returns Unix timestamps in UTC; Casablanca
+          Bourse returns bare date strings (<code>"2024-01-10"</code>) with no timezone. Storing as
+          <code>TIMESTAMPTZ</code> requires a consistent timezone assumption at ingestion time&mdash;but there is none.
+          A Unix timestamp of 00:00 UTC converts to the <em>previous</em> calendar day in US/Eastern, creating phantom
+          duplicates. A bare <code>DATE</code> forces normalization in the Go tap: convert to UTC date, strip time.
+          The semantic is unambiguous: <em>the exchange was open on this calendar day.</em></p>
+      </div>
+
+      <div class="decision-card">
+        <h4><i class="fa-solid fa-lightbulb"></i> Why store <code>raw_payload JSONB</code> alongside parsed columns?</h4>
+        <p>The raw_payload is an operational insurance policy. When Yahoo Finance silently renames a field&mdash;and it
+          has, multiple times (<code>adjclose</code> &rarr; <code>adjClose</code> in 2023)&mdash;parsed columns become
+          NULL but <code>raw_payload</code> still has the data intact. A one-line fix to a dbt bronze model is all
+          that's needed; no re-extraction required. Never throw away data you've already paid the network cost to fetch.</p>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 3: SINGER PROTOCOL                                    -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="singer"><i class="fa-solid fa-music" style="color:#0d9488;"></i> The Singer Protocol</div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-arrows-left-right-to-line" style="color:#0d9488;"></i> A Language-Agnostic ELT Contract</h2>
+
+      <p>Singer is an open specification originally developed by Stitch Data, now maintained by Meltano. It defines how
+        a <strong>tap</strong> (extractor) communicates with a <strong>target</strong> (loader). The entire protocol is
+        three types of newline-delimited JSON messages on <code>stdout</code>&mdash;no HTTP, no gRPC, no shared memory.
+        Any language that can print JSON can implement a Singer tap.</p>
+
+      <p>This simplicity is the key: our Go binary writes Singer to stdout; Meltano pipes it to
+        <code>target-postgres</code>, which bulk-COPYs rows into PostgreSQL. The two processes share zero code.</p>
+
+      <h3>Message Type 1: SCHEMA &mdash; Stream Definition</h3>
+      <div class="singer-msg">
+        <span class="msg-comment">// Emitted once per stream, before any RECORD messages.</span><br>
+        <span class="msg-comment">// target-postgres uses this to CREATE/ALTER the destination table.</span><br>
+        {<br>
+        &nbsp;&nbsp;<span class="msg-key">"type"</span>: <span class="msg-type">"SCHEMA"</span>,<br>
+        &nbsp;&nbsp;<span class="msg-key">"stream"</span>: <span class="msg-val">"raw_market_data"</span>,<br>
+        &nbsp;&nbsp;<span class="msg-key">"schema"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"type"</span>: <span class="msg-val">"object"</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"properties"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"symbol"</span>:      { <span class="msg-key">"type"</span>: <span class="msg-val">"string"</span> },<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"trade_date"</span>:  { <span class="msg-key">"type"</span>: <span class="msg-val">"string"</span>, <span class="msg-key">"format"</span>: <span class="msg-val">"date"</span> },<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"close_price"</span>: { <span class="msg-key">"type"</span>: [<span class="msg-val">"number"</span>, <span class="msg-val">"null"</span>] },<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"volume"</span>:       { <span class="msg-key">"type"</span>: [<span class="msg-val">"number"</span>, <span class="msg-val">"null"</span>] }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;},<br>
+        &nbsp;&nbsp;<span class="msg-key">"key_properties"</span>: [<span class="msg-val">"symbol"</span>, <span class="msg-val">"trade_date"</span>]<br>
+        }
+      </div>
+
+      <h3>Message Type 2: RECORD &mdash; One Data Row</h3>
+      <div class="singer-msg">
+        <span class="msg-comment">// One JSON line per row. The target buffers and batch-COPYs these.</span><br>
+        {<br>
+        &nbsp;&nbsp;<span class="msg-key">"type"</span>: <span class="msg-type">"RECORD"</span>,<br>
+        &nbsp;&nbsp;<span class="msg-key">"stream"</span>: <span class="msg-val">"raw_market_data"</span>,<br>
+        &nbsp;&nbsp;<span class="msg-key">"record"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"provider_name"</span>: <span class="msg-val">"YAHOO"</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"symbol"</span>: <span class="msg-val">"AAPL"</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"trade_date"</span>: <span class="msg-val">"2026-03-07"</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"open_price"</span>: <span class="msg-num">214.32</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"high_price"</span>: <span class="msg-num">219.80</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"close_price"</span>: <span class="msg-num">218.50</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"volume"</span>: <span class="msg-num">49823411</span><br>
+        &nbsp;&nbsp;}<br>
+        }
+      </div>
+
+      <h3>Message Type 3: STATE &mdash; Incremental Bookmark</h3>
+      <div class="singer-msg">
+        <span class="msg-comment">// Emitted at end of a successful run. Meltano persists this value atomically.</span><br>
+        <span class="msg-comment">// Next run: Meltano passes it back via --state flag.</span><br>
+        {<br>
+        &nbsp;&nbsp;<span class="msg-key">"type"</span>: <span class="msg-type">"STATE"</span>,<br>
+        &nbsp;&nbsp;<span class="msg-key">"value"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"bookmarks"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"raw_market_data"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="msg-key">"last_fetched_date"</span>: <span class="msg-val">"2026-03-07"</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;}<br>
+        }
+      </div>
+
+      <p>The STATE message is the key to incremental extraction. Meltano persists the bookmark atomically after each
+        successful run. On the next invocation, the Go tap reads it: <em>"last time I fetched through 2026-03-07, so
+        today I only need 2026-03-08 forward."</em> Crash-safe: if the process dies before emitting STATE, the next
+        run starts from the previous bookmark&mdash;preventing data gaps by design.</p>
+
+      <div class="decision-card">
+        <h4><i class="fa-solid fa-lightbulb"></i> Singer vs. a custom internal HTTP API</h4>
+        <p>Singer forces a clean interface boundary. The Go tap knows nothing about PostgreSQL. The target knows nothing
+          about Yahoo Finance. You can swap <code>target-postgres</code> for <code>target-bigquery</code> or
+          <code>target-snowflake</code> without touching a line of Go. This plugin architecture means your ingestion
+          investment is reusable across all future infrastructure migrations.</p>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4: GO TAP IMPLEMENTATION                              -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="go-tap"><i class="fa-brands fa-golang" style="color:#0d9488;"></i> Building the Go Singer Tap</div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-code" style="color:#0d9488;"></i> <code>tap-marketdata</code> — Full Implementation</h2>
+
+      <p>The tap is a single Go binary. It reads state from a file injected by Meltano, emits Singer messages to
+        stdout, and writes an updated STATE at the end. The architecture cleanly separates concerns: Singer emission
+        logic, extractor implementations, and state management are in separate packages.</p>
+
+      <h3>Thread-Safe Singer Emission</h3>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Go — internal/singer/emit.go</div>
+        <pre><code class="language-go">package singer
 
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"sync"
-	"time"
 )
 
-// Singer JSON Schema Message
-type SingerMessage struct {
-	Type   string      `json:"type"`
-	Record interface{} `json:"record,omitempty"`
-	Stream string      `json:"stream,omitempty"`
+// mu serializes all writes to stdout.
+// Multiple goroutines produce records concurrently;
+// stdout is a single sequential stream that must not be interleaved.
+var mu sync.Mutex
+
+type schemaMsg struct {
+	Type          string         `json:"type"`
+	Stream        string         `json:"stream"`
+	Schema        map[string]any `json:"schema"`
+	KeyProperties []string       `json:"key_properties"`
 }
 
-// Our unified Target Data format
+type recordMsg struct {
+	Type   string `json:"type"`
+	Stream string `json:"stream"`
+	Record any    `json:"record"`
+}
+
+type stateMsg struct {
+	Type  string `json:"type"`
+	Value any    `json:"value"`
+}
+
+// EmitSchema writes a SCHEMA message. Call once per stream before any records.
+func EmitSchema(stream string, schema map[string]any, keyProps []string) error {
+	mu.Lock()
+	defer mu.Unlock()
+	msg := schemaMsg{Type: "SCHEMA", Stream: stream, Schema: schema, KeyProperties: keyProps}
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("marshal schema %s: %w", stream, err)
+	}
+	_, err = fmt.Fprintln(os.Stdout, string(b))
+	return err
+}
+
+// EmitRecord writes a RECORD message. Thread-safe: safe to call from goroutines.
+func EmitRecord(stream string, record any) error {
+	mu.Lock()
+	defer mu.Unlock()
+	msg := recordMsg{Type: "RECORD", Stream: stream, Record: record}
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("marshal record: %w", err)
+	}
+	_, err = fmt.Fprintln(os.Stdout, string(b))
+	return err
+}
+
+// EmitState writes a STATE message at end of run.
+// Meltano persists this value; the next run receives it via --state flag.
+func EmitState(state any) error {
+	mu.Lock()
+	defer mu.Unlock()
+	msg := stateMsg{Type: "STATE", Value: state}
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("marshal state: %w", err)
+	}
+	_, err = fmt.Fprintln(os.Stdout, string(b))
+	return err
+}</code></pre>
+      </div>
+
+      <h3>Yahoo Finance Extractor — Semaphore-Bounded Goroutines</h3>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Go — internal/yahoo/extractor.go</div>
+        <pre><code class="language-go">package yahoo
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"sync"
+	"time"
+
+	"tap-marketdata/internal/singer"
+)
+
+// OHLCVRecord is the canonical row emitted for every OHLCV bar.
 type OHLCVRecord struct {
 	ProviderName string  `json:"provider_name"`
 	Symbol       string  `json:"symbol"`
-	TradeDate    string  `json:"trade_date"`
+	TradeDate    string  `json:"trade_date"`   // "YYYY-MM-DD"
 	OpenPrice    float64 `json:"open_price"`
 	HighPrice    float64 `json:"high_price"`
 	LowPrice     float64 `json:"low_price"`
 	ClosePrice   float64 `json:"close_price"`
-	AdjClose     float64 `json:"adj_close,omitempty"`
+	AdjClose     float64 `json:"adj_close"`
 	Volume       float64 `json:"volume"`
 }
 
-func emitRecord(stream string, record interface{}) {
-	msg := SingerMessage{ Type: "RECORD", Stream: stream, Record: record }
-	b, _ := json.Marshal(msg)
-	fmt.Println(string(b))
+// Extractor fetches daily OHLCV from Yahoo Finance v8 chart API.
+type Extractor struct {
+	client      *http.Client
+	concurrency int
+	fromDate    string // watermark start date "YYYY-MM-DD"
 }
 
-// ---------------------------------------------------------
-// Example: Concurrency-bounded Yahoo Fetcher
-// ---------------------------------------------------------
-func syncYahoo(symbols []string) {
-	const maxConcurrency = 50
-	sem := make(chan struct{}, maxConcurrency)
+func New(fromDate string, concurrency int) *Extractor {
+	return &Extractor{
+		client: &http.Client{
+			Timeout: 15 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConnsPerHost: concurrency,
+				IdleConnTimeout:     90 * time.Second,
+			},
+		},
+		concurrency: concurrency,
+		fromDate:    fromDate,
+	}
+}
+
+// Run fetches all symbols concurrently within a semaphore-bounded goroutine pool.
+// Returns the latest trade_date successfully fetched (used to update STATE).
+func (e *Extractor) Run(ctx context.Context, symbols []string) (string, error) {
+	sem := make(chan struct{}, e.concurrency)
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var errs []error
+	latestDate := e.fromDate
 
 	for _, sym := range symbols {
 		wg.Add(1)
 		go func(ticker string) {
 			defer wg.Done()
-			sem &lt;- struct{}{}
-			defer func() { &lt;-sem }()
-
-			// Genuine HTTP request mimicking institutional Go clients
-			url := fmt.Sprintf("https://query2.finance.yahoo.com/v8/finance/chart/%s?range=5d&interval=1d", ticker)
-			req, _ := http.NewRequest("GET", url, nil)
-			req.Header.Set("User-Agent", "Mozilla/5.0")
-
-			client := &http.Client{Timeout: 10 * time.Second}
-			resp, err := client.Do(req)
-			if err != nil || resp.StatusCode != 200 { return }
-			defer resp.Body.Close()
-
-			// Parse Yahoo's specific format
-			var result struct {
-				Chart struct {
-					Result []struct {
-						Timestamp []int64 `json:"timestamp"`
-						Indicators struct {
-							Quote []struct {
-								Open   []float64 `json:"open"`
-								High   []float64 `json:"high"`
-								Low    []float64 `json:"low"`
-								Close  []float64 `json:"close"`
-								Volume []float64 `json:"volume"`
-							} `json:"quote"`
-						} `json:"indicators"`
-					} `json:"result"`
-				} `json:"chart"`
+			// Acquire semaphore slot — blocks when pool is full
+			select {
+			case sem &lt;- struct{}{}:
+				defer func() { &lt;-sem }()
+			case &lt;-ctx.Done():
+				return // Context cancelled — bail out cleanly
 			}
-			json.NewDecoder(resp.Body).Decode(&result)
 
-			if len(result.Chart.Result) > 0 {
-				r := result.Chart.Result[0]
-				q := r.Indicators.Quote[0]
-				for i, ts := range r.Timestamp {
-					emitRecord("raw_market_data", OHLCVRecord{
-						ProviderName: "YAHOO",
-						Symbol:       ticker,
-						TradeDate:    time.Unix(ts, 0).Format(time.RFC3339),
-						OpenPrice:    q.Open[i],
-						HighPrice:    q.High[i],
-						LowPrice:     q.Low[i],
-						ClosePrice:   q.Close[i],
-						Volume:       q.Volume[i],
-					})
-				}
+			date, err := e.fetchOne(ticker)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				// Non-fatal: delisted symbols, holidays, API blips are expected
+				slog.Warn("yahoo fetch failed", "symbol", ticker, "err", err)
+				errs = append(errs, err)
+				return
+			}
+			if date > latestDate {
+				latestDate = date
 			}
 		}(sym)
 	}
 	wg.Wait()
+
+	if len(errs) > 0 {
+		// Partial failures are normal — log count and continue
+		slog.Warn("partial fetch errors", "count", len(errs), "total", len(symbols))
+	}
+	return latestDate, nil
 }
 
-// ---------------------------------------------------------
-// Example: Rate-limited BVC (Casablanca) Pagination Fetcher
-// ---------------------------------------------------------
-func syncCasablancaBVC() {
-	url := "https://api.casablanca-bourse.com/fr/api/bourse_data/instrument?page[limit]=200"
-	client := &http.Client{Timeout: 30 * time.Second}
+// yahooChartResponse mirrors the JSON structure of Yahoo Finance v8 chart API.
+type yahooChartResponse struct {
+	Chart struct {
+		Result []struct {
+			Timestamp  []int64 `json:"timestamp"`
+			Indicators struct {
+				Quote []struct {
+					Open   []float64 `json:"open"`
+					High   []float64 `json:"high"`
+					Low    []float64 `json:"low"`
+					Close  []float64 `json:"close"`
+					Volume []float64 `json:"volume"`
+				} `json:"quote"`
+				Adjclose []struct {
+					Adjclose []float64 `json:"adjclose"`
+				} `json:"adjclose"`
+			} `json:"indicators"`
+		} `json:"result"`
+		Error *struct {
+			Code        string `json:"code"`
+			Description string `json:"description"`
+		} `json:"error"`
+	} `json:"chart"`
+}
 
-	for url != "" {
-		req, _ := http.NewRequest("GET", url, nil)
-		resp, err := client.Do(req)
-		if err != nil { break }
+func (e *Extractor) fetchOne(ticker string) (latestDate string, err error) {
+	// Fetch 10 days to cover the 3-day lookback + current week
+	url := fmt.Sprintf(
+		"https://query2.finance.yahoo.com/v8/finance/chart/%s?range=10d&interval=1d&includeAdjustedClose=true",
+		ticker,
+	)
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	// Yahoo rate-limits automated bots — a realistic User-Agent reduces 429 errors
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	req.Header.Set("Accept", "application/json")
 
-		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("http: %w", err)
+	}
+	defer resp.Body.Close()
 
-		var result struct {
-			Data []struct {
-				Attributes struct {
-					Symbol   string `json:"symbol"`
-					CodeISIN string `json:"codeISIN"`
-				} `json:"attributes"`
-			} `json:"data"`
-			Links struct {
-				Next struct { Href string `json:"href"` } `json:"next"`
-			} `json:"links"`
+	if resp.StatusCode == http.StatusTooManyRequests {
+		time.Sleep(5 * time.Second) // back off before returning error (caller may retry)
+		return "", fmt.Errorf("rate limited: %s", ticker)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, ticker)
+	}
+
+	var result yahooChartResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("decode %s: %w", ticker, err)
+	}
+	if result.Chart.Error != nil {
+		// Yahoo returns HTTP 200 with an error body for unknown tickers
+		return "", fmt.Errorf("yahoo error %s: %s", result.Chart.Error.Code, result.Chart.Error.Description)
+	}
+	if len(result.Chart.Result) == 0 || len(result.Chart.Result[0].Indicators.Quote) == 0 {
+		return "", nil // Delisted or no data — skip silently
+	}
+
+	r := result.Chart.Result[0]
+	q := r.Indicators.Quote[0]
+
+	for i, ts := range r.Timestamp {
+		if i >= len(q.Close) || q.Close[i] == 0 {
+			continue // Skip empty bars (market closures, suspended instruments)
 		}
-		json.Unmarshal(body, &result)
-
-		for _, rec := range result.Data {
-			// Emit JSON payload for further normalization in dbt
-			emitRecord("raw_instruments", map[string]interface{}{
-				"provider_name":   "BVC",
-				"symbol":          rec.Attributes.Symbol,
-				"isin":            rec.Attributes.CodeISIN,
-				"instrument_type": "EQUITY", // Default for BVC listings
-				"raw_payload":     rec.Attributes,
-			})
+		date := time.Unix(ts, 0).UTC().Format("2006-01-02")
+		if date &lt; e.fromDate {
+			continue // Before watermark: already ingested
 		}
 
-		if result.Links.Next.Href != "" {
-			url = result.Links.Next.Href
-			time.Sleep(200 * time.Millisecond) // Strict rate limit for BVC API
-		} else {
-			url = ""
+		adjClose := 0.0
+		if len(r.Indicators.Adjclose) > 0 && i &lt; len(r.Indicators.Adjclose[0].Adjclose) {
+			adjClose = r.Indicators.Adjclose[0].Adjclose[i]
 		}
+
+		if err := singer.EmitRecord("raw_market_data", OHLCVRecord{
+			ProviderName: "YAHOO", Symbol: ticker, TradeDate: date,
+			OpenPrice: q.Open[i], HighPrice: q.High[i], LowPrice: q.Low[i],
+			ClosePrice: q.Close[i], AdjClose: adjClose, Volume: q.Volume[i],
+		}); err != nil {
+			return "", err
+		}
+		if date > latestDate {
+			latestDate = date
+		}
+	}
+	return latestDate, nil
+}</code></pre>
+      </div>
+
+      <h3>Casablanca Bourse (BVC) — Paginated JSON:API</h3>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Go — internal/bvc/extractor.go</div>
+        <pre><code class="language-go">package bvc
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"tap-marketdata/internal/singer"
+)
+
+// InstrumentRecord is the canonical row emitted for reference data streams.
+type InstrumentRecord struct {
+	ProviderName   string `json:"provider_name"`
+	ExternalID     string `json:"external_id"`
+	Symbol         string `json:"symbol"`
+	ISIN           string `json:"isin"`
+	Name           string `json:"name"`
+	InstrumentType string `json:"instrument_type"`
+	Currency       string `json:"currency"`
+	RawPayload     any    `json:"raw_payload"` // stored verbatim as JSONB
+}
+
+// Extractor fetches the complete Casablanca Bourse instrument listing.
+// BVC has strict rate limits: max ~240 req/hour. Pagination via JSON:API.
+type Extractor struct {
+	client  *http.Client
+	baseURL string
+	delay   time.Duration
+}
+
+func New() *Extractor {
+	return &Extractor{
+		client:  &http.Client{Timeout: 30 * time.Second},
+		baseURL: "https://api.casablanca-bourse.com/fr/api/bourse_data/instrument?page[limit]=200",
+		delay:   250 * time.Millisecond,
 	}
 }
 
+type bvcPage struct {
+	Data []struct {
+		ID         string `json:"id"`
+		Attributes struct {
+			CodeISIN string `json:"codeISIN"`
+			Symbol   string `json:"symbol"`
+			Libelle  string `json:"libelle"` // French security name
+			Secteur  string `json:"secteur"`
+		} `json:"attributes"`
+	} `json:"data"`
+	Links struct {
+		Next *struct{ Href string `json:"href"` } `json:"next"`
+	} `json:"links"`
+}
+
+// Run paginates through the full BVC listing, emitting one RECORD per instrument.
+// BVC lists ~75 companies, so sequential pagination (no concurrency needed) suffices.
+func (b *Extractor) Run() error {
+	nextURL := b.baseURL
+	for page := 1; nextURL != ""; page++ {
+		slog.Info("fetching BVC page", "page", page)
+
+		resp, err := b.client.Get(nextURL)
+		if err != nil {
+			return fmt.Errorf("BVC page %d: %w", page, err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("BVC HTTP %d on page %d", resp.StatusCode, page)
+		}
+
+		var result bvcPage
+		if err := json.Unmarshal(body, &result); err != nil {
+			return fmt.Errorf("BVC parse page %d: %w", page, err)
+		}
+
+		for _, item := range result.Data {
+			attr := item.Attributes
+			if err := singer.EmitRecord("raw_instruments", InstrumentRecord{
+				ProviderName:   "BVC",
+				ExternalID:     item.ID,
+				Symbol:         attr.Symbol,
+				ISIN:           attr.CodeISIN,
+				Name:           attr.Libelle,
+				InstrumentType: "EQUITY",
+				Currency:       "MAD",
+				RawPayload:     attr, // full attributes blob → stored as JSONB
+			}); err != nil {
+				return err
+			}
+		}
+
+		if result.Links.Next != nil && result.Links.Next.Href != "" {
+			nextURL = result.Links.Next.Href
+			time.Sleep(b.delay) // respect BVC rate limit strictly
+		} else {
+			nextURL = ""
+		}
+	}
+	return nil
+}</code></pre>
+      </div>
+
+      <h3>Main Entry Point &mdash; State &amp; Allocation Routing</h3>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Go — cmd/tap/main.go</div>
+        <pre><code class="language-go">package main
+
+import (
+	"context"
+	"encoding/json"
+	"flag"
+	"log/slog"
+	"os"
+	"strings"
+	"time"
+
+	"tap-marketdata/internal/bvc"
+	"tap-marketdata/internal/singer"
+	"tap-marketdata/internal/yahoo"
+)
+
+// tapState is the Singer STATE value persisted between runs.
+type tapState struct {
+	Bookmarks map[string]bookmark `json:"bookmarks"`
+}
+
+type bookmark struct {
+	LastFetchedDate string `json:"last_fetched_date"`
+}
+
 func main() {
-    // 1. Output Singer Schema (omitted for brevity)
-    // 2. Fetch all data
-	syncYahoo([]string{"AAPL", "MSFT", "IWM", "BTC-USD"}) // High concurrency
-	syncCasablancaBVC()                                   // Sequential & Rate-limited
+	stateFile := flag.String("state", "", "Path to Singer state file from previous run")
+	allocation := flag.String("allocation", "us_stocks", "us_stocks|eu_stocks|crypto|bvc")
+	flag.Parse()
+
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
+
+	// Load prior state; bookmarks are empty on the very first run
+	state := tapState{Bookmarks: make(map[string]bookmark)}
+	if *stateFile != "" {
+		if data, err := os.ReadFile(*stateFile); err == nil {
+			_ = json.Unmarshal(data, &state)
+		}
+	}
+
+	// Determine watermark; subtract 3 days for late volume/adjclose corrections
+	fromDate := "2000-01-01" // default: full history on first run
+	if bk, ok := state.Bookmarks["raw_market_data"]; ok && bk.LastFetchedDate != "" {
+		t, err := time.Parse("2006-01-02", bk.LastFetchedDate)
+		if err == nil {
+			fromDate = t.AddDate(0, 0, -3).Format("2006-01-02")
+		}
+	}
+
+	emitSchemas() // Declare all stream schemas once before any RECORD messages
+
+	ctx := context.Background()
+	var latestDate string
+
+	switch strings.ToLower(*allocation) {
+	case "bvc":
+		// BVC is small (~75 instruments) — instruments only, no OHLCV tap yet
+		if err := bvc.New().Run(); err != nil {
+			slog.Error("BVC extraction failed", "err", err)
+			os.Exit(1)
+		}
+
+	default: // us_stocks, eu_stocks, crypto, global_etfs
+		concurrency := 50
+		if *allocation == "crypto" {
+			concurrency = 30 // Binance/Yahoo crypto endpoints are stricter on rate limits
+		}
+		symbols := loadSymbolList(*allocation)
+		ext := yahoo.New(fromDate, concurrency)
+		var err error
+		if latestDate, err = ext.Run(ctx, symbols); err != nil {
+			slog.Error("Yahoo extraction failed", "allocation", *allocation, "err", err)
+			os.Exit(1)
+		}
+	}
+
+	// Update and persist the bookmark for the next incremental run
+	if latestDate != "" {
+		bk := state.Bookmarks["raw_market_data"]
+		bk.LastFetchedDate = latestDate
+		state.Bookmarks["raw_market_data"] = bk
+		if err := singer.EmitState(state); err != nil {
+			slog.Error("emit state failed", "err", err)
+		}
+	}
+
+	slog.Info("tap complete", "allocation", *allocation, "latest_date", latestDate)
 }
-</code></pre>
 
-        <div class="download-card">
-            <div class="download-card-info">
-                <h4><i class="fa-brands fa-golang" style="color:#00ADD8"></i> tap-marketdata-go.zip</h4>
-                <p>Contains the full Go project, extensive Singer JSON schema definitions, StockAnalysis parsers, and
-                    caching strategies.</p>
-            </div>
-            <a href="#" class="download-btn"><i class="fa-solid fa-download"></i> Download Zip</a>
-        </div>
+func loadSymbolList(allocation string) []string {
+	// In production: read from a flat file populated nightly by the screener
+	// Alternative: query the instruments table directly
+	data, err := os.ReadFile("/etc/tap-marketdata/symbols_" + allocation + ".txt")
+	if err != nil {
+		slog.Warn("symbol list not found", "allocation", allocation, "err", err)
+		return nil
+	}
+	return strings.Fields(string(data))
+}</code></pre>
+      </div>
+    </div>
 
-        <!-- ========================================== -->
-        <h2><i class="fa-brands fa-docker"></i> Packaging Meltano & Go into a single Image</h2>
-        <p>A crucial integration step: Meltano expects to invoke an executable file. We must compile our Go code and
-            inject it into a Python-based Meltano Docker container.</p>
+    <!-- ============================================================ -->
+    <!-- SECTION 5: MELTANO + DOCKER + NOMAD                           -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="infra"><i class="fa-solid fa-server" style="color:#0d9488;"></i> Meltano, Docker &amp; Nomad</div>
 
-        <pre><code class="language-dockerfile"># 1. Build the Go Singer Extractor
-FROM golang:1.22 AS builder
+    <div class="content-card">
+      <h2><i class="fa-solid fa-sliders" style="color:#0d9488;"></i> <code>meltano.yml</code> — The ELT Manifest</h2>
+
+      <p>Meltano manages plugin discovery, state persistence, environment variable injection, and the EL execution
+        pipeline. Our Go binary becomes a first-class Meltano <em>custom tap</em> by pointing to the compiled binary
+        in the <code>executable</code> field.</p>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">YAML — meltano.yml (key sections)</div>
+        <pre><code class="language-yaml">version: 1
+default_environment: production
+
+plugins:
+  extractors:
+    - name: tap-marketdata-go
+      namespace: tap_marketdata
+      executable: /usr/local/bin/tap-marketdata-go   # Our compiled Go binary
+      capabilities:
+        - state      # Supports --state flag (incremental runs)
+        - catalog    # Supports --catalog flag (schema declaration)
+      settings:
+        - name: allocation
+          kind: string
+          env: ALLOCATION_TARGET
+        - name: concurrency
+          kind: integer
+          value: 50
+          env: TAP_CONCURRENCY
+
+  loaders:
+    - name: target-postgres
+      variant: transferwise
+      pip_url: pipelinewise-target-postgres
+      config:
+        host: ${POSTGRES_HOST}
+        port: 5432
+        dbname: ${POSTGRES_DB}
+        user: ${POSTGRES_USER}
+        password: ${POSTGRES_PASSWORD}
+        default_target_schema: raw_zone
+        batch_size_rows: 10000     # Bulk COPY every 10K records
+        flush_all_streams: true
+        add_metadata_columns: true # Adds _sdc_extracted_at, _sdc_received_at
+
+schedules:
+  - name: daily-us-stocks
+    extractor: tap-marketdata-go
+    loader: target-postgres
+    transform: skip   # dbt runs as a separate Nomad job — see Part 3
+    interval: "@daily"
+    env:
+      ALLOCATION_TARGET: us_stocks
+
+  - name: daily-crypto
+    extractor: tap-marketdata-go
+    loader: target-postgres
+    transform: skip
+    interval: "@daily"
+    env:
+      ALLOCATION_TARGET: crypto
+      TAP_CONCURRENCY: "30"</code></pre>
+      </div>
+
+      <div class="decision-card">
+        <h4><i class="fa-solid fa-lightbulb"></i> <code>transform: skip</code> — why not run dbt inline?</h4>
+        <p>When <code>transform: run</code> is set, Meltano runs dbt immediately after extraction in the same process.
+          If a dbt model fails (a bug, a schema change), Meltano marks the <em>entire</em> schedule as failed&mdash;
+          preventing the Singer STATE bookmark from being saved. The next run then re-fetches already-ingested data.
+          With <code>transform: skip</code>, the EL job saves its bookmark regardless of dbt. Both jobs get
+          independent retry policies, independent logs, and independent failure domains.</p>
+      </div>
+
+      <h2 style="margin-top:2.5rem;"><i class="fa-brands fa-docker" style="color:#0d9488;"></i> Multi-Stage Docker Build</h2>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Dockerfile — Go binary inside Meltano container</div>
+        <pre><code class="language-bash"># ─── Stage 1: Compile Go binary ───────────────────────────────────────────────
+FROM golang:1.22-alpine AS go-builder
 WORKDIR /app
-COPY go.mod ./
-COPY main.go ./
-# Compile statically to ensure it runs anywhere
-RUN CGO_ENABLED=0 GOOS=linux go build -o tap-marketdata-go main.go
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+# CGO_ENABLED=0: fully static binary — runs on any Linux image, no libc dependency
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o tap-marketdata-go ./cmd/tap
 
-# 2. Build the Meltano Runtime
-FROM meltano/meltano:v3.1.0-python3.9
+# ─── Stage 2: Meltano runtime (Python + target-postgres) ──────────────────────
+FROM meltano/meltano:v3.3.0-python3.11
 WORKDIR /project
-
-# Install the target database loader
 RUN meltano add loader target-postgres --variant transferwise
-
-# Copy our compiled Go binary
-COPY --from=builder /app/tap-marketdata-go /usr/local/bin/tap-marketdata-go
+COPY --from=go-builder /app/tap-marketdata-go /usr/local/bin/
 RUN chmod +x /usr/local/bin/tap-marketdata-go
-
-# Copy Meltano configurations
 COPY meltano.yml .
+COPY config/symbols/ /etc/tap-marketdata/
+RUN meltano install      # Creates Python venv for target-postgres
+ENV ALLOCATION_TARGET=us_stocks
+ENTRYPOINT ["meltano", "run"]
+CMD ["tap-marketdata-go", "target-postgres"]</code></pre>
+      </div>
 
-ENTRYPOINT ["meltano"]
-</code></pre>
+      <h2 style="margin-top:2.5rem;"><i class="fa-solid fa-calendar-check" style="color:#0d9488;"></i> Nomad Periodic Jobs</h2>
 
-        <!-- ========================================== -->
-        <h2><i class="fa-solid fa-server"></i> Orchestration: Airflow on HashiCorp Nomad</h2>
-        <p>A simple Nomad <code>periodic</code> cron job is completely insufficient for a robust data platform. We need
-            a proper scheduler (Apache Airflow or Dagster) to map out dependencies: <strong>Extract/Load (Meltano)
-                &rarr; Transform (dbt) &rarr; Corporate Action Merges</strong>.</p>
+      <p>Nomad's <code>periodic</code> stanza turns any batch job into a cron-like schedule. Each allocation runs in
+        complete isolation: its own Docker container, its own CPU/memory envelope, its own log stream. A BVC
+        pagination error never touches the US stocks job.</p>
 
-        <p>We host Apache Airflow, and configure its Directed Acyclic Graphs (DAGs) to trigger executions
-            <strong>remotely on HashiCorp Nomad</strong> using the <code>NomadOperator</code> (or Nomad HTTP API). This
-            maintains Nomad as the sole compute allocator while giving Airflow control over the workflow logic.
-        </p>
-
-        <pre><code class="language-python"># airflow_dags/securities_master_dag.py
-from datetime import datetime
-from airflow import DAG
-from airflow.providers.hashicorp.operators.nomad import NomadOperator
-
-default_args = {
-    'owner': 'ai-strategy-agent',
-    'start_date': datetime(2026, 1, 1),
-    'retries': 2,
+      <div class="code-block-wrapper">
+        <div class="code-label">HCL — jobs/marketdata-ingest.nomad</div>
+        <pre><code class="language-hcl">variable "allocation" {
+  type    = string
+  default = "us_stocks"
 }
 
-# The AI Agent manages 4 distinct independent multi-allocation domains
-ALLOCATIONS = ["crypto", "us_stocks", "eu_stocks", "global_etfs"]
+variable "tap_image" {
+  type    = string
+  default = "registry.internal.org/data/tap-marketdata:latest"
+}
 
-with DAG('securities_master_daily_ingest', default_args=default_args, schedule_interval='0 23 * * 1-5') as dag:
+job "marketdata-ingest-${var.allocation}" {
+  datacenters = ["dc1"]
+  type        = "batch"
 
-    for allocation in ALLOCATIONS:
-        # Trigger isolated Meltano Containers on Nomad Cluster per Allocation
-        meltano_task = NomadOperator(
-            task_id=f'meltano_extract_{allocation}',
-            nomad_url='http://nomad.internal.org:4646',
-            job_spec=f"""
-                job "marketdata-ingest-{allocation}" {{
-                    datacenters = ["dc1"]
-                    type = "batch"
-                    group "elt" {{
-                        task "meltano" {{
-                            driver = "docker"
-                            config {{
-                                image = "registry.internal.org/data/marketdata-meltano:latest"
-                                command = "meltano"
-                                args = ["run", "tap-{allocation}-go", "target-postgres"]
-                            }}
-                            env {{
-                                ALLOCATION_TARGET = "{allocation}"
-                            }}
-                        }}
-                    }}
-                }}
-            """
-        )
-        # -> feeds into dbt_transforms (Part 3)
-</code></pre>
+  # Mon–Fri at 23:00 UTC (after US and EU market close)
+  periodic {
+    crons            = ["0 23 * * 1-5"]
+    prohibit_overlap = true  # Never start a second instance while one is running
+    timezone         = "UTC"
+  }
 
-        <div class="takeaway-box">
-            <h3><i class="fa-solid fa-flag-checkered"></i> Conclusion of Part 2</h3>
-            <p>We've successfully bypassed standard Python bottlenecks. By combining Go routines for ingestion,
-                Singer/Meltano for loading, and Airflow on Nomad for orchestration, we achieve massive scale. We can now
-                blindly ingest hundreds of thousands of instruments, and the data lands reliably in the
-                <code>raw_zone</code> Postgres tables.
-            </p>
-            <p><strong>Next up, in Part 3: Transforms!</strong> We will execute dbt to sanitize this raw data, map
-                unique identifiers (ISIN, FIGI), handle the logic of the <code>InstrumentType</code> interface, and
-                build the definitive master tables.</p>
+  reschedule {
+    attempts       = 3
+    interval       = "1h"
+    delay          = "5m"
+    delay_function = "exponential"
+    max_delay      = "30m"
+    unlimited      = false
+  }
+
+  group "elt" {
+    count = 1
+
+    task "meltano-tap" {
+      driver = "docker"
+
+      config {
+        image   = var.tap_image
+        command = "meltano"
+        args    = ["run", "tap-marketdata-go", "target-postgres"]
+      }
+
+      resources {
+        cpu    = 500   # MHz — Go tap &lt;100 MHz; Meltano Python overhead ~400 MHz
+        memory = 512   # MB  — Python ~256 MB; 50 goroutines ~100 MB
+      }
+
+      # Nomad injects secrets from Vault — no plaintext credentials in job specs
+      template {
+        data = &lt;&lt;EOH
+{{ with secret "secret/data/market-watch/postgres" }}
+POSTGRES_HOST="{{ .Data.data.host }}"
+POSTGRES_DB="{{ .Data.data.dbname }}"
+POSTGRES_USER="{{ .Data.data.user }}"
+POSTGRES_PASSWORD="{{ .Data.data.password }}"
+{{ end }}
+EOH
+        destination = "secrets/db.env"
+        env         = true
+      }
+
+      env {
+        ALLOCATION_TARGET = var.allocation
+        TAP_CONCURRENCY   = "50"
+      }
+
+      logs {
+        max_files     = 7
+        max_file_size = 50  # MB
+      }
+    }
+  }
+}</code></pre>
+      </div>
+
+      <div class="decision-card">
+        <h4><i class="fa-solid fa-lightbulb"></i> <code>prohibit_overlap = true</code> — why it's critical</h4>
+        <p>Without this, if the nightly job runs longer than 24 hours (possible during a multi-week backfill after an
+          outage), Nomad launches a second instance while the first is running. Two concurrent instances: (1) compete for
+          Yahoo Finance rate limits, increasing 429 errors; (2) attempt simultaneous COPY operations into the same
+          partitions, causing PRIMARY KEY conflicts and PostgreSQL lock contention; (3) race on the Singer STATE
+          bookmark. <code>prohibit_overlap</code> skips the cron tick if the previous instance is still active.</p>
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Shell — build and deploy all four allocations</div>
+        <pre><code class="language-bash">IMAGE="registry.internal.org/data/tap-marketdata:$(git rev-parse --short HEAD)"
+docker build -t "$IMAGE" . && docker push "$IMAGE"
+
+for alloc in us_stocks eu_stocks crypto bvc; do
+  nomad job run \
+    -var="allocation=${alloc}" \
+    -var="tap_image=${IMAGE}" \
+    jobs/marketdata-ingest.nomad
+  echo "✓ ${alloc} deployed"
+done
+
+# Monitor a running job
+nomad alloc logs -f "$(nomad job allocs -json marketdata-ingest-us_stocks | jq -r '.[0].ID')"</code></pre>
+      </div>
+
+      <div id="chartPipelineFlow" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+      <h3>Data Source Universe by Allocation</h3>
+      <div class="source-grid">
+        <div class="source-card yahoo">
+          <h4><i class="fa-solid fa-chart-line" style="color:#7c3aed;"></i> Yahoo Finance</h4>
+          <div class="source-meta">
+            <span class="source-tag" style="background:#ede9fe;color:#7c3aed;">EQUITY</span>
+            <span class="source-tag" style="background:#ede9fe;color:#7c3aed;">ETF</span>
+            <span class="source-tag" style="background:#ede9fe;color:#7c3aed;">CRYPTO</span><br>
+            ~50,000 global symbols &bull; ~2,000 req/hour per IP<br>
+            Format: JSON v8 chart API &bull; Auth: User-Agent header
+          </div>
         </div>
+        <div class="source-card bvc">
+          <h4><i class="fa-solid fa-star-and-crescent" style="color:#dc2626;"></i> Casablanca Bourse</h4>
+          <div class="source-meta">
+            <span class="source-tag" style="background:#fee2e2;color:#dc2626;">EQUITY</span>
+            <span class="source-tag" style="background:#fee2e2;color:#dc2626;">BOND</span><br>
+            ~75 listed companies &bull; Strict: 240 req/hour<br>
+            Format: JSON:API paginated &bull; Auth: None (public)
+          </div>
+        </div>
+        <div class="source-card binance">
+          <h4><i class="fa-solid fa-coins" style="color:#ca8a04;"></i> Binance</h4>
+          <div class="source-meta">
+            <span class="source-tag" style="background:#fef3c7;color:#ca8a04;">CRYPTO</span>
+            <span class="source-tag" style="background:#fef3c7;color:#ca8a04;">FUTURES</span><br>
+            ~350 spot, ~250 perp futures &bull; 1,200 req/min<br>
+            Format: REST JSON &bull; Auth: API key (public endpoints free)
+          </div>
+        </div>
+        <div class="source-card stockanalysis">
+          <h4><i class="fa-solid fa-list" style="color:#0d9488;"></i> StockAnalysis.com</h4>
+          <div class="source-meta">
+            <span class="source-tag" style="background:#ccfbf1;color:#0d9488;">UNIVERSE LISTS</span><br>
+            Full NASDAQ/NYSE/AMEX ticker lists<br>
+            Use: populate symbol files for the Yahoo tap
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <div class="article-footer">
-        <p>&copy; 2026 Market Watch. All rights reserved. <br>
-            <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Systematic Trading
-                Engineering</a>
-        </p>
+    <!-- ============================================================ -->
+    <!-- SECTION 6: INCREMENTAL + QUALITY GATES                       -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="incremental"><i class="fa-solid fa-droplet" style="color:#0d9488;"></i> Incremental Extraction &amp; Quality Gates</div>
+
+    <div class="content-card">
+      <h2><i class="fa-solid fa-bookmark" style="color:#0d9488;"></i> The 3-Day Lookback Window</h2>
+
+      <p>A full historical backfill (30,000 instruments &times; 25 years) is a one-time operation taking several hours.
+        After that, nightly incremental runs must complete in <strong>under 10 minutes</strong>. This requires proper
+        bookmark management plus a deliberate lookback window.</p>
+
+      <p>If today is March 7 and the bookmark says March 6, we don't fetch only March 7. We fetch from March 4
+        onwards. This 3-day window covers three classes of late corrections:</p>
+
+      <ul class="checklist">
+        <li><i class="fa-solid fa-circle-check" style="color:#0d9488;"></i>
+          <strong>Volume revisions:</strong> Exchanges often correct prior-day volume by T+1 or even T+2.</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#0d9488;"></i>
+          <strong>Adjusted close updates:</strong> A dividend declared today retroactively adjusts <code>adjclose</code>
+          for recent bars. The 3-day window catches these without waiting for the full corporate actions pipeline
+          (Part 4) to run.</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#0d9488;"></i>
+          <strong>API caching artifacts:</strong> Some Yahoo endpoints serve stale responses immediately after market
+          close. Fetching again the next day returns corrected values.</li>
+      </ul>
+
+      <p>Re-ingestion is safe because the PRIMARY KEY <code>(provider_name, symbol, trade_date)</code> makes every
+        COPY idempotent: rows already in the database conflict and are skipped. Corrected rows require an explicit
+        upsert&mdash;handled by dbt's <code>unique_key</code> incremental model in Part 3.</p>
+
+      <div class="formula-box">
+        <div class="formula-label">Incremental Fetch Window</div>
+        fetch_from = bookmark_date <span class="formula-highlight">&minus; 3 days</span>
+        &nbsp;&nbsp;&nbsp;
+        raw_zone insert: <span class="formula-highlight">ON CONFLICT DO NOTHING</span>
+        &nbsp;&nbsp;&nbsp;
+        dbt silver upsert: <span class="formula-highlight">unique_key MERGE</span>
+      </div>
+
+      <h3>Ingestion-Time Quality Gate</h3>
+
+      <div class="code-block-wrapper">
+        <div class="code-label">Go — lightweight validation before EmitRecord</div>
+        <pre><code class="language-go">// validateBar blocks catastrophically invalid data before it enters the database.
+// Comprehensive validation (range checks, cross-column assertions) belongs in dbt.
+func validateBar(symbol, date string, open, high, low, close float64) error {
+    if close &lt;= 0 || open &lt;= 0 {
+        return fmt.Errorf("non-positive price: %s %s close=%.4f", symbol, date, close)
+    }
+    if high &lt; low {
+        return fmt.Errorf("high &lt; low: %s %s high=%.4f low=%.4f", symbol, date, high, low)
+    }
+    if close &gt; high || close &lt; low {
+        return fmt.Errorf("close outside high-low band: %s %s", symbol, date)
+    }
+    // Flag but don't reject extreme moves — may be a split (Part 4 handles these)
+    if open &gt; 0 {
+        ret := (close - open) / open
+        if ret &gt; 0.80 || ret &lt; -0.80 {
+            slog.Warn("extreme daily return — possible split/error",
+                "symbol", symbol, "date", date, "return_pct", ret*100)
+        }
+    }
+    return nil
+}</code></pre>
+      </div>
+
+      <div class="alert-box" style="margin:1.5rem 0;">
+        <h4 style="color:#dc2626 !important;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i>
+          Don't over-validate at ingestion time</h4>
+        <p style="margin-bottom:0;">Rejecting data you can't fully evaluate in the tap means permanently losing it.
+          An 80% daily move might be a split, a trading halt resumption, or a penny stock. The raw zone should
+          capture everything; dbt tests (Part 3) will flag anomalies; the corporate actions pipeline (Part 4) will
+          adjust price continuity. The Go tap only blocks values that would cause a PostgreSQL NUMERIC overflow or
+          NaN insertion&mdash;both of which would crash the bulk COPY entirely.</p>
+      </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-    <script src="/assets/core.js"></script>
+    <!-- ============================================================ -->
+    <!-- SECTION 7: QUIZ                                               -->
+    <!-- ============================================================ -->
+    <div class="section-divider" id="quiz"><i class="fa-solid fa-graduation-cap" style="color:#0d9488;"></i> Quiz</div>
 
-  
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part1-foundations/" class="series-arrow" title="Part1 Foundations"><i class="fas fa-chevron-left"></i></a><span class="series-title">Securities
-            Master</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="./" class="series-step current" title="."><span class="series-num">2</span><span class="series-label">.</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">2/6</span><a href="../part3-transforms/" class="series-arrow" title="Part3 Transforms"><i class="fas fa-chevron-right"></i></a></div></div>
-<footer class="article-footer">
+    <div class="content-card">
+      <h2><i class="fa-solid fa-question-circle" style="color:#0d9488;"></i> Comprehension Check</h2>
+      <p>Before moving to dbt transforms in Part 3, verify these concepts are solid.</p>
+
+      <details>
+        <summary>Q1 — Why doesn't Python's <code>asyncio</code> fully solve the concurrency problem for financial data ingestion?</summary>
+        <div class="quiz-answer">
+          <code>asyncio</code> releases the GIL during IO, allowing concurrent coroutines. But it requires every library
+          in the call chain to be async-native. Most financial libraries (requests, yfinance, TA-Lib, psycopg2) use
+          blocking C extensions that hold the GIL and cannot yield to the event loop. The workaround — running sync code
+          in a <code>ThreadPoolExecutor</code> or spawning full Python processes — reintroduces the overhead async was
+          supposed to eliminate. Go goroutines have no such constraint: the Go runtime scheduler handles context-switching
+          transparently at the language level, regardless of what the goroutine calls.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q2 — What are the three Singer message types? What does each accomplish?</summary>
+        <div class="quiz-answer">
+          <strong>SCHEMA</strong>: Defines the JSON schema and primary key(s) for a named stream. Emitted once per
+          stream before any RECORD. The target uses this to CREATE/ALTER the destination table.<br><br>
+          <strong>RECORD</strong>: One row of data. A JSON object matching the SCHEMA declaration. The target buffers
+          these and bulk-COPYs them into PostgreSQL in batches (default: 10,000 rows).<br><br>
+          <strong>STATE</strong>: A bookmark that the target persists atomically after a successful flush. On the next
+          run, Meltano passes this value back via <code>--state</code>, allowing the tap to fetch only data since the
+          last successful run. Crash-safe: if the process dies before emitting STATE, the next run starts from the
+          previous bookmark, preventing data gaps.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q3 — Why use <code>DATE</code> instead of <code>TIMESTAMPTZ</code> for <code>trade_date</code>?</summary>
+        <div class="quiz-answer">
+          Providers represent trading dates differently. Yahoo Finance returns Unix timestamps in UTC; Casablanca Bourse
+          returns bare date strings with no timezone. Storing as <code>TIMESTAMPTZ</code> requires a consistent timezone
+          assumption at ingestion time&mdash;but there is none. A Unix timestamp of 00:00 UTC converts to the
+          <em>previous</em> calendar day in US/Eastern (due to UTC-5 offset), creating phantom duplicates around midnight.
+          A bare <code>DATE</code> forces normalization in the Go tap: convert all timestamps to UTC date, strip the time
+          component. The semantic is then unambiguous: one row per exchange trading day per symbol per provider.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q4 — Explain the 3-day lookback window. What three problems does it solve?</summary>
+        <div class="quiz-answer">
+          (1) <strong>Volume revisions</strong>: Exchanges often correct prior-day volume the following business day,
+          sometimes T+2. Without the lookback, these corrections would be missed until the next full backfill.
+          (2) <strong>Adjusted close updates</strong>: When a dividend is declared, Yahoo retroactively updates
+          <code>adjclose</code> for recent bars. The 3-day window captures these adjustments without waiting for the
+          corporate actions pipeline to run. (3) <strong>API caching artifacts</strong>: Some Yahoo endpoints serve
+          stale cached data immediately after market close; fetching again the next day returns corrected values.
+          The raw zone's PRIMARY KEY ensures re-ingestion is idempotent (ON CONFLICT DO NOTHING); dbt handles
+          genuine corrections via <code>unique_key</code> upsert in the silver incremental model.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q5 — What does <code>prohibit_overlap = true</code> prevent in the Nomad periodic job?</summary>
+        <div class="quiz-answer">
+          Without it, if the nightly job runs for more than 24 hours (possible during a multi-week backfill after an
+          outage), Nomad would launch a second instance while the first is still running. Two concurrent instances
+          would: (1) compete for Yahoo Finance rate limit budget, increasing 429 errors across the board; (2) attempt
+          simultaneous COPY operations into the same year partitions, causing PRIMARY KEY conflicts and PostgreSQL
+          table-level lock contention; (3) race on the Singer STATE bookmark, where both instances write their own
+          STATE, potentially causing the bookmark to regress. <code>prohibit_overlap = true</code> causes the scheduler
+          to simply skip the cron tick if the previous instance is still active.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q6 — Why set <code>transform: skip</code> and run dbt as a separate Nomad job?</summary>
+        <div class="quiz-answer">
+          When <code>transform: run</code> is set, Meltano executes dbt immediately after extraction within the same
+          process. If a dbt model fails, Meltano marks the entire schedule as failed&mdash;which prevents the Singer
+          STATE bookmark from being saved. The next scheduled run would then re-fetch all data since the last saved
+          bookmark, including data that was already successfully loaded into raw_zone. With <code>transform: skip</code>:
+          the EL job saves its STATE bookmark regardless of what happens in dbt. The dbt job is a separate Nomad periodic
+          job with its own retry policy, its own logs, and its own failure domain. A SQL model bug never blocks ingestion.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q7 — Why store <code>raw_payload JSONB</code> on every row alongside parsed columns?</summary>
+        <div class="quiz-answer">
+          The raw_payload is an operational insurance policy against API schema changes. When a provider renames a
+          field&mdash;Yahoo Finance did this multiple times in 2022&ndash;2023&mdash;parsed columns become NULL but
+          <code>raw_payload</code> still contains the data. Fixing the dbt bronze model with a corrected JSON path
+          expression is all that's needed; no re-extraction from the API is required. Additionally, the raw payload
+          enables forensic debugging: if a parsed price looks wrong, you can inspect exactly what the API returned
+          for that specific row without re-fetching. Never discard data you've already paid the network cost to retrieve.
+        </div>
+      </details>
+    </div>
+
+    <!-- Next CTA -->
+    <a href="../part3-transforms/" class="next-cta">
+      <div>
+        <div class="next-label">Up Next &mdash; Part 3/6</div>
+        <div class="next-title">Transforms &mdash; The dbt Medallion Architecture</div>
+      </div>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+
+    <!-- Takeaway -->
+    <div class="takeaway-box">
+      <h3><i class="fa-solid fa-flag-checkered"></i> What We Built in Part 2</h3>
+      <ul class="takeaway-list">
+        <li><i class="fa-solid fa-circle-check"></i>
+          A raw zone PostgreSQL schema with idempotent PRIMARY KEYs, year-based partitioning, and JSONB for verbatim API response storage.</li>
+        <li><i class="fa-solid fa-circle-check"></i>
+          The Singer Protocol: three JSON message types (SCHEMA, RECORD, STATE) that decouple the Go tap from PostgreSQL entirely.</li>
+        <li><i class="fa-solid fa-circle-check"></i>
+          A Go Singer tap (<code>tap-marketdata-go</code>) with a semaphore-bounded goroutine pool (50 workers) ingesting 10,000 tickers in ~7 minutes vs 5.5 hours in Python.</li>
+        <li><i class="fa-solid fa-circle-check"></i>
+          Singer STATE/bookmark with a 3-day lookback window for volume corrections, adjusted-close updates, and API caching artifacts.</li>
+        <li><i class="fa-solid fa-circle-check"></i>
+          A <code>meltano.yml</code> treating the Go binary as a first-class custom plugin, with <code>transform: skip</code> for independent EL and T retry semantics.</li>
+        <li><i class="fa-solid fa-circle-check"></i>
+          A multi-stage Docker build (static Go binary inside Meltano Python container) and four independent Nomad periodic jobs with <code>prohibit_overlap = true</code> and Vault-injected secrets.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="article-footer">
     &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
     Ceci n'est pas un conseil financier.
     <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
-  </footer><script src="/assets/tag-renderer.js"></script>
-</body>
+  </footer>
 
+  <div class="series-bar"><div class="series-bar-inner">
+    <a href="../part1-foundations/" class="series-arrow" title="Part 1 — Foundations"><i class="fas fa-chevron-left"></i></a>
+    <span class="series-title">Securities Master</span>
+    <div class="series-steps">
+      <a href="../part1-foundations/" class="series-step" title="Foundations"><span class="series-num">1</span><span class="series-label">Foundations</span></a>
+      <a href="./" class="series-step current" title="Pipelines"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+      <a href="../part3-transforms/" class="series-step" title="Transforms"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+      <a href="../part4-corporate-actions/" class="series-step" title="Corporate Actions"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+      <a href="../part5-dashboards/" class="series-step" title="AI Interface"><span class="series-num">5</span><span class="series-label">AI Interface</span></a>
+      <a href="../part6-operations/" class="series-step" title="Operations"><span class="series-num">6</span><span class="series-label">Operations</span></a>
+    </div>
+    <span class="series-counter">2/6</span>
+    <a href="../part3-transforms/" class="series-arrow" title="Part 3 — Transforms"><i class="fas fa-chevron-right"></i></a>
+  </div></div>
+
+  <div class="fnav" id="floatingNav">
+    <div class="fnav-menu" id="fnavMenu">
+      <a href="#python-problem" class="fnav-item" data-section="python-problem"><i class="fas fa-bookmark"></i><span>The Python Bottleneck</span></a>
+      <a href="#raw-zone" class="fnav-item" data-section="raw-zone"><i class="fas fa-bookmark"></i><span>Raw Zone Schema</span></a>
+      <a href="#singer" class="fnav-item" data-section="singer"><i class="fas fa-bookmark"></i><span>Singer Protocol</span></a>
+      <a href="#go-tap" class="fnav-item" data-section="go-tap"><i class="fas fa-bookmark"></i><span>Go Tap Implementation</span></a>
+      <a href="#infra" class="fnav-item" data-section="infra"><i class="fas fa-bookmark"></i><span>Meltano, Docker &amp; Nomad</span></a>
+      <a href="#incremental" class="fnav-item" data-section="incremental"><i class="fas fa-bookmark"></i><span>Incremental Extraction</span></a>
+      <a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-question-circle"></i><span>Quiz</span></a>
+    </div>
+    <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+      <i class="fas fa-bars" id="fnavIcon"></i>
+      <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+    </button>
+  </div>
+
+  <script>
+    // ── Throughput Comparison Chart ──────────────────────────────────────────────
+    (function () {
+      var dom = document.getElementById('chartThroughput');
+      if (!dom) return;
+      var chart = echarts.init(dom);
+      chart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        legend: { data: ['Python asyncio (50 workers)', 'Go goroutines (50 workers)'], bottom: 0 },
+        grid: { left: '5%', right: '5%', top: '8%', bottom: '18%' },
+        xAxis: { type: 'category', data: ['1K symbols', '5K symbols', '10K symbols', '30K symbols'] },
+        yAxis: { type: 'value', name: 'Minutes', axisLabel: { formatter: '{value} min' } },
+        series: [
+          { name: 'Python asyncio (50 workers)', type: 'bar', barGap: '10%', data: [5, 25, 50, 150], itemStyle: { color: '#3b82f6', borderRadius: [6, 6, 0, 0] }, label: { show: true, position: 'top', formatter: '{c} min', fontSize: 11, fontWeight: 700 } },
+          { name: 'Go goroutines (50 workers)', type: 'bar', data: [0.5, 2, 4, 12], itemStyle: { color: '#0d9488', borderRadius: [6, 6, 0, 0] }, label: { show: true, position: 'top', formatter: '{c} min', fontSize: 11, fontWeight: 700 } }
+        ]
+      });
+      window.addEventListener('resize', function () { chart.resize(); });
+    })();
+
+    // ── Pipeline Architecture Flow ───────────────────────────────────────────────
+    (function () {
+      var dom = document.getElementById('chartPipelineFlow');
+      if (!dom) return;
+      var chart = echarts.init(dom);
+      var nodes = [
+        { name: 'Yahoo Finance\n(50K symbols)', category: 0, symbolSize: 40, x: 50, y: 80 },
+        { name: 'Casablanca\nBourse (BVC)', category: 0, symbolSize: 35, x: 50, y: 190 },
+        { name: 'Binance', category: 0, symbolSize: 30, x: 50, y: 280 },
+        { name: 'StockAnalysis\n(universe lists)', category: 0, symbolSize: 25, x: 50, y: 360 },
+        { name: 'Go Singer Tap\n(50 goroutines)', category: 1, symbolSize: 60, x: 280, y: 220 },
+        { name: 'Meltano\n(EL framework)', category: 2, symbolSize: 55, x: 490, y: 220 },
+        { name: 'target-postgres\n(bulk COPY)', category: 3, symbolSize: 45, x: 700, y: 150 },
+        { name: 'STATE\n(bookmark)', category: 5, symbolSize: 35, x: 700, y: 300 },
+        { name: 'raw_zone\n(PostgreSQL)', category: 4, symbolSize: 60, x: 900, y: 220 },
+        { name: 'Nomad Periodic\n(23:00 UTC)', category: 6, symbolSize: 40, x: 280, y: 390 }
+      ];
+      var links = [
+        { source: 'Yahoo Finance\n(50K symbols)', target: 'Go Singer Tap\n(50 goroutines)' },
+        { source: 'Casablanca\nBourse (BVC)', target: 'Go Singer Tap\n(50 goroutines)' },
+        { source: 'Binance', target: 'Go Singer Tap\n(50 goroutines)' },
+        { source: 'StockAnalysis\n(universe lists)', target: 'Go Singer Tap\n(50 goroutines)' },
+        { source: 'Go Singer Tap\n(50 goroutines)', target: 'Meltano\n(EL framework)', label: { show: true, formatter: 'Singer stdout' } },
+        { source: 'Meltano\n(EL framework)', target: 'target-postgres\n(bulk COPY)' },
+        { source: 'Meltano\n(EL framework)', target: 'STATE\n(bookmark)' },
+        { source: 'target-postgres\n(bulk COPY)', target: 'raw_zone\n(PostgreSQL)' },
+        { source: 'Nomad Periodic\n(23:00 UTC)', target: 'Meltano\n(EL framework)', lineStyle: { type: 'dashed' }, label: { show: true, formatter: 'trigger' } }
+      ];
+      chart.setOption({
+        tooltip: {},
+        series: [{
+          type: 'graph', layout: 'none', roam: true,
+          label: { show: true, fontSize: 10, fontWeight: 600 },
+          edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 8,
+          edgeLabel: { fontSize: 9, color: '#64748b' },
+          categories: [
+            { name: 'Data Sources', itemStyle: { color: '#64748b' } },
+            { name: 'Go Tap', itemStyle: { color: '#00ADD8' } },
+            { name: 'Meltano', itemStyle: { color: '#9333ea' } },
+            { name: 'Loader', itemStyle: { color: '#f97316' } },
+            { name: 'Storage', itemStyle: { color: '#0d9488' } },
+            { name: 'State', itemStyle: { color: '#10b981' } },
+            { name: 'Nomad', itemStyle: { color: '#dc2626' } }
+          ],
+          data: nodes, links: links,
+          lineStyle: { color: '#94a3b8', width: 2, curveness: 0.15 }
+        }]
+      });
+      window.addEventListener('resize', function () { chart.resize(); });
+    })();
+
+    // ── FAB Navigation ───────────────────────────────────────────────────────────
+    (function () {
+      var fab = document.getElementById('fnavBtn');
+      var menu = document.getElementById('fnavMenu');
+      var icon = document.getElementById('fnavIcon');
+      var label = document.getElementById('fnavLabel');
+      if (!fab || !menu) return;
+      var items = menu.querySelectorAll('.fnav-item');
+      var sections = [];
+      var isOpen = false;
+      items.forEach(function (item) {
+        var id = item.getAttribute('data-section');
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, item: item });
+      });
+      function toggle() {
+        isOpen = !isOpen;
+        menu.classList.toggle('open', isOpen);
+        fab.classList.toggle('open', isOpen);
+        icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+      }
+      fab.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+      document.addEventListener('click', function (e) {
+        if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen) toggle(); });
+      items.forEach(function (item) {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          var target = document.getElementById(this.getAttribute('data-section'));
+          if (target) {
+            var bb = document.querySelector('.brand-bar');
+            var offset = (bb ? bb.offsetHeight : 56) + 20;
+            window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+          }
+          if (isOpen) toggle();
+        });
+      });
+      var currentActive = null;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var match = sections.find(function (s) { return s.el === entry.target; });
+            if (match) {
+              if (currentActive) currentActive.item.classList.remove('active');
+              match.item.classList.add('active');
+              currentActive = match;
+              label.textContent = match.item.querySelector('span').textContent;
+            }
+          }
+        });
+      }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+      sections.forEach(function (s) { observer.observe(s.el); });
+      if (sections.length > 0) {
+        sections[0].item.classList.add('active');
+        currentActive = sections[0];
+        label.textContent = sections[0].item.querySelector('span').textContent;
+      }
+    })();
+  </script>
+
+  <script src="/assets/core.js"></script>
+  <script src="/assets/tag-renderer.js"></script>
+</body>
 </html>

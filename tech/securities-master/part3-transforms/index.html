@@ -1,515 +1,1147 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="us,tech" data-tab="tech">
+<html lang="fr" data-tags="dbt,sql,postgresql,data-engineering,medallion,finance,tech" data-tab="tech">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transforms — The Medallion Architecture | Building a Securities Master — Part 3/6 | Market Watch</title>
-    <meta name="description"
-        content="Building a Securities Master series — Part 3/6: Taming raw JSON with dbt. Master the Bronze/Silver/Gold data flow, incremental materializations, automated SCD2 snapshots, and AI-ready analytical marts.">
+    <title>Transforms — Architecture Médaillon avec dbt | Building a Securities Master — Part 3/6 | Market Watch</title>
+    <meta name="description" content="Building a Securities Master — Part 3/6 : Transformer le JSON brut en données financières précises avec dbt. Architecture Médaillon Bronze/Silver/Gold, modèles incrémentiels, snapshots SCD Type 2, marts IA.">
 
     <!-- Google Tag Manager -->
-    <script>(function (w, d, s, l, i) {
-            w[l] = w[l] || []; w[l].push({
-                'gtm.start':
-                    new Date().getTime(), event: 'gtm.js'
-            }); var f = d.getElementsByTagName(s)[0],
-                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
 
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Prism.js Syntax Highlighting (Tomorrow Night theme) -->
+    <!-- Prism.js Syntax Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jinja2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
     <!-- Base CSS -->
     <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        /* Styling consistent with Part 1 & 2 - Teal Theme */ .series-link.upcoming {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
+        /* ── Local overrides consistent with Part 1 & 2 ── */
         .hero-section {
-            padding: 4rem 2rem 8rem 2rem;
+            padding: 4rem 2rem 8rem;
             background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
             text-align: center;
         }
-
         .hero-date {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #0d9488;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 1rem;
+            font-size: 0.85rem; font-weight: 700; color: #0d9488;
+            text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;
         }
-
-        .hero-badges {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 2rem;
-        }
-
+        .hero-badges { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
         .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.5rem 1rem;
-            border-radius: 99px;
-            font-size: 0.8rem;
-            font-weight: 700;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700;
         }
-
-        .hero-badge-teal {
-            background: rgba(13, 148, 136, 0.1);
-            color: #0d9488;
-            border: 1px solid rgba(13, 148, 136, 0.2);
-        }
-
-        .hero-badge-orange {
-            background: rgba(249, 115, 22, 0.1);
-            color: #f97316;
-            border: 1px solid rgba(249, 115, 22, 0.2);
-        }
+        .hero-badge-teal  { background: rgba(13,148,136,0.1); color: #0d9488; border: 1px solid rgba(13,148,136,0.2); }
+        .hero-badge-amber { background: rgba(202,138,4,0.1);  color: #ca8a04; border: 1px solid rgba(202,138,4,0.2); }
+        .hero-badge-blue  { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); }
+        .hero-badge-orange{ background: rgba(249,115,22,0.1); color: #f97316; border: 1px solid rgba(249,115,22,0.2); }
 
         .section-divider {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin: 3rem 0 2rem;
-            color: #94a3b8;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+            display: flex; align-items: center; gap: 1rem;
+            margin: 3rem 0 2rem; color: #94a3b8;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .section-divider::before, .section-divider::after {
+            content: ''; flex: 1; height: 1px; background: #e2e8f0;
         }
 
-        .section-divider::before,
-        .section-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e2e8f0;
-        }
-
-        /* Code Blocks */
-        pre[class*="language-"],
-        code[class*="language-"] {
+        /* Code blocks */
+        pre[class*="language-"], code[class*="language-"] {
             background: #042f2e !important;
-            border: 1px solid #115e59;
-            border-radius: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
+            border: 1px solid #115e59; border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6;
         }
-
-        pre[class*="language-"] {
-            padding: 1.5rem;
-            margin: 0;
-            overflow-x: auto;
-        }
-
-        code[class*="language-"] {
-            border: none;
-        }
-
+        pre[class*="language-"] { padding: 1.5rem; margin: 0; overflow-x: auto; }
+        code[class*="language-"] { border: none; }
         .code-label {
-            display: block;
-            font-size: 0.65rem;
-            color: #0d9488;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            display: block; font-size: 0.65rem; color: #0d9488;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 0.5rem;
         }
-
-        .code-block-wrapper {
-            margin: 1.5rem 0;
-            position: relative;
-        }
-
+        .code-block-wrapper { margin: 1.5rem 0; position: relative; }
         .inline-code {
-            font-family: 'JetBrains Mono', monospace;
-            background: #f1f5f9;
-            color: #0f766e;
-            padding: 0.2em 0.4em;
-            border-radius: 4px;
-            font-size: 0.9em;
-            border: 1px solid #e2e8f0;
+            font-family: 'JetBrains Mono', monospace; background: #f1f5f9;
+            color: #0f766e; padding: 0.2em 0.4em; border-radius: 4px;
+            font-size: 0.9em; border: 1px solid #e2e8f0;
         }
 
-        /* Medallion Architecture Grid */
-        .medallion-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
+        /* Medallion cards */
+        .medallion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 1.5rem; margin: 2rem 0; }
         .medallion-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s;
+            background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+            padding: 1.5rem; position: relative; overflow: hidden; transition: transform 0.2s;
         }
+        .medallion-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .medallion-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; }
+        .medallion-bronze::before { background: linear-gradient(90deg, #b45309, #d97706); }
+        .medallion-silver::before { background: linear-gradient(90deg, #64748b, #94a3b8); }
+        .medallion-gold::before   { background: linear-gradient(90deg, #ca8a04, #facc15); }
+        .medallion-card h4 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem; margin: 0.5rem 0 1rem; }
+        .medallion-bronze h4 { color: #b45309; }
+        .medallion-silver h4 { color: #475569; }
+        .medallion-gold h4   { color: #ca8a04; }
 
-        .medallion-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .medallion-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 6px;
-        }
-
-        .medallion-bronze::before {
-            background: linear-gradient(90deg, #b45309, #d97706);
-        }
-
-        .medallion-silver::before {
-            background: linear-gradient(90deg, #64748b, #94a3b8);
-        }
-
-        .medallion-gold::before {
-            background: linear-gradient(90deg, #ca8a04, #facc15);
-        }
-
-        .medallion-card h4 {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.25rem;
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .medallion-bronze h4 {
-            color: #b45309;
-        }
-
-        .medallion-silver h4 {
-            color: #475569;
-        }
-
-        .medallion-gold h4 {
-            color: #ca8a04;
-        }
-
-        /* Decision Cards & Takeaways */
+        /* Decision cards */
         .decision-card {
-            background: #f8fafc;
-            border-left: 4px solid #0d9488;
-            border-top: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            border-radius: 0 12px 12px 0;
-            padding: 1.25rem 1.5rem;
-            margin: 1.5rem 0;
+            background: #f8fafc; border-left: 4px solid #0d9488;
+            border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
+            border-radius: 0 12px 12px 0; padding: 1.25rem 1.5rem; margin: 1.5rem 0;
         }
-
         .decision-card h4 {
-            color: #0f766e;
-            margin: 0 0 0.5rem;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            color: #0f766e; margin: 0 0 0.5rem; font-size: 1rem;
+            display: flex; align-items: center; gap: 0.5rem;
         }
+        .decision-card.warning { border-left-color: #f59e0b; }
+        .decision-card.warning h4 { color: #b45309; }
+        .decision-card.danger { border-left-color: #ef4444; }
+        .decision-card.danger h4 { color: #b91c1c; }
 
+        /* Step cards */
+        .step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1rem; margin: 2rem 0; }
+        .step-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .step-num {
+            width: 32px; height: 32px; background: #0d9488; color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+        }
+        .step-title { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
+        .step-desc { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+
+        /* Takeaway box */
         .takeaway-box {
             background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-            border: 1px solid #0d9488;
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 3rem 0;
+            border: 1px solid #0d9488; border-radius: 16px; padding: 2rem; margin: 3rem 0;
         }
+        .takeaway-box h3 { color: #0f766e; margin-top: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .takeaway-list { list-style: none; padding: 0; margin: 1rem 0; }
+        .takeaway-list li { display: flex; gap: 0.75rem; border-bottom: 1px solid rgba(13,148,136,0.15); padding: 0.75rem 0; }
+        .takeaway-list li:last-child { border-bottom: none; }
 
-        .takeaway-box h3 {
-            color: #0f766e;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        /* Formula box */
+        .formula-box {
+            background: #0f172a; color: #e2e8f0; border-radius: 12px;
+            padding: 1.5rem 2rem; margin: 1.5rem 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem; line-height: 1.8; text-align: center;
+            border: 1px solid #1e293b;
         }
+        .formula-box .formula-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; font-family: 'Inter', sans-serif; }
+        .formula-box .formula-main { font-size: 1.15rem; color: #34d399; font-weight: 600; }
+        .formula-box .formula-sub  { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
 
-        /* Footer */
-        .footer-bar {
-            text-align: center;
-            padding: 2rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-            font-size: 0.8rem;
+        /* File tree */
+        .file-tree {
+            background: #042f2e; border: 1px solid #115e59; border-radius: 12px;
+            padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+            line-height: 1.8; color: #a7f3d0; overflow-x: auto;
+        }
+        .file-tree .dir  { color: #34d399; font-weight: 600; }
+        .file-tree .file { color: #a7f3d0; }
+        .file-tree .comment { color: #4b7c6b; }
+
+        /* Data quality table */
+        .dq-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        .dq-table th { background: #f1f5f9; color: #0f172a; font-weight: 700; padding: 0.75rem 1rem; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        .dq-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: top; }
+        .dq-table tr:hover td { background: #f8fafc; }
+        .dq-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; }
+        .dq-badge-green  { background: #dcfce7; color: #16a34a; }
+        .dq-badge-amber  { background: #fef9c3; color: #ca8a04; }
+        .dq-badge-red    { background: #fee2e2; color: #dc2626; }
+        .dq-badge-blue   { background: #dbeafe; color: #2563eb; }
+
+        /* Pedagogy box */
+        .pedagogy-box {
+            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
+            padding: 1.25rem 1.5rem; margin: 1.5rem 0;
+        }
+        .pedagogy-box h4 { color: #1d4ed8; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        /* Next CTA */
+        .next-cta {
+            display: flex; align-items: center; gap: 1.5rem;
+            background: linear-gradient(135deg, #0d9488, #0891b2);
+            border-radius: 16px; padding: 2rem; margin: 2rem 0; text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .next-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(13,148,136,0.4); }
+        .next-cta-icon { font-size: 2.5rem; flex-shrink: 0; }
+        .next-cta-text h3 { color: white; margin: 0 0 0.25rem; font-size: 1.1rem; }
+        .next-cta-text p  { color: rgba(255,255,255,0.85); margin: 0; font-size: 0.9rem; }
+        .next-cta-arrow { margin-left: auto; color: white; font-size: 1.5rem; flex-shrink: 0; }
+
+        /* Quiz styles */
+        .quiz-section { margin: 3rem 0; }
+        .quiz-section h2 { color: #0f172a; }
+        .quiz-item { margin-bottom: 1.5rem; }
+        .quiz-item summary {
+            cursor: pointer; padding: 1rem 1.25rem;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+            font-weight: 600; color: #0f172a; list-style: none;
+            display: flex; align-items: center; gap: 0.75rem;
+            transition: background 0.2s;
+        }
+        .quiz-item summary:hover { background: #f0fdfa; }
+        .quiz-item summary::before { content: '❓'; font-size: 1rem; }
+        .quiz-item[open] summary { background: #f0fdfa; border-color: #0d9488; border-radius: 10px 10px 0 0; }
+        .quiz-answer {
+            padding: 1rem 1.25rem; border: 1px solid #0d9488; border-top: none;
+            border-radius: 0 0 10px 10px; background: white; color: #334155; line-height: 1.7;
+        }
+        .quiz-answer strong { color: #0f766e; }
+
+        /* Nomad / HCL specific */
+        pre[class*="language-hcl"], code[class*="language-hcl"] { background: #042f2e !important; }
+
+        /* Chart containers */
+        .chart-container { margin: 2rem 0; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .chart-title { background: #f8fafc; padding: 0.75rem 1.25rem; font-size: 0.85rem; font-weight: 700; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+
+        /* FAB */
+        .fnav { position: fixed; bottom: 2rem; right: 2rem; z-index: 1000; }
+        .fnav-menu {
+            position: absolute; bottom: 60px; right: 0;
+            background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+            overflow: hidden; min-width: 210px; display: none; flex-direction: column;
+        }
+        .fnav-menu.open { display: flex; }
+        .fnav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1.25rem; text-decoration: none; color: #334155;
+            font-size: 0.85rem; font-weight: 500; border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+        }
+        .fnav-item:last-child { border-bottom: none; }
+        .fnav-item:hover { background: #f0fdfa; color: #0d9488; }
+        .fnav-item i { width: 16px; text-align: center; color: #0d9488; }
+        .fnav-btn {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #0891b2);
+            border: none; cursor: pointer; color: white; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 20px -4px rgba(13,148,136,0.5);
+            transition: transform 0.2s;
+        }
+        .fnav-btn:hover { transform: scale(1.08); }
+        .fnav-btn-label { display: none; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .step-grid { grid-template-columns: 1fr; }
+            .medallion-grid { grid-template-columns: 1fr; }
+            .hero-section { padding: 2rem 1rem 5rem; }
         }
     </style>
 </head>
 
 <body>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
-            style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Brand Bar -->
     <nav class="brand-bar">
-    <div class="brand-bar-inner">
-      <a href="/" class="brand-logo">
-        <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
-      </a>
-      <div class="brand-actions">
-        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
-      </div>
-    </div>
-  </nav>
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
 
-    <!-- Series Navigation -->
-    
-
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <div class="hero-date"><i class="fa-solid fa-shuffle" style="margin-right:0.4rem;"></i> Building a Securities
-            Master &mdash; Part 3 of 6</div>
-        <h1
-            style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:800px;">
-            Transforms &mdash; The Medallion Architecture</h1>
-        <p class="hero-subtitle"
-            style="font-size:1.15rem; color:#64748b; max-width:750px; margin:0 auto; line-height:1.7;">
-            Raw JSON is toxic to quantitative models. Learn how to construct a rigorous pipeline using dbt to parse
-            JSON, manage incremental billion-row tables, automate SCD Type 2 point-in-time logic, and deploy AI-ready
-            analytical data marts.
+    <!-- Hero -->
+    <header class="hero-section">
+        <div class="hero-date"><i class="fa-solid fa-shuffle" style="margin-right:0.4rem;"></i> Building a Securities Master &mdash; Part 3 de 6</div>
+        <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:820px;">
+            Transforms &mdash; Architecture Médaillon avec dbt
+        </h1>
+        <p style="font-size:1.15rem; color:#64748b; max-width:760px; margin:0 auto; line-height:1.7;">
+            Le JSON brut est toxique pour les modèles quantitatifs. Construisez un pipeline rigoureux avec dbt : vues Bronze, modèles incrémentiels Silver, snapshots SCD Type 2 automatisés, et marts Gold prêts pour l'IA.
         </p>
         <div class="hero-badges">
-            <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-shuffle"></i> dbt Core</span>
-            <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-medal"></i> Medallion Pattern</span>
-            <span class="hero-badge" style="background:#fefce8; color:#ca8a04; border:1px solid #fef08a;"><i
-                    class="fa-solid fa-box-archive"></i> Incremental Models</span>
-            <span class="hero-badge" style="background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe;"><i
-                    class="fa-solid fa-camera"></i> dbt Snapshots (SCD2)</span>
+            <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-medal"></i> Bronze / Silver / Gold</span>
+            <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-layer-group"></i> dbt Core</span>
+            <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-camera"></i> Snapshots SCD2</span>
+            <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-forward-fast"></i> Modèles Incrémentiels</span>
         </div>
-    <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+    </header>
 
-    
-
-    
-
-    
-
-    
-
-    
-
+    <!-- Series Bar -->
+    <div class="series-bar">
+        <div class="series-bar-inner">
+            <a href="../part2-pipelines/" class="series-arrow" title="Part 2 — Pipelines"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step" title="Fondations"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step" title="Pipelines"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="./" class="series-step current" title="Transforms"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="../part4-corporate-actions/" class="series-step" title="Corporate Actions"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="../part5-dashboards/" class="series-step" title="IA &amp; Dashboards"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="../part6-operations/" class="series-step" title="Opérations"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">3/6</span>
+            <a href="../part4-corporate-actions/" class="series-arrow" title="Part 4 — Corporate Actions"><i class="fas fa-chevron-right"></i></a>
+        </div>
     </div>
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part2-pipelines/" class="series-arrow" title="Part2 Pipelines"><i class="fas fa-chevron-left"></i></a><span class="series-title">Securities
-            Master</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="./" class="series-step current" title="."><span class="series-num">3</span><span class="series-label">.</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">3/6</span><a href="../part4-corporate-actions/" class="series-arrow" title="Part4 Corporate Actions"><i class="fas fa-chevron-right"></i></a></div></div>
 
-    <div class="container"
-        style="max-width: 900px; margin: -3rem auto 0; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: relative;">
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-play-circle"></i><span>Introduction</span></a>
+            <a href="#project-structure" class="fnav-item" data-section="project-structure"><i class="fas fa-folder-tree"></i><span>Structure dbt</span></a>
+            <a href="#bronze" class="fnav-item" data-section="bronze"><i class="fas fa-medal" style="color:#b45309;"></i><span>Couche Bronze</span></a>
+            <a href="#silver-incremental" class="fnav-item" data-section="silver-incremental"><i class="fas fa-database" style="color:#475569;"></i><span>Silver — Incrémental</span></a>
+            <a href="#silver-scd2" class="fnav-item" data-section="silver-scd2"><i class="fas fa-camera" style="color:#475569;"></i><span>Silver — SCD2</span></a>
+            <a href="#data-quality" class="fnav-item" data-section="data-quality"><i class="fas fa-shield-halved"></i><span>Qualité des Données</span></a>
+            <a href="#gold" class="fnav-item" data-section="gold"><i class="fas fa-crown" style="color:#ca8a04;"></i><span>Couche Gold</span></a>
+            <a href="#nomad-orchestration" class="fnav-item" data-section="nomad-orchestration"><i class="fas fa-server"></i><span>Orchestration Nomad</span></a>
+            <a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-circle-question"></i><span>Quiz</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+        </button>
+    </div>
 
-        <p style="font-size: 1.1rem; line-height: 1.8; color: #334155;">In <a href="../part1-foundations/"
-                style="color: #0d9488; font-weight: 600;">Part 1</a>, we designed the ultimate PostgreSQL schema for a
-            Securities Master, meticulously crafting tables that prevent Look-Ahead and Survivorship biases via SCD Type
-            2 constraints. In <a href="../part2-pipelines/" style="color: #0d9488; font-weight: 600;">Part 2</a>, we
-            unleashed highly-concurrent Go extractors orchestrated by Nomad and Meltano, ruthlessly scraping APIs and
-            dumping payloads into our database.</p>
-
-        <p style="font-size: 1.1rem; line-height: 1.8; color: #334155; font-weight: 600;">Now, we face the chaos.</p>
-
-        <p style="font-size: 1.05rem; line-height: 1.7; color: #475569;">Our <code>raw_zone</code> schema is overflowing
-            with raw JSON. The Casablanca Bourse API spits out nested, undocumented properties. Yahoo Finance dumps flat
-            CSVs. Binance APIs disagree on ticker conventions (is it <code>BTC-USD</code> or <code>BTCUSDT</code>?). If
-            a quant researcher queries this directly, your hedge fund will hemorrhage capital due to bad data. To bridge
-            the gap between unstructured API sludge and pristine, mathematically sound predictive models, we implement a
-            hardened <strong>Medallion Architecture</strong> using <strong>dbt (Data Build Tool)</strong>.</p>
+    <div class="container" style="max-width:920px; margin:-3rem auto 0; padding:2rem; background:white; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); position:relative;">
 
         <!-- ============================================================ -->
-        <!-- SECTION 1: THE MEDALLION PATTERN                             -->
+        <!-- SECTION 0: INTRO                                             -->
         <!-- ============================================================ -->
-        <div class="section-divider"><i class="fa-solid fa-layer-group" style="color:#0d9488;"></i> The Architectural
-            Strategy</div>
+        <div id="intro">
+            <p style="font-size:1.1rem; line-height:1.8; color:#334155;">
+                Dans la <a href="../part1-foundations/" style="color:#0d9488; font-weight:600;">Partie 1</a>, nous avons conçu le schéma PostgreSQL institutionnel avec SCD Type 2, tables de référence et partitionnement. Dans la <a href="../part2-pipelines/" style="color:#0d9488; font-weight:600;">Partie 2</a>, des extracteurs Go concurrents orchestrés par Nomad et Meltano pompent les APIs vers notre <span class="inline-code">raw_zone</span>. Maintenant, nous faisons face au chaos.
+            </p>
+            <p style="font-size:1.05rem; line-height:1.7; color:#475569;">
+                La <span class="inline-code">raw_zone</span> déborde de JSON brut. L'API Casablanca Bourse produit des propriétés imbriquées non documentées. Yahoo Finance renvoie des CSV plats avec des conventions de colonnes changeantes. Binance utilise <span class="inline-code">BTCUSDT</span> là où d'autres attendent <span class="inline-code">BTC-USD</span>. Si un chercheur quant interroge ces données directement, votre fonds perd de l'argent à cause de mauvaises données.
+            </p>
+            <p style="font-size:1.05rem; line-height:1.7; color:#334155; font-weight:600;">
+                La solution : l'<strong>Architecture Médaillon</strong> implémentée avec <strong>dbt Core</strong>.
+            </p>
+        </div>
 
-        <h2><i class="fa-solid fa-chess-knight" style="color:#0d9488;"></i> The Medallion Logic in Quantitative Finance
-        </h2>
+        <!-- ============================================================ -->
+        <!-- SECTION 1: MEDALLION OVERVIEW                                -->
+        <!-- ============================================================ -->
+        <div class="section-divider"><i class="fa-solid fa-layer-group" style="color:#0d9488;"></i> Vue d'ensemble</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-chess-knight" style="color:#0d9488;"></i> La Logique Médaillon en Finance Quantitative</h2>
 
-        <p>The Medallion pattern (Bronze, Silver, Gold) isn't just a buzzword; it's a defensive engineering mechanism.
-            It isolates the chaos of external providers from the fragile logic of your trading algorithms.</p>
+        <p style="color:#334155; line-height:1.7;">
+            Le pattern Médaillon (Bronze, Silver, Gold) n'est pas un buzzword — c'est un mécanisme de défense ingénierie. Il isole le chaos des fournisseurs externes de la logique fragile de vos algorithmes de trading. Chaque couche a un contrat strict.
+        </p>
 
         <div class="medallion-grid">
             <div class="medallion-card medallion-bronze">
-                <h4><i class="fa-solid fa-medal"></i> Bronze: Raw & Cast</h4>
-                <p><strong>Materialization:</strong> <code>view</code> or <code>ephemeral</code></p>
-                <p>This layer applies "Schema-on-Read". It reaches into the JSON payloads, extracts keys using JSON path
-                    functions, casts them to rigorous PostgreSQL types (e.g., <code>NUMERIC(14,4)</code>), and
-                    normalizes column names across providers. <strong>Zero storage cost.</strong></p>
+                <h4><i class="fa-solid fa-medal"></i> Bronze : Brut &amp; Casté</h4>
+                <p><strong>Matérialisation :</strong> <span class="inline-code">view</span></p>
+                <p>Schema-on-Read. Extrait les clés JSON, caste en types PostgreSQL stricts (<span class="inline-code">NUMERIC(14,4)</span>), normalise les noms de colonnes entre providers. <strong>Zéro coût de stockage.</strong></p>
+                <p style="color:#b45309; font-size:0.85rem; font-weight:600;"><i class="fas fa-shield-halved"></i> Couche de déduplication</p>
             </div>
-
             <div class="medallion-card medallion-silver">
-                <h4><i class="fa-solid fa-database"></i> Silver: Cleansed & Historicized</h4>
-                <p><strong>Materialization:</strong> <code>incremental</code> & <code>snapshot</code></p>
-                <p>The source of truth. Deduplication, resolution of conflicting provider data, and temporal tracking.
-                    This is where we implement <strong>SCD Type 2</strong> to track precisely when Apple changed its
-                    GICS Sector, and where we merge billions of daily OHLCV bars incrementally.</p>
+                <h4><i class="fa-solid fa-database"></i> Silver : Nettoyé &amp; Historisé</h4>
+                <p><strong>Matérialisation :</strong> <span class="inline-code">incremental</span> + <span class="inline-code">snapshot</span></p>
+                <p>Source de vérité. Déduplication, résolution des conflits entre providers, et tracking temporel SCD Type 2. Milliards de barres OHLCV fusionnées de façon incrémentielle.</p>
+                <p style="color:#475569; font-size:0.85rem; font-weight:600;"><i class="fas fa-clock-rotate-left"></i> Point-in-time correct</p>
             </div>
-
             <div class="medallion-card medallion-gold">
-                <h4><i class="fa-solid fa-chart-line"></i> Gold: AI & Strategy Marts</h4>
-                <p><strong>Materialization:</strong> <code>table</code></p>
-                <p>Highly denormalized Star Schemas. We pre-calculate technical indicators (ATR, Rolling Volatility,
-                    Dollar Volume). A quantitative agent or BI tool queries the Gold layer to find trading candidates
-                    instantly, without writing complex joins or point-in-time window functions.</p>
+                <h4><i class="fa-solid fa-chart-line"></i> Gold : Marts IA &amp; Stratégie</h4>
+                <p><strong>Matérialisation :</strong> <span class="inline-code">table</span></p>
+                <p>Schémas en étoile dé-normalisés. Indicateurs techniques pré-calculés (ATR, Volatilité Rolling, Volume Dollar). Un agent LLM ou un outil BI interroge le Gold layer sans écrire de fenêtres complexes.</p>
+                <p style="color:#ca8a04; font-size:0.85rem; font-weight:600;"><i class="fas fa-robot"></i> Interface IA prête</p>
             </div>
         </div>
 
+        <!-- EChart: Medallion Flow -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-diagram-project" style="color:#0d9488;"></i> Flux de données Médaillon — du JSON brut au mart IA</div>
+            <div id="medallionFlowChart" style="height:380px; padding:1rem;"></div>
+        </div>
 
         <!-- ============================================================ -->
-        <!-- SECTION 2: BRONZE LAYER                                      -->
+        <!-- SECTION 2: PROJECT STRUCTURE                                  -->
         <!-- ============================================================ -->
-        <div class="section-divider"><i class="fa-solid fa-screwdriver-wrench" style="color:#0d9488;"></i> Layer 1:
-            Bronze</div>
+        <div class="section-divider" id="project-structure"><i class="fa-solid fa-folder-tree" style="color:#0d9488;"></i> Structure du Projet dbt</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-folder-open" style="color:#0d9488;"></i> Organisation du Projet dbt</h2>
 
-        <h2><i class="fa-solid fa-code" style="color:#0d9488;"></i> Bronze: Taming the JSON Sludge</h2>
-
-        <p>We never write <code>INSERT</code> statements with JSON parsing. Instead, we define dbt views over the raw
-            tables. If an API provider changes their payload structure tomorrow (e.g., Yahoo changes
-            <code>Adj Close</code> to <code>adjusted_close</code>), we only update the Bronze view. The entire
-            downstream pipeline remains protected.
+        <p style="color:#334155; line-height:1.7;">
+            Avant d'écrire le moindre modèle SQL, la structure de répertoires est critique. dbt utilise une convention de nommage pour déduire la couche Médaillon et appliquer les configurations par défaut définies dans <span class="inline-code">dbt_project.yml</span>.
         </p>
 
-        <p>Here is how we extract deeply nested instrument reference data from a notoriously undocumented exchange API,
-            the Casablanca Bourse (BVC).</p>
+        <div class="code-block-wrapper">
+            <span class="code-label">Arborescence du projet dbt</span>
+            <div class="file-tree">
+<span class="dir">securities_dbt/</span>
+├── <span class="dir">models/</span>
+│   ├── <span class="dir">bronze/</span>                 <span class="comment"># Views — zéro coût stockage</span>
+│   │   ├── stg_yahoo_bars.sql
+│   │   ├── stg_bvc_bars.sql
+│   │   ├── stg_bvc_instruments.sql
+│   │   ├── stg_binance_bars.sql
+│   │   └── schema.yml
+│   ├── <span class="dir">silver/</span>                 <span class="comment"># Incrémental + Snapshots</span>
+│   │   ├── fct_market_data_daily.sql
+│   │   ├── fct_market_data_intraday.sql
+│   │   └── schema.yml
+│   └── <span class="dir">gold/</span>                   <span class="comment"># Tables matérialisées pour BI/IA</span>
+│       ├── mart_strategy_universe.sql
+│       ├── mart_sector_momentum.sql
+│       └── schema.yml
+├── <span class="dir">snapshots/</span>                  <span class="comment"># SCD Type 2 automatisé</span>
+│   └── dim_instruments_snapshot.sql
+├── <span class="dir">tests/</span>                      <span class="comment"># Tests personnalisés</span>
+│   ├── assert_no_future_dates.sql
+│   └── assert_positive_prices.sql
+├── <span class="dir">macros/</span>                     <span class="comment"># Jinja2 réutilisable</span>
+│   └── dedupe_cte.sql
+├── <span class="file">dbt_project.yml</span>
+├── <span class="file">profiles.yml</span>              <span class="comment"># Connexion PostgreSQL</span>
+└── <span class="file">packages.yml</span>              <span class="comment"># dbt-expectations, etc.</span>
+            </div>
+        </div>
 
         <div class="code-block-wrapper">
-            <div class="code-label">dbt sql &mdash; models/bronze/stg_bvc_instruments.sql</div>
-            <pre><code class="language-jinja2">{{ config(
-    materialized='view',
-    tags=['bronze', 'reference_data']
-) }}
+            <span class="code-label">yaml — dbt_project.yml (configurations par couche)</span>
+            <pre><code class="language-yaml">name: 'securities_dbt'
+version: '1.7.0'
+config-version: 2
+
+profile: 'securities_master'
+
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+models:
+  securities_dbt:
+    # Couche Bronze : vue légère, pas de stockage
+    bronze:
+      +materialized: view
+      +schema: bronze_zone
+      +tags: ['bronze']
+
+    # Couche Silver : tables incrémentielles persistantes
+    silver:
+      +materialized: incremental
+      +schema: silver_zone
+      +tags: ['silver']
+
+    # Couche Gold : tables rebuild complètes chaque nuit
+    gold:
+      +materialized: table
+      +schema: gold_zone
+      +tags: ['gold']
+
+snapshots:
+  securities_dbt:
+    +target_schema: silver_zone
+    +tags: ['scd2', 'silver']</code></pre>
+        </div>
+
+        <p style="color:#334155; line-height:1.7;">
+            La configuration centralisée dans <span class="inline-code">dbt_project.yml</span> évite de répéter <span class="inline-code">materialized</span> dans chaque fichier SQL. Chaque modèle dans <span class="inline-code">models/bronze/</span> hérite automatiquement de <span class="inline-code">view</span>. Vous pouvez toujours écraser localement avec <span class="inline-code">&#123;&#123; config(materialized='table') &#125;&#125;</span>.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">yaml — models/bronze/schema.yml (sources + documentation)</span>
+            <pre><code class="language-yaml">version: 2
+
+sources:
+  - name: raw_zone
+    description: "Données brutes ingérées par les taps Meltano/Go (Part 2)"
+    database: securities_master
+    schema: raw_zone
+    tables:
+      - name: raw_instruments
+        description: "Payloads JSON des instruments financiers par provider"
+        columns:
+          - name: external_id
+            description: "Identifiant du provider (ticker, ISIN, etc.)"
+            tests:
+              - not_null
+          - name: raw_payload
+            description: "JSONB complet du provider"
+            tests:
+              - not_null
+          - name: provider_name
+            description: "Nom du provider (BVC, YAHOO, BINANCE)"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['BVC', 'YAHOO', 'BINANCE', 'EURONEXT', 'CBOE']
+          - name: _sdc_extracted_at
+            description: "Timestamp d'ingestion Meltano (Singer _sdc_extracted_at)"
+            tests:
+              - not_null
+
+      - name: raw_market_data
+        description: "Données OHLCV brutes par provider"
+        columns:
+          - name: symbol
+            tests: [not_null]
+          - name: trade_date
+            tests: [not_null]
+          - name: raw_payload
+            tests: [not_null]</code></pre>
+        </div>
+
+        <div class="decision-card">
+            <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi <span class="inline-code">source()</span> plutôt que référence directe aux tables ?</h4>
+            <p style="color:#334155; margin:0;">
+                <span class="inline-code">&#123;&#123; source('raw_zone', 'raw_instruments') &#125;&#125;</span> permet à dbt de tracer le <strong>lineage complet</strong> de la donnée : de la table raw ingérée par le tap Go jusqu'au mart Gold final. Le <span class="inline-code">dbt docs generate</span> produit un graphe de dépendances interactif. Les tests sur les sources (<span class="inline-code">not_null</span>, <span class="inline-code">accepted_values</span>) créent un <strong>firewall de qualité</strong> à l'entrée du pipeline.
+            </p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: BRONZE LAYER                                      -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="bronze"><i class="fa-solid fa-medal" style="color:#b45309;"></i> Couche Bronze</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-code" style="color:#b45309;"></i> Bronze : Dompter le JSON avec PostgreSQL</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            On n'écrit jamais d'instructions <span class="inline-code">INSERT</span> avec du parsing JSON manuel. On définit des vues dbt sur les tables raw. Si un provider change <span class="inline-code">Adj Close</span> en <span class="inline-code">adjusted_close</span> demain, on met à jour uniquement la vue Bronze. Tout le pipeline aval reste protégé.
+        </p>
+
+        <div class="step-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-title">Extraire</div>
+                <div class="step-desc">Opérateurs JSONB PostgreSQL (<span class="inline-code">->></span>, <span class="inline-code">-></span>) pour extraire les valeurs.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-title">Caster</div>
+                <div class="step-desc">Conversion explicite : <span class="inline-code">::NUMERIC(14,4)</span>, <span class="inline-code">::DATE</span>, <span class="inline-code">::CHAR(12)</span>.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-title">Normaliser</div>
+                <div class="step-desc">Standardiser les noms de colonnes entre providers (snake_case, même sémantique).</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div class="step-title">Dédupliquer</div>
+                <div class="step-desc">CTE avec <span class="inline-code">ROW_NUMBER()</span> + <span class="inline-code">WHERE rn = 1</span> — compatible PostgreSQL.</div>
+            </div>
+        </div>
+
+        <h3 style="color:#0f172a;">Exemple : Instruments BVC (Bourse de Casablanca)</h3>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/bronze/stg_bvc_instruments.sql</span>
+            <pre><code class="language-sql">-- Héritage de dbt_project.yml : materialized='view', schema='bronze_zone'
+{{ config(tags=['bronze', 'reference_data']) }}
 
 WITH raw_bvc AS (
-    SELECT * FROM {{ source('raw_zone', 'raw_instruments') }}
+    -- {{ source() }} documente le lineage dans dbt docs
+    SELECT *
+    FROM {{ source('raw_zone', 'raw_instruments') }}
     WHERE provider_name = 'BVC'
 ),
 
 extracted AS (
     SELECT
-        -- The Meltano metadata
-        _sdc_extracted_at AS ingested_at,
-        
-        -- PostgreSQL JSONB Extraction & Casting
-        external_id::VARCHAR(50) AS provider_tick,
-        (raw_payload->>'codeISIN')::CHAR(12) AS isin,
-        (raw_payload->>'instrumentName')::TEXT AS name,
-        
-        -- Dealing with nested JSON arrays (e.g., sector classifications)
-        jsonb_array_element_text(raw_payload->'sectors', 0)::TEXT AS sector_primary,
-        
-        -- Standardizing to our Institutional Part 1 Data Model
-        'EQUITY'::VARCHAR(50) AS instrument_type,
-        'MAD'::CHAR(3) AS currency,
-        TRUE AS is_tradable
-        
+        -- Métadonnées Singer/Meltano (injectées par le tap Go en Part 2)
+        _sdc_extracted_at                                 AS ingested_at,
+
+        -- Extraction JSONB PostgreSQL + casting strict
+        external_id::VARCHAR(50)                          AS provider_tick,
+        (raw_payload->>'codeISIN')::CHAR(12)              AS isin,
+        (raw_payload->>'instrumentName')::TEXT            AS name,
+        (raw_payload->>'currency')::CHAR(3)               AS currency,
+
+        -- JSONB imbriqué : tableaux de secteurs
+        -- jsonb_array_element_text() extrait l'index 0 d'un tableau JSON
+        jsonb_array_element_text(
+            raw_payload->'sectors', 0
+        )::TEXT                                           AS sector_primary,
+
+        -- Standardisation vers notre modèle de données (Part 1)
+        UPPER(raw_payload->>'instrumentType')::VARCHAR(50) AS instrument_type,
+        (raw_payload->>'isTradable')::BOOLEAN              AS is_tradable,
+
+        -- Coordonnées boursières
+        (raw_payload->>'marketCap')::NUMERIC(20,2)         AS market_cap_mad,
+        (raw_payload->>'floatRatio')::NUMERIC(6,4)         AS float_ratio
+
     FROM raw_bvc
+),
+
+-- ⚠ Déduplication PostgreSQL correcte : CTE + ROW_NUMBER
+-- NOTE: QUALIFY n'existe PAS en PostgreSQL (BigQuery/Snowflake uniquement).
+-- Pattern correct : CTE intermédiaire + WHERE rn = 1
+deduped AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY isin
+            ORDER BY ingested_at DESC   -- garder l'ingestion la plus récente
+        ) AS rn
+    FROM extracted
+    WHERE isin IS NOT NULL              -- filtrer les instruments sans ISIN
 )
 
--- Defensive Deduplication: 
--- Sometimes an API pagination bug causes Meltano to ingest the same ticker twice in one run.
-SELECT *
-FROM extracted
-QUALIFY ROW_NUMBER() OVER (PARTITION BY isin ORDER BY ingested_at DESC) = 1</code></pre>
+SELECT
+    ingested_at,
+    provider_tick,
+    isin,
+    name,
+    currency,
+    sector_primary,
+    instrument_type,
+    is_tradable,
+    market_cap_mad,
+    float_ratio
+FROM deduped
+WHERE rn = 1    -- strictement le payload le plus récent par ISIN</code></pre>
         </div>
 
-        <div class="decision-card">
-            <h4><i class="fa-solid fa-triangle-exclamation"></i> The <code>QUALIFY ROW_NUMBER()</code> Pattern</h4>
-            <p>Data ingestion is inherently flawed. Network timeouts lead to retries, which lead to duplicated records
-                in the <code>raw_zone</code>. Instead of relying on <code>DISTINCT</code> (which is computationally
-                expensive and blind to timestamps), we use window functions.
-                <code>QUALIFY ROW_NUMBER() OVER (... ORDER BY ingested_at DESC) = 1</code> guarantees we strictly take
-                the absolutely most recent payload for a given instrument, cleanly discarding duplicates.
+        <div class="decision-card danger">
+            <h4><i class="fa-solid fa-triangle-exclamation"></i> Bug critique à éviter : <span class="inline-code">QUALIFY</span> n'existe pas en PostgreSQL</h4>
+            <p style="color:#334155; margin:0 0 0.75rem;">
+                La syntaxe <span class="inline-code">QUALIFY ROW_NUMBER() OVER (...) = 1</span> est exclusive à BigQuery, Snowflake, et DuckDB. <strong>Elle lève une erreur de syntaxe sur PostgreSQL.</strong>
+            </p>
+            <p style="color:#334155; margin:0;">
+                Le pattern correct PostgreSQL est un CTE avec <span class="inline-code">ROW_NUMBER()</span> calculé dans une sous-requête, puis filtré avec <span class="inline-code">WHERE rn = 1</span> dans la requête externe. dbt rend ce pattern naturel grâce aux CTEs enchaînées.
             </p>
         </div>
 
+        <div class="pedagogy-box">
+            <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi JSONB opérateur <span class="inline-code">->></span> et non <span class="inline-code">-></span> ?</h4>
+            <p style="color:#1e3a5f; margin:0; line-height:1.7;">
+                <span class="inline-code">-></span> retourne un <strong>objet JSONB</strong> (avec les guillemets JSON inclus). <span class="inline-code">->></span> retourne une <strong>chaîne de texte</strong>, ce qui permet le cast direct : <span class="inline-code">(raw_payload->>'marketCap')::NUMERIC</span>. Utiliser <span class="inline-code">-></span> avec un cast numérique provoque une erreur de type. Pour les tableaux JSON imbriqués, utiliser <span class="inline-code">jsonb_array_element_text(payload->'arrayKey', index)</span>.
+            </p>
+        </div>
 
-        <!-- ============================================================ -->
-        <!-- SECTION 3: SILVER LAYER (INCREMENTAL)                        -->
-        <!-- ============================================================ -->
-        <div class="section-divider"><i class="fa-solid fa-database" style="color:#0d9488;"></i> Layer 2: Silver
-            (Time-Series)</div>
-
-        <h2><i class="fa-solid fa-forward-fast" style="color:#0d9488;"></i> Incremental Models: Processing Billions of
-            Bars</h2>
-
-        <p>If you have 10,000 global equities, 25 years of daily history is roughly 60+ million rows. If you query
-            intraday (1-minute bars), you are swiftly dealing with <strong>tens of billions of rows</strong>.
-            Materializing this as a <code>table</code> in dbt—which runs a <code>DROP TABLE</code> then
-            <code>CREATE TABLE</code> every time—will bring your database cluster to its knees.
-        </p>
-
-        <p>We use dbt's <code>incremental</code> materialization. On the first run, it builds the entire table. On every
-            subsequent run, dbt intelligently executes an <code>INSERT ... ON CONFLICT</code> or a <code>MERGE</code>
-            statement, processing <em>only</em> the new data.</p>
+        <h3 style="color:#0f172a;">Exemple : Barres OHLCV Yahoo Finance</h3>
 
         <div class="code-block-wrapper">
-            <div class="code-label">dbt sql &mdash; models/silver/fct_market_data_daily.sql</div>
-            <pre><code class="language-jinja2">{{ config(
+            <span class="code-label">dbt SQL — models/bronze/stg_yahoo_bars.sql</span>
+            <pre><code class="language-sql">{{ config(tags=['bronze', 'market_data']) }}
+
+WITH raw_yahoo AS (
+    SELECT *
+    FROM {{ source('raw_zone', 'raw_market_data') }}
+    WHERE provider_name = 'YAHOO'
+),
+
+extracted AS (
+    SELECT
+        _sdc_extracted_at                               AS ingested_at,
+        (raw_payload->>'symbol')::VARCHAR(20)           AS symbol,
+
+        -- Yahoo renvoie trade_date comme string ISO 8601 'YYYY-MM-DD'
+        (raw_payload->>'date')::DATE                    AS trade_date,
+
+        -- OHLCV : Yahoo utilise 'Open', 'High', 'Low', 'Close' (capitalised)
+        (raw_payload->>'Open')::NUMERIC(14,4)           AS open_price,
+        (raw_payload->>'High')::NUMERIC(14,4)           AS high_price,
+        (raw_payload->>'Low')::NUMERIC(14,4)            AS low_price,
+        (raw_payload->>'Close')::NUMERIC(14,4)          AS close_price,
+        (raw_payload->>'Adj Close')::NUMERIC(14,4)      AS adj_close_price,
+        (raw_payload->>'Volume')::BIGINT                AS volume,
+
+        -- VWAP n'est pas fourni par Yahoo, on l'estime (HLC/3)
+        NULL::NUMERIC(14,4)                             AS vwap,
+
+        -- Validation de base : filtrer les barres sans prix valide
+        CASE
+            WHEN (raw_payload->>'Close') IS NULL  THEN FALSE
+            WHEN (raw_payload->>'Volume') = '0'   THEN FALSE
+            ELSE TRUE
+        END AS is_valid
+
+    FROM raw_yahoo
+),
+
+deduped AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY symbol, trade_date
+            ORDER BY ingested_at DESC
+        ) AS rn
+    FROM extracted
+    WHERE is_valid = TRUE
+      AND trade_date IS NOT NULL
+      AND symbol IS NOT NULL
+)
+
+SELECT
+    ingested_at, symbol, trade_date,
+    open_price, high_price, low_price, close_price, adj_close_price,
+    volume, vwap
+FROM deduped
+WHERE rn = 1</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: SILVER — INCREMENTAL                              -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="silver-incremental"><i class="fa-solid fa-database" style="color:#475569;"></i> Silver — Modèles Incrémentiels</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-forward-fast" style="color:#475569;"></i> Traiter des Milliards de Barres avec les Modèles Incrémentiels</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Avec 10 000 actions mondiales et 25 ans d'historique journalier, nous traitons 60+ millions de lignes. Les données intraday (barres 1 minute) atteignent <strong>plusieurs dizaines de milliards de lignes</strong>. Matérialiser cela en <span class="inline-code">table</span> dbt — qui exécute un <span class="inline-code">DROP TABLE</span> puis <span class="inline-code">CREATE TABLE AS SELECT</span> à chaque run — serait catastrophique.
+        </p>
+
+        <p style="color:#334155; line-height:1.7;">
+            La matérialisation <span class="inline-code">incremental</span> de dbt résout ce problème. Au premier run, elle construit la table complète. À chaque run suivant, dbt génère un <span class="inline-code">INSERT ... ON CONFLICT DO UPDATE</span>, ne traitant que les nouvelles données.
+        </p>
+
+        <div class="formula-box">
+            <div class="formula-label">Économie de traitement incrémentiel</div>
+            <div class="formula-main">Données traitées = WHERE trade_date ≥ MAX(trade_date) - INTERVAL '3 days'</div>
+            <div class="formula-sub">Sur 60M lignes : 60M → ~150K lignes traitées par run = 400× plus rapide</div>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/silver/fct_market_data_daily.sql</span>
+            <pre><code class="language-sql">-- Configuration du modèle incrémentiel
+-- ⚠ PostgreSQL : PAS de partition_by dans config dbt
+--   (c'est une option BigQuery-specific)
+--   Le partitionnement PostgreSQL est défini au niveau DDL (fait en Part 1)
+{{ config(
     materialized='incremental',
     unique_key=['symbol', 'trade_date'],
-    -- We leverage the partition strategy defined in Part 1!
-    partition_by={'field': 'trade_date', 'data_type': 'date', 'granularity': 'month'}
+    on_schema_change='fail',
+    tags=['silver', 'market_data']
 ) }}
 
-WITH combined_bronze_bars AS (
+WITH combined_bronze AS (
+    -- Union de toutes les sources Bronze normalisées
     SELECT * FROM {{ ref('stg_yahoo_bars') }}
     UNION ALL
     SELECT * FROM {{ ref('stg_bvc_bars') }}
     UNION ALL
     SELECT * FROM {{ ref('stg_binance_bars') }}
+),
+
+enriched AS (
+    SELECT
+        symbol,
+        trade_date,
+        open_price,
+        high_price,
+        low_price,
+        close_price,
+        adj_close_price,
+        volume,
+
+        -- VWAP proxy si le provider ne le fournit pas (HLC/3)
+        COALESCE(
+            vwap,
+            (high_price + low_price + close_price) / 3.0
+        ) AS vwap_proxy,
+
+        -- True Range pour calcul ATR ultérieur en Gold
+        high_price - low_price AS true_range_hl,
+
+        ingested_at,
+        CURRENT_TIMESTAMP AS dbt_updated_at
+
+    FROM combined_bronze
+    WHERE close_price > 0       -- sanity check
+      AND volume > 0
+      AND trade_date <= CURRENT_DATE  -- pas de barres futures
 )
+
+SELECT * FROM enriched
+
+{% if is_incremental() %}
+    -- ⚡ Block INCRÉMENTIEL : exécuté uniquement sur les runs de mise à jour
+    -- Lookback de 3 jours pour capturer :
+    --   - Les corrections tardives de volumes envoyées par les exchanges
+    --   - Les dividendes ajustés rétroactivement par Yahoo Finance
+    --   - Les splits qui recalculent l'historique adj_close
+    WHERE trade_date >= (
+        SELECT MAX(trade_date) - INTERVAL '3 days'
+        FROM {{ this }}
+    )
+{% endif %}</code></pre>
+        </div>
+
+        <div class="decision-card">
+            <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi la fenêtre de 3 jours, pas <span class="inline-code">> MAX(trade_date)</span> ?</h4>
+            <p style="color:#334155; margin:0 0 0.75rem;">
+                Les données financières arrivent avec un délai. Yahoo Finance corrige silencieusement ses prix ajustés des dividendes plusieurs jours après le paiement. Les exchanges envoient parfois un volume révisé le lendemain. Avec <span class="inline-code">> MAX(trade_date)</span>, ces corrections ne seraient jamais ingérées.
+            </p>
+            <p style="color:#334155; margin:0;">
+                La fenêtre de 3 jours garantit qu'on retraite les 3 derniers jours. Avec <span class="inline-code">unique_key=['symbol', 'trade_date']</span>, dbt génère un vrai <strong>upsert</strong> : si la ligne existe, elle est mise à jour ; sinon elle est insérée. On capture les corrections tout en traitant 400× moins de données qu'un rebuild complet.
+            </p>
+        </div>
+
+        <div class="decision-card warning">
+            <h4><i class="fa-solid fa-triangle-exclamation"></i> <span class="inline-code">partition_by</span> dans la config dbt : erreur BigQuery</h4>
+            <p style="color:#334155; margin:0 0 0.75rem;">
+                La clé <span class="inline-code">partition_by={'field': 'trade_date', 'data_type': 'date', 'granularity': 'month'}</span> dans le bloc <span class="inline-code">config()</span> dbt est <strong>exclusive à BigQuery</strong>. Sur PostgreSQL, elle est silencieusement ignorée ou provoque des erreurs selon la version de l'adaptateur.
+            </p>
+            <p style="color:#334155; margin:0;">
+                Le partitionnement PostgreSQL est défini au niveau DDL <span class="inline-code">PARTITION BY RANGE (trade_date)</span> lors de la création initiale de la table (fait dans la Partie 1). dbt insère ensuite dans la bonne partition automatiquement — sans configuration supplémentaire dans le modèle.
+            </p>
+        </div>
+
+        <h3 style="color:#0f172a;">Barres Intraday : Gestion des Volumes Extrêmes</h3>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/silver/fct_market_data_intraday.sql</span>
+            <pre><code class="language-sql">{{ config(
+    materialized='incremental',
+    unique_key=['symbol', 'bar_timestamp'],
+    -- Sur 50+ milliards de lignes, on vérifie d'abord si le schema a changé
+    on_schema_change='fail',
+    tags=['silver', 'intraday']
+) }}
+
+WITH raw_intraday AS (
+    SELECT *
+    FROM {{ source('raw_zone', 'raw_market_data') }}
+    WHERE provider_name IN ('BINANCE', 'BVC_INTRADAY')
+      AND (raw_payload->>'interval') = '1m'
+),
+
+extracted AS (
+    SELECT
+        (raw_payload->>'symbol')::VARCHAR(20)           AS symbol,
+
+        -- Timestamp complet avec timezone
+        TO_TIMESTAMP(
+            (raw_payload->>'open_time')::BIGINT / 1000.0
+        ) AT TIME ZONE 'UTC'                            AS bar_timestamp,
+
+        (raw_payload->>'open')::NUMERIC(14,8)           AS open_price,
+        (raw_payload->>'high')::NUMERIC(14,8)           AS high_price,
+        (raw_payload->>'low')::NUMERIC(14,8)            AS low_price,
+        (raw_payload->>'close')::NUMERIC(14,8)          AS close_price,
+        (raw_payload->>'volume')::NUMERIC(24,8)         AS volume,
+        (raw_payload->>'quote_asset_volume')::NUMERIC(24,8) AS quote_volume,
+        (raw_payload->>'number_of_trades')::INTEGER     AS num_trades,
+        _sdc_extracted_at                               AS ingested_at
+
+    FROM raw_intraday
+),
+
+deduped AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY symbol, bar_timestamp
+            ORDER BY ingested_at DESC
+        ) AS rn
+    FROM extracted
+    WHERE close_price > 0
+)
+
+SELECT
+    symbol, bar_timestamp, open_price, high_price, low_price,
+    close_price, volume, quote_volume, num_trades, ingested_at
+FROM deduped
+WHERE rn = 1
+
+{% if is_incremental() %}
+    -- Pour les barres intraday, lookback de 2 heures suffit
+    -- (les exchanges corrigent rarement au-delà d'une heure)
+    AND bar_timestamp >= (
+        SELECT MAX(bar_timestamp) - INTERVAL '2 hours'
+        FROM {{ this }}
+    )
+{% endif %}</code></pre>
+        </div>
+
+        <!-- EChart: Data Volume by Layer -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-chart-bar" style="color:#0d9488;"></i> Volume de données par couche Médaillon — Impact du traitement incrémentiel</div>
+            <div id="volumeChart" style="height:320px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: SILVER — SCD2 SNAPSHOTS                          -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="silver-scd2"><i class="fa-solid fa-camera" style="color:#475569;"></i> Silver — SCD Type 2 avec dbt Snapshots</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-clock-rotate-left" style="color:#475569;"></i> Automatiser SCD Type 2 avec dbt Snapshots</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Dans la Partie 1, nous avons conçu le framework théorique : quand les métadonnées fondamentales changent (Apple change de secteur GICS, une action est renommée suite à une fusion), on ne <strong>doit pas</strong> écraser la ligne. Il faut fermer le <span class="inline-code">valid_to</span> de l'ancienne version et insérer une nouvelle version avec <span class="inline-code">valid_from = NOW()</span>. Coder ces merges SQL manuellement est notoire pour produire des bugs subtils.
+        </p>
+
+        <p style="color:#334155; line-height:1.7;">
+            dbt Snapshots automatise entièrement cette logique. Vous déclarez quelles colonnes surveiller ; dbt calcule les hashes, détecte les mutations, et émet les <span class="inline-code">UPDATE</span>/<span class="inline-code">INSERT</span> appropriés.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt snapshot — snapshots/dim_instruments_snapshot.sql</span>
+            <pre><code class="language-sql">{% snapshot dim_instruments_snapshot %}
+
+{{
+    config(
+        target_schema='silver_zone',
+        unique_key='isin',
+
+        -- Stratégie 'check' : dbt compare un hash des colonnes listées
+        -- Si le hash change → nouvelle version SCD2
+        strategy='check',
+        check_cols=[
+            'name',
+            'sector_primary',
+            'instrument_type',
+            'is_tradable',
+            'currency',
+            'market_cap_mad',      -- Un changement de taille matérielle est documenté
+        ],
+
+        -- Colonnes dbt_scd_id, dbt_updated_at, dbt_valid_from, dbt_valid_to
+        -- sont automatiquement ajoutées par dbt
+        invalidate_hard_deletes=true,   -- Marquer dbt_valid_to si l'ISIN disparaît
+    )
+}}
+
+-- Source : la vue Bronze qui agrège tous les providers d'instruments
+SELECT
+    isin,
+    provider_tick,
+    name,
+    instrument_type,
+    sector_primary,
+    currency,
+    is_tradable,
+    market_cap_mad,
+    float_ratio,
+    ingested_at
+FROM {{ ref('stg_all_instruments') }}
+
+-- On n'inclut que les instruments avec ISIN valide
+WHERE isin IS NOT NULL
+  AND LENGTH(TRIM(isin)) = 12
+
+{% endsnapshot %}</code></pre>
+        </div>
+
+        <div class="pedagogy-box">
+            <h4><i class="fa-solid fa-graduation-cap"></i> Comment dbt Snapshot génère-t-il le SCD Type 2 ?</h4>
+            <p style="color:#1e3a5f; margin:0; line-height:1.7;">
+                À chaque run de <span class="inline-code">dbt snapshot</span>, dbt exécute un <span class="inline-code">MERGE</span> en deux étapes : d'abord, il compare le hash des <span class="inline-code">check_cols</span> de chaque ligne entrante avec la version active (où <span class="inline-code">dbt_valid_to IS NULL</span>). Si le hash change, dbt émet un <span class="inline-code">UPDATE</span> pour fermer l'ancienne ligne (<span class="inline-code">dbt_valid_to = NOW()</span>) puis un <span class="inline-code">INSERT</span> pour la nouvelle version (<span class="inline-code">dbt_valid_from = NOW()</span>, <span class="inline-code">dbt_valid_to = NULL</span>). Si le hash est identique, rien ne se passe. C'est exactement l'architecture point-in-time que nous avons codée manuellement en Partie 1, ici générée automatiquement.
+            </p>
+        </div>
+
+        <p style="color:#334155; line-height:1.7;">
+            La table générée <span class="inline-code">silver_zone.dim_instruments_snapshot</span> produit automatiquement les colonnes suivantes :
+        </p>
+
+        <table class="dq-table">
+            <thead>
+                <tr>
+                    <th>Colonne</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Valeur si actif</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="inline-code">dbt_scd_id</span></td>
+                    <td>TEXT</td>
+                    <td>Hash unique de la version</td>
+                    <td>UUID généré</td>
+                </tr>
+                <tr>
+                    <td><span class="inline-code">dbt_updated_at</span></td>
+                    <td>TIMESTAMP</td>
+                    <td>Dernière mise à jour de la ligne</td>
+                    <td>Timestamp du run</td>
+                </tr>
+                <tr>
+                    <td><span class="inline-code">dbt_valid_from</span></td>
+                    <td>TIMESTAMP</td>
+                    <td>Début de validité de cette version</td>
+                    <td>Date de création</td>
+                </tr>
+                <tr>
+                    <td><span class="inline-code">dbt_valid_to</span></td>
+                    <td>TIMESTAMP</td>
+                    <td>Fin de validité (NULL = version actuelle)</td>
+                    <td><strong>NULL</strong></td>
+                </tr>
+                <tr>
+                    <td><span class="inline-code">isin</span> + tous vos champs</td>
+                    <td>Vos types</td>
+                    <td>Données d'instrument à ce moment</td>
+                    <td>Valeurs actuelles</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Interroger les snapshots SCD2 (version point-in-time)</span>
+            <pre><code class="language-sql">-- Exemple : Quel secteur avait Apple (ISIN US0378331005) au 15 janvier 2023 ?
+-- Requête point-in-time correcte grâce aux snapshots dbt
+SELECT
+    isin,
+    name,
+    sector_primary,
+    instrument_type,
+    dbt_valid_from,
+    dbt_valid_to
+FROM silver_zone.dim_instruments_snapshot
+WHERE isin = 'US0378331005'
+  -- Point-in-time : la version valide à cette date
+  AND dbt_valid_from <= '2023-01-15'::TIMESTAMP
+  AND (dbt_valid_to > '2023-01-15'::TIMESTAMP OR dbt_valid_to IS NULL)
+ORDER BY dbt_valid_from;
+
+-- Pour obtenir uniquement la version actuelle (toutes les actions)
+SELECT *
+FROM silver_zone.dim_instruments_snapshot
+WHERE dbt_valid_to IS NULL
+  AND is_tradable = TRUE
+ORDER BY market_cap_mad DESC NULLS LAST;</code></pre>
+        </div>
+
+        <h3 style="color:#0f172a;">Vue helper : masquer la complexité SCD2</h3>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/silver/dim_instruments_current.sql</span>
+            <pre><code class="language-sql">-- Vue de commodité : expose uniquement la version actuelle de chaque instrument
+-- Les utilisateurs en aval n'ont pas à gérer dbt_valid_to IS NULL
+{{ config(materialized='view', tags=['silver', 'reference_data']) }}
+
+SELECT
+    isin,
+    provider_tick,
+    name,
+    instrument_type,
+    sector_primary,
+    currency,
+    is_tradable,
+    market_cap_mad,
+    float_ratio,
+    dbt_valid_from AS last_updated
+FROM {{ ref('dim_instruments_snapshot') }}
+WHERE dbt_valid_to IS NULL</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: DATA QUALITY                                      -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="data-quality"><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> Qualité des Données</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-vial-circle-check" style="color:#0d9488;"></i> Faire Confiance aux Données : Tests Automatisés dbt</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Si vous passez des NaN à un backtester Python, il plante. Si vous passez des données erronées à un algorithme de trading live, il perd de l'argent. Nous utilisons les assertions de test dbt comme une porte CI/CD stricte. Les données n'atteignent pas la couche Gold si des tests échouent.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">yaml — models/silver/schema.yml (tests automatisés)</span>
+            <pre><code class="language-yaml">version: 2
+
+models:
+  - name: fct_market_data_daily
+    description: "Barres OHLCV journalières — source de vérité du Securities Master"
+
+    columns:
+      - name: symbol
+        description: "Symbole boursier normalisé"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_instruments_current')
+              field: provider_tick
+
+      - name: trade_date
+        description: "Date de la séance boursière"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: "'1990-01-01'::DATE"
+              max_value: "CURRENT_DATE"
+
+      - name: close_price
+        description: "Prix de clôture en devise du marché"
+        tests:
+          - not_null
+          # Prix ne peut être négatif ou zéro
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0001
+              strictly: false
+
+      - name: volume
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+      - name: high_price
+        tests:
+          # High doit toujours être >= Close
+          - dbt_utils.expression_is_true:
+              expression: ">= close_price"
+
+      - name: low_price
+        tests:
+          # Low doit toujours être <= Close
+          - dbt_utils.expression_is_true:
+              expression: "<= close_price"
+
+    tests:
+      # Unicité composite : une seule barre par symbole par jour
+      - unique:
+          column_name: "symbol || '-' || trade_date::TEXT"
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - symbol
+            - trade_date
+
+  - name: dim_instruments_current
+    description: "Version courante de tous les instruments actifs"
+    columns:
+      - name: isin
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_value_lengths_to_equal:
+              value: 12
+
+      - name: instrument_type
+        tests:
+          # Rejet si un provider invente une nouvelle classe d'actif non documentée
+          - accepted_values:
+              values: ['EQUITY', 'FUTURE', 'FXFORWARD', 'IRS', 'OPTIONVOL', 'CRYPTO', 'ETF']
+
+      - name: currency
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_value_lengths_to_equal:
+              value: 3</code></pre>
+        </div>
+
+        <p style="color:#334155; line-height:1.7;">
+            Pour les tests métier complexes, dbt supporte des tests SQL personnalisés dans <span class="inline-code">tests/</span>. Ces tests doivent retourner 0 ligne pour passer.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — tests/assert_ohlcv_consistency.sql (test personnalisé)</span>
+            <pre><code class="language-sql">-- Test personnalisé : vérifie la cohérence OHLCV interne
+-- Un chandelier valide doit respecter : Low <= Open, Close <= High
+-- Ce test retourne les lignes invalides — dbt échoue si résultat non vide
 
 SELECT
     symbol,
@@ -518,280 +1150,873 @@ SELECT
     high_price,
     low_price,
     close_price,
-    volume,
-    -- Calculate VWAP if the provider didn't supply it
-    COALESCE(vwap, (high_price + low_price + close_price) / 3) AS vwap_proxy,
-    ingested_at
-FROM combined_bronze_bars
-
-{% if is_incremental() %}
-    -- This block ONLY runs on daily pipeline updates
-    -- It asks: "What is the maximum date currently in this table?"
-    -- And then only selects rows from the Bronze views strictly newer or equal to that date.
-    WHERE trade_date >= (SELECT MAX(trade_date) - interval '3 days' FROM {{ this }})
-{% endif %}</code></pre>
+    'OHLCV_INCONSISTENCY' AS failure_reason
+FROM {{ ref('fct_market_data_daily') }}
+WHERE
+    -- Open en dehors du range High/Low
+    open_price > high_price
+    OR open_price < low_price
+    -- Close en dehors du range High/Low
+    OR close_price > high_price
+    OR close_price < low_price
+    -- High inférieur à Low (impossible physiquement)
+    OR high_price < low_price</code></pre>
         </div>
-
-        <div class="decision-card">
-            <h4><i class="fa-solid fa-lightbulb"></i> The Lookback Window (<code>- interval '3 days'</code>)</h4>
-            <p>Why do we look back 3 days instead of just grabbing <code>> MAX(trade_date)</code>? Because of
-                <strong>late-arriving data and corrections</strong>. Sometimes, an exchange revises the closing volume
-                of Friday on a Monday morning. By defining <code>unique_key=['symbol', 'trade_date']</code>, dbt knows
-                how to gracefully <em>upsert</em> (update if exists, insert if not). Scanning a 3-day trailing window
-                guarantees we catch silent api corrections while processing 99.9% less data than a full refresh.
-            </p>
-        </div>
-
-
-        <!-- ============================================================ -->
-        <!-- SECTION 4: SILVER LAYER (SCD2 SNAPSHOTS)                     -->
-        <!-- ============================================================ -->
-        <div class="section-divider"><i class="fa-solid fa-clock-rotate-left" style="color:#0d9488;"></i> Layer 2:
-            Silver (SCD Type 2)</div>
-
-        <h2><i class="fa-solid fa-camera" style="color:#0d9488;"></i> Automating SCD Type 2 with dbt Snapshots</h2>
-
-        <p>In Part 1, we defined a rigorous framework: when fundamental metadata changes (e.g., Apple changes its GICS
-            sector, or a ticker symbol is renamed due to a merger), we must <strong>not</strong> overwrite the row. We
-            must close the <code>valid_to</code> timestamp of the old record, and insert a new record with
-            <code>valid_from</code> set to now. Hand-coding these SQL merges is famously bug-prone.
-        </p>
-
-        <p>We outsource this entirely to <strong>dbt Snapshots</strong>.</p>
 
         <div class="code-block-wrapper">
-            <div class="code-label">dbt snapshot &mdash; snapshots/dim_instruments_snapshot.sql</div>
-            <pre><code class="language-jinja2">{% snapshot dim_instruments_snapshot %}
-
-{{
-    config(
-      target_schema='silver_zone',
-      unique_key='isin',
-
-      -- Strategy: 'check' means dbt compares specific columns to detect a mutation
-      strategy='check',
-      check_cols=['name', 'sector', 'industry', 'instrument_type', 'is_tradable'],
-    )
-}}
+            <span class="code-label">SQL — tests/assert_no_weekend_bars.sql</span>
+            <pre><code class="language-sql">-- Les marchés actions sont fermés le weekend
+-- Ce test détecte les barres Saturday/Sunday pour les actions (pas crypto)
+-- Retourne les violations → dbt échoue si non vide
 
 SELECT
-    isin,
-    symbol,
-    name,
-    instrument_type,
-    sector,
-    industry,
-    currency,
-    is_tradable
-FROM {{ ref('stg_all_instruments') }}
-
-{% endsnapshot %}</code></pre>
+    f.symbol,
+    f.trade_date,
+    EXTRACT(DOW FROM f.trade_date) AS day_of_week,   -- 0=Sun, 6=Sat
+    'WEEKEND_BAR' AS failure_reason
+FROM {{ ref('fct_market_data_daily') }} f
+JOIN {{ ref('dim_instruments_current') }} d
+    ON f.symbol = d.provider_tick
+WHERE d.instrument_type = 'EQUITY'       -- Uniquement les actions
+  AND EXTRACT(DOW FROM f.trade_date) IN (0, 6)   -- Weekend</code></pre>
         </div>
 
-        <p>How it works: dbt takes a hash of the <code>check_cols</code>. Tomorrow, when the Airflow DAG runs
-            <code>dbt snapshot</code>, dbt compares the incoming API payload against the existing rows in
-            <code>silver_zone.dim_instruments_snapshot</code>.
+        <table class="dq-table" style="margin-top:2rem;">
+            <thead>
+                <tr>
+                    <th>Test</th>
+                    <th>Type</th>
+                    <th>Modèle</th>
+                    <th>Sévérité</th>
+                    <th>Action si échec</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="inline-code">not_null</span> sur symbol/date</td>
+                    <td><span class="dq-badge dq-badge-blue">Built-in</span></td>
+                    <td>Bronze + Silver</td>
+                    <td><span class="dq-badge dq-badge-red">error</span></td>
+                    <td>Pipeline bloqué</td>
+                </tr>
+                <tr>
+                    <td>Prix positif (<span class="inline-code">&gt; 0.0001</span>)</td>
+                    <td><span class="dq-badge dq-badge-green">dbt-expectations</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-red">error</span></td>
+                    <td>Pipeline bloqué</td>
+                </tr>
+                <tr>
+                    <td>Cohérence OHLCV</td>
+                    <td><span class="dq-badge dq-badge-amber">Custom SQL</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-amber">warn</span></td>
+                    <td>Alerte, pipeline continue</td>
+                </tr>
+                <tr>
+                    <td>Unicité symbol+date</td>
+                    <td><span class="dq-badge dq-badge-blue">Built-in</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-red">error</span></td>
+                    <td>Pipeline bloqué</td>
+                </tr>
+                <tr>
+                    <td>instrument_type accepté</td>
+                    <td><span class="dq-badge dq-badge-blue">Built-in</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-red">error</span></td>
+                    <td>Pipeline bloqué</td>
+                </tr>
+                <tr>
+                    <td>Barres weekend (actions)</td>
+                    <td><span class="dq-badge dq-badge-amber">Custom SQL</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-amber">warn</span></td>
+                    <td>Log + investigation</td>
+                </tr>
+                <tr>
+                    <td>Longueur ISIN = 12</td>
+                    <td><span class="dq-badge dq-badge-green">dbt-expectations</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-red">error</span></td>
+                    <td>Pipeline bloqué</td>
+                </tr>
+                <tr>
+                    <td>Relation instruments actifs</td>
+                    <td><span class="dq-badge dq-badge-blue">Built-in</span></td>
+                    <td>Silver</td>
+                    <td><span class="dq-badge dq-badge-amber">warn</span></td>
+                    <td>Alerte, pipeline continue</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: GOLD LAYER                                        -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="gold"><i class="fa-solid fa-crown" style="color:#ca8a04;"></i> Couche Gold</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-brain" style="color:#ca8a04;"></i> Gold : Le Mart de Découverte Stratégique pour l'IA</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            La couche Silver est parfaitement structurée mais normalisée. Demander à un Data Scientist ou un LLM d'écrire dynamiquement des fonctions de fenêtre pour calculer des ATR sur 20 jours en traversant des dimensions SCD2 est masochiste et source d'erreurs.
         </p>
-        <ul style="color:#334155; line-height: 1.6; font-size: 1.05rem;">
-            <li>If the hash matches, dbt does nothing.</li>
-            <li>If a new <code>isin</code> appears, dbt inserts it with <code>dbt_valid_from = current_timestamp</code>
-                and <code>dbt_valid_to = NULL</code>.</li>
-            <li>If Apple's <code>sector</code> changed to "AI Technologies", dbt issues an <code>UPDATE</code> statement
-                to set the old Apple row's <code>dbt_valid_to = current_timestamp</code>, and <code>INSERT</code>s the
-                new version.</li>
-        </ul>
 
-        <p>This magically generates the exact institutional Point-in-Time architecture we designed in SQL in Part 1!</p>
-
-
-        <!-- ============================================================ -->
-        <!-- SECTION 5: DATA QUALITY TESTING                              -->
-        <!-- ============================================================ -->
-        <div class="section-divider"><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> Data Quality
-            Assurance</div>
-
-        <h2><i class="fa-solid fa-vial-circle-check" style="color:#0d9488;"></i> Trusting the Data via Automated Tests
-        </h2>
-
-        <p>If you feed NaN values to a Python backtester, it crashes. If you feed bad data to a live trading algorithm,
-            it buys bad assets. We use dbt's testing assertions as a strict CI/CD gate. Data does not reach the Gold
-            layer if tests fail.</p>
+        <p style="color:#334155; line-height:1.7;">
+            La couche Gold abandonne la normalisation. Nous utilisons dbt pour pré-calculer des tables larges en schéma étoile, optimisées pour des <span class="inline-code">SELECT</span> rapides. Quand votre scanner systématique cherche chaque matin des "Candidats Breakout Haute Volatilité Très Liquides", il frappe la couche Gold.
+        </p>
 
         <div class="code-block-wrapper">
-            <div class="code-label">yaml &mdash; models/silver/schema.yml</div>
-            <pre><code class="language-yaml">models:
-  - name: fct_market_data_daily
-    description: "Daily OHLCV bars. The core time-series of the Securities Master."
-    columns:
-      - name: symbol
-        tests:
-          - not_null
-      - name: trade_date
-        tests:
-          - not_null
-      - name: close_price
-        tests:
-          - not_null
-          # A custom dbt_expectations test: Price cannot be negative or zero.
-          - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0.0001 
-              
-  - name: dim_instruments_snapshot
-    columns:
-      - name: instrument_type
-        tests:
-          # Reject the pipeline if a provider invents a new undocumented asset class
-          - accepted_values:
-              values: ['EQUITY', 'FUTURE', 'FXFORWARD', 'IRS', 'OPTIONVOL', 'CRYPTO']</code></pre>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- SECTION 6: GOLD LAYER                                        -->
-        <!-- ============================================================ -->
-        <div class="section-divider"><i class="fa-solid fa-crown" style="color:#d97706;"></i> Layer 3: Gold (Analytical
-            Marts)</div>
-
-        <h2><i class="fa-solid fa-brain" style="color:#ca8a04;"></i> Gold: The AI Strategy Discovery Mart</h2>
-
-        <p>The Silver layer is perfectly structured, normalized time-series data. However, asking a Data Scientist or an
-            LLM to dynamically write window functions to calculate 20-day Average True Ranges (ATR) across historical
-            SCD2 dimensions is masochistic.</p>
-
-        <p>The Gold layer drops normalization. We use dbt to pre-compute massive, wide "Star Schema" tables (Marts)
-            optimized solely for rapid SELECT queries. When your systematic scanner runs every morning to find "Highly
-            Liquid, High Volatility Breakout Candidates", it hits the Gold layer.</p>
-
-        <div class="code-block-wrapper">
-            <div class="code-label">dbt sql &mdash; models/gold/mart_strategy_universe.sql</div>
-            <pre><code class="language-jinja2">{{ config(
+            <span class="code-label">dbt SQL — models/gold/mart_strategy_universe.sql</span>
+            <pre><code class="language-sql">{{ config(
     materialized='table',
-    tags=['gold', 'ai_marts']
+    tags=['gold', 'ai_marts'],
+    post_hook="ANALYZE {{ this }}"   -- Mettre à jour les stats PostgreSQL après rebuild
 ) }}
 
 WITH active_instruments AS (
-    -- Hide SCD2 complexity from downstream users!
-    -- We only expose WHAT is currently tradable today.
-    SELECT * FROM {{ ref('dim_instruments_snapshot') }}
-    WHERE dbt_valid_to IS NULL 
-      AND is_tradable = TRUE
+    -- Cacher la complexité SCD2 aux utilisateurs downstream
+    -- On expose uniquement CE QUI est tradable AUJOURD'HUI
+    SELECT *
+    FROM {{ ref('dim_instruments_current') }}
+    WHERE is_tradable = TRUE
 ),
 
-volatility_and_liquidity AS (
+-- Derniers 252 jours de données (1 an de trading)
+recent_bars AS (
+    SELECT *
+    FROM {{ ref('fct_market_data_daily') }}
+    WHERE trade_date >= CURRENT_DATE - INTERVAL '252 days'
+),
+
+technicals AS (
     SELECT
         symbol,
         trade_date,
         close_price,
-        
-        -- Liquidity: 20-Day Average Daily Volume (in Dollars)
-        AVG(volume * close_price) OVER w_20d AS adv_20d_usd,
-        
-        -- Volatility: 20-Day Realized Volatility (Standard Deviation)
-        STDDEV(close_price) OVER w_20d AS realized_vol_20d,
-        
-        -- Momentum: 50-Day Simple Moving Average
-        AVG(close_price) OVER w_50d AS sma_50d
+        volume,
+        adj_close_price,
+
+        -- ══ Indicateurs de Liquidité ══
+        -- Average Daily Volume en devise (20 jours)
+        AVG(volume * close_price) OVER w_20d          AS adv_20d_usd,
+
+        -- ══ Indicateurs de Volatilité ══
+        -- Volatilité réalisée 20 jours (écart-type des rendements log)
+        STDDEV(
+            LN(close_price / LAG(close_price, 1) OVER w_all)
+        ) OVER w_20d * SQRT(252)                      AS realized_vol_20d_annualized,
+
+        -- True Range pour ATR
+        GREATEST(
+            high_price - low_price,
+            ABS(high_price - LAG(close_price, 1) OVER w_all),
+            ABS(low_price  - LAG(close_price, 1) OVER w_all)
+        )                                             AS true_range,
+
+        -- ══ Indicateurs de Tendance ══
+        AVG(close_price) OVER w_20d                   AS sma_20d,
+        AVG(close_price) OVER w_50d                   AS sma_50d,
+        AVG(close_price) OVER w_200d                  AS sma_200d,
+
+        -- Distance par rapport aux moyennes (momentum)
+        (close_price / NULLIF(AVG(close_price) OVER w_50d, 0) - 1) * 100
+                                                      AS pct_above_sma50,
+
+        -- ══ Performance Periods ══
+        -- Rendement 1 mois (21 jours de trading)
+        (close_price / NULLIF(
+            LAG(close_price, 21) OVER w_all, 0
+        ) - 1) * 100                                  AS perf_1m_pct,
+
+        -- Rendement 3 mois (63 jours de trading)
+        (close_price / NULLIF(
+            LAG(close_price, 63) OVER w_all, 0
+        ) - 1) * 100                                  AS perf_3m_pct
 
     FROM {{ ref('fct_market_data_daily') }}
-    
-    WINDOW 
-        w_20d AS (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 20 PRECEDING AND CURRENT ROW),
-        w_50d AS (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 50 PRECEDING AND CURRENT ROW)
+    JOIN active_instruments USING (symbol)
+
+    WINDOW
+        -- Fenêtres nommées réutilisées : lisibles et optimisées
+        w_all  AS (PARTITION BY symbol ORDER BY trade_date
+                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
+        w_20d  AS (PARTITION BY symbol ORDER BY trade_date
+                   ROWS BETWEEN 20 PRECEDING AND CURRENT ROW),
+        w_50d  AS (PARTITION BY symbol ORDER BY trade_date
+                   ROWS BETWEEN 50 PRECEDING AND CURRENT ROW),
+        w_200d AS (PARTITION BY symbol ORDER BY trade_date
+                   ROWS BETWEEN 200 PRECEDING AND CURRENT ROW)
+),
+
+-- ATR 14 jours : moyenne des true ranges
+atr_calc AS (
+    SELECT
+        symbol,
+        trade_date,
+        AVG(true_range) OVER (
+            PARTITION BY symbol ORDER BY trade_date
+            ROWS BETWEEN 14 PRECEDING AND CURRENT ROW
+        ) AS atr_14d
+    FROM technicals
+),
+
+-- Snapshot du dernier jour uniquement pour la table Gold
+latest_day AS (
+    SELECT DISTINCT ON (symbol)
+        t.*,
+        a.atr_14d
+    FROM technicals t
+    JOIN atr_calc a USING (symbol, trade_date)
+    ORDER BY symbol, t.trade_date DESC
 )
 
--- Build the final wide analytical table
+-- ══ Table Gold finale : large, dé-normalisée, IA-ready ══
 SELECT
+    -- Dimensions de référence (depuis Silver SCD2)
     ref.isin,
-    ref.symbol,
-    ref.name,
-    ref.sector,
-    metrics.trade_date,
-    metrics.close_price,
-    metrics.adv_20d_usd,
-    metrics.realized_vol_20d,
-    metrics.sma_50d,
-    
-    -- AI Tagging: Pre-classify regimes
-    CASE 
-        WHEN metrics.close_price > metrics.sma_50d THEN 'Bullish'
-        ELSE 'Bearish'
-    END AS trend_regime
+    ref.provider_tick                                  AS symbol,
+    ref.name                                           AS company_name,
+    ref.sector_primary                                 AS sector,
+    ref.instrument_type,
+    ref.currency,
+    ref.market_cap_mad,
+
+    -- Prix et date
+    ld.trade_date                                      AS last_price_date,
+    ld.close_price,
+    ld.adj_close_price,
+
+    -- Liquidité
+    ROUND(ld.adv_20d_usd::NUMERIC, 0)                 AS adv_20d_usd,
+
+    -- Volatilité et ATR
+    ROUND(ld.realized_vol_20d_annualized::NUMERIC, 4)  AS realized_vol_20d,
+    ROUND(ld.atr_14d::NUMERIC, 4)                      AS atr_14d,
+
+    -- Tendances
+    ROUND(ld.sma_20d::NUMERIC, 4)                      AS sma_20d,
+    ROUND(ld.sma_50d::NUMERIC, 4)                      AS sma_50d,
+    ROUND(ld.sma_200d::NUMERIC, 4)                     AS sma_200d,
+    ROUND(ld.pct_above_sma50::NUMERIC, 2)              AS pct_above_sma50,
+
+    -- Performance
+    ROUND(ld.perf_1m_pct::NUMERIC, 2)                  AS perf_1m_pct,
+    ROUND(ld.perf_3m_pct::NUMERIC, 2)                  AS perf_3m_pct,
+
+    -- ══ Tags de régime IA : pré-classifiés ══
+    CASE
+        WHEN ld.close_price > ld.sma_200d
+         AND ld.sma_50d > ld.sma_200d THEN 'Bullish — Golden Cross'
+        WHEN ld.close_price > ld.sma_50d THEN 'Bullish — Above SMA50'
+        WHEN ld.close_price < ld.sma_200d
+         AND ld.sma_50d < ld.sma_200d THEN 'Bearish — Death Cross'
+        ELSE 'Bearish — Below SMA50'
+    END                                                AS trend_regime,
+
+    -- Filtre liquidité institutionnel
+    CASE
+        WHEN ld.adv_20d_usd >= 50000000  THEN 'Institutionnel'
+        WHEN ld.adv_20d_usd >= 2000000   THEN 'Retail Eligible'
+        WHEN ld.adv_20d_usd >= 500000    THEN 'Micro Cap'
+        ELSE 'Illiquid'
+    END                                                AS liquidity_class,
+
+    CURRENT_TIMESTAMP                                  AS mart_refreshed_at
 
 FROM active_instruments ref
-JOIN volatility_and_liquidity metrics ON ref.symbol = metrics.symbol
--- Implement strict retail/institutional liquidity filters at the mart level
-WHERE metrics.adv_20d_usd > 2000000 </code></pre>
+JOIN latest_day ld ON ref.provider_tick = ld.symbol
+
+-- ══ Filtre de qualité Gold : exclure les instruments illiquides ══
+WHERE ld.adv_20d_usd >= 500000      -- min 500K$/jour de volume
+  AND ld.atr_14d IS NOT NULL        -- assez d'historique pour ATR 14j
+  AND ld.sma_50d IS NOT NULL        -- assez d'historique pour SMA 50j</code></pre>
         </div>
 
-        <p style="font-size: 1.05rem; line-height: 1.7; color: #475569;">Because this is materialized as a
-            <code>table</code>, the complex window functions are computed once during the Airflow nightly batch. When
-            generating an Evidence.dev dashboard or prompting an AI assistant via MCP, retrieving the top momentum
-            candidates takes under 10 milliseconds.
-        </p>
+        <div class="pedagogy-box">
+            <h4><i class="fa-solid fa-graduation-cap"></i> DISTINCT ON vs ROW_NUMBER pour "dernier par groupe" en PostgreSQL</h4>
+            <p style="color:#1e3a5f; margin:0; line-height:1.7;">
+                <span class="inline-code">SELECT DISTINCT ON (symbol)</span> est une extension PostgreSQL qui sélectionne la première ligne de chaque groupe selon l'<span class="inline-code">ORDER BY</span>. C'est souvent 2-5× plus rapide qu'un CTE avec <span class="inline-code">ROW_NUMBER() ... WHERE rn = 1</span> sur de grands volumes, car PostgreSQL peut utiliser un index sur <span class="inline-code">(symbol, trade_date DESC)</span>. Les deux approches sont correctes — <span class="inline-code">DISTINCT ON</span> est idiomatique pour "dernier enregistrement par partition".
+            </p>
+        </div>
 
+        <h3 style="color:#0f172a;">Mart Sectoriel : Rotation de Secteurs</h3>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">dbt SQL — models/gold/mart_sector_momentum.sql</span>
+            <pre><code class="language-sql">{{ config(materialized='table', tags=['gold', 'sector_analysis']) }}
+
+-- Agrège la performance par secteur pour détecter la rotation sectorielle
+-- Alimentera les dashboards Evidence.dev de la Partie 5
+
+SELECT
+    sector,
+    instrument_type,
+    COUNT(DISTINCT isin)                               AS num_instruments,
+    ROUND(AVG(perf_1m_pct)::NUMERIC, 2)               AS avg_perf_1m,
+    ROUND(AVG(perf_3m_pct)::NUMERIC, 2)               AS avg_perf_3m,
+    ROUND(AVG(realized_vol_20d)::NUMERIC, 4)           AS avg_vol_20d,
+    ROUND(SUM(adv_20d_usd)::NUMERIC, 0)               AS total_sector_adv,
+    ROUND(AVG(pct_above_sma50)::NUMERIC, 2)           AS avg_pct_above_sma50,
+
+    -- Score momentum : combinaison performance 1M + momentum SMA50
+    ROUND((
+        COALESCE(AVG(perf_1m_pct), 0) * 0.6 +
+        COALESCE(AVG(pct_above_sma50), 0) * 0.4
+    )::NUMERIC, 2)                                     AS sector_momentum_score,
+
+    -- Classement par momentum (utile pour les APIs MCP de la Partie 5)
+    RANK() OVER (
+        PARTITION BY instrument_type
+        ORDER BY (
+            COALESCE(AVG(perf_1m_pct), 0) * 0.6 +
+            COALESCE(AVG(pct_above_sma50), 0) * 0.4
+        ) DESC
+    )                                                  AS momentum_rank,
+
+    CURRENT_DATE                                       AS as_of_date
+
+FROM {{ ref('mart_strategy_universe') }}
+WHERE sector IS NOT NULL
+GROUP BY sector, instrument_type</code></pre>
+        </div>
 
         <!-- ============================================================ -->
-        <!-- WRAP UP                                                      -->
+        <!-- SECTION 8: NOMAD ORCHESTRATION                               -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="nomad-orchestration"><i class="fa-solid fa-server" style="color:#0d9488;"></i> Orchestration avec Nomad</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-gears" style="color:#0d9488;"></i> Orchestrer dbt avec HashiCorp Nomad</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Comme pour les pipelines d'ingestion de la Partie 2, nous utilisons <strong>Nomad</strong> pour orchestrer les runs dbt. Nomad gère le cycle de vie complet : injection des credentials de base de données depuis Vault, séquençage des étapes (Bronze → Silver → Snapshots → Tests → Gold), et retry automatique en cas d'échec.
+        </p>
+
+        <div class="decision-card">
+            <h4><i class="fa-solid fa-lightbulb"></i> Pourquoi Nomad pour dbt et pas un scheduler dbt natif ?</h4>
+            <p style="color:#334155; margin:0 0 0.75rem;">
+                dbt Cloud propose un scheduler intégré, mais il n'a pas accès à notre infrastructure on-premise (PostgreSQL en réseau privé, Vault pour les secrets). Le scheduler dbt open source est basique. Nomad s'intègre nativement avec Vault (injection de secrets), le réseau privé, et les alertes Prometheus — et nous l'utilisons déjà pour les taps de la Partie 2.
+            </p>
+            <p style="color:#334155; margin:0;">
+                Un seul système d'orchestration pour toute la stack : les taps d'ingestion (<span class="inline-code">periodic batch</span>) et les runs dbt (<span class="inline-code">periodic batch</span>) sont visibles dans la même UI Nomad, avec les mêmes patterns de logs et d'alertes.
+            </p>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">HCL — jobs/dbt-nightly.nomad (job Nomad pour dbt)</span>
+            <pre><code class="language-bash">job "dbt-nightly" {
+  datacenters = ["dc1"]
+  type        = "batch"
+  namespace   = "securities-master"
+
+  # Run chaque nuit à 02:00 UTC, après la fin des ingestions (Partie 2)
+  periodic {
+    crons            = ["0 2 * * *"]
+    prohibit_overlap = true   # Ne pas lancer un nouveau run si le précédent tourne encore
+    time_zone        = "UTC"
+  }
+
+  group "transforms" {
+    count = 1
+
+    # 4 Go de RAM pour les window functions PostgreSQL volumineuses
+    resources {
+      cpu    = 2000   # MHz
+      memory = 4096   # MB
+    }
+
+    task "dbt-run" {
+      driver = "docker"
+
+      config {
+        image   = "registry.internal/securities/dbt:1.7.0"
+        command = "/bin/sh"
+        args    = ["-c", "/app/run_pipeline.sh"]
+      }
+
+      # Injection sécurisée des credentials depuis Vault
+      template {
+        destination = "local/dbt_env"
+        env         = true
+        data        = <<EOH
+          {{- with secret "kv/data/securities/postgres" -}}
+          DBT_POSTGRES_HOST={{ .Data.data.host }}
+          DBT_POSTGRES_PORT={{ .Data.data.port }}
+          DBT_POSTGRES_USER={{ .Data.data.user }}
+          DBT_POSTGRES_PASSWORD={{ .Data.data.password }}
+          DBT_POSTGRES_DB={{ .Data.data.database }}
+          {{- end -}}
+        EOH
+      }
+
+      # profiles.yml injecté via template Nomad
+      template {
+        destination = "local/profiles.yml"
+        data        = <<EOH
+securities_master:
+  target: prod
+  outputs:
+    prod:
+      type: postgres
+      host: "{{ env "DBT_POSTGRES_HOST" }}"
+      port: {{ env "DBT_POSTGRES_PORT" }}
+      user: "{{ env "DBT_POSTGRES_USER" }}"
+      password: "{{ env "DBT_POSTGRES_PASSWORD" }}"
+      dbname: "{{ env "DBT_POSTGRES_DB" }}"
+      schema: public
+      threads: 8
+      connect_timeout: 30
+      keepalives_idle: 60
+EOH
+      }
+
+      logs {
+        max_files     = 10
+        max_file_size = 15  # MB
+      }
+
+      # Variables d'environnement non-secrets
+      env {
+        DBT_PROFILES_DIR   = "/local"
+        DBT_PROJECT_DIR    = "/app/securities_dbt"
+        DBT_TARGET         = "prod"
+      }
+    }
+
+    # Tâche de notification en cas d'échec du pipeline dbt
+    task "notify-failure" {
+      driver     = "exec"
+      lifecycle {
+        hook    = "poststop"
+        sidecar = false
+      }
+
+      config {
+        command = "/bin/sh"
+        args    = ["-c", <<EOH
+          if [ "$NOMAD_TASK_STATE" = "failed" ]; then
+            curl -s -X POST "$SLACK_WEBHOOK" \
+              -H 'Content-type: application/json' \
+              -d "{\"text\": \"🚨 dbt-nightly FAILED — allocation ${NOMAD_ALLOC_ID}. Verifie les logs Nomad.\"}"
+          fi
+        EOH
+        ]
+      }
+
+      template {
+        destination = "local/env"
+        env         = true
+        data        = <<EOH
+          {{- with secret "kv/data/securities/slack" -}}
+          SLACK_WEBHOOK={{ .Data.data.webhook_url }}
+          {{- end -}}
+        EOH
+      }
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">bash — run_pipeline.sh (script d'orchestration dbt séquentiel)</span>
+            <pre><code class="language-bash">#!/bin/bash
+set -euo pipefail    # Arrêt immédiat sur erreur
+
+echo "=== dbt Securities Master Pipeline — $(date -u) ==="
+
+# ── Étape 1 : Tester les sources (raw_zone) ──────────────────────────────────
+echo "→ [1/5] Test des sources raw_zone"
+dbt test --select "source:raw_zone" --profiles-dir /local
+
+# ── Étape 2 : Construire la couche Bronze (vues) ─────────────────────────────
+echo "→ [2/5] Build Bronze (vues JSON)"
+dbt run --select "tag:bronze" --profiles-dir /local
+
+# ── Étape 3 : Build Silver (modèles incrémentiels) ───────────────────────────
+echo "→ [3/5] Build Silver (incrémentiel)"
+dbt run --select "tag:silver" --profiles-dir /local
+
+# ── Étape 4 : Snapshots SCD Type 2 ───────────────────────────────────────────
+echo "→ [4/5] Snapshots SCD2"
+dbt snapshot --profiles-dir /local
+
+# ── Étape 5 : Tests de qualité Silver ────────────────────────────────────────
+echo "→ [5/5] Tests qualité Silver"
+dbt test --select "tag:silver" \
+         --store-failures \                   # Stocker les lignes en échec dans la DB
+         --profiles-dir /local
+
+# ── Étape 6 : Build Gold (uniquement si les tests Silver passent) ─────────────
+echo "→ [6/6] Build Gold (marts IA)"
+dbt run --select "tag:gold" --profiles-dir /local
+
+# ── Étape 7 : Tests Gold ─────────────────────────────────────────────────────
+echo "→ [7/7] Tests Gold"
+dbt test --select "tag:gold" --profiles-dir /local
+
+echo "✅ Pipeline dbt terminé avec succès — $(date -u)"</code></pre>
+        </div>
+
+        <div class="pedagogy-box">
+            <h4><i class="fa-solid fa-graduation-cap"></i> <span class="inline-code">--store-failures</span> : diagnostics en base de données</h4>
+            <p style="color:#1e3a5f; margin:0; line-height:1.7;">
+                Avec <span class="inline-code">--store-failures</span>, dbt ne se contente pas d'indiquer qu'un test a échoué — il stocke les lignes en défaut dans un schéma dédié (<span class="inline-code">dbt_test__audit</span>). Après une alerte, vous pouvez directement requêter <span class="inline-code">dbt_test__audit.not_null_fct_market_data_daily_symbol</span> pour voir exactement quels instruments ont déclenché l'échec. Inestimable pour le debugging sur un système de production.
+            </p>
+        </div>
+
+        <!-- EChart: dbt Lineage -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-project-diagram" style="color:#0d9488;"></i> Graphe de Lineage dbt — du source raw au mart Gold</div>
+            <div id="lineageChart" style="height:420px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION: TAKEAWAY                                            -->
         <!-- ============================================================ -->
         <div class="takeaway-box">
-            <h3><i class="fa-solid fa-flag-checkered"></i> Conclusion & Next Steps</h3>
-            <ul class="takeaway-list" style="list-style: none; padding: 0; margin: 1rem 0;">
-                <li
-                    style="display: flex; gap: 0.75rem; border-bottom: 1px solid rgba(13, 148, 136, 0.15); padding: 0.75rem 0;">
-                    <i class="fa-solid fa-check" style="color: #0d9488; margin-top: 0.2rem;"></i>
-                    <span><strong>Bronze Views</strong> decouple our database from API schema changes, standardizing
-                        JSON payloads natively.</span>
+            <h3><i class="fa-solid fa-flag-checkered"></i> Points Clés de la Partie 3</h3>
+            <ul class="takeaway-list">
+                <li>
+                    <i class="fa-solid fa-check" style="color:#0d9488; margin-top:0.2rem; flex-shrink:0;"></i>
+                    <span><strong>Vues Bronze</strong> découplent le pipeline des changements de schéma API. Le pattern <span class="inline-code">CTE + WHERE rn = 1</span> (pas <span class="inline-code">QUALIFY</span>) déduplique correctement en PostgreSQL.</span>
                 </li>
-                <li
-                    style="display: flex; gap: 0.75rem; border-bottom: 1px solid rgba(13, 148, 136, 0.15); padding: 0.75rem 0;">
-                    <i class="fa-solid fa-check" style="color: #0d9488; margin-top: 0.2rem;"></i>
-                    <span><strong>Incremental Logic</strong> with late-arriving overlap windows allows us to process
-                        60M+ rows in seconds, merging only newly fetched data while correcting historical API
-                        errors.</span>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#0d9488; margin-top:0.2rem; flex-shrink:0;"></i>
+                    <span><strong>Modèles incrémentiels</strong> avec fenêtre de 3 jours : 400× moins de données traitées par run. Le partitionnement PostgreSQL est défini au niveau DDL (Partie 1), pas dans la config dbt.</span>
                 </li>
-                <li
-                    style="display: flex; gap: 0.75rem; border-bottom: 1px solid rgba(13, 148, 136, 0.15); padding: 0.75rem 0;">
-                    <i class="fa-solid fa-check" style="color: #0d9488; margin-top: 0.2rem;"></i>
-                    <span><strong>dbt Snapshots</strong> mathematically automate SCD Type 2 tracking. Overwrites are
-                        abolished; full historical lineage of reference data is guaranteed.</span>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#0d9488; margin-top:0.2rem; flex-shrink:0;"></i>
+                    <span><strong>dbt Snapshots</strong> automatisent SCD Type 2 : détecter les mutations par hash, fermer l'ancienne version, insérer la nouvelle — sans code SQL manuel.</span>
                 </li>
-                <li style="display: flex; gap: 0.75rem; padding: 0.75rem 0;">
-                    <i class="fa-solid fa-check" style="color: #0d9488; margin-top: 0.2rem;"></i>
-                    <span><strong>Gold Marts</strong> pre-compute computational heavy lifting (Volatility, Adv, Regimes)
-                        via <code>WINDOW</code> functions, exposing pristine interfaces for Systematic Agents.</span>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#0d9488; margin-top:0.2rem; flex-shrink:0;"></i>
+                    <span><strong>Tests dbt</strong> comme firewall de qualité : 8 tests couvrant nulls, types, cohérence OHLCV, unicité. Avec <span class="inline-code">--store-failures</span>, les violations sont stockées pour investigation.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#0d9488; margin-top:0.2rem; flex-shrink:0;"></i>
+                    <span><strong>Marts Gold</strong> pré-calculent ATR, SMA, volatilité réalisée, et régimes de tendance. Un LLM ou un dashboard BI accède aux données en millisecondes sans fenêtres complexes.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#0d9488; margin-top:0.2rem; flex-shrink:0;"></i>
+                    <span><strong>Nomad orchestre dbt</strong> séquentiellement (Bronze → Silver → Snapshots → Tests → Gold) avec injection des credentials Vault et alertes Slack en cas d'échec.</span>
                 </li>
             </ul>
-
-            <p style="margin-top: 1.5rem; font-weight: 600; color: #0f766e;">The underlying data is now structured and
-                validated. But the math is still wrong. If Apple does a 4-for-1 stock split tomorrow, our chart will
-                show a 75% market crash.</p>
-
-            <a href="../part4-corporate-actions/"
-                style="display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #0d9488; color: white; text-decoration: none; border-radius: 8px; font-weight: 700; transition: background 0.2s;">
-                Continue to Part 4: Corporate Actions & Adjusted Mathematics <i class="fa-solid fa-arrow-right"></i>
-            </a>
+            <p style="margin-top:1.5rem; font-weight:600; color:#0f766e;">
+                Les données sont maintenant propres, validées, et historisées. Mais la math est encore fausse. Si Apple fait un split 4-pour-1 demain, notre graphe affichera un crash de 75%. Il faut ajuster les prix historiques.
+            </p>
         </div>
 
+        <a href="../part4-corporate-actions/" class="next-cta">
+            <div class="next-cta-icon">🏢</div>
+            <div class="next-cta-text">
+                <h3>Partie 4 — Corporate Actions &amp; Mathématiques d'Ajustement</h3>
+                <p>Splits, dividendes, fusions, spin-offs : ajuster les prix historiques pour que vos backtests restent mathématiquement corrects.</p>
+            </div>
+            <div class="next-cta-arrow"><i class="fas fa-arrow-right"></i></div>
+        </a>
+
+        <!-- ============================================================ -->
+        <!-- SECTION: QUIZ                                                -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Auto-Évaluation</div>
+        <div class="quiz-section">
+            <h2 style="color:#0f172a;"><i class="fa-solid fa-graduation-cap" style="color:#0d9488;"></i> Quiz : Maîtrisez-vous l'Architecture Médaillon ?</h2>
+            <p style="color:#64748b;">Cliquez sur chaque question pour révéler la réponse.</p>
+
+            <details class="quiz-item">
+                <summary>Pourquoi la syntaxe <code>QUALIFY ROW_NUMBER() OVER (...) = 1</code> est-elle invalide en PostgreSQL ?</summary>
+                <div class="quiz-answer">
+                    <strong>QUALIFY est une clause exclusive à BigQuery, Snowflake, et DuckDB.</strong> Elle permet de filtrer sur le résultat des fonctions de fenêtre dans la même requête. PostgreSQL (et SQL standard ANSI) ne supporte pas QUALIFY. Le pattern correct est une CTE intermédiaire : <code>WITH deduped AS (SELECT *, ROW_NUMBER() OVER (...) AS rn FROM ...) SELECT * FROM deduped WHERE rn = 1</code>. Utiliser QUALIFY dans un modèle dbt PostgreSQL provoque une erreur de syntaxe au runtime.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Quelle est la différence entre les opérateurs JSONB <code>-></code> et <code>->></code> en PostgreSQL ?</summary>
+                <div class="quiz-answer">
+                    <strong><code>-></code> retourne un objet JSONB</strong> (avec les guillemets JSON préservés, ex: <code>"42.5"</code> reste de type jsonb). <strong><code>->></code> retourne une chaîne TEXT</strong>, ce qui permet le cast direct : <code>(payload->>'price')::NUMERIC</code>. Pour les casts numériques, utilisez toujours <code>->></code>. Pour accéder à des objets imbriqués que vous voulez encore manipuler avec des opérateurs JSON, utilisez <code>-></code>. Pour les tableaux JSON, <code>jsonb_array_element_text(payload->'key', index)</code> retourne directement le texte de l'élément.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Pourquoi utiliser une fenêtre de "lookback" de 3 jours au lieu de <code>WHERE trade_date > MAX(trade_date)</code> dans un modèle incrémentiel ?</summary>
+                <div class="quiz-answer">
+                    <strong>Les données financières arrivent avec du retard et sont corrigées rétroactivement.</strong> Yahoo Finance peut corriger ses prix ajustés des dividendes 2-3 jours après le paiement. Les exchanges peuvent envoyer des volumes révisés le lendemain de la séance. Avec <code>> MAX(trade_date)</code>, ces corrections ne seraient jamais ingérées. Le lookback de 3 jours garantit qu'on retraite les derniers jours — et comme <code>unique_key</code> est défini, dbt génère un vrai upsert : les lignes existantes sont mises à jour, les nouvelles sont insérées. Coût : traiter ~3 jours au lieu de 1, soit toujours 400× moins qu'un rebuild complet.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Pourquoi ne faut-il PAS mettre <code>partition_by={'field': 'trade_date', 'data_type': 'date'}</code> dans la config dbt pour PostgreSQL ?</summary>
+                <div class="quiz-answer">
+                    <strong>Cette option de configuration dbt est exclusive à BigQuery.</strong> Sur PostgreSQL, elle est soit silencieusement ignorée soit provoque des erreurs selon la version de l'adaptateur <code>dbt-postgres</code>. Le partitionnement PostgreSQL (<code>PARTITION BY RANGE (trade_date)</code>) est une propriété DDL définie à la création de la table — ce qui est fait en Partie 1 via le schéma SQL initial. dbt insère ensuite dans les partitions automatiquement sans aucune configuration supplémentaire dans le modèle. Pour BigQuery, l'option dbt est nécessaire car c'est dbt qui génère le DDL <code>PARTITION BY</code>. Les deux systèmes ont des mécanismes fondamentalement différents.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Comment dbt Snapshot détecte-t-il qu'un enregistrement a changé avec la stratégie <code>check</code> ?</summary>
+                <div class="quiz-answer">
+                    <strong>dbt calcule un hash MD5 des colonnes listées dans <code>check_cols</code>.</strong> À chaque run de <code>dbt snapshot</code>, il compare ce hash pour chaque ligne entrante avec le hash stocké de la version active (où <code>dbt_valid_to IS NULL</code>). Si les hashes diffèrent (une colonne a changé) : dbt émet un <code>UPDATE</code> pour fermer l'ancienne ligne (<code>dbt_valid_to = NOW()</code>) puis un <code>INSERT</code> pour la nouvelle version (<code>dbt_valid_from = NOW()</code>, <code>dbt_valid_to = NULL</code>). Si les hashes sont identiques, rien ne se passe. Si une clé unique disparaît et que <code>invalidate_hard_deletes=true</code>, la ligne est fermée avec la date du run.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Quelle est la différence entre <code>DISTINCT ON (col)</code> et <code>ROW_NUMBER() OVER (...) WHERE rn = 1</code> en PostgreSQL ?</summary>
+                <div class="quiz-answer">
+                    <strong>Les deux sélectionnent la première ligne de chaque groupe, mais avec des performances différentes.</strong> <code>DISTINCT ON</code> est une extension PostgreSQL-native qui peut utiliser un index B-tree sur <code>(partition_col, order_col DESC)</code> directement — très efficace. <code>ROW_NUMBER()</code> via CTE est du SQL standard ANSI, portable sur BigQuery/Snowflake, mais nécessite un scan complet + tri avant le filtre. Pour du code PostgreSQL pur en production (couche Gold), <code>DISTINCT ON</code> est préférable. Pour du code qui doit rester portable entre moteurs, utilisez le pattern CTE avec <code>ROW_NUMBER()</code>.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Pourquoi Nomad orchestre-t-il les runs dbt au lieu d'utiliser dbt Cloud ou un cron simple ?</summary>
+                <div class="quiz-answer">
+                    <strong>Trois raisons critiques :</strong> (1) <strong>Accès réseau privé</strong> — notre PostgreSQL est sur un réseau interne inaccessible depuis dbt Cloud. (2) <strong>Gestion des secrets Vault</strong> — Nomad injecte les credentials de base de données depuis HashiCorp Vault à l'exécution, sans jamais les écrire dans des fichiers de configuration. Un cron simple ne supporte pas cette intégration. (3) <strong>Uniformité de la stack</strong> — les taps d'ingestion (Partie 2) et les runs dbt utilisent le même scheduler Nomad, avec les mêmes patterns de logs, d'alertes Prometheus, et de retry — une seule UI pour superviser toute la pipeline.
+                </div>
+            </details>
+
+            <details class="quiz-item">
+                <summary>Quelle est l'utilité du <code>post_hook="ANALYZE {{ this }}"</code> dans la config du mart Gold ?</summary>
+                <div class="quiz-answer">
+                    <strong>PostgreSQL maintient des statistiques de distribution des données pour l'optimiseur de requêtes.</strong> Après un rebuild complet d'une table (matérialisation <code>table</code>), les statistiques sont obsolètes. L'optimiseur peut choisir de mauvais plans de requête (ex: Seq Scan au lieu d'Index Scan) car il ne sait pas encore que la distribution a changé. La commande <code>ANALYZE</code> met à jour ces statistiques en échantillonnant la table. En l'ajoutant comme <code>post_hook</code> dans dbt, elle s'exécute automatiquement après chaque rebuild du mart Gold — garantissant des plans de requête optimaux dès la mise en production.
+                </div>
+            </details>
+        </div>
+
+    </div><!-- /.container -->
+
+    <!-- Series Bar (bottom) -->
+    <div class="series-bar" style="margin-top:3rem;">
+        <div class="series-bar-inner">
+            <a href="../part2-pipelines/" class="series-arrow" title="Part 2 — Pipelines"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step" title="Fondations"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step" title="Pipelines"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="./" class="series-step current" title="Transforms"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="../part4-corporate-actions/" class="series-step" title="Corporate Actions"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="../part5-dashboards/" class="series-step" title="IA &amp; Dashboards"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="../part6-operations/" class="series-step" title="Opérations"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">3/6</span>
+            <a href="../part4-corporate-actions/" class="series-arrow" title="Part 4 — Corporate Actions"><i class="fas fa-chevron-right"></i></a>
+        </div>
     </div>
 
-    <!-- Footer -->
-    <div class="article-footer">
-        <p>&copy; 2026 Market Watch. All rights reserved. <br>
-            <a href="#" style="color: #64748b; text-decoration: none;">Terms of Use</a> |
-            <a href="#" style="color: #64748b; text-decoration: none;">Privacy Policy</a> |
-            <a href="#" style="color: #64748b; text-decoration: none;">Systematic Trading Engineering</a>
-        </p>
-    </div>
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
 
     <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
 
-  
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part2-pipelines/" class="series-arrow" title="Part2 Pipelines"><i class="fas fa-chevron-left"></i></a><span class="series-title">Securities
-            Master</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="./" class="series-step current" title="."><span class="series-num">3</span><span class="series-label">.</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">3/6</span><a href="../part4-corporate-actions/" class="series-arrow" title="Part4 Corporate Actions"><i class="fas fa-chevron-right"></i></a></div></div>
-<footer class="article-footer">
-    &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
-    Ceci n'est pas un conseil financier.
-    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
-  </footer><script src="/assets/tag-renderer.js"></script>
+    <script>
+    // ── FAB Navigation ──────────────────────────────────────────────────────
+    (function() {
+        const btn  = document.getElementById('fnavBtn');
+        const menu = document.getElementById('fnavMenu');
+        if (!btn || !menu) return;
+
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menu.classList.toggle('open');
+        });
+        document.addEventListener('click', function() { menu.classList.remove('open'); });
+        menu.addEventListener('click', function() { menu.classList.remove('open'); });
+
+        // Active section tracking via IntersectionObserver
+        const sections = document.querySelectorAll('[id]');
+        const navItems = document.querySelectorAll('.fnav-item[data-section]');
+        if (sections.length && navItems.length) {
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        navItems.forEach(function(item) {
+                            item.classList.toggle('active',
+                                item.dataset.section === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-30% 0px -60% 0px' });
+            sections.forEach(function(s) { observer.observe(s); });
+        }
+    })();
+
+    // ── ECharts : Medallion Flow Diagram ─────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('medallionFlowChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+            series: [{
+                type: 'graph',
+                layout: 'none',
+                roam: false,
+                label: { show: true, fontSize: 11, fontWeight: 'bold' },
+                edgeLabel: {
+                    show: true,
+                    fontSize: 9,
+                    formatter: function(p) { return p.data.label || ''; }
+                },
+                lineStyle: { curveness: 0.1, width: 2 },
+                emphasis: { focus: 'adjacency' },
+                nodes: [
+                    // Sources
+                    { id: '0', name: 'Yahoo\nFinance', x: 50,  y: 80,  symbolSize: 42, itemStyle: { color: '#6366f1' } },
+                    { id: '1', name: 'BVC\nAPI',       x: 50,  y: 180, symbolSize: 42, itemStyle: { color: '#6366f1' } },
+                    { id: '2', name: 'Binance\nAPI',   x: 50,  y: 280, symbolSize: 42, itemStyle: { color: '#6366f1' } },
+                    // raw_zone
+                    { id: '3', name: 'raw_zone\n(JSONB)',  x: 200, y: 180, symbolSize: 50, itemStyle: { color: '#7c3aed' } },
+                    // Bronze
+                    { id: '4', name: '🟤 Bronze\nViews',   x: 360, y: 130, symbolSize: 54, itemStyle: { color: '#b45309' } },
+                    { id: '5', name: '🟤 Bronze\nBars',    x: 360, y: 230, symbolSize: 54, itemStyle: { color: '#b45309' } },
+                    // Silver
+                    { id: '6', name: '⚪ Silver\nfct_ohlcv', x: 540, y: 130, symbolSize: 58, itemStyle: { color: '#64748b' } },
+                    { id: '7', name: '⚪ Silver\ndim_snap',  x: 540, y: 250, symbolSize: 58, itemStyle: { color: '#64748b' } },
+                    // Gold
+                    { id: '8', name: '🟡 Gold\nmart_universe', x: 720, y: 130, symbolSize: 64, itemStyle: { color: '#ca8a04' } },
+                    { id: '9', name: '🟡 Gold\nmart_sector',   x: 720, y: 260, symbolSize: 64, itemStyle: { color: '#ca8a04' } },
+                    // Consumers
+                    { id: '10', name: 'BI\nDashboard',  x: 880, y: 100, symbolSize: 44, itemStyle: { color: '#0d9488' } },
+                    { id: '11', name: 'LLM\nAgent',     x: 880, y: 210, symbolSize: 44, itemStyle: { color: '#0d9488' } },
+                    { id: '12', name: 'Backtester',     x: 880, y: 310, symbolSize: 44, itemStyle: { color: '#0d9488' } },
+                ],
+                edges: [
+                    { source: '0', target: '3', data: { label: 'Meltano tap' } },
+                    { source: '1', target: '3', data: { label: 'Meltano tap' } },
+                    { source: '2', target: '3', data: { label: 'Meltano tap' } },
+                    { source: '3', target: '4', data: { label: 'dbt source()' } },
+                    { source: '3', target: '5', data: { label: 'dbt source()' } },
+                    { source: '4', target: '6', data: { label: 'UNION ALL' } },
+                    { source: '5', target: '6', data: { label: 'UNION ALL' } },
+                    { source: '4', target: '7', data: { label: 'stg_all_instruments' } },
+                    { source: '6', target: '8', data: { label: 'Window fns' } },
+                    { source: '7', target: '8', data: { label: 'JOIN' } },
+                    { source: '6', target: '9', data: { label: 'GROUP BY sector' } },
+                    { source: '8', target: '10', data: { label: 'SELECT' } },
+                    { source: '8', target: '11', data: { label: 'MCP query' } },
+                    { source: '9', target: '11', data: { label: 'MCP query' } },
+                    { source: '8', target: '12', data: { label: 'adj prices' } },
+                ]
+            }]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ── ECharts : Volume by Layer ─────────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('volumeChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: { data: ['Full Rebuild', 'Traitement Incrémentiel'], bottom: 0, fontSize: 11 },
+            grid: { top: 20, left: 60, right: 30, bottom: 50 },
+            xAxis: {
+                type: 'category',
+                data: ['raw_zone\n(JSONB)', 'Bronze\n(Views)', 'Silver\nJournalier', 'Silver\nIntraday', 'Gold\n(Table)'],
+                axisLabel: { fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Millions de lignes',
+                nameTextStyle: { fontSize: 10 },
+                axisLabel: { fontSize: 10 }
+            },
+            series: [
+                {
+                    name: 'Full Rebuild',
+                    type: 'bar',
+                    data: [60, 60, 60, 50000, 10],
+                    itemStyle: { color: '#ef4444', borderRadius: [4,4,0,0] },
+                    label: { show: true, position: 'top', fontSize: 9,
+                             formatter: function(p) { return p.value >= 1000 ? (p.value/1000).toFixed(0)+'B' : p.value+'M'; } }
+                },
+                {
+                    name: 'Traitement Incrémentiel',
+                    type: 'bar',
+                    data: [60, 0, 0.15, 2.5, 10],
+                    itemStyle: { color: '#0d9488', borderRadius: [4,4,0,0] },
+                    label: { show: true, position: 'top', fontSize: 9,
+                             formatter: function(p) { return p.value >= 1 ? p.value+'M' : (p.value*1000).toFixed(0)+'K'; } }
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ── ECharts : dbt Lineage Graph ───────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('lineageChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+
+        var categories = [
+            { name: 'Source',  itemStyle: { color: '#7c3aed' } },
+            { name: 'Bronze',  itemStyle: { color: '#b45309' } },
+            { name: 'Silver',  itemStyle: { color: '#64748b' } },
+            { name: 'Gold',    itemStyle: { color: '#ca8a04' } },
+        ];
+
+        var nodes = [
+            // Sources
+            { id: 's1', name: 'source:\nraw_instruments', category: 0, x: 0,   y: 50,  symbolSize: 40 },
+            { id: 's2', name: 'source:\nraw_market_data', category: 0, x: 0,   y: 200, symbolSize: 40 },
+            // Bronze
+            { id: 'b1', name: 'stg_bvc\n_instruments',   category: 1, x: 200, y: 0,   symbolSize: 36 },
+            { id: 'b2', name: 'stg_yahoo\n_bars',         category: 1, x: 200, y: 120, symbolSize: 36 },
+            { id: 'b3', name: 'stg_bvc\n_bars',           category: 1, x: 200, y: 220, symbolSize: 36 },
+            { id: 'b4', name: 'stg_binance\n_bars',       category: 1, x: 200, y: 320, symbolSize: 36 },
+            { id: 'b5', name: 'stg_all\n_instruments',    category: 1, x: 200, y: 60,  symbolSize: 36 },
+            // Silver
+            { id: 'si1', name: 'dim_instruments\n_snapshot',    category: 2, x: 420, y: 60,  symbolSize: 44 },
+            { id: 'si2', name: 'fct_market\n_data_daily',       category: 2, x: 420, y: 200, symbolSize: 44 },
+            { id: 'si3', name: 'dim_instruments\n_current',     category: 2, x: 420, y: 330, symbolSize: 36 },
+            // Gold
+            { id: 'g1', name: 'mart_strategy\n_universe',       category: 3, x: 640, y: 100, symbolSize: 50 },
+            { id: 'g2', name: 'mart_sector\n_momentum',         category: 3, x: 640, y: 280, symbolSize: 50 },
+        ];
+
+        var edges = [
+            { source: 's1', target: 'b1' },
+            { source: 's1', target: 'b5' },
+            { source: 's2', target: 'b2' },
+            { source: 's2', target: 'b3' },
+            { source: 's2', target: 'b4' },
+            { source: 'b1', target: 'b5' },
+            { source: 'b5', target: 'si1' },
+            { source: 'b2', target: 'si2' },
+            { source: 'b3', target: 'si2' },
+            { source: 'b4', target: 'si2' },
+            { source: 'si1', target: 'si3' },
+            { source: 'si2', target: 'g1' },
+            { source: 'si3', target: 'g1' },
+            { source: 'g1', target: 'g2' },
+        ];
+
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item' },
+            legend: {
+                data: categories.map(function(c) { return c.name; }),
+                bottom: 0, fontSize: 11
+            },
+            series: [{
+                type: 'graph',
+                layout: 'none',
+                categories: categories,
+                roam: false,
+                label: { show: true, fontSize: 9, fontWeight: 'bold', color: '#fff' },
+                lineStyle: { color: '#94a3b8', width: 1.5, curveness: 0.05 },
+                edgeSymbol: ['none', 'arrow'],
+                edgeSymbolSize: 8,
+                emphasis: { focus: 'adjacency', lineStyle: { width: 3 } },
+                nodes: nodes,
+                edges: edges,
+            }]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+    </script>
 </body>
-
 </html>

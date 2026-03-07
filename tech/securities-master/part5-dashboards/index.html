@@ -1,185 +1,1206 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="us,tech" data-tab="tech">
+<html lang="fr" data-tags="mcp,ai,llm,evidence-dev,go,postgresql,dashboards,finance,tech" data-tab="tech">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Governance & MCP Tools | Building a Securities Master — Part 5/6 | Market Watch</title>
-    <meta name="description"
-        content="Part 5/6: Exposing the Securities Master to the AI Strategy Agent via the Model Context Protocol (MCP) and building Evidence.dev analytical dashboards.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Interface IA : MCP &amp; Dashboards Evidence.dev | Building a Securities Master — Part 5/6 | Market Watch</title>
+    <meta name="description" content="Building a Securities Master — Part 5/6 : Exposer le Securities Master aux LLMs via Model Context Protocol (MCP) en Go, construire des dashboards Evidence.dev BI-as-Code, détection de régime de marché, et gouvernance des outils IA.">
+
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-            margin: 0;
-        } .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
+        .hero-section { padding:4rem 2rem 8rem; background:linear-gradient(180deg,#f0f9ff 0%,#f8fafc 100%); text-align:center; }
+        .hero-date { font-size:.85rem; font-weight:700; color:#3b82f6; text-transform:uppercase; letter-spacing:.1em; margin-bottom:1rem; }
+        .hero-badges { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+        .hero-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border-radius:99px; font-size:.8rem; font-weight:700; }
+        .hero-badge-blue   { background:rgba(59,130,246,.1); color:#3b82f6; border:1px solid rgba(59,130,246,.2); }
+        .hero-badge-teal   { background:rgba(13,148,136,.1); color:#0d9488; border:1px solid rgba(13,148,136,.2); }
+        .hero-badge-purple { background:rgba(139,92,246,.1); color:#8b5cf6; border:1px solid rgba(139,92,246,.2); }
+        .hero-badge-orange { background:rgba(249,115,22,.1); color:#f97316; border:1px solid rgba(249,115,22,.2); }
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
-            text-align: center;
-        }
+        .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
+        .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
 
-        h2 {
-            font-size: 1.8rem;
-            color: #0f172a;
-            margin-top: 2.5rem;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
-        }
+        pre[class*="language-"],code[class*="language-"] { background:#042f2e !important; border:1px solid #115e59; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.6; }
+        pre[class*="language-"] { padding:1.5rem; margin:0; overflow-x:auto; }
+        code[class*="language-"] { border:none; }
+        .code-label { display:block; font-size:.65rem; color:#0d9488; text-transform:uppercase; letter-spacing:.05em; font-family:'Inter',sans-serif; font-weight:700; margin-bottom:.5rem; }
+        .code-block-wrapper { margin:1.5rem 0; }
+        .inline-code { font-family:'JetBrains Mono',monospace; background:#f1f5f9; color:#0f766e; padding:.2em .4em; border-radius:4px; font-size:.9em; border:1px solid #e2e8f0; }
 
-        pre[class*="language-"] {
-            background: #042f2e !important;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            overflow-x: auto;
-        }
+        /* Tool cards */
+        .tool-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.25rem; margin:2rem 0; }
+        .tool-card { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; position:relative; overflow:hidden; transition:transform .2s; }
+        .tool-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px -4px rgba(0,0,0,.1); }
+        .tool-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:5px; }
+        .tool-read::before   { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+        .tool-write::before  { background:linear-gradient(90deg,#ef4444,#f97316); }
+        .tool-compute::before{ background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
+        .tool-card h4 { margin:.5rem 0 .5rem; font-size:.95rem; display:flex; align-items:center; gap:.4rem; }
+        .tool-read h4   { color:#3b82f6; }
+        .tool-write h4  { color:#ef4444; }
+        .tool-compute h4{ color:#8b5cf6; }
+        .tool-card p { font-size:.82rem; color:#475569; line-height:1.5; margin:0; }
+        .tool-card code { font-size:.75rem; }
 
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            color: #0d9488;
-            background: #ccfbf1;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-        }
+        /* Decision / info / alert / pedagogy */
+        .decision-card { background:#f8fafc; border-left:4px solid #0d9488; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; border-radius:0 12px 12px 0; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .decision-card h4 { color:#0f766e; margin:0 0 .5rem; font-size:1rem; display:flex; align-items:center; gap:.5rem; }
+        .decision-card.warning { border-left-color:#f59e0b; }
+        .decision-card.warning h4 { color:#b45309; }
+        .decision-card.blue { border-left-color:#3b82f6; }
+        .decision-card.blue h4 { color:#1d4ed8; }
+        .pedagogy-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .pedagogy-box h4 { color:#1d4ed8; margin:0 0 .5rem; display:flex; align-items:center; gap:.5rem; }
+        .alert-box { background:#fefce8; border:1px solid #fde047; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .alert-box h4 { color:#ca8a04; margin:0 0 .5rem; display:flex; align-items:center; gap:.5rem; }
 
-        .takeaway-box {
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-            border: 1px solid #0d9488;
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
+        /* Takeaway */
+        .takeaway-box { background:linear-gradient(135deg,#f0f9ff 0%,#dbeafe 100%); border:1px solid #3b82f6; border-radius:16px; padding:2rem; margin:3rem 0; }
+        .takeaway-box h3 { color:#1d4ed8; margin-top:0; display:flex; align-items:center; gap:.5rem; }
+        .takeaway-list { list-style:none; padding:0; margin:1rem 0; }
+        .takeaway-list li { display:flex; gap:.75rem; border-bottom:1px solid rgba(59,130,246,.15); padding:.75rem 0; }
+        .takeaway-list li:last-child { border-bottom:none; }
 
-        .footer-bar {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-        }
+        /* Next CTA */
+        .next-cta { display:flex; align-items:center; gap:1.5rem; background:linear-gradient(135deg,#0d9488,#0891b2); border-radius:16px; padding:2rem; margin:2rem 0; text-decoration:none; transition:transform .2s; }
+        .next-cta:hover { transform:translateY(-2px); box-shadow:0 10px 30px -5px rgba(13,148,136,.4); }
+        .next-cta-icon { font-size:2.5rem; flex-shrink:0; }
+        .next-cta-text h3 { color:white; margin:0 0 .25rem; font-size:1.1rem; }
+        .next-cta-text p  { color:rgba(255,255,255,.85); margin:0; font-size:.9rem; }
+        .next-cta-arrow { margin-left:auto; color:white; font-size:1.5rem; flex-shrink:0; }
+
+        /* File tree */
+        .file-tree { background:#042f2e; border:1px solid #115e59; border-radius:12px; padding:1.5rem; font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.8; color:#a7f3d0; overflow-x:auto; }
+        .file-tree .dir { color:#34d399; font-weight:600; }
+        .file-tree .comment { color:#4b7c6b; }
+
+        /* Compare table */
+        .compare-table { width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:.88rem; }
+        .compare-table th { background:#0f172a; color:#e2e8f0; padding:.75rem 1rem; text-align:left; font-weight:700; }
+        .compare-table td { padding:.75rem 1rem; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:top; }
+        .compare-table tr:hover td { background:#f8fafc; }
+
+        /* Chart container */
+        .chart-container { margin:2rem 0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; }
+        .chart-title { background:#f8fafc; padding:.75rem 1.25rem; font-size:.85rem; font-weight:700; color:#64748b; border-bottom:1px solid #e2e8f0; }
+
+        /* Quiz */
+        .quiz-item { margin-bottom:1.5rem; }
+        .quiz-item summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; font-weight:600; color:#0f172a; list-style:none; display:flex; align-items:center; gap:.75rem; transition:background .2s; }
+        .quiz-item summary:hover { background:#f0f9ff; }
+        .quiz-item summary::before { content:'❓'; font-size:1rem; }
+        .quiz-item[open] summary { background:#f0f9ff; border-color:#3b82f6; border-radius:10px 10px 0 0; }
+        .quiz-answer { padding:1rem 1.25rem; border:1px solid #3b82f6; border-top:none; border-radius:0 0 10px 10px; background:white; color:#334155; line-height:1.7; }
+        .quiz-answer strong { color:#1d4ed8; }
+
+        /* MCP message display */
+        .mcp-msg { background:#0f172a; border-radius:10px; padding:1rem 1.25rem; font-family:'JetBrains Mono',monospace; font-size:.8rem; line-height:1.7; margin:.5rem 0; }
+        .mcp-tool-call  { color:#34d399; }
+        .mcp-tool-result{ color:#a7f3d0; }
+        .mcp-model      { color:#93c5fd; }
+        .mcp-label { font-size:.65rem; color:#64748b; text-transform:uppercase; letter-spacing:.05em; font-family:'Inter',sans-serif; margin-bottom:.25rem; }
+
+        /* FAB */
+        .fnav { position:fixed; bottom:2rem; right:2rem; z-index:1000; }
+        .fnav-menu { position:absolute; bottom:60px; right:0; background:white; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 20px 40px -10px rgba(0,0,0,.15); overflow:hidden; min-width:220px; display:none; flex-direction:column; }
+        .fnav-menu.open { display:flex; }
+        .fnav-item { display:flex; align-items:center; gap:.75rem; padding:.75rem 1.25rem; text-decoration:none; color:#334155; font-size:.85rem; font-weight:500; border-bottom:1px solid #f1f5f9; transition:background .15s; }
+        .fnav-item:last-child { border-bottom:none; }
+        .fnav-item:hover { background:#f0f9ff; color:#3b82f6; }
+        .fnav-item i { width:16px; text-align:center; color:#3b82f6; }
+        .fnav-btn { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#8b5cf6); border:none; cursor:pointer; color:white; font-size:1.2rem; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px -4px rgba(59,130,246,.5); transition:transform .2s; }
+        .fnav-btn:hover { transform:scale(1.08); }
     </style>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-    </head>
+</head>
 
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     <nav class="brand-bar">
-    <div class="brand-bar-inner">
-      <a href="/" class="brand-logo">
-        <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
-      </a>
-      <div class="brand-actions">
-        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
-      </div>
-    </div>
-  </nav><div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
-    
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">AI Interface: MCP & Evidence.dev
+    <header class="hero-section">
+        <div class="hero-date"><i class="fa-solid fa-robot" style="margin-right:.4rem;"></i> Building a Securities Master &mdash; Part 5 de 6</div>
+        <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:820px;">
+            Interface IA : MCP &amp; Dashboards Evidence.dev
         </h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            Large Language Models cannot ingest 50 million rows of PostgreSQL. We bridge the LLM directly into our AI
-            Master Database through the Model Context Protocol (MCP) and provide strict human oversight via Evidence.dev
-            Dashboards.
+        <p style="font-size:1.15rem; color:#64748b; max-width:760px; margin:0 auto; line-height:1.7;">
+            Un LLM ne peut pas ingérer 50 millions de lignes PostgreSQL. Nous connectons les LLMs au Securities Master via un serveur MCP Go, avec des dashboards Evidence.dev pour la supervision humaine.
         </p>
-    </div>
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part4-corporate-actions/" class="series-arrow" title="Part4 Corporate Actions"><i class="fas fa-chevron-left"></i></a><span class="series-title">Series</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="./" class="series-step current" title="."><span class="series-num">5</span><span class="series-label">.</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">5/6</span><a href="../part6-operations/" class="series-arrow" title="Part6 Operations"><i class="fas fa-chevron-right"></i></a></div></div>
+        <div class="hero-badges">
+            <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-plug"></i> Model Context Protocol</span>
+            <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-robot"></i> LLM Integration</span>
+            <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-chart-column"></i> Evidence.dev</span>
+            <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-shield-halved"></i> Gouvernance IA</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+    </header>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <h2><i class="fa-solid fa-robot" style="color:#0d9488"></i> The Model Context Protocol (MCP)</h2>
-        <p>The Python Clustering Engine and the Go Strategy Scanner from previous parts produce incredible subsets of
-            data (e.g., the top 50 breakout candidates globally). To empower our autonomous AI Finance Agent, we expose
-            these curated PostgreSQL Gold Marts via an MCP Tool Server.</p>
-
-        <pre><code class="language-go">// mcp_server.go
-func RunAutoScreenerTool(intent string) ([]Candidate, error) {
-    // 1. Detect market regime directly from our Gold Marts
-    regime := DetectMarketRegimeSQL()
-    
-    // 2. Fetch the top K pre-calculated momentum strategies
-    return db.Query(`
-        SELECT symbol, realized_vol_20d, trend_regime 
-        FROM gold.mart_strategy_universe 
-        WHERE trend_regime = $1 
-        ORDER BY adv_20d_usd DESC LIMIT 10
-    `, regime)
-}
-// The LLM perfectly comprehends the filtered output and designs a balanced portfolio allocation.
-</code></pre>
-
-        <h2><i class="fa-solid fa-chart-line" style="color:#0d9488"></i> BI-as-Code with Evidence.dev</h2>
-        <p>While the AI Agent operates autonomously, human Portfolio Managers demand oversight. We use Evidence.dev to
-            securely map Markdown directly to our `gold.mart_strategy_universe` table. Because it's "BI-as-Code," all
-            dashboards are version-controlled alongside the Python and Go source code.</p>
-
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#0f766e;"><i class="fa-solid fa-flag-checkered"></i> The Final Mile</h3>
-            <p>The AI Agent has formulated a mathematically perfect multi-allocation portfolio based on pristine,
-                point-in-time correct Data Marts. Now, it must send those signals into the real world without blowing up
-                our capital.</p>
-            <a href="../part6-operations/"
-                style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#0d9488; color:white; text-decoration:none; border-radius:8px; font-weight:600;">Next:
-                Execution Operations & OMS &rarr;</a>
+    <div class="series-bar">
+        <div class="series-bar-inner">
+            <a href="../part4-corporate-actions/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="../part3-transforms/" class="series-step"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="../part4-corporate-actions/" class="series-step"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="./" class="series-step current"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="../part6-operations/" class="series-step"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">5/6</span>
+            <a href="../part6-operations/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
         </div>
     </div>
-    <div class="article-footer">&copy; 2026 Market Watch.</div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+
+    <!-- FAB -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#mcp-intro" class="fnav-item"><i class="fas fa-plug"></i><span>MCP — Introduction</span></a>
+            <a href="#mcp-server" class="fnav-item"><i class="fas fa-server"></i><span>Serveur MCP Go</span></a>
+            <a href="#tool-taxonomy" class="fnav-item"><i class="fas fa-sitemap"></i><span>Taxonomie des Outils</span></a>
+            <a href="#market-regime" class="fnav-item"><i class="fas fa-chart-line"></i><span>Détection de Régime</span></a>
+            <a href="#evidence-dev" class="fnav-item"><i class="fas fa-chart-column"></i><span>Evidence.dev</span></a>
+            <a href="#governance" class="fnav-item"><i class="fas fa-shield-halved"></i><span>Gouvernance IA</span></a>
+            <a href="#quiz" class="fnav-item"><i class="fas fa-circle-question"></i><span>Quiz</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <div class="container" style="max-width:920px; margin:-3rem auto 0; padding:2rem; background:white; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.05); position:relative;">
+
+        <!-- ============================================================ -->
+        <!-- MCP INTRO                                                     -->
+        <!-- ============================================================ -->
+        <div id="mcp-intro">
+            <p style="font-size:1.1rem; line-height:1.8; color:#334155;">
+                Notre Securities Master contient 60+ millions de barres OHLCV ajustées, des snapshots SCD2 de 15 000 instruments, et des marts Gold pré-calculés. Un LLM (Claude, GPT-4, Gemini) ne peut pas ingérer cette volumétrie dans son contexte. La solution : exposer le Securities Master comme un ensemble d'<strong>outils structurés</strong> que le LLM peut appeler on-demand via le <strong>Model Context Protocol (MCP)</strong>.
+            </p>
+
+            <div class="decision-card blue">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Qu'est-ce que le Model Context Protocol (MCP) ?</h4>
+                <p style="color:#334155; margin:0 0 .75rem;">
+                    MCP est un protocole ouvert développé par Anthropic (2024) qui standardise la façon dont les LLMs interagissent avec des systèmes externes. Au lieu que le LLM génère du SQL arbitraire (risque d'injection, accès non contrôlé), il appelle des <strong>outils MCP prédéfinis</strong> avec un schéma strict.
+                </p>
+                <p style="color:#334155; margin:0;">
+                    Architecture : le LLM ↔ MCP Client (dans Claude Desktop/Claude API) ↔ MCP Server (notre Go app) ↔ PostgreSQL (notre Securities Master). Le serveur MCP contrôle exactement quelles données sont exposées et avec quels filtres de sécurité.
+                </p>
+            </div>
+        </div>
+
+        <!-- Interaction example -->
+        <div style="margin:1.5rem 0;">
+            <div class="mcp-label">Exemple d'interaction LLM ↔ MCP Securities Master</div>
+            <div class="mcp-msg">
+                <div class="mcp-model">🤖 LLM : "Trouve les 10 meilleures actions momentum du secteur technologie avec un ADV > 50M$"</div>
+            </div>
+            <div class="mcp-msg">
+                <div class="mcp-tool-call">→ Tool call: get_momentum_candidates({sector: "Technology", min_adv_usd: 50000000, limit: 10})</div>
+            </div>
+            <div class="mcp-msg">
+                <div class="mcp-tool-result">← Tool result: [{symbol:"NVDA", close:875.4, perf_1m:+18.2%, sma_regime:"Bullish — Golden Cross", adv:2.1B}, ...]</div>
+            </div>
+            <div class="mcp-msg">
+                <div class="mcp-model">🤖 LLM : "Sur la base de ces données, voici une allocation suggérée avec un sizing de Kelly fractionnaire..."</div>
+            </div>
+        </div>
+
+        <!-- EChart: MCP Architecture -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-diagram-project" style="color:#3b82f6;"></i> Architecture MCP — du LLM au Securities Master</div>
+            <div id="mcpArchChart" style="height:320px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MCP SERVER                                                    -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="mcp-server"><i class="fa-solid fa-server" style="color:#3b82f6;"></i> Serveur MCP en Go</div>
+        <h2 style="color:#0f172a;"><i class="fa-brands fa-golang" style="color:#3b82f6;"></i> Implémentation du Serveur MCP</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Le serveur MCP est un binaire Go qui écoute sur stdin/stdout (protocole JSON-RPC 2.0 via stdio transport). Claude Desktop ou un client MCP personnalisé lance ce processus et communique via des messages JSON structurés.
+        </p>
+
+        <div class="file-tree">
+<span class="dir">mcp-securities/</span>
+├── <span class="dir">cmd/</span>
+│   └── server/
+│       └── main.go             <span class="comment"># Point d'entrée, configuration DB</span>
+├── <span class="dir">internal/</span>
+│   ├── <span class="dir">db/</span>
+│   │   └── postgres.go         <span class="comment"># Pool de connexions pgxpool</span>
+│   ├── <span class="dir">tools/</span>
+│   │   ├── universe.go         <span class="comment"># get_strategy_universe, get_instrument</span>
+│   │   ├── market_data.go      <span class="comment"># get_price_history, get_ohlcv</span>
+│   │   ├── regime.go           <span class="comment"># detect_market_regime</span>
+│   │   ├── screener.go         <span class="comment"># screen_momentum, screen_breakout</span>
+│   │   └── corporate.go        <span class="comment"># get_corporate_actions</span>
+│   └── <span class="dir">mcp/</span>
+│       ├── server.go           <span class="comment"># Boucle JSON-RPC stdio</span>
+│       ├── registry.go         <span class="comment"># Registre des outils + schémas</span>
+│       └── types.go            <span class="comment"># Types MCP (Tool, ToolCall, Result)</span>
+├── go.mod
+└── Dockerfile
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/mcp/types.go (types MCP JSON-RPC)</span>
+            <pre><code class="language-go">package mcp
+
+// Conformité avec la spec MCP v1.0 (Anthropic)
+
+// Tool décrit un outil MCP exposé au LLM
+type Tool struct {
+    Name        string      `json:"name"`
+    Description string      `json:"description"`
+    InputSchema InputSchema `json:"inputSchema"`
+}
+
+// InputSchema est un JSON Schema décrivant les paramètres de l'outil
+type InputSchema struct {
+    Type       string              `json:"type"`        // "object"
+    Properties map[string]Property `json:"properties"`
+    Required   []string            `json:"required,omitempty"`
+}
+
+type Property struct {
+    Type        string   `json:"type"`
+    Description string   `json:"description"`
+    Enum        []string `json:"enum,omitempty"`
+    Minimum     *float64 `json:"minimum,omitempty"`
+    Maximum     *float64 `json:"maximum,omitempty"`
+}
+
+// ToolCall est reçu du LLM quand il appelle un outil
+type ToolCall struct {
+    Name      string                 `json:"name"`
+    Arguments map[string]interface{} `json:"arguments"`
+}
+
+// ToolResult est renvoyé au LLM après exécution
+type ToolResult struct {
+    Content []ContentBlock `json:"content"`
+    IsError bool           `json:"isError,omitempty"`
+}
+
+type ContentBlock struct {
+    Type string `json:"type"` // "text"
+    Text string `json:"text"`
+}</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/mcp/server.go (boucle JSON-RPC stdio)</span>
+            <pre><code class="language-go">package mcp
+
+import (
+    "bufio"
+    "encoding/json"
+    "fmt"
+    "os"
+)
+
+// JSONRPCRequest : message entrant du client MCP
+type JSONRPCRequest struct {
+    JSONRPC string          `json:"jsonrpc"`
+    ID      interface{}     `json:"id"`
+    Method  string          `json:"method"`
+    Params  json.RawMessage `json:"params"`
+}
+
+// JSONRPCResponse : message sortant vers le client MCP
+type JSONRPCResponse struct {
+    JSONRPC string      `json:"jsonrpc"`
+    ID      interface{} `json:"id"`
+    Result  interface{} `json:"result,omitempty"`
+    Error   *RPCError   `json:"error,omitempty"`
+}
+
+type RPCError struct {
+    Code    int    `json:"code"`
+    Message string `json:"message"`
+}
+
+// Server gère la boucle de communication MCP via stdio
+type Server struct {
+    registry *Registry
+    scanner  *bufio.Scanner
+    encoder  *json.Encoder
+}
+
+func NewServer(reg *Registry) *Server {
+    return &Server{
+        registry: reg,
+        scanner:  bufio.NewScanner(os.Stdin),
+        encoder:  json.NewEncoder(os.Stdout),
+    }
+}
+
+func (s *Server) Run() error {
+    for s.scanner.Scan() {
+        line := s.scanner.Bytes()
+
+        var req JSONRPCRequest
+        if err := json.Unmarshal(line, &req); err != nil {
+            s.writeError(nil, -32700, "Parse error")
+            continue
+        }
+
+        switch req.Method {
+        // Handshake : le client MCP découvre les capacités du serveur
+        case "initialize":
+            s.writeResult(req.ID, map[string]interface{}{
+                "protocolVersion": "2024-11-05",
+                "serverInfo": map[string]string{
+                    "name":    "securities-master-mcp",
+                    "version": "1.0.0",
+                },
+                "capabilities": map[string]interface{}{
+                    "tools": map[string]bool{"listChanged": false},
+                },
+            })
+
+        // Liste des outils disponibles
+        case "tools/list":
+            s.writeResult(req.ID, map[string]interface{}{
+                "tools": s.registry.ListTools(),
+            })
+
+        // Exécution d'un outil spécifique
+        case "tools/call":
+            var p struct {
+                Name      string                 `json:"name"`
+                Arguments map[string]interface{} `json:"arguments"`
+            }
+            if err := json.Unmarshal(req.Params, &p); err != nil {
+                s.writeError(req.ID, -32602, "Invalid params")
+                continue
+            }
+
+            result, err := s.registry.Execute(p.Name, p.Arguments)
+            if err != nil {
+                s.writeResult(req.ID, ToolResult{
+                    IsError: true,
+                    Content: []ContentBlock{{Type: "text", Text: err.Error()}},
+                })
+                continue
+            }
+            s.writeResult(req.ID, result)
+
+        default:
+            s.writeError(req.ID, -32601, fmt.Sprintf("Method not found: %s", req.Method))
+        }
+    }
+    return s.scanner.Err()
+}
+
+func (s *Server) writeResult(id interface{}, result interface{}) {
+    _ = s.encoder.Encode(JSONRPCResponse{JSONRPC: "2.0", ID: id, Result: result})
+}
+
+func (s *Server) writeError(id interface{}, code int, msg string) {
+    _ = s.encoder.Encode(JSONRPCResponse{JSONRPC: "2.0", ID: id, Error: &RPCError{Code: code, Message: msg}})
+}</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/tools/screener.go (outil de screener momentum)</span>
+            <pre><code class="language-go">package tools
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+
+    "github.com/jackc/pgx/v5/pgxpool"
+    "securities-mcp/internal/mcp"
+)
+
+type ScreenerTool struct {
+    db *pgxpool.Pool
+}
+
+// Definition retourne le schéma MCP de l'outil (exposé au LLM)
+func (t *ScreenerTool) Definition() mcp.Tool {
+    min0  := float64(0)
+    max100 := float64(100)
+    return mcp.Tool{
+        Name:        "screen_momentum_candidates",
+        Description: "Trouve les actions avec le meilleur momentum prix selon les critères donnés. " +
+                     "Utilise les marts Gold pré-calculés (SMA, volatilité réalisée, ADV). " +
+                     "Retourne maximum 'limit' résultats triés par score momentum décroissant.",
+        InputSchema: mcp.InputSchema{
+            Type: "object",
+            Properties: map[string]mcp.Property{
+                "sector": {
+                    Type:        "string",
+                    Description: "Filtrer par secteur GICS (ex: 'Technology', 'Healthcare', 'Energy'). Vide = tous secteurs.",
+                },
+                "trend_regime": {
+                    Type:        "string",
+                    Description: "Filtrer par régime de tendance.",
+                    Enum:        []string{"Bullish — Golden Cross", "Bullish — Above SMA50", "Bearish — Death Cross", "Bearish — Below SMA50"},
+                },
+                "min_adv_usd": {
+                    Type:        "number",
+                    Description: "ADV minimum en USD (Average Daily Volume). Ex: 50000000 pour 50M$.",
+                    Minimum:     &min0,
+                },
+                "min_perf_1m_pct": {
+                    Type:        "number",
+                    Description: "Performance minimale sur 1 mois en %. Ex: 5 pour +5%.",
+                },
+                "max_vol_20d": {
+                    Type:        "number",
+                    Description: "Volatilité réalisée 20j maximale (annualisée). Ex: 0.4 pour 40%.",
+                    Minimum:     &min0,
+                    Maximum:     &max100,
+                },
+                "limit": {
+                    Type:        "number",
+                    Description: "Nombre maximum de résultats. Défaut: 10, maximum: 50.",
+                    Minimum:     &min0,
+                },
+            },
+            Required: []string{},
+        },
+    }
+}
+
+// Execute exécute l'outil et retourne un ToolResult
+func (t *ScreenerTool) Execute(ctx context.Context, args map[string]interface{}) (mcp.ToolResult, error) {
+    // Parsing des arguments avec valeurs par défaut
+    sector, _    := args["sector"].(string)
+    regime, _    := args["trend_regime"].(string)
+    minADV       := getFloat(args, "min_adv_usd", 0)
+    minPerf      := getFloat(args, "min_perf_1m_pct", -100)
+    maxVol       := getFloat(args, "max_vol_20d", 999)
+    limit        := int(getFloat(args, "limit", 10))
+
+    if limit > 50 { limit = 50 }   // Sécurité : limiter les résultats
+
+    // Construction de la requête SQL paramétrée (pas de string interpolation!)
+    query := `
+        SELECT
+            symbol,
+            company_name,
+            sector,
+            ROUND(close_price::NUMERIC, 2) AS close_price,
+            ROUND(adv_20d_usd::NUMERIC / 1e6, 1) AS adv_20d_m,
+            ROUND(perf_1m_pct::NUMERIC, 2) AS perf_1m_pct,
+            ROUND(perf_3m_pct::NUMERIC, 2) AS perf_3m_pct,
+            ROUND(realized_vol_20d::NUMERIC * 100, 1) AS vol_20d_pct,
+            trend_regime,
+            liquidity_class
+        FROM gold_zone.mart_strategy_universe
+        WHERE 1=1
+          AND ($1::TEXT = '' OR sector = $1)
+          AND ($2::TEXT = '' OR trend_regime = $2)
+          AND adv_20d_usd >= $3
+          AND perf_1m_pct >= $4
+          AND realized_vol_20d <= $5
+        ORDER BY perf_1m_pct DESC, adv_20d_usd DESC
+        LIMIT $6
+    `
+
+    rows, err := t.db.Query(ctx, query, sector, regime, minADV, minPerf, maxVol, limit)
+    if err != nil {
+        return mcp.ToolResult{}, fmt.Errorf("database query failed: %w", err)
+    }
+    defer rows.Close()
+
+    type Candidate struct {
+        Symbol       string  `json:"symbol"`
+        Name         string  `json:"name"`
+        Sector       string  `json:"sector"`
+        Price        float64 `json:"price_usd"`
+        ADV_M        float64 `json:"adv_20d_million_usd"`
+        Perf1M       float64 `json:"perf_1m_pct"`
+        Perf3M       float64 `json:"perf_3m_pct"`
+        Vol20D       float64 `json:"realized_vol_20d_pct"`
+        TrendRegime  string  `json:"trend_regime"`
+        Liquidity    string  `json:"liquidity_class"`
+    }
+
+    var candidates []Candidate
+    for rows.Next() {
+        var c Candidate
+        if err := rows.Scan(&c.Symbol, &c.Name, &c.Sector, &c.Price, &c.ADV_M,
+                             &c.Perf1M, &c.Perf3M, &c.Vol20D, &c.TrendRegime, &c.Liquidity); err != nil {
+            continue
+        }
+        candidates = append(candidates, c)
+    }
+
+    result, _ := json.MarshalIndent(map[string]interface{}{
+        "candidates": candidates,
+        "count":      len(candidates),
+        "filters_applied": map[string]interface{}{
+            "sector": sector, "trend_regime": regime,
+            "min_adv_usd": minADV, "min_perf_1m_pct": minPerf,
+        },
+    }, "", "  ")
+
+    return mcp.ToolResult{
+        Content: []mcp.ContentBlock{{Type: "text", Text: string(result)}},
+    }, nil
+}
+
+func getFloat(args map[string]interface{}, key string, def float64) float64 {
+    if v, ok := args[key]; ok {
+        if f, ok := v.(float64); ok {
+            return f
+        }
+    }
+    return def
+}</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TOOL TAXONOMY                                                 -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="tool-taxonomy"><i class="fa-solid fa-sitemap" style="color:#3b82f6;"></i> Taxonomie des Outils MCP</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-toolbox" style="color:#3b82f6;"></i> Concevoir la Taxonomie des Outils</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            L'architecture des outils MCP est critique : trop génériques et le LLM génère des requêtes coûteuses ; trop spécialisés et il manque de flexibilité. Notre taxonomie sépare les outils en trois familles selon leur impact.
+        </p>
+
+        <div class="tool-grid">
+            <div class="tool-card tool-read">
+                <h4><i class="fa-solid fa-eye"></i> Lecture (Read-Only)</h4>
+                <p><code>get_instrument_profile</code> — données de référence d'un titre<br>
+                   <code>get_price_history</code> — OHLCV ajustés sur une période<br>
+                   <code>screen_momentum_candidates</code> — screener Gold mart<br>
+                   <code>get_sector_rotation</code> — performance sectorielle<br>
+                   <code>get_corporate_actions</code> — historique splits/dividendes</p>
+            </div>
+            <div class="tool-card tool-compute">
+                <h4><i class="fa-solid fa-calculator"></i> Calcul (Compute)</h4>
+                <p><code>detect_market_regime</code> — régime global (Bull/Bear/Transition)<br>
+                   <code>calculate_correlation_matrix</code> — corrélation N×N sur fenêtre<br>
+                   <code>estimate_kelly_fraction</code> — sizing optimal par setup<br>
+                   <code>backtest_simple_strategy</code> — backtest paramétrique rapide</p>
+            </div>
+            <div class="tool-card tool-write">
+                <h4><i class="fa-solid fa-pen-to-square"></i> Écriture (Guardrails)</h4>
+                <p><code>create_watchlist</code> — créer une liste de suivi<br>
+                   <code>add_alert</code> — configurer une alerte prix<br>
+                   ⚠️ <strong>Aucun outil d'ordre de trading</strong> — le système de trading opère en Partie 6 avec des guardrails stricts séparés.</p>
+            </div>
+        </div>
+
+        <table class="compare-table">
+            <thead>
+                <tr><th>Outil MCP</th><th>Source de Données</th><th>Latence cible</th><th>Résultats max</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>screen_momentum_candidates</code></td><td>Gold mart_strategy_universe</td><td>&lt; 50ms</td><td>50</td></tr>
+                <tr><td><code>get_price_history</code></td><td>Silver fct_market_data_daily</td><td>&lt; 200ms</td><td>252 barres (1 an)</td></tr>
+                <tr><td><code>get_instrument_profile</code></td><td>Silver dim_instruments_current</td><td>&lt; 20ms</td><td>1 instrument</td></tr>
+                <tr><td><code>detect_market_regime</code></td><td>Gold mart_strategy_universe</td><td>&lt; 100ms</td><td>1 objet régime</td></tr>
+                <tr><td><code>get_sector_rotation</code></td><td>Gold mart_sector_momentum</td><td>&lt; 50ms</td><td>11 secteurs</td></tr>
+                <tr><td><code>calculate_correlation_matrix</code></td><td>Silver (window fn temps-réel)</td><td>&lt; 2s</td><td>Matrix 20×20 max</td></tr>
+            </tbody>
+        </table>
+
+        <!-- ============================================================ -->
+        <!-- MARKET REGIME DETECTION                                      -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="market-regime"><i class="fa-solid fa-chart-line" style="color:#0d9488;"></i> Détection de Régime de Marché</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-brain" style="color:#0d9488;"></i> Détecter le Régime de Marché depuis le Gold Mart</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Avant qu'un LLM puisse recommander des stratégies, il doit comprendre le contexte macro. Nous exposons une détection de régime en temps réel qui interroge le mart Gold agrégé — pas de calcul à la volée, réponse en &lt;100ms.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/tools/regime.go</span>
+            <pre><code class="language-go">package tools
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+
+    "github.com/jackc/pgx/v5/pgxpool"
+    "securities-mcp/internal/mcp"
+)
+
+type MarketRegime struct {
+    Regime           string  `json:"regime"`             // "Risk-On", "Risk-Off", "Transition"
+    BullishPct       float64 `json:"bullish_pct"`        // % actions au-dessus SMA50
+    GoldenCrossPct   float64 `json:"golden_cross_pct"`   // % avec Golden Cross
+    AvgVol20D        float64 `json:"avg_realized_vol_pct"`
+    MedianADV_B      float64 `json:"median_adv_billion"`
+    Breadth          string  `json:"market_breadth"`     // "Expanding", "Narrowing", "Weak"
+    TopSectors       []string `json:"top_sectors"`
+    BottomSectors    []string `json:"bottom_sectors"`
+    AsOfDate         string  `json:"as_of_date"`
+}
+
+func (t *RegimeTool) Execute(ctx context.Context, args map[string]interface{}) (mcp.ToolResult, error) {
+    // Requête agrégée sur le Gold Mart — aucun calcul de fenêtre temps-réel
+    row := t.db.QueryRow(ctx, `
+        WITH universe AS (
+            SELECT
+                trend_regime,
+                realized_vol_20d,
+                adv_20d_usd,
+                sector,
+                perf_1m_pct
+            FROM gold_zone.mart_strategy_universe
+            WHERE instrument_type = 'EQUITY'
+        ),
+        regime_stats AS (
+            SELECT
+                COUNT(*) FILTER (WHERE trend_regime LIKE 'Bullish%')::FLOAT / COUNT(*) * 100
+                    AS bullish_pct,
+                COUNT(*) FILTER (WHERE trend_regime = 'Bullish — Golden Cross')::FLOAT / COUNT(*) * 100
+                    AS golden_cross_pct,
+                AVG(realized_vol_20d) * 100
+                    AS avg_vol_20d_pct,
+                PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY adv_20d_usd) / 1e9
+                    AS median_adv_b
+            FROM universe
+        )
+        SELECT
+            bullish_pct, golden_cross_pct,
+            avg_vol_20d_pct, median_adv_b,
+            CURRENT_DATE::TEXT AS as_of_date
+        FROM regime_stats
+    `)
+
+    var r MarketRegime
+    r.AsOfDate = "unknown"
+    if err := row.Scan(&r.BullishPct, &r.GoldenCrossPct, &r.AvgVol20D, &r.MedianADV_B, &r.AsOfDate); err != nil {
+        return mcp.ToolResult{}, fmt.Errorf("regime query failed: %w", err)
+    }
+
+    // Détermination du régime par règles métier
+    switch {
+    case r.BullishPct >= 70 && r.GoldenCrossPct >= 40:
+        r.Regime = "Risk-On — Strong Bull Market"
+        r.Breadth = "Expanding"
+    case r.BullishPct >= 55:
+        r.Regime = "Risk-On — Moderate Uptrend"
+        r.Breadth = "Expanding"
+    case r.BullishPct >= 40:
+        r.Regime = "Transition — Mixed Signals"
+        r.Breadth = "Narrowing"
+    case r.BullishPct >= 25:
+        r.Regime = "Risk-Off — Early Bear"
+        r.Breadth = "Weak"
+    default:
+        r.Regime = "Risk-Off — Bear Market"
+        r.Breadth = "Weak"
+    }
+
+    // Top/Bottom secteurs
+    sectorRows, _ := t.db.Query(ctx, `
+        SELECT sector, sector_momentum_score
+        FROM gold_zone.mart_sector_momentum
+        WHERE instrument_type = 'EQUITY' AND sector IS NOT NULL
+        ORDER BY momentum_rank ASC
+        LIMIT 3
+    `)
+    defer sectorRows.Close()
+    for sectorRows.Next() {
+        var sector string
+        var score float64
+        if err := sectorRows.Scan(&sector, &score); err == nil {
+            r.TopSectors = append(r.TopSectors, sector)
+        }
+    }
+
+    result, _ := json.MarshalIndent(r, "", "  ")
+    return mcp.ToolResult{
+        Content: []mcp.ContentBlock{{Type: "text", Text: string(result)}},
+    }, nil
+}</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- EVIDENCE.DEV                                                  -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="evidence-dev"><i class="fa-solid fa-chart-column" style="color:#0d9488;"></i> Evidence.dev — BI-as-Code</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-file-code" style="color:#0d9488;"></i> Dashboards BI-as-Code avec Evidence.dev</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Pendant que l'agent IA opère de façon autonome, les portfolio managers exigent une supervision humaine. Evidence.dev transforme du Markdown avec des requêtes SQL directement en dashboards interactifs. Tout est versionné avec le code — pas de Tableau, pas de Metabase, juste du Markdown + SQL + Git.
+        </p>
+
+        <div class="pedagogy-box">
+            <h4><i class="fa-solid fa-graduation-cap"></i> Qu'est-ce qu'Evidence.dev ?</h4>
+            <p style="color:#1e3a5f; margin:0; line-height:1.7;">
+                Evidence.dev est un framework open-source qui génère des dashboards statiques à partir de fichiers Markdown contenant des blocs de requêtes SQL. Chaque fichier <span class="inline-code">.md</span> dans <span class="inline-code">pages/</span> devient une page de dashboard. Les requêtes SQL s'exécutent contre votre PostgreSQL à la compilation, les résultats sont intégrés dans un site statique. Le dashboard final peut être hébergé sur GitHub Pages, Netlify, ou un serveur interne — sans serveur backend.
+            </p>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">bash — Installation et configuration Evidence.dev</span>
+            <pre><code class="language-bash"># Initialiser un projet Evidence.dev
+npx degit evidence-dev/template securities-dashboards
+cd securities-dashboards
+npm install
+
+# Configurer la connexion PostgreSQL (sources.yaml)
+cat > sources/securities.yaml << EOF
+name: securities_master
+type: postgres
+host: ${POSTGRES_HOST}
+port: ${POSTGRES_PORT}
+database: securities_master
+user: ${POSTGRES_READONLY_USER}    # Utilisateur READ-ONLY uniquement
+password: ${POSTGRES_PASSWORD}
+EOF
+
+# Développement local avec hot-reload
+npm run dev   # → http://localhost:3000</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">markdown — pages/universe-overview.md (dashboard univers)</span>
+            <pre><code class="language-bash">---
+title: "Securities Universe — Vue d'ensemble"
+description: "Tableau de bord de l'univers d'investissement du Securities Master"
+---
+
+# Universe Overview
+
+## Régime de Marché Actuel
+
+```sql regime_summary
+SELECT
+    trend_regime,
+    COUNT(*) AS num_instruments,
+    ROUND(AVG(perf_1m_pct)::NUMERIC, 2) AS avg_perf_1m,
+    ROUND(AVG(adv_20d_usd / 1e6)::NUMERIC, 0) AS avg_adv_m
+FROM gold_zone.mart_strategy_universe
+WHERE instrument_type = 'EQUITY'
+GROUP BY trend_regime
+ORDER BY num_instruments DESC
+```
+
+&lt;BarChart
+    data={regime_summary}
+    x="trend_regime"
+    y="num_instruments"
+    colorPalette={["#0d9488","#f59e0b","#ef4444","#64748b"]}
+    title="Distribution des régimes de tendance"
+/&gt;
+
+## Top 20 Momentum Candidates
+
+```sql top_momentum
+SELECT
+    symbol,
+    company_name,
+    sector,
+    ROUND(close_price::NUMERIC, 2) AS price,
+    ROUND(adv_20d_usd / 1e6, 1) AS "ADV (M$)",
+    ROUND(perf_1m_pct::NUMERIC, 2) AS "Perf 1M %",
+    ROUND(perf_3m_pct::NUMERIC, 2) AS "Perf 3M %",
+    ROUND(realized_vol_20d * 100::NUMERIC, 1) AS "Vol 20D %",
+    trend_regime AS "Régime"
+FROM gold_zone.mart_strategy_universe
+WHERE instrument_type = 'EQUITY'
+  AND trend_regime LIKE 'Bullish%'
+  AND adv_20d_usd >= 50e6
+ORDER BY perf_1m_pct DESC
+LIMIT 20
+```
+
+&lt;DataTable data={top_momentum} search=true rows=10 /&gt;
+
+## Rotation Sectorielle
+
+```sql sector_rotation
+SELECT
+    sector,
+    num_instruments,
+    avg_perf_1m AS "Perf 1M %",
+    avg_perf_3m AS "Perf 3M %",
+    sector_momentum_score AS "Score Momentum",
+    momentum_rank AS "Rang"
+FROM gold_zone.mart_sector_momentum
+WHERE instrument_type = 'EQUITY' AND sector IS NOT NULL
+ORDER BY momentum_rank ASC
+```
+
+&lt;BarChart
+    data={sector_rotation}
+    x="sector"
+    y="Perf 1M %"
+    title="Performance sectorielle 1 mois"
+    colorPalette={["#0d9488"]}
+/&gt;</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">markdown — pages/corporate-actions-monitor.md (monitoring corporate actions)</span>
+            <pre><code class="language-bash">---
+title: "Corporate Actions Monitor"
+---
+
+# Corporate Actions Récentes
+
+```sql recent_ca
+SELECT
+    symbol,
+    isin,
+    ex_date,
+    ca_type AS "Type",
+    CASE
+        WHEN ca_type = 'SPLIT'    THEN 'Ratio: ' || split_ratio::TEXT
+        WHEN ca_type = 'DIVIDEND' THEN 'Montant: $' || dividend_amount::TEXT
+        ELSE description
+    END AS details,
+    provider_name AS "Source"
+FROM raw_zone.corporate_actions
+WHERE ex_date >= CURRENT_DATE - INTERVAL '30 days'
+ORDER BY ex_date DESC
+LIMIT 50
+```
+
+&lt;DataTable data={recent_ca} search=true rows=20 /&gt;
+
+## Instruments avec Ajustements Récents
+
+```sql adjusted_instruments
+SELECT
+    m.symbol,
+    m.company_name,
+    m.close_price,
+    m.close_total_return_yahoo AS close_adj,
+    m.cumulative_split_factor,
+    m.combined_adjustment_factor,
+    m.last_price_date
+FROM gold_zone.mart_adjusted_prices m
+WHERE m.cumulative_split_factor != 1.0
+   OR m.combined_adjustment_factor &lt; 0.99
+ORDER BY m.last_price_date DESC
+LIMIT 30
+```
+
+&lt;DataTable data={adjusted_instruments} /&gt;</code></pre>
+        </div>
+
+        <!-- EChart: Dashboard concept -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-chart-pie" style="color:#0d9488;"></i> Distribution des régimes de tendance — Univers mondial (exemple)</div>
+            <div id="regimeChart" style="height:300px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- GOVERNANCE                                                    -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="governance"><i class="fa-solid fa-shield-halved" style="color:#f97316;"></i> Gouvernance IA</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-gavel" style="color:#f97316;"></i> Guardrails et Gouvernance du Serveur MCP</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Exposer une base de données financière à un LLM sans guardrails est dangereux. Voici les couches de protection implémentées dans notre serveur MCP.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — Middleware de sécurité MCP (rate limiting + audit log)</span>
+            <pre><code class="language-go">// internal/mcp/middleware.go
+
+// RateLimiter : evite que le LLM exécute trop de requêtes par minute
+type RateLimiter struct {
+    mu       sync.Mutex
+    calls    map[string][]time.Time   // tool_name → timestamps
+    limit    int                      // max appels par fenêtre
+    window   time.Duration
+}
+
+func (rl *RateLimiter) Allow(toolName string) bool {
+    rl.mu.Lock()
+    defer rl.mu.Unlock()
+
+    now := time.Now()
+    // Purger les timestamps anciens
+    var recent []time.Time
+    for _, t := range rl.calls[toolName] {
+        if now.Sub(t) < rl.window {
+            recent = append(recent, t)
+        }
+    }
+    if len(recent) >= rl.limit {
+        return false   // Rate limit atteint
+    }
+    rl.calls[toolName] = append(recent, now)
+    return true
+}
+
+// AuditLogger : chaque appel d'outil est loggué pour conformité
+type AuditLogger struct {
+    db *pgxpool.Pool
+}
+
+func (al *AuditLogger) Log(ctx context.Context, entry AuditEntry) {
+    // Log asynchrone pour ne pas bloquer la réponse
+    go func() {
+        _, _ = al.db.Exec(ctx, `
+            INSERT INTO ops.mcp_audit_log
+                (tool_name, arguments_json, result_rows, duration_ms, session_id, ts)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+        `, entry.ToolName, entry.ArgsJSON, entry.ResultRows,
+           entry.DurationMs, entry.SessionID)
+    }()
+}
+
+type AuditEntry struct {
+    ToolName   string
+    ArgsJSON   string
+    ResultRows int
+    DurationMs int64
+    SessionID  string
+}
+
+// ResultRowLimit : limite stricte sur le nombre de lignes retournées
+// Un LLM n'a pas besoin de plus de 50 résultats — protège contre les dumps complets
+const MaxResultRows = 50
+
+// ReadOnlyUser : le serveur MCP se connecte avec un user PostgreSQL READ-ONLY
+// CREATE USER mcp_readonly WITH PASSWORD '...';
+// GRANT CONNECT ON DATABASE securities_master TO mcp_readonly;
+// GRANT USAGE ON SCHEMA gold_zone, silver_zone TO mcp_readonly;
+// GRANT SELECT ON ALL TABLES IN SCHEMA gold_zone TO mcp_readonly;
+// REVOKE ALL ON SCHEMA raw_zone FROM mcp_readonly;  -- raw_zone: jamais exposé</code></pre>
+        </div>
+
+        <div class="alert-box">
+            <h4><i class="fa-solid fa-triangle-exclamation"></i> Règle absolue : le serveur MCP ne transmet jamais d'ordres de trading</h4>
+            <p style="color:#334155; margin:0;">
+                Notre serveur MCP expose uniquement des outils de <strong>lecture et d'analyse</strong>. Aucun outil ne permet de créer un ordre, de modifier une position, ou de déclencher une exécution. Le chemin entre l'analyse IA et l'exécution réelle passe obligatoirement par l'OMS (Order Management System) de la Partie 6, avec des guardrails séparés, des limites de risque, et une validation humaine.
+            </p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAKEAWAY                                                     -->
+        <!-- ============================================================ -->
+        <div class="takeaway-box">
+            <h3><i class="fa-solid fa-flag-checkered"></i> Points Clés de la Partie 5</h3>
+            <ul class="takeaway-list">
+                <li>
+                    <i class="fa-solid fa-check" style="color:#3b82f6; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>MCP (Model Context Protocol)</strong> est le pont standardisé entre LLMs et systèmes externes. Notre serveur Go implémente le transport stdio JSON-RPC 2.0.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#3b82f6; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Chaque outil MCP a un schéma strict</strong> (JSON Schema) que le LLM respecte. Les requêtes SQL sont paramétrées — pas d'injection SQL possible, même via un LLM malicieux.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#3b82f6; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Détection de régime de marché</strong> en &lt;100ms via le mart Gold pré-calculé. Le LLM adapte ses recommandations au contexte macro sans calcul de fenêtre temps-réel.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#3b82f6; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Evidence.dev</strong> transforme du Markdown + SQL en dashboards statiques versionnés avec le code. Supervision humaine complète sans serveur backend additionnel.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#3b82f6; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Gouvernance IA</strong> : utilisateur PostgreSQL read-only, rate limiting par outil, audit log de chaque appel, limite stricte de 50 résultats, séparation totale MCP/OMS.</span>
+                </li>
+            </ul>
+            <p style="margin-top:1.5rem; font-weight:600; color:#1d4ed8;">
+                L'agent IA a maintenant accès à des données mathématiquement correctes via des outils sécurisés. Dans la Partie 6, nous fermons la boucle : comment ces signaux IA atteignent les marchés réels sans détruire le capital.
+            </p>
+        </div>
+
+        <a href="../part6-operations/" class="next-cta">
+            <div class="next-cta-icon">⚙️</div>
+            <div class="next-cta-text">
+                <h3>Partie 6 — Opérations : OMS, Exécution &amp; Monitoring</h3>
+                <p>OMS adapter pattern, intégration Interactive Brokers, contrôles de risque, SLOs de monitoring et conclusion de la série.</p>
+            </div>
+            <div class="next-cta-arrow"><i class="fas fa-arrow-right"></i></div>
+        </a>
+
+        <!-- ============================================================ -->
+        <!-- QUIZ                                                          -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#3b82f6;"></i> Auto-Évaluation</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-graduation-cap" style="color:#3b82f6;"></i> Quiz : MCP &amp; Interfaces IA</h2>
+
+        <details class="quiz-item">
+            <summary>Quelle est la différence fondamentale entre un LLM qui génère du SQL directement et un LLM qui utilise MCP ?</summary>
+            <div class="quiz-answer">
+                <strong>Contrôle, sécurité, et prévisibilité.</strong> Un LLM générant du SQL arbitraire peut écrire des requêtes non optimisées (scans de table entière), accéder à des données sensibles (raw_zone), ou théoriquement générer des requêtes destructives (DROP, UPDATE). Avec MCP, le LLM appelle uniquement des <strong>outils prédéfinis avec des schémas stricts</strong> : paramètres validés, requêtes SQL paramétrées (pas d'injection), utilisateur PostgreSQL read-only, résultats limités. Le serveur MCP est une API contrôlée vers la base de données — le LLM ne "voit" jamais le SQL sous-jacent.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Pourquoi les requêtes SQL dans les outils MCP utilisent-elles des paramètres ($1, $2...) plutôt que de l'interpolation de chaînes ?</summary>
+            <div class="quiz-answer">
+                <strong>Pour prévenir les injections SQL (SQL Injection).</strong> Un LLM malicieux ou détourné (prompt injection) pourrait tenter de passer des valeurs comme <code>' OR 1=1 --</code> dans les arguments. Avec des requêtes paramétrées, PostgreSQL traite les paramètres comme des <em>données</em> et non comme du code SQL — l'injection devient impossible. C'est la même règle que pour tout code qui interagit avec une base de données : ne jamais construire des requêtes SQL par concatenation de chaînes avec des entrées utilisateurs (ou LLM).
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Qu'est-ce que le "transport stdio" dans le Model Context Protocol ?</summary>
+            <div class="quiz-answer">
+                <strong>C'est le mécanisme de communication principal de MCP.</strong> Le client MCP (ex: Claude Desktop) lance le serveur MCP comme un processus enfant et communique via les flux stdin (entrée) et stdout (sortie) du processus. Les messages sont des objets JSON-RPC 2.0 délimités par des sauts de ligne. Avantages : pas de port réseau à gérer, pas de TLS à configurer, le serveur tourne localement sur la machine de l'utilisateur. Alternative : le transport SSE (Server-Sent Events) pour les serveurs MCP distants. Notre serveur Go utilise stdio, idéal pour une intégration desktop.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Pourquoi Evidence.dev peut-il héberger des dashboards sans backend, et quelles sont les limitations de cette approche ?</summary>
+            <div class="quiz-answer">
+                <strong>Evidence.dev génère un site statique à la compilation.</strong> Les requêtes SQL s'exécutent une seule fois lors du build (npm run build) — les résultats sont sérialisés en JSON dans les fichiers HTML/JS statiques. Le site résultant peut être hébergé sur n'importe quel CDN (GitHub Pages, Vercel, Netlify) sans backend. <strong>Limitations :</strong> les données ne sont "fraîches" qu'au moment du dernier build. Pour un dashboard mis à jour chaque nuit (après le pipeline dbt), on planifie le build Evidence.dev comme job Nomad périodique. Les données en temps réel (tick-by-tick) ne sont pas adaptées à cette approche.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Comment le rate limiting protège-t-il le Securities Master des appels excessifs d'un LLM ?</summary>
+            <div class="quiz-answer">
+                <strong>En limitant le nombre d'appels par outil par fenêtre temporelle.</strong> Un LLM en boucle (hallucination d'outil, prompt malicieux) pourrait appeler <code>get_price_history</code> des milliers de fois. Notre RateLimiter maintient un journal des timestamps des appels récents par outil. Si le nombre d'appels dans la fenêtre (ex: 60 secondes) dépasse le seuil (ex: 30 appels), le serveur retourne une erreur MCP standardisée (<code>isError: true</code>) sans exécuter la requête PostgreSQL. Combiné avec le pool de connexions pgxpool (max 10 connexions), cela protège la base de données des surcharges.
+            </div>
+        </details>
+
+    </div><!-- /.container -->
+
+    <div class="series-bar" style="margin-top:3rem;">
+        <div class="series-bar-inner">
+            <a href="../part4-corporate-actions/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="../part3-transforms/" class="series-step"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="../part4-corporate-actions/" class="series-step"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="./" class="series-step current"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="../part6-operations/" class="series-step"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">5/6</span>
+            <a href="../part6-operations/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
     <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
 
-  
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part4-corporate-actions/" class="series-arrow" title="Part4 Corporate Actions"><i class="fas fa-chevron-left"></i></a><span class="series-title">Series</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="./" class="series-step current" title="."><span class="series-num">5</span><span class="series-label">.</span></a><a href="../part6-operations/" class="series-step" title="Part6 Operations"><span class="series-num">6</span><span class="series-label">Part6 Operations</span></a></div><span class="series-counter">5/6</span><a href="../part6-operations/" class="series-arrow" title="Part6 Operations"><i class="fas fa-chevron-right"></i></a></div></div>
-<footer class="article-footer">
-    &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
-    Ceci n'est pas un conseil financier.
-    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
-  </footer><script src="/assets/tag-renderer.js"></script>
+    <script>
+    // ── FAB ──────────────────────────────────────────────────────────────────
+    (function() {
+        var btn = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        if (!btn || !menu) return;
+        btn.addEventListener('click', function(e) { e.stopPropagation(); menu.classList.toggle('open'); });
+        document.addEventListener('click', function() { menu.classList.remove('open'); });
+        menu.addEventListener('click', function() { menu.classList.remove('open'); });
+    })();
+
+    // ── ECharts : MCP Architecture ─────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('mcpArchChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+
+        var nodes = [
+            { id:'0', name:'Claude\nClaude API', x:50,  y:160, symbolSize:54, itemStyle:{color:'#8b5cf6'} },
+            { id:'1', name:'MCP\nClient',        x:220, y:160, symbolSize:46, itemStyle:{color:'#6366f1'} },
+            { id:'2', name:'MCP Server\n(Go)',    x:400, y:160, symbolSize:54, itemStyle:{color:'#3b82f6'} },
+            { id:'3', name:'pgxpool\n(Read-Only)',x:580, y:100, symbolSize:44, itemStyle:{color:'#0d9488'} },
+            { id:'4', name:'Gold Zone\n(Marts)',  x:750, y:60,  symbolSize:48, itemStyle:{color:'#ca8a04'} },
+            { id:'5', name:'Silver Zone\n(Facts)',x:750, y:160, symbolSize:48, itemStyle:{color:'#64748b'} },
+            { id:'6', name:'Audit Log\n(ops.)',   x:580, y:260, symbolSize:40, itemStyle:{color:'#ef4444'} },
+            { id:'7', name:'Evidence.dev\n(BI)',  x:400, y:280, symbolSize:44, itemStyle:{color:'#059669'} },
+        ];
+        var edges = [
+            { source:'0', target:'1', label:'JSON-RPC\nstdio' },
+            { source:'1', target:'2', label:'Tool Call' },
+            { source:'2', target:'3', label:'pgxpool' },
+            { source:'3', target:'4', label:'SELECT' },
+            { source:'3', target:'5', label:'SELECT' },
+            { source:'2', target:'6', label:'Audit' },
+            { source:'3', target:'7', label:'Build-time\nSQL' },
+        ];
+
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item' },
+            series: [{
+                type: 'graph', layout: 'none', roam: false,
+                label: { show: true, fontSize: 9, fontWeight: 'bold', color: '#fff' },
+                edgeLabel: { show: true, fontSize: 8, formatter: function(p) { return p.data.label || ''; } },
+                lineStyle: { color: '#94a3b8', width: 1.5, curveness: 0.1 },
+                edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 8,
+                nodes: nodes, edges: edges
+            }]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ── ECharts : Regime Distribution ─────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('regimeChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+        chart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item', formatter: '{b}: {c} instruments ({d}%)' },
+            legend: { orient: 'vertical', right: 10, top: 'center', fontSize: 11 },
+            series: [{
+                name: 'Régime de Marché',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                center: ['40%', '50%'],
+                avoidLabelOverlap: true,
+                label: { show: false },
+                emphasis: { label: { show: true, fontSize: 12, fontWeight: 'bold' } },
+                data: [
+                    { value: 3240, name: 'Bullish — Golden Cross',   itemStyle: { color: '#0d9488' } },
+                    { value: 2180, name: 'Bullish — Above SMA50',     itemStyle: { color: '#34d399' } },
+                    { value: 1450, name: 'Bearish — Below SMA50',     itemStyle: { color: '#f59e0b' } },
+                    { value: 880,  name: 'Bearish — Death Cross',     itemStyle: { color: '#ef4444' } },
+                ]
+            }]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+    </script>
 </body>
-
 </html>

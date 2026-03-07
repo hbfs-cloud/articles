@@ -1,183 +1,1219 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="us,tech" data-tab="tech">
+<html lang="fr" data-tags="go,oms,trading,operations,monitoring,postgresql,finance,tech" data-tab="tech">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Execution: OMS & Market Ops | Building a Securities Master — Part 6/6 | Market Watch</title>
-    <meta name="description"
-        content="Part 6/6: Live Order Management System (OMS). Bridging AI models to Interactive Brokers and Binance via high-performance Go architectures.">
-    <link rel="stylesheet" href="/assets/report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Opérations : OMS, Exécution &amp; Monitoring | Building a Securities Master — Part 6/6 | Market Watch</title>
+    <meta name="description" content="Building a Securities Master — Part 6/6 : OMS adapter pattern Go, intégration Interactive Brokers et Binance, contrôles de risque, réconciliation de positions, monitoring SLOs avec Nomad, et conclusion de la série.">
+
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/assets/report.css">
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-            margin: 0;
-        } .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
+        .hero-section { padding:4rem 2rem 8rem; background:linear-gradient(180deg,#fdf4ff 0%,#f8fafc 100%); text-align:center; }
+        .hero-date { font-size:.85rem; font-weight:700; color:#9333ea; text-transform:uppercase; letter-spacing:.1em; margin-bottom:1rem; }
+        .hero-badges { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+        .hero-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border-radius:99px; font-size:.8rem; font-weight:700; }
+        .hero-badge-purple { background:rgba(147,51,234,.1); color:#9333ea; border:1px solid rgba(147,51,234,.2); }
+        .hero-badge-teal   { background:rgba(13,148,136,.1); color:#0d9488; border:1px solid rgba(13,148,136,.2); }
+        .hero-badge-red    { background:rgba(239,68,68,.1);  color:#dc2626; border:1px solid rgba(239,68,68,.2); }
+        .hero-badge-orange { background:rgba(249,115,22,.1); color:#f97316; border:1px solid rgba(249,115,22,.2); }
 
-        .hero-section {
-            padding: 4rem 2rem 6rem;
-            background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%);
-            text-align: center;
-        }
+        .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
+        .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
 
-        h2 {
-            font-size: 1.8rem;
-            color: #0f172a;
-            margin-top: 2.5rem;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.5rem;
-        }
+        pre[class*="language-"],code[class*="language-"] { background:#042f2e !important; border:1px solid #115e59; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.6; }
+        pre[class*="language-"] { padding:1.5rem; margin:0; overflow-x:auto; }
+        code[class*="language-"] { border:none; }
+        .code-label { display:block; font-size:.65rem; color:#0d9488; text-transform:uppercase; letter-spacing:.05em; font-family:'Inter',sans-serif; font-weight:700; margin-bottom:.5rem; }
+        .code-block-wrapper { margin:1.5rem 0; }
+        .inline-code { font-family:'JetBrains Mono',monospace; background:#f1f5f9; color:#0f766e; padding:.2em .4em; border-radius:4px; font-size:.9em; border:1px solid #e2e8f0; }
 
-        pre[class*="language-"] {
-            background: #042f2e !important;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            overflow-x: auto;
-        }
+        /* Decision / pedagogy / alert */
+        .decision-card { background:#f8fafc; border-left:4px solid #0d9488; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; border-radius:0 12px 12px 0; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .decision-card h4 { color:#0f766e; margin:0 0 .5rem; font-size:1rem; display:flex; align-items:center; gap:.5rem; }
+        .decision-card.danger { border-left-color:#ef4444; }
+        .decision-card.danger h4 { color:#b91c1c; }
+        .decision-card.warning { border-left-color:#f59e0b; }
+        .decision-card.warning h4 { color:#b45309; }
+        .pedagogy-box { background:#fdf4ff; border:1px solid #e9d5ff; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .pedagogy-box h4 { color:#7e22ce; margin:0 0 .5rem; display:flex; align-items:center; gap:.5rem; }
+        .alert-box { background:#fefce8; border:1px solid #fde047; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+        .alert-box h4 { color:#ca8a04; margin:0 0 .5rem; display:flex; align-items:center; gap:.5rem; }
 
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            color: #0d9488;
-            background: #ccfbf1;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-        }
+        /* Step cards */
+        .step-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin:2rem 0; }
+        .step-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:.5rem; }
+        .step-num { width:32px; height:32px; background:#9333ea; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; flex-shrink:0; }
+        .step-title { font-weight:700; color:#0f172a; font-size:.95rem; }
+        .step-desc { font-size:.85rem; color:#64748b; line-height:1.5; }
 
-        .takeaway-box {
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-            border: 1px solid #0d9488;
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
+        /* Risk cards */
+        .risk-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin:2rem 0; }
+        .risk-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; }
+        .risk-icon { font-size:2rem; margin-bottom:.5rem; }
+        .risk-name { font-size:.9rem; font-weight:700; color:#0f172a; margin-bottom:.25rem; }
+        .risk-limit { font-family:'JetBrains Mono',monospace; font-size:.85rem; color:#ef4444; font-weight:600; }
+        .risk-desc { font-size:.78rem; color:#64748b; margin-top:.25rem; }
 
-        .footer-bar {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 4rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-        }
+        /* SLO table */
+        .slo-table { width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:.88rem; }
+        .slo-table th { background:#0f172a; color:#e2e8f0; padding:.75rem 1rem; text-align:left; font-weight:700; }
+        .slo-table td { padding:.75rem 1rem; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+        .slo-table tr:hover td { background:#f8fafc; }
+        .slo-badge { display:inline-block; padding:.2rem .6rem; border-radius:99px; font-size:.75rem; font-weight:700; }
+        .slo-green  { background:#dcfce7; color:#16a34a; }
+        .slo-yellow { background:#fef9c3; color:#ca8a04; }
+        .slo-red    { background:#fee2e2; color:#dc2626; }
+
+        /* Takeaway (série conclusion) */
+        .takeaway-box { background:linear-gradient(135deg,#fdf4ff 0%,#ede9fe 100%); border:1px solid #9333ea; border-radius:16px; padding:2rem; margin:3rem 0; }
+        .takeaway-box h3 { color:#7e22ce; margin-top:0; display:flex; align-items:center; gap:.5rem; }
+        .takeaway-list { list-style:none; padding:0; margin:1rem 0; }
+        .takeaway-list li { display:flex; gap:.75rem; border-bottom:1px solid rgba(147,51,234,.15); padding:.75rem 0; }
+        .takeaway-list li:last-child { border-bottom:none; }
+
+        /* Series complete CTA */
+        .series-complete { background:linear-gradient(135deg,#1e293b,#0f172a); border-radius:20px; padding:3rem; margin:3rem 0; text-align:center; }
+        .series-complete h2 { color:white; font-size:2rem; margin:0 0 1rem; }
+        .series-complete p { color:#94a3b8; font-size:1rem; line-height:1.7; max-width:600px; margin:0 auto 2rem; }
+        .series-links { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+        .series-link { display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.5rem; border-radius:10px; font-weight:700; font-size:.9rem; text-decoration:none; transition:transform .2s; }
+        .series-link:hover { transform:translateY(-2px); }
+        .series-link-primary { background:linear-gradient(135deg,#9333ea,#7c3aed); color:white; }
+        .series-link-secondary { background:#1e293b; color:#94a3b8; border:1px solid #334155; }
+
+        /* Chart container */
+        .chart-container { margin:2rem 0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; }
+        .chart-title { background:#f8fafc; padding:.75rem 1.25rem; font-size:.85rem; font-weight:700; color:#64748b; border-bottom:1px solid #e2e8f0; }
+
+        /* Quiz */
+        .quiz-item { margin-bottom:1.5rem; }
+        .quiz-item summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; font-weight:600; color:#0f172a; list-style:none; display:flex; align-items:center; gap:.75rem; transition:background .2s; }
+        .quiz-item summary:hover { background:#fdf4ff; }
+        .quiz-item summary::before { content:'❓'; font-size:1rem; }
+        .quiz-item[open] summary { background:#fdf4ff; border-color:#9333ea; border-radius:10px 10px 0 0; }
+        .quiz-answer { padding:1rem 1.25rem; border:1px solid #9333ea; border-top:none; border-radius:0 0 10px 10px; background:white; color:#334155; line-height:1.7; }
+        .quiz-answer strong { color:#7e22ce; }
+
+        /* FAB */
+        .fnav { position:fixed; bottom:2rem; right:2rem; z-index:1000; }
+        .fnav-menu { position:absolute; bottom:60px; right:0; background:white; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 20px 40px -10px rgba(0,0,0,.15); overflow:hidden; min-width:220px; display:none; flex-direction:column; }
+        .fnav-menu.open { display:flex; }
+        .fnav-item { display:flex; align-items:center; gap:.75rem; padding:.75rem 1.25rem; text-decoration:none; color:#334155; font-size:.85rem; font-weight:500; border-bottom:1px solid #f1f5f9; transition:background .15s; }
+        .fnav-item:last-child { border-bottom:none; }
+        .fnav-item:hover { background:#fdf4ff; color:#9333ea; }
+        .fnav-item i { width:16px; text-align:center; color:#9333ea; }
+        .fnav-btn { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#9333ea,#7c3aed); border:none; cursor:pointer; color:white; font-size:1.2rem; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px -4px rgba(147,51,234,.5); transition:transform .2s; }
+        .fnav-btn:hover { transform:scale(1.08); }
     </style>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-    </head>
+</head>
 
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     <nav class="brand-bar">
-    <div class="brand-bar-inner">
-      <a href="/" class="brand-logo">
-        <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
-      </a>
-      <div class="brand-actions">
-        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
-      </div>
-    </div>
-  </nav><div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
-    
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">MarketWatch</span>
+            </a>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
 
-    <div class="hero-section">
-        <h1 style="font-size:3rem; font-weight:900; margin-bottom:1rem; color:#0f172a">Execution: The Go Prime Broker
-            OMS</h1>
-        <p style="font-size:1.1rem; color:#475569; max-width:800px; margin:0 auto;">
-            The AI Agent provides targets. Our custom Go Order Management System (OMS) reconciles live positions and
-            fires precise Limit Orders to Interactive Brokers and Binance.
+    <header class="hero-section">
+        <div class="hero-date"><i class="fa-solid fa-gears" style="margin-right:.4rem;"></i> Building a Securities Master &mdash; Part 6 de 6 &mdash; Finale</div>
+        <h1 style="font-size:2.8rem; font-weight:900; color:#0f172a; line-height:1.15; margin:0 auto 1.5rem; max-width:820px;">
+            Opérations : OMS, Exécution &amp; Monitoring de Production
+        </h1>
+        <p style="font-size:1.15rem; color:#64748b; max-width:760px; margin:0 auto; line-height:1.7;">
+            L'IA génère des signaux. L'OMS Go les transforme en ordres réels sur Interactive Brokers et Binance, avec réconciliation de positions, contrôles de risque stricts, et monitoring de production via Nomad et Prometheus.
         </p>
-    </div>
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part5-dashboards/" class="series-arrow" title="Part5 Dashboards"><i class="fas fa-chevron-left"></i></a><span class="series-title">Series</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="./" class="series-step current" title="."><span class="series-num">6</span><span class="series-label">.</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+        <div class="hero-badges">
+            <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-receipt"></i> OMS Go</span>
+            <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-scale-balanced"></i> Réconciliation</span>
+            <span class="hero-badge hero-badge-red"><i class="fa-solid fa-shield-halved"></i> Contrôles de Risque</span>
+            <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-line"></i> Monitoring SLOs</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+    </header>
 
-    <div class="container" style="margin-top:-3rem; position:relative;">
-        <h2><i class="fa-solid fa-bolts" style="color:#0d9488"></i> The Adapter Pattern</h2>
-        <p>In Part 1, we built an immutable <code>orders</code> and <code>strategies</code> schema. Our Go Execution
-            Engine reads the theoretical Target Portfolio assigned by the AI Agent and reconciles it against the live
-            Prime Broker state using the Adapter pattern.</p>
-
-        <pre><code class="language-go">// internal/broker/ibkr.go
-type IBAdapter struct {
-    // Interactive Brokers specific state
-}
-
-func (iba *IBAdapter) GetPositions() []PortfolioPosition {
-    // API Call to TWS to verify actual live allocations
-}
-
-func ExecuteReconciliation(target []StrategySignal, adapter BrokerAdapter) {
-    live := adapter.GetPositions()
-    orders := ComputeDelta(target, live)
-    for _, order := range orders {
-        adapter.PlaceOrder(order)
-    }
-}
-</code></pre>
-        <p>This strict boundary decoupling allows the AI to remain completely ignorant of API rate limits or FIX
-            protocol complexities. The Engine manages risk buffers, stop losses, and order timeout trims safely.</p>
-
-        <div class="takeaway-box">
-            <h3 style="margin-top:0; color:#0f766e;"><i class="fa-solid fa-flag-checkered"></i> The Architecture is
-                Complete</h3>
-            <p>We designed the Master Database to store flawless, point-in-time correct data. We constructed
-                hyper-concurrency Go Pipelines and Nomad/Airflow DAGs to feed it. We deployed dbt to transform JSON
-                sludge into analytical Gold Marts. Finally, we bound this intelligence physically back to the markets
-                via the Go OMS.</p>
-            <p><strong>This is the Systematic Trading Edge.</strong></p>
+    <div class="series-bar">
+        <div class="series-bar-inner">
+            <a href="../part5-dashboards/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="../part3-transforms/" class="series-step"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="../part4-corporate-actions/" class="series-step"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="../part5-dashboards/" class="series-step"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="./" class="series-step current"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">6/6</span>
+            <span class="series-arrow" style="opacity:.3; cursor:default;"><i class="fas fa-chevron-right"></i></span>
         </div>
     </div>
-    <div class="article-footer">&copy; 2026 Market Watch.</div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+
+    <!-- FAB -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#adapter-pattern" class="fnav-item"><i class="fas fa-plug"></i><span>Adapter Pattern</span></a>
+            <a href="#ibkr" class="fnav-item"><i class="fas fa-building-columns"></i><span>Interactive Brokers</span></a>
+            <a href="#binance" class="fnav-item"><i class="fas fa-bitcoin-sign"></i><span>Binance</span></a>
+            <a href="#reconciliation" class="fnav-item"><i class="fas fa-scale-balanced"></i><span>Réconciliation</span></a>
+            <a href="#risk-controls" class="fnav-item"><i class="fas fa-shield-halved"></i><span>Contrôles de Risque</span></a>
+            <a href="#monitoring" class="fnav-item"><i class="fas fa-chart-line"></i><span>Monitoring SLOs</span></a>
+            <a href="#series-conclusion" class="fnav-item"><i class="fas fa-flag-checkered"></i><span>Conclusion Série</span></a>
+            <a href="#quiz" class="fnav-item"><i class="fas fa-circle-question"></i><span>Quiz</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <div class="container" style="max-width:920px; margin:-3rem auto 0; padding:2rem; background:white; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.05); position:relative;">
+
+        <!-- ============================================================ -->
+        <!-- INTRO                                                         -->
+        <!-- ============================================================ -->
+        <p style="font-size:1.1rem; line-height:1.8; color:#334155;">
+            L'agent IA de la Partie 5 a généré un portefeuille cible optimisé. Les prix sont ajustés (Partie 4). Les données sont point-in-time correctes (Parties 1-3). Il reste la partie la plus critique : transformer ces signaux analytiques en ordres réels sans perdre de capital à cause d'un bug d'exécution. C'est le rôle de l'<strong>Order Management System (OMS)</strong>.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- ADAPTER PATTERN                                               -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="adapter-pattern"><i class="fa-solid fa-plug" style="color:#9333ea;"></i> Architecture OMS</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-diagram-project" style="color:#9333ea;"></i> L'Adapter Pattern : Découpler l'IA des Brokers</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Interactive Brokers (actions/options) et Binance (crypto) ont des APIs radicalement différentes : IB TWS utilise un protocole socket propriétaire ; Binance expose un REST API + WebSocket. Notre OMS implémente le pattern <strong>Adapter</strong> : une interface Go commune, deux implémentations concrètes.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/broker/interface.go (interface commune)</span>
+            <pre><code class="language-go">package broker
+
+import (
+    "context"
+    "time"
+)
+
+// BrokerAdapter est l'interface commune pour tous les brokers
+// L'agent IA et le moteur de réconciliation n'utilisent QUE cette interface
+// Ils sont complètement ignorants d'IB, Binance, ou tout autre broker
+type BrokerAdapter interface {
+    // Lecture de l'état live
+    GetPositions(ctx context.Context) ([]Position, error)
+    GetAccountValue(ctx context.Context) (AccountValue, error)
+    GetOpenOrders(ctx context.Context) ([]Order, error)
+
+    // Exécution d'ordres
+    PlaceOrder(ctx context.Context, req OrderRequest) (Order, error)
+    CancelOrder(ctx context.Context, orderID string) error
+    CancelAllOrders(ctx context.Context) error
+
+    // Streaming de données de marché (pour les prix live)
+    SubscribeTicker(ctx context.Context, symbols []string) (<-chan TickData, error)
+
+    // Info broker
+    BrokerName() string
+    IsConnected(ctx context.Context) bool
+}
+
+// Position représente une position live (indépendante du broker)
+type Position struct {
+    Symbol      string
+    ISIN        string
+    Quantity    float64   // négatif = short
+    AvgPrice    float64
+    MarketValue float64   // en devise du compte
+    PnL         float64
+    PnLPct      float64
+    AsOf        time.Time
+}
+
+// OrderRequest est l'ordre généré par le moteur de réconciliation
+type OrderRequest struct {
+    Symbol    string
+    Quantity  float64     // positif = achat, négatif = vente
+    OrderType string      // "LIMIT", "MARKET", "MOC" (Market on Close)
+    LimitPx   *float64    // nul si OrderType = "MARKET"
+    TimeInForce string    // "DAY", "GTC", "IOC"
+    Strategy  string     // tag pour l'audit log (ex: "momentum_breakout")
+}
+
+// AccountValue agrège la valeur du compte
+type AccountValue struct {
+    NetLiquidation float64
+    BuyingPower    float64
+    MarginUsed     float64
+    Currency       string
+}
+
+// TickData est un prix de marché live streamé
+type TickData struct {
+    Symbol    string
+    Bid       float64
+    Ask       float64
+    Last      float64
+    Volume    int64
+    Timestamp time.Time
+}</code></pre>
+        </div>
+
+        <!-- EChart: OMS Architecture -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-diagram-project" style="color:#9333ea;"></i> Architecture OMS — du signal IA à l'ordre broker</div>
+            <div id="omsArchChart" style="height:320px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- IBKR                                                          -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="ibkr"><i class="fa-solid fa-building-columns" style="color:#9333ea;"></i> Interactive Brokers</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-landmark" style="color:#9333ea;"></i> Adaptateur Interactive Brokers TWS</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Interactive Brokers TWS (Trader Workstation) expose son API via un protocole socket sur localhost:7497 (paper trading) ou 7496 (live). La librairie Go officielle est <span class="inline-code">ibapi</span> — mais elle est complexe. Nous construisons un wrapper minimaliste.
+        </p>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/broker/ibkr.go (adaptateur IB)</span>
+            <pre><code class="language-go">package broker
+
+import (
+    "context"
+    "fmt"
+    "sync"
+    "time"
+
+    ibapi "github.com/hadrienk/ibapi"
+)
+
+// IBKRAdapter implémente BrokerAdapter pour Interactive Brokers TWS
+type IBKRAdapter struct {
+    mu      sync.RWMutex
+    client  *ibapi.EClient
+    wrapper *IBWrapper   // Récepteur des callbacks asynchrones IB
+    host    string
+    port    int
+    clientID int32
+}
+
+// IBWrapper implémente ibapi.EWrapper — reçoit toutes les réponses async d'IB
+type IBWrapper struct {
+    mu          sync.Mutex
+    positions   map[string]*Position    // symbol → position live
+    orders      map[int64]*Order        // orderID → ordre
+    accountVal  AccountValue
+    tickers     map[string]chan TickData
+}
+
+func NewIBKRAdapter(host string, port int, clientID int32) *IBKRAdapter {
+    wrapper := &IBWrapper{
+        positions: make(map[string]*Position),
+        orders:    make(map[int64]*Order),
+        tickers:   make(map[string]chan TickData),
+    }
+    client := ibapi.NewEClient(wrapper)
+    return &IBKRAdapter{
+        client:   client,
+        wrapper:  wrapper,
+        host:     host,
+        port:     port,
+        clientID: clientID,
+    }
+}
+
+func (a *IBKRAdapter) Connect(ctx context.Context) error {
+    if err := a.client.Connect(a.host, a.port, a.clientID); err != nil {
+        return fmt.Errorf("IB TWS connection failed: %w", err)
+    }
+    // Démarrer la goroutine de lecture des messages IB
+    go a.client.Run()
+
+    // Attendre la confirmation de connexion (timeout 10s)
+    select {
+    case <-a.wrapper.Connected():
+        return nil
+    case <-time.After(10 * time.Second):
+        return fmt.Errorf("IB TWS connection timeout after 10s")
+    case <-ctx.Done():
+        return ctx.Err()
+    }
+}
+
+func (a *IBKRAdapter) GetPositions(ctx context.Context) ([]Position, error) {
+    // Demander toutes les positions au TWS
+    a.client.ReqPositions()
+
+    // Attendre la réponse async (positions arrivées via wrapper.UpdatePortfolio)
+    select {
+    case <-a.wrapper.PositionsReady():
+        a.mu.RLock()
+        defer a.mu.RUnlock()
+        positions := make([]Position, 0, len(a.wrapper.positions))
+        for _, p := range a.wrapper.positions {
+            positions = append(positions, *p)
+        }
+        return positions, nil
+    case <-time.After(5 * time.Second):
+        return nil, fmt.Errorf("timeout waiting for IB positions")
+    case <-ctx.Done():
+        return nil, ctx.Err()
+    }
+}
+
+func (a *IBKRAdapter) PlaceOrder(ctx context.Context, req OrderRequest) (Order, error) {
+    // Convertir un OrderRequest générique en ordre IB
+    ibOrder := ibapi.Order{
+        Action:      "BUY",
+        TotalQuantity: req.Quantity,
+        OrderType:   req.OrderType,
+        Tif:         req.TimeInForce,
+    }
+    if req.Quantity < 0 {
+        ibOrder.Action = "SELL"
+        ibOrder.TotalQuantity = -req.Quantity
+    }
+    if req.LimitPx != nil {
+        ibOrder.LmtPrice = *req.LimitPx
+    }
+
+    // Contrat IB pour l'action
+    contract := ibapi.Contract{
+        Symbol:   req.Symbol,
+        SecType:  "STK",
+        Exchange: "SMART",   // IB Smart Routing
+        Currency: "USD",
+    }
+
+    orderID := a.client.NextOrderID()
+    a.client.PlaceOrder(orderID, contract, ibOrder)
+
+    return Order{
+        ExternalID: fmt.Sprintf("IB-%d", orderID),
+        Symbol:     req.Symbol,
+        Quantity:   req.Quantity,
+        Status:     "SUBMITTED",
+        SubmittedAt: time.Now(),
+    }, nil
+}
+
+func (a *IBKRAdapter) BrokerName() string { return "InteractiveBrokers-TWS" }</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- BINANCE                                                       -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="binance"><i class="fa-brands fa-bitcoin" style="color:#f59e0b;"></i> Binance</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> Adaptateur Binance (Crypto 24/7)</h2>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/broker/binance.go (adaptateur Binance REST + WebSocket)</span>
+            <pre><code class="language-go">package broker
+
+import (
+    "context"
+    "fmt"
+    "net/http"
+    "encoding/json"
+    "crypto/hmac"
+    "crypto/sha256"
+    "encoding/hex"
+    "time"
+    "strconv"
+)
+
+// BinanceAdapter implémente BrokerAdapter pour Binance Spot
+type BinanceAdapter struct {
+    apiKey    string
+    secretKey string
+    baseURL   string     // "https://api.binance.com" ou "https://testnet.binance.vision"
+    client    *http.Client
+}
+
+func NewBinanceAdapter(apiKey, secretKey string, testnet bool) *BinanceAdapter {
+    base := "https://api.binance.com"
+    if testnet {
+        base = "https://testnet.binance.vision"
+    }
+    return &BinanceAdapter{
+        apiKey:    apiKey,
+        secretKey: secretKey,
+        baseURL:   base,
+        client:    &http.Client{Timeout: 5 * time.Second},
+    }
+}
+
+// signParams ajoute timestamp + signature HMAC-SHA256 requise par Binance
+func (a *BinanceAdapter) signParams(params string) string {
+    ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
+    body := params + "&timestamp=" + ts
+
+    mac := hmac.New(sha256.New, []byte(a.secretKey))
+    mac.Write([]byte(body))
+    sig := hex.EncodeToString(mac.Sum(nil))
+
+    return body + "&signature=" + sig
+}
+
+func (a *BinanceAdapter) PlaceOrder(ctx context.Context, req OrderRequest) (Order, error) {
+    side := "BUY"
+    qty := req.Quantity
+    if req.Quantity < 0 {
+        side = "SELL"
+        qty = -req.Quantity
+    }
+
+    // Binance utilise BTCUSDT, ETHUSDT — pas BTC-USD
+    // Normalisation du symbole (notre OMS utilise BTC-USD en interne)
+    binanceSymbol := normalizeToBinanceSymbol(req.Symbol)
+
+    params := fmt.Sprintf(
+        "symbol=%s&side=%s&type=%s&quantity=%g&timeInForce=%s",
+        binanceSymbol, side, req.OrderType, qty, req.TimeInForce,
+    )
+    if req.LimitPx != nil {
+        params += fmt.Sprintf("&price=%.8f", *req.LimitPx)
+    }
+    params = a.signParams(params)
+
+    httpReq, _ := http.NewRequestWithContext(ctx, "POST",
+        a.baseURL+"/api/v3/order?"+params, nil)
+    httpReq.Header.Set("X-MBX-APIKEY", a.apiKey)
+
+    resp, err := a.client.Do(httpReq)
+    if err != nil {
+        return Order{}, fmt.Errorf("binance order failed: %w", err)
+    }
+    defer resp.Body.Close()
+
+    var result struct {
+        OrderID int64  `json:"orderId"`
+        Status  string `json:"status"`
+        Symbol  string `json:"symbol"`
+    }
+    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+        return Order{}, fmt.Errorf("binance response decode: %w", err)
+    }
+
+    return Order{
+        ExternalID:  fmt.Sprintf("BNB-%d", result.OrderID),
+        Symbol:      req.Symbol,
+        Quantity:    req.Quantity,
+        Status:      result.Status,
+        SubmittedAt: time.Now(),
+    }, nil
+}
+
+// normalizeToBinanceSymbol : "BTC-USD" → "BTCUSDT", "ETH-USD" → "ETHUSDT"
+func normalizeToBinanceSymbol(symbol string) string {
+    mapping := map[string]string{
+        "BTC-USD": "BTCUSDT", "ETH-USD": "ETHUSDT",
+        "SOL-USD": "SOLUSDT", "BNB-USD": "BNBUSDT",
+        "XRP-USD": "XRPUSDT",
+    }
+    if s, ok := mapping[symbol]; ok { return s }
+    // Fallback : remplacer "-USD" par "USDT"
+    return symbol[:len(symbol)-4] + "USDT"
+}
+
+func (a *BinanceAdapter) BrokerName() string { return "Binance-Spot" }</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- RECONCILIATION                                                -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="reconciliation"><i class="fa-solid fa-scale-balanced" style="color:#0d9488;"></i> Réconciliation de Positions</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-arrows-rotate" style="color:#0d9488;"></i> Algorithme de Réconciliation Target vs. Live</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Le cœur de l'OMS : comparer le portefeuille cible (généré par l'IA) au portefeuille live (lu via le broker adapter) et calculer les ordres minimum nécessaires pour converger vers la cible.
+        </p>
+
+        <div class="step-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-title">Lire le Cible</div>
+                <div class="step-desc">Charger l'allocation cible depuis PostgreSQL (<span class="inline-code">strategies.target_portfolio</span>).</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-title">Lire le Live</div>
+                <div class="step-desc">Appeler <span class="inline-code">adapter.GetPositions()</span> pour l'état réel du compte broker.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-title">Calculer le Delta</div>
+                <div class="step-desc">Delta = Cible − Live pour chaque symbole. Positif → achat, Négatif → vente.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div class="step-title">Filtrer les Micro-ordres</div>
+                <div class="step-desc">Ignorer les deltas &lt; min_order_size ou &lt; 1% de la position actuelle.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">5</div>
+                <div class="step-title">Valider le Risque</div>
+                <div class="step-desc">Chaque ordre passe par les garde-fous de risque avant soumission au broker.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">6</div>
+                <div class="step-title">Soumettre &amp; Logger</div>
+                <div class="step-desc">PlaceOrder() + INSERT dans <span class="inline-code">orders.order_events</span> pour l'audit trail.</div>
+            </div>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/oms/reconcile.go (moteur de réconciliation)</span>
+            <pre><code class="language-go">package oms
+
+import (
+    "context"
+    "fmt"
+    "math"
+
+    "securities-oms/internal/broker"
+    "securities-oms/internal/db"
+    "securities-oms/internal/risk"
+)
+
+// ReconciliationEngine réconcilie le portefeuille cible avec le live
+type ReconciliationEngine struct {
+    adapter  broker.BrokerAdapter
+    store    *db.OrderStore
+    risk     *risk.RiskController
+    config   ReconcileConfig
+}
+
+type ReconcileConfig struct {
+    MinOrderSizePct float64   // Ignorer si delta < X% de la position actuelle
+    MinOrderSizeUSD float64   // Ignorer si delta < X$ de valeur notionnelle
+    MaxOrderSizeUSD float64   // Limiter chaque ordre à X$ (éviter les gros impacts marché)
+    LimitOrderSlip  float64   // Pct de slippage autorisé pour prix limit (ex: 0.002 = 0.2%)
+}
+
+type TargetAllocation struct {
+    Symbol         string
+    TargetPctNav   float64    // % du NAV alloué à ce titre
+    StrategyTag    string
+}
+
+// Reconcile exécute un cycle complet de réconciliation
+func (e *ReconciliationEngine) Reconcile(ctx context.Context, targets []TargetAllocation) error {
+    // 1. Lire le NAV et les positions live
+    acctVal, err := e.adapter.GetAccountValue(ctx)
+    if err != nil {
+        return fmt.Errorf("get account value: %w", err)
+    }
+    livePositions, err := e.adapter.GetPositions(ctx)
+    if err != nil {
+        return fmt.Errorf("get positions: %w", err)
+    }
+
+    // Index des positions live par symbole
+    liveBySymbol := make(map[string]broker.Position)
+    for _, p := range livePositions {
+        liveBySymbol[p.Symbol] = p
+    }
+
+    // 2. Calculer les deltas
+    for _, target := range targets {
+        targetUSD := target.TargetPctNav * acctVal.NetLiquidation / 100.0
+
+        livePos := liveBySymbol[target.Symbol]
+        deltaUSD := targetUSD - livePos.MarketValue
+
+        // 3. Filtrer les micro-deltas
+        if math.Abs(deltaUSD) < e.config.MinOrderSizeUSD {
+            continue
+        }
+        if livePos.MarketValue > 0 && math.Abs(deltaUSD)/livePos.MarketValue < e.config.MinOrderSizePct {
+            continue
+        }
+
+        // 4. Calculer la quantité en nombre d'actions
+        // Pour cela, on a besoin du prix live — streamé via SubscribeTicker
+        // Simplifié ici : on utilise un prix mid approximatif
+        midPrice := e.getMidPrice(ctx, target.Symbol)
+        if midPrice <= 0 {
+            continue
+        }
+
+        qty := deltaUSD / midPrice
+
+        // Cap par taille max d'ordre
+        if deltaUSD > e.config.MaxOrderSizeUSD {
+            qty = e.config.MaxOrderSizeUSD / midPrice
+        } else if deltaUSD < -e.config.MaxOrderSizeUSD {
+            qty = -e.config.MaxOrderSizeUSD / midPrice
+        }
+
+        // 5. Valider les garde-fous de risque AVANT de soumettre
+        orderReq := broker.OrderRequest{
+            Symbol:      target.Symbol,
+            Quantity:    qty,
+            OrderType:   "LIMIT",
+            TimeInForce: "DAY",
+            Strategy:    target.StrategyTag,
+        }
+        // Prix limit = mid ± slippage autorisé
+        limitPx := midPrice * (1 + e.config.LimitOrderSlip)
+        if qty < 0 { limitPx = midPrice * (1 - e.config.LimitOrderSlip) }
+        orderReq.LimitPx = &limitPx
+
+        if err := e.risk.Validate(ctx, orderReq, acctVal); err != nil {
+            // Garde-fou déclenché → log et skip, pas de panic
+            e.store.LogRejection(ctx, orderReq, err.Error())
+            continue
+        }
+
+        // 6. Soumettre l'ordre
+        order, err := e.adapter.PlaceOrder(ctx, orderReq)
+        if err != nil {
+            e.store.LogError(ctx, orderReq, err.Error())
+            continue
+        }
+
+        // Audit trail complet dans PostgreSQL
+        e.store.InsertOrderEvent(ctx, order, "SUBMITTED")
+    }
+    return nil
+}
+
+func (e *ReconciliationEngine) getMidPrice(ctx context.Context, symbol string) float64 {
+    // Implémentation : query Gold Mart pour le dernier close_price
+    // En production : prix live depuis le stream WebSocket broker
+    return e.store.GetLastClosePrice(ctx, symbol)
+}</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- RISK CONTROLS                                                 -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="risk-controls"><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Contrôles de Risque</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-lock" style="color:#ef4444;"></i> Guardrails de Risque Multi-Niveaux</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            Tout ordre passe par un <span class="inline-code">RiskController</span> avant d'atteindre le broker. Ces garde-fous sont <em>indépendants</em> de l'IA — ils ne peuvent pas être désactivés par un signal de l'agent.
+        </p>
+
+        <div class="risk-grid">
+            <div class="risk-card">
+                <div class="risk-icon">📊</div>
+                <div class="risk-name">Position Limit</div>
+                <div class="risk-limit">Max 10% NAV</div>
+                <div class="risk-desc">Un seul titre ne peut dépasser 10% du capital. Stop-out automatique si dépassé.</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-icon">🎯</div>
+                <div class="risk-name">Secteur Limit</div>
+                <div class="risk-limit">Max 30% NAV</div>
+                <div class="risk-desc">La concentration sectorielle est limitée pour éviter le risque idiosyncratique.</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-icon">📉</div>
+                <div class="risk-name">Daily Loss Limit</div>
+                <div class="risk-limit">Max -2% NAV/jour</div>
+                <div class="risk-desc">Circuit breaker : stop de tous les ordres si le P&amp;L journalier dépasse -2%.</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-icon">⚡</div>
+                <div class="risk-name">Order Rate</div>
+                <div class="risk-limit">Max 10 ordres/min</div>
+                <div class="risk-desc">Rate limiter pour éviter de bombarder les APIs broker (risque de ban).</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-icon">💰</div>
+                <div class="risk-name">Notional Limit</div>
+                <div class="risk-limit">Max $50K/ordre</div>
+                <div class="risk-desc">Aucun ordre individuel ne peut dépasser $50 000 de valeur notionnelle.</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-icon">🚫</div>
+                <div class="risk-name">Blacklist</div>
+                <div class="risk-limit">Liste statique</div>
+                <div class="risk-desc">Instruments interdits (ex: pink sheets, warrants, certificats) non-tradeables.</div>
+            </div>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">go — internal/risk/controller.go (garde-fous de risque)</span>
+            <pre><code class="language-go">package risk
+
+import (
+    "context"
+    "fmt"
+    "math"
+
+    "securities-oms/internal/broker"
+)
+
+type RiskController struct {
+    maxPositionPct  float64   // 0.10 = 10%
+    maxSectorPct    float64   // 0.30 = 30%
+    maxDailyLossPct float64   // 0.02 = 2%
+    maxOrderUSD     float64   // 50000
+    blacklist       map[string]bool
+}
+
+func NewRiskController() *RiskController {
+    return &RiskController{
+        maxPositionPct:  0.10,
+        maxSectorPct:    0.30,
+        maxDailyLossPct: 0.02,
+        maxOrderUSD:     50000,
+        blacklist:       loadBlacklist(),   // Depuis fichier de config ou DB
+    }
+}
+
+// Validate vérifie tous les garde-fous pour un ordre donné
+// Retourne une erreur décrivant quel guard a été déclenché, nil si OK
+func (rc *RiskController) Validate(ctx context.Context, req broker.OrderRequest, acct broker.AccountValue) error {
+    // Guard 1 : Blacklist
+    if rc.blacklist[req.Symbol] {
+        return fmt.Errorf("RISK_BLACKLIST: %s is on the trading blacklist", req.Symbol)
+    }
+
+    // Guard 2 : Notional limit par ordre
+    notionalUSD := math.Abs(req.Quantity) * (*req.LimitPx)
+    if notionalUSD > rc.maxOrderUSD {
+        return fmt.Errorf("RISK_ORDER_TOO_LARGE: $%.0f > max $%.0f", notionalUSD, rc.maxOrderUSD)
+    }
+
+    // Guard 3 : Position limit (après exécution de cet ordre)
+    currentExposure := rc.getCurrentExposure(ctx, req.Symbol)
+    projectedExposure := currentExposure + notionalUSD
+    projectedPct := projectedExposure / acct.NetLiquidation
+    if projectedPct > rc.maxPositionPct {
+        return fmt.Errorf("RISK_POSITION_LIMIT: %.1f%% > max %.1f%% for %s",
+            projectedPct*100, rc.maxPositionPct*100, req.Symbol)
+    }
+
+    // Guard 4 : Daily loss circuit breaker
+    dailyPnL := rc.getDailyPnL(ctx)
+    dailyPnLPct := dailyPnL / acct.NetLiquidation
+    if dailyPnLPct < -rc.maxDailyLossPct {
+        return fmt.Errorf("RISK_DAILY_LOSS: Daily P&L %.2f%% exceeds limit %.2f%%",
+            dailyPnLPct*100, -rc.maxDailyLossPct*100)
+    }
+
+    return nil   // Tous les garde-fous OK
+}
+
+func (rc *RiskController) getCurrentExposure(ctx context.Context, symbol string) float64 {
+    // Requête PostgreSQL : SUM des positions ouvertes pour ce symbole
+    // (implémentation dans db.OrderStore)
+    return 0   // Simplifié pour l'exemple
+}
+
+func (rc *RiskController) getDailyPnL(ctx context.Context) float64 {
+    // P&L journalier depuis orders.order_events
+    return 0   // Simplifié pour l'exemple
+}
+
+func loadBlacklist() map[string]bool {
+    // Charger depuis /etc/securities-oms/blacklist.txt ou table PostgreSQL
+    return map[string]bool{
+        "MMTLP": true,   // Pink sheet
+        "AMTD":  true,   // Delisted
+    }
+}</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MONITORING                                                    -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="monitoring"><i class="fa-solid fa-chart-line" style="color:#0d9488;"></i> Monitoring &amp; SLOs</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-gauge-high" style="color:#0d9488;"></i> SLOs de Production et Monitoring Nomad</h2>
+
+        <p style="color:#334155; line-height:1.7;">
+            En production, le Securities Master est un système critique. Nous définissons des SLOs (Service Level Objectives) stricts pour chaque composant et les monitorons via Prometheus + AlertManager.
+        </p>
+
+        <table class="slo-table">
+            <thead>
+                <tr>
+                    <th>Composant</th>
+                    <th>SLO</th>
+                    <th>Alerte si</th>
+                    <th>Priorité</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Tap d'ingestion (Part 2)</strong></td>
+                    <td>Données fraîches &lt; 6h après clôture marché</td>
+                    <td>Retard &gt; 6h</td>
+                    <td><span class="slo-badge slo-red">P1</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Pipeline dbt (Part 3)</strong></td>
+                    <td>Run &lt; 45 min, aucun test échoué</td>
+                    <td>Run &gt; 60 min OR test failures</td>
+                    <td><span class="slo-badge slo-red">P1</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Serveur MCP (Part 5)</strong></td>
+                    <td>Latence p99 &lt; 200ms par outil</td>
+                    <td>p99 &gt; 500ms</td>
+                    <td><span class="slo-badge slo-yellow">P2</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+                <tr>
+                    <td><strong>OMS — Broker Connect</strong></td>
+                    <td>Connexion IB/Binance disponible en heures de trading</td>
+                    <td>Déconnexion &gt; 30s</td>
+                    <td><span class="slo-badge slo-red">P1</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+                <tr>
+                    <td><strong>OMS — Exécution ordres</strong></td>
+                    <td>Ordre soumis &lt; 2s après signal</td>
+                    <td>Latence &gt; 5s</td>
+                    <td><span class="slo-badge slo-red">P1</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+                <tr>
+                    <td><strong>PostgreSQL</strong></td>
+                    <td>Disponibilité 99.9%, p99 queries &lt; 100ms</td>
+                    <td>Connections &gt; 80% pool</td>
+                    <td><span class="slo-badge slo-red">P1</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Réconciliation journalière</strong></td>
+                    <td>Drift positions &lt; 0.5% NAV</td>
+                    <td>Drift &gt; 1% NAV</td>
+                    <td><span class="slo-badge slo-yellow">P2</span></td>
+                    <td><span class="slo-badge slo-green">OK</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">SQL — Monitoring : réconciliation des positions (drift check)</span>
+            <pre><code class="language-sql">-- Vue de monitoring : comparer la dernière réconciliation au NAV actuel
+-- Exécuté toutes les heures par un job Nomad de monitoring
+
+WITH latest_reconciliation AS (
+    SELECT
+        symbol,
+        target_pct_nav,
+        live_pct_nav,
+        ABS(target_pct_nav - live_pct_nav) AS drift_pct,
+        reconciled_at
+    FROM ops.reconciliation_snapshots
+    WHERE reconciled_at = (
+        SELECT MAX(reconciled_at)
+        FROM ops.reconciliation_snapshots
+    )
+),
+summary AS (
+    SELECT
+        COUNT(*) AS num_positions,
+        SUM(drift_pct) AS total_drift_pct,
+        MAX(drift_pct) AS max_drift_pct,
+        COUNT(*) FILTER (WHERE drift_pct > 1.0) AS num_breaches,
+        MAX(reconciled_at) AS last_reconciled_at,
+        NOW() - MAX(reconciled_at) AS age_since_last_recon
+    FROM latest_reconciliation
+)
+
+SELECT
+    *,
+    CASE
+        WHEN num_breaches > 0             THEN 'ALERT: Position drift > 1% NAV'
+        WHEN age_since_last_recon > '2 hours' THEN 'ALERT: Stale reconciliation'
+        WHEN total_drift_pct > 5          THEN 'WARN: High aggregate drift'
+        ELSE 'OK'
+    END AS health_status
+FROM summary;</code></pre>
+        </div>
+
+        <div class="code-block-wrapper">
+            <span class="code-label">yaml — Nomad job : monitoring heartbeat (toutes les heures)</span>
+            <pre><code class="language-yaml">job "oms-monitoring" {
+  type      = "batch"
+  namespace = "securities-master"
+  periodic {
+    crons            = ["0 * * * *"]   # Toutes les heures
+    prohibit_overlap = true
+  }
+
+  group "health-check" {
+    task "drift-check" {
+      driver = "exec"
+      config {
+        command = "/usr/local/bin/psql"
+        args    = [
+          "-h", "${POSTGRES_HOST}",
+          "-U", "monitoring_readonly",
+          "-d", "securities_master",
+          "-f", "/etc/monitoring/drift_check.sql",
+          "--csv", "-t"
+        ]
+      }
+      template {
+        destination = "local/env"
+        env         = true
+        data        = <<EOH
+          {{- with secret "kv/data/securities/postgres" -}}
+          PGPASSWORD={{ .Data.data.monitoring_password }}
+          POSTGRES_HOST={{ .Data.data.host }}
+          {{- end -}}
+        EOH
+      }
+    }
+
+    task "pipeline-freshness" {
+      driver = "exec"
+      config {
+        command = "/usr/local/bin/check_pipeline_freshness.sh"
+      }
+    }
+  }
+}</code></pre>
+        </div>
+
+        <!-- EChart: System Health Dashboard -->
+        <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-heartbeat" style="color:#ef4444;"></i> Pipeline Santé — Latences et Disponibilité sur 30 jours</div>
+            <div id="healthChart" style="height:300px; padding:1rem;"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SERIES CONCLUSION                                             -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="series-conclusion"><i class="fa-solid fa-flag-checkered" style="color:#9333ea;"></i> Conclusion de la Série</div>
+
+        <div class="takeaway-box">
+            <h3><i class="fa-solid fa-trophy"></i> L'Architecture Complète — Résumé de la Série</h3>
+            <ul class="takeaway-list">
+                <li>
+                    <i class="fa-solid fa-check" style="color:#9333ea; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Partie 1 — Fondations :</strong> Schéma PostgreSQL institutionnel, SCD Type 2, tables de marché partitionnées, séparation des zones raw/silver/gold.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#9333ea; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Partie 2 — Pipelines :</strong> Taps Go concurrents avec pattern sémaphore, Singer Protocol, Meltano EL, orchestration Nomad + Vault.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#9333ea; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Partie 3 — Transforms :</strong> dbt Médaillon Bronze/Silver/Gold, modèles incrémentiels PostgreSQL (sans partition_by BigQuery), snapshots SCD2, marts Gold IA-ready.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#9333ea; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Partie 4 — Corporate Actions :</strong> EXP(SUM(LN())) pour CRAF splits/dividendes, spin-offs SCD2, fusions delistings, intégration Gold layer.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#9333ea; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Partie 5 — Interface IA :</strong> Serveur MCP Go stdio, taxonomie d'outils sécurisés, détection de régime de marché, dashboards Evidence.dev BI-as-Code.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-check" style="color:#9333ea; margin-top:.2rem; flex-shrink:0;"></i>
+                    <span><strong>Partie 6 — Opérations :</strong> Adapter pattern IB TWS + Binance, réconciliation target/live, guardrails de risque multi-niveaux, SLOs de production Nomad.</span>
+                </li>
+            </ul>
+            <p style="margin-top:1.5rem; font-weight:700; color:#7e22ce; font-size:1.05rem;">
+                C'est l'edge systématique complet. Chaque couche est conçue pour protéger les couches suivantes des erreurs de données, des biases de backtests, et des pertes d'exécution. Ce n'est pas un framework générique — c'est une architecture spécifiquement construite pour la rigueur mathématique du trading algorithmique institutionnel.
+            </p>
+        </div>
+
+        <div class="series-complete">
+            <h2>🏆 Série Complète</h2>
+            <p>Vous avez maîtrisé l'intégralité de l'architecture d'un Securities Master institutionnel — de la base de données PostgreSQL aux ordres live sur les marchés. Ce stack s'applique à n'importe quelle classe d'actifs : actions, crypto, futures, options.</p>
+            <div class="series-links">
+                <a href="../part1-foundations/" class="series-link series-link-primary">
+                    <i class="fas fa-play"></i> Recommencer depuis la Partie 1
+                </a>
+                <a href="/" class="series-link series-link-secondary">
+                    <i class="fas fa-home"></i> Tous les Articles
+                </a>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- QUIZ                                                          -->
+        <!-- ============================================================ -->
+        <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#9333ea;"></i> Auto-Évaluation Finale</div>
+        <h2 style="color:#0f172a;"><i class="fa-solid fa-graduation-cap" style="color:#9333ea;"></i> Quiz Final : OMS &amp; Opérations</h2>
+
+        <details class="quiz-item">
+            <summary>Pourquoi l'interface BrokerAdapter est-elle définie séparément des implémentations IBKR et Binance ?</summary>
+            <div class="quiz-answer">
+                <strong>Pour découpler le moteur métier (réconciliation, risk) des détails d'implémentation des APIs broker.</strong> Le <code>ReconciliationEngine</code> et le <code>RiskController</code> n'importent jamais le package ibkr ou binance — ils utilisent uniquement <code>broker.BrokerAdapter</code>. Cela permet : (1) d'ajouter un nouveau broker (ex: Interactive Brokers Europe, Alpaca) sans toucher au moteur de réconciliation ; (2) d'injecter un mock broker dans les tests unitaires ; (3) de tester le moteur de réconciliation en isolation avec des positions simulées. C'est le principe SOLID "Dependency Inversion".
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Pourquoi normalise-t-on "BTC-USD" en "BTCUSDT" avant d'envoyer un ordre à Binance ?</summary>
+            <div class="quiz-answer">
+                <strong>Les brokers ont des conventions de nommage incompatibles.</strong> Notre Securities Master utilise une convention interne standardisée (<code>BTC-USD</code>, <code>ETH-USD</code>) alignée sur Yahoo Finance. Binance utilise la convention <code>BTCUSDT</code>, <code>ETHUSDT</code> (pas de tiret, suffixe "T" pour USDT). Si on envoie "BTC-USD" directement à l'API Binance, on obtient une erreur <code>Invalid symbol</code>. La normalisation est gérée dans l'adaptateur — le moteur de réconciliation utilise toujours la convention interne et ignore les particularités de chaque broker.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Expliquez pourquoi les contrôles de risque sont séparés de l'agent IA et ne peuvent pas être désactivés par un signal LLM.</summary>
+            <div class="quiz-answer">
+                <strong>Séparation des préoccupations (Separation of Concerns) et défense en profondeur.</strong> L'agent IA peut faire des erreurs : hallucinations, mauvaise compréhension d'un contexte de marché, prompt injection d'un acteur malveillant. Si le LLM pouvait désactiver les contrôles de risque, un bug ou une attaque pourrait causer des pertes catastrophiques. Le <code>RiskController</code> est un système purement déterministe, codé en dur en Go, qui ne prend aucune instruction d'un LLM. Il valide chaque ordre indépendamment selon des règles métier claires. C'est la même approche qu'un circuit breaker électrique — il ne demande pas permission avant de couper le courant.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Qu'est-ce qu'un SLO (Service Level Objective) et en quoi diffère-t-il d'un SLA ?</summary>
+            <div class="quiz-answer">
+                <strong>Un SLO est un objectif interne de qualité de service ; un SLA est un engagement contractuel externe.</strong> SLO = "notre pipeline dbt doit s'exécuter en moins de 45 minutes" — c'est une cible d'équipe, mesurée en interne, sans pénalité contractuelle si elle est manquée. SLA = "nous garantissons à nos clients que les données seront disponibles avant 9h00 ou remboursement" — engagement légal avec des pénalités financières. En pratique : définissez d'abord des SLOs stricts en interne, avec alertes automatiques (Prometheus AlertManager, PagerDuty). Si vous tenez vos SLOs, vous pouvez garantir des SLAs à vos clients avec une marge de sécurité.
+            </div>
+        </details>
+
+        <details class="quiz-item">
+            <summary>Comment le "Daily Loss Limit" (circuit breaker) protège-t-il contre les marchés en forte chute ?</summary>
+            <div class="quiz-answer">
+                <strong>En stoppant automatiquement toute exécution d'ordres si le P&L journalier dépasse un seuil.</strong> Si le marché chute brutalement (ex: -5% en une heure), un algorithme de momentum sans circuit breaker peut continuer d'acheter en croyant être face à un pullback, amplifiant les pertes. Avec un Daily Loss Limit de -2% NAV, dès que les pertes atteignent ce seuil, le <code>RiskController</code> rejette tous les nouveaux ordres d'achat et permet uniquement la réduction des positions existantes. L'équipe reçoit une alerte P1 et peut décider manuellement de reprendre ou de liquider. C'est la protection contre le "runaway loss" le plus basique de tout OMS institutionnel.
+            </div>
+        </details>
+
+    </div><!-- /.container -->
+
+    <div class="series-bar" style="margin-top:3rem;">
+        <div class="series-bar-inner">
+            <a href="../part5-dashboards/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+            <span class="series-title">Securities Master</span>
+            <div class="series-steps">
+                <a href="../part1-foundations/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondations</span></a>
+                <a href="../part2-pipelines/" class="series-step"><span class="series-num">2</span><span class="series-label">Pipelines</span></a>
+                <a href="../part3-transforms/" class="series-step"><span class="series-num">3</span><span class="series-label">Transforms</span></a>
+                <a href="../part4-corporate-actions/" class="series-step"><span class="series-num">4</span><span class="series-label">Corp. Actions</span></a>
+                <a href="../part5-dashboards/" class="series-step"><span class="series-num">5</span><span class="series-label">IA &amp; Dash.</span></a>
+                <a href="./" class="series-step current"><span class="series-num">6</span><span class="series-label">Opérations</span></a>
+            </div>
+            <span class="series-counter">6/6</span>
+            <span class="series-arrow" style="opacity:.3;"><i class="fas fa-chevron-right"></i></span>
+        </div>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
     <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
 
-  
-    <div class="series-bar"><div class="series-bar-inner"><a href="../part5-dashboards/" class="series-arrow" title="Part5 Dashboards"><i class="fas fa-chevron-left"></i></a><span class="series-title">Series</span><div class="series-steps"><a href="../part1-foundations/" class="series-step" title="Part1 Foundations"><span class="series-num">1</span><span class="series-label">Part1 Foundations</span></a><a href="../part2-pipelines/" class="series-step" title="Part2 Pipelines"><span class="series-num">2</span><span class="series-label">Part2 Pipelines</span></a><a href="../part3-transforms/" class="series-step" title="Part3 Transforms"><span class="series-num">3</span><span class="series-label">Part3 Transforms</span></a><a href="../part4-corporate-actions/" class="series-step" title="Part4 Corporate Actions"><span class="series-num">4</span><span class="series-label">Part4 Corporate Actions</span></a><a href="../part5-dashboards/" class="series-step" title="Part5 Dashboards"><span class="series-num">5</span><span class="series-label">Part5 Dashboards</span></a><a href="./" class="series-step current" title="."><span class="series-num">6</span><span class="series-label">.</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
-<footer class="article-footer">
-    &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
-    Ceci n'est pas un conseil financier.
-    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
-  </footer><script src="/assets/tag-renderer.js"></script>
+    <script>
+    // ── FAB ──────────────────────────────────────────────────────────────────
+    (function() {
+        var btn = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        if (!btn || !menu) return;
+        btn.addEventListener('click', function(e) { e.stopPropagation(); menu.classList.toggle('open'); });
+        document.addEventListener('click', function() { menu.classList.remove('open'); });
+        menu.addEventListener('click', function() { menu.classList.remove('open'); });
+    })();
+
+    // ── ECharts : OMS Architecture ─────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('omsArchChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+        var nodes = [
+            { id:'0', name:'IA Agent\n(MCP)',       x:50,  y:160, symbolSize:52, itemStyle:{color:'#8b5cf6'} },
+            { id:'1', name:'Recon\nEngine',          x:220, y:160, symbolSize:52, itemStyle:{color:'#9333ea'} },
+            { id:'2', name:'Risk\nController',       x:390, y:80,  symbolSize:48, itemStyle:{color:'#ef4444'} },
+            { id:'3', name:'Order\nStore (PG)',      x:390, y:250, symbolSize:48, itemStyle:{color:'#0d9488'} },
+            { id:'4', name:'IBKR\nAdapter',          x:580, y:80,  symbolSize:48, itemStyle:{color:'#3b82f6'} },
+            { id:'5', name:'Binance\nAdapter',       x:580, y:250, symbolSize:48, itemStyle:{color:'#f59e0b'} },
+            { id:'6', name:'IB TWS\n(Live)',          x:760, y:80,  symbolSize:44, itemStyle:{color:'#1d4ed8'} },
+            { id:'7', name:'Binance\nAPI (Live)',     x:760, y:250, symbolSize:44, itemStyle:{color:'#d97706'} },
+        ];
+        var edges = [
+            { source:'0', target:'1', data:{label:'Portfolio\nTarget'} },
+            { source:'1', target:'2', data:{label:'Validate'} },
+            { source:'1', target:'3', data:{label:'Audit Log'} },
+            { source:'2', target:'4', data:{label:'PlaceOrder\n(if OK)'} },
+            { source:'2', target:'5', data:{label:'PlaceOrder\n(if OK)'} },
+            { source:'4', target:'6', data:{label:'Socket'} },
+            { source:'5', target:'7', data:{label:'REST/WS'} },
+            { source:'6', target:'1', data:{label:'Positions\nLive'} },
+            { source:'7', target:'1', data:{label:'Positions\nLive'} },
+        ];
+        chart.setOption({
+            backgroundColor:'transparent',
+            tooltip:{trigger:'item'},
+            series:[{
+                type:'graph', layout:'none', roam:false,
+                label:{show:true, fontSize:9, fontWeight:'bold', color:'#fff'},
+                edgeLabel:{show:true, fontSize:8, formatter:function(p){return p.data.label||'';}},
+                lineStyle:{color:'#94a3b8', width:1.5, curveness:.1},
+                edgeSymbol:['none','arrow'], edgeSymbolSize:8,
+                nodes:nodes, edges:edges
+            }]
+        });
+        window.addEventListener('resize', function(){chart.resize();});
+    })();
+
+    // ── ECharts : Health Dashboard ─────────────────────────────────────────
+    (function() {
+        var dom = document.getElementById('healthChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        var chart = echarts.init(dom);
+        var days = [];
+        for (var i = 29; i >= 0; i--) {
+            var d = new Date(); d.setDate(d.getDate() - i);
+            days.push((d.getMonth()+1)+'/'+(d.getDate()));
+        }
+        // Simulated latencies
+        var dbtLatency  = days.map(function() { return Math.floor(25 + Math.random()*20); });
+        var mcpLatency  = days.map(function() { return Math.floor(40 + Math.random()*60); });
+        var omsLatency  = days.map(function() { return Math.floor(800 + Math.random()*400); });
+
+        chart.setOption({
+            backgroundColor:'transparent',
+            tooltip:{trigger:'axis'},
+            legend:{data:['dbt Run (min)','MCP Latency p99 (ms)','OMS Order Submit (ms)'],bottom:0,fontSize:10},
+            grid:{top:30, left:60, right:30, bottom:50},
+            xAxis:{type:'category', data:days, axisLabel:{fontSize:9, interval:4}},
+            yAxis:{type:'value', name:'ms / min', axisLabel:{fontSize:10}},
+            series:[
+                {name:'dbt Run (min)',    type:'line', data:dbtLatency, lineStyle:{color:'#0d9488',width:1.5}, itemStyle:{color:'#0d9488'}, smooth:true},
+                {name:'MCP Latency p99 (ms)', type:'line', data:mcpLatency, lineStyle:{color:'#3b82f6',width:1.5}, itemStyle:{color:'#3b82f6'}, smooth:true},
+                {name:'OMS Order Submit (ms)', type:'bar',  data:omsLatency, itemStyle:{color:'#9333ea', borderRadius:[3,3,0,0]}}
+            ]
+        });
+        window.addEventListener('resize', function(){chart.resize();});
+    })();
+    </script>
 </body>
-
 </html>
