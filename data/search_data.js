@@ -366,6 +366,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALOY",
+    "exchange": "Nasdaq • Basic Materials • Rare Earth Metals & Magnets — Mine-to-Magnet US Defense",
+    "name": "ALOY — REalloys (ALOY) : mine-to-magnet rare earth, contrat DLA, board défense (Gen Keane), $5...",
+    "title": "ALOY — REalloys (ALOY) : mine-to-magnet rare earth, contrat DLA, board défense (Gen Keane), $5...",
+    "desc": "ALOY : REalloys, seul producteur US mine-to-magnet de terres rares lourdes. Contrat DLA Pentagon, zéro input chinois. Pre-revenue, dilution massive. Analyse complète.",
+    "tags": "us,materials,defense,geopolitique,trade-idea,speculative",
+    "grade": "B-",
+    "href": "/analyses/ALOY/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "RCAT",
     "exchange": "NASDAQ • Industrials • Aerospace & Defense\n            — Military Drones • ISR Systems • Electronic Warfare",
     "name": "RCAT — Military drone pure-play surging on Middle East tensions and NATO spending. #1 trending...",
