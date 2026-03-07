@@ -2475,12 +2475,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Retrospective",
-    "desc": "The standout strategy of the period. WEAT hit TP1 (+6.8%), MRVL reached TP1 (+11.1%) on strong earnings momentum. NOW is just $0.66 short of TP1 at $124.34 (+14.1%). UBER and DKNG also in positive territory. Only EWJ (Mar 2) was stopped.",
+    "title": "Scanner Retrospective — Feb 24 to Mar 5, 2026",
+    "desc": "70 setups reviewed across 7 scans. 27% TP1 hit rate on completed trades. AAOI +19%, NOW +14%, USO +14% top picks. Early Risk-Off regime dominated — energy picks outperformed while EU/Asia ETFs lagged. 48 setups still in progress.",
     "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
     "grade": "",
     "href": "/scanner/retrospective/20260306/",
-    "date": "6 mars 2026"
+    "date": "6 March 2026"
   },
   {
     "type": "scanner",
@@ -2488,8 +2488,8 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Daily Scanner",
-    "desc": "Following the retrospectives (C+ on Feb 20, B+ on Feb 28), we adjusted our approach: 30% defensive/short positions for Risk-Off alignment, strict price validation (spot <10% deviation), and 100% new tickers vs. yesterday's scan. The Iran/Hormuz crisis continues to dominate markets with WTI surging +...",
+    "title": "Top 10 A+ RISK-OFF — XOM, EQNR, RTX, KR, ADM, TTE, GLD, EWY, SH, UNG",
+    "desc": "RISK-OFF regime — VIX 29.49, WTI $91/bbl (+12%), Gold $5,179 ATH. Iran/Hormuz crisis escalation. Energy + defense + safe havens dominate. Score moyen 90.1/100. 100% nouveaux tickers vs scan précédent.",
     "tags": "us,eu,asia,etf,energy,defense,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260306/",
@@ -2909,6 +2909,45 @@ window.searchDataPrebuilt = [
     "tags": "tech,ai",
     "grade": "",
     "href": "tech/anthropic-ecosystem/part1-foundation/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Trading Small-Caps — From Scanner to Edge",
+    "desc": "Master small-cap trading: VWAP technique, confirmed moves, scanner calibration, due diligence, strategies, risk management, traps, and realistic returns.",
+    "tags": "us,small-cap,formation,trade-idea,technique",
+    "grade": "",
+    "href": "/series/trading-small-caps/part1-landscape/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Trading Mid-Caps — The Sweet Spot",
+    "desc": "The $2B–$10B sweet spot: screening, growth engines, technical analysis, strategies, earnings plays, sector rotation, and portfolio construction.",
+    "tags": "us,formation,trade-idea,technique",
+    "grade": "",
+    "href": "/series/trading-mid-caps/part1-sweet-spot/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Trading Mega-Caps — Titans of the Market",
+    "desc": "Mag 7 analysis, valuation frameworks, technical trading, options strategies, earnings/macro plays, dividends/buybacks, and alpha generation with mega-caps.",
+    "tags": "us,tech,formation,trade-idea,technique",
+    "grade": "",
+    "href": "/series/trading-mega-caps/part1-titans/",
     "date": ""
   },
   {

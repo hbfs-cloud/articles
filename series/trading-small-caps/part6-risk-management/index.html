@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,small-cap,formation,trade-idea,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Risk Management &amp; Position Sizing for Volatile Names | Trading Small-Caps — Part 6/8 | Market Watch</title>
+ <meta name="description" content="Trading Small-Caps series — Part 6/8: The 2% rule, ATR-based sizing, Kelly Criterion, portfolio heat, gap risk, stop strategies, drawdown management, and the trade journal template.">
+ <meta property="og:title" content="Risk Management &amp; Position Sizing | Trading Small-Caps 6/8 | Market Watch">
+ <meta property="og:description" content="Risk management is THE edge in small-caps. Master position sizing formulas, portfolio heat limits, gap risk solutions, and drawdown recovery protocols.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-small-caps/part6-risk-management/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+/* TEAL SMALL-CAP THEME */
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+.hero-badge-amber { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
+
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+.takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#115e59; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0d9488 0%, #115e59 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0d9488 0%, #115e59 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#2dd4bf; }
+
+.signal-box { border-radius:12px; padding:1.5rem; margin:1rem 0; }
+.signal-box h4 { margin:0 0 0.75rem; font-size:0.95rem; }
+.signal-box ul { margin:0; padding:0 0 0 1.25rem; }
+.signal-box li { margin:0.4rem 0; font-size:0.9rem; line-height:1.5; }
+.signal-bull { background:#f0fdf4; border:1px solid #16a34a; }
+.signal-bull h4 { color:#16a34a; }
+.signal-bear { background:#fef2f2; border:1px solid #dc2626; }
+.signal-bear h4 { color:#dc2626; }
+
+.scenario-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0; border-left:5px solid #0d9488; }
+.scenario-card h4 { margin:0 0 1rem; color:#0f172a; font-size:1.05rem; }
+.scenario-card .calc-row { display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #f1f5f9; font-size:0.9rem; }
+.scenario-card .calc-row:last-child { border-bottom:none; }
+.scenario-card .calc-label { color:#64748b; }
+.scenario-card .calc-value { color:#0f172a; font-weight:700; }
+.scenario-card .calc-result { color:#0d9488; font-weight:800; font-size:1.1rem; }
+
+.journal-row { display:grid; grid-template-columns:120px 1fr; gap:0.5rem; padding:0.6rem 0; border-bottom:1px solid #f1f5f9; font-size:0.9rem; }
+.journal-row:last-child { border-bottom:none; }
+.journal-label { font-weight:700; color:#64748b; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; }
+.journal-value { color:#334155; }
+
+details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; }
+details[open] summary { border-bottom:1px solid #e2e8f0; background:#f0fdfa; }
+details .quiz-content { padding:1.5rem; }
+details .quiz-content p { margin:0.5rem 0; }
+
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+  .scenario-card .calc-row { flex-direction:column; gap:0.2rem; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .step-grid { grid-template-columns:1fr; }
+  .journal-row { grid-template-columns:1fr; }
+}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-shield-halved"></i> Trading Small-Caps Series — Part 6 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Risk Management &amp; Position Sizing for Volatile Names</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">The difference between a trader who survives and one who blows up is not stock picking — it's risk management. This chapter gives you the exact formulas, rules, and protocols to protect your capital while still capturing outsized returns in small-caps.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-shield-halved"></i> The 2% Rule</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calculator"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-gauge-high"></i> Kelly Criterion</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Gap Risk</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-book"></i> Trade Journal</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-small-caps/part5-strategies/" class="series-arrow" title="Trading Strategies"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Small-Caps</span><div class="series-steps"><a href="/series/trading-small-caps/part1-landscape/" class="series-step" title="The Small-Cap Landscape"><span class="series-num">1</span><span class="series-label">Landscape</span></a><a href="/series/trading-small-caps/part2-screening/" class="series-step" title="Building Your Scanner"><span class="series-num">2</span><span class="series-label">Screening</span></a><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-step" title="Spotting Confirmed Moves"><span class="series-num">3</span><span class="series-label">Confirmed Moves</span></a><a href="/series/trading-small-caps/part4-due-diligence/" class="series-step" title="Due Diligence Deep Dive"><span class="series-num">4</span><span class="series-label">Due Diligence</span></a><a href="/series/trading-small-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-small-caps/part6-risk-management/" class="series-step current" title="Risk &amp; Position Sizing"><span class="series-num">6</span><span class="series-label">Risk Mgmt</span></a><a href="/series/trading-small-caps/part7-traps/" class="series-step" title="The Trap Playbook"><span class="series-num">7</span><span class="series-label">Traps</span></a><a href="/series/trading-small-caps/part8-returns/" class="series-step" title="Returns &amp; Edge Building"><span class="series-num">8</span><span class="series-label">Returns</span></a></div><span class="series-counter">6/8</span><a href="/series/trading-small-caps/part7-traps/" class="series-arrow" title="The Trap Playbook"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why" class="fnav-item" data-section="why"><i class="fas fa-shield-halved"></i><span>Why Risk Mgmt</span></a><a href="#two-percent" class="fnav-item" data-section="two-percent"><i class="fas fa-percent"></i><span>The 2% Rule</span></a><a href="#sizing" class="fnav-item" data-section="sizing"><i class="fas fa-calculator"></i><span>Position Sizing</span></a><a href="#kelly" class="fnav-item" data-section="kelly"><i class="fas fa-brain"></i><span>Kelly Criterion</span></a><a href="#heat" class="fnav-item" data-section="heat"><i class="fas fa-fire"></i><span>Portfolio Heat</span></a><a href="#stops" class="fnav-item" data-section="stops"><i class="fas fa-hand"></i><span>Stop Strategies</span></a><a href="#gaps" class="fnav-item" data-section="gaps"><i class="fas fa-bolt"></i><span>Gap Risk</span></a><a href="#drawdown" class="fnav-item" data-section="drawdown"><i class="fas fa-chart-line"></i><span>Drawdown Mgmt</span></a><a href="#journal" class="fnav-item" data-section="journal"><i class="fas fa-book"></i><span>Trade Journal</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- WHY RISK MANAGEMENT IS THE EDGE                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="why"><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> Why Risk Management Is THE Edge</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> The Single Most Important Skill in Small-Cap Trading</h2>
+
+  <p>Here's a truth that most trading educators won't tell you: <strong>the best stock picker in the world will blow up without risk management</strong>. Finding winning trades is the easy part. Surviving the losers — and there will be many — is what separates the professionals from the blown-up accounts on Reddit.</p>
+
+  <p>Consider this scenario: a trader has a 60% win rate (better than most hedge funds) with an average winner of +15% and an average loser of -15%. Sounds profitable, right? It is — on average. But if that trader puts 25% of their portfolio in every trade and hits three losers in a row (which will happen eventually with 40% of trades losing), they're down 57.8% before they even get to trade the winners. A 57.8% drawdown requires a 137% gain just to get back to breakeven.</p>
+
+  <p>The math of ruin is unforgiving. Small-caps amplify this problem because they're 2-3x more volatile than large-caps. A "normal" 8% stop-loss in Apple might be a 20% gap in a small-cap biotech. Risk management isn't just a chapter in a trading book — it's the entire book. Everything else is a footnote.</p>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> The Asymmetry of Losses</h3>
+    <p>Losses are asymmetric: a -10% loss requires +11.1% to recover. A -25% loss requires +33.3%. A -50% loss requires +100%. And a -75% loss requires +300%. The deeper the hole, the exponentially harder it is to climb out. This is why position sizing (how much you risk per trade) is more important than your win rate or your stock selection. A modest edge with excellent risk management will always beat a great edge with reckless sizing.</p>
+  </div>
+
+  <!-- Chart: Drawdown Recovery -->
+  <div id="chart-drawdown-recovery" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3><i class="fa-solid fa-ranking-star" style="color:#0d9488;"></i> What the Professionals Do</h3>
+
+  <p>Professional prop traders and hedge fund managers share a common framework regardless of their strategy:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Pre-Defined Risk</h4>
+      <p>Every trade has a maximum dollar loss determined BEFORE entry. No exceptions, no negotiations.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Position Sizing Formula</h4>
+      <p>The stop distance determines the position size, not the other way around. Never "round up" shares because you're feeling confident.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Portfolio Heat Limits</h4>
+      <p>Total portfolio risk at any time is capped. Typically 6-8% — if all open positions hit their stops simultaneously, the max drawdown is known.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Drawdown Protocols</h4>
+      <p>Automatic size reduction when drawdown exceeds thresholds. At -10%, cut size in half. At -15%, stop trading. No discretion.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE 2% RULE                                                   -->
+<!-- ============================================================ -->
+<div class="section-divider" id="two-percent"><i class="fa-solid fa-percent" style="color:#0d9488;"></i> The 2% Rule</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-percent" style="color:#0d9488;"></i> Never Risk More Than 2% on a Single Trade</h2>
+
+  <p>The 2% rule is the foundational principle of professional risk management. It states: <strong>on any single trade, you should never risk more than 2% of your total account equity</strong>. "Risk" means the dollar amount you will lose if your stop-loss is hit — not the position size itself.</p>
+
+  <p>Why 2%? Because it balances two competing needs:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> <strong>Survival:</strong> Even 10 consecutive losers (which happens in small-cap trading) would only draw down your account by ~18%. That's painful but survivable. At 5% risk per trade, 10 losers wipes out 40% of your account.</li>
+    <li><i class="fa-solid fa-rocket" style="color:#0d9488;"></i> <strong>Growth:</strong> 2% risk allows meaningful position sizes. If you only risked 0.5%, your positions would be so small that even great trades barely move the needle.</li>
+  </ul>
+
+  <div class="formula-box">
+    <div class="formula-label">The 2% Rule</div>
+    Max Dollar Risk = <span class="formula-highlight">Account Equity</span> &times; <span class="formula-highlight">0.02</span>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Account Size</th>
+        <th>2% Risk</th>
+        <th>Max Loss Per Trade</th>
+        <th>10 Consecutive Losers</th>
+        <th>Account After 10 Losers</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>$25,000</strong></td>
+        <td>$500</td>
+        <td>$500</td>
+        <td>-$4,360</td>
+        <td>$20,640 (-17.4%)</td>
+      </tr>
+      <tr>
+        <td><strong>$50,000</strong></td>
+        <td>$1,000</td>
+        <td>$1,000</td>
+        <td>-$8,720</td>
+        <td>$41,280 (-17.4%)</td>
+      </tr>
+      <tr>
+        <td><strong>$100,000</strong></td>
+        <td>$2,000</td>
+        <td>$2,000</td>
+        <td>-$17,440</td>
+        <td>$82,560 (-17.4%)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Note: The 10 consecutive losers calculation uses compounding — after each loss, the 2% is recalculated on the new (lower) account balance. This is important: 2% of $50,000 is $1,000, but after a $1,000 loss, 2% of $49,000 is $980. Each subsequent loss is slightly smaller in dollar terms, which provides a natural braking mechanism.</p>
+
+  <div class="signal-box signal-bear">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> When to Use Less Than 2%</h4>
+    <ul>
+      <li><strong>Binary events (earnings, FDA):</strong> Reduce to 0.5-1% because your stop can be gapped through</li>
+      <li><strong>After a drawdown:</strong> At -10% monthly drawdown, reduce to 1%. At -15%, reduce to 0.5% or stop</li>
+      <li><strong>New trader:</strong> Start with 0.5-1% until you have 50+ trades logged and a proven positive expectancy</li>
+      <li><strong>Correlated positions:</strong> If you hold 3 small-cap tech stocks, reduce individual risk to 1% each (total sector risk = 3%, well under 6%)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- POSITION SIZING FORMULA                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-calculator" style="color:#0d9488;"></i> The Position Sizing Formula</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#0d9488;"></i> Position Size = (Account &times; Risk%) &divide; (Entry &minus; Stop)</h2>
+
+  <p>This is the most important formula you'll learn in this entire series. It determines exactly how many shares to buy for every single trade. The formula ensures that if your stop-loss is hit, you lose exactly the dollar amount you're willing to risk — no more, no less.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Universal Position Sizing Formula</div>
+    Shares = (<span class="formula-highlight">Account</span> &times; <span class="formula-highlight">Risk%</span>) &divide; (<span class="formula-highlight">Entry Price</span> &minus; <span class="formula-highlight">Stop Price</span>)
+  </div>
+
+  <p>Let's walk through three detailed examples with different account sizes and setups:</p>
+
+  <div class="scenario-card">
+    <h4><i class="fa-solid fa-user" style="color:#0d9488;"></i> Scenario 1: $50,000 Account — Momentum Trade</h4>
+    <p>You identify a small-cap breaking to new 52-week highs at $22.50. Your stop is below the breakout candle low at $20.75.</p>
+    <div class="calc-row"><span class="calc-label">Account equity</span><span class="calc-value">$50,000</span></div>
+    <div class="calc-row"><span class="calc-label">Risk percentage</span><span class="calc-value">2%</span></div>
+    <div class="calc-row"><span class="calc-label">Dollar risk</span><span class="calc-value">$50,000 &times; 0.02 = $1,000</span></div>
+    <div class="calc-row"><span class="calc-label">Entry price</span><span class="calc-value">$22.50</span></div>
+    <div class="calc-row"><span class="calc-label">Stop price</span><span class="calc-value">$20.75</span></div>
+    <div class="calc-row"><span class="calc-label">Risk per share</span><span class="calc-value">$22.50 - $20.75 = $1.75</span></div>
+    <div class="calc-row"><span class="calc-label">Shares to buy</span><span class="calc-result">$1,000 &divide; $1.75 = 571 shares</span></div>
+    <div class="calc-row"><span class="calc-label">Position value</span><span class="calc-value">571 &times; $22.50 = $12,848 (25.7% of account)</span></div>
+    <div class="calc-row"><span class="calc-label">Max loss if stopped</span><span class="calc-value">571 &times; $1.75 = $1,000 (exactly 2%)</span></div>
+  </div>
+
+  <div class="scenario-card">
+    <h4><i class="fa-solid fa-user" style="color:#2563eb;"></i> Scenario 2: $25,000 Account — Mean Reversion Trade</h4>
+    <p>A quality small-cap has dropped to $8.20 (RSI 22, at 200-day MA). Hammer candle reversal on volume. Stop below the swing low at $7.40.</p>
+    <div class="calc-row"><span class="calc-label">Account equity</span><span class="calc-value">$25,000</span></div>
+    <div class="calc-row"><span class="calc-label">Risk percentage</span><span class="calc-value">2%</span></div>
+    <div class="calc-row"><span class="calc-label">Dollar risk</span><span class="calc-value">$25,000 &times; 0.02 = $500</span></div>
+    <div class="calc-row"><span class="calc-label">Entry price</span><span class="calc-value">$8.20</span></div>
+    <div class="calc-row"><span class="calc-label">Stop price</span><span class="calc-value">$7.40</span></div>
+    <div class="calc-row"><span class="calc-label">Risk per share</span><span class="calc-value">$8.20 - $7.40 = $0.80</span></div>
+    <div class="calc-row"><span class="calc-label">Shares to buy</span><span class="calc-result">$500 &divide; $0.80 = 625 shares</span></div>
+    <div class="calc-row"><span class="calc-label">Position value</span><span class="calc-value">625 &times; $8.20 = $5,125 (20.5% of account)</span></div>
+    <div class="calc-row"><span class="calc-label">Max loss if stopped</span><span class="calc-value">625 &times; $0.80 = $500 (exactly 2%)</span></div>
+  </div>
+
+  <div class="scenario-card">
+    <h4><i class="fa-solid fa-user" style="color:#9333ea;"></i> Scenario 3: $100,000 Account — Catalyst Trade (Pre-Event)</h4>
+    <p>Insider cluster buying ahead of earnings. Stock at $15.30. Binary event = 0.5% risk. No hard stop (will exit post-event).</p>
+    <div class="calc-row"><span class="calc-label">Account equity</span><span class="calc-value">$100,000</span></div>
+    <div class="calc-row"><span class="calc-label">Risk percentage</span><span class="calc-value">0.5% (binary event)</span></div>
+    <div class="calc-row"><span class="calc-label">Dollar risk</span><span class="calc-value">$100,000 &times; 0.005 = $500</span></div>
+    <div class="calc-row"><span class="calc-label">Estimated max adverse move</span><span class="calc-value">-30% (earnings miss gap)</span></div>
+    <div class="calc-row"><span class="calc-label">Max shares (risk-based)</span><span class="calc-result">$500 &divide; ($15.30 &times; 0.30) = $500 &divide; $4.59 = 108 shares</span></div>
+    <div class="calc-row"><span class="calc-label">Position value</span><span class="calc-value">108 &times; $15.30 = $1,652 (1.65% of account)</span></div>
+    <div class="calc-row"><span class="calc-label">Max loss if -30% gap</span><span class="calc-value">108 &times; $4.59 = $496 (~0.5%)</span></div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> The Key Insight: Stop Distance Drives Position Size</h3>
+    <p>Notice how the position size varies dramatically based on the stop distance. In Scenario 1, the 7.8% stop results in a 25.7% position. In Scenario 2, the 9.8% stop results in a 20.5% position. In Scenario 3, the 30% estimated move results in a tiny 1.65% position. <strong>You're not choosing how much to buy — you're letting the chart tell you.</strong> A wider stop = smaller position. A tighter stop = larger position. The constant is the dollar risk (2% of account). This is the professional approach to sizing.</p>
+  </div>
+
+  <!-- Chart: Position Size Calculator Visualization -->
+  <div id="chart-position-size" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Position Sizing</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> Your $50K account. Entry at $30, stop at $27. How many shares?</p>
+      <p><strong>A:</strong> Dollar risk = $50,000 &times; 0.02 = $1,000. Risk per share = $30 - $27 = $3. Shares = $1,000 / $3 = 333 shares. Position value = $9,990 (20% of account).</p>
+      <p><strong>Q2:</strong> Same setup but the stop is at $28 instead of $27. How does this change things?</p>
+      <p><strong>A:</strong> Risk per share = $30 - $28 = $2. Shares = $1,000 / $2 = 500 shares. Position = $15,000 (30% of account). Tighter stop = larger position. But the dollar risk is still exactly $1,000 (2%).</p>
+      <p><strong>Q3:</strong> You calculate 500 shares but the average daily volume is only 50,000 shares. Should you take this position?</p>
+      <p><strong>A:</strong> Check your position size relative to the average daily volume. 500 shares / 50,000 ADV = 1%. That's fine — you should never exceed 5% of the ADV, as larger positions create slippage on entry and exit. If the ADV were only 5,000, you'd need 10% of the daily volume to fill — too much. Reduce to 250 shares (1% risk instead of 2%).</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- VOLATILITY-ADJUSTED SIZING: ATR-BASED                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="atr"><i class="fa-solid fa-wave-square" style="color:#0d9488;"></i> Volatility-Adjusted Sizing</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-wave-square" style="color:#0d9488;"></i> ATR-Based Position Sizing</h2>
+
+  <p>The basic formula works well, but it treats all stocks equally. A $20 stock with an Average True Range (ATR) of $0.50 is far less volatile than a $20 stock with an ATR of $2.00. Volatility-adjusted sizing accounts for this by using the ATR to set the stop distance, ensuring that you take smaller positions in more volatile stocks and larger positions in calmer ones.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">ATR-Based Stop</div>
+    Stop Price = Entry &minus; (<span class="formula-highlight">N</span> &times; <span class="formula-highlight">ATR(14)</span>)
+  </div>
+
+  <p>Where <strong>N</strong> is a multiplier, typically between 1.5 and 3.0:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>N Multiplier</th>
+        <th>Stop Width</th>
+        <th>Use Case</th>
+        <th>Hit Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1.5 ATR</strong></td>
+        <td>Tight</td>
+        <td>Day trades, mean reversion, scalps</td>
+        <td>Gets stopped 40-50% (wide for short-term noise)</td>
+      </tr>
+      <tr>
+        <td><strong>2.0 ATR</strong></td>
+        <td>Standard</td>
+        <td>Swing trades, breakouts, most positions</td>
+        <td>Gets stopped 25-35% (good balance)</td>
+      </tr>
+      <tr>
+        <td><strong>2.5 ATR</strong></td>
+        <td>Wide</td>
+        <td>Position trades, volatile names, high conviction</td>
+        <td>Gets stopped 15-25% (survives shakeouts)</td>
+      </tr>
+      <tr>
+        <td><strong>3.0 ATR</strong></td>
+        <td>Very Wide</td>
+        <td>Multi-week trends, Trend Following</td>
+        <td>Gets stopped 10-15% (max room, small position)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Let's see how ATR-based sizing automatically adjusts for different volatility levels:</p>
+
+  <div class="scenario-card">
+    <h4><i class="fa-solid fa-chart-bar" style="color:#0d9488;"></i> Low Volatility Stock: CALM (Cal-Maine Foods) — ATR(14) = $0.85</h4>
+    <div class="calc-row"><span class="calc-label">Account / Risk</span><span class="calc-value">$50,000 / 2% = $1,000</span></div>
+    <div class="calc-row"><span class="calc-label">Entry price</span><span class="calc-value">$62.00</span></div>
+    <div class="calc-row"><span class="calc-label">Stop (2 ATR)</span><span class="calc-value">$62.00 - (2 &times; $0.85) = $60.30</span></div>
+    <div class="calc-row"><span class="calc-label">Risk per share</span><span class="calc-value">$1.70</span></div>
+    <div class="calc-row"><span class="calc-label">Shares</span><span class="calc-result">$1,000 / $1.70 = 588 shares ($36,456 position)</span></div>
+  </div>
+
+  <div class="scenario-card">
+    <h4><i class="fa-solid fa-chart-bar" style="color:#ef4444;"></i> High Volatility Stock: SMCI (Super Micro) — ATR(14) = $4.20</h4>
+    <div class="calc-row"><span class="calc-label">Account / Risk</span><span class="calc-value">$50,000 / 2% = $1,000</span></div>
+    <div class="calc-row"><span class="calc-label">Entry price</span><span class="calc-value">$42.00</span></div>
+    <div class="calc-row"><span class="calc-label">Stop (2 ATR)</span><span class="calc-value">$42.00 - (2 &times; $4.20) = $33.60</span></div>
+    <div class="calc-row"><span class="calc-label">Risk per share</span><span class="calc-value">$8.40</span></div>
+    <div class="calc-row"><span class="calc-label">Shares</span><span class="calc-result">$1,000 / $8.40 = 119 shares ($4,998 position)</span></div>
+  </div>
+
+  <p>Same $1,000 risk, but the calm stock gets a $36,456 position (73% of account) while the volatile stock gets only $4,998 (10% of account). The ATR-based approach automatically protects you from volatile names by giving you fewer shares.</p>
+
+  <div class="signal-box signal-bull">
+    <h4><i class="fa-solid fa-circle-check"></i> ATR Sizing Advantages</h4>
+    <ul>
+      <li>Automatically adjusts for volatility — no guesswork</li>
+      <li>Equal dollar risk across all positions regardless of volatility</li>
+      <li>Stops are placed at "normal noise" distance — harder to get shaken out</li>
+      <li>Works across all asset classes (stocks, ETFs, crypto, futures)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE KELLY CRITERION                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="kelly"><i class="fa-solid fa-brain" style="color:#0d9488;"></i> The Kelly Criterion</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-brain" style="color:#0d9488;"></i> Optimal Bet Sizing — The Kelly Criterion</h2>
+
+  <p>The Kelly Criterion, developed by John Kelly at Bell Labs in 1956, answers a fundamental question: <strong>given your win rate and payoff ratio, what percentage of your bankroll should you bet to maximize long-term growth?</strong></p>
+
+  <div class="formula-box">
+    <div class="formula-label">The Kelly Criterion</div>
+    f* = <span class="formula-highlight">W</span> &minus; [(1 &minus; <span class="formula-highlight">W</span>) &divide; <span class="formula-highlight">R</span>]
+  </div>
+
+  <p>Where: <strong>f*</strong> = fraction of capital to risk, <strong>W</strong> = win rate (decimal), <strong>R</strong> = win/loss ratio (average win / average loss).</p>
+
+  <p>Let's calculate Kelly for each of our four strategies from Part 5:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>Win Rate (W)</th>
+        <th>Avg Win / Avg Loss (R)</th>
+        <th>Full Kelly (f*)</th>
+        <th>Half-Kelly</th>
+        <th>Quarter-Kelly</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Momentum</strong></td>
+        <td>0.45</td>
+        <td>18% / 7% = 2.57</td>
+        <td>23.6%</td>
+        <td>11.8%</td>
+        <td>5.9%</td>
+      </tr>
+      <tr>
+        <td><strong>Breakout</strong></td>
+        <td>0.40</td>
+        <td>22% / 8% = 2.75</td>
+        <td>18.2%</td>
+        <td>9.1%</td>
+        <td>4.5%</td>
+      </tr>
+      <tr>
+        <td><strong>Mean Reversion</strong></td>
+        <td>0.55</td>
+        <td>12% / 8% = 1.50</td>
+        <td>25.0%</td>
+        <td>12.5%</td>
+        <td>6.3%</td>
+      </tr>
+      <tr>
+        <td><strong>Catalyst</strong></td>
+        <td>0.50</td>
+        <td>25% / 10% = 2.50</td>
+        <td>30.0%</td>
+        <td>15.0%</td>
+        <td>7.5%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Why Most Traders Should Use Half-Kelly or Less</h3>
+
+  <p>Full Kelly is mathematically optimal for maximizing long-term compound growth, but it comes with <strong>brutal drawdowns</strong>. Full Kelly can produce drawdowns of 50-60% even with a profitable strategy. Most traders can't psychologically handle this, and they'll deviate from the system at the worst possible time (selling at the bottom of a drawdown).</p>
+
+  <p>The standard recommendation:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-gauge-high" style="color:#ef4444;"></i> <strong>Full Kelly:</strong> Theoretical maximum. Do NOT use. Drawdowns are too severe for any human to tolerate.</li>
+    <li><i class="fa-solid fa-gauge" style="color:#f59e0b;"></i> <strong>Half-Kelly:</strong> Achieves 75% of the compound growth rate of Full Kelly but with significantly smaller drawdowns. Suitable for experienced traders with a well-documented edge.</li>
+    <li><i class="fa-solid fa-gauge-low" style="color:#10b981;"></i> <strong>Quarter-Kelly:</strong> Achieves ~50% of the growth rate but with very manageable drawdowns. Recommended for most traders. Notice that Quarter-Kelly for our strategies (4.5-7.5%) aligns closely with the 2% risk rule when you consider that position size is typically 2-4x the risk amount.</li>
+  </ul>
+
+  <!-- Chart: Kelly Criterion Growth vs Drawdown -->
+  <div id="chart-kelly" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> Kelly in Practice: The "Known Edge" Problem</h3>
+    <p>Kelly requires accurate estimates of your win rate and payoff ratio. In trading, these are estimates based on historical data — and they change over time. If your actual win rate is 40% but you calculated Kelly assuming 50%, you're massively oversized. This estimation error is another reason to use Half or Quarter-Kelly: even if your estimates are off by 20%, you're still in a safe range. The moral: <strong>be conservative with your edge estimates</strong>. It's better to underestimate your edge and under-size than to overestimate and blow up.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Kelly Criterion</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> Your trading journal shows a 52% win rate with average winner = $1,200 and average loser = $800. What's your Kelly fraction?</p>
+      <p><strong>A:</strong> R = $1,200 / $800 = 1.5. Full Kelly = 0.52 - (0.48 / 1.5) = 0.52 - 0.32 = 0.20 = 20%. Half-Kelly = 10%. Quarter-Kelly = 5%. For a $50K account at Quarter-Kelly, you'd risk $2,500 per trade (5%).</p>
+      <p><strong>Q2:</strong> Why is Full Kelly dangerous even when your edge is real?</p>
+      <p><strong>A:</strong> Full Kelly maximizes the long-term geometric growth rate but does so by accepting drawdowns that can exceed 50-60%. In practice, (a) your edge estimates may be wrong, (b) returns aren't normally distributed (small-caps have fat tails), and (c) humans can't psychologically handle watching half their money disappear even if the math says it'll come back. One mistake at Full Kelly can be catastrophic.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- PORTFOLIO HEAT                                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="heat"><i class="fa-solid fa-fire" style="color:#0d9488;"></i> Portfolio Heat</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-fire" style="color:#0d9488;"></i> Total Portfolio Risk at Any Time</h2>
+
+  <p><strong>Portfolio heat</strong> is the total dollar amount you would lose if every open position hit its stop loss simultaneously. Professional traders cap this at <strong>6-8% of total account equity</strong>. This means: with 2% risk per trade, you can have a maximum of 3-4 open positions at full risk.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Portfolio Heat Formula</div>
+    Heat = <span class="formula-highlight">&Sigma;</span> (Shares<sub>i</sub> &times; Risk/Share<sub>i</sub>) &divide; <span class="formula-highlight">Account Equity</span>
+  </div>
+
+  <p>Example with a $50,000 account:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Position</th>
+        <th>Shares</th>
+        <th>Entry</th>
+        <th>Stop</th>
+        <th>Risk/Share</th>
+        <th>$ at Risk</th>
+        <th>% of Account</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>SMCI</strong></td>
+        <td>119</td>
+        <td>$42.00</td>
+        <td>$33.60</td>
+        <td>$8.40</td>
+        <td>$1,000</td>
+        <td>2.0%</td>
+      </tr>
+      <tr>
+        <td><strong>HIMS</strong></td>
+        <td>625</td>
+        <td>$8.20</td>
+        <td>$7.40</td>
+        <td>$0.80</td>
+        <td>$500</td>
+        <td>1.0%</td>
+      </tr>
+      <tr>
+        <td><strong>CELH</strong></td>
+        <td>400</td>
+        <td>$32.50</td>
+        <td>$30.00</td>
+        <td>$2.50</td>
+        <td>$1,000</td>
+        <td>2.0%</td>
+      </tr>
+      <tr>
+        <td><strong>ASTS</strong></td>
+        <td>200</td>
+        <td>$18.00</td>
+        <td>$15.50</td>
+        <td>$2.50</td>
+        <td>$500</td>
+        <td>1.0%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Total portfolio heat:</strong> $1,000 + $500 + $1,000 + $500 = <strong>$3,000 = 6.0%</strong>. This is within the 6-8% limit. If all four positions hit their stops simultaneously, you'd lose 6% of your account — painful but recoverable.</p>
+
+  <!-- Chart: Portfolio Heat Gauge -->
+  <div id="chart-heat-gauge" style="width:100%; height:350px; margin:2rem 0;"></div>
+
+  <h3><i class="fa-solid fa-link-slash" style="color:#ef4444;"></i> Correlation Risk: The Hidden Danger</h3>
+
+  <p>Portfolio heat calculations assume positions are independent. But <strong>correlated positions can all move against you at the same time</strong>, making the effective portfolio heat much higher than the sum of individual risks.</p>
+
+  <p>Example of dangerous correlation: You hold 4 small-cap tech stocks. A hawkish Fed statement drops the Nasdaq 3%. All four stocks drop 8-12% and hit their stops simultaneously. Your 6% portfolio heat becomes reality in one session.</p>
+
+  <p>Diversification rules for small-cap portfolios:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Limit</th>
+        <th>Rationale</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Same sector</strong></td>
+        <td>Max 2 positions</td>
+        <td>Sector rotation can hit all names in a group</td>
+      </tr>
+      <tr>
+        <td><strong>Same catalyst type</strong></td>
+        <td>Max 2 positions</td>
+        <td>E.g., don't hold 3 biotechs all waiting for FDA decisions</td>
+      </tr>
+      <tr>
+        <td><strong>Same market cap band</strong></td>
+        <td>Max 3 positions</td>
+        <td>Micro-caps ($50M-$300M) correlate in selloffs</td>
+      </tr>
+      <tr>
+        <td><strong>Same direction (all long)</strong></td>
+        <td>Cap at 6% heat</td>
+        <td>Consider a hedge position (SH, SQQQ, or put) above 6%</td>
+      </tr>
+      <tr>
+        <td><strong>Total open positions</strong></td>
+        <td>Max 5-6</td>
+        <td>More positions dilute your attention and your edge</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> The "Black Monday" Test</h3>
+    <p>Before adding a new position, ask yourself: <strong>"If the market drops 5% tomorrow morning (a Black Monday scenario), what happens to my portfolio?"</strong> If the answer is "I lose more than 10%," you're too exposed. In small-caps, a 5% market drop typically means a 10-15% drop in your positions (small-caps have a beta of 1.5-2.0 vs the S&P 500). Stress-testing your portfolio against this scenario will prevent catastrophic drawdowns.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Portfolio Heat</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> You have $100K, three open positions each with 2% risk, and you want to add a fourth trade at 2% risk. Should you?</p>
+      <p><strong>A:</strong> Current heat = 3 &times; 2% = 6%. Adding 2% brings you to 8% — the upper limit. It's acceptable if the fourth position is in a different sector than your existing three. If it's in the same sector, reduce it to 1% risk to keep your correlated risk manageable.</p>
+      <p><strong>Q2:</strong> Your three open positions are: a tech small-cap, a biotech small-cap, and a fintech small-cap. What's the problem?</p>
+      <p><strong>A:</strong> All three are effectively "growth/tech" plays that will be highly correlated in a risk-off move. If rates spike or the Nasdaq sells off, all three will drop together. You've violated the sector diversification rule. Replace one with a value-oriented or commodity-exposed small-cap for better diversification.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- STOP LOSS STRATEGIES                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stops"><i class="fa-solid fa-hand" style="color:#0d9488;"></i> Stop Loss Strategies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hand" style="color:#0d9488;"></i> Five Stop Loss Methods for Small-Caps</h2>
+
+  <p>Your stop loss is where you admit the trade was wrong and exit. In small-caps, placing the stop correctly is both an art and a science — too tight and you get shaken out by normal volatility; too wide and your losses are unacceptable.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Stop Type</th>
+        <th>Method</th>
+        <th>Best For</th>
+        <th>Pro</th>
+        <th>Con</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Fixed %</strong></td>
+        <td>X% below entry (typically 7-10%)</td>
+        <td>Beginners, quick trades</td>
+        <td>Simple, easy to calculate</td>
+        <td>Ignores stock's actual volatility</td>
+      </tr>
+      <tr>
+        <td><strong>ATR-Based</strong></td>
+        <td>Entry - N &times; ATR(14)</td>
+        <td>Swing trades, trending stocks</td>
+        <td>Adapts to each stock's volatility</td>
+        <td>Requires ATR data, can be wide</td>
+      </tr>
+      <tr>
+        <td><strong>Structural</strong></td>
+        <td>Below key support (MA, horizontal level, trend line)</td>
+        <td>Technical traders, breakouts</td>
+        <td>Most logically sound</td>
+        <td>Support can be subjective</td>
+      </tr>
+      <tr>
+        <td><strong>Trailing</strong></td>
+        <td>X% below highest close since entry</td>
+        <td>Trend-following, momentum</td>
+        <td>Locks in profits as trade moves</td>
+        <td>Can give back a lot of open profit</td>
+      </tr>
+      <tr>
+        <td><strong>Time-Based</strong></td>
+        <td>Exit if no progress in N days</td>
+        <td>All strategies</td>
+        <td>Prevents dead money</td>
+        <td>Might exit right before the move</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-clock" style="color:#0d9488;"></i> The Time Stop: The Underused Secret Weapon</h3>
+
+  <p>Most traders only think about price stops. The <strong>time stop</strong> is equally important: if a trade hasn't moved in your favor within a defined time window, exit regardless of where the price is. Dead money — capital tied up in a non-moving trade — has a real cost: it prevents you from deploying that capital into better opportunities.</p>
+
+  <p>Recommended time stops by strategy:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>Momentum:</strong> 5 trading days. If the stock hasn't made a higher high within 5 days of entry, the momentum thesis is failing.</li>
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>Breakout:</strong> 3 trading days. A true breakout should show follow-through within the first 3 days. No follow-through = trapped buyers, exit.</li>
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>Mean Reversion:</strong> 10-15 trading days. The reversion to the mean should happen within 2-3 weeks. If it hasn't, the stock may be in a structural downtrend.</li>
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>Catalyst:</strong> 5 trading days post-event. The catalyst should generate momentum within the first week. After that, the information is fully priced.</li>
+  </ul>
+
+  <h3><i class="fa-solid fa-gavel" style="color:#0d9488;"></i> Scaling In and Out</h3>
+
+  <p>Professional traders rarely go "all-in" at once. Scaling reduces the impact of imperfect timing:</p>
+
+  <p><strong>Scaling In (Building the Position):</strong></p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>1/3 at initial signal:</strong> Take the first third when your setup triggers. This gives you skin in the game but limits damage if the signal is false.</li>
+    <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>1/3 at confirmation:</strong> Add the second third when the trade moves in your favor (e.g., first pullback to 10-EMA in a momentum trade, or first higher low after a breakout).</li>
+    <li><i class="fa-solid fa-arrow-right" style="color:#2563eb;"></i> <strong>1/3 at add point:</strong> Add the final third at a secondary confirmation point (e.g., the stock retests the breakout level as support). By now, your first two entries are profitable and your average cost is well below the current price.</li>
+  </ul>
+
+  <p><strong>Scaling Out (Exiting the Position):</strong></p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrow-left" style="color:#10b981;"></i> <strong>1/3 at 1R (risk equals reward):</strong> Lock in some profit and reduce anxiety. Move stop to breakeven on remaining position.</li>
+    <li><i class="fa-solid fa-arrow-left" style="color:#10b981;"></i> <strong>1/3 at 2R:</strong> Take more profit. You're now in a "free trade" — even if stopped out on the remaining third, the trade was profitable overall.</li>
+    <li><i class="fa-solid fa-arrow-left" style="color:#10b981;"></i> <strong>1/3 trailing stop:</strong> Let the final third run with a trailing stop. This captures the tail of big winners while still protecting the bulk of your profits.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE GAP RISK PROBLEM                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="gaps"><i class="fa-solid fa-bolt" style="color:#0d9488;"></i> The Gap Risk Problem</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#0d9488;"></i> When Your Stop Can't Protect You</h2>
+
+  <p>Here's the uncomfortable truth about small-cap trading: <strong>your stop-loss won't save you from gap risk</strong>. A small-cap can report terrible earnings after the bell and gap down 25-35% the next morning. Your stop at -8% is meaningless — the stock opens at -30% and you're filled at the open price, not your stop price.</p>
+
+  <p>How common is this? In a typical year, roughly 15-20% of small-caps experience at least one gap of 15%+ in a single session. During earnings season, the probability is even higher. If you trade 50 small-caps per year, you'll face 3-5 significant gap events.</p>
+
+  <h3><i class="fa-solid fa-shield" style="color:#0d9488;"></i> Solutions to Gap Risk</h3>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Position Size Reduction</h4>
+      <p>The primary defense. If a stock can gap 30%, size your position so that a 30% gap costs you no more than 2% of your account. This means pre-earnings positions are ~1/3 the size of normal positions.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Exit Before Events</h4>
+      <p>Close positions before binary events (earnings, FDA dates) and re-enter after the event if the direction confirms your thesis. You sacrifice the gap profit but eliminate the gap risk.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Put Options as Insurance</h4>
+      <p>Buy a put option to cap your downside. A $1.50 put on a $25 stock gives you a floor at $25. Works well for larger positions, but options on illiquid small-caps have wide spreads.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Sector Diversification</h4>
+      <p>Spread your risk across 3-4 different sectors. A biotech gap down won't affect your industrial small-cap. Diversification is the only free lunch in finance.</p>
+    </div>
+  </div>
+
+  <h3><i class="fa-solid fa-chart-column" style="color:#0d9488;"></i> Calculating Your "Gap Budget"</h3>
+
+  <p>Before holding any small-cap overnight, calculate the worst-case gap scenario:</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Gap Risk Formula</div>
+    Gap Risk = <span class="formula-highlight">Position Value</span> &times; <span class="formula-highlight">Max Expected Gap%</span>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th>Typical Max Gap</th>
+        <th>$10K Position</th>
+        <th>$5K Position</th>
+        <th>$2K Position</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Normal overnight</strong></td>
+        <td>-5%</td>
+        <td>-$500</td>
+        <td>-$250</td>
+        <td>-$100</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings (beat/miss)</strong></td>
+        <td>-20%</td>
+        <td>-$2,000</td>
+        <td>-$1,000</td>
+        <td>-$400</td>
+      </tr>
+      <tr>
+        <td><strong>FDA decision</strong></td>
+        <td>-50%</td>
+        <td>-$5,000</td>
+        <td>-$2,500</td>
+        <td>-$1,000</td>
+      </tr>
+      <tr>
+        <td><strong>Secondary offering</strong></td>
+        <td>-15%</td>
+        <td>-$1,500</td>
+        <td>-$750</td>
+        <td>-$300</td>
+      </tr>
+      <tr>
+        <td><strong>Market crash day</strong></td>
+        <td>-10%</td>
+        <td>-$1,000</td>
+        <td>-$500</td>
+        <td>-$200</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>For a $50K account with a 2% risk limit ($1,000), you should not hold more than $5,000 in any single stock going into earnings (worst case -20% = -$1,000 = 2% of account). For FDA events, the position should be $2,000 or less.</p>
+
+  <!-- Chart: Gap Risk Distribution -->
+  <div id="chart-gap-risk" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Gap Risk</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> You hold a $12,000 position in a small-cap biotech. The stock reports earnings tomorrow. What should you do?</p>
+      <p><strong>A:</strong> For a $50K account, a 20% gap on $12,000 = -$2,400 (4.8% of account) — more than double your 2% risk limit. You have three options: (1) Sell the entire position before earnings, (2) Sell 60% to reduce to $5,000 (max 2% gap risk), or (3) Buy a protective put. Option 2 is the most balanced approach.</p>
+      <p><strong>Q2:</strong> A small-cap you hold announces a secondary offering after hours. The stock is down 12% in after-hours trading. What's the best action?</p>
+      <p><strong>A:</strong> Sell at the open. Secondary offerings are dilutive and create persistent selling pressure as the new shares are distributed. The after-hours price is often the BEST price you'll get — the stock typically drifts lower over the next 2-3 weeks as the offering is marketed. Don't hold hoping for a bounce; the supply/demand dynamics have fundamentally changed.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- WHEN TO CUT LOSSES                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cut"><i class="fa-solid fa-scissors" style="color:#0d9488;"></i> When to Cut Immediately</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scissors" style="color:#0d9488;"></i> The Three Scenarios Where You Sell Immediately</h2>
+
+  <p>Normal stop losses are executed when price hits your predetermined level. But there are three scenarios where you don't wait for the stop — you sell immediately, at market, no questions asked:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-ban" style="font-size:0.8rem;"></i></div>
+      <h4>1. Thesis Broken</h4>
+      <p>The reason you bought the stock no longer exists. Example: you bought a breakout, and the stock falls back below the breakout level on Day 2. The thesis (breakout with follow-through) is invalidated. Sell immediately — don't wait for the stop.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-ban" style="font-size:0.8rem;"></i></div>
+      <h4>2. Dilution Announced</h4>
+      <p>The company announces a secondary offering, shelf registration, or at-the-market (ATM) program. These create persistent selling pressure that overwhelms any technical setup. Exit at the open the next morning.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-ban" style="font-size:0.8rem;"></i></div>
+      <h4>3. Fraud Discovered</h4>
+      <p>Short seller report, SEC investigation, auditor resignation, or accounting restatement. These situations have no floor — the stock can go to zero. The survival instinct should override everything. Sell immediately at any price.</p>
+    </div>
+  </div>
+
+  <div class="signal-box signal-bear">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The "Hope Trade" — The Most Dangerous Trade in Small-Caps</h4>
+    <ul>
+      <li>You buy a stock at $15 with a stop at $13.50</li>
+      <li>It drops to $13.50 — you tell yourself "it'll bounce, just a shakeout"</li>
+      <li>It drops to $12 — you move the stop to $11 "to give it more room"</li>
+      <li>It drops to $10 — you're now down 33%, way past your original plan</li>
+      <li>It drops to $7 — you capitulate and sell, losing 53%</li>
+      <li><strong>The original 10% loss has become a 53% loss because you refused to honor the stop.</strong></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MAX DRAWDOWN MANAGEMENT                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="drawdown"><i class="fa-solid fa-chart-line" style="color:#0d9488;"></i> Maximum Drawdown Management</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#0d9488;"></i> The Circuit Breaker Protocol</h2>
+
+  <p>Every professional trader has a drawdown protocol — a set of automatic rules that reduce risk when losses accumulate. These rules prevent a bad week from becoming a bad month, and a bad month from becoming a blown account.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Drawdown Level</th>
+        <th>From Peak Equity</th>
+        <th>Action</th>
+        <th>Rationale</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Level 1: Warning</strong></td>
+        <td>-5%</td>
+        <td>Review all open positions. Tighten stops. No new positions for 24 hours.</td>
+        <td>Pause and assess whether the losses are random or systematic</td>
+      </tr>
+      <tr>
+        <td><strong>Level 2: Reduce</strong></td>
+        <td>-10%</td>
+        <td>Reduce position size to 1% risk (half normal). Close weakest position.</td>
+        <td>Something is wrong — either the market regime has changed or your execution is off</td>
+      </tr>
+      <tr>
+        <td><strong>Level 3: Minimum</strong></td>
+        <td>-15%</td>
+        <td>Stop trading for 1 week. Close all positions. Review entire journal.</td>
+        <td>Forced cool-down. Identify whether the drawdown is strategy failure or emotional trading</td>
+      </tr>
+      <tr>
+        <td><strong>Level 4: Reset</strong></td>
+        <td>-20%</td>
+        <td>Stop trading for 1 month. Paper trade only. Consider if the strategy is still valid.</td>
+        <td>A 20% drawdown requires a 25% gain to recover. You need to fundamentally reassess.</td>
+      </tr>
+      <tr>
+        <td><strong>Level 5: Emergency</strong></td>
+        <td>-25%+</td>
+        <td>Full stop. Seek mentorship or coaching. Do not resume until the root cause is identified and fixed.</td>
+        <td>You are approaching the "point of no return" where psychology deteriorates and revenge trading begins</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3><i class="fa-solid fa-calculator" style="color:#0d9488;"></i> The Math of Recovery</h3>
+
+  <p>Understanding recovery math is the most powerful motivator for disciplined risk management:</p>
+
+  <!-- Chart: Recovery Chart -->
+  <div id="chart-recovery" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> The Weekly P&L Review</h3>
+    <p>Every Friday, calculate your weekly drawdown from your equity high. If you're at Level 1 (-5%), acknowledge it and reduce aggression next week. If you're at Level 2 (-10%), follow the protocol without exception. <strong>The protocol is not optional</strong> — it's the difference between a temporary setback and a permanent impairment. Professional prop firms enforce these rules externally (risk managers cut your size automatically). As a retail trader, you must enforce them yourself. Write them on a sticky note on your monitor. Print them and tape them to your desk. Make them impossible to ignore.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Drawdown Management</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> Your account is down 11% this month. You just found what you think is an amazing momentum setup. What do you do?</p>
+      <p><strong>A:</strong> You're at Level 2 (>10% drawdown). The protocol says: reduce to 1% risk and close your weakest position. You can take the momentum trade, but at HALF your normal size (1% risk instead of 2%). If you're tempted to "make it back" with a big position, recognize that this is exactly the emotional state that causes the drawdown to deepen from 11% to 20%+.</p>
+      <p><strong>Q2:</strong> You've been paper trading for a month after a 20% drawdown. Your paper results are excellent. Should you resume live trading?</p>
+      <p><strong>A:</strong> Not at full size. Start with 25% of your normal position sizes (0.5% risk instead of 2%). Trade live for 2 weeks at reduced size. If your live results match your paper results, increase to 50% (1% risk). After another 2 profitable weeks, return to full size. This gradual ramp-up prevents the psychological shock of going from zero risk to full risk overnight.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TRADE JOURNAL TEMPLATE                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="journal"><i class="fa-solid fa-book" style="color:#0d9488;"></i> The Trade Journal</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-book" style="color:#0d9488;"></i> What to Track — The Complete Trade Journal</h2>
+
+  <p>A trade journal is your single most valuable tool for improvement. Without it, you're flying blind — repeating the same mistakes, never identifying your strengths, and never developing the pattern recognition that separates professionals from amateurs.</p>
+
+  <p>Here's the template for every trade:</p>
+
+  <div class="scenario-card">
+    <h4><i class="fa-solid fa-pen" style="color:#0d9488;"></i> Trade Journal Entry Template</h4>
+    <div class="journal-row"><span class="journal-label">Date</span><span class="journal-value">Entry date and time</span></div>
+    <div class="journal-row"><span class="journal-label">Ticker</span><span class="journal-value">Symbol and company name</span></div>
+    <div class="journal-row"><span class="journal-label">Strategy</span><span class="journal-value">M (Momentum), B (Breakout), MR (Mean Reversion), C (Catalyst)</span></div>
+    <div class="journal-row"><span class="journal-label">Setup Grade</span><span class="journal-value">A+, A, B+, B, C — be honest about the quality of the setup</span></div>
+    <div class="journal-row"><span class="journal-label">Entry Price</span><span class="journal-value">Exact fill price</span></div>
+    <div class="journal-row"><span class="journal-label">Stop Price</span><span class="journal-value">Where you will exit if wrong</span></div>
+    <div class="journal-row"><span class="journal-label">Target Price</span><span class="journal-value">TP1 and TP2 levels</span></div>
+    <div class="journal-row"><span class="journal-label">Shares</span><span class="journal-value">Number of shares purchased</span></div>
+    <div class="journal-row"><span class="journal-label">$ at Risk</span><span class="journal-value">Shares &times; (Entry - Stop)</span></div>
+    <div class="journal-row"><span class="journal-label">% of Account</span><span class="journal-value">Dollar risk / Account equity</span></div>
+    <div class="journal-row"><span class="journal-label">Entry Reason</span><span class="journal-value">2-3 sentences: why this trade, what signals confirmed</span></div>
+    <div class="journal-row"><span class="journal-label">Market Context</span><span class="journal-value">VIX level, IWM trend, overall market sentiment</span></div>
+    <div class="journal-row"><span class="journal-label">Exit Date</span><span class="journal-value">When you closed the position</span></div>
+    <div class="journal-row"><span class="journal-label">Exit Price</span><span class="journal-value">Actual fill price on exit</span></div>
+    <div class="journal-row"><span class="journal-label">P&L ($)</span><span class="journal-value">Dollar profit or loss</span></div>
+    <div class="journal-row"><span class="journal-label">P&L (%)</span><span class="journal-value">Percentage return on position</span></div>
+    <div class="journal-row"><span class="journal-label">R-Multiple</span><span class="journal-value">Profit / Initial Risk (e.g., 2.1R means you made 2.1x your risk)</span></div>
+    <div class="journal-row"><span class="journal-label">Emotional State</span><span class="journal-value">Confident, anxious, FOMO, revenge, calm, bored</span></div>
+    <div class="journal-row"><span class="journal-label">Execution Grade</span><span class="journal-value">A-F: Did you follow the plan? Any deviation?</span></div>
+    <div class="journal-row"><span class="journal-label">Lesson</span><span class="journal-value">What did you learn? What would you do differently?</span></div>
+  </div>
+
+  <h3><i class="fa-solid fa-chart-pie" style="color:#0d9488;"></i> Monthly Review Metrics</h3>
+
+  <p>At the end of each month, compile your journal into these aggregate metrics:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Calculation</th>
+        <th>Target</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Total trades</strong></td>
+        <td>Count of all trades</td>
+        <td>8-20 (more than 20 = overtrading, less than 5 = possibly too selective)</td>
+      </tr>
+      <tr>
+        <td><strong>Win rate</strong></td>
+        <td>Winners / Total trades</td>
+        <td>Depends on strategy (40-55% typical)</td>
+      </tr>
+      <tr>
+        <td><strong>Average R</strong></td>
+        <td>Average R-multiple across all trades</td>
+        <td>&gt;0.3R (profitable system)</td>
+      </tr>
+      <tr>
+        <td><strong>Expectancy per trade</strong></td>
+        <td>(Win% &times; Avg Win) - (Loss% &times; Avg Loss)</td>
+        <td>&gt;$200 per trade for a $50K account</td>
+      </tr>
+      <tr>
+        <td><strong>Profit factor</strong></td>
+        <td>Gross profits / Gross losses</td>
+        <td>&gt;1.5 (good), &gt;2.0 (excellent)</td>
+      </tr>
+      <tr>
+        <td><strong>Max drawdown</strong></td>
+        <td>Largest peak-to-trough decline in the month</td>
+        <td>&lt;10%</td>
+      </tr>
+      <tr>
+        <td><strong>Largest winner</strong></td>
+        <td>Best single trade</td>
+        <td>Should be &gt;3R</td>
+      </tr>
+      <tr>
+        <td><strong>Largest loser</strong></td>
+        <td>Worst single trade</td>
+        <td>Should be &lt;-1.5R (controlled loss)</td>
+      </tr>
+      <tr>
+        <td><strong>Execution grade</strong></td>
+        <td>Average of all trade execution grades</td>
+        <td>&gt;B (consistent plan execution)</td>
+      </tr>
+      <tr>
+        <td><strong>Emotional trades</strong></td>
+        <td>Count of trades taken from FOMO, revenge, or boredom</td>
+        <td>0 (goal) — mark these honestly</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Chart: Risk-Adjusted Returns Comparison -->
+  <div id="chart-risk-adjusted" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> The "Emotional State" Column — The Secret Sauce</h3>
+    <p>The most underrated column in your journal is "Emotional State." After logging 50+ trades, you'll likely discover something revealing: your FOMO trades lose money, your revenge trades lose money, your bored trades lose money. Only your "calm" and "confident" trades are consistently profitable. This data gives you permission to skip trades when you're not in the right mental state — and that discipline alone can transform a breakeven trader into a profitable one. Track it honestly. Every single trade.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Trade Journal</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> After 3 months of journaling, you find your breakout trades have a -0.2R expectancy while your mean reversion trades have +0.5R expectancy. What should you do?</p>
+      <p><strong>A:</strong> Reduce your breakout allocation significantly. Allocate 70% of your risk budget to mean reversion and only 30% to breakouts. After another 30 breakout trades, re-evaluate — if the expectancy is still negative, consider dropping breakouts entirely. The data is telling you that your execution of breakout strategies isn't working, regardless of the theoretical expectancy.</p>
+      <p><strong>Q2:</strong> Your monthly review shows 28 trades last month. Is that too many?</p>
+      <p><strong>A:</strong> Likely yes. 28 trades in ~22 trading days means you're trading more than once per day on average. Check how many of those were A/A+ setups versus B/C setups. Most traders find that their B/C trades have negative expectancy — they're taking lower-quality setups out of boredom or the need for action. Aim for 10-15 high-quality trades per month.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- KEY TAKEAWAYS                                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#0d9488;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark"></i> Chapter 6 — Key Takeaways</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Risk management is THE edge:</strong> A mediocre strategy with excellent sizing beats a great strategy with reckless sizing. Protect your capital first; profits follow.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>The 2% rule is non-negotiable:</strong> Never risk more than 2% of your account on a single trade. Even 10 consecutive losers only draw down 17.4% — survivable and recoverable.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Position Size = (Account x Risk%) / (Entry - Stop):</strong> This formula determines every position. The stop distance drives the position size, not your conviction level.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Use ATR-based sizing for volatile names:</strong> A 2-ATR stop automatically gives you a smaller position in volatile stocks and a larger position in calm stocks. Equal dollar risk across all trades.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Half-Kelly or Quarter-Kelly only:</strong> Full Kelly maximizes growth but with 50%+ drawdowns. Quarter-Kelly achieves ~50% of the growth with manageable drawdowns. Conservative is profitable.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Portfolio heat cap at 6-8%:</strong> If all stops hit simultaneously, the maximum drawdown must be known and tolerable. Max 3-4 open positions at full 2% risk.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Gap risk requires position reduction:</strong> Before earnings/FDA events, reduce positions so that a 20-30% gap costs no more than 2% of your account.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Three instant-sell scenarios:</strong> Thesis broken, dilution announced, or fraud discovered. Exit immediately, no waiting for the stop.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Circuit breaker protocol:</strong> At -10% drawdown, halve your size. At -15%, stop trading for a week. These rules are not optional.</li>
+    <li><i class="fa-solid fa-check-circle"></i> <strong>Journal everything, especially emotional state:</strong> After 50+ trades, the data will reveal that your calm trades are profitable and your emotional trades lose money. Act on that data.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-small-caps/part7-traps/" class="next-cta">
+  <div>
+    <div class="next-label">Part 7 of 8</div>
+    <div class="next-title">The Trap Playbook — Avoiding the Pitfalls <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-small-caps/part5-strategies/" class="series-arrow" title="Trading Strategies"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Small-Caps</span><div class="series-steps"><a href="/series/trading-small-caps/part1-landscape/" class="series-step" title="The Small-Cap Landscape"><span class="series-num">1</span><span class="series-label">Landscape</span></a><a href="/series/trading-small-caps/part2-screening/" class="series-step" title="Building Your Scanner"><span class="series-num">2</span><span class="series-label">Screening</span></a><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-step" title="Spotting Confirmed Moves"><span class="series-num">3</span><span class="series-label">Confirmed Moves</span></a><a href="/series/trading-small-caps/part4-due-diligence/" class="series-step" title="Due Diligence Deep Dive"><span class="series-num">4</span><span class="series-label">Due Diligence</span></a><a href="/series/trading-small-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-small-caps/part6-risk-management/" class="series-step current" title="Risk &amp; Position Sizing"><span class="series-num">6</span><span class="series-label">Risk Mgmt</span></a><a href="/series/trading-small-caps/part7-traps/" class="series-step" title="The Trap Playbook"><span class="series-num">7</span><span class="series-label">Traps</span></a><a href="/series/trading-small-caps/part8-returns/" class="series-step" title="Returns &amp; Edge Building"><span class="series-num">8</span><span class="series-label">Returns</span></a></div><span class="series-counter">6/8</span><a href="/series/trading-small-caps/part7-traps/" class="series-arrow" title="The Trap Playbook"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: Drawdown Recovery
+var chartDrawdown = echarts.init(document.getElementById('chart-drawdown-recovery'));
+chartDrawdown.setOption({
+  title: { text: 'The Asymmetry of Losses — Recovery Required', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return 'Drawdown: -' + p[0].axisValue + '%<br/>Recovery needed: +' + p[0].data + '%'; } },
+  grid: { left: '3%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['5','10','15','20','25','30','35','40','45','50','60','75','90'], name: 'Drawdown (%)', axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Recovery Needed (%)', axisLabel: { fontSize: 11 } },
+  series: [{
+    name: 'Recovery %',
+    type: 'bar',
+    data: [5.3, 11.1, 17.6, 25.0, 33.3, 42.9, 53.8, 66.7, 81.8, 100, 150, 300, 900],
+    itemStyle: {
+      color: function(params) {
+        var val = params.data;
+        if (val <= 25) return '#10b981';
+        if (val <= 50) return '#f59e0b';
+        if (val <= 100) return '#ef4444';
+        return '#7f1d1d';
+      },
+      borderRadius: [4,4,0,0]
+    },
+    barWidth: '60%',
+    label: {
+      show: true,
+      position: 'top',
+      formatter: function(p) { return '+' + p.data + '%'; },
+      fontSize: 10,
+      fontWeight: 600,
+      color: '#475569'
+    }
+  }]
+});
+
+// Chart 2: Position Size Calculator Visualization
+var chartPosSize = echarts.init(document.getElementById('chart-position-size'));
+chartPosSize.setOption({
+  title: { text: 'Position Size vs Stop Distance — $50K Account, 2% Risk', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return 'Stop Distance: ' + p[0].axisValue + '%<br/>Position Size: $' + (p[0].data*1000).toLocaleString() + '<br/>% of Account: ' + ((p[0].data*1000/50000)*100).toFixed(1) + '%'; } },
+  grid: { left: '3%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['3%','4%','5%','6%','7%','8%','10%','12%','15%','20%','25%','30%'], name: 'Stop Distance from Entry', axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Position Size ($K)', axisLabel: { fontSize: 11, formatter: function(v){return '$'+v+'K';} } },
+  series: [{
+    name: 'Position Size',
+    type: 'bar',
+    data: [33.3, 25.0, 20.0, 16.7, 14.3, 12.5, 10.0, 8.3, 6.7, 5.0, 4.0, 3.3],
+    itemStyle: {
+      color: function(params) {
+        var pct = params.data * 1000 / 50000;
+        if (pct > 0.5) return '#ef4444';
+        if (pct > 0.3) return '#f59e0b';
+        return '#0d9488';
+      },
+      borderRadius: [4,4,0,0]
+    },
+    barWidth: '55%',
+    label: {
+      show: true,
+      position: 'top',
+      formatter: function(p) { return ((p.data*1000/50000)*100).toFixed(0) + '%'; },
+      fontSize: 10,
+      fontWeight: 600,
+      color: '#475569'
+    }
+  }]
+});
+
+// Chart 3: Portfolio Heat Gauge
+var chartHeat = echarts.init(document.getElementById('chart-heat-gauge'));
+chartHeat.setOption({
+  series: [{
+    type: 'gauge',
+    startAngle: 200,
+    endAngle: -20,
+    min: 0,
+    max: 12,
+    splitNumber: 6,
+    axisLine: {
+      lineStyle: {
+        width: 25,
+        color: [
+          [0.33, '#10b981'],
+          [0.58, '#f59e0b'],
+          [0.83, '#ef4444'],
+          [1, '#7f1d1d']
+        ]
+      }
+    },
+    pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '55%', width: 12, itemStyle: { color: '#0f172a' } },
+    axisTick: { distance: -25, length: 8, lineStyle: { color: '#fff', width: 2 } },
+    splitLine: { distance: -30, length: 25, lineStyle: { color: '#fff', width: 3 } },
+    axisLabel: { color: '#64748b', fontSize: 13, distance: -40, formatter: function(v){return v+'%';} },
+    detail: {
+      valueAnimation: true,
+      formatter: function(v){return v.toFixed(1)+'%\nPortfolio Heat';},
+      color: '#0f172a',
+      fontSize: 18,
+      fontWeight: 700,
+      offsetCenter: [0, '75%']
+    },
+    data: [{ value: 6.0 }],
+    title: { show: true, offsetCenter: [0, '-30%'], fontSize: 16, fontWeight: 700, color: '#0f172a' }
+  }]
+});
+
+// Chart 4: Kelly Criterion Growth vs Drawdown
+var chartKelly = echarts.init(document.getElementById('chart-kelly'));
+(function(){
+  var years = ['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'];
+  var fullKelly = [100,142,168,195,260,310,285,380,460,420,550];
+  var halfKelly = [100,128,152,175,210,248,235,290,340,325,405];
+  var quarterKelly = [100,115,132,148,170,195,190,218,248,240,280];
+  chartKelly.setOption({
+    title: { text: 'Kelly Criterion — Growth vs Drawdown Tradeoff', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', formatter: function(p){var s=''; p.forEach(function(i){s+=i.marker+i.seriesName+': $'+i.data.toLocaleString()+'K<br/>';}); return s;} },
+    legend: { bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Portfolio Value ($K)', axisLabel: { fontSize: 11, formatter: function(v){return '$'+v+'K';} } },
+    series: [
+      { name: 'Full Kelly (Max Growth, Max Pain)', type: 'line', smooth: true, data: fullKelly, lineStyle: { color: '#ef4444', width: 2.5 }, itemStyle: { color: '#ef4444' }, symbol: 'circle', symbolSize: 6 },
+      { name: 'Half Kelly (75% Growth, 50% Pain)', type: 'line', smooth: true, data: halfKelly, lineStyle: { color: '#f59e0b', width: 2.5 }, itemStyle: { color: '#f59e0b' }, symbol: 'circle', symbolSize: 6 },
+      { name: 'Quarter Kelly (50% Growth, 25% Pain)', type: 'line', smooth: true, data: quarterKelly, lineStyle: { color: '#0d9488', width: 3 }, itemStyle: { color: '#0d9488' }, symbol: 'circle', symbolSize: 7,
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(13,148,136,0.15)' }, { offset: 1, color: 'rgba(13,148,136,0.02)' }] } }
+      }
+    ]
+  });
+})();
+
+// Chart 5: Gap Risk Distribution
+var chartGap = echarts.init(document.getElementById('chart-gap-risk'));
+chartGap.setOption({
+  title: { text: 'Small-Cap Overnight Gap Distribution (1-Year Sample, N=500)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  grid: { left: '3%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['-30%','-25%','-20%','-15%','-10%','-5%','-3%','-1%','0%','+1%','+3%','+5%','+10%','+15%','+20%','+25%','+30%'], name: 'Overnight Gap Size', axisLabel: { fontSize: 10, rotate: 30 } },
+  yAxis: { type: 'value', name: 'Frequency (%)', axisLabel: { fontSize: 11 } },
+  series: [{
+    name: 'Frequency',
+    type: 'bar',
+    data: [0.4, 0.8, 1.5, 3.2, 5.5, 12, 15, 18, 8, 16, 11, 4.5, 2.2, 1.0, 0.5, 0.2, 0.1],
+    itemStyle: {
+      color: function(params) {
+        var idx = params.dataIndex;
+        if (idx <= 4) return '#ef4444';
+        if (idx <= 7) return '#f59e0b';
+        if (idx === 8) return '#94a3b8';
+        if (idx <= 11) return '#10b981';
+        return '#0d9488';
+      },
+      borderRadius: [3,3,0,0]
+    },
+    barWidth: '60%'
+  }]
+});
+
+// Chart 6: Recovery Chart
+var chartRecovery = echarts.init(document.getElementById('chart-recovery'));
+(function(){
+  var months = ['M0','M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
+  var dd10 = [100,90,91.5,93,94.5,96,97.5,99,100,101.5,103,104.5,106];
+  var dd25 = [100,75,77,79.5,82,84,86.5,89,91,93.5,96,98,100];
+  var dd50 = [100,50,53,56.5,60,63,66,70,74,78,82,87,92];
+  chartRecovery.setOption({
+    title: { text: 'Recovery Time from Different Drawdown Levels', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+    tooltip: { trigger: 'axis', formatter: function(p){var s=''; p.forEach(function(i){s+=i.marker+i.seriesName+': $'+i.data+'K<br/>';}); return s;} },
+    legend: { bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+    xAxis: { type: 'category', data: months, name: 'Months', axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Account Value ($K)', axisLabel: { fontSize: 11 }, min: 40, max: 110 },
+    series: [
+      { name: '-10% DD (recovers month 8)', type: 'line', smooth: true, data: dd10, lineStyle: { color: '#10b981', width: 2.5 }, itemStyle: { color: '#10b981' }, symbol: 'circle', symbolSize: 5 },
+      { name: '-25% DD (recovers month 12)', type: 'line', smooth: true, data: dd25, lineStyle: { color: '#f59e0b', width: 2.5 }, itemStyle: { color: '#f59e0b' }, symbol: 'circle', symbolSize: 5 },
+      { name: '-50% DD (still recovering at month 12)', type: 'line', smooth: true, data: dd50, lineStyle: { color: '#ef4444', width: 2.5 }, itemStyle: { color: '#ef4444' }, symbol: 'circle', symbolSize: 5,
+        markLine: { data: [{ yAxis: 100, lineStyle: { color: '#94a3b8', type: 'dashed' }, label: { formatter: 'Breakeven', fontSize: 10, color: '#94a3b8' } }] }
+      }
+    ]
+  });
+})();
+
+// Chart 7: Risk-Adjusted Returns
+var chartRiskAdj = echarts.init(document.getElementById('chart-risk-adjusted'));
+chartRiskAdj.setOption({
+  title: { text: 'Monthly Returns — Disciplined vs Undisciplined Trader', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Monthly Return (%)', axisLabel: { fontSize: 11 } },
+  series: [
+    {
+      name: 'Disciplined (2% Rule)',
+      type: 'bar',
+      data: [4.2, -2.1, 6.5, 3.8, -1.5, 5.2, -3.0, 7.1, 2.4, -1.8, 8.3, 4.6],
+      itemStyle: { color: '#0d9488', borderRadius: [4,4,0,0] }
+    },
+    {
+      name: 'Undisciplined (5-10% Risk)',
+      type: 'bar',
+      data: [12.5, -8.4, 15.2, -6.1, -12.3, 18.5, -15.2, 22.1, -9.4, -18.6, 25.3, -11.2],
+      itemStyle: { color: '#ef4444', borderRadius: [4,4,0,0] }
+    }
+  ]
+});
+
+// Resize all charts
+window.addEventListener('resize', function() {
+  chartDrawdown.resize();
+  chartPosSize.resize();
+  chartHeat.resize();
+  chartKelly.resize();
+  chartGap.resize();
+  chartRecovery.resize();
+  chartRiskAdj.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

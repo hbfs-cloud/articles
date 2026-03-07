@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,formation,trade-idea,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Screening Mid-Caps — Finding Tomorrow's Large-Caps | Trading Mid-Caps — Part 2/8 | Market Watch</title>
+ <meta name="description" content="Trading Mid-Caps series — Part 2/8: How to screen for high-quality mid-cap stocks using growth filters, quality metrics, and technical confirmation. Three scanner archetypes: graduation candidate, acquisition target, momentum mid-cap.">
+ <meta property="og:title" content="Screening Mid-Caps | Trading Mid-Caps 2/8 | Market Watch">
+ <meta property="og:description" content="Build a systematic mid-cap screening workflow with growth, quality, and technical filters. Find tomorrow's large-caps before the crowd.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-mid-caps/part2-screening/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+/* INDIGO MID-CAP THEME */
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+.takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#3730a3; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #4f46e5; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#818cf8; }
+
+details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; }
+details[open] summary { border-bottom:1px solid #e2e8f0; background:#eef2ff; }
+details .quiz-content { padding:1.5rem; }
+details .quiz-content p { margin:0.5rem 0; }
+
+.filter-box { background:white; border:2px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1.5rem 0; border-left:5px solid #4f46e5; }
+.filter-box h4 { margin:0 0 0.75rem; color:#0f172a; font-size:1rem; }
+.filter-box code { background:#eef2ff; color:#4f46e5; padding:0.15rem 0.5rem; border-radius:4px; font-size:0.85rem; font-weight:600; }
+.filter-box p { margin:0.5rem 0; font-size:0.9rem; color:#475569; line-height:1.6; }
+
+.scanner-card { background:linear-gradient(135deg, #f8fafc, #eef2ff); border:2px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+.scanner-card h3 { color:#3730a3; margin-top:0; font-size:1.2rem; }
+.scanner-card .scanner-label { font-size:0.7rem; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:0.5rem; }
+
+.code-block { background:#0f172a; color:#e2e8f0; padding:1.5rem; border-radius:12px; margin:1.5rem 0; overflow-x:auto; font-family:'Fira Code', monospace; font-size:0.85rem; line-height:1.7; }
+.code-block .comment { color:#64748b; }
+.code-block .keyword { color:#818cf8; }
+.code-block .string { color:#34d399; }
+.code-block .number { color:#fbbf24; }
+
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+.stat-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; }
+.stat-value { font-size:2rem; font-weight:900; color:#4f46e5; }
+.stat-label { font-size:0.8rem; color:#64748b; font-weight:600; margin-top:0.25rem; }
+
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+  .code-block { font-size:0.75rem; padding:1rem; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .step-grid { grid-template-columns:1fr; }
+}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-magnifying-glass-chart"></i> Trading Mid-Caps Series — Part 2 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Screening Mid-Caps — Finding Tomorrow's Large-Caps</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">A systematic approach to filtering the mid-cap universe. Three scanner archetypes — graduation candidates, acquisition targets, and momentum plays — with exact filter criteria for TradingView and Finviz.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-filter"></i> Tier 1-3 Filters</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-graduation-cap"></i> Graduation Scanner</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-handshake"></i> M&A Target Scanner</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-bolt"></i> Momentum Scanner</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-mid-caps/part1-sweet-spot/" class="series-arrow" title="The Mid-Cap Sweet Spot"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Mid-Caps</span><div class="series-steps"><a href="/series/trading-mid-caps/part1-sweet-spot/" class="series-step" title="The Mid-Cap Sweet Spot"><span class="series-num">1</span><span class="series-label">Sweet Spot</span></a><a href="/series/trading-mid-caps/part2-screening/" class="series-step current" title="Screening Mid-Caps"><span class="series-num">2</span><span class="series-label">Screening</span></a><a href="/series/trading-mid-caps/part3-growth-engines/" class="series-step" title="Growth Engines & Catalysts"><span class="series-num">3</span><span class="series-label">Growth Engines</span></a><a href="/series/trading-mid-caps/part4-technical-analysis/" class="series-step" title="Technical Analysis for Mid-Caps"><span class="series-num">4</span><span class="series-label">Technicals</span></a><a href="/series/trading-mid-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-mid-caps/part6-earnings-plays/" class="series-step" title="Earnings Season Playbook"><span class="series-num">6</span><span class="series-label">Earnings Plays</span></a><a href="/series/trading-mid-caps/part7-sector-rotation/" class="series-step" title="Sector Rotation & Timing"><span class="series-num">7</span><span class="series-label">Sector Rotation</span></a><a href="/series/trading-mid-caps/part8-portfolio/" class="series-step" title="Portfolio Construction & Returns"><span class="series-num">8</span><span class="series-label">Portfolio</span></a></div><span class="series-counter">2/8</span><a href="/series/trading-mid-caps/part3-growth-engines/" class="series-arrow" title="Growth Engines & Catalysts"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#philosophy" class="fnav-item" data-section="philosophy"><i class="fas fa-compass"></i><span>Scanner Philosophy</span></a><a href="#tier1" class="fnav-item" data-section="tier1"><i class="fas fa-filter"></i><span>Tier 1: Universe</span></a><a href="#tier2" class="fnav-item" data-section="tier2"><i class="fas fa-chart-line"></i><span>Tier 2: Growth & Quality</span></a><a href="#tier3" class="fnav-item" data-section="tier3"><i class="fas fa-chart-bar"></i><span>Tier 3: Technicals</span></a><a href="#scanners" class="fnav-item" data-section="scanners"><i class="fas fa-crosshairs"></i><span>3 Scanner Archetypes</span></a><a href="#platforms" class="fnav-item" data-section="platforms"><i class="fas fa-desktop"></i><span>Platform Setups</span></a><a href="#workflow" class="fnav-item" data-section="workflow"><i class="fas fa-calendar-check"></i><span>Daily Workflow</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- SCANNER PHILOSOPHY                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="philosophy"><i class="fa-solid fa-compass" style="color:#4f46e5;"></i> Scanner Philosophy</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-compass" style="color:#4f46e5;"></i> Quality Over Discovery</h2>
+
+  <p>Screening mid-caps is fundamentally different from screening small-caps. With small-caps, you are in discovery mode: sifting through thousands of obscure names hoping to find a hidden gem before anyone else notices. The universe is vast (~3,000 stocks under $2B), the data is sparse, and the failure rate is high. You are essentially panning for gold.</p>
+
+  <p>Mid-cap screening is about <strong>quality selection</strong>. The universe is smaller (~800-1,000 stocks between $2B and $10B), the data is reliable, and every company has already survived the startup gauntlet. Your job is not to find unknown companies — most mid-caps are well-known within their industries. Your job is to identify which of these established companies are about to <strong>accelerate</strong>.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#4f46e5;"></i> The Funnel Approach</h4>
+    <p>Think of mid-cap screening as a three-tier funnel. Each tier progressively narrows the universe:</p>
+    <p><strong>Tier 1 — Universe Filters:</strong> Market cap, volume, exchange listing. This reduces ~6,000 stocks to ~800 mid-caps.</p>
+    <p><strong>Tier 2 — Growth & Quality Filters:</strong> Revenue growth, earnings, ROE, margins, debt. This reduces ~800 to ~80-120 candidates.</p>
+    <p><strong>Tier 3 — Technical Filters:</strong> Trend, relative strength, accumulation, volume patterns. This reduces ~100 to ~15-25 actionable setups.</p>
+    <p>The key insight: the best mid-cap traders do not try to be creative with their filters. They use <strong>proven, mechanical criteria</strong> and let the data do the work. The alpha comes from execution and position management, not from inventing novel screens.</p>
+  </div>
+
+  <!-- EChart: Filter Funnel -->
+  <div id="chart-funnel" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-value">~6,000</div>
+      <div class="stat-label">All Listed U.S. Stocks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~800</div>
+      <div class="stat-label">Mid-Cap Universe</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~100</div>
+      <div class="stat-label">Growth + Quality Pass</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~20</div>
+      <div class="stat-label">Technical Confirmation</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Quiz: Screening Philosophy</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Why is mid-cap screening "quality over discovery" while small-cap screening is about "discovery"?</p>
+      <p><strong>Answer:</strong> Small-caps include thousands of obscure companies with little analyst coverage, unreliable data, and high failure rates. The edge comes from finding companies nobody knows about yet. Mid-caps have proven their business model, have reliable financial data (5-12 analysts), and are known within their industries. The edge comes from identifying which proven companies are about to accelerate — a quality judgment, not a discovery exercise. You are selecting the best athletes from an already talented pool, not scouting in unknown territory.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TIER 1: UNIVERSE FILTERS                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tier1"><i class="fa-solid fa-filter" style="color:#4f46e5;"></i> Tier 1: Universe Filters</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-filter" style="color:#4f46e5;"></i> Defining Your Mid-Cap Universe</h2>
+
+  <p>The first tier of filters is mechanical and non-negotiable. These are not opinion-based — they simply define the boundaries of the mid-cap universe and ensure minimum liquidity standards. Every stock that fails Tier 1 is automatically excluded regardless of how attractive it might look otherwise.</p>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-1" style="color:#4f46e5;"></i> Market Capitalization: $2B - $10B</h4>
+    <p>This is the defining filter. Use the company's <strong>current</strong> market cap, not trailing averages. Some screeners use "float-adjusted" market cap — for mid-cap screening, total market cap is more appropriate because it reflects the true size of the business.</p>
+    <p><code>Finviz: Market Cap = Mid ($2bln to $10bln)</code></p>
+    <p><code>TradingView: market_cap_basic &gt;= 2e9 AND market_cap_basic &lt;= 10e9</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-2" style="color:#4f46e5;"></i> Average Daily Volume: &gt; 500,000 shares</h4>
+    <p>Minimum 500K shares average daily volume over the last 20 trading days. This ensures you can build and exit a meaningful position ($50K-$500K) within a single day without significant market impact. Below 500K shares, spreads widen and slippage increases.</p>
+    <p><code>Finviz: Average Volume = Over 500K</code></p>
+    <p><code>TradingView: average_volume_20d_calc &gt;= 500000</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-3" style="color:#4f46e5;"></i> Exchange: NYSE, NASDAQ, or CBOE</h4>
+    <p>Only major U.S. exchanges. This excludes OTC/Pink Sheets and foreign-listed ADRs that may have different reporting standards. If you want international mid-caps, screen them separately with different criteria.</p>
+    <p><code>Finviz: Exchange = Any (NYSE, NASDAQ, AMEX)</code></p>
+    <p><code>TradingView: exchange IN ["NYSE", "NASDAQ"]</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-4" style="color:#4f46e5;"></i> Price: &gt; $10</h4>
+    <p>Stocks below $10 tend to have wider spreads as a percentage of price and attract more retail speculation. Most institutional investors have a $10 minimum price threshold. This also filters out companies that may have recently crashed.</p>
+    <p><code>Finviz: Price = Over $10</code></p>
+    <p><code>TradingView: close &gt;= 10</code></p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Criteria</th>
+        <th>Purpose</th>
+        <th>Stocks Removed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Market Cap</strong></td>
+        <td>$2B - $10B</td>
+        <td>Define mid-cap universe</td>
+        <td>~5,200 (small + large caps)</td>
+      </tr>
+      <tr>
+        <td><strong>Avg Volume</strong></td>
+        <td>&gt; 500K shares</td>
+        <td>Ensure tradeable liquidity</td>
+        <td>~80-100 illiquid mid-caps</td>
+      </tr>
+      <tr>
+        <td><strong>Exchange</strong></td>
+        <td>NYSE, NASDAQ</td>
+        <td>Data quality + reporting standards</td>
+        <td>~20-30 OTC/ADRs</td>
+      </tr>
+      <tr>
+        <td><strong>Price</strong></td>
+        <td>&gt; $10</td>
+        <td>Institutional quality + spread control</td>
+        <td>~15-20 penny-ish stocks</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Tier 1 Result</div>
+    ~6,000 stocks <span class="formula-highlight">&rarr;</span> ~700-800 mid-caps pass Tier 1
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#4f46e5;"></i> Why Volume Matters More Than You Think</h4>
+    <p>Volume is not just about being able to trade. It is a <strong>quality signal</strong>. Stocks with consistently high volume are attracting institutional attention. Stocks with declining volume are being abandoned. A mid-cap that trades 2M shares daily is fundamentally different from one that trades 200K — the former has institutional backing, the latter may be drifting.</p>
+    <p>Moreover, volume is essential for <strong>technical analysis</strong> (Part 4). Chart patterns, moving averages, and relative strength calculations are only reliable when backed by sufficient volume. A "breakout" on 50K shares is noise. A breakout on 3M shares (3x average) is institutional conviction.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TIER 2: GROWTH & QUALITY                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tier2"><i class="fa-solid fa-chart-line" style="color:#10b981;"></i> Tier 2: Growth & Quality Filters</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-line" style="color:#10b981;"></i> Separating Winners from Losers</h2>
+
+  <p>Tier 2 is where the real work begins. These filters assess the fundamental quality and growth trajectory of each company. The goal is to identify companies that are <strong>growing faster than the market expects</strong>, have <strong>sustainable competitive advantages</strong>, and are <strong>financially healthy enough to survive economic downturns</strong>.</p>
+
+  <h3>Growth Filters</h3>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> Revenue Growth: &gt; 15% Year-over-Year</h4>
+    <p>Revenue growth is the single most important fundamental metric for mid-cap screening. A company growing revenue at 15%+ is in the sweet spot: fast enough to compound meaningfully, but achievable for a company with an established business model. Below 10%, the company is maturing and will soon act like a large-cap. Above 30% is exceptional but may not be sustainable.</p>
+    <p>Use <strong>trailing twelve months (TTM)</strong> revenue growth, not just the most recent quarter. A single quarter can be lumpy due to seasonal effects or one-time contracts. TTM smooths out noise.</p>
+    <p><code>Finviz: Sales growth past 5 years &gt; 15%</code></p>
+    <p><code>TradingView: revenue_growth_rate_ttm &gt;= 15</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-dollar-sign" style="color:#10b981;"></i> EPS Growth: &gt; 10% Year-over-Year</h4>
+    <p>Revenue growth means nothing if it does not translate to earnings. EPS growth of 10%+ confirms that the company is scaling efficiently — revenue growth is flowing to the bottom line, not being eaten by costs. The 10% threshold is deliberately lower than the 15% revenue threshold because companies in the growth phase often reinvest heavily, compressing near-term earnings while building long-term value.</p>
+    <p><code>Finviz: EPS growth next 5 years &gt; 10%</code></p>
+    <p><code>TradingView: earnings_per_share_growth_rate_ttm &gt;= 10</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-chart-area" style="color:#10b981;"></i> Margin Expansion (Preferred, Not Required)</h4>
+    <p>Expanding gross margins or operating margins are a strong quality signal. It means the company has pricing power and/or is achieving economies of scale. While not a hard filter (some companies intentionally invest margins into growth), margin expansion combined with revenue growth is the most bullish fundamental combination.</p>
+    <p>Check: Is operating margin TTM higher than operating margin 1 year ago? If yes, add a positive quality point.</p>
+  </div>
+
+  <h3>Quality Filters</h3>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-award" style="color:#2563eb;"></i> Return on Equity (ROE): &gt; 15%</h4>
+    <p>ROE above 15% indicates that management is deploying shareholder capital efficiently. It measures how much profit a company generates for each dollar of equity. Companies with high ROE tend to compound their book value faster and generate higher long-term stock returns. Below 15% suggests the company is not earning its cost of capital.</p>
+    <p><code>Finviz: Return on Equity &gt; 15%</code></p>
+    <p><code>TradingView: return_on_equity &gt;= 15</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-scale-balanced" style="color:#2563eb;"></i> Debt-to-Equity: &lt; 1.5</h4>
+    <p>Moderate leverage is fine — many mid-caps use debt to fund growth. But a D/E above 1.5 signals excessive leverage that can become dangerous during economic downturns or when refinancing at higher interest rates. Companies with D/E below 1.5 have a buffer that lets them survive adverse conditions. Exception: REITs and financials have structurally higher D/E; use different criteria for those sectors.</p>
+    <p><code>Finviz: Debt/Equity &lt; 1.5</code></p>
+    <p><code>TradingView: debt_to_equity &lt;= 1.5</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-money-bill-wave" style="color:#2563eb;"></i> Free Cash Flow: Positive</h4>
+    <p>Free cash flow positive means the company generates more cash from operations than it spends on capital expenditures. This is the ultimate quality test: a company can manufacture earnings through accounting tricks, but free cash flow is much harder to fake. Negative FCF in a mid-cap is a red flag unless the company is deliberately investing in a massive growth opportunity (like building a new factory or data center).</p>
+    <p><code>Finviz: Operating Cash Flow &gt; 0 (proxy)</code></p>
+    <p><code>TradingView: free_cash_flow &gt; 0</code></p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Threshold</th>
+        <th>What It Measures</th>
+        <th>Pass Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Revenue Growth</strong></td>
+        <td>&gt; 15% YoY</td>
+        <td>Top-line momentum</td>
+        <td>~40% of mid-caps</td>
+      </tr>
+      <tr>
+        <td><strong>EPS Growth</strong></td>
+        <td>&gt; 10% YoY</td>
+        <td>Earnings scalability</td>
+        <td>~50% of mid-caps</td>
+      </tr>
+      <tr>
+        <td><strong>ROE</strong></td>
+        <td>&gt; 15%</td>
+        <td>Capital efficiency</td>
+        <td>~45% of mid-caps</td>
+      </tr>
+      <tr>
+        <td><strong>Debt/Equity</strong></td>
+        <td>&lt; 1.5</td>
+        <td>Balance sheet health</td>
+        <td>~65% of mid-caps</td>
+      </tr>
+      <tr>
+        <td><strong>Free Cash Flow</strong></td>
+        <td>Positive</td>
+        <td>Cash generation quality</td>
+        <td>~70% of mid-caps</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Tier 2 Result</div>
+    ~800 mid-caps <span class="formula-highlight">&rarr;</span> ~80-120 pass all growth + quality filters
+  </div>
+
+  <!-- EChart: Quality Metrics Radar -->
+  <div id="chart-quality-radar" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#4f46e5;"></i> The "AND" vs. "OR" Debate</h4>
+    <p>Should you require ALL filters to pass (AND logic) or ANY filter to pass (OR logic)? For mid-cap screening, use <strong>AND logic for Tier 1</strong> (non-negotiable) and <strong>mostly AND for Tier 2</strong> with one exception: you can relax one filter if the others are exceptionally strong.</p>
+    <p>For example, a company with 35% revenue growth, 25% ROE, and positive FCF but D/E of 1.8 might still be worth investigating. The leverage might be funding an aggressive expansion that justifies the debt. But a company that fails three Tier 2 filters should be rejected regardless of how attractive the chart looks.</p>
+    <p><strong>Rule of thumb:</strong> Require 4 out of 5 Tier 2 filters to pass. If only 3 pass, the stock goes on a "watch only" list. If fewer than 3 pass, it is excluded.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Growth vs Quality</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Company A has 25% revenue growth, 5% ROE, negative FCF, and D/E of 2.5. Company B has 12% revenue growth, 22% ROE, strong positive FCF, and D/E of 0.8. Which would you prioritize for further analysis?</p>
+      <p><strong>Answer:</strong> Company B. Despite lower revenue growth (12% vs 25%), Company B passes 4 out of 5 Tier 2 filters convincingly. Its high ROE (22%), strong FCF, and low debt signal a quality compounder. Company A has impressive revenue growth but fails on ROE, FCF, and leverage — a pattern that often indicates unprofitable growth funded by debt. Company A's growth may be unsustainable. Remember: in mid-cap screening, quality over discovery.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TIER 3: TECHNICAL FILTERS                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tier3"><i class="fa-solid fa-chart-bar" style="color:#9333ea;"></i> Tier 3: Technical Filters</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#9333ea;"></i> Confirming with Price Action</h2>
+
+  <p>Tier 3 adds the timing component. A stock can have perfect fundamentals but be in a downtrend — which means either (a) the market knows something you do not, or (b) the market has not yet recognized the value. Technical filters help you distinguish between these two scenarios and, most importantly, ensure you are buying stocks that are <strong>already being accumulated by institutions</strong>.</p>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-arrow-up" style="color:#9333ea;"></i> Price Above 200-Day Moving Average</h4>
+    <p>The 200-day simple moving average (SMA) is the single most widely watched trend indicator. A stock trading above its 200 SMA is in a long-term uptrend. A stock below is in a downtrend. This is non-negotiable: <strong>never buy a mid-cap trading below its 200 SMA unless you are specifically running a mean-reversion strategy</strong> (which is a different approach covered in Part 5).</p>
+    <p><code>Finviz: SMA200 = Price above SMA200</code></p>
+    <p><code>TradingView: close &gt; sma(close, 200)</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-ranking-star" style="color:#9333ea;"></i> Relative Strength Rating: &gt; 70</h4>
+    <p>Relative strength (RS) measures how a stock is performing compared to the overall market over the last 12 months. An RS rating of 70 means the stock has outperformed 70% of all stocks. You want mid-caps in the top 30% of relative performance — these are the stocks that institutions are accumulating. RS below 50 means the stock is lagging the market, which is a warning sign even if the fundamentals look good.</p>
+    <p><code>Finviz: Relative Strength Index (12M) = Over 70</code></p>
+    <p><code>IBD: RS Rating &gt;= 70</code></p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-volume-high" style="color:#9333ea;"></i> Accumulation Pattern: A or B Rating</h4>
+    <p>Accumulation/distribution measures whether institutional money is flowing into or out of a stock. An A or B rating means institutions are net buyers. C is neutral. D or E means institutions are selling. Only buy mid-caps with A or B accumulation ratings — this confirms that smart money is on the same side as your fundamental thesis.</p>
+    <p>Look for: price closing in the upper half of its daily range on above-average volume = accumulation. Price closing in the lower half on above-average volume = distribution.</p>
+  </div>
+
+  <div class="filter-box">
+    <h4><i class="fa-solid fa-chart-area" style="color:#9333ea;"></i> Volume Trend: Rising or Stable</h4>
+    <p>Average volume over the last 10 days should be equal to or greater than the 50-day average. Rising volume on advancing prices is the most bullish combination. Declining volume on advancing prices suggests the move is losing momentum and may reverse.</p>
+    <p><code>TradingView: sma(volume, 10) &gt;= sma(volume, 50) * 0.9</code></p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Technical Filter</th>
+        <th>Criteria</th>
+        <th>Signal</th>
+        <th>Pass Rate (from Tier 2 survivors)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>200 SMA</strong></td>
+        <td>Price above 200 SMA</td>
+        <td>Long-term uptrend confirmed</td>
+        <td>~60-70%</td>
+      </tr>
+      <tr>
+        <td><strong>Relative Strength</strong></td>
+        <td>RS &gt; 70</td>
+        <td>Outperforming 70%+ of market</td>
+        <td>~40-50%</td>
+      </tr>
+      <tr>
+        <td><strong>Accumulation</strong></td>
+        <td>A or B rating</td>
+        <td>Institutions buying</td>
+        <td>~50-60%</td>
+      </tr>
+      <tr>
+        <td><strong>Volume Trend</strong></td>
+        <td>10d vol &ge; 90% of 50d vol</td>
+        <td>Volume not declining</td>
+        <td>~60-70%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Tier 3 Result</div>
+    ~100 candidates <span class="formula-highlight">&rarr;</span> ~15-25 pass all technical filters
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-exclamation-triangle" style="color:#f59e0b;"></i> The Fundamental-Technical Alignment Principle</h4>
+    <p>The most powerful mid-cap setups occur when <strong>strong fundamentals align with strong technicals</strong>. A stock with 20% revenue growth, 18% ROE, and positive FCF that is also above its 200 SMA with rising RS and accumulation is a conviction buy. This alignment reduces the probability of a value trap (great fundamentals, terrible chart) and a momentum trap (great chart, no fundamental backing).</p>
+    <p>When fundamentals and technicals diverge, wait. Either the fundamentals will deteriorate (validating the bearish chart), or the chart will turn bullish (creating a better entry). Forcing trades when the two disagree is the most common mid-cap trading mistake.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Technical Confirmation</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> A mid-cap stock has excellent fundamentals (passes all Tier 2 filters) but is trading 15% below its 200-day moving average with declining volume and a D accumulation rating. Should you buy?</p>
+      <p><strong>Answer:</strong> No. Despite strong fundamentals, the technicals are bearish: below the 200 SMA, declining volume, and institutional distribution (D rating). This is a classic value trap setup. The market is telling you something: institutions are selling despite the good numbers. Possible reasons: management credibility issues, industry headwinds not yet reflected in the numbers, or upcoming negative catalysts that insiders know about. Wait for the stock to reclaim its 200 SMA and show accumulation before entering. Rule: fundamentals attract you, technicals time you.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- THREE SCANNER ARCHETYPES                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scanners"><i class="fa-solid fa-crosshairs" style="color:#4f46e5;"></i> Three Scanner Archetypes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-crosshairs" style="color:#4f46e5;"></i> Purpose-Built Scanners</h2>
+
+  <p>While the three-tier funnel gives you a general-purpose mid-cap watchlist, specialized scanners let you target specific opportunity types. Each archetype has a different thesis, different filter priorities, and different expected holding periods.</p>
+
+  <h3>Scanner 1: The Graduation Candidate</h3>
+
+  <div class="scanner-card">
+    <div class="scanner-label">Graduation Candidate Scanner</div>
+    <h3><i class="fa-solid fa-graduation-cap" style="color:#4f46e5;"></i> Finding Future S&P 500 Members</h3>
+    <p><strong>Thesis:</strong> Identify mid-caps approaching $18B market cap that meet S&P 500 inclusion criteria. Buy before the announcement to capture the 5-10% inclusion premium plus the long-term growth that got them there.</p>
+    <p><strong>Expected Holding Period:</strong> 6-18 months</p>
+    <p><strong>Historical Hit Rate:</strong> ~65% of stocks matching these criteria eventually get added to the S&P 500 within 24 months</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Criteria</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Market Cap</strong></td>
+        <td>$8B - $16B</td>
+        <td>Approaching $18B threshold for S&P 500</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings</strong></td>
+        <td>Positive EPS last 4 quarters + last quarter</td>
+        <td>S&P 500 requires positive earnings</td>
+      </tr>
+      <tr>
+        <td><strong>Revenue Growth</strong></td>
+        <td>&gt; 15% TTM</td>
+        <td>Growing fast enough to cross $18B</td>
+      </tr>
+      <tr>
+        <td><strong>Float</strong></td>
+        <td>&gt; 50% of shares outstanding</td>
+        <td>S&P 500 requires &gt;50% public float</td>
+      </tr>
+      <tr>
+        <td><strong>Exchange</strong></td>
+        <td>NYSE or NASDAQ only</td>
+        <td>S&P 500 requires major U.S. exchange</td>
+      </tr>
+      <tr>
+        <td><strong>Domicile</strong></td>
+        <td>U.S. incorporated</td>
+        <td>S&P 500 requires U.S. domicile</td>
+      </tr>
+      <tr>
+        <td><strong>Chart</strong></td>
+        <td>Above 50 SMA, RS &gt; 80</td>
+        <td>Strong momentum confirms growth trajectory</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Scanner 2: The Acquisition Target</h3>
+
+  <div class="scanner-card">
+    <div class="scanner-label">Acquisition Target Scanner</div>
+    <h3><i class="fa-solid fa-handshake" style="color:#10b981;"></i> Identifying M&A Sweet Spots</h3>
+    <p><strong>Thesis:</strong> Find mid-caps that look like ideal acquisition targets — clean balance sheets, niche market leadership, reasonable valuations. Capture the 20-40% M&A premium if a bid materializes.</p>
+    <p><strong>Expected Holding Period:</strong> 3-12 months (or longer if no deal materializes; the stock should still perform based on quality)</p>
+    <p><strong>Historical Hit Rate:</strong> ~15-20% of stocks matching these criteria receive M&A offers within 24 months</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Criteria</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Market Cap</strong></td>
+        <td>$2B - $8B</td>
+        <td>Affordable for mega-cap acquirers</td>
+      </tr>
+      <tr>
+        <td><strong>PE Ratio</strong></td>
+        <td>&lt; 25</td>
+        <td>Reasonable valuation = affordable premium</td>
+      </tr>
+      <tr>
+        <td><strong>Debt/Equity</strong></td>
+        <td>&lt; 0.8</td>
+        <td>Clean balance sheet = easier to acquire</td>
+      </tr>
+      <tr>
+        <td><strong>FCF Yield</strong></td>
+        <td>&gt; 4%</td>
+        <td>Strong cash generation = immediate accretion for acquirer</td>
+      </tr>
+      <tr>
+        <td><strong>Gross Margin</strong></td>
+        <td>&gt; 40%</td>
+        <td>Pricing power suggests niche leadership</td>
+      </tr>
+      <tr>
+        <td><strong>Insider Ownership</strong></td>
+        <td>5-25%</td>
+        <td>Aligned incentives but not founder-controlled (blockers)</td>
+      </tr>
+      <tr>
+        <td><strong>Industry Position</strong></td>
+        <td>Top 3 in niche</td>
+        <td>Acquirers buy market leaders, not also-rans</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Scanner 3: The Momentum Mid-Cap</h3>
+
+  <div class="scanner-card">
+    <div class="scanner-label">Momentum Mid-Cap Scanner</div>
+    <h3><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Riding Institutional Accumulation</h3>
+    <p><strong>Thesis:</strong> Find mid-caps showing technical breakout characteristics — new highs, volume expansion, strong relative strength. These are stocks where institutions are actively building positions.</p>
+    <p><strong>Expected Holding Period:</strong> 2-8 weeks (swing trading)</p>
+    <p><strong>Historical Hit Rate:</strong> ~55-60% with proper risk management (stops, position sizing)</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Criteria</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Market Cap</strong></td>
+        <td>$2B - $10B</td>
+        <td>Full mid-cap universe</td>
+      </tr>
+      <tr>
+        <td><strong>New Highs</strong></td>
+        <td>Within 5% of 52-week high</td>
+        <td>Breakout territory — no overhead resistance</td>
+      </tr>
+      <tr>
+        <td><strong>Volume</strong></td>
+        <td>Today &gt; 1.5x average</td>
+        <td>Volume expansion confirms institutional conviction</td>
+      </tr>
+      <tr>
+        <td><strong>RS Rating</strong></td>
+        <td>&gt; 85</td>
+        <td>Top 15% of market performers</td>
+      </tr>
+      <tr>
+        <td><strong>Base Length</strong></td>
+        <td>&gt; 30 days</td>
+        <td>Consolidation before breakout = more reliable</td>
+      </tr>
+      <tr>
+        <td><strong>Price vs 21 EMA</strong></td>
+        <td>Within 3% above 21 EMA</td>
+        <td>Tight to short-term trend = controlled pullback</td>
+      </tr>
+      <tr>
+        <td><strong>Sector RS</strong></td>
+        <td>Positive</td>
+        <td>Stock's sector is also outperforming = sector tailwind</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: Scanner Comparison Radar -->
+  <div id="chart-scanner-radar" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#4f46e5;"></i> Which Scanner Should You Use?</h4>
+    <p>The answer depends on your trading style and time horizon:</p>
+    <p><strong>Graduation Candidate</strong> is best for investors who can hold 6-18 months and want to buy quality growth before the crowd. It requires patience and the ability to sit through 10-15% drawdowns. Risk/reward is attractive: you are buying growing companies that have a structural catalyst (S&P 500 inclusion) ahead.</p>
+    <p><strong>Acquisition Target</strong> is best for patient value-oriented traders who want upside optionality. Even if no M&A offer comes, you own a quality mid-cap with strong fundamentals. The M&A premium is the cherry on top, not the entire thesis.</p>
+    <p><strong>Momentum Mid-Cap</strong> is best for active swing traders who can monitor positions daily and manage stops. Higher turnover, higher win rate on individual trades, but smaller average gains per trade. This scanner requires the most active management.</p>
+    <p>Most successful mid-cap traders run <strong>all three scanners simultaneously</strong> and allocate capital across the best ideas from each archetype. This provides diversification across both time horizon and thesis type.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Scanner Selection</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> A mid-cap has a market cap of $12B, revenue growth of 22%, positive earnings for 6 consecutive quarters, and RS rating of 92. It trades on NASDAQ. Which scanner archetype best fits this stock?</p>
+      <p><strong>Answer:</strong> This stock fits the <strong>Graduation Candidate</strong> scanner perfectly. At $12B and growing at 22%, it could cross the $18B S&P 500 threshold within 12-18 months. It has positive earnings (S&P 500 requirement), trades on NASDAQ (major exchange requirement), and has strong relative strength (RS 92). It is a textbook graduation candidate. If it also showed volume expansion and a 30+ day base, it would simultaneously qualify for the Momentum scanner — a dual signal that increases conviction.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- PLATFORM SETUPS                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="platforms"><i class="fa-solid fa-desktop" style="color:#2563eb;"></i> Platform Setups</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-desktop" style="color:#2563eb;"></i> Setting Up Your Screeners</h2>
+
+  <p>Here are exact filter configurations for the two most popular screening platforms. Copy these directly into your screener to start generating mid-cap candidates immediately.</p>
+
+  <h3>Finviz Setup — General Mid-Cap Screen</h3>
+
+  <div class="code-block">
+<span class="comment">/* Finviz Screener Settings — Mid-Cap Quality Growth */</span>
+
+<span class="keyword">Descriptive:</span>
+  Market Cap       = Mid ($2bln to $10bln)
+  Average Volume   = Over 500K
+  Price            = Over $10
+
+<span class="keyword">Fundamental:</span>
+  Sales growth     = Over 15%
+  EPS growth next  = Over 10%
+  Return on Equity = Over 15%
+  Debt/Equity      = Under 1.5
+  Operating Margin = Positive (>0%)
+
+<span class="keyword">Technical:</span>
+  SMA200           = Price above SMA200
+  Relative Volume  = Over 1
+  52-Week High/Low = 0-10% below High
+
+<span class="comment">/* Save as: "MC-Quality-Growth" */</span>
+<span class="comment">/* Run: Daily at market open */</span>
+<span class="comment">/* Expected results: 15-40 stocks */</span>
+  </div>
+
+  <h3>TradingView Setup — Graduation Candidate</h3>
+
+  <div class="code-block">
+<span class="comment">// TradingView Screener — Graduation Candidate</span>
+
+<span class="keyword">market_cap_basic</span> >= <span class="number">8e9</span> <span class="keyword">AND</span> <span class="keyword">market_cap_basic</span> <= <span class="number">16e9</span>
+<span class="keyword">AND</span> <span class="keyword">average_volume_20d_calc</span> >= <span class="number">500000</span>
+<span class="keyword">AND</span> <span class="keyword">close</span> >= <span class="number">10</span>
+<span class="keyword">AND</span> <span class="keyword">revenue_growth_rate_ttm</span> >= <span class="number">15</span>
+<span class="keyword">AND</span> <span class="keyword">earnings_per_share_basic_ttm</span> > <span class="number">0</span>
+<span class="keyword">AND</span> <span class="keyword">return_on_equity</span> >= <span class="number">15</span>
+<span class="keyword">AND</span> <span class="keyword">close</span> > <span class="keyword">sma</span>(<span class="keyword">close</span>, <span class="number">50</span>)
+<span class="keyword">AND</span> <span class="keyword">close</span> > <span class="keyword">sma</span>(<span class="keyword">close</span>, <span class="number">200</span>)
+
+<span class="comment">// Sort by: market_cap_basic DESC</span>
+<span class="comment">// Save as: "MC-Graduation"</span>
+<span class="comment">// Expected: 5-15 stocks</span>
+  </div>
+
+  <h3>TradingView Setup — Momentum Mid-Cap</h3>
+
+  <div class="code-block">
+<span class="comment">// TradingView Screener — Momentum Mid-Cap</span>
+
+<span class="keyword">market_cap_basic</span> >= <span class="number">2e9</span> <span class="keyword">AND</span> <span class="keyword">market_cap_basic</span> <= <span class="number">10e9</span>
+<span class="keyword">AND</span> <span class="keyword">average_volume_20d_calc</span> >= <span class="number">750000</span>
+<span class="keyword">AND</span> <span class="keyword">close</span> >= <span class="keyword">high_52_week</span> * <span class="number">0.95</span>
+<span class="keyword">AND</span> <span class="keyword">volume</span> > <span class="keyword">average_volume_20d_calc</span> * <span class="number">1.5</span>
+<span class="keyword">AND</span> <span class="keyword">close</span> > <span class="keyword">ema</span>(<span class="keyword">close</span>, <span class="number">21</span>)
+<span class="keyword">AND</span> <span class="keyword">close</span> > <span class="keyword">sma</span>(<span class="keyword">close</span>, <span class="number">200</span>)
+<span class="keyword">AND</span> <span class="keyword">change_from_open</span> > <span class="number">0</span>
+
+<span class="comment">// Sort by: volume_change DESC</span>
+<span class="comment">// Save as: "MC-Momentum"</span>
+<span class="comment">// Expected: 3-10 stocks (volatile, run near close)</span>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Strengths</th>
+        <th>Weaknesses</th>
+        <th>Best For</th>
+        <th>Cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Finviz</strong></td>
+        <td>Fast, intuitive, great visualizations (heat maps, charts)</td>
+        <td>Limited real-time data on free tier, no custom formulas</td>
+        <td>Daily fundamental + basic technical screening</td>
+        <td>Free / $25/mo Elite</td>
+      </tr>
+      <tr>
+        <td><strong>TradingView</strong></td>
+        <td>Highly customizable, real-time, Pine Script integration</td>
+        <td>Steeper learning curve, premium required for advanced screeners</td>
+        <td>Custom technical screens, backtesting</td>
+        <td>Free / $15-60/mo</td>
+      </tr>
+      <tr>
+        <td><strong>IBD MarketSurge</strong></td>
+        <td>RS ratings, accumulation ratings, institutional sponsorship data</td>
+        <td>Expensive, IBD-specific methodology, limited customization</td>
+        <td>CAN SLIM-style screening</td>
+        <td>$30-100/mo</td>
+      </tr>
+      <tr>
+        <td><strong>TC2000</strong></td>
+        <td>Fast scanning, easy condition builder, alerts</td>
+        <td>U.S. only, proprietary interface</td>
+        <td>Active traders who want speed</td>
+        <td>$10-90/mo</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: Platform Feature Comparison -->
+  <div id="chart-platforms" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Platform Selection</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You want to screen for mid-caps with volume expanding at least 2x their 20-day average while making new 52-week highs. You also want real-time alerts when a stock matches. Which platform is best?</p>
+      <p><strong>Answer:</strong> TradingView. It offers custom screener conditions with real-time data and alerting capabilities. You can set up the volume expansion + 52-week high condition and receive alerts via email, SMS, or app notification. Finviz can screen for these conditions but does not offer real-time alerts on the free tier. IBD does not allow this level of custom technical screening. TC2000 could also work for this use case but TradingView's alert system is more flexible.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- DAILY WORKFLOW                                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="workflow"><i class="fa-solid fa-calendar-check" style="color:#4f46e5;"></i> Daily Workflow</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-check" style="color:#4f46e5;"></i> The Mid-Cap Scanner Daily Routine</h2>
+
+  <p>Consistency beats brilliance in mid-cap scanning. The best traders do not reinvent their process every day — they follow a disciplined routine that takes 30-45 minutes and surfaces the best opportunities systematically. Here is a proven daily workflow:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Pre-Market (7:30 AM)</h4>
+      <p>Check overnight futures, major news, and your existing positions. Review any earnings reports from mid-cap holdings. Takes 5-10 minutes.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Run Screeners (9:15 AM)</h4>
+      <p>Run all three scanner archetypes on Finviz/TradingView. Export results to a spreadsheet. Cross-reference with yesterday's results to spot new additions. Takes 10-15 minutes.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Chart Review (9:30 AM)</h4>
+      <p>Open charts for all new scanner hits. Apply the 21 EMA / 50 SMA / 200 SMA template. Check for proper base formation, volume patterns, and S/R levels. Takes 10-15 minutes.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Fundamental Check (10:00 AM)</h4>
+      <p>For any stock that passes chart review, pull up the last two earnings reports. Verify revenue growth, margin trends, and guidance. Check for upcoming catalysts (earnings date, conferences). Takes 5-10 minutes.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">5</div>
+      <h4>Watchlist Update (10:15 AM)</h4>
+      <p>Add qualified stocks to your active watchlist with entry levels, stop levels, and position size. Remove stocks that have deteriorated. Maintain a maximum of 15-20 active names. Takes 5 minutes.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">6</div>
+      <h4>Post-Close Review (4:15 PM)</h4>
+      <p>Review the day's action on watchlist stocks. Note any breakouts, breakdowns, or unusual volume. Update entry/stop levels for tomorrow. Log any trades in your journal. Takes 10 minutes.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#4f46e5;"></i> The Weekly Deep Dive (Sunday Evening)</h4>
+    <p>In addition to the daily routine, set aside 1-2 hours on Sunday evening for a weekly deep dive:</p>
+    <p><strong>1. Review the week's results:</strong> Which scanner hits worked? Which failed? Update your hit rate tracker.</p>
+    <p><strong>2. Sector rotation check:</strong> Which sectors are gaining relative strength? Which are weakening? Adjust your sector bias accordingly (covered in Part 7).</p>
+    <p><strong>3. Market regime assessment:</strong> Are we in a broadening or narrowing regime? Is credit stress rising? Adjust your allocation to mid-caps vs. large-caps based on the regime.</p>
+    <p><strong>4. Earnings calendar review:</strong> Which mid-cap watchlist stocks report this week? Plan your pre-earnings position adjustments.</p>
+    <p><strong>5. New idea generation:</strong> Run your scanners with slightly modified parameters. Read industry reports. Check insider buying filings (Form 4 on SEC EDGAR). Feed the top of the funnel with fresh ideas.</p>
+  </div>
+
+  <!-- EChart: Workflow Hit Rate Over Time -->
+  <div id="chart-hitrate" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <h3>Tracking Your Scanner Performance</h3>
+
+  <p>Every serious mid-cap trader maintains a scanner performance log. Track these metrics weekly:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Target</th>
+        <th>Red Flag</th>
+        <th>How to Improve</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Stocks scanned / week</strong></td>
+        <td>50-100</td>
+        <td>&lt;20 (not enough breadth)</td>
+        <td>Run scanners more consistently</td>
+      </tr>
+      <tr>
+        <td><strong>Watchlist additions / week</strong></td>
+        <td>5-10</td>
+        <td>&gt;20 (not selective enough)</td>
+        <td>Tighten Tier 2/3 filters</td>
+      </tr>
+      <tr>
+        <td><strong>Trade entries / week</strong></td>
+        <td>1-3</td>
+        <td>&gt;5 (overtrading)</td>
+        <td>Raise conviction threshold</td>
+      </tr>
+      <tr>
+        <td><strong>Hit rate (trades that reach TP1)</strong></td>
+        <td>&gt;55%</td>
+        <td>&lt;45%</td>
+        <td>Review losing trades for pattern</td>
+      </tr>
+      <tr>
+        <td><strong>Avg win / avg loss</strong></td>
+        <td>&gt;1.5:1</td>
+        <td>&lt;1:1</td>
+        <td>Cut losses faster, let winners run</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details>
+    <summary>Quiz: Workflow Optimization</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Your mid-cap scanner generated 35 hits today. You reviewed all 35 charts and added 12 to your watchlist. You already have 18 stocks on your watchlist from previous days. Is this a problem?</p>
+      <p><strong>Answer:</strong> Yes. A watchlist of 30 stocks (18 + 12) is too large to monitor effectively. You will spread your attention too thin and miss key developments. Maximum active watchlist size should be 15-20 names. Solution: (1) Review the existing 18 stocks and remove any that have broken below key support, had negative fundamental developments, or no longer meet scanner criteria. (2) From the 12 new additions, rank by conviction and only keep the top 5-7. (3) Move the rest to a "tier 2 watch" list that you review weekly, not daily. Focus beats breadth.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- COMMON MISTAKES                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="mistakes"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Common Screening Mistakes</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Pitfalls That Destroy Mid-Cap Scanner Performance</h2>
+
+  <p>Even experienced traders make systematic errors in their mid-cap screening process. Understanding these mistakes will save you months of trial-and-error and protect your capital from avoidable losses. Each mistake below has been observed in real trading performance data across thousands of mid-cap trades.</p>
+
+  <h3>Mistake 1: Screening Without Context</h3>
+
+  <p>Running the same scanner in every market environment is a recipe for disappointment. Your mid-cap screening parameters must adapt to the current market regime. In a strong bull market with breadth expanding, you can afford to be less selective on technicals — many mid-caps will work. In a narrow leadership market dominated by mega-caps, you need to tighten every filter because only the strongest mid-caps will outperform.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Market Regime</th>
+        <th>Scanner Adjustment</th>
+        <th>Expected Hit Rate</th>
+        <th>Position Size</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Broadening Bull</strong></td>
+        <td>Standard filters. Full universe. 3 scanners active.</td>
+        <td>60-65%</td>
+        <td>Full (5% per position)</td>
+      </tr>
+      <tr>
+        <td><strong>Narrow Leadership</strong></td>
+        <td>Tighten RS to >85. Require sector RS positive. Only graduation + momentum scanners.</td>
+        <td>45-50%</td>
+        <td>Reduced (3% per position)</td>
+      </tr>
+      <tr>
+        <td><strong>Early Recovery</strong></td>
+        <td>Loosen price filter to >$7. Broaden market cap to $1.5-12B. Focus on beaten-down quality.</td>
+        <td>55-60%</td>
+        <td>Aggressive (5-7% per position)</td>
+      </tr>
+      <tr>
+        <td><strong>Late Cycle / Defensive</strong></td>
+        <td>Require FCF yield >5%. D/E <1.0. Focus on M&A target scanner.</td>
+        <td>50-55%</td>
+        <td>Conservative (3% per position)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Mistake 2: Ignoring the "Quality of Growth" Dimension</h3>
+
+  <p>Not all revenue growth is created equal. A mid-cap growing revenue at 20% through acquisitions is fundamentally different from one growing 20% organically. Acquisition-fueled growth often comes with integration risk, goodwill write-downs, and dilution. Organic growth demonstrates genuine demand for the company's products and is far more sustainable.</p>
+
+  <p>How to distinguish: Check the company's 10-Q for "organic growth" or "same-store growth" disclosures. If no acquisitions are mentioned, growth is organic. If the company made acquisitions, calculate organic growth by subtracting acquired revenue. Screen for companies where organic growth exceeds 12% — this is the "real growth" threshold.</p>
+
+  <h3>Mistake 3: Overweighting a Single Factor</h3>
+
+  <p>Some traders fall in love with one metric — maybe RS rating, or insider buying, or revenue growth — and use it as the sole decision criterion. This creates a skewed portfolio. A stock with RS 95 but deteriorating fundamentals is a momentum trap waiting to spring. A stock with 30% revenue growth but terrible technicals (below 200 SMA, distribution pattern) is a value trap.</p>
+
+  <p>The solution is the multi-factor approach outlined in this chapter: Tier 1 (universe), Tier 2 (fundamentals), Tier 3 (technicals). No single factor should carry more than 30% of your decision weight. The best trades pass <strong>all three tiers</strong> with flying colors.</p>
+
+  <h3>Mistake 4: Recency Bias in Scanner Design</h3>
+
+  <p>After a losing streak, traders often tighten their filters so much that nothing passes. After a winning streak, they loosen filters and let in marginal candidates. This emotional adjustment to scanner parameters is the opposite of what you should do. Your filters should be <strong>fixed and consistent</strong>. The only adjustments should be regime-based (see Mistake 1), not emotion-based.</p>
+
+  <p>Keep a written record of your exact filter parameters. Review them monthly against your performance data. Only change a filter if the data shows it is consistently hurting performance over 50+ trades — not because you had two bad weeks.</p>
+
+  <h3>Mistake 5: Not Tracking False Positives</h3>
+
+  <p>Most traders track their winners but ignore their false positives — stocks that passed the scanner but failed as trades. These false positives contain critical information: they reveal systematic weaknesses in your screening methodology. If 40% of your false positives are in the healthcare sector, maybe your fundamental filters do not adequately screen for biotech binary risk. If 60% of your false positives broke out on below-average volume, your volume threshold is too low.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>False Positive Pattern</th>
+        <th>Likely Cause</th>
+        <th>Fix</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Breakout fails within 3 days</strong></td>
+        <td>Base too short or volume too low</td>
+        <td>Increase base minimum to 35 days. Require 2x avg volume.</td>
+      </tr>
+      <tr>
+        <td><strong>Stock gaps down on earnings</strong></td>
+        <td>Positioned too large before binary event</td>
+        <td>Reduce to half-position before earnings or hedge with options.</td>
+      </tr>
+      <tr>
+        <td><strong>Sector rotation kills position</strong></td>
+        <td>No sector context in screening</td>
+        <td>Add sector RS filter. Only buy mid-caps in top 5 sectors.</td>
+      </tr>
+      <tr>
+        <td><strong>Stock meets all criteria but drifts sideways</strong></td>
+        <td>No catalyst — just good fundamentals + good chart</td>
+        <td>Require at least one catalyst within 6 weeks.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#4f46e5;"></i> The Post-Mortem Ritual</h4>
+    <p>Every Friday afternoon, spend 15 minutes reviewing the week's scanner results. For each stock that was added to the watchlist and subsequently traded:</p>
+    <p><strong>Winners:</strong> What was the score on the breakout scorecard? Which factors contributed most? Was there a catalyst? Did volume confirm? Add these observations to your "what works" file.</p>
+    <p><strong>Losers:</strong> Which filter was the weakest link? Did you override any red flags? Was the market regime unfavorable? Was the sector underperforming? Add these observations to your "lessons learned" file.</p>
+    <p>Over 3-6 months, clear patterns will emerge from these post-mortems. You will discover that your best trades consistently share specific characteristics (high RS + earnings catalyst + volume expansion, for example), and your worst trades share different characteristics (low volume breakout + no catalyst + lagging sector). Use these patterns to refine your scoring weights.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Common Mistakes</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Your mid-cap scanner has produced 10 trades over the last month. 6 were winners (avg +12%) and 4 were losers (avg -8%). However, you notice that all 4 losers were in the healthcare sector and all broke out on below-average volume. What should you change?</p>
+      <p><strong>Answer:</strong> Two adjustments are warranted: (1) <strong>Add a healthcare-specific filter:</strong> Healthcare mid-caps face unique binary risks (FDA decisions, clinical trial results, CMS reimbursement changes). Add a requirement for healthcare mid-caps to have at least two consecutive profitable quarters and no FDA decision within 60 days. (2) <strong>Increase volume threshold:</strong> Your current threshold is allowing below-average volume breakouts through. Increase the breakout volume requirement from 1.0x to 1.5x average, or even 2.0x for healthcare specifically. Do NOT change your overall approach (which is working at 60% hit rate) — just patch the specific weakness the data reveals.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- KEY TAKEAWAYS                                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#4f46e5;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 2: Screening Mid-Caps</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Mid-cap screening is about quality selection, not discovery. The universe is ~800 stocks with reliable data. Your job is identifying which proven companies are about to accelerate.</li>
+    <li><i class="fa-solid fa-check"></i> Use a three-tier funnel: Tier 1 (universe: market cap $2-10B, volume &gt;500K, major exchange, price &gt;$10), Tier 2 (growth &amp; quality: revenue &gt;15%, EPS &gt;10%, ROE &gt;15%, D/E &lt;1.5, FCF positive), Tier 3 (technicals: above 200 SMA, RS &gt;70, accumulation A/B).</li>
+    <li><i class="fa-solid fa-check"></i> Three scanner archetypes: (1) Graduation Candidate — approaching S&P 500 inclusion, hold 6-18 months. (2) Acquisition Target — clean balance sheet, niche leader, hold 3-12 months. (3) Momentum Mid-Cap — breakout + volume expansion, hold 2-8 weeks.</li>
+    <li><i class="fa-solid fa-check"></i> The Fundamental-Technical Alignment Principle: the most powerful setups occur when strong fundamentals align with strong technicals. When they diverge, wait.</li>
+    <li><i class="fa-solid fa-check"></i> Set up your screeners on Finviz (fundamental) and TradingView (technical + alerts). Save presets for each scanner archetype. Run them consistently, not sporadically.</li>
+    <li><i class="fa-solid fa-check"></i> Daily routine: pre-market check (7:30), run screeners (9:15), chart review (9:30), fundamental check (10:00), watchlist update (10:15), post-close review (4:15). Total: 40-50 minutes/day.</li>
+    <li><i class="fa-solid fa-check"></i> Track your scanner performance weekly: hit rate target &gt;55%, avg win/loss ratio &gt;1.5:1, maximum 15-20 active watchlist names, 1-3 trade entries per week.</li>
+    <li><i class="fa-solid fa-check"></i> Weekly deep dive on Sundays: review results, check sector rotation, assess market regime, plan for upcoming earnings, and generate new ideas.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-mid-caps/part3-growth-engines/" class="next-cta">
+  <div>
+    <div class="next-label">Part 3 of 8</div>
+    <div class="next-title">Growth Engines & Catalysts — What Drives Mid-Cap Moves <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-mid-caps/part1-sweet-spot/" class="series-arrow" title="The Mid-Cap Sweet Spot"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Mid-Caps</span><div class="series-steps"><a href="/series/trading-mid-caps/part1-sweet-spot/" class="series-step" title="The Mid-Cap Sweet Spot"><span class="series-num">1</span><span class="series-label">Sweet Spot</span></a><a href="/series/trading-mid-caps/part2-screening/" class="series-step current" title="Screening Mid-Caps"><span class="series-num">2</span><span class="series-label">Screening</span></a><a href="/series/trading-mid-caps/part3-growth-engines/" class="series-step" title="Growth Engines & Catalysts"><span class="series-num">3</span><span class="series-label">Growth Engines</span></a><a href="/series/trading-mid-caps/part4-technical-analysis/" class="series-step" title="Technical Analysis for Mid-Caps"><span class="series-num">4</span><span class="series-label">Technicals</span></a><a href="/series/trading-mid-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-mid-caps/part6-earnings-plays/" class="series-step" title="Earnings Season Playbook"><span class="series-num">6</span><span class="series-label">Earnings Plays</span></a><a href="/series/trading-mid-caps/part7-sector-rotation/" class="series-step" title="Sector Rotation & Timing"><span class="series-num">7</span><span class="series-label">Sector Rotation</span></a><a href="/series/trading-mid-caps/part8-portfolio/" class="series-step" title="Portfolio Construction & Returns"><span class="series-num">8</span><span class="series-label">Portfolio</span></a></div><span class="series-counter">2/8</span><a href="/series/trading-mid-caps/part3-growth-engines/" class="series-arrow" title="Growth Engines & Catalysts"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: Filter Funnel
+var chartFunnel = echarts.init(document.getElementById('chart-funnel'));
+chartFunnel.setOption({
+  title: { text: 'Mid-Cap Screening Funnel', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c} stocks' },
+  series: [{
+    type: 'funnel',
+    left: '10%', top: 60, bottom: 20, width: '80%',
+    min: 0, max: 6000, minSize: '15%', maxSize: '100%',
+    sort: 'descending', gap: 4,
+    label: { show: true, position: 'inside', formatter: '{b}\n{c}', fontSize: 12, fontWeight: 600, color: '#fff' },
+    labelLine: { show: false },
+    data: [
+      { value: 6000, name: 'All U.S. Stocks', itemStyle: { color: '#94a3b8' } },
+      { value: 800, name: 'Tier 1: Mid-Cap Universe', itemStyle: { color: '#818cf8' } },
+      { value: 100, name: 'Tier 2: Growth + Quality', itemStyle: { color: '#4f46e5' } },
+      { value: 20, name: 'Tier 3: Technical Confirmation', itemStyle: { color: '#3730a3' } }
+    ]
+  }]
+});
+
+// Chart 2: Quality Metrics Radar
+var chartQualityRadar = echarts.init(document.getElementById('chart-quality-radar'));
+chartQualityRadar.setOption({
+  title: { text: 'Ideal Mid-Cap Quality Profile', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['Strong Mid-Cap', 'Weak Mid-Cap', 'Your Target'], textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Revenue Growth', max: 40 },
+      { name: 'EPS Growth', max: 40 },
+      { name: 'ROE', max: 35 },
+      { name: 'FCF Yield', max: 10 },
+      { name: 'Debt Health\n(inv D/E)', max: 3 },
+      { name: 'Margin Trend', max: 10 }
+    ],
+    radius: '58%'
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [28, 25, 22, 6, 2.2, 8], name: 'Strong Mid-Cap', lineStyle: { color: '#10b981', width: 2 }, areaStyle: { color: 'rgba(16,185,129,0.15)' }, itemStyle: { color: '#10b981' } },
+      { value: [8, 5, 8, 1, 0.5, 2], name: 'Weak Mid-Cap', lineStyle: { color: '#ef4444', width: 2 }, areaStyle: { color: 'rgba(239,68,68,0.15)' }, itemStyle: { color: '#ef4444' } },
+      { value: [18, 15, 18, 5, 1.5, 6], name: 'Your Target', lineStyle: { color: '#4f46e5', width: 3 }, areaStyle: { color: 'rgba(79,70,229,0.15)' }, itemStyle: { color: '#4f46e5' } }
+    ]
+  }]
+});
+
+// Chart 3: Scanner Comparison Radar
+var chartScannerRadar = echarts.init(document.getElementById('chart-scanner-radar'));
+chartScannerRadar.setOption({
+  title: { text: 'Scanner Archetype Comparison', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['Graduation', 'M&A Target', 'Momentum'], textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Hold Period', max: 10 },
+      { name: 'Hit Rate', max: 10 },
+      { name: 'Avg Return', max: 10 },
+      { name: 'Risk Level', max: 10 },
+      { name: 'Active Mgmt', max: 10 },
+      { name: 'Fundamental Weight', max: 10 }
+    ],
+    radius: '58%'
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [8, 7, 8, 4, 3, 8], name: 'Graduation', lineStyle: { color: '#4f46e5' }, areaStyle: { color: 'rgba(79,70,229,0.12)' }, itemStyle: { color: '#4f46e5' } },
+      { value: [6, 5, 7, 3, 2, 9], name: 'M&A Target', lineStyle: { color: '#10b981' }, areaStyle: { color: 'rgba(16,185,129,0.12)' }, itemStyle: { color: '#10b981' } },
+      { value: [3, 6, 5, 7, 9, 4], name: 'Momentum', lineStyle: { color: '#f59e0b' }, areaStyle: { color: 'rgba(245,158,11,0.12)' }, itemStyle: { color: '#f59e0b' } }
+    ]
+  }]
+});
+
+// Chart 4: Platform Feature Comparison
+var chartPlatforms = echarts.init(document.getElementById('chart-platforms'));
+chartPlatforms.setOption({
+  title: { text: 'Screening Platform Capabilities', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { bottom: 0, textStyle: { fontSize: 10 } },
+  grid: { left: '5%', right: '4%', bottom: '15%', top: '15%', containLabel: true },
+  yAxis: { type: 'category', data: ['Finviz', 'TradingView', 'IBD MarketSurge', 'TC2000'], axisLabel: { fontSize: 11 } },
+  xAxis: { type: 'value', name: 'Score (1-10)', max: 10, axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Fundamentals', type: 'bar', stack: 'total', data: [8, 7, 6, 5], itemStyle: { color: '#4f46e5' } },
+    { name: 'Technicals', type: 'bar', stack: 'total', data: [5, 9, 7, 8], itemStyle: { color: '#10b981' } },
+    { name: 'Real-time', type: 'bar', stack: 'total', data: [3, 9, 7, 8], itemStyle: { color: '#f59e0b' } },
+    { name: 'Alerts', type: 'bar', stack: 'total', data: [2, 9, 5, 7], itemStyle: { color: '#9333ea' } }
+  ]
+});
+
+// Chart 5: Hit Rate Over Time
+var chartHitrate = echarts.init(document.getElementById('chart-hitrate'));
+chartHitrate.setOption({
+  title: { text: 'Scanner Hit Rate Improvement Over Time (Typical Trader)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6', 'Month 9', 'Month 12'], axisLabel: { fontSize: 11 }, boundaryGap: false },
+  yAxis: { type: 'value', name: '%', axisLabel: { fontSize: 11 }, max: 75 },
+  series: [
+    {
+      name: 'Hit Rate (%)',
+      type: 'line',
+      smooth: true,
+      data: [35, 40, 45, 50, 53, 56, 60, 63],
+      lineStyle: { color: '#4f46e5', width: 3 },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(79,70,229,0.2)' }, { offset: 1, color: 'rgba(79,70,229,0.02)' }] } },
+      itemStyle: { color: '#4f46e5' },
+      symbol: 'circle', symbolSize: 8,
+      markLine: { data: [{ yAxis: 55, label: { formatter: 'Target: 55%', fontSize: 10, color: '#10b981' }, lineStyle: { color: '#10b981', type: 'dashed' } }] }
+    },
+    {
+      name: 'Win/Loss Ratio',
+      type: 'line',
+      smooth: true,
+      data: [0.8, 1.0, 1.1, 1.3, 1.4, 1.5, 1.7, 1.9],
+      lineStyle: { color: '#f59e0b', width: 2 },
+      itemStyle: { color: '#f59e0b' },
+      symbol: 'circle', symbolSize: 6
+    }
+  ]
+});
+
+// Resize all charts
+window.addEventListener('resize', function() {
+  chartFunnel.resize();
+  chartQualityRadar.resize();
+  chartScannerRadar.resize();
+  chartPlatforms.resize();
+  chartHitrate.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

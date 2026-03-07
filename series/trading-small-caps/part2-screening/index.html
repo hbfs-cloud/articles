@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,small-cap,formation,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Building Your Small-Cap Scanner — Filters That Actually Work | Trading Small-Caps — Part 2/8 | Market Watch</title>
+ <meta name="description" content="Trading Small-Caps series — Part 2/8: How to build a small-cap scanner with tiered filters, momentum/breakout/mean-reversion screeners, platform comparisons, and a daily scanning workflow.">
+ <meta property="og:title" content="Building Your Scanner | Trading Small-Caps 2/8 | Market Watch">
+ <meta property="og:description" content="A practical guide to building small-cap scanners — from mandatory filters to momentum, breakout, and mean-reversion screeners. Includes TradingView, Finviz, and TC2000 setups.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-small-caps/part2-screening/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL SMALL-CAPS THEME */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#115e59; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0d9488 0%, #115e59 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0d9488 0%, #115e59 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#2dd4bf; }
+
+ details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+ details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; }
+ details[open] summary { border-bottom:1px solid #e2e8f0; background:#f0fdfa; }
+ details .quiz-content { padding:1.5rem; }
+ details .quiz-content p { margin:0.5rem 0; }
+
+ .filter-tier { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:2rem 0; position:relative; overflow:hidden; }
+ .filter-tier::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; }
+ .filter-tier.tier-1::before { background:linear-gradient(90deg, #dc2626, #ef4444); }
+ .filter-tier.tier-2::before { background:linear-gradient(90deg, #f59e0b, #fbbf24); }
+ .filter-tier.tier-3::before { background:linear-gradient(90deg, #0d9488, #2dd4bf); }
+ .filter-tier h3 { margin-top:0; }
+ .filter-tier .tier-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.8rem; border-radius:99px; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:1rem; }
+ .tier-1 .tier-badge { background:rgba(220,38,38,0.1); color:#dc2626; }
+ .tier-2 .tier-badge { background:rgba(245,158,11,0.1); color:#f59e0b; }
+ .tier-3 .tier-badge { background:rgba(13,148,136,0.1); color:#0d9488; }
+
+ .scanner-box { background:linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%); border:2px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .scanner-box h3 { color:#115e59; margin-top:0; }
+ .scanner-filter { display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0; font-size:0.9rem; color:#334155; border-bottom:1px solid rgba(13,148,136,0.1); }
+ .scanner-filter:last-child { border-bottom:none; }
+ .scanner-filter .filter-name { font-weight:700; min-width:180px; color:#0f172a; }
+ .scanner-filter .filter-value { font-family:monospace; background:#0f172a; color:#2dd4bf; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.85rem; }
+
+ .workflow-timeline { position:relative; padding-left:2rem; margin:2rem 0; }
+ .workflow-timeline::before { content:''; position:absolute; left:0.6rem; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, #0d9488, #2dd4bf); }
+ .workflow-step { position:relative; padding:1rem 0 1.5rem 1.5rem; }
+ .workflow-step::before { content:''; position:absolute; left:-0.55rem; top:1.2rem; width:14px; height:14px; border-radius:50%; background:#0d9488; border:3px solid #f0fdfa; }
+ .workflow-step h4 { margin:0 0 0.25rem; font-size:0.95rem; color:#0f172a; }
+ .workflow-step .wf-time { font-size:0.75rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.05em; }
+ .workflow-step p { margin:0.5rem 0 0; font-size:0.9rem; color:#64748b; line-height:1.5; }
+
+ .example-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin:0.75rem 0; display:flex; align-items:center; gap:1rem; }
+ .example-card .ex-ticker { font-size:1.2rem; font-weight:900; color:#0d9488; min-width:60px; }
+ .example-card .ex-name { font-weight:600; color:#0f172a; font-size:0.9rem; }
+ .example-card .ex-details { font-size:0.8rem; color:#64748b; margin-top:0.15rem; }
+ .example-card .ex-badge { margin-left:auto; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase; }
+ .ex-badge-pass { background:rgba(16,185,129,0.1); color:#10b981; }
+ .ex-badge-fail { background:rgba(239,68,68,0.1); color:#ef4444; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .scanner-filter { flex-direction:column; align-items:flex-start; gap:0.25rem; }
+   .scanner-filter .filter-name { min-width:auto; }
+   .example-card { flex-direction:column; text-align:center; }
+   .example-card .ex-badge { margin-left:0; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .step-grid { grid-template-columns:1fr; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-filter"></i> Trading Small-Caps Series — Part 2 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Building Your Small-Cap Scanner — Filters That Actually Work</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">There are over 4,000 small-cap stocks in the US. You cannot track them manually. A well-built scanner reduces the universe to 10-50 actionable names per day. This guide shows you exactly how to build one that works.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-filter"></i> 3-Tier Filters</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-rocket"></i> Momentum Scanner</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-bar"></i> Breakout Scanner</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-rotate-left"></i> Mean Reversion</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-small-caps/part1-landscape/" class="series-arrow" title="The Small-Cap Landscape"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Small-Caps</span><div class="series-steps"><a href="/series/trading-small-caps/part1-landscape/" class="series-step" title="The Small-Cap Landscape"><span class="series-num">1</span><span class="series-label">Landscape</span></a><a href="/series/trading-small-caps/part2-screening/" class="series-step current" title="Building Your Scanner"><span class="series-num">2</span><span class="series-label">Scanner</span></a><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-step" title="Spotting Confirmed Moves"><span class="series-num">3</span><span class="series-label">Confirmed Moves</span></a><a href="/series/trading-small-caps/part4-due-diligence/" class="series-step" title="Due Diligence Deep Dive"><span class="series-num">4</span><span class="series-label">Due Diligence</span></a><a href="/series/trading-small-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-small-caps/part6-risk-management/" class="series-step" title="Risk & Position Sizing"><span class="series-num">6</span><span class="series-label">Risk Mgmt</span></a><a href="/series/trading-small-caps/part7-traps/" class="series-step" title="The Trap Playbook"><span class="series-num">7</span><span class="series-label">Traps</span></a><a href="/series/trading-small-caps/part8-returns/" class="series-step" title="Returns & Edge Building"><span class="series-num">8</span><span class="series-label">Returns</span></a></div><span class="series-counter">2/8</span><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-arrow" title="Spotting Confirmed Moves"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why" class="fnav-item" data-section="why"><i class="fas fa-question-circle"></i><span>Why You Need a Scanner</span></a><a href="#tier1" class="fnav-item" data-section="tier1"><i class="fas fa-shield-halved"></i><span>Tier 1: Mandatory</span></a><a href="#tier2" class="fnav-item" data-section="tier2"><i class="fas fa-gem"></i><span>Tier 2: Quality</span></a><a href="#tier3" class="fnav-item" data-section="tier3"><i class="fas fa-chart-line"></i><span>Tier 3: Technical</span></a><a href="#scanners" class="fnav-item" data-section="scanners"><i class="fas fa-crosshairs"></i><span>3 Scanner Types</span></a><a href="#redflags" class="fnav-item" data-section="redflags"><i class="fas fa-flag"></i><span>Red Flags</span></a><a href="#platforms" class="fnav-item" data-section="platforms"><i class="fas fa-desktop"></i><span>Platforms</span></a><a href="#workflow" class="fnav-item" data-section="workflow"><i class="fas fa-clock"></i><span>Daily Workflow</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- WHY YOU NEED A SCANNER                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="why"><i class="fa-solid fa-question-circle" style="color:#0d9488;"></i> Why You Need a Scanner</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-question-circle" style="color:#0d9488;"></i> The Needle in the Haystack Problem</h2>
+
+  <p>The US stock market has approximately <strong>4,000 small-cap stocks</strong> listed on NYSE and NASDAQ. Add micro-caps and OTC stocks, and the number exceeds 10,000. Even if you spend only 2 minutes per stock reviewing a chart and basic fundamentals, that is 133 hours — more than three full work weeks — to scan the entire universe once.</p>
+
+  <p>Nobody does this. Not hedge funds, not professional traders, and certainly not retail traders. Instead, everyone uses <strong>screeners</strong> (also called scanners) — software tools that filter the universe down to a manageable watchlist based on quantifiable criteria.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">The Scanner Philosophy</div>
+    <span class="formula-highlight">Eliminate Noise First</span> → Then Find Signal → Then <span class="formula-highlight">Validate Manually</span>
+  </div>
+
+  <p>A well-designed scanner works in three stages:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Tier 1: Eliminate Junk</h4>
+      <p>Remove stocks that should never be traded: too small, too illiquid, too cheap, wrong exchange. This eliminates ~70% of the universe.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Tier 2: Find Quality</h4>
+      <p>From the remaining 30%, filter for companies with real revenue, insider ownership, and institutional interest. This eliminates another ~60%.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Tier 3: Technical Setup</h4>
+      <p>From the quality pool (~500 stocks), find those with actionable technical setups: momentum, breakouts, or mean-reversion signals.</p>
+    </div>
+  </div>
+
+  <!-- EChart: Filter Funnel -->
+  <div id="chart-funnel" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#0d9488;"></i> Why Most Scanners Fail</h4>
+    <p>The most common mistake beginners make is <strong>starting with technical filters</strong> (RSI < 30, MACD cross, etc.) without first eliminating junk. If you run an RSI < 30 scan on the entire market, you get 200+ results — most of which are untradeable micro-caps, penny stocks, and companies headed for bankruptcy. The RSI is low <em>because the stock deserves to go lower</em>.</p>
+    <p>The correct approach is to establish a <strong>quality universe first</strong> (Tier 1 + Tier 2 = ~500 names), then apply technical filters to that universe. This way, every result from your scanner is a stock that is fundamentally worth owning. The technical filter simply tells you <em>when</em> to buy it.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Scanner Fundamentals</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You run a scan for small-caps with RSI < 30 and get 180 results. You then manually review the first 20 and find that 15 of them are micro-caps under $100M market cap with no revenue. What went wrong?</p>
+      <p><strong>Answer:</strong> You <strong>skipped Tier 1 filters</strong>. By not filtering for minimum market cap ($300M+), minimum volume (500K+), and minimum price ($5+), you allowed junk to dominate your results. An RSI < 30 in a $50M no-revenue company is not an oversold signal — it is a death spiral. Fix: add Tier 1 filters first (market cap $300M-$2B, avg volume > 500K, price > $5, exchange = NYSE/NASDAQ), then re-run the RSI filter. You will get 15-25 results instead of 180, and every one of them will be a legitimate small-cap worth researching.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TIER 1: MANDATORY FILTERS                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tier1"><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> Tier 1: Mandatory Filters</div>
+
+<div class="filter-tier tier-1">
+  <span class="tier-badge"><i class="fa-solid fa-shield-halved"></i> Tier 1 — Mandatory — Never Skip These</span>
+  <h3>The Non-Negotiable Filters</h3>
+
+  <p>These four filters are mandatory for every scan you run. They eliminate stocks that are fundamentally untradeable for retail swing traders. Without these filters, your results will be contaminated with stocks that look technically interesting but are traps.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Setting</th>
+        <th>Why It Matters</th>
+        <th>What It Eliminates</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Market Cap</strong></td>
+        <td>$300M - $2B</td>
+        <td>Defines the small-cap universe. Below $300M is micro-cap territory with thin liquidity and high manipulation risk. Above $2B is mid-cap.</td>
+        <td>~6,000 stocks (micro-caps, penny stocks, large-caps)</td>
+      </tr>
+      <tr>
+        <td><strong>Average Daily Volume</strong></td>
+        <td>> 500,000 shares</td>
+        <td>Ensures you can enter and exit positions without excessive slippage. As discussed in Part 1, below 500K your stops fail and spreads widen.</td>
+        <td>~1,500 illiquid small-caps</td>
+      </tr>
+      <tr>
+        <td><strong>Price</strong></td>
+        <td>> $5.00</td>
+        <td>Eliminates penny stocks. Stocks under $5 are more volatile, often distressed, and attract pump-and-dump schemes. Many institutional investors cannot buy sub-$5 stocks by mandate.</td>
+        <td>~800 cheap stocks</td>
+      </tr>
+      <tr>
+        <td><strong>Exchange</strong></td>
+        <td>NYSE or NASDAQ only</td>
+        <td>Listed stocks must meet exchange listing standards (minimum revenue, shareholders, price). OTC and Pink Sheet stocks have no such requirements.</td>
+        <td>~3,000 OTC/Pink Sheet stocks</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Tier 1 Result</div>
+    ~10,000 US stocks → <span class="formula-highlight">Tier 1 Filters</span> → ~1,200 tradeable small-caps
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#0d9488;"></i> The $5 Rule: Why It Matters</h4>
+    <p>The $5 minimum price filter is not arbitrary. It serves three critical purposes:</p>
+    <ol>
+      <li><strong>Institutional eligibility:</strong> Many mutual funds and ETFs have internal policies prohibiting purchases of sub-$5 stocks. By filtering above $5, you ensure your stocks have potential institutional demand.</li>
+      <li><strong>Options availability:</strong> Most small-caps above $5 have listed options (if they have sufficient volume). Options allow you to hedge positions and define risk precisely. Sub-$5 stocks rarely have liquid options chains.</li>
+      <li><strong>Behavioral signal:</strong> A stock trading below $5 has often fallen there from a higher price. Companies that have declined to sub-$5 levels frequently have deteriorating fundamentals, dilution risk, or pending delisting. The rare exceptions (intentionally low-priced stocks after reverse splits or spinoffs) are not worth the risk of the false positives.</li>
+    </ol>
+  </div>
+
+  <h3>Tier 1 In Practice: Before and After</h3>
+
+  <p>Here are 5 stocks that would appear in a raw "RSI < 35" scan but get correctly eliminated by Tier 1 filters:</p>
+
+  <div class="example-card">
+    <span class="ex-ticker">ABCL</span>
+    <div>
+      <div class="ex-name">AbCellera Biologics</div>
+      <div class="ex-details">Market Cap: $850M | Volume: 1.2M | Price: $3.20 | Exchange: NASDAQ</div>
+    </div>
+    <span class="ex-badge ex-badge-fail"><i class="fa-solid fa-times"></i> Fails Price ($3.20 < $5)</span>
+  </div>
+
+  <div class="example-card">
+    <span class="ex-ticker">SLDP</span>
+    <div>
+      <div class="ex-name">Solid Power</div>
+      <div class="ex-details">Market Cap: $420M | Volume: 2.8M | Price: $2.10 | Exchange: NASDAQ</div>
+    </div>
+    <span class="ex-badge ex-badge-fail"><i class="fa-solid fa-times"></i> Fails Price ($2.10 < $5)</span>
+  </div>
+
+  <div class="example-card">
+    <span class="ex-ticker">CPRX</span>
+    <div>
+      <div class="ex-name">Catalyst Pharmaceuticals</div>
+      <div class="ex-details">Market Cap: $1.4B | Volume: 890K | Price: $18.50 | Exchange: NASDAQ</div>
+    </div>
+    <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> PASSES All Tier 1</span>
+  </div>
+
+  <div class="example-card">
+    <span class="ex-ticker">FLGT</span>
+    <div>
+      <div class="ex-name">Fulgent Genetics</div>
+      <div class="ex-details">Market Cap: $680M | Volume: 520K | Price: $22.40 | Exchange: NASDAQ</div>
+    </div>
+    <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> PASSES All Tier 1</span>
+  </div>
+
+  <div class="example-card">
+    <span class="ex-ticker">XYZQ</span>
+    <div>
+      <div class="ex-name">Fictional OTC Corp</div>
+      <div class="ex-details">Market Cap: $180M | Volume: 85K | Price: $1.50 | Exchange: OTC</div>
+    </div>
+    <span class="ex-badge ex-badge-fail"><i class="fa-solid fa-times"></i> Fails All 4 Tier 1</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TIER 2: QUALITY FILTERS                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tier2"><i class="fa-solid fa-gem" style="color:#f59e0b;"></i> Tier 2: Quality Filters</div>
+
+<div class="filter-tier tier-2">
+  <span class="tier-badge"><i class="fa-solid fa-gem"></i> Tier 2 — Quality — Separate Good from Bad</span>
+  <h3>Finding Companies Worth Owning</h3>
+
+  <p>After Tier 1, you have approximately 1,200 small-caps. Many of these are still poor investments — companies with declining revenue, excessive dilution, or zero insider ownership. Tier 2 filters separate companies that are building value from those that are destroying it.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Setting</th>
+        <th>Why It Matters</th>
+        <th>Where to Find Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Revenue Growth (YoY)</strong></td>
+        <td>> 10%</td>
+        <td>Companies growing revenue above 10% are gaining market share. Below 10% at the small-cap level often means stagnation. At this size, growth is the primary value driver.</td>
+        <td>Finviz, Yahoo Finance, SEC filings (10-Q/10-K)</td>
+      </tr>
+      <tr>
+        <td><strong>Operating Income</strong></td>
+        <td>Positive (or clear path)</td>
+        <td>Companies burning cash indefinitely eventually dilute shareholders. Positive operating income means the core business is self-sustaining. Exception: pre-revenue biotechs with funded pipelines.</td>
+        <td>Income Statement on any financial data provider</td>
+      </tr>
+      <tr>
+        <td><strong>Insider Ownership</strong></td>
+        <td>> 5%</td>
+        <td>When founders and executives own significant shares, their interests are aligned with yours. Below 5%, insiders have been fully cashed out and have little skin in the game.</td>
+        <td>Finviz "Insider Own" column, SEC Form 4 filings</td>
+      </tr>
+      <tr>
+        <td><strong>Institutional Ownership</strong></td>
+        <td>10% - 60%</td>
+        <td>The sweet spot from Part 1. Below 10% = no institutional interest. Above 60% = fully discovered. The 10-60% range means smart money is accumulating but the stock is not yet widely owned.</td>
+        <td>Finviz "Inst Own" column, NASDAQ institutional holders page</td>
+      </tr>
+      <tr>
+        <td><strong>Shares Outstanding Change (1Y)</strong></td>
+        <td>< 10% growth</td>
+        <td>Rapid share count growth signals dilution — the company is selling new shares to fund operations. Each new share reduces your ownership. Growth > 20% is a major red flag.</td>
+        <td>SEC filings, Macrotrends.net shares outstanding chart</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Tier 2 Result</div>
+    ~1,200 Tier 1 stocks → <span class="formula-highlight">Tier 2 Quality Filters</span> → ~200-400 quality small-caps
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#0d9488;"></i> The Insider Ownership Signal</h4>
+    <p>Insider ownership is one of the most powerful and underused quality signals in small-cap investing. Research by Lakonishok and Lee (2001) showed that <strong>stocks with high insider ownership outperform by 4-7% annually</strong> after controlling for size and value factors.</p>
+    <p>Why? Because insiders know more about their company than any analyst. When a CEO owns 15% of the company ($150M of a $1B company), they are not going to make decisions that destroy shareholder value — they would be destroying their own wealth. Conversely, when insiders own < 1%, they have no personal downside from empire-building, dilution, or reckless M&A.</p>
+    <p>The ideal scenario: insider ownership > 10% <strong>and</strong> insiders have been buying (not selling) in the last 90 days. This is a strong signal of confidence from the people who know the business best. Check SEC Form 4 filings on the SEC EDGAR website or use OpenInsider.com for free.</p>
+  </div>
+
+  <h3>Tier 2 In Practice: Quality Examples</h3>
+
+  <div class="example-card">
+    <span class="ex-ticker">CPRX</span>
+    <div>
+      <div class="ex-name">Catalyst Pharmaceuticals</div>
+      <div class="ex-details">Rev Growth: +32% | Op Income: $180M | Insider Own: 7.2% | Inst Own: 48% | Dilution: +1.5%</div>
+    </div>
+    <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Quality Pass</span>
+  </div>
+
+  <div class="example-card">
+    <span class="ex-ticker">TGTX</span>
+    <div>
+      <div class="ex-name">TG Therapeutics</div>
+      <div class="ex-details">Rev Growth: +85% | Op Income: $45M | Insider Own: 5.4% | Inst Own: 52% | Dilution: +2.1%</div>
+    </div>
+    <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Quality Pass</span>
+  </div>
+
+  <div class="example-card">
+    <span class="ex-ticker">XXYZ</span>
+    <div>
+      <div class="ex-name">Example Biotech (Fictional)</div>
+      <div class="ex-details">Rev Growth: -15% | Op Income: -$40M | Insider Own: 1.2% | Inst Own: 8% | Dilution: +35%</div>
+    </div>
+    <span class="ex-badge ex-badge-fail"><i class="fa-solid fa-times"></i> Fails: Revenue, Op Income, Insiders, Dilution</span>
+  </div>
+
+  <details>
+    <summary>Quiz: Quality Filters</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> A small-cap ($900M) has 45% revenue growth, but operating income is -$20M, insider ownership is 22%, institutional ownership is 15%, and shares outstanding grew 8% last year. Does it pass Tier 2?</p>
+      <p><strong>Answer:</strong> <strong>Borderline pass</strong>. The revenue growth (45%) is excellent. Insider ownership (22%) is very strong — management has skin in the game. Institutional ownership (15%) is in the sweet spot (early discovery). Dilution (8%) is below the 10% threshold. The only concern is negative operating income (-$20M). However, with 45% revenue growth and strong insider ownership, this company likely has a "clear path to profitability" — the losses are from investment in growth, not from a failing business model. In this case, you would pass it through Tier 2 but flag the negative operating income as a risk to monitor. Check the 10-Q to see if operating losses are shrinking quarter over quarter. If they are, the company is on track.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- TIER 3: TECHNICAL FILTERS                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="tier3"><i class="fa-solid fa-chart-line" style="color:#0d9488;"></i> Tier 3: Technical Filters</div>
+
+<div class="filter-tier tier-3">
+  <span class="tier-badge"><i class="fa-solid fa-chart-line"></i> Tier 3 — Technical — Timing Your Entry</span>
+  <h3>When to Buy Quality Stocks</h3>
+
+  <p>Tier 1 and Tier 2 tell you <em>what</em> to buy. Tier 3 tells you <em>when</em>. These technical filters identify stocks that are at actionable price levels — not too extended (chasing), not in freefall (catching knives).</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Filter</th>
+        <th>Setting</th>
+        <th>Rationale</th>
+        <th>What to Avoid</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>RSI (14-day)</strong></td>
+        <td>40 - 70</td>
+        <td>RSI 40-70 captures stocks in constructive uptrends that are not yet overbought. RSI < 40 often means a broken chart. RSI > 70 means the easy money has been made.</td>
+        <td>RSI < 30 (falling knife), RSI > 80 (extended)</td>
+      </tr>
+      <tr>
+        <td><strong>Price vs 50-Day MA</strong></td>
+        <td>Above 50-day SMA</td>
+        <td>The 50-day SMA is the single most-watched moving average by institutional traders. Being above it means the intermediate trend is up. Below it signals deterioration.</td>
+        <td>Deep below 50-day MA (trend broken)</td>
+      </tr>
+      <tr>
+        <td><strong>Volume Surge</strong></td>
+        <td>> 2x 20-day average</td>
+        <td>Volume confirms price moves. A breakout on 2x average volume has a much higher success rate than a breakout on average volume. Volume is "the fuel for the move."</td>
+        <td>Breakouts on low volume (likely fakeout)</td>
+      </tr>
+      <tr>
+        <td><strong>Price vs 200-Day MA</strong></td>
+        <td>Within 30% above</td>
+        <td>Stocks more than 30% above their 200-day MA are extended. Mean reversion risk is high. Stay within a reasonable range.</td>
+        <td>Parabolic moves > 50% above 200-day MA</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Tier 3 Result</div>
+    ~200-400 Quality Stocks → <span class="formula-highlight">Tier 3 Technical</span> → ~10-50 actionable setups daily
+  </div>
+
+  <p>These base technical filters create your <strong>daily watchlist</strong> — the 10-50 stocks that pass all three tiers and deserve manual chart review. From this watchlist, you select 3-5 actual trades per week based on the scanner types described in the next section.</p>
+
+  <details>
+    <summary>Quiz: Tier 3 Filters</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> A stock passes Tier 1 and Tier 2 with strong fundamentals. Its RSI is 28, it is 15% below the 50-day MA, and today's volume is 3x average. Is this a buy signal?</p>
+      <p><strong>Answer:</strong> <strong>No — this fails Tier 3.</strong> RSI 28 is below the 40 minimum, indicating severe selling pressure. Being 15% below the 50-day MA means the intermediate trend is broken. The 3x volume surge confirms massive selling (distribution), not buying. This stock is in a <strong>distribution phase</strong> — large holders are dumping shares. Even though fundamentals are strong, the market is telling you something you do not know yet. Wait. If the stock stabilizes, builds a base above the 50-day MA, and RSI recovers above 40, it may become a mean-reversion candidate later. But right now, the technicals say "stay away."</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- THREE SCANNER TYPES                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="scanners"><i class="fa-solid fa-crosshairs" style="color:#2563eb;"></i> Three Scanner Types</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-crosshairs" style="color:#2563eb;"></i> Momentum, Breakout, and Mean Reversion Scanners</h2>
+
+  <p>With your quality universe established (Tier 1 + Tier 2), you can now apply three different scanner strategies. Each targets a different type of trading opportunity. You should run all three daily and select the best setups across them.</p>
+
+  <!-- Scanner 1: Momentum -->
+  <div class="scanner-box">
+    <h3><i class="fa-solid fa-rocket" style="color:#0d9488;"></i> Scanner 1: Momentum Scanner</h3>
+    <p>Finds small-caps with strong upward momentum that are likely to continue higher. Best in risk-on, early-cycle, and broad-breadth environments.</p>
+    <div class="scanner-filter">
+      <span class="filter-name">52-Week High Distance</span>
+      <span class="filter-value">Within 10% of 52W high</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Relative Strength (3M)</span>
+      <span class="filter-value">> 80th percentile</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Sector RS vs Market</span>
+      <span class="filter-value">Positive (sector outperforming SPY)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">EPS Growth (Recent Q)</span>
+      <span class="filter-value">> 20% YoY</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price vs 20-Day MA</span>
+      <span class="filter-value">Above (short-term trend intact)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Volume Trend</span>
+      <span class="filter-value">Rising 10-day avg volume vs 50-day avg</span>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="color:#0d9488;"></i> Why This Works</h4>
+      <p>Momentum works in small-caps because of <strong>slow information diffusion</strong>. When a small-cap company reports strong earnings, the news reaches a much smaller audience than a large-cap announcement. Momentum scanners catch stocks where the price is trending up because fundamentals are improving, but the market has not fully priced in the improvement.</p>
+      <p>The key filter is <strong>sector relative strength</strong>. A small-cap biotech rallying while the entire biotech sector is declining is likely a one-off catalyst (FDA approval, trial data). A small-cap biotech rallying while the sector is also strong is surfing a sector wave — much more sustainable.</p>
+    </div>
+
+    <h4>Example Momentum Candidates (March 2026)</h4>
+
+    <div class="example-card">
+      <span class="ex-ticker">CPRX</span>
+      <div>
+        <div class="ex-name">Catalyst Pharma — $1.4B</div>
+        <div class="ex-details">3% from 52W high | RS rank 92 | Sector RS: Positive | EPS +45% YoY | Above 20-day MA</div>
+      </div>
+      <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Momentum</span>
+    </div>
+
+    <div class="example-card">
+      <span class="ex-ticker">RVMD</span>
+      <div>
+        <div class="ex-name">Revolution Medicines — $1.8B</div>
+        <div class="ex-details">7% from 52W high | RS rank 88 | Sector RS: Positive | Rev +120% YoY | Above 20-day MA</div>
+      </div>
+      <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Momentum</span>
+    </div>
+  </div>
+
+  <!-- Scanner 2: Breakout -->
+  <div class="scanner-box">
+    <h3><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> Scanner 2: Breakout Scanner</h3>
+    <p>Finds small-caps consolidating in tight ranges that are about to break out. Best when volatility is contracting and a catalyst is approaching (earnings, FDA date, conference).</p>
+    <div class="scanner-filter">
+      <span class="filter-name">Consolidation Period</span>
+      <span class="filter-value">> 20 trading days in a range</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Range Width</span>
+      <span class="filter-value">< 15% (tight consolidation)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Volume Contraction</span>
+      <span class="filter-value">10-day avg volume < 50-day avg volume</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Bollinger Band Width</span>
+      <span class="filter-value">Below 20th percentile (6-month)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price Position in Range</span>
+      <span class="filter-value">Upper 25% of consolidation range</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Upcoming Catalyst</span>
+      <span class="filter-value">Earnings within 15 days, FDA date, conference</span>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-graduation-cap" style="color:#0d9488;"></i> The Volatility Contraction Pattern (VCP)</h4>
+      <p>The Volatility Contraction Pattern, described by Mark Minervini in his book <em>Trade Like a Stock Market Wizard</em>, is one of the most reliable breakout patterns in small-caps. The concept is simple: as a stock consolidates, each successive pullback within the base gets <strong>shallower</strong> (e.g., -15%, then -10%, then -5%), and volume dries up. This indicates that sellers are being absorbed and buyers are in control.</p>
+      <p>When the stock finally breaks above the consolidation range on <strong>2x+ average volume</strong>, the breakout has a high probability of follow-through. The tight range acts as a "coiled spring" — the longer and tighter the consolidation, the more explosive the breakout.</p>
+      <p>In practice, scan for Bollinger Band Width in the bottom 20th percentile of its 6-month range. This mathematically identifies stocks where volatility has contracted to unusually low levels — the setup phase of a VCP.</p>
+    </div>
+
+    <h4>Example Breakout Candidates</h4>
+
+    <div class="example-card">
+      <span class="ex-ticker">FLGT</span>
+      <div>
+        <div class="ex-name">Fulgent Genetics — $680M</div>
+        <div class="ex-details">32-day base | Range: 11% | Vol contracting | BB Width: 15th pct | Upper 30% of range | Earnings in 12 days</div>
+      </div>
+      <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Breakout</span>
+    </div>
+
+    <div class="example-card">
+      <span class="ex-ticker">VCEL</span>
+      <div>
+        <div class="ex-name">Vericel Corp — $1.2B</div>
+        <div class="ex-details">45-day base | Range: 9% | Vol contracting | BB Width: 8th pct | Upper 20% of range | Conference in 8 days</div>
+      </div>
+      <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Breakout</span>
+    </div>
+  </div>
+
+  <!-- Scanner 3: Mean Reversion -->
+  <div class="scanner-box">
+    <h3><i class="fa-solid fa-rotate-left" style="color:#9333ea;"></i> Scanner 3: Mean Reversion Scanner</h3>
+    <p>Finds quality small-caps that have been oversold due to market-wide selling or sector rotation, not fundamental deterioration. Best in risk-off environments when throwing the baby out with the bathwater.</p>
+    <div class="scanner-filter">
+      <span class="filter-name">RSI (14-day)</span>
+      <span class="filter-value">< 30 (oversold)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price vs Support</span>
+      <span class="filter-value">Within 3% of major support level</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Insider Buying</span>
+      <span class="filter-value">Cluster buys in last 90 days</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Revenue Trend</span>
+      <span class="filter-value">Still growing (> 0% YoY) — not broken</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Drawdown from High</span>
+      <span class="filter-value">-25% to -40% from 52W high</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Short Interest</span>
+      <span class="filter-value">< 15% of float (avoid short squeezes)</span>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="color:#0d9488;"></i> The Insider Buying Signal</h4>
+      <p>Mean reversion is dangerous in small-caps because many oversold stocks <em>deserve</em> to be oversold. The single best validation that a selloff is overdone is <strong>insider buying</strong>. When a CEO or CFO spends $200K+ of personal money buying shares after a 30% selloff, they are telling you they believe the selloff is temporary.</p>
+      <p>The key word is <strong>cluster</strong>. A single insider buy could be a formality or a token purchase. Three or more insiders buying within a 60-day window is a powerful signal. The research shows that clusters of insider buying precede 12-month outperformance of 8-12% on average (Jeng, Metrick, Zeckhauser, 2003).</p>
+      <p>Check <strong>OpenInsider.com</strong> for free, real-time SEC Form 4 filings. Filter for purchases > $100K to eliminate noise.</p>
+    </div>
+
+    <h4>Example Mean Reversion Candidates</h4>
+
+    <div class="example-card">
+      <span class="ex-ticker">PCRX</span>
+      <div>
+        <div class="ex-name">Pacira BioSciences — $900M</div>
+        <div class="ex-details">RSI: 27 | At 200-day SMA support | CEO bought $350K in Feb | Rev +8% YoY | -32% from 52W high | SI: 6%</div>
+      </div>
+      <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Mean Reversion</span>
+    </div>
+
+    <div class="example-card">
+      <span class="ex-ticker">ENVA</span>
+      <div>
+        <div class="ex-name">Enova International — $1.1B</div>
+        <div class="ex-details">RSI: 31 | At horizontal support $45 | 3 insiders bought $1.2M total | Rev +22% YoY | -28% from high | SI: 9%</div>
+      </div>
+      <span class="ex-badge ex-badge-pass"><i class="fa-solid fa-check"></i> Mean Reversion</span>
+    </div>
+  </div>
+
+  <!-- EChart: Scanner Hit Rates -->
+  <div id="chart-hitrates" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Choosing the Right Scanner</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> The market is in a risk-off environment — S&P 500 is down 8% in three weeks, VIX is at 28, and credit spreads are widening. Which scanner type should you prioritize?</p>
+      <p><strong>Answer:</strong> <strong>Mean Reversion Scanner</strong>. In a broad risk-off selloff, quality stocks get sold alongside junk as funds raise cash and risk parity models de-leverage. This creates opportunities to buy quality small-caps at oversold prices. The momentum scanner will produce mostly false signals (stocks near 52-week highs in a falling market are usually defensive sectors, not growth opportunities). The breakout scanner will see breakouts fail (breakouts in high-VIX environments have low success rates). The mean reversion scanner, combined with the insider buying filter, will identify stocks where management is signaling the selloff is overdone. However, be patient — in risk-off environments, oversold stocks can get more oversold. Wait for RSI to bounce back above 30 before entering, confirming the selling pressure is exhausting.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- RED FLAG FILTERS                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="redflags"><i class="fa-solid fa-flag" style="color:#dc2626;"></i> Red Flag Filters</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flag" style="color:#dc2626;"></i> What to Exclude: Red Flags That Kill Returns</h2>
+
+  <p>Beyond the positive filters (what to look for), you need <strong>negative filters</strong> (what to avoid). These red flags are return-killers in small-caps and should result in automatic exclusion from your watchlist.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Red Flag</th>
+        <th>Filter Setting</th>
+        <th>Why It Kills Returns</th>
+        <th>How to Check</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Excessive Dilution</strong></td>
+        <td>Shares outstanding growth > 20% (1Y)</td>
+        <td>The company is funding operations by selling new shares. Each new share reduces your ownership. A stock can rise 20% and you make 0% if they diluted 20%. This is the #1 small-cap return killer.</td>
+        <td>Macrotrends.net shares outstanding chart. Compare current shares to 1 year ago.</td>
+      </tr>
+      <tr>
+        <td><strong>Extreme Short Interest</strong></td>
+        <td>Short interest > 30% of float</td>
+        <td>Heavy short interest means professional traders are betting the stock goes to zero. While short squeezes can produce spectacular gains, they are unpredictable and the underlying business is usually broken. You are gambling, not investing.</td>
+        <td>Finviz "Short Float" column. Ortex for real-time data.</td>
+      </tr>
+      <tr>
+        <td><strong>No Revenue (Non-Biotech)</strong></td>
+        <td>TTM Revenue = $0 AND sector != Healthcare</td>
+        <td>Pre-revenue companies outside biotech are almost always uninvestable. A $500M tech company with zero revenue is selling a dream. Pre-revenue biotechs are an exception because the value is in the drug pipeline (FDA approvals can create revenue overnight).</td>
+        <td>Income statement, revenue line. If $0 and not biotech, skip.</td>
+      </tr>
+      <tr>
+        <td><strong>Repeated Shelf Registrations</strong></td>
+        <td>2+ ATM (at-the-market) offerings in 12 months</td>
+        <td>An ATM offering means the company can sell shares directly into the market at any time. If they have done this twice in a year, they will do it again. Every ATM offering pressures the stock price.</td>
+        <td>SEC EDGAR: search for "S-3" or "ATM" filings. InvestorPlace and SEC Daily filings.</td>
+      </tr>
+      <tr>
+        <td><strong>Auditor Red Flags</strong></td>
+        <td>"Going concern" qualification or auditor change</td>
+        <td>A "going concern" qualification means the auditor believes the company may not survive the next 12 months. An auditor change (especially from Big 4 to small firm) can signal accounting issues.</td>
+        <td>10-K annual report, auditor's opinion section (first few pages).</td>
+      </tr>
+      <tr>
+        <td><strong>Excessive Insider Selling</strong></td>
+        <td>> $5M insider sales with < $500K purchases (90 days)</td>
+        <td>When insiders are selling aggressively while not buying, they are signaling lack of confidence. Small sells for tax or diversification are normal. $5M+ in 90 days from multiple insiders is a warning.</td>
+        <td>OpenInsider.com, SEC Form 4 filings.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Dilution: The Silent Wealth Destroyer</h4>
+    <p>Dilution is to small-caps what contango is to commodity ETFs — a persistent, invisible drag that erodes your returns over time. Consider this example:</p>
+    <p>You buy 1,000 shares of a $10 stock ($10,000 investment). The company has 50 million shares outstanding, so you own 0.002% of the company. Over the next year, the company issues 15 million new shares through ATM offerings and secondary offerings. Now there are 65 million shares outstanding. Your 1,000 shares now represent only 0.00154% of the company — a 23% reduction in your ownership.</p>
+    <p>Even if the company's total value (enterprise value) stays the same, the stock price drops from $10 to $7.69 (50/65 x $10) just from dilution. You have lost $2,310 without the company losing a single dollar of revenue. This is why tracking shares outstanding is critical.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Red Flags</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> A small-cap biotech ($600M market cap) has RSI 32, insiders bought $400K last month, revenue is growing 25%, but shares outstanding grew 28% last year from two ATM offerings. Should you trade it?</p>
+      <p><strong>Answer:</strong> <strong>No.</strong> Despite the positive signals (insider buying, revenue growth, oversold RSI), the 28% dilution is a dealbreaker. Two ATM offerings in 12 months means the company is funding operations by selling shares into the market. The insider buying ($400K) is dwarfed by the dilution (28% of $600M = $168M in new shares issued). The insiders may be buying as a PR signal while the company simultaneously dilutes shareholders massively. Even if the stock rallies 25% from here, the dilution will eat most of that return. Wait until the company stops diluting (no new ATM filings for 6+ months) before reconsidering.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCANNER PLATFORMS                                               -->
+<!-- ============================================================ -->
+<div class="section-divider" id="platforms"><i class="fa-solid fa-desktop" style="color:#9333ea;"></i> Scanner Platforms Compared</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-desktop" style="color:#9333ea;"></i> Choosing Your Screening Platform</h2>
+
+  <p>The best scanner is the one you actually use every day. Here is a detailed comparison of the four most popular platforms for small-cap screening:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Price</th>
+        <th>Best For</th>
+        <th>Small-Cap Filters</th>
+        <th>Real-Time</th>
+        <th>Weaknesses</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Finviz</strong></td>
+        <td>Free / Elite $40/mo</td>
+        <td>Quick fundamental + technical screening. Best free option. Visual map view.</td>
+        <td>Excellent: market cap, volume, price, insider own, inst own, revenue growth, RSI, 50-day MA, short float, EPS growth</td>
+        <td>Free: 15-min delay. Elite: real-time + intraday alerts</td>
+        <td>Cannot combine complex conditions (AND/OR). No custom formulas. No backtesting.</td>
+      </tr>
+      <tr>
+        <td><strong>TradingView</strong></td>
+        <td>Free / Plus $15/mo / Premium $30/mo</td>
+        <td>Custom technical screeners with Pine Script. Best charting integration.</td>
+        <td>Good: market cap, volume, price, RSI, MACD, Bollinger, moving averages. Weaker on fundamentals (limited insider data).</td>
+        <td>Real-time on paid plans</td>
+        <td>Insider ownership data limited. No insider transaction alerts. Screener can be slow with complex filters.</td>
+      </tr>
+      <tr>
+        <td><strong>TC2000</strong></td>
+        <td>Silver $10/mo / Gold $30/mo</td>
+        <td>Advanced condition-based scanning. EasyScan wizard. Custom PCFs (Personal Criteria Formulas).</td>
+        <td>Excellent: custom formulas for any technical or fundamental combination. PCFs can calculate Bollinger Band Width, volume surges, custom RS rankings.</td>
+        <td>Real-time on all paid plans</td>
+        <td>Steeper learning curve. Interface feels dated. Smaller community than TradingView.</td>
+      </tr>
+      <tr>
+        <td><strong>Trade Ideas</strong></td>
+        <td>Standard $120/mo / Premium $230/mo</td>
+        <td>AI-powered scanning. Holly AI virtual assistant. Best for day traders.</td>
+        <td>Excellent: pre-built small-cap scanners, real-time streaming alerts, AI pattern recognition, backtesting.</td>
+        <td>Real-time streaming</td>
+        <td>Expensive. Primarily day-trading focused. Overkill for swing traders. AI suggestions can be noisy.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Setting Up Your Finviz Scanner (Step-by-Step)</h3>
+
+  <p>Finviz is the recommended starting platform because it is free, fast, and covers both fundamental and technical filters. Here is the exact setup for each scanner type:</p>
+
+  <div class="scanner-box">
+    <h3><i class="fa-solid fa-cog"></i> Finviz Momentum Scanner Setup</h3>
+    <div class="scanner-filter">
+      <span class="filter-name">Market Cap</span>
+      <span class="filter-value">Small ($300M to $2B)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Average Volume</span>
+      <span class="filter-value">Over 500K</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price</span>
+      <span class="filter-value">Over $5</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Exchange</span>
+      <span class="filter-value">NYSE, NASDAQ</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">52-Week High/Low</span>
+      <span class="filter-value">0-10% below High</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">EPS Growth This Year</span>
+      <span class="filter-value">Over 20%</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Relative Volume</span>
+      <span class="filter-value">Over 1</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">RSI (14)</span>
+      <span class="filter-value">40 to 70</span>
+    </div>
+    <p><strong>Expected results:</strong> 15-40 stocks depending on market conditions. Sort by "Relative Volume" descending to find the most active names first.</p>
+  </div>
+
+  <div class="scanner-box">
+    <h3><i class="fa-solid fa-cog"></i> Finviz Mean Reversion Scanner Setup</h3>
+    <div class="scanner-filter">
+      <span class="filter-name">Market Cap</span>
+      <span class="filter-value">Small ($300M to $2B)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Average Volume</span>
+      <span class="filter-value">Over 500K</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price</span>
+      <span class="filter-value">Over $5</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Exchange</span>
+      <span class="filter-value">NYSE, NASDAQ</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">RSI (14)</span>
+      <span class="filter-value">Oversold (< 30)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Insider Transactions</span>
+      <span class="filter-value">Positive (> 0%)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">EPS Growth Next Year</span>
+      <span class="filter-value">Over 10%</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Short Float</span>
+      <span class="filter-value">Under 15%</span>
+    </div>
+    <p><strong>Expected results:</strong> 5-20 stocks. Sort by "RSI" ascending to find the most oversold names. Cross-reference insider buying on OpenInsider.com.</p>
+  </div>
+
+  <h3>Setting Up TradingView Screener (Step-by-Step)</h3>
+
+  <p>TradingView offers more technical flexibility. Navigate to <strong>Screener</strong> (bottom panel) and set these filters:</p>
+
+  <div class="scanner-box">
+    <h3><i class="fa-solid fa-cog"></i> TradingView Breakout Scanner Setup</h3>
+    <div class="scanner-filter">
+      <span class="filter-name">Market Cap</span>
+      <span class="filter-value">300M to 2B</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Volume (20-day avg)</span>
+      <span class="filter-value">> 500,000</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price</span>
+      <span class="filter-value">> $5</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Exchange</span>
+      <span class="filter-value">NYSE, NASDAQ</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">BB Width (20,2)</span>
+      <span class="filter-value">< 0.10 (narrow bands = low volatility)</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Price Position</span>
+      <span class="filter-value">Close > 50-day SMA</span>
+    </div>
+    <div class="scanner-filter">
+      <span class="filter-name">Volume Today vs 20-day Avg</span>
+      <span class="filter-value">> 1.5x (volume surge starting)</span>
+    </div>
+    <p><strong>Expected results:</strong> 10-30 stocks. Click each result to view the chart directly. Look for the VCP pattern — successive tightening of the range with declining volume.</p>
+  </div>
+
+  <!-- EChart: Platform Comparison Radar -->
+  <div id="chart-platforms" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Platform Selection</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You are a beginner swing trader with a $50K account. You trade 3-5 small-caps per week. Which platform should you start with and why?</p>
+      <p><strong>Answer:</strong> <strong>Finviz (Free or Elite at $40/mo)</strong>. For a swing trader doing 3-5 trades per week, you need a screener that balances fundamental and technical filters, is fast to use, and does not require programming. Finviz checks all boxes: market cap, volume, insider ownership, RSI, and moving average filters are all built-in. The visual heat map gives you instant market context. The free version is sufficient for daily end-of-day scanning. Upgrade to Elite ($40/mo) when you want real-time data and intraday alerts. TradingView is the best complement for charting — use Finviz to find candidates, then TradingView to analyze charts. TC2000 is worth upgrading to once you want custom formulas (PCFs). Trade Ideas ($120-230/mo) is overkill for swing trading — it is designed for day traders who need streaming real-time alerts.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- DAILY SCANNING WORKFLOW                                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="workflow"><i class="fa-solid fa-clock" style="color:#0d9488;"></i> Daily Scanning Workflow</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clock" style="color:#0d9488;"></i> The 30-Minute Morning Routine</h2>
+
+  <p>A scanner is only useful if you use it consistently. The following daily workflow takes approximately 30 minutes before the market opens and produces a focused watchlist of 5-10 stocks for the day.</p>
+
+  <div class="workflow-timeline">
+    <div class="workflow-step">
+      <div class="wf-time">6:30 AM — Market Context (5 min)</div>
+      <h4>Check the Macro Environment</h4>
+      <p>Futures (ES, NQ, RTY), VIX level, any overnight news (geopolitical, earnings surprises, Fed speeches). This determines which scanner type to prioritize today. Green futures + low VIX = momentum scanner. Red futures + high VIX = mean reversion scanner.</p>
+    </div>
+    <div class="workflow-step">
+      <div class="wf-time">6:35 AM — Run All Three Scanners (10 min)</div>
+      <h4>Momentum + Breakout + Mean Reversion Scans</h4>
+      <p>Run your three pre-saved Finviz scans. Each produces 10-30 results. Copy the tickers into a spreadsheet or TradingView watchlist. You should have 30-80 raw candidates.</p>
+    </div>
+    <div class="workflow-step">
+      <div class="wf-time">6:45 AM — Quick Chart Review (10 min)</div>
+      <h4>60-Second Chart Check on Each Candidate</h4>
+      <p>Open each ticker's daily chart. In 60 seconds per chart, assess: (1) Is the trend clean or choppy? (2) Where is the nearest support/resistance? (3) Is volume confirming the move? (4) Is there a clear entry level and stop level? If yes to all four, it makes the final watchlist. If any answer is "no," skip it. Goal: reduce 30-80 candidates to 5-10 watchlist names.</p>
+    </div>
+    <div class="workflow-step">
+      <div class="wf-time">6:55 AM — Set Alerts (3 min)</div>
+      <h4>Price Alerts on Key Levels</h4>
+      <p>For each watchlist stock, set a price alert at the entry trigger level (breakout level, support bounce level, or momentum continuation level). This way, you do not need to watch 10 charts all day. The alert notifies you only when a stock reaches your predetermined entry zone.</p>
+    </div>
+    <div class="workflow-step">
+      <div class="wf-time">7:00 AM — Insider & News Check (2 min)</div>
+      <h4>Final Validation</h4>
+      <p>Quick check on OpenInsider.com for any insider transactions on your watchlist stocks. Check for any pre-market news (earnings, FDA, analyst actions). Remove any stock with negative overnight news from the watchlist.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#0d9488;"></i> Watchlist Management Best Practices</h4>
+    <p>Your watchlist is a living document, not a permanent list. Follow these rules:</p>
+    <ul>
+      <li><strong>Maximum 15 names at any time.</strong> More than 15 and you cannot track them effectively. If your scan produces 20, cut the weakest 5.</li>
+      <li><strong>Remove stocks that do not trigger within 5 trading days.</strong> If a stock sits on your watchlist for a week without triggering your entry alert, it is not acting well. Remove it and replace with fresh scan results.</li>
+      <li><strong>Track your scan-to-trade ratio.</strong> You should convert roughly 20-30% of your watchlist names into actual trades. If you are trading less than 10%, your scanner is too broad. If you are trading more than 50%, your scanner is not filtering enough.</li>
+      <li><strong>Keep a "graduated" list.</strong> When a stock grows above $2B market cap, remove it from your small-cap watchlist. It is now a mid-cap and trades differently.</li>
+      <li><strong>Weekend scan:</strong> Every Saturday, run a broader scan (relax Tier 3 filters) to find stocks building bases that might trigger during the coming week. This gives you a head start on the weekly pipeline.</li>
+    </ul>
+  </div>
+
+  <h3>Weekly Workflow (Saturday Morning)</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Time</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Run expanded scans (relax Tier 3)</strong></td>
+        <td>15 min</td>
+        <td>Find stocks building bases that may trigger next week. Wider RSI range (30-75), no volume surge required.</td>
+      </tr>
+      <tr>
+        <td><strong>Review current positions</strong></td>
+        <td>10 min</td>
+        <td>Check each open position: is the thesis intact? Has anything changed fundamentally? Adjust stops if needed.</td>
+      </tr>
+      <tr>
+        <td><strong>Check earnings calendar (next week)</strong></td>
+        <td>5 min</td>
+        <td>Identify watchlist stocks reporting earnings next week. Decide: hold through earnings or reduce/exit before?</td>
+      </tr>
+      <tr>
+        <td><strong>Review insider transactions</strong></td>
+        <td>5 min</td>
+        <td>Scan OpenInsider for cluster buys in small-caps ($300M-$2B, purchases > $100K). Add interesting names to watchlist.</td>
+      </tr>
+      <tr>
+        <td><strong>Sector rotation check</strong></td>
+        <td>5 min</td>
+        <td>Review sector ETF performance (XLF, XLK, XLV, XLE, XLI). Overweight sectors in uptrend, avoid sectors in downtrend.</td>
+      </tr>
+      <tr>
+        <td><strong>Journal review</strong></td>
+        <td>10 min</td>
+        <td>Review last week's trades: which scanner produced the winners? Which produced the losers? Adjust scanner weights accordingly.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: Volume Distribution -->
+  <div id="chart-volume" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <details>
+    <summary>Quiz: Daily Workflow</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> It is Monday morning. Futures are down 1.5%, VIX is at 24 (up from 18 last Friday), and there is news about potential tariff escalation. You run your three scanners. The momentum scanner returns 8 results, the breakout scanner returns 22 results, and the mean reversion scanner returns 35 results. What do you do?</p>
+      <p><strong>Answer:</strong> <strong>Focus on the mean reversion scanner results.</strong> The macro context (down futures, rising VIX, geopolitical risk) signals a risk-off environment. In this environment: (1) The 8 momentum results are probably false signals — stocks near highs in a falling market are likely to catch down. Skip them. (2) The 22 breakout candidates are risky — breakouts in high-VIX environments fail at much higher rates (~60% failure vs ~35% in low VIX). Save these for later but do not trade them today. (3) The 35 mean reversion candidates are the priority. But 35 is too many — filter further by checking insider buying (OpenInsider), lowest RSI, and proximity to major support levels. Reduce to 8-10 names. Set alerts at support levels. Only enter if the stock bounces from support with a bullish reversal candle (hammer, engulfing) on above-average volume. In risk-off, patience is critical — do not try to catch the falling knife on the first down day.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- KEY TAKEAWAYS                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#0d9488;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 2</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> A scanner works in three tiers: Tier 1 (mandatory — market cap, volume, price, exchange) eliminates 70% of junk. Tier 2 (quality — revenue growth, operating income, insider ownership, institutional ownership) finds companies worth owning. Tier 3 (technical — RSI, moving averages, volume) determines when to buy.</li>
+    <li><i class="fa-solid fa-check"></i> The four non-negotiable Tier 1 filters: market cap $300M-$2B, average volume > 500K, price > $5, exchange NYSE/NASDAQ. Never skip these.</li>
+    <li><i class="fa-solid fa-check"></i> Three scanner types for different market regimes: Momentum (near 52-week highs, strong relative strength), Breakout (tight consolidation, volume contraction, VCP pattern), and Mean Reversion (RSI < 30, at support, insider buying).</li>
+    <li><i class="fa-solid fa-check"></i> Red flag filters to always exclude: dilution > 20% (shares outstanding growth), short interest > 30%, no revenue (non-biotech), repeated ATM offerings, going concern qualification, heavy insider selling.</li>
+    <li><i class="fa-solid fa-check"></i> Finviz (free) is the best starting platform for combined fundamental + technical screening. TradingView for charting. TC2000 for advanced custom formulas. Trade Ideas for AI-powered day trading (expensive).</li>
+    <li><i class="fa-solid fa-check"></i> The daily 30-minute routine: 5 min macro context, 10 min run three scanners, 10 min chart review (60 seconds per chart), 3 min set alerts, 2 min insider/news check. Produces a focused 5-10 stock watchlist.</li>
+    <li><i class="fa-solid fa-check"></i> Watchlist management: max 15 names, remove after 5 days without trigger, track scan-to-trade ratio (target 20-30%), Saturday expanded scan for the week ahead.</li>
+    <li><i class="fa-solid fa-check"></i> Match scanner type to market regime: momentum in risk-on environments, mean reversion in risk-off selloffs, breakouts in low-volatility transitions. The scanner that matches the regime produces the best hit rate.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-small-caps/part3-confirmed-moves/" class="next-cta">
+  <div>
+    <div class="next-label">Part 3 of 8</div>
+    <div class="next-title">Spotting Confirmed Moves — Volume, Catalysts & Breakout Validation <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-small-caps/part1-landscape/" class="series-arrow" title="The Small-Cap Landscape"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Small-Caps</span><div class="series-steps"><a href="/series/trading-small-caps/part1-landscape/" class="series-step" title="The Small-Cap Landscape"><span class="series-num">1</span><span class="series-label">Landscape</span></a><a href="/series/trading-small-caps/part2-screening/" class="series-step current" title="Building Your Scanner"><span class="series-num">2</span><span class="series-label">Scanner</span></a><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-step" title="Spotting Confirmed Moves"><span class="series-num">3</span><span class="series-label">Confirmed Moves</span></a><a href="/series/trading-small-caps/part4-due-diligence/" class="series-step" title="Due Diligence Deep Dive"><span class="series-num">4</span><span class="series-label">Due Diligence</span></a><a href="/series/trading-small-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-small-caps/part6-risk-management/" class="series-step" title="Risk & Position Sizing"><span class="series-num">6</span><span class="series-label">Risk Mgmt</span></a><a href="/series/trading-small-caps/part7-traps/" class="series-step" title="The Trap Playbook"><span class="series-num">7</span><span class="series-label">Traps</span></a><a href="/series/trading-small-caps/part8-returns/" class="series-step" title="Returns & Edge Building"><span class="series-num">8</span><span class="series-label">Returns</span></a></div><span class="series-counter">2/8</span><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-arrow" title="Spotting Confirmed Moves"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: Filter Funnel
+var chartFunnel = echarts.init(document.getElementById('chart-funnel'));
+chartFunnel.setOption({
+  title: { text: 'The Small-Cap Scanner Funnel', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item', formatter: '{b}: {c} stocks' },
+  series: [{
+    type: 'funnel',
+    left: '10%', right: '10%', top: '18%', bottom: '5%',
+    width: '70%',
+    min: 0, max: 10000,
+    minSize: '15%', maxSize: '100%',
+    sort: 'descending',
+    gap: 4,
+    label: { show: true, position: 'inside', fontSize: 12, fontWeight: 600, color: '#fff', formatter: function(p) { return p.name + '\n' + p.value.toLocaleString(); } },
+    itemStyle: { borderWidth: 0 },
+    data: [
+      { value: 10000, name: 'All US Stocks', itemStyle: { color: '#94a3b8' } },
+      { value: 4000, name: 'Small-Cap Universe', itemStyle: { color: '#64748b' } },
+      { value: 1200, name: 'After Tier 1 (Mandatory)', itemStyle: { color: '#dc2626' } },
+      { value: 350, name: 'After Tier 2 (Quality)', itemStyle: { color: '#f59e0b' } },
+      { value: 30, name: 'After Tier 3 (Technical)', itemStyle: { color: '#0d9488' } },
+      { value: 8, name: 'Final Watchlist', itemStyle: { color: '#115e59' } }
+    ]
+  }]
+});
+
+// Chart 2: Scanner Hit Rates (Bar)
+var chartHitrates = echarts.init(document.getElementById('chart-hitrates'));
+chartHitrates.setOption({
+  title: { text: 'Historical Scanner Hit Rates by Type & Market Regime', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Risk-On\n(VIX < 15)', 'Neutral\n(VIX 15-22)', 'Risk-Off\n(VIX > 22)', 'Overall\nAverage'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Hit Rate (%)', axisLabel: { fontSize: 11, formatter: '{value}%' }, max: 80 },
+  series: [
+    {
+      name: 'Momentum Scanner',
+      type: 'bar',
+      data: [68, 52, 28, 49],
+      itemStyle: { color: '#0d9488', borderRadius: [4,4,0,0] }
+    },
+    {
+      name: 'Breakout Scanner',
+      type: 'bar',
+      data: [62, 48, 32, 47],
+      itemStyle: { color: '#2563eb', borderRadius: [4,4,0,0] }
+    },
+    {
+      name: 'Mean Reversion Scanner',
+      type: 'bar',
+      data: [38, 45, 58, 47],
+      itemStyle: { color: '#9333ea', borderRadius: [4,4,0,0] }
+    }
+  ]
+});
+
+// Chart 3: Platform Comparison Radar
+var chartPlatforms = echarts.init(document.getElementById('chart-platforms'));
+chartPlatforms.setOption({
+  title: { text: 'Scanner Platform Comparison', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['Finviz', 'TradingView', 'TC2000', 'Trade Ideas'], textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: 'Ease of Use', max: 10 },
+      { name: 'Fundamental\nFilters', max: 10 },
+      { name: 'Technical\nFilters', max: 10 },
+      { name: 'Real-Time\nData', max: 10 },
+      { name: 'Custom\nFormulas', max: 10 },
+      { name: 'Price\n(Value)', max: 10 },
+      { name: 'Charting', max: 10 },
+      { name: 'Backtesting', max: 10 }
+    ],
+    radius: '52%'
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [9, 8, 6, 5, 3, 10, 5, 2], name: 'Finviz', lineStyle: { color: '#0d9488' }, itemStyle: { color: '#0d9488' }, areaStyle: { color: 'rgba(13,148,136,0.1)' } },
+      { value: [8, 5, 9, 8, 7, 8, 10, 4], name: 'TradingView', lineStyle: { color: '#2563eb' }, itemStyle: { color: '#2563eb' }, areaStyle: { color: 'rgba(37,99,235,0.1)' } },
+      { value: [5, 7, 9, 8, 10, 7, 7, 6], name: 'TC2000', lineStyle: { color: '#f59e0b' }, itemStyle: { color: '#f59e0b' }, areaStyle: { color: 'rgba(245,158,11,0.1)' } },
+      { value: [4, 6, 10, 10, 8, 2, 6, 9], name: 'Trade Ideas', lineStyle: { color: '#9333ea' }, itemStyle: { color: '#9333ea' }, areaStyle: { color: 'rgba(147,51,234,0.1)' } }
+    ]
+  }]
+});
+
+// Chart 4: Volume Distribution in Small-Caps
+var chartVolume = echarts.init(document.getElementById('chart-volume'));
+chartVolume.setOption({
+  title: { text: 'Small-Cap Daily Volume Distribution (4,000 Stocks)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(params) { return params[0].axisValue + '<br/>' + params[0].marker + params[0].value + '% of small-caps'; } },
+  grid: { left: '3%', right: '4%', bottom: '10%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['< 50K', '50-100K', '100-250K', '250-500K', '500K-1M', '1-3M', '3-5M', '5-10M', '> 10M'], axisLabel: { fontSize: 10, rotate: 15 }, name: 'Average Daily Volume' },
+  yAxis: { type: 'value', name: '% of Small-Caps', axisLabel: { fontSize: 11, formatter: '{value}%' } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 18, itemStyle: { color: '#ef4444' } },
+      { value: 15, itemStyle: { color: '#ef4444' } },
+      { value: 22, itemStyle: { color: '#f59e0b' } },
+      { value: 16, itemStyle: { color: '#f59e0b' } },
+      { value: 14, itemStyle: { color: '#0d9488' } },
+      { value: 9, itemStyle: { color: '#0d9488' } },
+      { value: 3, itemStyle: { color: '#0d9488' } },
+      { value: 2, itemStyle: { color: '#10b981' } },
+      { value: 1, itemStyle: { color: '#10b981' } }
+    ],
+    barWidth: '60%',
+    label: { show: true, position: 'top', fontSize: 10, fontWeight: 600, formatter: '{c}%' },
+    markLine: { data: [{ xAxis: '500K-1M', lineStyle: { color: '#0d9488', type: 'dashed', width: 2 }, label: { show: true, formatter: '500K Minimum\nFilter Line', fontSize: 10, color: '#0d9488', position: 'start' } }], symbol: 'none' }
+  }],
+  graphic: [{
+    type: 'text', left: '15%', top: '30%',
+    style: { text: 'EXCLUDED\n(71% of small-caps)', fontSize: 13, fontWeight: 700, fill: '#ef4444' }
+  }, {
+    type: 'text', right: '15%', top: '30%',
+    style: { text: 'TRADEABLE\n(29% of small-caps)', fontSize: 13, fontWeight: 700, fill: '#0d9488' }
+  }]
+});
+
+// Resize all charts on window resize
+window.addEventListener('resize', function() {
+  chartFunnel.resize();
+  chartHitrates.resize();
+  chartPlatforms.resize();
+  chartVolume.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

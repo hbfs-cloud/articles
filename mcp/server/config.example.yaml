@@ -1,0 +1,170 @@
+# Market Watch MCP Server Configuration
+# Copy to config.yaml and edit with your settings
+
+# ══════════════════════════════════════
+# DATA SOURCES
+# ══════════════════════════════════════
+sources:
+  yahoo:
+    enabled: true
+    # No API key needed — uses public Yahoo Finance v8 API
+    polling_interval: 15  # seconds for realtime quotes
+    cache_ttl:
+      quotes: 15          # seconds
+      bars: 300           # 5 minutes
+      financials: 86400   # 24 hours
+      options: 600        # 10 minutes
+      news: 300           # 5 minutes
+
+  binance:
+    enabled: true
+    # No API key needed for public data
+    websocket: true       # realtime via WebSocket
+    symbols:              # crypto pairs to track
+      - BTCUSDT
+      - ETHUSDT
+      - SOLUSDT
+      - XRPUSDT
+      - DOGEUSDT
+
+  sec_edgar:
+    enabled: true
+    user_agent: "MarketWatch MCP contact@market-watch.xyz"
+    # SEC requires a User-Agent with contact info
+    filing_types:         # filings to track
+      - "10-K"
+      - "10-Q"
+      - "8-K"
+      - "4"               # insider transactions
+      - "13F-HR"          # institutional holdings
+
+  fred:
+    enabled: false
+    api_key: ""           # Get free key at https://fred.stlouisfed.org/docs/api/api_key.html
+    series:
+      - VIXCLS            # VIX
+      - DGS10             # 10-Year Treasury
+      - CPIAUCSL          # CPI
+      - UNRATE            # Unemployment
+      - FEDFUNDS          # Fed Funds Rate
+
+# ══════════════════════════════════════
+# AI / LLM (for local analysis)
+# ══════════════════════════════════════
+llm:
+  provider: "deepseek"    # deepseek (free), openai, anthropic, ollama
+  deepseek:
+    api_key: ""           # Get free key at https://platform.deepseek.com/
+    model: "deepseek-chat"
+    max_tokens: 4096
+  openai:
+    api_key: ""
+    model: "gpt-4o-mini"
+  anthropic:
+    api_key: ""
+    model: "claude-haiku-4-5-20251001"
+  ollama:
+    url: "http://localhost:11434"
+    model: "llama3.2"
+  # Used for: news sentiment analysis, DD reports, alert enrichment, morning briefings
+
+# ══════════════════════════════════════
+# WATCHLIST & SCANNER
+# ══════════════════════════════════════
+watchlist:
+  sync_url: "https://articles.market-watch.xyz/mcp/watchlist.json"
+  sync_interval: 3600     # seconds (1 hour)
+  custom_tickers: []      # add your own tickers on top of scanner picks
+  # custom_tickers: ["CRWD", "PANW", "SNOW"]
+
+scanner:
+  enabled: true
+  universe: "sp500"       # sp500, russell2000, custom
+  custom_universe: []     # tickers if universe=custom
+  interval: 300           # seconds between scans (5 min)
+  presets:
+    momentum:
+      enabled: true
+      filters:
+        rsi_min: 60
+        rsi_max: 80
+        rvol_min: 2.0
+        above_50ma: true
+        new_high_pct: 10   # within 10% of 52-week high
+    breakout:
+      enabled: true
+      filters:
+        consolidation_days: 20
+        volume_contraction: true
+        bollinger_squeeze: true
+    mean_reversion:
+      enabled: true
+      filters:
+        rsi_max: 30
+        at_support: true
+        insider_buying_90d: true
+
+# ══════════════════════════════════════
+# ALERTS & NOTIFICATIONS
+# ══════════════════════════════════════
+alerts:
+  enabled: true
+  throttle: 60            # min seconds between alerts for same ticker
+  channels:
+    desktop:
+      enabled: true
+      types: ["entry", "stop", "tp", "news_critical", "regime_change"]
+
+    slack:
+      enabled: false
+      webhook_url: ""     # https://hooks.slack.com/services/T.../B.../xxx
+      types: ["entry", "stop", "tp", "news", "earnings", "regime_change"]
+
+    discord:
+      enabled: false
+      webhook_url: ""     # https://discord.com/api/webhooks/123/abc
+      types: ["entry", "stop", "tp", "regime_change", "scanner"]
+
+    telegram:
+      enabled: false
+      bot_token: ""       # from @BotFather
+      chat_id: ""         # your chat ID
+      types: ["all"]
+
+  # Alert types:
+  # entry        — price enters watchlist entry zone
+  # stop         — price hits stop loss level
+  # tp           — price hits take profit (TP1, TP2)
+  # news         — significant news on watchlist ticker
+  # news_critical — breaking news with high impact score
+  # earnings     — earnings report within 24h for watchlist ticker
+  # regime_change — market regime shifts (e.g. Risk-On → Risk-Off)
+  # scanner      — new scanner pick detected
+  # insider      — insider buying/selling on watchlist ticker
+  # volume_spike — volume surge >3x average on watchlist ticker
+  # sec_filing   — new SEC filing for watchlist ticker
+  # vwap_reclaim — price reclaims VWAP with confirmation candle
+
+# ══════════════════════════════════════
+# TRADE JOURNAL
+# ══════════════════════════════════════
+journal:
+  enabled: true
+  db_path: "./data/journal.db"   # SQLite database
+  auto_log: true                  # auto-log alert-triggered events
+  screenshot: false               # requires puppeteer (heavy)
+
+# ══════════════════════════════════════
+# DASHBOARD
+# ══════════════════════════════════════
+dashboard:
+  enabled: true
+  port: 3847
+  auto_open: true         # open browser on start
+
+# ══════════════════════════════════════
+# BROWSER EXTENSION
+# ══════════════════════════════════════
+extension:
+  port: 3848              # WebSocket port for extension communication
+  enabled: true

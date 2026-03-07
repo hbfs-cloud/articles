@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,tech,formation,trade-idea,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Valuation Frameworks — Is NVDA Expensive at 35x? | Trading Mega-Caps & Blue Chips — Part 3/8 | Market Watch</title>
+ <meta name="description" content="Trading Mega-Caps & Blue Chips series — Part 3/8: PE vs Forward PE, PEG ratio, EV/EBITDA, DCF simplified, FCF yield, relative vs absolute valuation, sum-of-parts, and the Rule of 40.">
+ <meta property="og:title" content="Valuation Frameworks | Trading Mega-Caps 3/8 | Market Watch">
+ <meta property="og:description" content="Master the valuation frameworks used by institutional investors to determine if mega-cap stocks are cheap or expensive — PE, PEG, EV/EBITDA, DCF, FCF yield, and sum-of-the-parts analysis.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-mega-caps/part3-valuation/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+/* SLATE/NAVY MEGA-CAPS THEME */
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0f4f8 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#1e3a5f; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-navy { background:rgba(30,58,95,0.1); color:#1e3a5f; border:1px solid rgba(30,58,95,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+.takeaway-box { background:linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%); border:1px solid #1e3a5f; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#1e3a5f; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(30,58,95,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#1e3a5f; margin-top:0.2rem; flex-shrink:0; }
+
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #1e3a5f 0%, #0f1d30 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(30,58,95,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #1e3a5f; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #1e3a5f 0%, #0f1d30 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#60a5fa; }
+
+details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#1e3a5f; }
+details[open] summary { border-bottom:1px solid #e2e8f0; background:#f0f4f8; }
+details .quiz-content { padding:1.5rem; }
+details .quiz-content p { margin:0.5rem 0; }
+
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .step-grid { grid-template-columns:1fr; }
+}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-building-columns"></i> Trading Mega-Caps & Blue Chips — Part 3 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Valuation Frameworks — Is NVDA Expensive at 35x?</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">The question "is this stock expensive?" is the most frequently asked and most frequently answered incorrectly in investing. A stock's PE ratio alone tells you nothing. Context — growth rate, margin trajectory, capital returns, and competitive position — is everything. This is your guide to thinking about valuation like an institutional investor.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-navy"><i class="fa-solid fa-calculator"></i> PE & PEG</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-bar"></i> EV/EBITDA</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-money-bill-trend-up"></i> DCF & FCF</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-puzzle-piece"></i> Sum-of-Parts</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-mega-caps/part2-mag7/" class="series-arrow" title="The Magnificent 7"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Mega-Caps & Blue Chips</span><div class="series-steps"><a href="/series/trading-mega-caps/part1-titans/" class="series-step" title="The Titans"><span class="series-num">1</span><span class="series-label">The Titans</span></a><a href="/series/trading-mega-caps/part2-mag7/" class="series-step" title="The Mag 7"><span class="series-num">2</span><span class="series-label">The Mag 7</span></a><a href="/series/trading-mega-caps/part3-valuation/" class="series-step current" title="Valuation"><span class="series-num">3</span><span class="series-label">Valuation</span></a><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-step" title="Technical Trading"><span class="series-num">4</span><span class="series-label">Technical Trading</span></a><a href="/series/trading-mega-caps/part5-options/" class="series-step" title="Options"><span class="series-num">5</span><span class="series-label">Options</span></a><a href="/series/trading-mega-caps/part6-earnings-macro/" class="series-step" title="Earnings & Macro"><span class="series-num">6</span><span class="series-label">Earnings & Macro</span></a><a href="/series/trading-mega-caps/part7-dividends-buybacks/" class="series-step" title="Dividends & Buybacks"><span class="series-num">7</span><span class="series-label">Dividends & Buybacks</span></a><a href="/series/trading-mega-caps/part8-portfolio-alpha/" class="series-step" title="Portfolio Alpha"><span class="series-num">8</span><span class="series-label">Portfolio Alpha</span></a></div><span class="series-counter">3/8</span><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-arrow" title="Technical Trading Mega-Caps"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#pe-trap" class="fnav-item" data-section="pe-trap"><i class="fas fa-exclamation-triangle"></i><span>The PE Trap</span></a><a href="#forward-pe" class="fnav-item" data-section="forward-pe"><i class="fas fa-forward"></i><span>Forward PE & PEG</span></a><a href="#ev-ebitda" class="fnav-item" data-section="ev-ebitda"><i class="fas fa-building"></i><span>EV/EBITDA</span></a><a href="#dcf" class="fnav-item" data-section="dcf"><i class="fas fa-calculator"></i><span>DCF Analysis</span></a><a href="#fcf" class="fnav-item" data-section="fcf"><i class="fas fa-money-bill-wave"></i><span>FCF Yield</span></a><a href="#relative" class="fnav-item" data-section="relative"><i class="fas fa-scale-balanced"></i><span>Relative Valuation</span></a><a href="#sotp" class="fnav-item" data-section="sotp"><i class="fas fa-puzzle-piece"></i><span>Sum-of-Parts</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- THE PE TRAP                                                    -->
+<!-- ============================================================ -->
+<div class="section-divider" id="pe-trap"><i class="fa-solid fa-exclamation-triangle" style="color:#1e3a5f;"></i> The PE Ratio Trap</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-exclamation-triangle" style="color:#1e3a5f;"></i> Why Traditional PE Ratio Is Misleading for Mega-Caps</h2>
+
+  <p>The price-to-earnings ratio is the most cited valuation metric in finance and also the most misused. When a financial news anchor says "NVDA is expensive at 35x earnings," they are making an implicit comparison to historical averages or to other stocks — without accounting for the vastly different growth rates, margin profiles, and capital return policies of the companies being compared.</p>
+
+  <p>The trailing PE ratio (price divided by last 12 months' earnings) is particularly misleading for fast-growing companies because it uses <em>backward-looking</em> earnings that do not reflect the company's current run rate. NVIDIA's trailing PE might show 45x because it includes quarters where revenue was still ramping. The forward PE (price divided by next 12 months' estimated earnings) shows 35x — a more accurate picture of what you are paying for NVIDIA's current earnings power.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">The PE Mislead</div>
+    <span class="formula-highlight">T (AT&T)</span> at 8x PE &#8800; "cheap" | <span class="formula-highlight">NVDA</span> at 35x PE &#8800; "expensive"
+  </div>
+
+  <p>Consider this: AT&T trades at 8x earnings. NVIDIA trades at 35x earnings. A naive reading says AT&T is 4x cheaper than NVIDIA. But AT&T's earnings are declining 2% annually while NVIDIA's are growing 55% annually. In two years, AT&T's EPS will be roughly $1.92 (down from $2.00), while NVIDIA's EPS will be roughly $7.20 (up from $3.00). The stock trading at 35x today's earnings is trading at only 15x earnings two years from now. The stock at 8x is still at 8x — or higher if earnings continue declining.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>AT&T (T)</th>
+        <th>NVIDIA (NVDA)</th>
+        <th>Who's Really "Cheaper"?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Current PE</strong></td>
+        <td>8x</td>
+        <td>35x</td>
+        <td>T looks cheaper</td>
+      </tr>
+      <tr>
+        <td><strong>EPS Growth</strong></td>
+        <td>-2%</td>
+        <td>+55%</td>
+        <td>NVDA massively faster</td>
+      </tr>
+      <tr>
+        <td><strong>PEG Ratio</strong></td>
+        <td>N/A (negative growth)</td>
+        <td>0.64</td>
+        <td>NVDA is cheaper on growth-adjusted basis</td>
+      </tr>
+      <tr>
+        <td><strong>PE in 2 Years</strong></td>
+        <td>~8.3x</td>
+        <td>~15x</td>
+        <td>NVDA rapidly de-rates via growth</td>
+      </tr>
+      <tr>
+        <td><strong>FCF Yield</strong></td>
+        <td>8.5%</td>
+        <td>2.8%</td>
+        <td>T has higher current yield</td>
+      </tr>
+      <tr>
+        <td><strong>Revenue Trend</strong></td>
+        <td>Declining (cord-cutting)</td>
+        <td>Accelerating (AI demand)</td>
+        <td>NVDA has secular tailwind</td>
+      </tr>
+      <tr>
+        <td><strong>Net Debt/EBITDA</strong></td>
+        <td>3.2x (high leverage)</td>
+        <td>Net cash ($26B)</td>
+        <td>NVDA has fortress balance sheet</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> The Value Trap Concept</h4>
+    <p>A <strong>value trap</strong> is a stock that looks cheap on PE but is cheap for a good reason — the business is in structural decline. The low PE is not a buying opportunity; it is the market correctly pricing declining future cash flows. Classic value traps include legacy telecom (Verizon, AT&T), traditional media (ViacomCBS), and disrupted retailers (Macy's).</p>
+    <p>The key difference between a value trap and a genuine value opportunity: <strong>Is the PE low because the business is declining, or because the market is temporarily mispricing a healthy business?</strong> GOOGL at 22x PE is likely a genuine value opportunity because its business (search, cloud) is healthy and growing. AT&T at 8x PE is likely a value trap because its core business (wireless, legacy media) faces structural headwinds.</p>
+    <p>For mega-caps specifically, value traps are rare because these companies generally have strong competitive positions. The risk is more often overpaying for growth (buying TSLA at 85x PE when growth is 8%) than getting trapped in a declining business.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Is a stock at 50x PE always expensive?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> No. A stock at 50x PE can be cheap if earnings are growing fast enough to justify the multiple. If EPS is growing at 80% annually, the PEG ratio is 50/80 = 0.63, which Peter Lynch would consider undervalued. Amazon traded at 50-100x PE for most of the 2010s and delivered a 30x return because earnings grew fast enough to justify (and eventually compress) the multiple.</p>
+      <p>The correct question is not "is 50x expensive?" but rather "is 50x justified by the growth rate, competitive position, and TAM of this business?" If the answer is yes, the stock may actually be cheap despite the high PE.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- FORWARD PE & PEG                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="forward-pe"><i class="fa-solid fa-forward" style="color:#1e3a5f;"></i> Forward PE & PEG Ratio</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-forward" style="color:#1e3a5f;"></i> Always Use Forward PE for Growth Companies</h2>
+
+  <p>Institutional investors almost exclusively use <strong>forward PE</strong> (price / next 12 months' estimated EPS) rather than trailing PE. The reason is simple: you are buying future cash flows, not past cash flows. The trailing PE tells you what the company earned last year; the forward PE tells you what the market expects it to earn next year. For fast-growing companies, the difference can be enormous.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Trailing PE (TTM)</th>
+        <th>Forward PE (NTM)</th>
+        <th>Difference</th>
+        <th>Why the Gap Exists</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>48x</td>
+        <td>35x</td>
+        <td>-27%</td>
+        <td>Earnings are growing 55% YoY — forward catches up fast</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>28x</td>
+        <td>24x</td>
+        <td>-14%</td>
+        <td>Strong earnings growth from AI-driven ad efficiency</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>36x</td>
+        <td>34x</td>
+        <td>-6%</td>
+        <td>Stable 14-16% growth narrows the gap</td>
+      </tr>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>33x</td>
+        <td>32x</td>
+        <td>-3%</td>
+        <td>Slow 5-8% growth, trailing and forward are similar</td>
+      </tr>
+      <tr>
+        <td><strong>TSLA</strong></td>
+        <td>95x</td>
+        <td>85x</td>
+        <td>-11%</td>
+        <td>Volatile earnings make estimates uncertain</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The PEG Ratio: Peter Lynch's Master Framework</h3>
+
+  <p>Peter Lynch, the legendary Fidelity Magellan fund manager who returned 29.2% annually from 1977-1990, used a simple but powerful framework: the <strong>PEG ratio</strong> (Price/Earnings to Growth). The formula is:</p>
+
+  <div class="formula-box">
+    <div class="formula-label">PEG Ratio Formula</div>
+    <span class="formula-highlight">PEG</span> = Forward PE / Annual EPS Growth Rate = <span class="formula-highlight">35 / 55</span> = 0.64
+  </div>
+
+  <p>Lynch's guidelines:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-circle" style="color:#10b981;"></i> <strong>PEG &lt; 1.0:</strong> Stock is undervalued relative to its growth rate. Potential buy signal.</li>
+    <li><i class="fa-solid fa-circle" style="color:#f59e0b;"></i> <strong>PEG 1.0 - 2.0:</strong> Stock is fairly valued. Growth justifies the current price.</li>
+    <li><i class="fa-solid fa-circle" style="color:#dc2626;"></i> <strong>PEG &gt; 2.0:</strong> Stock is overvalued relative to its growth rate. Consider waiting for a pullback.</li>
+  </ul>
+
+  <!-- EChart: PEG Ratio Comparison -->
+  <div id="chart-peg" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#1e3a5f;"></i> PEG Ratio Limitations</h4>
+    <p>The PEG ratio is powerful but has limitations that intermediate traders must understand:</p>
+    <p><strong>1. Growth must be sustainable:</strong> A PEG of 0.5 based on one exceptional quarter is meaningless. Use the consensus 2-year forward growth estimate, not a single quarter's rate.</p>
+    <p><strong>2. Does not account for quality:</strong> Two stocks with PEG of 1.0 can have very different risk profiles. A software company growing 20% with 40% margins (MSFT) is far superior to a hardware company growing 20% with 10% margins.</p>
+    <p><strong>3. Negative earnings invalidate the ratio:</strong> If a company has negative EPS or negative growth, PEG is meaningless. It cannot be used for pre-profit companies or companies in decline.</p>
+    <p><strong>4. Ignores capital structure:</strong> PEG does not account for debt. A highly leveraged company with 1.0 PEG is riskier than a net-cash company with 1.0 PEG.</p>
+    <p>Despite these limitations, PEG remains the fastest and most intuitive way to compare mega-cap valuations across different growth profiles.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: A stock has a Forward PE of 25x and EPS is growing at 30%. Is it expensive?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> No. The PEG ratio is 25/30 = 0.83, which is below 1.0 — indicating the stock is <strong>undervalued</strong> relative to its growth rate. Peter Lynch would consider this a potential buy.</p>
+      <p>However, before buying, verify that: (1) the 30% growth rate is sustainable for at least 2-3 years (not a one-time spike), (2) the company has a competitive moat protecting that growth, (3) the balance sheet is healthy (low debt, positive FCF), and (4) the macro environment supports the growth thesis. A sub-1.0 PEG is a necessary but not sufficient condition for a buy.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- EV/EBITDA                                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="ev-ebitda"><i class="fa-solid fa-building" style="color:#1e3a5f;"></i> EV/EBITDA — The Institutional Standard</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-building" style="color:#1e3a5f;"></i> Enterprise Value / EBITDA: Removing Capital Structure Noise</h2>
+
+  <p>While retail investors focus on PE ratio, institutional investors prefer <strong>EV/EBITDA</strong> (Enterprise Value / Earnings Before Interest, Taxes, Depreciation, and Amortization). This metric has two key advantages over PE: (1) it uses Enterprise Value instead of market cap, which accounts for debt and cash, and (2) it uses EBITDA instead of net income, which removes the distortion of different tax rates, debt levels, and depreciation policies.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Enterprise Value Formula</div>
+    <span class="formula-highlight">EV</span> = Market Cap + Total Debt - Cash = <span class="formula-highlight">$2,800B + $8B - $26B</span> = $2,782B (NVDA)
+  </div>
+
+  <p>Enterprise Value represents the total cost of acquiring the company — you pay the market cap to buy all shares, you assume the debt (which you must eventually repay), and you receive the cash on the balance sheet. This gives a more accurate picture of what the business is "worth" than market cap alone.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Market Cap ($B)</th>
+        <th>Net Debt ($B)</th>
+        <th>EV ($B)</th>
+        <th>EBITDA ($B)</th>
+        <th>EV/EBITDA</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>3,570</td>
+        <td>-54 (net cash)</td>
+        <td>3,516</td>
+        <td>135</td>
+        <td>26.0x</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>3,100</td>
+        <td>-32 (net cash)</td>
+        <td>3,068</td>
+        <td>128</td>
+        <td>24.0x</td>
+      </tr>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>2,800</td>
+        <td>-18 (net cash)</td>
+        <td>2,782</td>
+        <td>87</td>
+        <td>32.0x</td>
+      </tr>
+      <tr>
+        <td><strong>AMZN</strong></td>
+        <td>2,200</td>
+        <td>+28 (net debt)</td>
+        <td>2,228</td>
+        <td>124</td>
+        <td>18.0x</td>
+      </tr>
+      <tr>
+        <td><strong>GOOGL</strong></td>
+        <td>2,100</td>
+        <td>-82 (net cash)</td>
+        <td>2,018</td>
+        <td>126</td>
+        <td>16.0x</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>1,650</td>
+        <td>-40 (net cash)</td>
+        <td>1,610</td>
+        <td>107</td>
+        <td>15.0x</td>
+      </tr>
+      <tr>
+        <td><strong>TSLA</strong></td>
+        <td>1,050</td>
+        <td>-16 (net cash)</td>
+        <td>1,034</td>
+        <td>20</td>
+        <td>52.0x</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> Why EV/EBITDA Is Superior to PE for Comparisons</h4>
+    <p><strong>PE ratio problem:</strong> Company A has $100M net income and no debt. Company B has $100M net income and $500M in debt (paying $30M interest). Both show the same EPS, but Company B's "real" earnings power is $130M (pre-interest). PE makes them look the same; EV/EBITDA reveals that Company B is more leveraged and its equity is riskier.</p>
+    <p><strong>When to use PE:</strong> Comparing companies within the same industry with similar capital structures (e.g., AAPL vs MSFT).</p>
+    <p><strong>When to use EV/EBITDA:</strong> Comparing companies across industries or with different capital structures (e.g., AMZN with debt vs GOOGL with net cash). Also essential for M&A analysis — acquirers think in EV/EBITDA because they pay EV, not market cap.</p>
+  </div>
+
+  <p>Notice that on EV/EBITDA, the valuation ranking changes significantly from PE. GOOGL and META look even cheaper (16x and 15x respectively) because they have enormous net cash positions that reduce their EV relative to market cap. Amazon looks cheaper than AAPL or MSFT because its EBITDA includes the full run-rate of AWS (which is growing 28% and has 37% margins) — making the 18x EV/EBITDA a compelling value for a business of Amazon's quality.</p>
+
+  <details>
+    <summary>Quiz: Why does GOOGL have the lowest EV/EBITDA despite not having the lowest PE?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> GOOGL has the lowest EV/EBITDA (16x) because of its massive <strong>$82 billion net cash position</strong>. While GOOGL's PE is 22x (based on market cap), its EV is reduced by $82B from the net cash, making the ratio lower. This net cash effectively means that $82B of GOOGL's $2.1T market cap is "risk-free" — you are getting the operating business at a discount because the company has $82B sitting in the bank.</p>
+      <p>For an acquirer thinking about buying GOOGL (hypothetically), the actual cost of the business is $2.018T (EV), not $2.1T (market cap), because they would receive $82B in cash from the balance sheet.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- DCF ANALYSIS                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="dcf"><i class="fa-solid fa-calculator" style="color:#1e3a5f;"></i> Simplified DCF for Mega-Caps</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#1e3a5f;"></i> Discounted Cash Flow: What Is the Business Actually Worth?</h2>
+
+  <p>A <strong>Discounted Cash Flow (DCF)</strong> analysis estimates the intrinsic value of a business by projecting its future free cash flows and discounting them back to present value using an appropriate discount rate. It is the most theoretically rigorous valuation method and the one most commonly used in investment banking and institutional research.</p>
+
+  <p>For mega-caps, a simplified 5-year DCF is sufficient for making trading decisions. You do not need a 10-year projection with 50 assumptions — you need a reasonable estimate of whether the stock is trading above or below its intrinsic value based on consensus expectations.</p>
+
+  <h3>Simplified 5-Year DCF: NVIDIA Example</h3>
+
+  <div class="formula-box">
+    <div class="formula-label">DCF Formula</div>
+    <span class="formula-highlight">Intrinsic Value</span> = Sum of (FCF_t / (1+r)^t) + Terminal Value / (1+r)^5
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Revenue ($B)</th>
+        <th>FCF Margin</th>
+        <th>FCF ($B)</th>
+        <th>Discount Factor (10%)</th>
+        <th>Present Value ($B)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Year 1 (FY2027)</strong></td>
+        <td>$170</td>
+        <td>40%</td>
+        <td>$68</td>
+        <td>0.909</td>
+        <td>$61.8</td>
+      </tr>
+      <tr>
+        <td><strong>Year 2 (FY2028)</strong></td>
+        <td>$215</td>
+        <td>42%</td>
+        <td>$90</td>
+        <td>0.826</td>
+        <td>$74.4</td>
+      </tr>
+      <tr>
+        <td><strong>Year 3 (FY2029)</strong></td>
+        <td>$250</td>
+        <td>43%</td>
+        <td>$108</td>
+        <td>0.751</td>
+        <td>$81.0</td>
+      </tr>
+      <tr>
+        <td><strong>Year 4 (FY2030)</strong></td>
+        <td>$275</td>
+        <td>44%</td>
+        <td>$121</td>
+        <td>0.683</td>
+        <td>$82.6</td>
+      </tr>
+      <tr>
+        <td><strong>Year 5 (FY2031)</strong></td>
+        <td>$295</td>
+        <td>45%</td>
+        <td>$133</td>
+        <td>0.621</td>
+        <td>$82.5</td>
+      </tr>
+      <tr>
+        <td><strong>Terminal Value</strong></td>
+        <td colspan="2">25x Year 5 FCF</td>
+        <td>$3,325</td>
+        <td>0.621</td>
+        <td>$2,064.8</td>
+      </tr>
+      <tr>
+        <td><strong>Total Intrinsic Value</strong></td>
+        <td colspan="4"></td>
+        <td><strong>$2,447B</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>This simplified DCF suggests NVIDIA's intrinsic value is approximately $2,447 billion, compared to its current market cap of $2,800 billion. This implies the stock is approximately 14% overvalued at current prices — assuming these growth and margin assumptions are correct and the discount rate is 10%.</p>
+
+  <p>However, DCF is extremely sensitive to assumptions. Let's see what happens when we change key inputs:</p>
+
+  <!-- EChart: DCF Sensitivity -->
+  <div id="chart-dcf" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#1e3a5f;"></i> The Terminal Value Problem</h4>
+    <p>In the DCF above, the terminal value ($2,065B) represents 84% of the total intrinsic value. This is a well-known problem with DCF analysis: <strong>most of the value comes from the terminal value assumption, which is the most uncertain input</strong>. A terminal multiple of 25x gives $2,447B; a terminal multiple of 30x gives $2,794B (close to current price); a terminal multiple of 20x gives $2,099B (25% downside).</p>
+    <p>This is why professional investors do not use DCF as a precise price target tool. Instead, they use it as a <strong>sanity check</strong> and a <strong>scenario analysis framework</strong>. If your DCF shows the stock is 50% overvalued under base-case assumptions, it is probably genuinely expensive. If it shows the stock is 10-15% over/undervalued, the difference is within the margin of error of your assumptions.</p>
+    <p><strong>Practical rule:</strong> Only act on a DCF signal if the gap between intrinsic value and market price exceeds 25%. Below that threshold, the uncertainty in your assumptions is larger than the signal.</p>
+  </div>
+
+  <h3>DCF for Different Mega-Cap Profiles</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>5Y Rev CAGR</th>
+        <th>Terminal FCF Margin</th>
+        <th>DCF Value ($B)</th>
+        <th>Current Mkt Cap ($B)</th>
+        <th>Over/Under Valued</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>5%</td>
+        <td>28%</td>
+        <td>$3,200</td>
+        <td>$3,570</td>
+        <td>12% overvalued</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>13%</td>
+        <td>38%</td>
+        <td>$3,400</td>
+        <td>$3,100</td>
+        <td>10% undervalued</td>
+      </tr>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>25%</td>
+        <td>45%</td>
+        <td>$2,450</td>
+        <td>$2,800</td>
+        <td>14% overvalued</td>
+      </tr>
+      <tr>
+        <td><strong>GOOGL</strong></td>
+        <td>12%</td>
+        <td>30%</td>
+        <td>$2,500</td>
+        <td>$2,100</td>
+        <td>19% undervalued</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>14%</td>
+        <td>35%</td>
+        <td>$2,000</td>
+        <td>$1,650</td>
+        <td>21% undervalued</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details>
+    <summary>Quiz: Why is DCF more useful as a scenario analysis tool than a precise valuation tool?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> DCF is better for scenario analysis because <strong>the inputs are inherently uncertain</strong>. A 2% change in the discount rate or a 5x change in the terminal multiple can swing the intrinsic value by 30-40%. No analyst can predict NVIDIA's revenue growth rate in 2031 with any precision. Instead of pretending the DCF gives a precise answer, professional investors run bull/bear/base scenarios with different assumptions and look at the <em>distribution of outcomes</em> rather than a single number.</p>
+      <p>If the stock is overvalued in all three scenarios (bull, base, bear), it is genuinely expensive. If it is undervalued in the base and bull scenarios and only overvalued in the bear scenario, the risk/reward favors buying. This probabilistic approach is far more valuable than treating the DCF output as a price target.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- FCF YIELD                                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="fcf"><i class="fa-solid fa-money-bill-wave" style="color:#1e3a5f;"></i> FCF Yield — The "Real" Earnings Yield</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-money-bill-wave" style="color:#1e3a5f;"></i> Free Cash Flow Yield: What You Actually Get</h2>
+
+  <p>Free Cash Flow Yield (FCF/Market Cap) is arguably the single most important valuation metric for mega-cap investors. It measures the actual cash the business generates per dollar of market value — cash that can be returned to shareholders via buybacks and dividends, reinvested in growth, or used for acquisitions.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">FCF Yield Formula</div>
+    <span class="formula-highlight">FCF Yield</span> = Free Cash Flow / Market Cap = <span class="formula-highlight">$88B / $2,100B</span> = 4.2% (GOOGL)
+  </div>
+
+  <p>Unlike PE ratio, which uses accounting earnings (subject to manipulation via depreciation policies, stock-based compensation, and one-time items), FCF represents actual cash in the bank. A company can report high EPS while burning cash (Tesla in 2017-2019) or report lower EPS while generating enormous cash (Amazon throughout the 2010s due to heavy depreciation on warehouses/data centers).</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Annual FCF ($B)</th>
+        <th>Market Cap ($B)</th>
+        <th>FCF Yield</th>
+        <th>What They Do With FCF</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>GOOGL</strong></td>
+        <td>$88</td>
+        <td>$2,100</td>
+        <td>4.2%</td>
+        <td>Buybacks ($62B) + capex (AI/cloud) + Waymo</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>$63</td>
+        <td>$1,650</td>
+        <td>3.8%</td>
+        <td>Buybacks ($50B) + AI capex + Reality Labs</td>
+      </tr>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>$111</td>
+        <td>$3,570</td>
+        <td>3.1%</td>
+        <td>Buybacks ($90B) + dividend ($15B) + R&D</td>
+      </tr>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>$78</td>
+        <td>$2,800</td>
+        <td>2.8%</td>
+        <td>Reinvestment (R&D) + small buyback + dividend</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>$74</td>
+        <td>$3,100</td>
+        <td>2.4%</td>
+        <td>Buybacks ($30B) + dividend ($22B) + AI capex</td>
+      </tr>
+      <tr>
+        <td><strong>AMZN</strong></td>
+        <td>$40</td>
+        <td>$2,200</td>
+        <td>1.8%</td>
+        <td>Reinvestment (logistics, AWS) + minimal buyback</td>
+      </tr>
+      <tr>
+        <td><strong>TSLA</strong></td>
+        <td>$9</td>
+        <td>$1,050</td>
+        <td>0.9%</td>
+        <td>Capex (Gigafactories) + R&D (FSD, Optimus)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> FCF Yield vs. Bond Yield: The Equity Risk Premium</h4>
+    <p>A powerful way to assess mega-cap valuation is to compare FCF yield to the 10-year Treasury yield. If GOOGL has a 4.2% FCF yield and the 10-year Treasury yields 4.3%, you are getting essentially the same "yield" from GOOGL stock as from a risk-free government bond — but with the upside of 13% annual growth. This suggests GOOGL is undervalued relative to bonds.</p>
+    <p>The <strong>equity risk premium</strong> (FCF yield minus risk-free rate) should typically be 2-3% to compensate for the additional risk of owning equity. If GOOGL's FCF yield minus the 10Y yield is near zero or negative, it means stocks are offering the least compensation for risk in recent memory — a caution signal. If the spread is 2%+, equities are fairly priced relative to bonds.</p>
+    <p>Currently (March 2026 with 10Y at ~4.3%), only GOOGL and META offer FCF yields near the risk-free rate. NVDA, MSFT, and AAPL are below the 10Y yield, meaning investors are paying a premium for growth. TSLA's 0.9% FCF yield is 3.4 percentage points below the risk-free rate — investors are paying an enormous premium for Tesla's future optionality.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Apple generates $111B in FCF but GOOGL only generates $88B. Why is GOOGL's FCF yield higher?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> Because FCF yield is <strong>FCF relative to market cap</strong>, not absolute FCF. Apple generates more FCF ($111B vs $88B), but Apple's market cap ($3.57T) is much larger than Alphabet's ($2.1T). So Apple's FCF yield is $111B/$3,570B = 3.1%, while Alphabet's is $88B/$2,100B = 4.2%. Per dollar invested, Alphabet gives you more free cash flow than Apple.</p>
+      <p>This is precisely why FCF yield is a superior metric for comparing companies of different sizes. Absolute FCF tells you the scale of cash generation; FCF yield tells you the efficiency of cash generation per dollar of market value.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- RELATIVE VALUATION                                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="relative"><i class="fa-solid fa-scale-balanced" style="color:#1e3a5f;"></i> Relative vs. Absolute Valuation</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-scale-balanced" style="color:#1e3a5f;"></i> Comparing to Peers vs. Comparing to History</h2>
+
+  <p>There are two fundamentally different approaches to valuation: <strong>relative valuation</strong> (comparing a stock to its peers or to the market) and <strong>absolute valuation</strong> (comparing a stock to its own history or to a DCF-derived intrinsic value). Sophisticated investors use both.</p>
+
+  <h3>Relative Valuation: Peer Comparison</h3>
+
+  <p>The question "is NVDA expensive at 35x?" becomes much clearer when you compare NVDA to its closest peers — companies with similar growth rates, margins, and competitive positions. If semiconductor companies growing 50%+ typically trade at 40-50x forward PE, then NVDA at 35x is actually <em>cheap</em> relative to peers.</p>
+
+  <!-- EChart: PE History -->
+  <div id="chart-pe-history" style="width:100%; height:450px; margin:2rem 0;"></div>
+
+  <h3>Historical Self-Comparison</h3>
+
+  <p>Another powerful technique is comparing a stock to its own valuation history. If Apple has traded between 20x and 35x forward PE over the past 5 years, with a median of 27x, then Apple at 32x is toward the upper end of its historical range — suggesting the stock is moderately expensive relative to its own history.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>5Y PE Low</th>
+        <th>5Y PE Median</th>
+        <th>5Y PE High</th>
+        <th>Current PE</th>
+        <th>Percentile</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>20x</td>
+        <td>27x</td>
+        <td>35x</td>
+        <td>32x</td>
+        <td>80th (expensive)</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>24x</td>
+        <td>30x</td>
+        <td>38x</td>
+        <td>34x</td>
+        <td>71st (above avg)</td>
+      </tr>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>25x</td>
+        <td>40x</td>
+        <td>65x</td>
+        <td>35x</td>
+        <td>25th (cheap for NVDA)</td>
+      </tr>
+      <tr>
+        <td><strong>GOOGL</strong></td>
+        <td>18x</td>
+        <td>24x</td>
+        <td>32x</td>
+        <td>22x</td>
+        <td>29th (cheap)</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>10x</td>
+        <td>20x</td>
+        <td>28x</td>
+        <td>24x</td>
+        <td>78th (above avg)</td>
+      </tr>
+      <tr>
+        <td><strong>TSLA</strong></td>
+        <td>30x</td>
+        <td>65x</td>
+        <td>200x+</td>
+        <td>85x</td>
+        <td>55th (mid-range for TSLA)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#1e3a5f;"></i> The Growth Premium: When "Expensive" Is Actually Cheap</h4>
+    <p>Mean reversion is one of the most powerful forces in valuation — stocks that trade above their historical median tend to revert back, and stocks that trade below tend to revert up. But mean reversion only works when the underlying business has not fundamentally changed.</p>
+    <p>NVDA at 35x PE looks cheap relative to its own 5-year median of 40x. But in 2021, NVDA was primarily a gaming GPU company with moderate growth. Today, it is the AI infrastructure monopoly with 55% growth. The historical PE range may be irrelevant because the business has structurally changed. When using historical comparison, always ask: <strong>is the business today comparable to the business during the historical period?</strong></p>
+    <p>Conversely, META at 24x PE looks expensive relative to its 5-year median of 20x. But in 2022 (when PE was 10x), investors feared the Metaverse would destroy the company. The subsequent recovery to 24x reflects a genuine improvement in business fundamentals (AI ad targeting, efficiency gains), not irrational exuberance. The historical low was an anomaly, not a fair baseline.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: NVDA trades at the 25th percentile of its 5-year PE range. Is it cheap?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> Probably, but with a significant caveat. The 25th percentile means NVDA is trading near the low end of its historical valuation range, which typically signals a buying opportunity. However, NVDA's business has changed dramatically — its 5-year PE range includes periods when it was primarily a gaming company (lower growth, lower margins). The current 35x PE on 55% growth (PEG 0.6) is genuinely cheap compared to historical periods when NVDA traded at 40-65x on 20-30% growth (PEG 1.3-3.2).</p>
+      <p>The risk: if AI capex growth slows faster than expected, NVDA's growth rate could normalize to 15-20%, making 35x PE look expensive again (PEG would rise to 1.75-2.3). The historical comparison is most useful when combined with forward-looking growth analysis — do not buy solely because the PE is at a low percentile.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- SUM-OF-THE-PARTS                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sotp"><i class="fa-solid fa-puzzle-piece" style="color:#1e3a5f;"></i> Sum-of-the-Parts Analysis</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-puzzle-piece" style="color:#1e3a5f;"></i> Valuing Divisions Separately: The Amazon Example</h2>
+
+  <p>Sum-of-the-parts (SOTP) analysis values each business segment separately and adds them up. This is particularly useful for conglomerates like Amazon that operate multiple distinct businesses with different growth rates and margin profiles. The total SOTP value is often different from the market cap, revealing hidden value or overvaluation in specific segments.</p>
+
+  <h3>Amazon SOTP: Three Businesses in One</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Segment</th>
+        <th>Revenue ($B)</th>
+        <th>EBITDA ($B)</th>
+        <th>Comparable Multiple</th>
+        <th>Implied Value ($B)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>AWS (Cloud)</strong></td>
+        <td>$105</td>
+        <td>$39</td>
+        <td>25x EV/EBITDA (Azure comp)</td>
+        <td>$975</td>
+      </tr>
+      <tr>
+        <td><strong>Advertising</strong></td>
+        <td>$56</td>
+        <td>$34</td>
+        <td>15x EV/EBITDA (META comp)</td>
+        <td>$510</td>
+      </tr>
+      <tr>
+        <td><strong>E-Commerce (Retail)</strong></td>
+        <td>$395</td>
+        <td>$28</td>
+        <td>12x EV/EBITDA (WMT comp)</td>
+        <td>$336</td>
+      </tr>
+      <tr>
+        <td><strong>Prime Video / Subs</strong></td>
+        <td>$42</td>
+        <td>$5</td>
+        <td>20x EV/EBITDA (NFLX comp)</td>
+        <td>$100</td>
+      </tr>
+      <tr>
+        <td><strong>Net Cash</strong></td>
+        <td colspan="3">Cash minus debt</td>
+        <td>-$28</td>
+      </tr>
+      <tr>
+        <td><strong>SOTP Total</strong></td>
+        <td colspan="3"></td>
+        <td><strong>$1,893</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Current Market Cap</strong></td>
+        <td colspan="3"></td>
+        <td><strong>$2,200</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>The SOTP analysis suggests Amazon's market cap ($2.2T) exceeds the sum of its parts ($1.9T) by approximately 16%. This "conglomerate premium" reflects the market's belief that Amazon's segments are worth more together than apart — the e-commerce platform drives Prime membership, which drives AWS adoption, which funds logistics investments, which improve e-commerce. The integrated ecosystem creates value that would not exist if the segments were independent.</p>
+
+  <h3>Alphabet SOTP: The Hidden Value in Waymo and Cloud</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Segment</th>
+        <th>Revenue ($B)</th>
+        <th>EBITDA ($B)</th>
+        <th>Comparable Multiple</th>
+        <th>Implied Value ($B)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Google Search + YouTube</strong></td>
+        <td>$253</td>
+        <td>$115</td>
+        <td>15x EV/EBITDA (META comp)</td>
+        <td>$1,725</td>
+      </tr>
+      <tr>
+        <td><strong>Google Cloud</strong></td>
+        <td>$43</td>
+        <td>$9</td>
+        <td>25x EV/EBITDA (Azure comp)</td>
+        <td>$225</td>
+      </tr>
+      <tr>
+        <td><strong>Waymo (Autonomous)</strong></td>
+        <td>$1.5</td>
+        <td>-$4</td>
+        <td>Strategic value (comparables: $30-50B)</td>
+        <td>$40</td>
+      </tr>
+      <tr>
+        <td><strong>Other Bets</strong></td>
+        <td>$2</td>
+        <td>-$5</td>
+        <td>Venture value (Verily, Calico, Wing)</td>
+        <td>$30</td>
+      </tr>
+      <tr>
+        <td><strong>Net Cash</strong></td>
+        <td colspan="3">Cash minus debt</td>
+        <td>$82</td>
+      </tr>
+      <tr>
+        <td><strong>SOTP Total</strong></td>
+        <td colspan="3"></td>
+        <td><strong>$2,102</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Current Market Cap</strong></td>
+        <td colspan="3"></td>
+        <td><strong>$2,100</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Alphabet's SOTP value ($2.1T) almost exactly matches its market cap, suggesting the stock is fairly valued. But here is the hidden insight: the market is assigning essentially <strong>zero value to Waymo and Other Bets</strong> in the current price. If Waymo succeeds in scaling autonomous ride-hailing (it is already operating in San Francisco and Phoenix), its standalone value could be $50-100B+. This creates free optionality — you are getting Waymo for free when you buy GOOGL at current prices.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> When to Use Sum-of-the-Parts</h4>
+    <p>SOTP analysis is most valuable for companies with <strong>distinct business segments that could theoretically operate independently</strong>. It works well for:</p>
+    <p><strong>Amazon:</strong> AWS, advertising, and e-commerce are each large enough to be standalone public companies. SOTP reveals the relative value contribution of each.</p>
+    <p><strong>Alphabet:</strong> Search/YouTube, Cloud, and Waymo have different growth profiles and risk factors. SOTP reveals hidden value in under-appreciated segments.</p>
+    <p><strong>Microsoft:</strong> Cloud (Azure), Productivity (Office), and Personal Computing (Windows, Xbox) have different growth rates. SOTP can reveal if the market is undervaluing Azure's contribution.</p>
+    <p>SOTP is less useful for companies with a single dominant business (META = 98% ads, NVDA = 85% data center GPUs). For these companies, the traditional PE/PEG/EV-EBITDA approach is more appropriate.</p>
+  </div>
+
+  <h3>When to Use Which Valuation Framework</h3>
+
+  <p>With five different valuation frameworks now in your toolkit (PE/PEG, EV/EBITDA, DCF, FCF yield, SOTP), a natural question arises: which one should you use? The answer depends on the type of company and the specific question you are trying to answer.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Framework</th>
+        <th>Best For</th>
+        <th>Weak For</th>
+        <th>When to Use</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Forward PE / PEG</strong></td>
+        <td>Quick comparisons, growth companies, screening</td>
+        <td>Pre-profit companies, companies with volatile earnings</td>
+        <td>Initial screening, comparing within Mag 7, daily monitoring</td>
+      </tr>
+      <tr>
+        <td><strong>EV/EBITDA</strong></td>
+        <td>Cross-capital-structure comparisons, M&A analysis</td>
+        <td>Companies with high SBC (distorts EBITDA), asset-light businesses</td>
+        <td>Comparing across sectors, evaluating leverage impact, M&A targets</td>
+      </tr>
+      <tr>
+        <td><strong>DCF</strong></td>
+        <td>Intrinsic value estimation, scenario analysis</td>
+        <td>Precise price targets (too many assumptions), short-term trading</td>
+        <td>Long-term positioning, understanding what growth rate the price implies</td>
+      </tr>
+      <tr>
+        <td><strong>FCF Yield</strong></td>
+        <td>Income comparison, capital return analysis, bond-like assessment</td>
+        <td>High-capex growth companies (TSLA, AMZN with heavy reinvestment)</td>
+        <td>Comparing to bonds, evaluating buyback sustainability, income investing</td>
+      </tr>
+      <tr>
+        <td><strong>Sum-of-Parts</strong></td>
+        <td>Conglomerates, multi-segment businesses (AMZN, GOOGL)</td>
+        <td>Single-product companies (META, NVDA), highly integrated businesses</td>
+        <td>Identifying hidden value in segments, evaluating spinoff potential</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> The "Reverse DCF" Technique</h4>
+    <p>One of the most powerful applications of DCF is using it <strong>in reverse</strong>: instead of projecting cash flows forward to derive a fair value, you start with the current stock price and work backward to determine what growth rate the market is implying. This tells you what must happen for the stock to be worth its current price.</p>
+    <p><strong>Example with TSLA at $300 ($1.05T market cap):</strong> To justify a $1.05T valuation with a 10% discount rate and 25x terminal multiple, TSLA would need to generate roughly $42B in FCF by Year 5 (FY2031). Currently, TSLA generates ~$9B in FCF. This implies the market expects TSLA's FCF to grow roughly 36% annually for the next 5 years — a heroic assumption that requires massive volume growth, margin expansion, AND new revenue streams (FSD licensing, robotaxi, Optimus).</p>
+    <p>By contrast, the reverse DCF for GOOGL at $170 ($2.1T) implies only 10-12% annual FCF growth — well below Google's current 15% FCF growth rate. This tells you the market is pricing in <em>deceleration</em> for Google, creating a favorable risk/reward if growth remains stable.</p>
+    <p>Reverse DCF is the fastest way to determine whether a stock's price implies optimistic or pessimistic assumptions, without needing to build your own projections.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Amazon trades at a 16% premium to SOTP. Is this premium justified?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> Yes, the premium is generally justified because of <strong>ecosystem synergies</strong> that would not exist if the segments were separated. Prime members spend 2x more on e-commerce than non-members. AWS was developed internally to serve Amazon's own infrastructure needs before becoming a commercial product. The advertising business exists because of the e-commerce traffic.</p>
+      <p>However, a 16% premium is moderate. If the premium exceeded 30-40%, it might signal that the market is being too generous in valuing the synergies. The key risk to the premium is regulatory — if the FTC ever forced Amazon to spin off AWS (unlikely but theoretically possible), the conglomerate premium would disappear and the stock could drop 10-15%.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- RULE OF 40 AND WHEN CHEAP/EXPENSIVE                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="rule40"><i class="fa-solid fa-ruler-combined" style="color:#1e3a5f;"></i> The Rule of 40 & Valuation Signals</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-ruler-combined" style="color:#1e3a5f;"></i> Rule of 40: Revenue Growth + Profit Margin</h2>
+
+  <p>The Rule of 40 is a framework popularized by venture capitalists and later adopted by public market investors to evaluate technology companies. The rule states that a healthy tech company should have its <strong>revenue growth rate plus profit margin exceed 40</strong>. Companies scoring above 40 deserve premium valuations; those below 40 are either growing too slowly or not profitable enough.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Rule of 40 Formula</div>
+    <span class="formula-highlight">Score</span> = Revenue Growth (%) + Profit Margin (%) &gt; <span class="formula-highlight">40</span>
+  </div>
+
+  <p>The beauty of this framework is that it accommodates different business strategies. A hyper-growth company with 50% revenue growth and -10% margins scores 40 — acceptable because growth is being prioritized over profitability. A mature company with 5% growth and 40% margins also scores 45 — acceptable because profitability compensates for slower growth. What fails the test: a company growing 10% with 15% margins (score 25) — neither fast enough to justify sacrificing margins nor profitable enough to justify slow growth.</p>
+
+  <!-- EChart: Rule of 40 Scatter -->
+  <div id="chart-rule40" style="width:100%; height:480px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Rev Growth</th>
+        <th>Net Margin</th>
+        <th>Rule of 40 Score</th>
+        <th>Forward PE</th>
+        <th>Assessment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>55%</td>
+        <td>56%</td>
+        <td>111</td>
+        <td>35x</td>
+        <td>Exceptional — 35x PE is cheap for 111 score</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>14%</td>
+        <td>37%</td>
+        <td>51</td>
+        <td>34x</td>
+        <td>Premium — justified by quality and moat</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>18%</td>
+        <td>33%</td>
+        <td>51</td>
+        <td>24x</td>
+        <td>Undervalued — 24x PE for 51 score is a discount</td>
+      </tr>
+      <tr>
+        <td><strong>GOOGL</strong></td>
+        <td>13%</td>
+        <td>28%</td>
+        <td>41</td>
+        <td>22x</td>
+        <td>Fair — at threshold but cheap PE compensates</td>
+      </tr>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>5%</td>
+        <td>26%</td>
+        <td>31</td>
+        <td>32x</td>
+        <td>Overvalued — below 40 threshold at 32x PE</td>
+      </tr>
+      <tr>
+        <td><strong>AMZN</strong></td>
+        <td>12%</td>
+        <td>8%</td>
+        <td>20</td>
+        <td>38x</td>
+        <td>Expensive on Rule of 40, but margin trajectory matters</td>
+      </tr>
+      <tr>
+        <td><strong>TSLA</strong></td>
+        <td>8%</td>
+        <td>10%</td>
+        <td>18</td>
+        <td>85x</td>
+        <td>Severely overvalued — 85x PE for 18 score</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> When Mega-Caps Are "Cheap" vs "Expensive" — A Multi-Factor Framework</h4>
+    <p>No single valuation metric tells the full story. The most robust approach combines multiple signals. A mega-cap is likely <strong>cheap</strong> when:</p>
+    <p>1. PEG ratio is below 1.0 (growth-adjusted discount)<br>
+    2. Forward PE is below its 5-year median (historical discount)<br>
+    3. FCF yield exceeds the 10-year Treasury yield (equity risk premium positive)<br>
+    4. Rule of 40 score exceeds 40 (quality threshold met)<br>
+    5. EV/EBITDA is below sector peers (relative discount)</p>
+    <p>A mega-cap is likely <strong>expensive</strong> when:</p>
+    <p>1. PEG ratio exceeds 3.0 (significant growth-adjusted premium)<br>
+    2. Forward PE is above its 5-year 80th percentile (historical premium)<br>
+    3. FCF yield is less than half the 10-year Treasury yield (expensive vs bonds)<br>
+    4. Rule of 40 score is below 30 (quality threshold missed)<br>
+    5. EV/EBITDA exceeds sector peers by 50%+ (relative premium)</p>
+    <p>Currently (March 2026): <strong>GOOGL</strong> passes 5 of 5 "cheap" criteria. <strong>META</strong> passes 4 of 5. <strong>TSLA</strong> fails all 5 and triggers 4 of 5 "expensive" criteria. <strong>NVDA</strong> passes 3 of 5 "cheap" criteria despite its high absolute PE.</p>
+  </div>
+
+  <h3>When Historical Valuation Ranges Break Down</h3>
+
+  <p>A critical warning for traders using historical valuation comparison: the historical range is only valid if the business today is comparable to the business during the reference period. There are three scenarios where historical comparisons can mislead:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-exclamation-triangle" style="color:#dc2626;"></i> <strong>Structural acceleration:</strong> NVDA's PE history includes 2020-2022 when it was primarily a gaming GPU company growing 15-25%. Today it is the AI infrastructure monopoly growing 55%. Comparing current 35x PE to the historical range (25-65x) is misleading because the growth rate has permanently shifted upward. The "fair" PE for the new business is likely higher than the historical median.</li>
+    <li><i class="fa-solid fa-exclamation-triangle" style="color:#dc2626;"></i> <strong>Structural deceleration:</strong> Apple's PE history includes 2019-2021 when iPhone growth was rebounding post-cycle and Services was accelerating from a low base. Today, iPhone growth is ~2% and Services growth is decelerating from 25% to 15%. The "fair" PE for the current business may be lower than the historical median.</li>
+    <li><i class="fa-solid fa-exclamation-triangle" style="color:#dc2626;"></i> <strong>Interest rate regime change:</strong> All PE ranges from 2010-2021 were set in a near-zero interest rate environment. With rates now at 4-5%, the entire PE framework has shifted lower. A stock that was "fair" at 30x PE in a zero-rate world might only be "fair" at 22-25x PE in a 4.5% rate world, because the higher risk-free rate raises the discount rate for all future cash flows.</li>
+  </ul>
+
+  <h3>Valuation Scorecard: Putting It All Together</h3>
+
+  <p>Here is the complete valuation scorecard for each Mag 7 stock as of March 2026, combining all the frameworks we have discussed:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>NVDA</th>
+        <th>GOOGL</th>
+        <th>META</th>
+        <th>MSFT</th>
+        <th>AMZN</th>
+        <th>AAPL</th>
+        <th>TSLA</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Fwd PE</strong></td>
+        <td>35x</td>
+        <td>22x</td>
+        <td>24x</td>
+        <td>34x</td>
+        <td>38x</td>
+        <td>32x</td>
+        <td>85x</td>
+      </tr>
+      <tr>
+        <td><strong>PEG</strong></td>
+        <td>0.6</td>
+        <td>1.5</td>
+        <td>1.2</td>
+        <td>2.1</td>
+        <td>1.7</td>
+        <td>4.0</td>
+        <td>7.1</td>
+      </tr>
+      <tr>
+        <td><strong>EV/EBITDA</strong></td>
+        <td>32x</td>
+        <td>16x</td>
+        <td>15x</td>
+        <td>24x</td>
+        <td>18x</td>
+        <td>26x</td>
+        <td>52x</td>
+      </tr>
+      <tr>
+        <td><strong>FCF Yield</strong></td>
+        <td>2.8%</td>
+        <td>4.2%</td>
+        <td>3.8%</td>
+        <td>2.4%</td>
+        <td>1.8%</td>
+        <td>3.1%</td>
+        <td>0.9%</td>
+      </tr>
+      <tr>
+        <td><strong>Rule of 40</strong></td>
+        <td>111</td>
+        <td>41</td>
+        <td>51</td>
+        <td>51</td>
+        <td>20</td>
+        <td>31</td>
+        <td>18</td>
+      </tr>
+      <tr>
+        <td><strong>PE vs 5Y Median</strong></td>
+        <td>Below</td>
+        <td>Below</td>
+        <td>Above</td>
+        <td>Above</td>
+        <td>Above</td>
+        <td>Above</td>
+        <td>Mid</td>
+      </tr>
+      <tr>
+        <td><strong>DCF vs Market</strong></td>
+        <td>14% over</td>
+        <td>19% under</td>
+        <td>21% under</td>
+        <td>10% under</td>
+        <td>16% over</td>
+        <td>12% over</td>
+        <td>40%+ over</td>
+      </tr>
+      <tr>
+        <td><strong>Overall Signal</strong></td>
+        <td>Fair-Cheap</td>
+        <td>Cheap</td>
+        <td>Cheap</td>
+        <td>Fair</td>
+        <td>Fair-Rich</td>
+        <td>Rich</td>
+        <td>Expensive</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap" style="color:#1e3a5f;"></i> Translating Valuation to Trading Decisions</h4>
+    <p>Valuation signals are not timing signals. A stock can be "cheap" for months or even years before the market recognizes the value (GOOGL has been "cheap" since 2023). Similarly, a stock can be "expensive" and continue rallying for extended periods (TSLA has been "expensive" on every metric since 2020 and tripled).</p>
+    <p>The correct way to use valuation in trading:</p>
+    <p><strong>1. Position sizing:</strong> Allocate more capital to cheap stocks and less to expensive ones. If you normally risk 2% per trade, risk 3% on GOOGL (cheap) and 1% on TSLA (expensive).</p>
+    <p><strong>2. Dip-buying conviction:</strong> Buy dips more aggressively in cheap stocks. A 10% dip in GOOGL at 22x PE is a gift. A 10% dip in TSLA at 85x PE might be the beginning of a larger de-rating.</p>
+    <p><strong>3. Profit-taking discipline:</strong> Take profits more quickly in expensive stocks. If TSLA rallies 15% from your entry, take 75% off. If GOOGL rallies 15%, let it run — the valuation supports further upside.</p>
+    <p><strong>4. Short candidates:</strong> Only short expensive stocks with deteriorating fundamentals. Never short solely because a stock is "expensive" — NVDA was "expensive" at $50 in 2023 and went to $140. Short when expensive AND growth is decelerating AND a catalyst is imminent.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Based on the valuation scorecard, which Mag 7 stock offers the best risk/reward right now?</summary>
+    <div class="quiz-content">
+      <p><strong>Answer:</strong> <strong>Alphabet (GOOGL)</strong> offers the best risk/reward among the Mag 7 based on the comprehensive valuation scorecard. It scores "Cheap" on the overall signal because: (1) lowest PEG at 1.5 (growth-adjusted discount), (2) lowest EV/EBITDA at 16x (accounting for $82B net cash), (3) highest FCF yield at 4.2% (nearly matching the risk-free rate), (4) PE below its 5-year median (historical discount), and (5) DCF analysis suggests 19% upside.</p>
+      <p>The primary risk is AI disruption to Google Search. If ChatGPT or AI search alternatives capture meaningful search market share, GOOGL's core revenue engine could decelerate. However, the current valuation already discounts significant disruption risk — at 22x PE, the market is pricing in a scenario worse than what fundamentals currently show (Google Cloud growing 28%, search revenue still growing 12%, YouTube dominant in video advertising).</p>
+      <p><strong>Runner-up:</strong> META at 24x PE, 3.8% FCF yield, 51 Rule of 40, and 21% DCF upside. META faces less existential risk than GOOGL (no ChatGPT competitor to Facebook/Instagram) but trades at a modest premium due to Reality Labs spending ($15B+/year in losses).</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- KEY TAKEAWAYS                                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#1e3a5f;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="color:#1e3a5f;"></i> Part 3 Summary: Valuation Frameworks</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Raw PE ratio is misleading without growth context. NVDA at 35x PE (55% growth, PEG 0.6) is cheaper than AT&T at 8x PE (declining earnings). Always use growth-adjusted metrics.</li>
+    <li><i class="fa-solid fa-check"></i> Forward PE is always preferred over trailing PE for growth companies. The gap between trailing and forward can be 27%+ for fast growers (NVDA trailing 48x vs forward 35x).</li>
+    <li><i class="fa-solid fa-check"></i> PEG ratio (PE/Growth) is the fastest way to compare: below 1.0 = undervalued, 1.0-2.0 = fair, above 2.0 = expensive. NVDA (0.6) is cheapest; TSLA (7.1) is most expensive on PEG.</li>
+    <li><i class="fa-solid fa-check"></i> EV/EBITDA is the institutional standard because it accounts for debt and cash. GOOGL (16x) and META (15x) look even cheaper on EV/EBITDA due to massive net cash positions.</li>
+    <li><i class="fa-solid fa-check"></i> DCF analysis is best used for scenario analysis, not precise valuation. Terminal value often represents 80%+ of intrinsic value. Only act on DCF signals when the gap exceeds 25%.</li>
+    <li><i class="fa-solid fa-check"></i> FCF yield (FCF/Market Cap) measures actual cash return. GOOGL leads at 4.2%, nearly matching the 10Y Treasury yield while growing 13% annually — arguably undervalued vs bonds.</li>
+    <li><i class="fa-solid fa-check"></i> Compare to peers (relative) AND to history (absolute). NVDA at 35x is cheap vs its own 5Y median (40x) and cheap on PEG — a double confirmation. AAPL at 32x is expensive vs its median (27x) and on PEG (4.0).</li>
+    <li><i class="fa-solid fa-check"></i> Sum-of-the-parts reveals hidden value. GOOGL's Waymo and Other Bets are priced at near-zero in the current stock price — free optionality for investors.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-mega-caps/part4-technical-trading/" class="next-cta">
+  <div>
+    <div class="next-label">Part 4 of 8</div>
+    <div class="next-title">Technical Trading Mega-Caps <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-mega-caps/part2-mag7/" class="series-arrow" title="The Magnificent 7"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Mega-Caps & Blue Chips</span><div class="series-steps"><a href="/series/trading-mega-caps/part1-titans/" class="series-step" title="The Titans"><span class="series-num">1</span><span class="series-label">The Titans</span></a><a href="/series/trading-mega-caps/part2-mag7/" class="series-step" title="The Mag 7"><span class="series-num">2</span><span class="series-label">The Mag 7</span></a><a href="/series/trading-mega-caps/part3-valuation/" class="series-step current" title="Valuation"><span class="series-num">3</span><span class="series-label">Valuation</span></a><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-step" title="Technical Trading"><span class="series-num">4</span><span class="series-label">Technical Trading</span></a><a href="/series/trading-mega-caps/part5-options/" class="series-step" title="Options"><span class="series-num">5</span><span class="series-label">Options</span></a><a href="/series/trading-mega-caps/part6-earnings-macro/" class="series-step" title="Earnings & Macro"><span class="series-num">6</span><span class="series-label">Earnings & Macro</span></a><a href="/series/trading-mega-caps/part7-dividends-buybacks/" class="series-step" title="Dividends & Buybacks"><span class="series-num">7</span><span class="series-label">Dividends & Buybacks</span></a><a href="/series/trading-mega-caps/part8-portfolio-alpha/" class="series-step" title="Portfolio Alpha"><span class="series-num">8</span><span class="series-label">Portfolio Alpha</span></a></div><span class="series-counter">3/8</span><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-arrow" title="Technical Trading Mega-Caps"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: PEG Ratio Comparison
+var chartPeg = echarts.init(document.getElementById('chart-peg'));
+chartPeg.setOption({
+  title: { text: 'PEG Ratio Comparison — Mag 7 (Lower = Cheaper)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { left: 60, right: 20, top: 50, bottom: 40 },
+  xAxis: { type: 'category', data: ['NVDA', 'META', 'GOOGL', 'AMZN', 'MSFT', 'AAPL', 'TSLA'], axisLabel: { fontWeight: 700 } },
+  yAxis: { type: 'value', name: 'PEG Ratio', splitLine: { lineStyle: { type: 'dashed' } } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 0.6, itemStyle: { color: '#10b981' } },
+      { value: 1.2, itemStyle: { color: '#10b981' } },
+      { value: 1.5, itemStyle: { color: '#f59e0b' } },
+      { value: 1.7, itemStyle: { color: '#f59e0b' } },
+      { value: 2.1, itemStyle: { color: '#ea580c' } },
+      { value: 4.0, itemStyle: { color: '#dc2626' } },
+      { value: 7.1, itemStyle: { color: '#dc2626' } }
+    ],
+    barWidth: '50%',
+    label: { show: true, position: 'top', formatter: '{c}x', fontWeight: 700, fontSize: 12 },
+    itemStyle: { borderRadius: [6, 6, 0, 0] },
+    markLine: { data: [{ yAxis: 1, label: { formatter: 'Fair Value (1.0)', position: 'end' }, lineStyle: { color: '#1e3a5f', type: 'dashed', width: 2 } }], silent: true }
+  }]
+});
+
+// Chart 2: DCF Sensitivity
+var chartDcf = echarts.init(document.getElementById('chart-dcf'));
+chartDcf.setOption({
+  title: { text: 'NVDA DCF Sensitivity — Terminal Multiple vs Discount Rate', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { formatter: function(p) { return 'Terminal: ' + p.value[0] + 'x, Rate: ' + p.value[1] + '%<br>Value: $' + p.value[2] + 'B'; } },
+  grid: { left: 80, right: 40, top: 50, bottom: 60 },
+  xAxis: { type: 'category', data: ['20x', '25x', '30x', '35x', '40x'], name: 'Terminal Multiple', axisLabel: { fontWeight: 600 } },
+  yAxis: { type: 'category', data: ['8%', '9%', '10%', '11%', '12%'], name: 'Discount Rate', axisLabel: { fontWeight: 600 } },
+  visualMap: { min: 1600, max: 4000, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#ef4444', '#f59e0b', '#10b981', '#059669'] } },
+  series: [{
+    type: 'heatmap',
+    data: [
+      [0,0,2650],[1,0,3150],[2,0,3660],[3,0,4160],[4,0,4670],
+      [0,1,2420],[1,1,2880],[2,1,3340],[3,1,3800],[4,1,4260],
+      [0,2,2100],[1,2,2450],[2,2,2800],[3,2,3150],[4,2,3500],
+      [0,3,1920],[1,3,2250],[2,3,2580],[3,3,2910],[4,3,3240],
+      [0,4,1750],[1,4,2060],[2,4,2370],[3,4,2680],[4,4,2990]
+    ],
+    label: { show: true, formatter: function(p) { return '$' + p.value[2] + 'B'; }, fontSize: 11, fontWeight: 600 },
+    itemStyle: { borderColor: '#fff', borderWidth: 2 }
+  }]
+});
+
+// Chart 3: PE History (Line)
+var chartPEH = echarts.init(document.getElementById('chart-pe-history'));
+chartPEH.setOption({
+  title: { text: 'Forward PE History — Select Mega-Caps (5 Year)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: 50, right: 20, top: 50, bottom: 55 },
+  xAxis: { type: 'category', data: ['2021', 'H1 22', 'H2 22', '2023', 'H1 24', 'H2 24', '2025', 'Mar 26'], axisLabel: { fontWeight: 600 } },
+  yAxis: { type: 'value', name: 'Forward PE', axisLabel: { formatter: '{value}x' } },
+  series: [
+    { name: 'AAPL', type: 'line', data: [30, 25, 22, 28, 30, 31, 33, 32], lineStyle: { width: 2, color: '#1e3a5f' }, itemStyle: { color: '#1e3a5f' }, symbol: 'circle', symbolSize: 5 },
+    { name: 'MSFT', type: 'line', data: [35, 28, 24, 30, 33, 34, 35, 34], lineStyle: { width: 2, color: '#2563eb' }, itemStyle: { color: '#2563eb' }, symbol: 'circle', symbolSize: 5 },
+    { name: 'NVDA', type: 'line', data: [55, 40, 30, 42, 35, 32, 38, 35], lineStyle: { width: 2, color: '#7c3aed' }, itemStyle: { color: '#7c3aed' }, symbol: 'circle', symbolSize: 5 },
+    { name: 'GOOGL', type: 'line', data: [28, 22, 18, 22, 24, 23, 22, 22], lineStyle: { width: 2, color: '#ea580c' }, itemStyle: { color: '#ea580c' }, symbol: 'circle', symbolSize: 5 },
+    { name: 'TSLA', type: 'line', data: [150, 95, 35, 65, 70, 80, 90, 85], lineStyle: { width: 2, color: '#dc2626', type: 'dashed' }, itemStyle: { color: '#dc2626' }, symbol: 'circle', symbolSize: 5 }
+  ]
+});
+
+// Chart 4: Rule of 40 Scatter
+var chartR40 = echarts.init(document.getElementById('chart-rule40'));
+chartR40.setOption({
+  title: { text: 'Rule of 40 — Revenue Growth vs Profit Margin', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { formatter: function(p) { return p.data[3] + '<br>Growth: ' + p.data[0] + '%<br>Margin: ' + p.data[1] + '%<br>Score: ' + p.data[2]; } },
+  grid: { left: 60, right: 30, top: 50, bottom: 40 },
+  xAxis: { type: 'value', name: 'Revenue Growth (%)', min: 0, max: 60, axisLabel: { formatter: '{value}%' } },
+  yAxis: { type: 'value', name: 'Net Margin (%)', min: 0, max: 60, axisLabel: { formatter: '{value}%' } },
+  series: [
+    {
+      type: 'scatter',
+      symbolSize: function(data) { return Math.max(data[2] / 3, 12); },
+      data: [
+        [55, 56, 111, 'NVDA'],
+        [14, 37, 51, 'MSFT'],
+        [18, 33, 51, 'META'],
+        [13, 28, 41, 'GOOGL'],
+        [5, 26, 31, 'AAPL'],
+        [12, 8, 20, 'AMZN'],
+        [8, 10, 18, 'TSLA']
+      ],
+      label: { show: true, formatter: function(p) { return p.data[3]; }, position: 'top', fontWeight: 700, fontSize: 12 },
+      itemStyle: {
+        color: function(p) {
+          var score = p.data[2];
+          if (score > 50) return '#10b981';
+          if (score >= 40) return '#f59e0b';
+          return '#ef4444';
+        }
+      }
+    },
+    {
+      type: 'line',
+      data: [[0, 40], [40, 0]],
+      lineStyle: { color: '#1e3a5f', width: 2, type: 'dashed' },
+      symbol: 'none',
+      tooltip: { show: false },
+      label: { show: false }
+    }
+  ]
+});
+
+// Resize
+window.addEventListener('resize', function() {
+  chartPeg.resize(); chartDcf.resize(); chartPEH.resize(); chartR40.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

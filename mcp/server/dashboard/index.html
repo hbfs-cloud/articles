@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Watch — MCP Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+/* ========== RESET & BASE ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-tertiary:#334155;
+  --bg-card:#1e293b;--bg-card-hover:#263347;--bg-input:#0f172a;
+  --border:#334155;--border-light:#475569;
+  --text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;
+  --accent:#3b82f6;--accent-hover:#2563eb;--accent-glow:rgba(59,130,246,.15);
+  --green:#10b981;--green-bg:rgba(16,185,129,.12);--green-border:rgba(16,185,129,.3);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.12);--red-border:rgba(239,68,68,.3);
+  --yellow:#f59e0b;--yellow-bg:rgba(245,158,11,.12);--yellow-border:rgba(245,158,11,.3);
+  --purple:#8b5cf6;--purple-bg:rgba(139,92,246,.12);
+  --cyan:#06b6d4;--cyan-bg:rgba(6,182,212,.12);
+  --orange:#f97316;
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.4);
+  --transition:all .2s ease;
+}
+html{font-size:14px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg-primary)}
+::-webkit-scrollbar-thumb{background:var(--bg-tertiary);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
+input,select,textarea,button{font-family:inherit;font-size:inherit}
+
+/* ========== LAYOUT ========== */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--bg-secondary);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem;color:var(--text-primary)}
+.topbar-logo i{color:var(--accent);font-size:1.3rem}
+.topbar-divider{width:1px;height:28px;background:var(--border)}
+.topbar-status{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-secondary)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.5}}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-meta{font-size:.8rem;color:var(--text-muted)}
+.topbar-meta span{margin-left:12px}
+.topbar-actions{display:flex;gap:8px}
+
+.main-content{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;background:var(--bg-secondary);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;display:flex;flex-direction:column}
+.nav-section{padding:0 12px;margin-bottom:8px}
+.nav-section-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);padding:8px 12px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);color:var(--text-secondary);cursor:pointer;transition:var(--transition);font-size:.9rem;font-weight:500;user-select:none}
+.nav-item:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+.nav-item.active{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(59,130,246,.2)}
+.nav-item i{width:20px;text-align:center;font-size:.95rem}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:.7rem;padding:2px 7px;border-radius:10px;font-weight:600}
+.sidebar-footer{margin-top:auto;padding:12px;border-top:1px solid var(--border)}
+.sidebar-footer-text{font-size:.7rem;color:var(--text-muted);text-align:center;line-height:1.6}
+
+.content{flex:1;overflow-y:auto;padding:24px;max-height:calc(100vh - 56px)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ========== COMPONENTS ========== */
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:var(--transition)}
+.kpi-card:hover{border-color:var(--border-light);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.kpi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.kpi-icon{width:40px;height:40px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.kpi-icon.blue{background:var(--accent-glow);color:var(--accent)}
+.kpi-icon.green{background:var(--green-bg);color:var(--green)}
+.kpi-icon.purple{background:var(--purple-bg);color:var(--purple)}
+.kpi-icon.cyan{background:var(--cyan-bg);color:var(--cyan)}
+.kpi-icon.red{background:var(--red-bg);color:var(--red)}
+.kpi-icon.yellow{background:var(--yellow-bg);color:var(--yellow)}
+.kpi-change{font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:10px}
+.kpi-change.up{color:var(--green);background:var(--green-bg)}
+.kpi-change.down{color:var(--red);background:var(--red-bg)}
+.kpi-value{font-size:1.8rem;font-weight:800;line-height:1.2;margin-bottom:4px}
+.kpi-label{font-size:.8rem;color:var(--text-secondary);font-weight:500}
+
+/* Section Headers */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title i{color:var(--accent);font-size:.95rem}
+
+/* Cards / Panels */
+.panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel-title i{color:var(--accent)}
+
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.data-table thead th{text-align:left;padding:10px 12px;background:var(--bg-primary);color:var(--text-secondary);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);position:sticky;top:0}
+.data-table tbody tr{border-bottom:1px solid var(--border);transition:var(--transition)}
+.data-table tbody tr:hover{background:var(--bg-card-hover)}
+.data-table tbody td{padding:10px 12px;vertical-align:middle}
+.table-wrapper{overflow-x:auto;max-height:400px;overflow-y:auto}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;font-size:.75rem;font-weight:600}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.badge-yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}
+.badge-blue{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(59,130,246,.3)}
+.badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(139,92,246,.3)}
+.badge-cyan{background:var(--cyan-bg);color:var(--cyan);border:1px solid rgba(6,182,212,.3)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-weight:600;font-size:.85rem;cursor:pointer;transition:var(--transition);border:1px solid transparent;outline:none}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--text-secondary);border-color:var(--border)}
+.btn-secondary:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#059669}
+.btn-sm{padding:5px 10px;font-size:.78rem}
+.btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);background:transparent;color:var(--text-secondary);border:1px solid var(--border);cursor:pointer;transition:var(--transition)}
+.btn-icon:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);transition:var(--transition)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.form-check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem}
+.form-check input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px}
+
+/* Toggle */
+.toggle{position:relative;width:44px;height:24px;display:inline-block}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--bg-tertiary);border-radius:12px;cursor:pointer;transition:var(--transition)}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:var(--transition)}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+
+/* Timeline */
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.timeline-item{position:relative;padding-bottom:16px}
+.timeline-item::before{content:'';position:absolute;left:-20px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-card)}
+.timeline-item.green::before{background:var(--green)}
+.timeline-item.red::before{background:var(--red)}
+.timeline-item.yellow::before{background:var(--yellow)}
+.timeline-time{font-size:.7rem;color:var(--text-muted);margin-bottom:2px}
+.timeline-title{font-size:.85rem;font-weight:600;margin-bottom:2px}
+.timeline-desc{font-size:.8rem;color:var(--text-secondary)}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:20px}
+
+/* Chart containers */
+.chart-box{width:100%;height:300px}
+.chart-box-sm{width:100%;height:200px}
+.chart-box-lg{width:100%;height:400px}
+
+/* Mini sparkline cards */
+.spark-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.spark-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:var(--transition)}
+.spark-card:hover{border-color:var(--border-light)}
+.spark-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.spark-ticker{font-weight:700;font-size:.95rem}
+.spark-price{font-size:1.2rem;font-weight:700}
+.spark-change{font-size:.8rem;font-weight:600}
+.spark-change.up{color:var(--green)}
+.spark-change.down{color:var(--red)}
+
+/* Alert channel badges */
+.channel-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:.7rem;font-weight:600}
+.channel-slack{background:rgba(139,92,246,.15);color:#a78bfa}
+.channel-discord{background:rgba(59,130,246,.15);color:#60a5fa}
+.channel-telegram{background:rgba(6,182,212,.15);color:#22d3ee}
+.channel-desktop{background:rgba(16,185,129,.15);color:#34d399}
+
+/* Settings sections */
+.settings-section{margin-bottom:32px}
+.settings-section-title{font-size:.95rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.settings-section-title i{color:var(--accent)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(51,65,85,.5)}
+.settings-row-info{flex:1}
+.settings-row-label{font-size:.9rem;font-weight:600}
+.settings-row-desc{font-size:.78rem;color:var(--text-muted);margin-top:2px}
+.settings-row-action{display:flex;align-items:center;gap:12px}
+
+/* Stats row for journal */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+.stat-value{font-size:1.4rem;font-weight:800;margin-bottom:4px}
+.stat-label{font-size:.75rem;color:var(--text-secondary);font-weight:500}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+.stat-value.blue{color:var(--accent)}
+
+/* Toast */
+.toast-container{position:fixed;top:70px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);font-size:.85rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toast-in .3s ease;display:flex;align-items:center;gap:8px}
+.toast-success{background:#065f46;color:#6ee7b7;border:1px solid var(--green-border)}
+.toast-error{background:#7f1d1d;color:#fca5a5;border:1px solid var(--red-border)}
+.toast-info{background:#1e3a5f;color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+@keyframes toast-in{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* Responsive */
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-2-1,.grid-1-2{grid-template-columns:1fr}.spark-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.sidebar{display:none}.content{padding:16px}.kpi-grid{grid-template-columns:1fr}.spark-grid{grid-template-columns:1fr}.topbar{padding:0 12px}}
+
+/* Loading spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ========== TOP BAR ========== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo"><i class="fas fa-chart-line"></i> MarketWatch MCP</div>
+      <div class="topbar-divider"></div>
+      <div class="topbar-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connected</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-meta">
+        <span><i class="fas fa-code-branch"></i> v2.0.0</span>
+        <span id="uptimeDisplay"><i class="fas fa-clock"></i> 0d 0h 0m</span>
+        <span id="lastRefresh"><i class="fas fa-sync-alt"></i> --</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" title="Refresh" onclick="refreshAll()"><i class="fas fa-sync-alt"></i></button>
+        <button class="btn-icon" title="Notifications" onclick="showToast('No new notifications','info')"><i class="fas fa-bell"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <!-- ========== SIDEBAR ========== -->
+    <nav class="sidebar">
+      <div class="nav-section">
+        <div class="nav-section-title">Navigation</div>
+        <div class="nav-item active" data-tab="overview" onclick="switchTab('overview')">
+          <i class="fas fa-th-large"></i> Overview
+        </div>
+        <div class="nav-item" data-tab="watchlist" onclick="switchTab('watchlist')">
+          <i class="fas fa-binoculars"></i> Watchlist <span class="nav-badge" id="watchlistCount">0</span>
+        </div>
+        <div class="nav-item" data-tab="alerts" onclick="switchTab('alerts')">
+          <i class="fas fa-bell"></i> Alerts <span class="nav-badge" id="alertsCount">0</span>
+        </div>
+        <div class="nav-item" data-tab="journal" onclick="switchTab('journal')">
+          <i class="fas fa-book"></i> Journal
+        </div>
+        <div class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+          <i class="fas fa-cog"></i> Settings
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-text">
+          Market Watch MCP Server<br>localhost:3847
+        </div>
+      </div>
+    </nav>
+
+    <!-- ========== CONTENT ========== -->
+    <main class="content" id="contentArea">
+
+      <!-- ==================== OVERVIEW TAB ==================== -->
+      <div class="tab-panel active" id="tab-overview">
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon blue"><i class="fas fa-bell"></i></div>
+              <span class="kpi-change up" id="kpiAlertsChange">+2 today</span>
+            </div>
+            <div class="kpi-value" id="kpiAlerts">12</div>
+            <div class="kpi-label">Active Alerts</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon green"><i class="fas fa-binoculars"></i></div>
+              <span class="kpi-change up">10 picks</span>
+            </div>
+            <div class="kpi-value" id="kpiWatchlist">24</div>
+            <div class="kpi-label">Watchlist Tickers</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon purple"><i class="fas fa-exchange-alt"></i></div>
+              <span class="kpi-change up">3 new</span>
+            </div>
+            <div class="kpi-value" id="kpiTrades">7</div>
+            <div class="kpi-label">Open Trades</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon cyan"><i class="fas fa-trophy"></i></div>
+              <span class="kpi-change up">+2.1%</span>
+            </div>
+            <div class="kpi-value" id="kpiWinRate">68%</div>
+            <div class="kpi-label">Win Rate (30d)</div>
+          </div>
+        </div>
+
+        <!-- Regime Gauge + Mini Charts -->
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-tachometer-alt"></i> Market Regime</div>
+              <span class="badge badge-yellow" id="regimeBadge">Neutral</span>
+            </div>
+            <div class="chart-box" id="regimeGauge"></div>
+          </div>
+          <div>
+            <div class="spark-grid" style="grid-template-columns:1fr;gap:12px">
+              <div class="spark-card">
+                <div class="spark-header">
+                  <span class="spark-ticker">SPY</span>
+                  <span class="spark-change up" id="spyChange">+0.42%</span>
+                </div>
+                <div class="spark-price" id="spyPrice">$527.85</div>
+                <div class="chart-box-sm" id="spySparkline"></div>
+              </div>
+              <div class="spark-card">
+                <div class="spark-header">
+                  <span class="spark-ticker">BTC-USD</span>
+                  <span class="spark-change up" id="btcChange">+1.23%</span>
+                </div>
+                <div class="spark-price" id="btcPrice">$91,240</div>
+                <div class="chart-box-sm" id="btcSparkline" style="height:100px"></div>
+              </div>
+              <div class="spark-card">
+                <div class="spark-header">
+                  <span class="spark-ticker">VIX</span>
+                  <span class="spark-change down" id="vixChange">-3.10%</span>
+                </div>
+                <div class="spark-price" id="vixPrice">18.42</div>
+                <div class="chart-box-sm" id="vixSparkline" style="height:100px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Watchlist Table + Alerts Timeline -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-list"></i> Watchlist</div>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('watchlist')">View All</button>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="overviewWatchlistTable">
+                <thead>
+                  <tr><th>Ticker</th><th>Score</th><th>Strategy</th><th>Entry</th><th>Current</th><th>P&L</th><th>Status</th></tr>
+                </thead>
+                <tbody id="overviewWatchlistBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-stream"></i> Recent Alerts</div>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('alerts')">View All</button>
+            </div>
+            <div class="timeline" id="alertsTimeline"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== WATCHLIST TAB ==================== -->
+      <div class="tab-panel" id="tab-watchlist">
+        <div class="section-header">
+          <div class="section-title"><i class="fas fa-binoculars"></i> Watchlist Management</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="syncWatchlist()"><i class="fas fa-sync-alt"></i> Sync from Market Watch</button>
+            <button class="btn btn-secondary" onclick="toggleAddTickerForm()"><i class="fas fa-plus"></i> Add Custom</button>
+          </div>
+        </div>
+
+        <!-- Add Ticker Form (hidden by default) -->
+        <div class="panel" id="addTickerPanel" style="display:none">
+          <div class="panel-title" style="margin-bottom:16px"><i class="fas fa-plus-circle"></i> Add Custom Ticker</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Ticker</label><input class="form-input" id="addTicker" placeholder="AAPL"></div>
+            <div class="form-group"><label class="form-label">Entry</label><input class="form-input" id="addEntry" type="number" step="0.01" placeholder="150.00"></div>
+            <div class="form-group"><label class="form-label">Stop</label><input class="form-input" id="addStop" type="number" step="0.01" placeholder="145.00"></div>
+            <div class="form-group"><label class="form-label">TP1</label><input class="form-input" id="addTP1" type="number" step="0.01" placeholder="160.00"></div>
+            <div class="form-group"><label class="form-label">TP2</label><input class="form-input" id="addTP2" type="number" step="0.01" placeholder="170.00"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Note</label><input class="form-input" id="addNote" placeholder="Breakout above 200 EMA"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="toggleAddTickerForm()">Cancel</button>
+            <button class="btn btn-primary" onclick="addCustomTicker()"><i class="fas fa-check"></i> Add Ticker</button>
+          </div>
+        </div>
+
+        <!-- Full Watchlist Table -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-table"></i> All Picks</div>
+            <span class="badge badge-blue" id="watchlistTotal">24 tickers</span>
+          </div>
+          <div class="table-wrapper" style="max-height:500px">
+            <table class="data-table">
+              <thead>
+                <tr><th>Ticker</th><th>Score</th><th>Strategy</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Current</th><th>P&L%</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="fullWatchlistBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Scanner Picks -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-crosshairs"></i> Latest Scanner Picks</div>
+            <span class="badge badge-purple">10 setups</span>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr><th>Ticker</th><th>Score</th><th>Strategy</th><th>Region</th><th>Entry</th><th>Stop</th><th>TP1</th><th>R:R</th></tr>
+              </thead>
+              <tbody id="scannerPicksBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== ALERTS TAB ==================== -->
+      <div class="tab-panel" id="tab-alerts">
+        <div class="section-header">
+          <div class="section-title"><i class="fas fa-bell"></i> Alert Management</div>
+          <button class="btn btn-primary" onclick="toggleCreateAlert()"><i class="fas fa-plus"></i> Create Alert</button>
+        </div>
+
+        <!-- Create Alert Form -->
+        <div class="panel" id="createAlertPanel" style="display:none">
+          <div class="panel-title" style="margin-bottom:16px"><i class="fas fa-plus-circle"></i> New Alert</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Ticker</label><input class="form-input" id="alertTicker" placeholder="AAPL"></div>
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select class="form-select" id="alertType">
+                <option value="price_above">Price Above</option>
+                <option value="price_below">Price Below</option>
+                <option value="pct_change">% Change</option>
+                <option value="volume_spike">Volume Spike</option>
+                <option value="rsi_oversold">RSI Oversold</option>
+                <option value="rsi_overbought">RSI Overbought</option>
+                <option value="macd_cross">MACD Cross</option>
+                <option value="earnings">Earnings</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Value</label><input class="form-input" id="alertValue" type="number" step="0.01" placeholder="150.00"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Message</label><input class="form-input" id="alertMessage" placeholder="AAPL broke above $150 resistance"></div>
+          <div class="form-group">
+            <label class="form-label">Channels</label>
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+              <label class="form-check"><input type="checkbox" id="chSlack" checked> <i class="fab fa-slack"></i> Slack</label>
+              <label class="form-check"><input type="checkbox" id="chDiscord" checked> <i class="fab fa-discord"></i> Discord</label>
+              <label class="form-check"><input type="checkbox" id="chTelegram"> <i class="fab fa-telegram"></i> Telegram</label>
+              <label class="form-check"><input type="checkbox" id="chDesktop" checked> <i class="fas fa-desktop"></i> Desktop</label>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="toggleCreateAlert()">Cancel</button>
+            <button class="btn btn-primary" onclick="createAlert()"><i class="fas fa-check"></i> Create</button>
+          </div>
+        </div>
+
+        <!-- Channel Status -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-plug"></i> Channel Status</div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-primary);border-radius:var(--radius);border:1px solid var(--border)">
+              <i class="fab fa-slack" style="color:#a78bfa"></i> <span>Slack</span>
+              <span class="badge badge-green">Connected</span>
+              <button class="btn btn-secondary btn-sm" onclick="testChannel('Slack')">Test</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-primary);border-radius:var(--radius);border:1px solid var(--border)">
+              <i class="fab fa-discord" style="color:#60a5fa"></i> <span>Discord</span>
+              <span class="badge badge-green">Connected</span>
+              <button class="btn btn-secondary btn-sm" onclick="testChannel('Discord')">Test</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-primary);border-radius:var(--radius);border:1px solid var(--border)">
+              <i class="fab fa-telegram" style="color:#22d3ee"></i> <span>Telegram</span>
+              <span class="badge badge-yellow">Not configured</span>
+              <button class="btn btn-secondary btn-sm" onclick="testChannel('Telegram')">Test</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-primary);border-radius:var(--radius);border:1px solid var(--border)">
+              <i class="fas fa-desktop" style="color:#34d399"></i> <span>Desktop</span>
+              <span class="badge badge-green">Active</span>
+              <button class="btn btn-secondary btn-sm" onclick="testChannel('Desktop')">Test</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Alerts List -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-list"></i> Active Alerts</div>
+            <span class="badge badge-blue" id="activeAlertsBadge">12 active</span>
+          </div>
+          <div class="table-wrapper" style="max-height:400px">
+            <table class="data-table">
+              <thead>
+                <tr><th>Ticker</th><th>Type</th><th>Condition</th><th>Channels</th><th>Created</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="alertsListBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Alert History -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-history"></i> Alert History</div>
+          </div>
+          <div class="table-wrapper" style="max-height:300px">
+            <table class="data-table">
+              <thead>
+                <tr><th>Time</th><th>Ticker</th><th>Type</th><th>Message</th><th>Channels</th></tr>
+              </thead>
+              <tbody id="alertHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== JOURNAL TAB ==================== -->
+      <div class="tab-panel" id="tab-journal">
+        <div class="section-header">
+          <div class="section-title"><i class="fas fa-book"></i> Trading Journal</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="toggleLogTrade()"><i class="fas fa-plus"></i> Log Trade</button>
+            <button class="btn btn-secondary" onclick="toggleCloseTrade()"><i class="fas fa-flag-checkered"></i> Close Trade</button>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-value green" id="jWinRate">68%</div><div class="stat-label">Win Rate</div></div>
+          <div class="stat-card"><div class="stat-value green" id="jProfitFactor">2.14</div><div class="stat-label">Profit Factor</div></div>
+          <div class="stat-card"><div class="stat-value blue" id="jAvgR">1.42R</div><div class="stat-label">Avg R-Multiple</div></div>
+          <div class="stat-card"><div class="stat-value red" id="jMaxDD">-8.2%</div><div class="stat-label">Max Drawdown</div></div>
+          <div class="stat-card"><div class="stat-value blue" id="jTotalTrades">47</div><div class="stat-label">Total Trades</div></div>
+          <div class="stat-card"><div class="stat-value green" id="jBestTrade">+18.4%</div><div class="stat-label">Best (NVDA)</div></div>
+          <div class="stat-card"><div class="stat-value red" id="jWorstTrade">-6.8%</div><div class="stat-label">Worst (BABA)</div></div>
+        </div>
+
+        <!-- Log Trade Form -->
+        <div class="panel" id="logTradePanel" style="display:none">
+          <div class="panel-title" style="margin-bottom:16px"><i class="fas fa-plus-circle"></i> Log New Trade</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Ticker</label><input class="form-input" id="jtTicker" placeholder="AAPL"></div>
+            <div class="form-group"><label class="form-label">Direction</label>
+              <select class="form-select" id="jtDirection"><option value="long">Long</option><option value="short">Short</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Strategy</label>
+              <select class="form-select" id="jtStrategy"><option value="breakout">Breakout</option><option value="pullback">Pullback</option><option value="reversal">Reversal</option><option value="momentum">Momentum</option><option value="mean_reversion">Mean Reversion</option><option value="earnings">Earnings Play</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Entry Price</label><input class="form-input" id="jtEntry" type="number" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Stop Loss</label><input class="form-input" id="jtStop" type="number" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Target</label><input class="form-input" id="jtTarget" type="number" step="0.01"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="jtNotes" placeholder="Setup rationale..."></textarea></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="toggleLogTrade()">Cancel</button>
+            <button class="btn btn-primary" onclick="logTrade()"><i class="fas fa-check"></i> Log Trade</button>
+          </div>
+        </div>
+
+        <!-- Close Trade Form -->
+        <div class="panel" id="closeTradePanel" style="display:none">
+          <div class="panel-title" style="margin-bottom:16px"><i class="fas fa-flag-checkered"></i> Close Trade</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Select Trade</label>
+              <select class="form-select" id="ctTrade">
+                <option value="1">NVDA Long @ $875.20</option>
+                <option value="2">MSFT Long @ $412.50</option>
+                <option value="3">GLD Long @ $238.40</option>
+                <option value="4">AMZN Long @ $185.30</option>
+                <option value="5">META Long @ $502.15</option>
+                <option value="6">XLE Short @ $89.20</option>
+                <option value="7">TLT Long @ $92.40</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Exit Price</label><input class="form-input" id="ctExit" type="number" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Reason</label>
+              <select class="form-select" id="ctReason"><option value="tp_hit">TP Hit</option><option value="stop_hit">Stop Hit</option><option value="manual">Manual Exit</option><option value="trailing_stop">Trailing Stop</option><option value="time_exit">Time Exit</option></select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="toggleCloseTrade()">Cancel</button>
+            <button class="btn btn-success" onclick="closeTrade()"><i class="fas fa-check"></i> Close</button>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:12px"><i class="fas fa-chart-line"></i> Equity Curve</div>
+            <div class="chart-box" id="equityCurveChart"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:12px"><i class="fas fa-chart-bar"></i> P&L Distribution</div>
+            <div class="chart-box" id="pnlDistChart"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:12px"><i class="fas fa-chart-pie"></i> Win Rate by Strategy</div>
+            <div class="chart-box" id="winRateStratChart"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:12px"><i class="fas fa-chart-area"></i> R-Multiple Histogram</div>
+            <div class="chart-box" id="rMultipleChart"></div>
+          </div>
+        </div>
+
+        <!-- Trade Log -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-table"></i> Trade Log</div>
+            <span class="badge badge-blue">47 trades</span>
+          </div>
+          <div class="table-wrapper" style="max-height:400px">
+            <table class="data-table">
+              <thead>
+                <tr><th>Date</th><th>Ticker</th><th>Dir</th><th>Strategy</th><th>Entry</th><th>Exit</th><th>P&L%</th><th>R</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tradeLogBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== SETTINGS TAB ==================== -->
+      <div class="tab-panel" id="tab-settings">
+        <div class="section-header">
+          <div class="section-title"><i class="fas fa-cog"></i> Server Configuration</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" onclick="exportConfig()"><i class="fas fa-download"></i> Export</button>
+            <label class="btn btn-secondary" style="cursor:pointer"><i class="fas fa-upload"></i> Import<input type="file" accept=".json,.yaml" style="display:none" onchange="importConfig(event)"></label>
+          </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="panel">
+          <div class="settings-section">
+            <div class="settings-section-title"><i class="fas fa-database"></i> Data Sources</div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Yahoo Finance</div><div class="settings-row-desc">Real-time quotes, historical bars, financials</div></div>
+              <div class="settings-row-action"><span class="badge badge-green">Active</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Binance</div><div class="settings-row-desc">Crypto spot & futures data</div></div>
+              <div class="settings-row-action">
+                <input class="form-input" style="width:200px;font-size:.8rem" placeholder="BTC,ETH,SOL,XRP" value="BTC,ETH,SOL,XRP,DOGE">
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">SEC EDGAR</div><div class="settings-row-desc">Insider transactions, institutional holdings</div></div>
+              <div class="settings-row-action"><span class="badge badge-yellow">Limited</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Provider -->
+        <div class="panel">
+          <div class="settings-section">
+            <div class="settings-section-title"><i class="fas fa-brain"></i> AI Provider</div>
+            <div class="form-row" style="align-items:end">
+              <div class="form-group">
+                <label class="form-label">Provider</label>
+                <select class="form-select" id="aiProvider">
+                  <option value="deepseek_free">DeepSeek (Free Tier)</option>
+                  <option value="deepseek_api">DeepSeek API</option>
+                  <option value="openai" selected>OpenAI (GPT-4o)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="ollama">Ollama (Local)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input class="form-input" type="password" placeholder="sk-..." value="sk-••••••••••••••••" id="aiApiKey">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Model</label>
+                <input class="form-input" placeholder="gpt-4o" value="gpt-4o" id="aiModel">
+              </div>
+              <div class="form-group">
+                <button class="btn btn-secondary" onclick="testAI()"><i class="fas fa-vial"></i> Test</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="panel">
+          <div class="settings-section">
+            <div class="settings-section-title"><i class="fas fa-bell"></i> Notifications</div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Slack Webhook</div><div class="settings-row-desc">Post alerts to Slack channel</div></div>
+              <div class="settings-row-action"><input class="form-input" style="width:300px;font-size:.8rem" placeholder="https://hooks.slack.com/services/..." value="https://hooks.slack.com/services/T0••••/B0••••"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Discord Webhook</div><div class="settings-row-desc">Post alerts to Discord channel</div></div>
+              <div class="settings-row-action"><input class="form-input" style="width:300px;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="https://discord.com/api/webhooks/12••••/ab••••"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Telegram Bot Token</div><div class="settings-row-desc">Bot token for Telegram alerts</div></div>
+              <div class="settings-row-action"><input class="form-input" style="width:200px;font-size:.8rem" placeholder="123456:ABC..." id="tgToken"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Telegram Chat ID</div><div class="settings-row-desc">Target chat/channel ID</div></div>
+              <div class="settings-row-action"><input class="form-input" style="width:200px;font-size:.8rem" placeholder="-100123456789" id="tgChatId"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Desktop Notifications</div><div class="settings-row-desc">Browser push notifications</div></div>
+              <div class="settings-row-action"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scanner Settings -->
+        <div class="panel">
+          <div class="settings-section">
+            <div class="settings-section-title"><i class="fas fa-crosshairs"></i> Scanner</div>
+            <div class="form-row" style="align-items:end">
+              <div class="form-group">
+                <label class="form-label">Universe</label>
+                <select class="form-select" id="scanUniverse">
+                  <option value="sp500" selected>S&P 500</option>
+                  <option value="nasdaq100">NASDAQ 100</option>
+                  <option value="russell2000">Russell 2000</option>
+                  <option value="global">Global (US+EU+APAC)</option>
+                  <option value="crypto">Crypto Top 50</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Scan Interval</label>
+                <select class="form-select" id="scanInterval">
+                  <option value="5m">5 minutes</option>
+                  <option value="15m" selected>15 minutes</option>
+                  <option value="1h">1 hour</option>
+                  <option value="4h">4 hours</option>
+                  <option value="1d">Daily</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+              <label class="form-check"><input type="checkbox" checked> Breakout</label>
+              <label class="form-check"><input type="checkbox" checked> Pullback</label>
+              <label class="form-check"><input type="checkbox" checked> Momentum</label>
+              <label class="form-check"><input type="checkbox" checked> Mean Reversion</label>
+              <label class="form-check"><input type="checkbox"> Earnings Gap</label>
+              <label class="form-check"><input type="checkbox" checked> Oversold Bounce</label>
+              <label class="form-check"><input type="checkbox"> Short Squeeze</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Server Settings -->
+        <div class="panel">
+          <div class="settings-section">
+            <div class="settings-section-title"><i class="fas fa-server"></i> Server</div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Dashboard Port</div><div class="settings-row-desc">Web dashboard port</div></div>
+              <div class="settings-row-action"><input class="form-input" style="width:100px;font-size:.8rem" value="3847" id="dashPort"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Auto-open Dashboard</div><div class="settings-row-desc">Open browser on server start</div></div>
+              <div class="settings-row-action"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info"><div class="settings-row-label">Extension Port</div><div class="settings-row-desc">VS Code extension WebSocket port</div></div>
+              <div class="settings-row-action">
+                <span class="badge badge-green">Connected</span>
+                <input class="form-input" style="width:100px;font-size:.8rem" value="3848" id="extPort">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="panel" style="border-color:var(--red-border)">
+          <div class="settings-section">
+            <div class="settings-section-title" style="border-bottom-color:var(--red-border)"><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> <span style="color:var(--red)">Danger Zone</span></div>
+            <div class="settings-row" style="border:none">
+              <div class="settings-row-info"><div class="settings-row-label">Reset All Settings</div><div class="settings-row-desc">Restore factory defaults. This cannot be undone.</div></div>
+              <div class="settings-row-action"><button class="btn btn-danger" onclick="resetConfig()"><i class="fas fa-trash-alt"></i> Reset</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title"><i class="fas fa-exclamation-triangle" style="color:var(--yellow)"></i> Confirm Action</div>
+    <p id="confirmMessage" style="color:var(--text-secondary);margin-bottom:8px">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmBtn" onclick="closeModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================================================================
+   DATA SERVICE — Mock data + API fetch structure
+   ================================================================== */
+class DataService {
+  constructor() {
+    this.baseUrl = 'http://localhost:3847/api';
+    this.articlesUrl = 'https://articles.market-watch.xyz/mcp';
+    this.startTime = Date.now();
+    this.useMock = true; // will switch to false when API is ready
+  }
+
+  async fetchJSON(url) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (e) {
+      console.warn(`Fetch failed: ${url}`, e.message);
+      return null;
+    }
+  }
+
+  getUptime() {
+    const ms = Date.now() - this.startTime;
+    const d = Math.floor(ms / 86400000);
+    const h = Math.floor((ms % 86400000) / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return `${d}d ${h}h ${m}m`;
+  }
+
+  // ---- MOCK DATA ----
+  getWatchlist() {
+    return [
+      { ticker:'NVDA', score:94, strategy:'Breakout', entry:875.20, stop:845.00, tp1:920.00, tp2:960.00, current:912.45, region:'US' },
+      { ticker:'MSFT', score:91, strategy:'Pullback', entry:412.50, stop:398.00, tp1:430.00, tp2:450.00, current:425.80, region:'US' },
+      { ticker:'GLD', score:89, strategy:'Momentum', entry:238.40, stop:232.00, tp1:248.00, tp2:258.00, current:251.20, region:'ETF' },
+      { ticker:'AMZN', score:88, strategy:'Breakout', entry:185.30, stop:178.00, tp1:195.00, tp2:210.00, current:192.75, region:'US' },
+      { ticker:'META', score:87, strategy:'Momentum', entry:502.15, stop:485.00, tp1:530.00, tp2:560.00, current:518.40, region:'US' },
+      { ticker:'ASML', score:92, strategy:'Pullback', entry:890.00, stop:855.00, tp1:935.00, tp2:980.00, current:921.30, region:'EU' },
+      { ticker:'SAP', score:86, strategy:'Breakout', entry:215.80, stop:207.00, tp1:228.00, tp2:240.00, current:222.15, region:'EU' },
+      { ticker:'XLE', score:85, strategy:'Mean Reversion', entry:89.20, stop:86.50, tp1:93.00, tp2:96.50, current:87.10, region:'ETF', dir:'short' },
+      { ticker:'TLT', score:88, strategy:'Reversal', entry:92.40, stop:89.50, tp1:96.00, tp2:100.00, current:94.85, region:'ETF' },
+      { ticker:'7203.T', score:87, strategy:'Breakout', entry:2850, stop:2750, tp1:3000, tp2:3150, current:2945, region:'APAC', name:'Toyota' },
+      { ticker:'TSLA', score:83, strategy:'Momentum', entry:245.00, stop:232.00, tp1:265.00, tp2:285.00, current:258.40, region:'US' },
+      { ticker:'AVGO', score:90, strategy:'Breakout', entry:1680.00, stop:1620.00, tp1:1780.00, tp2:1880.00, current:1745.50, region:'US' },
+      { ticker:'BBVA', score:85, strategy:'Pullback', entry:11.45, stop:10.80, tp1:12.20, tp2:13.00, current:11.92, region:'EU' },
+      { ticker:'SLV', score:84, strategy:'Momentum', entry:28.60, stop:27.20, tp1:30.50, tp2:32.00, current:29.85, region:'ETF' },
+      { ticker:'GOOGL', score:89, strategy:'Breakout', entry:175.20, stop:168.00, tp1:185.00, tp2:195.00, current:181.30, region:'US' },
+      { ticker:'EWY', score:82, strategy:'Mean Reversion', entry:62.40, stop:59.80, tp1:65.50, tp2:68.00, current:63.75, region:'APAC' },
+      { ticker:'AAPL', score:87, strategy:'Pullback', entry:228.50, stop:220.00, tp1:240.00, tp2:252.00, current:234.60, region:'US' },
+      { ticker:'CRM', score:86, strategy:'Breakout', entry:312.40, stop:298.00, tp1:330.00, tp2:350.00, current:325.80, region:'US' },
+      { ticker:'TTE', score:84, strategy:'Momentum', entry:58.20, stop:55.50, tp1:62.00, tp2:65.50, current:60.45, region:'EU' },
+      { ticker:'BTC-USD', score:91, strategy:'Breakout', entry:88500, stop:84000, tp1:95000, tp2:102000, current:91240, region:'Crypto' },
+      { ticker:'ETH-USD', score:88, strategy:'Momentum', entry:3150, stop:2950, tp1:3500, tp2:3800, current:3385, region:'Crypto' },
+      { ticker:'SOL-USD', score:85, strategy:'Breakout', entry:142, stop:130, tp1:165, tp2:185, current:156.80, region:'Crypto' },
+      { ticker:'AMD', score:88, strategy:'Pullback', entry:168.50, stop:160.00, tp1:180.00, tp2:195.00, current:175.20, region:'US' },
+      { ticker:'XLF', score:83, strategy:'Momentum', entry:42.80, stop:41.20, tp1:44.50, tp2:46.00, current:43.65, region:'ETF' },
+    ];
+  }
+
+  getScannerPicks() {
+    return [
+      { ticker:'PLTR', score:96, strategy:'Breakout', region:'US', entry:82.50, stop:77.00, tp1:92.00, rr:'1:1.7' },
+      { ticker:'MRVL', score:93, strategy:'Pullback', region:'US', entry:88.20, stop:83.50, tp1:96.00, rr:'1:1.7' },
+      { ticker:'ASML', score:92, strategy:'Pullback', region:'EU', entry:890.00, stop:855.00, tp1:935.00, rr:'1:1.3' },
+      { ticker:'AVGO', score:91, strategy:'Momentum', region:'US', entry:1680.00, stop:1620.00, tp1:1780.00, rr:'1:1.7' },
+      { ticker:'GLD', score:90, strategy:'Momentum', region:'ETF', entry:238.40, stop:232.00, tp1:248.00, rr:'1:1.5' },
+      { ticker:'SAP', score:89, strategy:'Breakout', region:'EU', entry:215.80, stop:207.00, tp1:228.00, rr:'1:1.4' },
+      { ticker:'BTC-USD', score:88, strategy:'Breakout', region:'Crypto', entry:88500, stop:84000, tp1:95000, rr:'1:1.4' },
+      { ticker:'7203.T', score:87, strategy:'Breakout', region:'APAC', entry:2850, stop:2750, tp1:3000, rr:'1:1.5' },
+      { ticker:'TLT', score:86, strategy:'Reversal', region:'ETF', entry:92.40, stop:89.50, tp1:96.00, rr:'1:1.2' },
+      { ticker:'TSLA', score:85, strategy:'Momentum', region:'US', entry:245.00, stop:232.00, tp1:265.00, rr:'1:1.5' },
+    ];
+  }
+
+  getAlerts() {
+    return [
+      { id:1, ticker:'NVDA', type:'price_above', condition:'> $920', channels:['slack','discord','desktop'], created:'2026-03-05', status:'active' },
+      { id:2, ticker:'BTC-USD', type:'price_below', condition:'< $84,000', channels:['slack','discord','telegram'], created:'2026-03-04', status:'active' },
+      { id:3, ticker:'SPY', type:'pct_change', condition:'> -2% daily', channels:['discord','desktop'], created:'2026-03-04', status:'active' },
+      { id:4, ticker:'VIX', type:'price_above', condition:'> 25', channels:['slack','discord','desktop'], created:'2026-03-03', status:'active' },
+      { id:5, ticker:'AAPL', type:'earnings', condition:'Earnings date', channels:['slack'], created:'2026-03-03', status:'active' },
+      { id:6, ticker:'GLD', type:'price_above', condition:'> $260', channels:['discord','desktop'], created:'2026-03-02', status:'active' },
+      { id:7, ticker:'ETH-USD', type:'price_above', condition:'> $3,800', channels:['telegram','desktop'], created:'2026-03-02', status:'paused' },
+      { id:8, ticker:'META', type:'rsi_overbought', condition:'RSI > 75', channels:['slack','discord'], created:'2026-03-01', status:'active' },
+      { id:9, ticker:'TSLA', type:'volume_spike', condition:'Vol > 3x avg', channels:['discord'], created:'2026-03-01', status:'active' },
+      { id:10, ticker:'AMD', type:'macd_cross', condition:'Bullish cross', channels:['slack','desktop'], created:'2026-02-28', status:'active' },
+      { id:11, ticker:'TLT', type:'price_above', condition:'> $100', channels:['discord'], created:'2026-02-28', status:'active' },
+      { id:12, ticker:'SOL-USD', type:'price_above', condition:'> $185', channels:['telegram','discord'], created:'2026-02-27', status:'active' },
+    ];
+  }
+
+  getAlertHistory() {
+    return [
+      { time:'2026-03-06 06:42', ticker:'AVGO', type:'price_above', message:'AVGO broke above $1,750 resistance (+5% AH on earnings beat)', channels:['slack','discord'] },
+      { time:'2026-03-06 04:15', ticker:'BTC-USD', type:'price_above', message:'BTC-USD crossed $91,000 — bullish momentum continues', channels:['telegram','discord'] },
+      { time:'2026-03-05 21:30', ticker:'VIX', type:'price_below', message:'VIX dropped below 19 — risk-on signal', channels:['slack','desktop'] },
+      { time:'2026-03-05 16:02', ticker:'GLD', type:'price_above', message:'GLD new ATH $251.20 — gold rally extends', channels:['discord','desktop'] },
+      { time:'2026-03-05 14:45', ticker:'SPY', type:'pct_change', message:'SPY down -1.2% intraday — monitoring risk-off', channels:['discord'] },
+      { time:'2026-03-04 22:10', ticker:'SOL-USD', type:'price_above', message:'SOL-USD broke $155 — altcoin rotation', channels:['telegram'] },
+      { time:'2026-03-04 15:30', ticker:'NVDA', type:'price_above', message:'NVDA approaching $920 target — consider partial exit', channels:['slack','discord','desktop'] },
+      { time:'2026-03-04 09:35', ticker:'TSLA', type:'volume_spike', message:'TSLA volume 2.8x average — unusual activity detected', channels:['discord'] },
+      { time:'2026-03-03 20:15', ticker:'ETH-USD', type:'price_above', message:'ETH-USD crossed $3,350 — DeFi momentum building', channels:['telegram'] },
+      { time:'2026-03-03 14:00', ticker:'META', type:'rsi_overbought', message:'META RSI at 72 — approaching overbought territory', channels:['slack'] },
+    ];
+  }
+
+  getRecentAlerts() {
+    const hist = this.getAlertHistory();
+    return hist.map((a, i) => ({
+      ...a,
+      color: a.type.includes('above') || a.type === 'pct_change' ? (a.message.includes('down') || a.message.includes('risk-off') ? 'red' : 'green') : (a.type.includes('below') ? 'yellow' : 'green')
+    }));
+  }
+
+  getTrades() {
+    const trades = [
+      { date:'2026-03-05', ticker:'AVGO', dir:'Long', strategy:'Earnings', entry:1680, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-03-04', ticker:'NVDA', dir:'Long', strategy:'Breakout', entry:875.20, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-03-04', ticker:'MSFT', dir:'Long', strategy:'Pullback', entry:412.50, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-03-03', ticker:'GLD', dir:'Long', strategy:'Momentum', entry:238.40, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-03-03', ticker:'AMZN', dir:'Long', strategy:'Breakout', entry:185.30, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-03-02', ticker:'META', dir:'Long', strategy:'Momentum', entry:502.15, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-03-01', ticker:'XLE', dir:'Short', strategy:'Mean Reversion', entry:89.20, exit:null, pnl:null, r:null, status:'open' },
+      { date:'2026-02-28', ticker:'GOOGL', dir:'Long', strategy:'Breakout', entry:168.40, exit:181.30, pnl:7.66, r:2.1, status:'win' },
+      { date:'2026-02-27', ticker:'CRM', dir:'Long', strategy:'Pullback', entry:295.00, exit:325.80, pnl:10.44, r:2.8, status:'win' },
+      { date:'2026-02-26', ticker:'AAPL', dir:'Long', strategy:'Pullback', entry:222.00, exit:234.60, pnl:5.68, r:1.5, status:'win' },
+      { date:'2026-02-25', ticker:'TLT', dir:'Long', strategy:'Reversal', entry:90.20, exit:94.85, pnl:5.15, r:1.6, status:'win' },
+      { date:'2026-02-24', ticker:'BABA', dir:'Long', strategy:'Breakout', entry:98.50, exit:91.80, pnl:-6.80, r:-1.2, status:'loss' },
+      { date:'2026-02-23', ticker:'AMD', dir:'Long', strategy:'Momentum', entry:158.00, exit:175.20, pnl:10.89, r:2.4, status:'win' },
+      { date:'2026-02-21', ticker:'SLV', dir:'Long', strategy:'Momentum', entry:26.80, exit:29.85, pnl:11.38, r:2.9, status:'win' },
+      { date:'2026-02-20', ticker:'TSLA', dir:'Long', strategy:'Breakout', entry:238.00, exit:258.40, pnl:8.57, r:1.9, status:'win' },
+      { date:'2026-02-19', ticker:'COIN', dir:'Long', strategy:'Momentum', entry:245.00, exit:238.50, pnl:-2.65, r:-0.6, status:'loss' },
+      { date:'2026-02-18', ticker:'PLTR', dir:'Long', strategy:'Breakout', entry:72.50, exit:82.00, pnl:13.10, r:3.2, status:'win' },
+      { date:'2026-02-17', ticker:'SOFI', dir:'Long', strategy:'Mean Reversion', entry:12.80, exit:11.90, pnl:-7.03, r:-1.5, status:'loss' },
+      { date:'2026-02-14', ticker:'XLF', dir:'Long', strategy:'Pullback', entry:41.20, exit:43.65, pnl:5.95, r:1.6, status:'win' },
+      { date:'2026-02-13', ticker:'MRVL', dir:'Long', strategy:'Pullback', entry:82.00, exit:92.40, pnl:12.68, r:2.7, status:'win' },
+      { date:'2026-02-12', ticker:'EWY', dir:'Long', strategy:'Mean Reversion', entry:60.50, exit:63.75, pnl:5.37, r:1.3, status:'win' },
+      { date:'2026-02-11', ticker:'SHOP', dir:'Long', strategy:'Breakout', entry:105.00, exit:98.20, pnl:-6.48, r:-1.3, status:'loss' },
+      { date:'2026-02-10', ticker:'NFLX', dir:'Long', strategy:'Momentum', entry:885.00, exit:942.00, pnl:6.44, r:1.8, status:'win' },
+      { date:'2026-02-07', ticker:'LLY', dir:'Long', strategy:'Pullback', entry:780.00, exit:815.50, pnl:4.55, r:1.2, status:'win' },
+      { date:'2026-02-06', ticker:'SNAP', dir:'Short', strategy:'Breakdown', entry:12.40, exit:13.10, pnl:-5.65, r:-1.1, status:'loss' },
+      { date:'2026-02-05', ticker:'BTC-USD', dir:'Long', strategy:'Breakout', entry:82000, exit:91240, pnl:11.27, r:2.5, status:'win' },
+    ];
+    return trades;
+  }
+
+  getSparkData(ticker) {
+    const base = { SPY: 520, 'BTC-USD': 86000, VIX: 21 };
+    const vol = { SPY: 4, 'BTC-USD': 2000, VIX: 1.5 };
+    const b = base[ticker] || 100;
+    const v = vol[ticker] || 5;
+    const data = [];
+    let price = b;
+    for (let i = 0; i < 30; i++) {
+      price += (Math.random() - 0.45) * v;
+      data.push(parseFloat(price.toFixed(2)));
+    }
+    return data;
+  }
+}
+
+const DS = new DataService();
+
+/* ==================================================================
+   UI HELPERS
+   ================================================================== */
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById(`tab-${tab}`);
+  const nav = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if (panel) panel.classList.add('active');
+  if (nav) nav.classList.add('active');
+  localStorage.setItem('mcp_tab', tab);
+  // Resize charts on tab switch
+  setTimeout(() => {
+    Object.values(chartInstances).forEach(c => { if (c && typeof c.resize === 'function') c.resize(); });
+  }, 50);
+}
+
+function toggleAddTickerForm() { toggle('addTickerPanel'); }
+function toggleCreateAlert() { toggle('createAlertPanel'); }
+function toggleLogTrade() { toggle('logTradePanel'); }
+function toggleCloseTrade() { toggle('closeTradePanel'); }
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function closeModal() { document.getElementById('confirmModal').classList.remove('active'); }
+
+function pnlColor(val) { return val > 0 ? 'var(--green)' : val < 0 ? 'var(--red)' : 'var(--text-secondary)'; }
+function pnlBadge(val) {
+  if (val > 0) return `<span class="badge badge-green">+${val.toFixed(2)}%</span>`;
+  if (val < 0) return `<span class="badge badge-red">${val.toFixed(2)}%</span>`;
+  return `<span class="badge badge-yellow">0.00%</span>`;
+}
+function statusBadge(current, entry, stop) {
+  if (current >= entry) return '<span class="badge badge-green">Above Entry</span>';
+  if (current <= stop) return '<span class="badge badge-red">Below Stop</span>';
+  return '<span class="badge badge-yellow">In Range</span>';
+}
+function regionFlag(r) {
+  const flags = { US: '<span title="US">&#127482;&#127480;</span>', EU: '<span title="Europe">&#127466;&#127482;</span>', APAC: '<span title="Asia-Pacific">&#127759;</span>', ETF: '<i class="fas fa-chart-bar" title="ETF" style="color:var(--cyan)"></i>', Crypto: '<i class="fab fa-bitcoin" title="Crypto" style="color:var(--yellow)"></i>' };
+  return flags[r] || r;
+}
+function channelBadges(channels) {
+  const map = { slack:'<span class="channel-badge channel-slack"><i class="fab fa-slack"></i> Slack</span>', discord:'<span class="channel-badge channel-discord"><i class="fab fa-discord"></i> Discord</span>', telegram:'<span class="channel-badge channel-telegram"><i class="fab fa-telegram"></i> TG</span>', desktop:'<span class="channel-badge channel-desktop"><i class="fas fa-desktop"></i> Desktop</span>' };
+  return channels.map(c => map[c] || c).join(' ');
+}
+function typeBadge(type) {
+  const colors = { price_above:'badge-green', price_below:'badge-red', pct_change:'badge-yellow', volume_spike:'badge-purple', rsi_oversold:'badge-cyan', rsi_overbought:'badge-red', macd_cross:'badge-blue', earnings:'badge-purple' };
+  const labels = { price_above:'Price Above', price_below:'Price Below', pct_change:'% Change', volume_spike:'Volume Spike', rsi_oversold:'RSI Oversold', rsi_overbought:'RSI Overbought', macd_cross:'MACD Cross', earnings:'Earnings' };
+  return `<span class="badge ${colors[type] || 'badge-blue'}">${labels[type] || type}</span>`;
+}
+
+/* ==================================================================
+   RENDER FUNCTIONS
+   ================================================================== */
+function renderOverviewWatchlist() {
+  const data = DS.getWatchlist().slice(0, 8);
+  const tbody = document.getElementById('overviewWatchlistBody');
+  tbody.innerHTML = data.map(w => {
+    const pnl = ((w.current - w.entry) / w.entry * 100);
+    return `<tr>
+      <td><strong>${w.ticker}</strong></td>
+      <td>${w.score}</td>
+      <td>${w.strategy}</td>
+      <td>$${w.entry.toLocaleString()}</td>
+      <td>$${w.current.toLocaleString()}</td>
+      <td style="color:${pnlColor(pnl)};font-weight:600">${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}%</td>
+      <td>${statusBadge(w.current, w.entry, w.stop)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAlertsTimeline() {
+  const alerts = DS.getRecentAlerts();
+  const el = document.getElementById('alertsTimeline');
+  el.innerHTML = alerts.map(a => `
+    <div class="timeline-item ${a.color}">
+      <div class="timeline-time">${a.time}</div>
+      <div class="timeline-title">${a.ticker} — ${a.type.replace('_', ' ')}</div>
+      <div class="timeline-desc">${a.message}</div>
+    </div>
+  `).join('');
+}
+
+function renderFullWatchlist() {
+  const data = DS.getWatchlist();
+  document.getElementById('watchlistCount').textContent = data.length;
+  document.getElementById('watchlistTotal').textContent = `${data.length} tickers`;
+  const tbody = document.getElementById('fullWatchlistBody');
+  tbody.innerHTML = data.map(w => {
+    const pnl = ((w.current - w.entry) / w.entry * 100);
+    return `<tr>
+      <td><strong>${regionFlag(w.region)} ${w.ticker}</strong></td>
+      <td>${w.score}</td>
+      <td>${w.strategy}</td>
+      <td>$${w.entry.toLocaleString()}</td>
+      <td>$${w.stop.toLocaleString()}</td>
+      <td>$${w.tp1.toLocaleString()}</td>
+      <td>$${w.tp2.toLocaleString()}</td>
+      <td>$${w.current.toLocaleString()}</td>
+      <td>${pnlBadge(pnl)}</td>
+      <td>${statusBadge(w.current, w.entry, w.stop)}</td>
+      <td><button class="btn-icon btn-sm" title="Remove" onclick="removeTicker('${w.ticker}')"><i class="fas fa-trash" style="color:var(--red)"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderScannerPicks() {
+  const data = DS.getScannerPicks();
+  const tbody = document.getElementById('scannerPicksBody');
+  tbody.innerHTML = data.map(p => `<tr>
+    <td><strong>${p.ticker}</strong></td>
+    <td>${p.score}</td>
+    <td>${p.strategy}</td>
+    <td>${regionFlag(p.region)} ${p.region}</td>
+    <td>$${p.entry.toLocaleString()}</td>
+    <td>$${p.stop.toLocaleString()}</td>
+    <td>$${p.tp1.toLocaleString()}</td>
+    <td>${p.rr}</td>
+  </tr>`).join('');
+}
+
+function renderAlertsList() {
+  const alerts = DS.getAlerts();
+  document.getElementById('alertsCount').textContent = alerts.filter(a => a.status === 'active').length;
+  document.getElementById('activeAlertsBadge').textContent = `${alerts.filter(a => a.status === 'active').length} active`;
+  document.getElementById('kpiAlerts').textContent = alerts.filter(a => a.status === 'active').length;
+  const tbody = document.getElementById('alertsListBody');
+  tbody.innerHTML = alerts.map(a => `<tr>
+    <td><strong>${a.ticker}</strong></td>
+    <td>${typeBadge(a.type)}</td>
+    <td>${a.condition}</td>
+    <td>${channelBadges(a.channels)}</td>
+    <td>${a.created}</td>
+    <td>${a.status === 'active' ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-yellow">Paused</span>'}</td>
+    <td>
+      <button class="btn-icon btn-sm" title="${a.status === 'active' ? 'Pause' : 'Resume'}" onclick="toggleAlert(${a.id})"><i class="fas fa-${a.status === 'active' ? 'pause' : 'play'}"></i></button>
+      <button class="btn-icon btn-sm" title="Delete" onclick="deleteAlert(${a.id})"><i class="fas fa-trash" style="color:var(--red)"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderAlertHistory() {
+  const hist = DS.getAlertHistory();
+  const tbody = document.getElementById('alertHistoryBody');
+  tbody.innerHTML = hist.map(h => `<tr>
+    <td style="white-space:nowrap">${h.time}</td>
+    <td><strong>${h.ticker}</strong></td>
+    <td>${typeBadge(h.type)}</td>
+    <td>${h.message}</td>
+    <td>${channelBadges(h.channels)}</td>
+  </tr>`).join('');
+}
+
+function renderTradeLog() {
+  const trades = DS.getTrades();
+  const tbody = document.getElementById('tradeLogBody');
+  tbody.innerHTML = trades.map(t => {
+    const pnl = t.pnl !== null ? `<span style="color:${pnlColor(t.pnl)};font-weight:600">${t.pnl > 0 ? '+' : ''}${t.pnl.toFixed(2)}%</span>` : '-';
+    const rDisp = t.r !== null ? `<span style="color:${pnlColor(t.r)};font-weight:600">${t.r > 0 ? '+' : ''}${t.r.toFixed(1)}R</span>` : '-';
+    const sBadge = t.status === 'open' ? '<span class="badge badge-blue">Open</span>' : t.status === 'win' ? '<span class="badge badge-green">Win</span>' : '<span class="badge badge-red">Loss</span>';
+    return `<tr>
+      <td>${t.date}</td>
+      <td><strong>${t.ticker}</strong></td>
+      <td>${t.dir === 'Short' ? '<span style="color:var(--red)">Short</span>' : '<span style="color:var(--green)">Long</span>'}</td>
+      <td>${t.strategy}</td>
+      <td>$${t.entry.toLocaleString()}</td>
+      <td>${t.exit ? '$' + t.exit.toLocaleString() : '-'}</td>
+      <td>${pnl}</td>
+      <td>${rDisp}</td>
+      <td>${sBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ==================================================================
+   ECHARTS
+   ================================================================== */
+const chartInstances = {};
+
+function initCharts() {
+  initRegimeGauge();
+  initSparklines();
+  initEquityCurve();
+  initPnlDist();
+  initWinRateStrat();
+  initRMultiple();
+}
+
+function initRegimeGauge() {
+  const el = document.getElementById('regimeGauge');
+  if (!el) return;
+  const chart = echarts.init(el, null, { renderer: 'canvas' });
+  chartInstances.regime = chart;
+  const vix = 18.42;
+  // Regime score: 0=extreme risk-off, 50=neutral, 100=extreme risk-on
+  const regimeScore = Math.max(0, Math.min(100, 100 - (vix - 10) * 4));
+  chart.setOption({
+    series: [{
+      type: 'gauge',
+      startAngle: 200,
+      endAngle: -20,
+      min: 0, max: 100,
+      splitNumber: 10,
+      axisLine: {
+        lineStyle: {
+          width: 20,
+          color: [[0.25, '#ef4444'], [0.5, '#f59e0b'], [0.75, '#10b981'], [1, '#06b6d4']]
+        }
+      },
+      pointer: { itemStyle: { color: '#f1f5f9' }, width: 5, length: '70%' },
+      axisTick: { distance: -20, length: 6, lineStyle: { color: '#475569', width: 1 } },
+      splitLine: { distance: -24, length: 12, lineStyle: { color: '#475569', width: 2 } },
+      axisLabel: { color: '#64748b', distance: 30, fontSize: 11 },
+      detail: {
+        valueAnimation: true, fontSize: 22, fontWeight: 700, color: '#f1f5f9',
+        formatter: function(v) {
+          if (v > 70) return 'Risk-On';
+          if (v > 40) return 'Neutral';
+          return 'Risk-Off';
+        },
+        offsetCenter: [0, '75%']
+      },
+      title: { offsetCenter: [0, '95%'], fontSize: 13, color: '#94a3b8', formatter: 'VIX: ' + vix },
+      data: [{ value: regimeScore, name: 'VIX: ' + vix }]
+    }]
+  });
+}
+
+function initSparklines() {
+  ['spy', 'btc', 'vix'].forEach(key => {
+    const tickers = { spy: 'SPY', btc: 'BTC-USD', vix: 'VIX' };
+    const colors = { spy: '#3b82f6', btc: '#f59e0b', vix: '#ef4444' };
+    const el = document.getElementById(`${key}Sparkline`);
+    if (!el) return;
+    const chart = echarts.init(el, null, { renderer: 'canvas' });
+    chartInstances[key] = chart;
+    const data = DS.getSparkData(tickers[key]);
+    chart.setOption({
+      grid: { left: 0, right: 0, top: 5, bottom: 0 },
+      xAxis: { type: 'category', show: false, data: data.map((_, i) => i) },
+      yAxis: { type: 'value', show: false, min: Math.min(...data) * 0.998, max: Math.max(...data) * 1.002 },
+      series: [{
+        type: 'line', data, smooth: true, symbol: 'none',
+        lineStyle: { color: colors[key], width: 2 },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: colors[key] + '40' },
+          { offset: 1, color: colors[key] + '05' }
+        ])}
+      }],
+      tooltip: { show: false }
+    });
+  });
+}
+
+function initEquityCurve() {
+  const el = document.getElementById('equityCurveChart');
+  if (!el) return;
+  const chart = echarts.init(el, null, { renderer: 'canvas' });
+  chartInstances.equity = chart;
+  const trades = DS.getTrades().filter(t => t.status !== 'open').reverse();
+  let equity = 10000;
+  const dates = ['Start'];
+  const values = [10000];
+  trades.forEach(t => {
+    equity += equity * (t.pnl / 100);
+    dates.push(t.date.slice(5));
+    values.push(Math.round(equity));
+  });
+  chart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 55, right: 15, top: 20, bottom: 30 },
+    xAxis: { type: 'category', data: dates, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#64748b', fontSize: 10, rotate: 45 } },
+    yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b', fontSize: 10, formatter: '${value}' } },
+    series: [{
+      type: 'line', data: values, smooth: true, symbol: 'circle', symbolSize: 5,
+      lineStyle: { color: '#3b82f6', width: 2 },
+      itemStyle: { color: '#3b82f6' },
+      areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: 'rgba(59,130,246,.25)' },
+        { offset: 1, color: 'rgba(59,130,246,.02)' }
+      ])}
+    }],
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f1f5f9', fontSize: 12 } }
+  });
+}
+
+function initPnlDist() {
+  const el = document.getElementById('pnlDistChart');
+  if (!el) return;
+  const chart = echarts.init(el, null, { renderer: 'canvas' });
+  chartInstances.pnlDist = chart;
+  const trades = DS.getTrades().filter(t => t.pnl !== null);
+  const sorted = trades.sort((a, b) => a.pnl - b.pnl);
+  chart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 55, right: 15, top: 20, bottom: 40 },
+    xAxis: { type: 'category', data: sorted.map(t => t.ticker), axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8', fontSize: 10, rotate: 45 } },
+    yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b', fontSize: 10, formatter: '{value}%' } },
+    series: [{
+      type: 'bar', data: sorted.map(t => ({
+        value: t.pnl,
+        itemStyle: { color: t.pnl >= 0 ? '#10b981' : '#ef4444', borderRadius: t.pnl >= 0 ? [3, 3, 0, 0] : [0, 0, 3, 3] }
+      }))
+    }],
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f1f5f9', fontSize: 12 }, formatter: p => `${p[0].name}: ${p[0].value > 0 ? '+' : ''}${p[0].value.toFixed(2)}%` }
+  });
+}
+
+function initWinRateStrat() {
+  const el = document.getElementById('winRateStratChart');
+  if (!el) return;
+  const chart = echarts.init(el, null, { renderer: 'canvas' });
+  chartInstances.winRate = chart;
+  const strategies = ['Breakout', 'Pullback', 'Momentum', 'Mean Reversion', 'Reversal', 'Earnings'];
+  const winRates = [75, 80, 71, 50, 100, 100];
+  const counts = [8, 5, 6, 3, 1, 1];
+  chart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 90, right: 15, top: 20, bottom: 20 },
+    xAxis: { type: 'value', max: 100, axisLine: { show: false }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b', fontSize: 10, formatter: '{value}%' } },
+    yAxis: { type: 'category', data: strategies, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8', fontSize: 11 } },
+    series: [{
+      type: 'bar', data: winRates.map((v, i) => ({
+        value: v,
+        itemStyle: { color: v >= 70 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444', borderRadius: [0, 4, 4, 0] },
+        label: { show: true, position: 'right', formatter: `${v}% (${counts[i]})`, color: '#94a3b8', fontSize: 10 }
+      })),
+      barWidth: 20
+    }],
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f1f5f9' } }
+  });
+}
+
+function initRMultiple() {
+  const el = document.getElementById('rMultipleChart');
+  if (!el) return;
+  const chart = echarts.init(el, null, { renderer: 'canvas' });
+  chartInstances.rMultiple = chart;
+  // Histogram bins
+  const bins = ['-2R to -1.5R', '-1.5R to -1R', '-1R to -0.5R', '-0.5R to 0R', '0R to 0.5R', '0.5R to 1R', '1R to 1.5R', '1.5R to 2R', '2R to 2.5R', '2.5R to 3R', '3R+'];
+  const counts = [1, 2, 1, 1, 0, 1, 3, 3, 3, 2, 2];
+  chart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 40, right: 15, top: 20, bottom: 50 },
+    xAxis: { type: 'category', data: bins, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#64748b', fontSize: 9, rotate: 45 } },
+    yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b', fontSize: 10 } },
+    series: [{
+      type: 'bar', data: counts.map((v, i) => ({
+        value: v,
+        itemStyle: { color: i < 4 ? '#ef4444' : i < 5 ? '#f59e0b' : '#10b981', borderRadius: [3, 3, 0, 0] }
+      })),
+      barWidth: 20
+    }],
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f1f5f9' } }
+  });
+}
+
+/* ==================================================================
+   ACTIONS
+   ================================================================== */
+function syncWatchlist() {
+  showToast('Syncing watchlist from Market Watch...', 'info');
+  setTimeout(() => {
+    renderFullWatchlist();
+    renderOverviewWatchlist();
+    showToast('Watchlist synced: 24 tickers loaded', 'success');
+  }, 1200);
+}
+
+function addCustomTicker() {
+  const ticker = document.getElementById('addTicker').value.trim().toUpperCase();
+  if (!ticker) { showToast('Ticker is required', 'error'); return; }
+  showToast(`Added ${ticker} to watchlist`, 'success');
+  document.getElementById('addTicker').value = '';
+  document.getElementById('addEntry').value = '';
+  document.getElementById('addStop').value = '';
+  document.getElementById('addTP1').value = '';
+  document.getElementById('addTP2').value = '';
+  document.getElementById('addNote').value = '';
+  toggle('addTickerPanel');
+}
+
+function removeTicker(ticker) {
+  showToast(`Removed ${ticker} from watchlist`, 'info');
+}
+
+function createAlert() {
+  const ticker = document.getElementById('alertTicker').value.trim().toUpperCase();
+  if (!ticker) { showToast('Ticker is required', 'error'); return; }
+  showToast(`Alert created for ${ticker}`, 'success');
+  toggle('createAlertPanel');
+}
+
+function toggleAlert(id) { showToast(`Alert #${id} toggled`, 'info'); }
+function deleteAlert(id) { showToast(`Alert #${id} deleted`, 'info'); }
+
+function testChannel(name) { showToast(`Test notification sent to ${name}`, 'success'); }
+
+function logTrade() {
+  const ticker = document.getElementById('jtTicker').value.trim().toUpperCase();
+  if (!ticker) { showToast('Ticker is required', 'error'); return; }
+  showToast(`Trade logged: ${ticker}`, 'success');
+  toggle('logTradePanel');
+}
+
+function closeTrade() {
+  const sel = document.getElementById('ctTrade');
+  const text = sel.options[sel.selectedIndex].text;
+  showToast(`Trade closed: ${text}`, 'success');
+  toggle('closeTradePanel');
+}
+
+function testAI() {
+  showToast('Testing AI provider connection...', 'info');
+  setTimeout(() => showToast('AI provider connected: OpenAI GPT-4o', 'success'), 1000);
+}
+
+function exportConfig() {
+  const config = {
+    dataSources: { yahoo: true, binance: { enabled: true, symbols: 'BTC,ETH,SOL,XRP,DOGE' }, edgar: true },
+    ai: { provider: 'openai', model: 'gpt-4o' },
+    notifications: { slack: true, discord: true, telegram: false, desktop: true },
+    scanner: { universe: 'sp500', interval: '15m' },
+    server: { dashPort: 3847, extPort: 3848 }
+  };
+  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mcp-config.json';
+  a.click();
+  showToast('Config exported', 'success');
+}
+
+function importConfig(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  showToast(`Config imported from ${file.name}`, 'success');
+}
+
+function resetConfig() {
+  const modal = document.getElementById('confirmModal');
+  document.getElementById('confirmMessage').textContent = 'This will reset ALL settings to factory defaults. This action cannot be undone.';
+  document.getElementById('confirmBtn').onclick = () => {
+    closeModal();
+    showToast('All settings have been reset to defaults', 'info');
+  };
+  modal.classList.add('active');
+}
+
+/* ==================================================================
+   REFRESH & INIT
+   ================================================================== */
+function refreshAll() {
+  document.getElementById('lastRefresh').innerHTML = `<i class="fas fa-sync-alt"></i> ${new Date().toLocaleTimeString()}`;
+  renderOverviewWatchlist();
+  renderAlertsTimeline();
+  renderAlertsList();
+  renderAlertHistory();
+  renderFullWatchlist();
+  renderScannerPicks();
+  renderTradeLog();
+  // Resize all charts
+  setTimeout(() => {
+    Object.values(chartInstances).forEach(c => { if (c && typeof c.resize === 'function') c.resize(); });
+  }, 50);
+}
+
+function updateUptime() {
+  document.getElementById('uptimeDisplay').innerHTML = `<i class="fas fa-clock"></i> ${DS.getUptime()}`;
+}
+
+// Global resize handler
+window.addEventListener('resize', () => {
+  Object.values(chartInstances).forEach(c => { if (c && typeof c.resize === 'function') c.resize(); });
+});
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore tab
+  const savedTab = localStorage.getItem('mcp_tab');
+  if (savedTab) switchTab(savedTab);
+
+  // Render all
+  refreshAll();
+
+  // Init charts (slight delay to let DOM settle)
+  setTimeout(initCharts, 100);
+
+  // Auto-refresh every 15s
+  setInterval(() => {
+    refreshAll();
+    updateUptime();
+  }, 15000);
+
+  // Uptime ticker every minute
+  setInterval(updateUptime, 60000);
+  updateUptime();
+});
+</script>
+</body>
+</html>

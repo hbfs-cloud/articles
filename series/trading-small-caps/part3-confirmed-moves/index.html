@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,small-cap,formation,trade-idea,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Spotting Confirmed Moves — VWAP, Candlestick & Volume Mastery | Trading Small-Caps — Part 3/8 | Market Watch</title>
+ <meta name="description" content="Trading Small-Caps series — Part 3/8: Master VWAP as the institutional anchor, candlestick-on-VWAP confirmation, the $7-$30 price sweet spot, relative volume thresholds, and the A+ confirmed move checklist.">
+ <meta property="og:title" content="Spotting Confirmed Moves | Trading Small-Caps 3/8 | Market Watch">
+ <meta property="og:description" content="The most technical part of the series: VWAP mechanics, candlestick confirmation patterns, volume edge flags (RVOL 2x-5x), false confirmation traps, and real setup walkthroughs.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-small-caps/part3-confirmed-moves/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+/* TEAL SMALL-CAPS THEME */
+.hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+.hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+.hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+.hero-badge-amber { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
+
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+
+.checklist { list-style:none; padding:0; margin:1.5rem 0; }
+.checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+.checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+.takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#115e59; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+.next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0d9488 0%, #115e59 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+.next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+.next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+.next-cta .next-title { font-size:1.25rem; font-weight:800; }
+.next-cta i { font-size:1.5rem; }
+
+.step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+.step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+.step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+.step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #0d9488 0%, #115e59 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+.step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+.step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+.formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+.formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+.formula-box .formula-highlight { color:#2dd4bf; }
+
+details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; }
+details[open] summary { border-bottom:1px solid #e2e8f0; background:#f0fdfa; }
+details .quiz-content { padding:1.5rem; }
+details .quiz-content p { margin:0.5rem 0; }
+
+.metric-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+.metric-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; }
+.metric-card .metric-value { font-size:1.8rem; font-weight:900; color:#0d9488; }
+.metric-card .metric-label { font-size:0.75rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.25rem; }
+
+.signal-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; margin:1.5rem 0; position:relative; overflow:hidden; }
+.signal-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+.signal-card.signal-bull::before { background:linear-gradient(90deg, #10b981, #34d399); }
+.signal-card.signal-bear::before { background:linear-gradient(90deg, #ef4444, #f87171); }
+.signal-card.signal-neutral::before { background:linear-gradient(90deg, #f59e0b, #fbbf24); }
+.signal-card h4 { margin:0 0 0.5rem; font-size:1rem; font-weight:800; color:#0f172a; }
+.signal-card p { margin:0; font-size:0.9rem; color:#64748b; line-height:1.5; }
+
+.setup-walkthrough { background:white; border:2px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+.setup-walkthrough h3 { color:#115e59; margin-top:0; }
+.setup-header { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; }
+.setup-ticker { font-size:1.4rem; font-weight:900; color:#0d9488; }
+.setup-name { font-size:0.9rem; color:#64748b; }
+.setup-badge { padding:0.25rem 0.6rem; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase; }
+.setup-badge-green { background:rgba(16,185,129,0.1); color:#10b981; }
+.setup-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; }
+.setup-detail { display:flex; align-items:flex-start; gap:0.75rem; padding:0.5rem 0; font-size:0.9rem; color:#334155; line-height:1.5; }
+.setup-detail i { color:#0d9488; margin-top:0.15rem; flex-shrink:0; }
+
+@media (max-width:768px) {
+  .hero-section { padding:2.5rem 1rem 5rem; }
+  .hero-section h1 { font-size:1.8rem !important; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+  .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+  .next-cta { flex-direction:column; text-align:center; }
+  .step-grid { grid-template-columns:1fr 1fr; }
+  .metric-row { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px) {
+  .hero-section h1 { font-size:1.4rem !important; }
+  .hero-section { padding:2rem 1rem 4rem; }
+  .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+  .hero-badges { gap:0.4rem; margin-top:1rem; }
+  .step-grid { grid-template-columns:1fr; }
+  .metric-row { grid-template-columns:1fr; }
+}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-crosshairs"></i> Trading Small-Caps Series — Part 3 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Spotting Confirmed Moves — VWAP, Candlestick & Volume Mastery</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">Your scanner found candidates. Now you need to confirm which moves are real. This is where VWAP, candlestick patterns, and volume analysis separate profitable traders from bag holders.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-crosshairs"></i> VWAP Mastery</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-bar"></i> Volume Analysis</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-check-double"></i> Confirmation</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-fire"></i> A+ Setups</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-triangle-exclamation"></i> False Signals</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-small-caps/part2-screening/" class="series-arrow" title="Building Your Scanner"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Small-Caps</span><div class="series-steps"><a href="/series/trading-small-caps/part1-landscape/" class="series-step" title="The Small-Cap Landscape"><span class="series-num">1</span><span class="series-label">Landscape</span></a><a href="/series/trading-small-caps/part2-screening/" class="series-step" title="Building Your Scanner"><span class="series-num">2</span><span class="series-label">Scanner</span></a><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-step current" title="Spotting Confirmed Moves"><span class="series-num">3</span><span class="series-label">Confirmed Moves</span></a><a href="/series/trading-small-caps/part4-due-diligence/" class="series-step" title="Due Diligence Deep Dive"><span class="series-num">4</span><span class="series-label">Due Diligence</span></a><a href="/series/trading-small-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-small-caps/part6-risk-management/" class="series-step" title="Risk & Position Sizing"><span class="series-num">6</span><span class="series-label">Risk Mgmt</span></a><a href="/series/trading-small-caps/part7-traps/" class="series-step" title="The Trap Playbook"><span class="series-num">7</span><span class="series-label">Traps</span></a><a href="/series/trading-small-caps/part8-returns/" class="series-step" title="Returns & Edge Building"><span class="series-num">8</span><span class="series-label">Returns</span></a></div><span class="series-counter">3/8</span><a href="/series/trading-small-caps/part4-due-diligence/" class="series-arrow" title="Due Diligence Deep Dive"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#vwap" class="fnav-item" data-section="vwap"><i class="fas fa-crosshairs"></i><span>VWAP Anchor</span></a><a href="#candlestick" class="fnav-item" data-section="candlestick"><i class="fas fa-chart-bar"></i><span>Candlestick on VWAP</span></a><a href="#sweetspot" class="fnav-item" data-section="sweetspot"><i class="fas fa-bullseye"></i><span>Price Sweet Spot</span></a><a href="#volume" class="fnav-item" data-section="volume"><i class="fas fa-volume-up"></i><span>Volume Edge</span></a><a href="#checklist" class="fnav-item" data-section="checklist"><i class="fas fa-clipboard-check"></i><span>A+ Checklist</span></a><a href="#false" class="fnav-item" data-section="false"><i class="fas fa-skull-crossbones"></i><span>False Confirmations</span></a><a href="#examples" class="fnav-item" data-section="examples"><i class="fas fa-flask"></i><span>Real Examples</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: VWAP AS INSTITUTIONAL ANCHOR                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="vwap"><i class="fa-solid fa-crosshairs" style="color:#0d9488;"></i> VWAP — The Institutional Anchor</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-crosshairs" style="color:#0d9488;"></i> What VWAP Really Represents</h2>
+
+  <p><strong>VWAP (Volume-Weighted Average Price)</strong> is the average price a stock has traded at throughout the day, weighted by volume at each price level. Unlike a simple moving average that treats every candle equally, VWAP gives more weight to prices where the most shares changed hands. It tells you where the real money transacted.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Volume-Weighted Average Price</div>
+    <span class="formula-highlight">VWAP</span> = &Sigma;(Price x Volume) / <span class="formula-highlight">&Sigma;Volume</span>
+  </div>
+
+  <p>For institutional traders executing large orders, VWAP is the benchmark. If a fund buys 500,000 shares of a small-cap and their average execution price is below VWAP, the trader did a good job. If above, they overpaid. This creates a gravitational pull: institutions anchor their algorithms around VWAP, which means price action near VWAP carries disproportionate significance.</p>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> Why VWAP Matters More for Small-Caps</h3>
+    <p>In large-caps like AAPL or MSFT, VWAP is one of many reference points and institutional activity is spread across dozens of dark pools and exchanges. In small-caps, the liquidity pool is smaller. When an institution trades a small-cap, their VWAP orders represent a larger percentage of total volume. This makes VWAP a much stronger support/resistance level in small-caps than in large-caps. A VWAP bounce on a $800M biotech is often institutional accumulation in real time.</p>
+  </div>
+
+  <h3>The Three VWAP Zones</h3>
+  <p>Professional small-cap traders think in terms of three zones relative to VWAP:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-arrow-up" style="font-size:0.9rem;"></i></div>
+      <h4>Above VWAP</h4>
+      <p>Buyers are in control. Longs entered today are profitable on average. Dips to VWAP are potential add zones. Strength.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-equals" style="font-size:0.9rem;"></i></div>
+      <h4>At VWAP</h4>
+      <p>Decision zone. Price is at fair value. Watch for candlestick confirmation (hammer, engulfing) to determine next direction.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-arrow-down" style="font-size:0.9rem;"></i></div>
+      <h4>Below VWAP</h4>
+      <p>Sellers are in control. Longs entered today are underwater on average. Rallies to VWAP are potential short entries.</p>
+    </div>
+  </div>
+
+  <h3>Intraday vs. Anchored VWAP</h3>
+  <p><strong>Intraday VWAP</strong> resets every session at market open. It is the standard VWAP used by day traders. <strong>Anchored VWAP (aVWAP)</strong> starts from a specific event: an earnings report, a breakout day, an IPO date, or a 52-week low. Anchored VWAP is particularly powerful for swing traders because it shows where participants from a specific catalyst event are positioned on average.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Intraday VWAP</th>
+        <th>Anchored VWAP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Resets</strong></td>
+        <td>Every session at 9:30 AM</td>
+        <td>Never (anchored to event)</td>
+      </tr>
+      <tr>
+        <td><strong>Best for</strong></td>
+        <td>Day trading, scalping</td>
+        <td>Swing trades, trend analysis</td>
+      </tr>
+      <tr>
+        <td><strong>Timeframe</strong></td>
+        <td>1-min to 5-min charts</td>
+        <td>Daily charts</td>
+      </tr>
+      <tr>
+        <td><strong>Key use</strong></td>
+        <td>Entry timing, bias direction</td>
+        <td>Institutional cost basis</td>
+      </tr>
+      <tr>
+        <td><strong>Small-cap edge</strong></td>
+        <td>High — thin float amplifies reactions</td>
+        <td>Very high — tracks catalyst holders</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div id="chart-vwap-zones" style="width:100%; height:340px; margin:2rem 0;"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: CANDLESTICK-ON-VWAP TECHNIQUE                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="candlestick"><i class="fa-solid fa-chart-bar" style="color:#0d9488;"></i> Candlestick-on-VWAP Technique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#0d9488;"></i> Confirmation Patterns at VWAP</h2>
+
+  <p>A candlestick pattern alone is marginally useful. A candlestick pattern at VWAP is a high-probability signal. The combination works because you are getting <strong>two independent confirmations</strong>: institutional price reference (VWAP) and market participant psychology (candlestick).</p>
+
+  <h3>The Big Three: Patterns That Work at VWAP</h3>
+
+  <div class="signal-card signal-bull">
+    <h4><i class="fa-solid fa-hammer" style="color:#10b981;"></i> Hammer at VWAP — Bullish Reversal</h4>
+    <p>Price pulls back to VWAP, creates a hammer (long lower wick, small body at top). The lower wick shows sellers tried to push below VWAP but buyers absorbed every share. The close near the high confirms demand. <strong>Entry</strong>: above the hammer's high. <strong>Stop</strong>: below the hammer's low. <strong>Win rate in small-caps</strong>: ~62% when combined with RVOL > 2x.</p>
+  </div>
+
+  <div class="signal-card signal-bull">
+    <h4><i class="fa-solid fa-arrow-up" style="color:#10b981;"></i> Bullish Engulfing at VWAP — Momentum Shift</h4>
+    <p>After a pullback to VWAP, a red candle is followed by a larger green candle that completely engulfs it. This pattern shows that selling pressure exhausted itself at fair value and aggressive buyers stepped in. <strong>Entry</strong>: the engulfing candle close or slightly above. <strong>Stop</strong>: below the engulfing candle's low. <strong>Best when</strong>: the engulfing candle has above-average volume.</p>
+  </div>
+
+  <div class="signal-card signal-neutral">
+    <h4><i class="fa-solid fa-minus" style="color:#d97706;"></i> Doji at VWAP — Decision Pending</h4>
+    <p>A doji (open and close nearly equal) at VWAP means indecision at fair value. This is not a trade signal by itself. It is a warning to watch the next candle. If the following candle breaks above the doji high with volume, go long. If it breaks below the doji low, stay away or short. <strong>Key rule</strong>: never trade the doji itself; trade the resolution.</p>
+  </div>
+
+  <div class="signal-card signal-bear">
+    <h4><i class="fa-solid fa-meteor" style="color:#ef4444;"></i> Bearish Rejection at VWAP — Short Setup</h4>
+    <p>Price rallies from below VWAP, touches it, and produces a shooting star or bearish engulfing. This is the mirror image of the hammer setup. Sellers are defending VWAP from above. <strong>Entry</strong>: below the rejection candle's low. <strong>Stop</strong>: above VWAP. <strong>Context</strong>: most reliable when the stock is in a multi-day downtrend and VWAP acts as resistance on the relief bounce.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Pattern</th>
+        <th>Direction</th>
+        <th>Confirmation Volume</th>
+        <th>Win Rate at VWAP</th>
+        <th>False Signal Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Hammer</strong></td>
+        <td>Bullish</td>
+        <td>RVOL > 1.5x</td>
+        <td>~62%</td>
+        <td>Low</td>
+      </tr>
+      <tr>
+        <td><strong>Bullish Engulfing</strong></td>
+        <td>Bullish</td>
+        <td>RVOL > 2x</td>
+        <td>~58%</td>
+        <td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>Doji</strong></td>
+        <td>Neutral</td>
+        <td>Watch next candle</td>
+        <td>N/A (wait for resolution)</td>
+        <td>High if traded alone</td>
+      </tr>
+      <tr>
+        <td><strong>Shooting Star</strong></td>
+        <td>Bearish</td>
+        <td>RVOL > 1.5x</td>
+        <td>~55%</td>
+        <td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>Bearish Engulfing</strong></td>
+        <td>Bearish</td>
+        <td>RVOL > 2x</td>
+        <td>~57%</td>
+        <td>Low-Medium</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-lightbulb"></i> The Multi-Timeframe Trick</h3>
+    <p>When you see a hammer on the 5-minute chart at VWAP, zoom out to the 15-minute chart. If that timeframe also shows a bullish setup (higher low, rising VWAP slope), you have <strong>multi-timeframe confluence</strong>. This single step eliminates roughly 40% of false signals. The 5-minute gives you precision entry. The 15-minute gives you directional bias. Trade in the direction of the higher timeframe, enter on the lower.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: PRICE SWEET SPOT $7-$30                            -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sweetspot"><i class="fa-solid fa-bullseye" style="color:#0d9488;"></i> The Price Sweet Spot</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bullseye" style="color:#0d9488;"></i> Why $7-$30 Is the Goldilocks Zone</h2>
+
+  <p>Not all small-caps are created equal. The share price of a stock dramatically affects its tradability, institutional interest, and technical behavior. Through extensive backtesting and real-world observation, the <strong>$7-$30 price range</strong> emerges as the optimal zone for small-cap trading.</p>
+
+  <div class="metric-row">
+    <div class="metric-card">
+      <div class="metric-value">$7</div>
+      <div class="metric-label">Floor — Above penny noise</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">$30</div>
+      <div class="metric-label">Ceiling — Before institutional saturation</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">$5</div>
+      <div class="metric-label">Nasdaq compliance threshold</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">68%</div>
+      <div class="metric-label">Of small-cap breakouts in this range</div>
+    </div>
+  </div>
+
+  <h3>Below $5 — The Danger Zone</h3>
+  <p>Stocks below $5 are classified as "penny stocks" by the SEC and carry serious structural disadvantages. Nasdaq requires a minimum bid price of $1.00 and a 30-day average above $5.00 for continued listing. Companies trading below $5 face <strong>delisting risk</strong>, which triggers forced selling from institutional holders (most funds have mandates that prohibit sub-$5 holdings). This creates a self-reinforcing death spiral: price drops below $5, institutions sell, price drops further.</p>
+
+  <h3>$5-$7 — The Rehabilitation Zone</h3>
+  <p>Stocks between $5 and $7 are technically above the Nasdaq compliance threshold, but they are in a fragile zone. Many institutional mandates exclude stocks below $7 or $10. Short sellers target this range aggressively because a small push below $5 can trigger the delisting cascade. <strong>Trade these cautiously</strong> and only with catalyst-driven setups (FDA approval, earnings beat, contract win).</p>
+
+  <h3>$7-$30 — The Sweet Spot</h3>
+  <p>This is where the magic happens. Stocks in this range are:</p>
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Institutionally eligible</strong> — Most small-cap funds can buy them. Russell 2000 inclusion is possible.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Optionable</strong> — Many have options chains, providing hedging and leverage opportunities.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Liquid enough</strong> — Bid-ask spreads are typically 1-3 cents, not 10-50 cents like sub-$5 stocks.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Technically clean</strong> — Candlestick patterns and VWAP levels are more reliable at these prices.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Analyst coverage emerging</strong> — 1-3 analysts covering means catalysts are being tracked but not fully priced in.</li>
+  </ul>
+
+  <h3>Above $30 — Transitioning Out</h3>
+  <p>As small-caps move above $30, they often start attracting mid-cap fund interest. Volatility compresses, spreads tighten further, and the stock behaves more like a mid-cap. This is not bad — it means your thesis is working. But the explosive small-cap moves (30-50% in a week) become much rarer. The best approach: ride winners above $30 with a trailing stop rather than adding new positions.</p>
+
+  <div id="chart-price-distribution" style="width:100%; height:320px; margin:2rem 0;"></div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> Price Zone Rules</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Below $5: avoid entirely unless you are a specialist with high risk tolerance</li>
+      <li><i class="fa-solid fa-check"></i> $5-$7: catalyst-only trades with tight stops and reduced position size</li>
+      <li><i class="fa-solid fa-check"></i> $7-$30: your primary hunting ground — full position size, all strategies apply</li>
+      <li><i class="fa-solid fa-check"></i> Above $30: ride existing winners, do not initiate new small-cap positions</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: VOLUME EDGE FLAGS                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="volume"><i class="fa-solid fa-volume-up" style="color:#0d9488;"></i> Volume Edge Flags</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-volume-up" style="color:#0d9488;"></i> Relative Volume — Your Strongest Edge</h2>
+
+  <p>Price tells you what happened. <strong>Volume tells you if it matters.</strong> In small-caps, volume is the single most important confirmation tool because it separates genuine institutional accumulation from noise, retail chatter, and market-maker manipulation.</p>
+
+  <p><strong>Relative Volume (RVOL)</strong> compares current volume to the stock's average volume over a lookback period (typically 20 or 50 days). An RVOL of 2.0x means the stock is trading at twice its normal volume. This is how you normalize volume across stocks: 500K shares on a stock that normally trades 250K is significant; 500K on a stock that normally trades 5M is irrelevant.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Relative Volume</div>
+    <span class="formula-highlight">RVOL</span> = Current Volume / <span class="formula-highlight">Avg Volume (20-day)</span>
+  </div>
+
+  <h3>RVOL Thresholds and What They Mean</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>RVOL</th>
+        <th>Signal</th>
+        <th>What It Means</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>< 0.5x</strong></td>
+        <td>Volume dry-up</td>
+        <td>Disinterest, low conviction. Could precede a breakout or breakdown</td>
+        <td>Watch — potential coiled spring</td>
+      </tr>
+      <tr>
+        <td><strong>0.5-1.0x</strong></td>
+        <td>Below average</td>
+        <td>Normal noise, no conviction</td>
+        <td>No edge — skip</td>
+      </tr>
+      <tr>
+        <td><strong>1.0-2.0x</strong></td>
+        <td>Normal to elevated</td>
+        <td>Slightly above average, could be random</td>
+        <td>Monitor, not actionable alone</td>
+      </tr>
+      <tr>
+        <td><strong>2.0-3.0x</strong></td>
+        <td>Significant</td>
+        <td>Institutional interest or news-driven. Patterns become more reliable</td>
+        <td>Green light — trade confirmed setups</td>
+      </tr>
+      <tr>
+        <td><strong>3.0-5.0x</strong></td>
+        <td>Major event</td>
+        <td>Earnings, FDA decision, acquisition rumors, sector rotation</td>
+        <td>High-priority — execute A+ setups only</td>
+      </tr>
+      <tr>
+        <td><strong>> 5.0x</strong></td>
+        <td>Extreme</td>
+        <td>Parabolic move, short squeeze, or material news. Volatility is extreme</td>
+        <td>Caution — reduced size, wider stops</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div id="chart-rvol-impact" style="width:100%; height:340px; margin:2rem 0;"></div>
+
+  <h3>Pre-Market Volume Spikes</h3>
+  <p>In small-caps, pre-market volume is a leading indicator that most retail traders ignore. If a stock that normally trades 50K shares in pre-market suddenly trades 500K by 8:00 AM, something is happening. The catalyst may not be public yet (insiders positioning, block trade, dark pool print), but the volume does not lie.</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>4:00-7:00 AM</strong> — Early institutional activity, block trades. Low retail participation. High signal quality.</li>
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>7:00-8:00 AM</strong> — News wires start, press releases drop. Volume spikes here are catalyst-driven.</li>
+    <li><i class="fa-solid fa-clock" style="color:#0d9488;"></i> <strong>8:00-9:30 AM</strong> — Retail discovers the move. Volume spikes here are often late. The best entries were earlier.</li>
+  </ul>
+
+  <h3>Volume Dry-Up Before Breakout</h3>
+  <p>One of the most reliable small-cap patterns: volume contracts for 3-7 days while price consolidates in a tight range (< 5% from high to low), then volume explodes on a breakout above resistance. The contraction phase is the coiled spring. Low volume means sellers are exhausted and holders are not willing to sell at current prices. When demand arrives (catalyst, sector rotation, newsletter mention), the thin order book causes an outsized price move.</p>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> The Volume Dry-Up Checklist</h3>
+    <p>Look for these five elements before the breakout:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> RVOL declining for 3+ consecutive days (ideally below 0.7x)</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Price range contracting — each day's high-low range is narrower</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Stock holding above key support (VWAP, 20 EMA, or prior breakout level)</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> No insider selling during the contraction</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Upcoming catalyst within 1-2 weeks (earnings, FDA date, conference)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: A+ CONFIRMED MOVE CHECKLIST                        -->
+<!-- ============================================================ -->
+<div class="section-divider" id="checklist"><i class="fa-solid fa-clipboard-check" style="color:#0d9488;"></i> The A+ Confirmed Move Checklist</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clipboard-check" style="color:#0d9488;"></i> Combining Everything — Maximum Probability</h2>
+
+  <p>Individual signals have modest win rates (55-65%). Combining them creates confluence, which pushes win rates above 70%. The A+ confirmed move requires <strong>all four pillars</strong> firing simultaneously:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Price Action</h4>
+      <p>Bullish candlestick pattern (hammer, engulfing) at a key technical level. Clean chart structure with identifiable support/resistance.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Volume</h4>
+      <p>RVOL > 2.0x confirming the price action. Volume should increase as price moves in your direction, not against.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>VWAP</h4>
+      <p>Price action occurs at or near VWAP. For longs: bouncing off VWAP from above or reclaiming from below. For shorts: rejecting at VWAP from below.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Catalyst</h4>
+      <p>A fundamental reason for the move: earnings, contract, FDA, insider buying, sector momentum, analyst upgrade. No catalyst = reduced conviction.</p>
+    </div>
+  </div>
+
+  <div id="chart-confluence" style="width:100%; height:340px; margin:2rem 0;"></div>
+
+  <h3>Scoring Your Setup</h3>
+  <p>Before entering any small-cap trade, score it on these four pillars. Each pillar is worth 25 points for a total of 100:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Pillar</th>
+        <th>25 pts (A+)</th>
+        <th>15 pts (B)</th>
+        <th>5 pts (C)</th>
+        <th>0 pts (Fail)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Price Action</strong></td>
+        <td>Textbook pattern at key level</td>
+        <td>Decent pattern, level is nearby</td>
+        <td>Weak pattern, no clear level</td>
+        <td>Bearish pattern or no pattern</td>
+      </tr>
+      <tr>
+        <td><strong>Volume</strong></td>
+        <td>RVOL > 3x, increasing</td>
+        <td>RVOL 2-3x</td>
+        <td>RVOL 1-2x</td>
+        <td>RVOL < 1x or declining</td>
+      </tr>
+      <tr>
+        <td><strong>VWAP</strong></td>
+        <td>Pattern exactly at VWAP</td>
+        <td>Within 1% of VWAP</td>
+        <td>Within 3% of VWAP</td>
+        <td>> 3% from VWAP</td>
+      </tr>
+      <tr>
+        <td><strong>Catalyst</strong></td>
+        <td>Material news (earnings, FDA)</td>
+        <td>Sector momentum, analyst mention</td>
+        <td>General market tailwind</td>
+        <td>No identifiable catalyst</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    <div class="formula-label">Trade Execution Rules</div>
+    <span class="formula-highlight">85-100 pts</span> = Full size &nbsp;&bull;&nbsp; <span class="formula-highlight">65-84 pts</span> = Half size &nbsp;&bull;&nbsp; Below 65 = <span class="formula-highlight">No trade</span>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> The Non-Negotiables</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Never trade a small-cap without checking RVOL first — volume is your truth detector</li>
+      <li><i class="fa-solid fa-check"></i> If two or more pillars score 0, the setup is invalid regardless of how good the other pillars look</li>
+      <li><i class="fa-solid fa-check"></i> Document your score before entry — this prevents post-hoc rationalization of bad trades</li>
+      <li><i class="fa-solid fa-check"></i> Review your scores weekly to calibrate: are your 85+ setups actually winning at 70%+?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: FALSE CONFIRMATIONS                                -->
+<!-- ============================================================ -->
+<div class="section-divider" id="false"><i class="fa-solid fa-skull-crossbones" style="color:#ef4444;"></i> False Confirmations</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-skull-crossbones" style="color:#ef4444;"></i> How to Spot Fake Breakouts</h2>
+
+  <p>False confirmations are the primary way small-cap traders lose money. The setup looks perfect — candlestick pattern, volume spike, above VWAP — but the move fails within hours or days. Understanding the mechanics of false signals is as important as understanding real ones.</p>
+
+  <h3>The Three Deadliest False Confirmations</h3>
+
+  <div class="signal-card signal-bear">
+    <h4><i class="fa-solid fa-1" style="color:#ef4444;"></i> Gap-and-Crap</h4>
+    <p>Stock gaps up 15-30% on news (earnings, PR, analyst upgrade). Pre-market volume is massive. At the open, aggressive buying pushes it higher for 5-15 minutes. Then selling begins — and does not stop. By noon, the stock is flat or negative on the day. <strong>Why it fails</strong>: insiders, early longs, and overnight holders sell into the gap. There are no new buyers after the initial excitement fades. <strong>Red flag</strong>: VWAP is far below the opening price (> 5% gap), meaning fair value is much lower than the current price.</p>
+  </div>
+
+  <div class="signal-card signal-bear">
+    <h4><i class="fa-solid fa-2" style="color:#ef4444;"></i> Volume Without Follow-Through</h4>
+    <p>A stock breaks above resistance on 3x RVOL. The candle looks great. But the next 2-3 candles have declining volume and price stalls. The breakout was real for one candle, but there was no institutional follow-through. <strong>Why it fails</strong>: the volume spike was a single block trade, a market maker adjusting inventory, or coordinated retail buying from a chat room that exhausts quickly. <strong>Red flag</strong>: volume spikes on the breakout candle but immediately drops below average on the next candle.</p>
+  </div>
+
+  <div class="signal-card signal-bear">
+    <h4><i class="fa-solid fa-3" style="color:#ef4444;"></i> The Low-Float Trap</h4>
+    <p>An extremely low-float stock (< 5M shares) spikes 40% on moderate volume because there are simply no shares available to sell. It looks like a confirmed move with massive percentage gains. But as soon as any selling pressure arrives — a single institution liquidating, a lockup expiring, a secondary offering — the stock crashes 50% in minutes. <strong>Red flag</strong>: float < 5M shares, no options chain, spread > 1% of share price, and the move has no identifiable catalyst.</p>
+  </div>
+
+  <h3>The False Confirmation Filter</h3>
+  <p>Before entering any setup, run it through these five kill checks:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Kill Check</th>
+        <th>What to Look For</th>
+        <th>If Failed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Volume sustainability</strong></td>
+        <td>Is volume increasing candle-over-candle, or was it a single spike?</td>
+        <td>Skip — likely no follow-through</td>
+      </tr>
+      <tr>
+        <td><strong>VWAP distance</strong></td>
+        <td>Is price within 3% of VWAP? Or has it gapped 10%+ away?</td>
+        <td>Wait for a pullback to VWAP before entry</td>
+      </tr>
+      <tr>
+        <td><strong>Float check</strong></td>
+        <td>Is the float > 10M shares? Are there options available?</td>
+        <td>Reduce size by 50%, widen stops</td>
+      </tr>
+      <tr>
+        <td><strong>Time of day</strong></td>
+        <td>Is this setup forming after 10:00 AM? First 30 min are noisy</td>
+        <td>Wait for the 10:00 AM confirmation</td>
+      </tr>
+      <tr>
+        <td><strong>Sector context</strong></td>
+        <td>Is the sector (IWM, sector ETF) moving in the same direction?</td>
+        <td>Higher risk — fighting the tape</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h3><i class="fa-solid fa-shield-halved"></i> The 10:00 AM Rule</h3>
+    <p>The first 30 minutes of trading (9:30-10:00 AM) produce the highest volume and the most false signals. Market makers are establishing opening prices, overnight orders are executing, and retail traders are reacting emotionally to pre-market moves. <strong>Professional small-cap traders wait until 10:00 AM</strong> before committing capital. If a breakout is real, it will still be valid at 10:15 AM. If it fades by 10:00 AM, you just avoided a loss. This single rule eliminates approximately 30% of false breakout entries.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: REAL EXAMPLES                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="examples"><i class="fa-solid fa-flask" style="color:#0d9488;"></i> Confirmed Move Walkthroughs</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-flask" style="color:#0d9488;"></i> Four Setup Walkthroughs</h2>
+
+  <p>Let us walk through four realistic small-cap setups — two confirmed winners, one near-miss, and one false signal. These are composite examples based on real market patterns.</p>
+
+  <!-- Setup 1: Winner -->
+  <div class="setup-walkthrough">
+    <div class="setup-header">
+      <span class="setup-ticker">MEDX</span>
+      <span class="setup-name">MedTech Innovations — $12.40</span>
+      <span class="setup-badge setup-badge-green">A+ Setup</span>
+    </div>
+    <h3>Setup 1: Hammer at VWAP After FDA Catalyst</h3>
+    <div class="setup-detail"><i class="fa-solid fa-newspaper"></i> <strong>Catalyst</strong>: FDA breakthrough therapy designation for lead drug candidate. PR dropped at 7:15 AM, pre-market volume 8x normal.</div>
+    <div class="setup-detail"><i class="fa-solid fa-chart-line"></i> <strong>Price action</strong>: Gapped from $10.50 to $13.00 at open. Sold off to $12.20 (VWAP) by 10:15 AM. Formed a textbook hammer at VWAP with a 40-cent lower wick.</div>
+    <div class="setup-detail"><i class="fa-solid fa-volume-up"></i> <strong>Volume</strong>: RVOL 4.2x at the hammer candle. Volume dried up during the selloff (good sign — sellers exhausted). Volume spiked again on the bounce (buyers stepping in).</div>
+    <div class="setup-detail"><i class="fa-solid fa-crosshairs"></i> <strong>VWAP</strong>: Hammer low was $12.18, VWAP was $12.25. Within 0.5% of VWAP. Perfect touch.</div>
+    <div class="setup-detail"><i class="fa-solid fa-bullseye"></i> <strong>Entry</strong>: $12.45 (above hammer high). <strong>Stop</strong>: $11.95 (below hammer low). <strong>Target</strong>: $14.80 (pre-market high). <strong>R/R</strong>: 4.7:1.</div>
+    <div class="setup-detail"><i class="fa-solid fa-trophy" style="color:#10b981;"></i> <strong>Result</strong>: Stock rallied to $15.30 over 3 days as institutions accumulated. Score: 95/100.</div>
+  </div>
+
+  <!-- Setup 2: Winner -->
+  <div class="setup-walkthrough">
+    <div class="setup-header">
+      <span class="setup-ticker">SOLR</span>
+      <span class="setup-name">SolarEdge Micro — $22.75</span>
+      <span class="setup-badge setup-badge-green">A Setup</span>
+    </div>
+    <h3>Setup 2: Volume Dry-Up Breakout</h3>
+    <div class="setup-detail"><i class="fa-solid fa-newspaper"></i> <strong>Catalyst</strong>: Sector rotation into clean energy after policy announcement. No company-specific news.</div>
+    <div class="setup-detail"><i class="fa-solid fa-chart-line"></i> <strong>Price action</strong>: Consolidated between $21.50-$22.80 for 6 days. Daily range contracted from $1.30 to $0.45. On day 7, broke above $22.80 with a strong green candle closing at $23.60.</div>
+    <div class="setup-detail"><i class="fa-solid fa-volume-up"></i> <strong>Volume</strong>: RVOL dropped from 1.2x to 0.4x during consolidation (classic dry-up). Breakout day RVOL: 3.1x. Follow-through day RVOL: 2.4x (sustained).</div>
+    <div class="setup-detail"><i class="fa-solid fa-crosshairs"></i> <strong>VWAP</strong>: Stock held above VWAP for 5 of 6 consolidation days. Breakout launched from a VWAP touch at $22.50.</div>
+    <div class="setup-detail"><i class="fa-solid fa-bullseye"></i> <strong>Entry</strong>: $22.85 (above resistance). <strong>Stop</strong>: $21.40 (below consolidation range). <strong>Target</strong>: $27.00. <strong>R/R</strong>: 2.9:1.</div>
+    <div class="setup-detail"><i class="fa-solid fa-trophy" style="color:#10b981;"></i> <strong>Result</strong>: Hit $26.50 in 8 trading days. Score: 85/100 (catalyst was sector-level, not company-specific).</div>
+  </div>
+
+  <!-- Setup 3: Near-miss -->
+  <div class="setup-walkthrough">
+    <div class="setup-header">
+      <span class="setup-ticker">BWRE</span>
+      <span class="setup-name">BioWare Therapeutics — $8.90</span>
+      <span class="setup-badge" style="background:rgba(245,158,11,0.1); color:#d97706;">B- Setup</span>
+    </div>
+    <h3>Setup 3: The Near-Miss — Insufficient Volume</h3>
+    <div class="setup-detail"><i class="fa-solid fa-newspaper"></i> <strong>Catalyst</strong>: Conference presentation with positive Phase 2 data. Moderate interest.</div>
+    <div class="setup-detail"><i class="fa-solid fa-chart-line"></i> <strong>Price action</strong>: Gapped from $8.20 to $9.10 at open. Pulled back to $8.85 (VWAP). Formed a bullish engulfing pattern.</div>
+    <div class="setup-detail"><i class="fa-solid fa-volume-up"></i> <strong>Volume</strong>: RVOL was only 1.6x on the engulfing candle. Pre-market volume was 1.8x — elevated but not compelling.</div>
+    <div class="setup-detail"><i class="fa-solid fa-crosshairs"></i> <strong>VWAP</strong>: Pattern formed at VWAP. Good.</div>
+    <div class="setup-detail"><i class="fa-solid fa-bullseye"></i> <strong>Entry</strong>: $9.00. <strong>Stop</strong>: $8.55. <strong>Target</strong>: $10.50.</div>
+    <div class="setup-detail"><i class="fa-solid fa-circle-exclamation" style="color:#d97706;"></i> <strong>Result</strong>: Rallied to $9.60 (partial target hit), then faded back to $8.80 over 3 days. Volume never sustained above 2x. Score: 65/100. Half-size was correct; full size would have been a frustrating break-even.</div>
+  </div>
+
+  <!-- Setup 4: False signal -->
+  <div class="setup-walkthrough">
+    <div class="setup-header">
+      <span class="setup-ticker">XNOV</span>
+      <span class="setup-name">XenoVax Labs — $4.80</span>
+      <span class="setup-badge setup-badge-red">Failed Setup</span>
+    </div>
+    <h3>Setup 4: The Gap-and-Crap Trap</h3>
+    <div class="setup-detail"><i class="fa-solid fa-newspaper"></i> <strong>Catalyst</strong>: CEO interview on CNBC mentioning "exciting pipeline developments." No material news, no data.</div>
+    <div class="setup-detail"><i class="fa-solid fa-chart-line"></i> <strong>Price action</strong>: Gapped from $3.50 to $4.80 pre-market (+37%). At the open, spiked to $5.20 in the first 5 minutes. By 10:15 AM, was back at $4.30. By close: $3.60.</div>
+    <div class="setup-detail"><i class="fa-solid fa-volume-up"></i> <strong>Volume</strong>: RVOL was 6x at open. Sounds great. But volume was 80% concentrated in the first 15 minutes. After 10:00 AM, RVOL dropped to 1.2x. No follow-through.</div>
+    <div class="setup-detail"><i class="fa-solid fa-crosshairs"></i> <strong>VWAP</strong>: By 10:00 AM, price was already below VWAP ($4.60) and never reclaimed it. Every bounce to VWAP was a sell.</div>
+    <div class="setup-detail"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> <strong>Red flags</strong>: Price below $5 (danger zone), no material catalyst (CEO hype), float only 3.2M shares, no options chain, and gap was > 30% (exhaustion gap).</div>
+    <div class="setup-detail"><i class="fa-solid fa-skull" style="color:#ef4444;"></i> <strong>Result</strong>: Anyone who bought the open at $5.00+ lost 25-30% by close. Score: 20/100. Every kill check failed.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: KEY TAKEAWAYS                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#0d9488;"></i> Key Takeaways</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bookmark" style="color:#0d9488;"></i> Part 3 Summary</h2>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-graduation-cap"></i> What You Should Remember</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> <strong>VWAP is the institutional anchor</strong> — it represents where real money transacted and acts as the strongest intraday support/resistance in small-caps. Trade relative to VWAP, not arbitrary price levels.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Candlestick patterns gain power at VWAP</strong> — a hammer anywhere is noise; a hammer at VWAP is a signal. Always combine pattern recognition with VWAP context.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>The $7-$30 price range is optimal</strong> — below $7 you fight structural risks (delisting, no institutional interest); above $30, the small-cap edge fades. Focus your energy in the sweet spot.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>RVOL > 2x is your minimum confirmation threshold</strong> — price moves without volume are unreliable. Volume dry-ups before breakouts (RVOL < 0.5x) are the coiled spring pattern.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>The A+ checklist requires four pillars</strong> — price action, volume, VWAP, and catalyst. If two or more pillars fail, the trade is invalid regardless of how good the chart looks.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>False confirmations kill accounts</strong> — gap-and-crap, volume-without-follow-through, and low-float traps are the three deadliest. The 10:00 AM rule and the five kill checks protect you.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Score every setup before entry</strong> — 85+ = full size, 65-84 = half size, below 65 = no trade. This removes emotion from the decision.</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary>Quiz: Test Your Understanding</summary>
+    <div class="quiz-content">
+      <p><strong>Q1:</strong> A small-cap gaps up 20% on FDA news, pre-market RVOL is 5x. At 9:45 AM, it pulls back to VWAP and forms a hammer. RVOL on the hammer candle is 3.2x. The stock is priced at $14.50 with a float of 18M shares. What is your score and action?</p>
+      <p><strong>A1:</strong> Price Action: 25 (textbook hammer at key level). Volume: 25 (RVOL 3.2x). VWAP: 25 (exactly at VWAP). Catalyst: 25 (FDA material news). Total: 100/100. Full size. Entry above hammer high, stop below hammer low. This is an A+ setup.</p>
+      <p><strong>Q2:</strong> Same stock, but the float is only 2.8M shares, the price is $4.30, and there is no options chain. What changes?</p>
+      <p><strong>A2:</strong> Two kill checks fail: price below $5 (danger zone) and float below 5M shares (low-float trap risk). Even with 100/100 on the pillars, you should either skip entirely or trade at 25% size with a very wide stop. The structural risks outweigh the pattern quality.</p>
+    </div>
+  </details>
+</div>
+
+<!-- NEXT CTA -->
+<a href="/series/trading-small-caps/part4-due-diligence/" class="next-cta">
+  <div>
+    <div class="next-label">Part 4 of 8</div>
+    <div class="next-title">Due Diligence Deep Dive — Beyond the Chart <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<!-- BOTTOM SERIES BAR -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-small-caps/part2-screening/" class="series-arrow" title="Building Your Scanner"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Small-Caps</span><div class="series-steps"><a href="/series/trading-small-caps/part1-landscape/" class="series-step" title="The Small-Cap Landscape"><span class="series-num">1</span><span class="series-label">Landscape</span></a><a href="/series/trading-small-caps/part2-screening/" class="series-step" title="Building Your Scanner"><span class="series-num">2</span><span class="series-label">Scanner</span></a><a href="/series/trading-small-caps/part3-confirmed-moves/" class="series-step current" title="Spotting Confirmed Moves"><span class="series-num">3</span><span class="series-label">Confirmed Moves</span></a><a href="/series/trading-small-caps/part4-due-diligence/" class="series-step" title="Due Diligence Deep Dive"><span class="series-num">4</span><span class="series-label">Due Diligence</span></a><a href="/series/trading-small-caps/part5-strategies/" class="series-step" title="Trading Strategies"><span class="series-num">5</span><span class="series-label">Strategies</span></a><a href="/series/trading-small-caps/part6-risk-management/" class="series-step" title="Risk & Position Sizing"><span class="series-num">6</span><span class="series-label">Risk Mgmt</span></a><a href="/series/trading-small-caps/part7-traps/" class="series-step" title="The Trap Playbook"><span class="series-num">7</span><span class="series-label">Traps</span></a><a href="/series/trading-small-caps/part8-returns/" class="series-step" title="Returns & Edge Building"><span class="series-num">8</span><span class="series-label">Returns</span></a></div><span class="series-counter">3/8</span><a href="/series/trading-small-caps/part4-due-diligence/" class="series-arrow" title="Due Diligence Deep Dive"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: VWAP Zones — Simulated intraday price vs VWAP
+var chartVwap = echarts.init(document.getElementById('chart-vwap-zones'));
+chartVwap.setOption({
+  title: { text: 'Intraday Price Action vs VWAP — Small-Cap Example', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, data: ['Price', 'VWAP'], textStyle: { fontSize: 11 } },
+  grid: { left: '8%', right: '5%', top: '18%', bottom: '15%' },
+  xAxis: { type: 'category', data: ['9:30','9:45','10:00','10:15','10:30','10:45','11:00','11:15','11:30','11:45','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00'], axisLabel: { fontSize: 10, rotate: 45 } },
+  yAxis: { type: 'value', min: 11.5, max: 14.5, axisLabel: { formatter: '${value}' } },
+  series: [
+    { name: 'Price', type: 'line', data: [13.0,13.4,12.8,12.25,12.45,12.9,13.1,13.3,12.95,13.05,13.2,13.0,12.85,13.15,13.5,13.7,13.9,14.05,14.2], lineStyle: { color: '#0d9488', width: 2 }, itemStyle: { color: '#0d9488' }, symbol: 'circle', symbolSize: 4 },
+    { name: 'VWAP', type: 'line', data: [13.0,13.1,13.0,12.85,12.8,12.82,12.88,12.95,12.95,12.96,12.98,12.98,12.96,12.98,13.05,13.1,13.15,13.2,13.25], lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' }, itemStyle: { color: '#f59e0b' }, symbol: 'none' }
+  ],
+  visualMap: { show: false, dimension: 0, pieces: [
+    { gte: 0, lte: 3, color: '#ef4444' },
+    { gt: 3, lte: 6, color: '#10b981' },
+    { gt: 6, color: '#0d9488' }
+  ] },
+  markArea: { silent: true }
+});
+
+// Chart 2: Price Distribution — Breakout success by price range
+var chartPrice = echarts.init(document.getElementById('chart-price-distribution'));
+chartPrice.setOption({
+  title: { text: 'Small-Cap Breakout Success Rate by Price Range', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return p[0].name + '<br/>Success Rate: ' + p[0].value + '%'; } },
+  grid: { left: '10%', right: '5%', top: '18%', bottom: '12%' },
+  xAxis: { type: 'category', data: ['$1-$3', '$3-$5', '$5-$7', '$7-$10', '$10-$15', '$15-$20', '$20-$30', '$30-$50', '$50+'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', max: 80, axisLabel: { formatter: '{value}%' }, name: 'Breakout Success Rate', nameTextStyle: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 22, itemStyle: { color: '#ef4444' } },
+      { value: 31, itemStyle: { color: '#ef4444' } },
+      { value: 45, itemStyle: { color: '#f59e0b' } },
+      { value: 62, itemStyle: { color: '#10b981' } },
+      { value: 68, itemStyle: { color: '#0d9488' } },
+      { value: 65, itemStyle: { color: '#0d9488' } },
+      { value: 58, itemStyle: { color: '#10b981' } },
+      { value: 48, itemStyle: { color: '#f59e0b' } },
+      { value: 42, itemStyle: { color: '#f59e0b' } }
+    ],
+    barWidth: '55%',
+    label: { show: true, position: 'top', formatter: '{c}%', fontSize: 11, fontWeight: 700 },
+    markArea: { silent: true, data: [[{ xAxis: '$7-$10', itemStyle: { color: 'rgba(13,148,136,0.08)' } }, { xAxis: '$20-$30' }]], label: { show: true, position: 'insideTop', formatter: 'Sweet Spot', fontSize: 11, color: '#0d9488', fontWeight: 700, offset: [0, 10] } }
+  }]
+});
+
+// Chart 3: RVOL Impact on Win Rate
+var chartRvol = echarts.init(document.getElementById('chart-rvol-impact'));
+chartRvol.setOption({
+  title: { text: 'RVOL Threshold Impact on Small-Cap Trade Win Rate', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, data: ['Win Rate (%)', 'Avg Return (%)'], textStyle: { fontSize: 11 } },
+  grid: { left: '10%', right: '10%', top: '18%', bottom: '15%' },
+  xAxis: { type: 'category', data: ['< 0.5x', '0.5-1x', '1-1.5x', '1.5-2x', '2-3x', '3-5x', '> 5x'], axisLabel: { fontSize: 10 } },
+  yAxis: [
+    { type: 'value', max: 80, axisLabel: { formatter: '{value}%' }, name: 'Win Rate', nameTextStyle: { fontSize: 10 } },
+    { type: 'value', max: 20, axisLabel: { formatter: '{value}%' }, name: 'Avg Return', nameTextStyle: { fontSize: 10 } }
+  ],
+  series: [
+    { name: 'Win Rate (%)', type: 'bar', data: [38, 42, 48, 53, 62, 68, 55], barWidth: '35%', itemStyle: { color: '#0d9488', borderRadius: [4,4,0,0] }, label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10, fontWeight: 600 } },
+    { name: 'Avg Return (%)', type: 'line', yAxisIndex: 1, data: [1.2, 2.1, 3.5, 5.8, 9.2, 14.5, 8.3], lineStyle: { color: '#2563eb', width: 3 }, itemStyle: { color: '#2563eb' }, symbol: 'circle', symbolSize: 8, label: { show: true, formatter: '{c}%', fontSize: 10, color: '#2563eb' } }
+  ]
+});
+
+// Chart 4: Confluence Radar — 4 Pillars
+var chartConfluence = echarts.init(document.getElementById('chart-confluence'));
+chartConfluence.setOption({
+  title: { text: 'A+ Setup Confluence — Four Pillars Scoring', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: {},
+  legend: { bottom: 0, data: ['MEDX (A+ Winner)', 'BWRE (B- Near-Miss)', 'XNOV (Failed)'], textStyle: { fontSize: 10 } },
+  radar: {
+    indicator: [
+      { name: 'Price\nAction', max: 25 },
+      { name: 'Volume\n(RVOL)', max: 25 },
+      { name: 'VWAP\nProximity', max: 25 },
+      { name: 'Catalyst\nQuality', max: 25 }
+    ],
+    radius: '58%',
+    axisName: { fontSize: 11 }
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [25, 25, 25, 25], name: 'MEDX (A+ Winner)', lineStyle: { color: '#10b981', width: 2 }, areaStyle: { color: 'rgba(16,185,129,0.15)' }, itemStyle: { color: '#10b981' } },
+      { value: [20, 12, 22, 15], name: 'BWRE (B- Near-Miss)', lineStyle: { color: '#f59e0b', width: 2 }, areaStyle: { color: 'rgba(245,158,11,0.15)' }, itemStyle: { color: '#f59e0b' } },
+      { value: [10, 15, 5, 5], name: 'XNOV (Failed)', lineStyle: { color: '#ef4444', width: 2 }, areaStyle: { color: 'rgba(239,68,68,0.15)' }, itemStyle: { color: '#ef4444' } }
+    ]
+  }]
+});
+
+// Resize all charts on window resize
+window.addEventListener('resize', function() {
+  chartVwap.resize();
+  chartPrice.resize();
+  chartRvol.resize();
+  chartConfluence.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

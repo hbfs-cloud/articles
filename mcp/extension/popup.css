@@ -1,0 +1,453 @@
+/* ============================================================
+   Market Watch MCP — Popup Stylesheet
+   Dark theme, 400x600 compact layout
+   ============================================================ */
+
+:root {
+  --mw-bg: #0f1117;
+  --mw-surface: #1a1d27;
+  --mw-surface-hover: #222633;
+  --mw-border: #2a2e3d;
+  --mw-text: #e4e6ed;
+  --mw-text-muted: #8b8fa3;
+  --mw-accent: #3b82f6;
+  --mw-accent-hover: #2563eb;
+  --mw-green: #10b981;
+  --mw-red: #ef4444;
+  --mw-yellow: #f59e0b;
+  --mw-purple: #8b5cf6;
+  --mw-radius: 8px;
+  --mw-radius-sm: 4px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  min-height: 500px;
+  max-height: 600px;
+  overflow-y: auto;
+  background: var(--mw-bg);
+  color: var(--mw-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Scrollbar */
+body::-webkit-scrollbar {
+  width: 6px;
+}
+body::-webkit-scrollbar-track {
+  background: var(--mw-bg);
+}
+body::-webkit-scrollbar-thumb {
+  background: var(--mw-border);
+  border-radius: 3px;
+}
+
+/* ===== Header ===== */
+.mw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--mw-surface);
+  border-bottom: 1px solid var(--mw-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.mw-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mw-logo {
+  border-radius: 6px;
+}
+
+.mw-title {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+}
+
+.mw-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--mw-accent);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.mw-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mw-status {
+  font-size: 8px;
+  color: var(--mw-red);
+  transition: color 0.3s;
+}
+.mw-status.connected {
+  color: var(--mw-green);
+}
+
+.mw-icon-btn {
+  background: none;
+  border: none;
+  color: var(--mw-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 14px;
+  border-radius: var(--mw-radius-sm);
+  transition: color 0.2s, background 0.2s;
+}
+.mw-icon-btn:hover {
+  color: var(--mw-text);
+  background: var(--mw-surface-hover);
+}
+
+/* ===== Settings Panel ===== */
+.mw-settings {
+  background: var(--mw-surface);
+  border-bottom: 1px solid var(--mw-border);
+  padding: 12px 14px;
+}
+.mw-settings h3 {
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--mw-text-muted);
+}
+.mw-settings label {
+  display: block;
+  font-size: 12px;
+  color: var(--mw-text-muted);
+  margin-bottom: 8px;
+}
+.mw-settings input[type="text"],
+.mw-settings input[type="number"] {
+  display: block;
+  width: 100%;
+  margin-top: 3px;
+  padding: 6px 8px;
+  background: var(--mw-bg);
+  border: 1px solid var(--mw-border);
+  border-radius: var(--mw-radius-sm);
+  color: var(--mw-text);
+  font-size: 12px;
+}
+.mw-settings input[type="checkbox"] {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.mw-settings-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ===== Buttons ===== */
+.mw-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--mw-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.mw-btn:active {
+  transform: scale(0.97);
+}
+.mw-btn-sm {
+  padding: 5px 12px;
+  font-size: 11px;
+}
+.mw-btn:not(.mw-btn-ghost) {
+  background: var(--mw-accent);
+  color: #fff;
+}
+.mw-btn:not(.mw-btn-ghost):hover {
+  background: var(--mw-accent-hover);
+}
+.mw-btn-ghost {
+  background: transparent;
+  color: var(--mw-text-muted);
+  border: 1px solid var(--mw-border);
+}
+.mw-btn-ghost:hover {
+  color: var(--mw-text);
+  border-color: var(--mw-text-muted);
+}
+
+/* ===== Stats Bar ===== */
+.mw-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--mw-border);
+  border-bottom: 1px solid var(--mw-border);
+}
+.mw-stat {
+  background: var(--mw-surface);
+  text-align: center;
+  padding: 10px 8px;
+}
+.mw-stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mw-text);
+}
+.mw-stat-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--mw-text-muted);
+  margin-top: 2px;
+}
+
+/* ===== Quick Actions ===== */
+.mw-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mw-border);
+}
+.mw-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: var(--mw-surface);
+  border: 1px solid var(--mw-border);
+  border-radius: var(--mw-radius);
+  color: var(--mw-text);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.mw-action-btn i {
+  font-size: 16px;
+  color: var(--mw-accent);
+}
+.mw-action-btn:hover {
+  background: var(--mw-surface-hover);
+  border-color: var(--mw-accent);
+}
+
+/* ===== Sections ===== */
+.mw-section {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mw-border);
+}
+.mw-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.mw-section-header h3 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--mw-text-muted);
+}
+
+/* ===== Watchlist Table ===== */
+.mw-watchlist-wrapper {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.mw-watchlist {
+  width: 100%;
+  border-collapse: collapse;
+}
+.mw-watchlist th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--mw-text-muted);
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--mw-border);
+}
+.mw-watchlist th:last-child {
+  text-align: right;
+}
+.mw-watchlist td {
+  padding: 6px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(42, 46, 61, 0.5);
+}
+.mw-watchlist tr:hover td {
+  background: var(--mw-surface-hover);
+}
+.mw-watchlist .mw-ticker {
+  font-weight: 700;
+  color: var(--mw-accent);
+  cursor: pointer;
+}
+.mw-watchlist .mw-price {
+  font-variant-numeric: tabular-nums;
+}
+.mw-watchlist .mw-change {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.mw-watchlist .mw-change.up {
+  color: var(--mw-green);
+}
+.mw-watchlist .mw-change.down {
+  color: var(--mw-red);
+}
+
+/* Status badges */
+.mw-status-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+}
+.mw-status-badge.entry {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--mw-accent);
+}
+.mw-status-badge.stop {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--mw-red);
+}
+.mw-status-badge.tp1 {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--mw-green);
+}
+.mw-status-badge.tp2 {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--mw-purple);
+}
+.mw-status-badge.watching {
+  background: rgba(139, 143, 163, 0.15);
+  color: var(--mw-text-muted);
+}
+
+/* Remove button */
+.mw-remove-btn {
+  background: none;
+  border: none;
+  color: var(--mw-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+.mw-watchlist tr:hover .mw-remove-btn {
+  opacity: 1;
+}
+.mw-remove-btn:hover {
+  color: var(--mw-red);
+}
+
+/* ===== Alerts List ===== */
+.mw-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mw-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--mw-surface);
+  border-radius: var(--mw-radius-sm);
+  border-left: 3px solid var(--mw-yellow);
+}
+.mw-alert-item.alert-stop {
+  border-left-color: var(--mw-red);
+}
+.mw-alert-item.alert-tp {
+  border-left-color: var(--mw-green);
+}
+.mw-alert-icon {
+  font-size: 14px;
+  color: var(--mw-yellow);
+  flex-shrink: 0;
+}
+.mw-alert-item.alert-stop .mw-alert-icon {
+  color: var(--mw-red);
+}
+.mw-alert-item.alert-tp .mw-alert-icon {
+  color: var(--mw-green);
+}
+.mw-alert-body {
+  flex: 1;
+  min-width: 0;
+}
+.mw-alert-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+.mw-alert-time {
+  font-size: 10px;
+  color: var(--mw-text-muted);
+}
+
+/* ===== Empty States ===== */
+.mw-empty {
+  text-align: center;
+  color: var(--mw-text-muted);
+  font-size: 12px;
+  padding: 16px 0;
+}
+
+/* ===== Footer ===== */
+.mw-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 10px;
+  color: var(--mw-text-muted);
+}
+.mw-footer a {
+  color: var(--mw-accent);
+  text-decoration: none;
+}
+.mw-footer a:hover {
+  text-decoration: underline;
+}
+.mw-version {
+  opacity: 0.5;
+}
+
+/* ===== Animations ===== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.mw-loading .mw-stat-value {
+  animation: pulse 1.5s ease-in-out infinite;
+}

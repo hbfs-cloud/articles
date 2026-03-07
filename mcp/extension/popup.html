@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400">
+  <title>Market Watch MCP</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="mw-header">
+    <div class="mw-header-left">
+      <img src="icons/icon48.png" alt="MW" class="mw-logo" width="28" height="28">
+      <span class="mw-title">Market Watch</span>
+      <span class="mw-badge">MCP</span>
+    </div>
+    <div class="mw-header-right">
+      <span class="mw-status" id="statusDot" title="Disconnected">
+        <i class="fas fa-circle"></i>
+      </span>
+      <button class="mw-icon-btn" id="settingsBtn" title="Settings">
+        <i class="fas fa-gear"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Settings Panel (hidden by default) ===== -->
+  <section class="mw-settings" id="settingsPanel" style="display:none;">
+    <h3><i class="fas fa-sliders"></i> Settings</h3>
+    <label>
+      MCP Host
+      <input type="text" id="mcpHost" placeholder="localhost:3847" value="localhost:3847">
+    </label>
+    <label>
+      Poll Interval (sec)
+      <input type="number" id="pollInterval" min="5" max="300" value="15">
+    </label>
+    <label>
+      <input type="checkbox" id="notificationsEnabled" checked>
+      Desktop Notifications
+    </label>
+    <div class="mw-settings-actions">
+      <button class="mw-btn mw-btn-sm" id="saveSettings">Save</button>
+      <button class="mw-btn mw-btn-sm mw-btn-ghost" id="cancelSettings">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ===== Quick Stats Bar ===== -->
+  <section class="mw-stats-bar">
+    <div class="mw-stat">
+      <span class="mw-stat-value" id="watchlistCount">0</span>
+      <span class="mw-stat-label">Watching</span>
+    </div>
+    <div class="mw-stat">
+      <span class="mw-stat-value" id="alertsCount">0</span>
+      <span class="mw-stat-label"><i class="fas fa-bell"></i> Alerts</span>
+    </div>
+    <div class="mw-stat">
+      <span class="mw-stat-value" id="signalsCount">0</span>
+      <span class="mw-stat-label">Signals</span>
+    </div>
+  </section>
+
+  <!-- ===== Quick Actions ===== -->
+  <section class="mw-actions">
+    <button class="mw-action-btn" id="addTickerBtn" title="Add current page ticker to watchlist">
+      <i class="fas fa-plus"></i> Add Ticker
+    </button>
+    <button class="mw-action-btn" id="analyzeBtn" title="Analyze with Claude">
+      <i class="fas fa-brain"></i> Analyze
+    </button>
+    <button class="mw-action-btn" id="runDdBtn" title="Run full due diligence">
+      <i class="fas fa-microscope"></i> Run DD
+    </button>
+  </section>
+
+  <!-- ===== Watchlist Table ===== -->
+  <section class="mw-section">
+    <div class="mw-section-header">
+      <h3><i class="fas fa-list"></i> Watchlist</h3>
+      <button class="mw-icon-btn" id="refreshWatchlist" title="Refresh">
+        <i class="fas fa-arrows-rotate"></i>
+      </button>
+    </div>
+    <div class="mw-watchlist-wrapper">
+      <table class="mw-watchlist" id="watchlistTable">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Price</th>
+            <th>Chg%</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="watchlistBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+      <p class="mw-empty" id="watchlistEmpty">No tickers in watchlist. Click <strong>+ Add Ticker</strong> to start.</p>
+    </div>
+  </section>
+
+  <!-- ===== Recent Alerts ===== -->
+  <section class="mw-section">
+    <div class="mw-section-header">
+      <h3><i class="fas fa-bell"></i> Recent Alerts</h3>
+    </div>
+    <div id="alertsList" class="mw-alerts-list">
+      <p class="mw-empty" id="alertsEmpty">No recent alerts.</p>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="mw-footer">
+    <a href="https://articles.market-watch.xyz/" target="_blank">articles.market-watch.xyz</a>
+    <span class="mw-version">v1.0.0</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+/* ============================================================
+   Market Watch MCP — Shared Overlay Styles
+   Injected on Yahoo Finance, Finviz, StockTwits, Reddit, TradingView
+   ============================================================ */
+
+/* ===== MW Badge Overlay ===== */
+.mw-overlay-badge {
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(15, 17, 23, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  color: #e4e6ed;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s, border-color 0.2s;
+  user-select: none;
+  max-width: 420px;
+}
+
+.mw-overlay-badge:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
+}
+
+.mw-overlay-badge.mw-hidden {
+  transform: translateX(calc(100% + 20px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Badge color variants */
+.mw-overlay-badge.mw-bullish {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.mw-overlay-badge.mw-bearish {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.mw-overlay-badge.mw-watching {
+  border-color: rgba(59, 130, 246, 0.4);
+}
+.mw-overlay-badge.mw-stop-nearby {
+  border-color: rgba(239, 68, 68, 0.6);
+  animation: mw-pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes mw-pulse-red {
+  0%, 100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+  50% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3); }
+}
+
+/* ===== Badge Components ===== */
+.mw-overlay-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.mw-overlay-score {
+  font-weight: 700;
+  font-size: 14px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+.mw-overlay-badge.mw-bullish .mw-overlay-score {
+  color: #10b981;
+}
+.mw-overlay-badge.mw-bearish .mw-overlay-score {
+  color: #ef4444;
+}
+
+.mw-overlay-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(139, 143, 163, 0.3);
+  flex-shrink: 0;
+}
+
+.mw-overlay-levels {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mw-overlay-level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.mw-overlay-level-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b8fa3;
+}
+
+.mw-overlay-level-value {
+  font-weight: 600;
+}
+
+.mw-overlay-level-value.entry { color: #3b82f6; }
+.mw-overlay-level-value.stop { color: #ef4444; }
+.mw-overlay-level-value.tp1 { color: #10b981; }
+.mw-overlay-level-value.tp2 { color: #8b5cf6; }
+
+/* ===== Dismiss Button ===== */
+.mw-overlay-dismiss {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2a2e3d;
+  border: 1px solid #3a3f52;
+  color: #8b8fa3;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.mw-overlay-badge:hover .mw-overlay-dismiss {
+  opacity: 1;
+}
+.mw-overlay-dismiss:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+/* ===== MW Action Buttons (injected near stock name) ===== */
+.mw-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  margin-left: 8px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  color: #3b82f6;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.mw-inline-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.mw-inline-btn.mw-btn-green {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+.mw-inline-btn.mw-btn-green:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.mw-inline-btn.mw-btn-purple {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #8b5cf6;
+}
+.mw-inline-btn.mw-btn-purple:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* ===== Tooltip ===== */
+.mw-tooltip {
+  position: fixed;
+  z-index: 100000;
+  padding: 8px 12px;
+  background: rgba(15, 17, 23, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid #2a2e3d;
+  border-radius: 6px;
+  color: #e4e6ed;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+  max-width: 280px;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== Sentiment Indicator ===== */
+.mw-sentiment-bar {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+  gap: 1px;
+}
+.mw-sentiment-bar .bullish {
+  background: #10b981;
+}
+.mw-sentiment-bar .bearish {
+  background: #ef4444;
+}
+.mw-sentiment-bar .neutral {
+  background: #8b8fa3;
+}
+
+/* ===== Loading Shimmer ===== */
+.mw-shimmer {
+  background: linear-gradient(90deg, #1a1d27 25%, #2a2e3d 50%, #1a1d27 75%);
+  background-size: 200% 100%;
+  animation: mw-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes mw-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

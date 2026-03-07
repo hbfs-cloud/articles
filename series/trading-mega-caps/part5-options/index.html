@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,tech,formation,trade-idea,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Options Strategies for Blue Chips — Covered Calls, Spreads, LEAPS & More | Trading Mega-Caps — Part 5/8 | Market Watch</title>
+ <meta name="description" content="Trading Mega-Caps series — Part 5/8: Options strategies tailored for blue chips — covered calls, cash-secured puts, vertical spreads, iron condors, LEAPS, the wheel strategy, and earnings straddles.">
+ <meta property="og:title" content="Options Strategies for Blue Chips | Trading Mega-Caps 5/8 | Market Watch">
+ <meta property="og:description" content="Master options strategies specifically designed for mega-cap stocks — from income generation with covered calls to leveraged exposure with LEAPS.">
+ <meta property="og:image" content="https://market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/trading-mega-caps/part5-options/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="https://market-watch.xyz/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* SLATE/NAVY MEGA-CAPS THEME */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2f7 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#1e3a5f; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-navy { background:rgba(30,58,95,0.1); color:#1e3a5f; border:1px solid rgba(30,58,95,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ .takeaway-box { background:linear-gradient(135deg, #eef2f7 0%, #dbe4ef 100%); border:1px solid #1e3a5f; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#1e3a5f; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(30,58,95,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#1e3a5f; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #1e3a5f 0%, #0f1d30 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(30,58,95,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #1e3a5f; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #1e3a5f 0%, #0f1d30 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#60a5fa; }
+
+ details { background:white; border:1px solid #e2e8f0; border-radius:12px; margin:1.5rem 0; overflow:hidden; }
+ details summary { padding:1rem 1.5rem; font-weight:700; color:#0f172a; cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.5rem; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#1e3a5f; }
+ details[open] summary { border-bottom:1px solid #e2e8f0; background:#eef2f7; }
+ details .quiz-content { padding:1.5rem; }
+ details .quiz-content p { margin:0.5rem 0; }
+
+ .pedagogy-box { background:linear-gradient(135deg,#eef2f7 0%,#dbe4ef 100%); border-left:4px solid #1e3a5f; border-radius:0 12px 12px 0; padding:1.5rem 2rem; margin:2rem 0; }
+ .pedagogy-box h4 { color:#1e3a5f; margin-top:0; }
+
+ .strategy-highlight { background:white; border:2px solid #1e3a5f; border-radius:16px; padding:2rem; margin:2rem 0; position:relative; }
+ .strategy-highlight::before { content:'STRATEGY'; position:absolute; top:-12px; left:20px; background:#1e3a5f; color:white; font-size:0.65rem; font-weight:800; padding:3px 12px; border-radius:6px; letter-spacing:0.1em; }
+ .strategy-highlight h3 { color:#1e3a5f; margin-top:0.5rem; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .step-grid { grid-template-columns:1fr; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-building-columns"></i> Trading Mega-Caps &amp; Blue Chips Series — Part 5 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Options Strategies for Blue Chips — Generate Income, Hedge Risk, and Leverage the Giants</h1>
+  <p class="hero-subtitle" style="max-width:700px; margin:0 auto;">Mega-cap options are the most liquid in the world. Tight spreads, deep order books, and predictable IV patterns make them perfect for every strategy from conservative covered calls to aggressive earnings straddles. This is your complete intermediate guide.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-navy"><i class="fa-solid fa-shield-halved"></i> Covered Calls</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-up-down"></i> Vertical Spreads</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-clock"></i> LEAPS</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-rotate"></i> The Wheel</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-arrow" title="Technical Trading"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Mega-Caps</span><div class="series-steps"><a href="/series/trading-mega-caps/part1-titans/" class="series-step" title="The Titans"><span class="series-num">1</span><span class="series-label">The Titans</span></a><a href="/series/trading-mega-caps/part2-mag7/" class="series-step" title="The Magnificent 7"><span class="series-num">2</span><span class="series-label">The Magnificent 7</span></a><a href="/series/trading-mega-caps/part3-valuation/" class="series-step" title="Valuation Frameworks"><span class="series-num">3</span><span class="series-label">Valuation Frameworks</span></a><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-step" title="Technical Trading"><span class="series-num">4</span><span class="series-label">Technical Trading</span></a><a href="/series/trading-mega-caps/part5-options/" class="series-step current" title="Options Strategies"><span class="series-num">5</span><span class="series-label">Options Strategies</span></a><a href="/series/trading-mega-caps/part6-earnings-macro/" class="series-step" title="Earnings &amp; Macro"><span class="series-num">6</span><span class="series-label">Earnings &amp; Macro</span></a><a href="/series/trading-mega-caps/part7-dividends-buybacks/" class="series-step" title="Dividends &amp; Buybacks"><span class="series-num">7</span><span class="series-label">Dividends &amp; Buybacks</span></a><a href="/series/trading-mega-caps/part8-portfolio-alpha/" class="series-step" title="Portfolio &amp; Alpha"><span class="series-num">8</span><span class="series-label">Portfolio &amp; Alpha</span></a></div><span class="series-counter">5/8</span><a href="/series/trading-mega-caps/part6-earnings-macro/" class="series-arrow" title="Earnings &amp; Macro"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#why-options" class="fnav-item" data-section="why-options"><i class="fas fa-star"></i><span>Why Mega-Cap Options</span></a><a href="#basics" class="fnav-item" data-section="basics"><i class="fas fa-graduation-cap"></i><span>Options Basics</span></a><a href="#greeks" class="fnav-item" data-section="greeks"><i class="fas fa-calculator"></i><span>The Greeks</span></a><a href="#income" class="fnav-item" data-section="income"><i class="fas fa-hand-holding-dollar"></i><span>Income Strategies</span></a><a href="#directional" class="fnav-item" data-section="directional"><i class="fas fa-arrows-left-right"></i><span>Directional &amp; Neutral</span></a><a href="#leaps" class="fnav-item" data-section="leaps"><i class="fas fa-clock"></i><span>LEAPS &amp; Protection</span></a><a href="#earnings" class="fnav-item" data-section="earnings"><i class="fas fa-bolt"></i><span>Earnings Plays</span></a><a href="#takeaway" class="fnav-item" data-section="takeaway"><i class="fas fa-bookmark"></i><span>Key Takeaways</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<div class="container" style="max-width:860px; margin:0 auto; padding:0 1.5rem;">
+
+<!-- ============================================================ -->
+<!-- WHY MEGA-CAP OPTIONS                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="why-options"><i class="fa-solid fa-star" style="color:#1e3a5f;"></i> Why Mega-Cap Options Are Special</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-star" style="color:#1e3a5f;"></i> The Best Options Market in the World</h2>
+
+  <p>Not all options are created equal. Trading options on a $3 billion mid-cap biotech is a fundamentally different experience than trading options on Apple, Microsoft, or NVIDIA. Mega-cap options enjoy structural advantages that make them <strong>ideal for every strategy</strong> in the options playbook.</p>
+
+  <p>Consider the numbers: AAPL options trade over <strong>2 million contracts per day</strong>. The bid-ask spread on at-the-money monthly options is typically $0.01-0.03 for a $200+ stock. Compare that to a small-cap where the spread might be $0.20-0.50 on a $15 stock. That difference in liquidity means mega-cap options give you better fills, easier exits, and more consistent pricing.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Mega-Cap Options</th>
+        <th>Small/Mid-Cap Options</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Daily Volume</strong></td>
+        <td>500K-3M contracts</td>
+        <td>100-10K contracts</td>
+      </tr>
+      <tr>
+        <td><strong>Bid-Ask Spread</strong></td>
+        <td>$0.01-0.05 (tight)</td>
+        <td>$0.10-1.00 (wide)</td>
+      </tr>
+      <tr>
+        <td><strong>Strike Intervals</strong></td>
+        <td>$1-2.50 (many choices)</td>
+        <td>$2.50-5.00 (few choices)</td>
+      </tr>
+      <tr>
+        <td><strong>Expiration Dates</strong></td>
+        <td>Weekly + monthly + LEAPS</td>
+        <td>Monthly only (sometimes)</td>
+      </tr>
+      <tr>
+        <td><strong>IV Behavior</strong></td>
+        <td>Predictable, mean-reverting</td>
+        <td>Erratic, event-driven spikes</td>
+      </tr>
+      <tr>
+        <td><strong>Assignment Risk</strong></td>
+        <td>Well-understood, manageable</td>
+        <td>Illiquid exercise problems</td>
+      </tr>
+      <tr>
+        <td><strong>Earnings IV Pattern</strong></td>
+        <td>Consistent pre-earnings ramp</td>
+        <td>Unpredictable IV behavior</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> Why Liquidity Matters So Much</h4>
+    <p>Imagine you sell a covered call on a small-cap stock. The stock drops 8% in a day and you want to buy back your call to roll it. But the bid-ask is $0.40 wide and there are only 12 contracts at the ask. You end up paying $0.20 more than fair value just to close the position. On AAPL, the same trade would cost you $0.01-0.02 in slippage. Over 50 trades per year, that liquidity advantage compounds to thousands of dollars in saved execution costs.</p>
+  </div>
+
+  <h3>Mega-Cap IV Patterns Are Predictable</h3>
+
+  <p>One of the most powerful edges in mega-cap options is the <strong>predictability of implied volatility</strong>. These stocks follow well-established IV cycles:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#1e3a5f;"></i> <strong>Pre-earnings IV expansion:</strong> IV steadily rises for 2-3 weeks before earnings, peaking the day before the announcement. This is as reliable as sunrise.</li>
+    <li><i class="fa-solid fa-check" style="color:#1e3a5f;"></i> <strong>Post-earnings IV crush:</strong> IV drops 30-60% overnight after earnings. This creates opportunities for both buyers and sellers depending on your timing.</li>
+    <li><i class="fa-solid fa-check" style="color:#1e3a5f;"></i> <strong>Mean reversion:</strong> After a spike event (earnings miss, macro shock), mega-cap IV reliably returns to its baseline within 2-4 weeks.</li>
+    <li><i class="fa-solid fa-check" style="color:#1e3a5f;"></i> <strong>Seasonal patterns:</strong> IV tends to be lower in Q1 (post-holiday calm) and higher in Q3-Q4 (election years, tax-loss selling, year-end positioning).</li>
+    <li><i class="fa-solid fa-check" style="color:#1e3a5f;"></i> <strong>Correlation with VIX:</strong> Mega-cap IV tracks VIX closely but with lower beta. When VIX spikes to 30, AAPL IV might go to 35 vs. a small-cap going to 80.</li>
+  </ul>
+
+  <!-- EChart: IV Rank History -->
+  <div id="chart-iv-rank" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <p>The chart above shows how IV Rank (where current IV sits relative to its 52-week range) cycles for AAPL. Notice the clear spikes around earnings dates (marked in red) and the reliable mean reversion afterward. This predictability is what makes strategies like selling premium so effective on mega-caps.</p>
+
+  <details>
+    <summary>Quiz: Why Are Mega-Cap Options Better?</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You want to sell an iron condor on a stock with 25% IV. Stock A (AAPL, $200, bid-ask $0.02) and Stock B (BIOR, $8, bid-ask $0.35) both have similar IV. Which is better for the trade, and why?</p>
+      <p><strong>Answer:</strong> AAPL is vastly superior. The $0.02 spread means you lose ~$2 per contract on entry and exit combined, while BIOR costs $35 per contract in spread alone. An iron condor has 4 legs, so BIOR costs $140 in spreads vs $8 for AAPL. Additionally, AAPL's IV is mean-reverting and well-studied, while a biotech's IV can spike 200% on a clinical trial result. Never sell premium on illiquid names.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- OPTIONS BASICS RECAP                                           -->
+<!-- ============================================================ -->
+<div class="section-divider" id="basics"><i class="fa-solid fa-graduation-cap" style="color:#1e3a5f;"></i> Options Basics Recap</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-graduation-cap" style="color:#1e3a5f;"></i> The Building Blocks — Calls, Puts, and Pricing</h2>
+
+  <p>Before diving into strategies, let us make sure the fundamentals are rock-solid. Every options strategy, no matter how complex, is built from two basic instruments: <strong>calls</strong> and <strong>puts</strong>.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-arrow-up"></i></div>
+      <h4>Call Option</h4>
+      <p>The <strong>right to buy</strong> 100 shares at the strike price before expiration. You buy calls when you are bullish. The seller (writer) is obligated to sell shares if assigned.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-arrow-down"></i></div>
+      <h4>Put Option</h4>
+      <p>The <strong>right to sell</strong> 100 shares at the strike price before expiration. You buy puts when you are bearish. The seller is obligated to buy shares if assigned.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-crosshairs"></i></div>
+      <h4>Strike Price</h4>
+      <p>The price at which the option can be exercised. ITM = strike below stock (calls) or above stock (puts). OTM = the opposite. ATM = at current price.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-calendar"></i></div>
+      <h4>Expiration</h4>
+      <p>The date the option ceases to exist. Weeklies (every Friday), monthlies (3rd Friday), quarterlies, and LEAPS (1-3 years out). Time is the enemy of option buyers.</p>
+    </div>
+  </div>
+
+  <h3>Intrinsic vs Extrinsic Value</h3>
+
+  <p>Every option price has two components. Understanding this split is essential for every strategy.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Option Price Decomposition</div>
+    <span class="formula-highlight">Option Premium</span> = Intrinsic Value + <span class="formula-highlight">Extrinsic Value</span> (Time Value + Volatility Premium)
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Definition</th>
+        <th>Example (AAPL at $230)</th>
+        <th>What Drives It</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Intrinsic Value</strong></td>
+        <td>How much the option is worth if exercised right now</td>
+        <td>$230 Call with $220 strike = $10 intrinsic</td>
+        <td>Stock price vs strike price only</td>
+      </tr>
+      <tr>
+        <td><strong>Time Value</strong></td>
+        <td>Premium for the remaining time until expiration</td>
+        <td>30 DTE adds ~$4.50 of time value</td>
+        <td>Days to expiration (theta decay)</td>
+      </tr>
+      <tr>
+        <td><strong>Volatility Premium</strong></td>
+        <td>Premium for expected future price swings</td>
+        <td>Higher IV = higher premium (~$2.00 extra at 30 IV vs 20 IV)</td>
+        <td>Implied volatility (IV rank/percentile)</td>
+      </tr>
+      <tr>
+        <td><strong>Total Premium</strong></td>
+        <td>What you actually pay or receive</td>
+        <td>$10 + $4.50 + $2.00 = <strong>$16.50</strong></td>
+        <td>All three factors combined</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> The Time Value Decay Curve</h4>
+    <p>Time value does not decay linearly. An option with 90 days to expiration loses roughly $0.03/day in theta. The same option with 30 days loses $0.08/day. At 7 days, it loses $0.15/day. At 1 day, it might lose $0.50/day. This acceleration is why selling premium with 30-45 DTE and closing at 50% profit is the sweet spot. You capture the fastest decay without holding through the dangerous final week where gamma risk explodes.</p>
+  </div>
+
+  <h3>Moneyness — ITM, ATM, OTM</h3>
+
+  <p>Where your strike sits relative to the stock price determines your strategy's risk profile. Here is the breakdown for a stock trading at $230:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Moneyness</th>
+        <th>Call Strike</th>
+        <th>Put Strike</th>
+        <th>Delta Range</th>
+        <th>Use Case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Deep ITM</strong></td>
+        <td>$200 (below stock)</td>
+        <td>$260 (above stock)</td>
+        <td>0.80-0.95</td>
+        <td>LEAPS stock replacement, high directional exposure</td>
+      </tr>
+      <tr>
+        <td><strong>ITM</strong></td>
+        <td>$220 (slightly below)</td>
+        <td>$240 (slightly above)</td>
+        <td>0.55-0.75</td>
+        <td>Covered calls with downside buffer, protective puts</td>
+      </tr>
+      <tr>
+        <td><strong>ATM</strong></td>
+        <td>$230 (at stock price)</td>
+        <td>$230 (at stock price)</td>
+        <td>0.45-0.55</td>
+        <td>Maximum time value, straddles, highest theta</td>
+      </tr>
+      <tr>
+        <td><strong>OTM</strong></td>
+        <td>$240 (above stock)</td>
+        <td>$220 (below stock)</td>
+        <td>0.25-0.45</td>
+        <td>Covered calls, cash-secured puts, spreads</td>
+      </tr>
+      <tr>
+        <td><strong>Deep OTM</strong></td>
+        <td>$260 (far above)</td>
+        <td>$200 (far below)</td>
+        <td>0.05-0.20</td>
+        <td>Iron condor wings, cheap lottery tickets, tail hedges</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details>
+    <summary>Quiz: Option Pricing Basics</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> MSFT is at $440. A $430 call expiring in 45 days is trading at $18.50. Break down the intrinsic and extrinsic value. If IV drops from 28 to 22 (no price change), roughly what happens to the premium?</p>
+      <p><strong>Answer:</strong> Intrinsic value = $440 - $430 = $10.00. Extrinsic value = $18.50 - $10.00 = $8.50. If IV drops from 28 to 22 (a 21% decrease), the extrinsic value would shrink by approximately 20-25% (vega effect), so the option might drop to around $16.50-$17.00. The intrinsic $10 does not change. This is why buying options before an IV crush (like post-earnings) is dangerous even if you get the direction right.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- THE GREEKS                                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="greeks"><i class="fa-solid fa-calculator" style="color:#1e3a5f;"></i> The Greeks for Mega-Caps</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#1e3a5f;"></i> Delta, Gamma, Theta, Vega — Your Dashboard</h2>
+
+  <p>The Greeks are not abstract math. They are your <strong>real-time risk dashboard</strong>. Every options trader should be able to look at their Greeks and immediately understand what is happening to their position. For mega-caps, the Greeks behave more predictably than on small-caps, which is another reason these are the best stocks for options trading.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Greek</th>
+        <th>Measures</th>
+        <th>Practical Meaning</th>
+        <th>Mega-Cap Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Delta</strong></td>
+        <td>Price sensitivity per $1 stock move</td>
+        <td>A 0.50 delta call gains $50 per $1 stock rise (per contract)</td>
+        <td>Stable and predictable on blue chips; less gap risk</td>
+      </tr>
+      <tr>
+        <td><strong>Gamma</strong></td>
+        <td>Rate of change of delta per $1 move</td>
+        <td>High gamma = delta changes fast. Dangerous near expiration at ATM strikes</td>
+        <td>Lower gamma on high-priced stocks ($200+) since moves are smaller in % terms</td>
+      </tr>
+      <tr>
+        <td><strong>Theta</strong></td>
+        <td>Time decay per day</td>
+        <td>A -$0.12 theta means the option loses $12/day. Sellers love theta; buyers hate it</td>
+        <td>Very consistent on mega-caps. Accelerates in final 2 weeks as expected</td>
+      </tr>
+      <tr>
+        <td><strong>Vega</strong></td>
+        <td>Sensitivity to 1% change in IV</td>
+        <td>A 0.35 vega means the option gains $35 if IV rises 1 point</td>
+        <td>Critical around earnings. AAPL vega is huge in dollar terms due to high premium</td>
+      </tr>
+      <tr>
+        <td><strong>Rho</strong></td>
+        <td>Sensitivity to interest rate changes</td>
+        <td>Usually negligible for short-dated options. Matters for LEAPS</td>
+        <td>More relevant in 2025-2026 with rates at 4-5%. LEAPS calls benefit from higher rates</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: Greeks Sensitivity -->
+  <div id="chart-greeks" style="width:100%; height:420px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> Delta as Probability</h4>
+    <p>A useful approximation: delta roughly equals the probability that the option expires in-the-money. A 0.30 delta call has roughly a 30% chance of being ITM at expiration. This means when you sell a 0.16 delta call (as a covered call), there is approximately an 84% chance it expires worthless and you keep the premium. This is why many covered call sellers target the 0.15-0.20 delta range: high probability of keeping premium while still collecting meaningful income.</p>
+  </div>
+
+  <h3>How the Greeks Interact</h3>
+
+  <p>The Greeks do not work in isolation. They interact in ways that create both opportunities and traps:</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrows-rotate" style="color:#1e3a5f;"></i> <strong>Gamma-Theta Trade-off:</strong> High gamma positions (near ATM, near expiration) also have high theta. You cannot have one without the other. Long gamma = paying theta. Short gamma = collecting theta but exposed to sudden moves.</li>
+    <li><i class="fa-solid fa-arrows-rotate" style="color:#1e3a5f;"></i> <strong>Vega-Theta Trade-off:</strong> Long vega positions (long options, straddles) also lose theta daily. You are betting that a volatility increase will more than offset time decay. Timing matters enormously.</li>
+    <li><i class="fa-solid fa-arrows-rotate" style="color:#1e3a5f;"></i> <strong>Delta-Gamma Acceleration:</strong> When the stock makes a big move, gamma causes your delta to change, accelerating your profits (if you are right) or losses (if you are wrong). This is why risk management is essential.</li>
+    <li><i class="fa-solid fa-arrows-rotate" style="color:#1e3a5f;"></i> <strong>Vega Term Structure:</strong> Longer-dated options have higher vega. A 1-point IV increase adds $0.12 to a 30-day option but $0.35 to a 180-day option. This is why calendar spreads work.</li>
+  </ul>
+
+  <div class="formula-box">
+    <div class="formula-label">Position Greek Calculation</div>
+    <span class="formula-highlight">Position Delta</span> = Option Delta x Contracts x 100 | <span class="formula-highlight">Position Theta</span> = Option Theta x Contracts x 100
+  </div>
+
+  <p>If you own 5 contracts of a 0.45 delta call with -0.08 theta, your position delta is +225 (equivalent to owning 225 shares) and your position theta is -$40/day (you lose $40 per day if nothing else changes). Always calculate position-level Greeks, not just per-contract.</p>
+
+  <details>
+    <summary>Quiz: Greek Interpretation</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You sold 10 iron condors on AAPL (short 240 call, long 250 call, short 215 put, long 205 put). Your position shows: Delta = -15, Gamma = -8, Theta = +$42, Vega = -$180. What does each number tell you about your position?</p>
+      <p><strong>Answer:</strong> Delta -15: you are slightly bearish (benefit from small move down). Gamma -8: large moves in either direction will hurt you (your delta will get more negative if stock rises or more positive if stock falls, both bad). Theta +$42: you earn $42/day from time decay, which is your edge. Vega -180: a 1-point rise in IV costs you $180. You want low, stable volatility. This is a textbook neutral premium-selling position that profits from time passing and volatility staying low.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- INCOME STRATEGIES                                              -->
+<!-- ============================================================ -->
+<div class="section-divider" id="income"><i class="fa-solid fa-hand-holding-dollar" style="color:#1e3a5f;"></i> Income Strategies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-hand-holding-dollar" style="color:#1e3a5f;"></i> Generating Cash Flow from Blue Chips</h2>
+
+  <p>Income strategies are the bread and butter of mega-cap options trading. These strategies let you generate <strong>consistent cash flow</strong> from stocks you own or want to own. The high liquidity and predictable IV of blue chips make them the ideal candidates.</p>
+
+  <div class="strategy-highlight">
+    <h3>Strategy #1: Covered Calls — The Income Workhorse</h3>
+
+    <p>The covered call is the single most popular options strategy in the world, and for good reason. You own 100 shares of a stock and sell a call option against it. If the stock stays flat or rises modestly, you keep the premium. If it rises above your strike, you sell shares at a profit plus keep the premium. The only downside is opportunity cost if the stock rockets past your strike.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Conservative</th>
+          <th>Moderate</th>
+          <th>Aggressive</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Strike Selection</strong></td>
+          <td>10-15% OTM</td>
+          <td>5-8% OTM</td>
+          <td>ATM or 1-3% OTM</td>
+        </tr>
+        <tr>
+          <td><strong>Delta Target</strong></td>
+          <td>0.10-0.15</td>
+          <td>0.20-0.30</td>
+          <td>0.40-0.50</td>
+        </tr>
+        <tr>
+          <td><strong>Expiration</strong></td>
+          <td>45 DTE</td>
+          <td>30 DTE</td>
+          <td>7-14 DTE</td>
+        </tr>
+        <tr>
+          <td><strong>Monthly Yield</strong></td>
+          <td>0.5-1.0%</td>
+          <td>1.0-2.0%</td>
+          <td>2.0-4.0%</td>
+        </tr>
+        <tr>
+          <td><strong>Annualized Yield</strong></td>
+          <td>6-12%</td>
+          <td>12-24%</td>
+          <td>24-48%</td>
+        </tr>
+        <tr>
+          <td><strong>Upside Capture</strong></td>
+          <td>High (keeps most upside)</td>
+          <td>Moderate</td>
+          <td>Low (capped quickly)</td>
+        </tr>
+        <tr>
+          <td><strong>Assignment Probability</strong></td>
+          <td>~10-15%</td>
+          <td>~20-30%</td>
+          <td>~40-50%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>AAPL Covered Call Example</h4>
+    <p>You own 100 shares of AAPL at $230. You sell a $245 call (6.5% OTM) expiring in 30 days for $3.20. Three outcomes:</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Stock stays at $230:</strong> Call expires worthless. You keep $320 premium. Yield = 1.39% for the month. Repeat.</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Stock rises to $245:</strong> Called away at $245. Profit = $15 capital gain + $3.20 premium = $18.20/share ($1,820). Total return = 7.9%.</li>
+      <li><i class="fa-solid fa-exclamation-triangle" style="color:#f59e0b;"></i> <strong>Stock drops to $215:</strong> Call expires worthless (keep $320), but shares lost $1,500. Net loss = $1,180. The premium provided a $3.20 buffer. Without the covered call, loss would be $1,500.</li>
+    </ul>
+  </div>
+
+  <!-- EChart: Covered Call Payoff -->
+  <div id="chart-covered-call" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> The Covered Call Sweet Spot</h4>
+    <p>The ideal covered call setup: sell 30-45 DTE options at the 0.20-0.30 delta strike. Close at 50% profit (if the option decays to half its initial value, buy it back early and sell a new one). This captures the steepest part of the theta decay curve while avoiding the gamma risk of the final week. On AAPL, this typically means selling 5-8% OTM calls and generating 1.0-2.0% monthly income on top of any stock appreciation and dividends.</p>
+  </div>
+
+  <div class="strategy-highlight">
+    <h3>Strategy #2: Cash-Secured Puts — Buying the Dip with a Paycheck</h3>
+
+    <p>If covered calls are for stocks you own, cash-secured puts are for stocks you <strong>want to own at a lower price</strong>. You sell a put option below the current price and get paid premium. If the stock drops to your strike, you buy it at a discount plus you already collected premium. If it stays above, you keep the cash.</p>
+
+    <h4>MSFT Cash-Secured Put Example</h4>
+    <p>MSFT trades at $440. You want to buy it at $410. You sell a $410 put (7% OTM, 30 DTE) for $4.80. You must set aside $41,000 in cash (or margin) as collateral.</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Stock stays above $410:</strong> Put expires worthless. You keep $480. Annualized return on capital = 14%. Repeat next month.</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Stock drops to $410:</strong> You buy 100 shares at $410. Your effective cost basis = $410 - $4.80 = $405.20. You got MSFT at an 8% discount to the current price.</li>
+      <li><i class="fa-solid fa-exclamation-triangle" style="color:#f59e0b;"></i> <strong>Stock crashes to $380:</strong> You buy at $410, current value $380. Paper loss = $2,520 after premium offset. But you wanted to own MSFT anyway, and your cost basis is still $405.20.</li>
+    </ul>
+
+    <p>The <strong>key insight</strong>: only sell puts on stocks you genuinely want to own at the strike price. Never sell puts purely for premium on a stock you would not want to hold. That is how people blow up.</p>
+  </div>
+
+  <div class="strategy-highlight">
+    <h3>The Wheel Strategy — Combining Covered Calls and Cash-Secured Puts</h3>
+
+    <p>The wheel is a systematic income strategy that combines both techniques into a perpetual cycle. It works best on mega-caps with strong fundamentals that you are comfortable holding.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Sell Cash-Secured Put</h4>
+        <p>Pick a strike 5-10% below current price. Collect premium. Wait for expiration or 50% profit to close early.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Get Assigned (or Repeat)</h4>
+        <p>If assigned, you now own 100 shares at your strike. If not, sell another put and collect more premium.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Sell Covered Calls</h4>
+        <p>With shares in hand, sell calls 5-10% above your cost basis. Collect premium. Collect dividends while waiting.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Get Called Away (or Repeat)</h4>
+        <p>If called away, you sell at a profit + kept all premiums. Go back to Step 1 and start again.</p>
+      </div>
+    </div>
+
+    <!-- EChart: Wheel Strategy Returns -->
+    <div id="chart-wheel" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> Wheel Strategy on AAPL — Realistic Returns</h4>
+      <p>Running the wheel on AAPL for 12 months: sell monthly puts at 0.25 delta, sell calls at 0.25 delta when assigned. Assume getting assigned twice and called away twice during the year. Typical cumulative premium collected: $2,800-$3,600 on a ~$23,000 position. That is 12-16% annualized return from premium alone, before any capital gains or dividends. The key risk: AAPL drops 30% and you are stuck holding at a loss for months. Only wheel stocks you would hold through a bear market.</p>
+    </div>
+  </div>
+
+  <details>
+    <summary>Quiz: Income Strategies</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You run the wheel on GOOGL ($175). You sold a $160 put for $3.50 and got assigned. Your cost basis is $156.50. Now you want to sell covered calls. What strike and DTE do you choose, and why?</p>
+      <p><strong>Answer:</strong> Sell the $160 call (or higher) at 30-45 DTE. Never sell below your cost basis ($156.50) or you lock in a guaranteed loss if assigned. The $160 strike gives you $3.50 capital gain + premium if called away. At 30 DTE, the 0.25-0.30 delta call at $165 might pay $2.80. If GOOGL stays below $165, you keep the $280. If called at $165, total profit = ($165-$156.50) x 100 + $280 = $1,130 or 7.2% on the position.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- DIRECTIONAL & NEUTRAL                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="directional"><i class="fa-solid fa-arrows-left-right" style="color:#1e3a5f;"></i> Directional and Neutral Strategies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrows-left-right" style="color:#1e3a5f;"></i> Defined-Risk Strategies for Every Outlook</h2>
+
+  <p>Sometimes you have a directional opinion but want to limit your risk. Other times you think a stock will go nowhere for a month. Options give you strategies for every scenario with <strong>defined maximum loss</strong>.</p>
+
+  <div class="strategy-highlight">
+    <h3>Strategy #3: Vertical Spreads — Directional with Defined Risk</h3>
+
+    <p>A vertical spread involves buying one option and selling another at a different strike, same expiration. You cap both your profit and your loss. These are the most capital-efficient way to express a directional view.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Spread Type</th>
+          <th>When to Use</th>
+          <th>Structure</th>
+          <th>Max Profit</th>
+          <th>Max Loss</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Bull Call Spread</strong></td>
+          <td>Moderately bullish</td>
+          <td>Buy lower strike call, sell higher strike call</td>
+          <td>Width - debit paid</td>
+          <td>Debit paid</td>
+        </tr>
+        <tr>
+          <td><strong>Bear Put Spread</strong></td>
+          <td>Moderately bearish</td>
+          <td>Buy higher strike put, sell lower strike put</td>
+          <td>Width - debit paid</td>
+          <td>Debit paid</td>
+        </tr>
+        <tr>
+          <td><strong>Bull Put Spread</strong></td>
+          <td>Neutral to bullish (credit)</td>
+          <td>Sell higher strike put, buy lower strike put</td>
+          <td>Credit received</td>
+          <td>Width - credit received</td>
+        </tr>
+        <tr>
+          <td><strong>Bear Call Spread</strong></td>
+          <td>Neutral to bearish (credit)</td>
+          <td>Sell lower strike call, buy higher strike call</td>
+          <td>Credit received</td>
+          <td>Width - credit received</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>NVDA Bull Call Spread Example</h4>
+    <p>NVDA is at $890. You are bullish for the next 30 days. You buy the $890 call ($28.00) and sell the $920 call ($16.50). Net debit = $11.50 ($1,150 per contract).</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Max profit:</strong> $30 (width) - $11.50 (debit) = $18.50 per share ($1,850). Occurs if NVDA is above $920 at expiration.</li>
+      <li><i class="fa-solid fa-arrow-right" style="color:#1e3a5f;"></i> <strong>Breakeven:</strong> $890 + $11.50 = $901.50. NVDA needs to rise 1.3% for you to break even.</li>
+      <li><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> <strong>Max loss:</strong> $11.50 per share ($1,150). Occurs if NVDA is below $890 at expiration.</li>
+      <li><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> <strong>Risk/Reward:</strong> Risk $1,150 to make $1,850 = 1:1.6 R/R. Much better than buying the naked $890 call for $2,800.</li>
+    </ul>
+  </div>
+
+  <!-- EChart: Vertical Spread Payoff -->
+  <div id="chart-vertical" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="strategy-highlight">
+    <h3>Strategy #4: Iron Condors — Profiting from Range-Bound Stocks</h3>
+
+    <p>An iron condor sells premium on both sides of the stock price, betting that the stock stays within a range. It combines a bull put spread and a bear call spread. This strategy shines on mega-caps during non-earnings months when IV is low and stable.</p>
+
+    <h4>AAPL Iron Condor Example (Non-Earnings Month)</h4>
+    <p>AAPL at $230. IV Rank = 25 (moderate). No earnings for 6 weeks. You build:</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Leg</th>
+          <th>Strike</th>
+          <th>Type</th>
+          <th>Premium</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Buy Put</strong></td>
+          <td>$210</td>
+          <td>Long put (protection)</td>
+          <td>-$1.20</td>
+        </tr>
+        <tr>
+          <td><strong>Sell Put</strong></td>
+          <td>$215</td>
+          <td>Short put (credit)</td>
+          <td>+$1.85</td>
+        </tr>
+        <tr>
+          <td><strong>Sell Call</strong></td>
+          <td>$245</td>
+          <td>Short call (credit)</td>
+          <td>+$1.65</td>
+        </tr>
+        <tr>
+          <td><strong>Buy Call</strong></td>
+          <td>$250</td>
+          <td>Long call (protection)</td>
+          <td>-$1.05</td>
+        </tr>
+        <tr>
+          <td colspan="3"><strong>Net Credit Received</strong></td>
+          <td><strong>$1.25 ($125/contract)</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Max profit:</strong> $125 if AAPL stays between $215 and $245 at expiration (a $30 range, 13% wide).</li>
+      <li><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> <strong>Max loss:</strong> $500 - $125 = $375. Occurs only if AAPL moves below $210 or above $250.</li>
+      <li><i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> <strong>Probability of profit:</strong> ~68-72% (both short strikes are well OTM).</li>
+      <li><i class="fa-solid fa-arrow-right" style="color:#1e3a5f;"></i> <strong>Management:</strong> Close at 50% profit ($62.50). If either spread reaches 200% of credit received ($250), close the tested side and reassess.</li>
+    </ul>
+  </div>
+
+  <!-- EChart: Iron Condor Payoff -->
+  <div id="chart-iron-condor" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> When Iron Condors Work Best on Mega-Caps</h4>
+    <p>Iron condors excel in specific conditions: (1) IV Rank above 30 (you are selling relatively expensive options), (2) no earnings within the expiration window, (3) no major macro events (FOMC, CPI) that could cause a gap, (4) the stock has been range-bound for 2-4 weeks. On AAPL, this typically means the 2-3 months between earnings quarters. Avoid iron condors the week before earnings, during FOMC weeks, or when the stock is trending strongly in one direction.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Iron Condor Management</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You have an iron condor on MSFT ($440): short $420 put, long $410 put, short $460 call, long $470 call. You collected $1.50 credit. MSFT drops to $423 with 10 DTE remaining. What do you do?</p>
+      <p><strong>Answer:</strong> Your short $420 put is being tested (MSFT only $3 above the strike). Options: (1) Close the entire position for a loss if the put spread is now worth $3.00+ (cut losses at 2x credit). (2) Close just the put spread for a loss and let the call spread expire worthless (partial recovery). (3) Roll the put spread down and out (to $410/$400 at a later expiration) to collect more premium and give yourself more room. For mega-caps, rolling is often the best choice because they tend to bounce from support levels. Never hold a tested position into the final 5 DTE where gamma can destroy you.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- LEAPS & PROTECTION                                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="leaps"><i class="fa-solid fa-clock" style="color:#1e3a5f;"></i> LEAPS and Protective Strategies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-clock" style="color:#1e3a5f;"></i> Long-Term Leverage and Portfolio Insurance</h2>
+
+  <div class="strategy-highlight">
+    <h3>Strategy #5: LEAPS — The Poor Man's Stock Ownership</h3>
+
+    <p>LEAPS (Long-term Equity Anticipation Securities) are options with 12-36 months until expiration. Deep in-the-money LEAPS calls let you control 100 shares for a fraction of the stock price, giving you <strong>leveraged exposure</strong> with defined risk.</p>
+
+    <h4>MSFT LEAPS Example</h4>
+    <p>MSFT trades at $440. Instead of buying 100 shares ($44,000), you buy a $350 strike call expiring in 18 months for $105.00 ($10,500).</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>100 Shares</th>
+          <th>LEAPS $350 Call</th>
+          <th>Advantage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Capital Required</strong></td>
+          <td>$44,000</td>
+          <td>$10,500</td>
+          <td>76% less capital</td>
+        </tr>
+        <tr>
+          <td><strong>Delta</strong></td>
+          <td>1.00 (shares)</td>
+          <td>0.85</td>
+          <td>85% of stock's movement</td>
+        </tr>
+        <tr>
+          <td><strong>Max Loss</strong></td>
+          <td>$44,000 (theoretically)</td>
+          <td>$10,500 (defined)</td>
+          <td>Capped downside</td>
+        </tr>
+        <tr>
+          <td><strong>If MSFT +20% to $528</strong></td>
+          <td>+$8,800 (20%)</td>
+          <td>+$7,300 (69.5%)</td>
+          <td>3.5x leverage on gains</td>
+        </tr>
+        <tr>
+          <td><strong>If MSFT -20% to $352</strong></td>
+          <td>-$8,800 (20%)</td>
+          <td>-$6,800 (64.8%)</td>
+          <td>Worse % loss, better $ loss</td>
+        </tr>
+        <tr>
+          <td><strong>Dividends</strong></td>
+          <td>Yes (~$3.32/year)</td>
+          <td>No</td>
+          <td>Shares win here</td>
+        </tr>
+        <tr>
+          <td><strong>Time Decay</strong></td>
+          <td>None</td>
+          <td>~$0.18/day ($65/year)</td>
+          <td>Shares win here</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>The <strong>"poor man's covered call"</strong> takes this further: buy a deep ITM LEAPS call and sell short-term OTM calls against it, just like a covered call but with 76% less capital. Your LEAPS acts as the "stock" position.</p>
+  </div>
+
+  <div class="strategy-highlight">
+    <h3>Strategy #6: Protective Puts — Portfolio Insurance</h3>
+
+    <p>If you own a large position in a mega-cap and worry about a crash, buying a put option is like buying insurance. You pay a premium and in return you have a guaranteed minimum selling price.</p>
+
+    <h4>Portfolio Hedge: SPY Protective Put</h4>
+    <p>Your portfolio is $500,000, 80% in mega-caps that are highly correlated with SPY. SPY is at $540. You want protection against a 10%+ decline for the next 3 months.</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-shield-halved" style="color:#1e3a5f;"></i> <strong>Buy 9 SPY $490 puts (90 DTE) at $4.50 each.</strong> Cost = $4,050 (0.81% of portfolio). This covers a ~$486,000 notional.</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>If SPY drops 15% to $459:</strong> Puts are worth $31 each. Gain = ($31 - $4.50) x 900 = $23,850. This offsets ~30% of your portfolio loss.</li>
+      <li><i class="fa-solid fa-exclamation-triangle" style="color:#f59e0b;"></i> <strong>If SPY stays flat or rises:</strong> Puts expire worthless. Cost = $4,050 (the "insurance premium"). Your portfolio gains are reduced by 0.81%.</li>
+    </ul>
+
+    <p>The cost of protection is the trade-off. At 0.81% per quarter (3.2% annualized), permanent put protection is expensive. This is why most institutional investors only hedge before known risk events (elections, Fed meetings, geopolitical crises) or when VIX is unusually low (cheap insurance).</p>
+  </div>
+
+  <h3>Collar Strategy — Free Insurance (Almost)</h3>
+
+  <p>A collar combines a protective put with a covered call to create <strong>nearly zero-cost protection</strong>. You sacrifice upside above the call strike to pay for the put below.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Collar Construction</div>
+    <span class="formula-highlight">Own 100 Shares</span> + Buy OTM Put (protection) + Sell OTM Call (<span class="formula-highlight">finances the put</span>)
+  </div>
+
+  <h4>AAPL Collar Example</h4>
+  <p>AAPL at $230. Buy $215 put for $3.20. Sell $250 call for $3.40. Net credit = $0.20. Your downside is protected below $215. Your upside is capped at $250. Cost: essentially free (you actually received $0.20).</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>AAPL Price at Expiry</th>
+        <th>Stock P/L</th>
+        <th>Put Value</th>
+        <th>Call Value</th>
+        <th>Total P/L</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>$190 (-17.4%)</td>
+        <td>-$4,000</td>
+        <td>+$2,500</td>
+        <td>$0</td>
+        <td><strong>-$1,480</strong> (vs -$4,000 unprotected)</td>
+      </tr>
+      <tr>
+        <td>$215 (-6.5%)</td>
+        <td>-$1,500</td>
+        <td>$0</td>
+        <td>$0</td>
+        <td><strong>-$1,480</strong> (floor)</td>
+      </tr>
+      <tr>
+        <td>$230 (flat)</td>
+        <td>$0</td>
+        <td>$0</td>
+        <td>$0</td>
+        <td><strong>+$20</strong> (net credit)</td>
+      </tr>
+      <tr>
+        <td>$250 (+8.7%)</td>
+        <td>+$2,000</td>
+        <td>$0</td>
+        <td>$0</td>
+        <td><strong>+$2,020</strong> (ceiling)</td>
+      </tr>
+      <tr>
+        <td>$270 (+17.4%)</td>
+        <td>+$4,000</td>
+        <td>$0</td>
+        <td>-$2,000</td>
+        <td><strong>+$2,020</strong> (capped)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> When to Use Collars</h4>
+    <p>Collars are perfect for: (1) concentrated stock positions you cannot sell (restricted stock, tax reasons), (2) heading into a known risk event (election, earnings, FOMC), (3) when you have large unrealized gains and want to lock in a range of outcomes. Many corporate executives use collars on their company stock. The trade-off is clear: you give up unlimited upside for defined downside. On mega-caps, the collar is easy to implement because of tight spreads and many strike choices.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: LEAPS and Protection</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> You buy a GOOGL $150 LEAPS call (18 months, delta 0.80) for $32.00. GOOGL is at $175. After 6 months, GOOGL rises to $195. Your LEAPS is now worth $50.00. What happened to your Greeks, and should you take profits?</p>
+      <p><strong>Answer:</strong> Your delta increased from 0.80 to ~0.88 (deeper ITM). Theta is now higher (12 months left vs 18, accelerating). Intrinsic value = $195 - $150 = $45. Extrinsic = $50 - $45 = $5 (down from $7 initially). You have $18 profit ($1,800/contract, 56% return). Decision: if you still believe in GOOGL, hold. If the position is now oversized (risk management), sell half. If extrinsic is very low ($5 on a $50 option), the LEAPS is acting like stock and there is less theta risk. Many traders take profits when they hit 50-75% of max gain on LEAPS.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- EARNINGS PLAYS                                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="earnings"><i class="fa-solid fa-bolt" style="color:#1e3a5f;"></i> Earnings and Volatility Plays</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-bolt" style="color:#1e3a5f;"></i> Playing Mega-Cap Earnings with Options</h2>
+
+  <p>Mega-cap earnings are the <strong>Super Bowl of options trading</strong>. When Apple, NVIDIA, or Microsoft report, the options market creates specific patterns that can be exploited with the right strategy and the right expectations.</p>
+
+  <h3>The Earnings IV Cycle</h3>
+
+  <p>Every mega-cap earnings event follows a predictable IV lifecycle:</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>3-4 Weeks Before</h4>
+      <p>IV starts rising from baseline. Options get progressively more expensive. Smart sellers begin positioning.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>1 Week Before</h4>
+      <p>IV acceleration. Weekly options IV spikes 50-100% above monthly. Straddle prices peak. Earnings premium is at maximum.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Earnings Day</h4>
+      <p>IV at peak. The straddle price implies an expected move (e.g., AAPL $8 straddle = market expects +-3.5% move).</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Day After Earnings</h4>
+      <p>IV CRUSH. IV drops 30-60% overnight regardless of direction. Options buyers often lose even when they get direction right.</p>
+    </div>
+  </div>
+
+  <!-- EChart: Earnings IV Cycle -->
+  <div id="chart-earnings-iv" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <h3>The Implied Move Calculation</h3>
+
+  <div class="formula-box">
+    <div class="formula-label">Expected Earnings Move</div>
+    <span class="formula-highlight">Expected Move</span> = ATM Straddle Price / Stock Price x 100 = <span class="formula-highlight">Expected % Move</span>
+  </div>
+
+  <p>If AAPL is at $230 and the weekly straddle (ATM call + ATM put) costs $8.00, the market expects a +-$8 move (3.5%). Historically, AAPL's actual earnings move has been about 3-4%, so this straddle is fairly priced. If actual moves average 5% but the straddle implies only 3%, buying volatility has an edge. If actual moves average 2% but straddle implies 4%, selling volatility wins.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Stock</th>
+        <th>Avg Implied Move</th>
+        <th>Avg Actual Move</th>
+        <th>IV Premium</th>
+        <th>Edge</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>AAPL</strong></td>
+        <td>3.8%</td>
+        <td>3.2%</td>
+        <td>+0.6%</td>
+        <td>Slight seller edge</td>
+      </tr>
+      <tr>
+        <td><strong>MSFT</strong></td>
+        <td>4.2%</td>
+        <td>3.8%</td>
+        <td>+0.4%</td>
+        <td>Slight seller edge</td>
+      </tr>
+      <tr>
+        <td><strong>NVDA</strong></td>
+        <td>8.5%</td>
+        <td>9.8%</td>
+        <td>-1.3%</td>
+        <td>Buyer edge (underpriced moves)</td>
+      </tr>
+      <tr>
+        <td><strong>AMZN</strong></td>
+        <td>5.5%</td>
+        <td>5.2%</td>
+        <td>+0.3%</td>
+        <td>Fairly priced</td>
+      </tr>
+      <tr>
+        <td><strong>GOOGL</strong></td>
+        <td>5.0%</td>
+        <td>5.6%</td>
+        <td>-0.6%</td>
+        <td>Slight buyer edge</td>
+      </tr>
+      <tr>
+        <td><strong>META</strong></td>
+        <td>7.5%</td>
+        <td>8.2%</td>
+        <td>-0.7%</td>
+        <td>Buyer edge</td>
+      </tr>
+      <tr>
+        <td><strong>TSLA</strong></td>
+        <td>9.0%</td>
+        <td>10.5%</td>
+        <td>-1.5%</td>
+        <td>Clear buyer edge</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Earnings Straddle Strategy</h3>
+
+  <p>A straddle (buying both ATM call and ATM put) profits from a large move in either direction. On mega-caps, the key question is whether the actual move will exceed the implied move.</p>
+
+  <h4>NVDA Earnings Straddle Example</h4>
+  <p>NVDA at $890. Weekly ATM straddle = $75 ($890 call at $42 + $890 put at $33). Implied move = 8.4%. Historical average actual move = 9.8%.</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>If NVDA moves +-12% ($107):</strong> Straddle profit = $107 - $75 = $32 per share ($3,200 per contract). The move exceeded the implied move.</li>
+    <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>If NVDA moves +-9% ($80):</strong> Straddle profit = $80 - $75 = $5 ($500). Small win because actual exceeded implied.</li>
+    <li><i class="fa-solid fa-exclamation-triangle" style="color:#f59e0b;"></i> <strong>If NVDA moves only +-5% ($44):</strong> Straddle loss = $75 - $44 = $31 ($3,100 loss). IV crush + insufficient move = painful.</li>
+  </ul>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> The IV Crush Reality Check</h4>
+    <p>The most common mistake with earnings options: buying a call before AAPL earnings because you think they will beat. AAPL reports a strong beat, stock gaps up 3%. But your call barely moves or even loses money. Why? Because IV dropped from 45 to 22 overnight (IV crush). The vega loss exceeded the delta gain. To profit from a directional earnings bet, you need the stock to move MORE than the implied move. This is why many professionals prefer selling premium into earnings or using spreads to reduce vega exposure.</p>
+  </div>
+
+  <h3>Post-Earnings Drift Strategy</h3>
+
+  <p>Studies show that mega-caps tend to <strong>continue moving</strong> in the direction of their earnings gap for 2-4 weeks after the report. This is called post-earnings announcement drift (PEAD). The strategy: wait for earnings, observe the reaction, then enter a defined-risk trade in the direction of the gap after IV has crushed.</p>
+
+  <ul class="checklist">
+    <li><i class="fa-solid fa-arrow-right" style="color:#1e3a5f;"></i> <strong>Day 1 after earnings:</strong> Observe the gap direction and magnitude. Do not trade on day 1 (volatility is extreme).</li>
+    <li><i class="fa-solid fa-arrow-right" style="color:#1e3a5f;"></i> <strong>Day 2-3:</strong> If the stock is holding its gap level, enter a vertical spread in the gap direction. IV is now crushed, so options are cheap.</li>
+    <li><i class="fa-solid fa-arrow-right" style="color:#1e3a5f;"></i> <strong>Target:</strong> Hold for 2-3 weeks. The drift typically adds 2-5% beyond the initial gap on mega-caps.</li>
+    <li><i class="fa-solid fa-arrow-right" style="color:#1e3a5f;"></i> <strong>Stop:</strong> If the stock reverses and fills the gap completely, exit immediately. The drift thesis is invalidated.</li>
+  </ul>
+
+  <details>
+    <summary>Quiz: Earnings Volatility</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> META is at $520. The weekly $520 straddle costs $38. META reports a massive beat and gaps up 10% ($52) to $572. What is the straddle P/L?</p>
+      <p><strong>Answer:</strong> The $520 call is now worth approximately $52 (all intrinsic at $572 stock price). The $520 put is nearly worthless (~$0.30). Total straddle value = ~$52.30. You paid $38. Profit = $14.30 per share ($1,430 per contract, 37.6% return). This worked because the 10% actual move exceeded the 7.3% implied move ($38/$520). If META had only moved 5% ($26), the straddle would be worth ~$26 and you would lose $12 ($1,200 per contract).</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- POSITION SIZING & IV RANK                                      -->
+<!-- ============================================================ -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-sliders" style="color:#1e3a5f;"></i> Position Sizing and IV Intelligence</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-sliders" style="color:#1e3a5f;"></i> Managing Risk Like a Professional</h2>
+
+  <h3>The 2% Rule for Options</h3>
+
+  <p>Never risk more than 2% of your total portfolio on any single options trade. This is not a guideline. It is a <strong>survival rule</strong>. Here is how to apply it:</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Position Sizing Formula</div>
+    <span class="formula-highlight">Max Contracts</span> = (Portfolio x 2%) / Max Loss Per Contract
+  </div>
+
+  <h4>Example: $100,000 Portfolio</h4>
+  <p>Max risk per trade = $2,000. If you are buying a $10 vertical spread (max loss = $1,000 per contract), you can trade <strong>2 contracts maximum</strong>. If you are selling a $5-wide iron condor for $1.50 credit (max loss = $350 per contract), you can trade <strong>5 contracts maximum</strong>.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>Max Loss/Contract</th>
+        <th>Max Contracts ($100K port)</th>
+        <th>Total Capital at Risk</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Long Call ($15)</strong></td>
+        <td>$1,500</td>
+        <td>1</td>
+        <td>$1,500 (1.5%)</td>
+      </tr>
+      <tr>
+        <td><strong>Bull Call Spread ($8 debit)</strong></td>
+        <td>$800</td>
+        <td>2</td>
+        <td>$1,600 (1.6%)</td>
+      </tr>
+      <tr>
+        <td><strong>Iron Condor ($3.50 max loss)</strong></td>
+        <td>$350</td>
+        <td>5</td>
+        <td>$1,750 (1.75%)</td>
+      </tr>
+      <tr>
+        <td><strong>Covered Call (stock risk)</strong></td>
+        <td>$5,000 (5% stock drop)</td>
+        <td>N/A (1 lot = 100 shares)</td>
+        <td>Portfolio allocation: max 10% per name</td>
+      </tr>
+      <tr>
+        <td><strong>Cash-Secured Put ($410 strike)</strong></td>
+        <td>$41,000 (full capital)</td>
+        <td>N/A (1 put = $41K collateral)</td>
+        <td>Max 10% of portfolio in CSP collateral</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>IV Rank and IV Percentile — When to Sell vs Buy</h3>
+
+  <p>Knowing whether options are cheap or expensive is half the battle. Two metrics help:</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Formula</th>
+        <th>Interpretation</th>
+        <th>Strategy Implication</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IV Rank</strong></td>
+        <td>(Current IV - 52W Low) / (52W High - 52W Low)</td>
+        <td>Where IV sits in its 52-week range. 80 = near top, 20 = near bottom.</td>
+        <td>Above 50: sell premium. Below 30: buy premium or stay away.</td>
+      </tr>
+      <tr>
+        <td><strong>IV Percentile</strong></td>
+        <td>% of days in past year when IV was below current level</td>
+        <td>If 75%, IV was lower 75% of the time = currently elevated.</td>
+        <td>Above 60%: selling edge. Below 40%: buying edge.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- EChart: IV Rank Strategy Map -->
+  <div id="chart-iv-strategy" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#1e3a5f;"></i> The IV Rank Decision Framework</h4>
+    <p><strong>IV Rank 0-30:</strong> Options are cheap. Avoid selling premium (low edge). Buy LEAPS, debit spreads, or protective puts. <strong>IV Rank 30-50:</strong> Neutral zone. Use spreads in both directions. <strong>IV Rank 50-80:</strong> Sweet spot for sellers. Sell covered calls, cash-secured puts, iron condors. Premium is elevated and mean reversion is on your side. <strong>IV Rank 80-100:</strong> Options are expensive. Aggressive premium selling with defined risk (spreads, not naked). This is where the best risk/reward for sellers exists, but size conservatively because high IV often means high uncertainty.</p>
+  </div>
+
+  <details>
+    <summary>Quiz: Position Sizing</summary>
+    <div class="quiz-content">
+      <p><strong>Question:</strong> Your portfolio is $250,000. You want to sell iron condors on 3 different mega-caps (AAPL, MSFT, GOOGL). Each condor has a max loss of $375. How many contracts can you trade per name, and what is your total portfolio risk?</p>
+      <p><strong>Answer:</strong> Max risk per trade = $250,000 x 2% = $5,000. Max contracts per name = $5,000 / $375 = 13 contracts. But best practice is to also limit total portfolio theta-selling exposure to 5-10% of portfolio value. With 13 contracts x 3 names = 39 contracts x $375 max loss = $14,625 total risk (5.85% of portfolio). This is within the 10% total ceiling. A more conservative approach: 8-10 contracts per name, total risk ~$11,250 (4.5%).</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<!-- SERIES ROADMAP                                                 -->
+<!-- ============================================================ -->
+<div class="section-divider" id="roadmap"><i class="fa-solid fa-map" style="color:#1e3a5f;"></i> Series Roadmap</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-map" style="color:#1e3a5f;"></i> Trading Mega-Caps &amp; Blue Chips — All 8 Parts</h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Part</th>
+        <th>Topic</th>
+        <th>What You Learn</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. The Titans</strong></td>
+        <td>Introduction to Mega-Caps</td>
+        <td>What defines a mega-cap, the trillion-dollar club, why they dominate indices</td>
+      </tr>
+      <tr>
+        <td><strong>2. The Magnificent 7</strong></td>
+        <td>Deep Dive into the Mag 7</td>
+        <td>AAPL, MSFT, NVDA, AMZN, GOOGL, META, TSLA — business models, moats, risks</td>
+      </tr>
+      <tr>
+        <td><strong>3. Valuation Frameworks</strong></td>
+        <td>How to Value Giants</td>
+        <td>P/E, PEG, DCF, EV/EBITDA, FCF yield — applied to mega-caps</td>
+      </tr>
+      <tr>
+        <td><strong>4. Technical Trading</strong></td>
+        <td>Chart Patterns for Blue Chips</td>
+        <td>Support/resistance, moving averages, volume analysis, breakout/pullback entries</td>
+      </tr>
+      <tr>
+        <td><strong>5. Options Strategies</strong> (current)</td>
+        <td>Options for Blue Chips</td>
+        <td>Covered calls, CSP, spreads, iron condors, LEAPS, wheel, earnings straddles</td>
+      </tr>
+      <tr>
+        <td><strong>6. Earnings &amp; Macro</strong></td>
+        <td>What Moves the Giants</td>
+        <td>Earnings analysis, macro sensitivity, Fed impact, geopolitical risks</td>
+      </tr>
+      <tr>
+        <td><strong>7. Dividends &amp; Buybacks</strong></td>
+        <td>Shareholder Returns</td>
+        <td>Buyback mechanics, dividend growth, DRIP compounding, total return analysis</td>
+      </tr>
+      <tr>
+        <td><strong>8. Portfolio &amp; Alpha</strong></td>
+        <td>Building the Portfolio</td>
+        <td>Portfolio construction, position management, hedging, alpha generation</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- KEY TAKEAWAYS                                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="takeaway"><i class="fa-solid fa-bookmark" style="color:#1e3a5f;"></i> Key Takeaways</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> Key Takeaways — Part 5: Options Strategies</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Mega-cap options are the most liquid in the world with tight spreads ($0.01-0.03), deep order books, weekly/monthly expirations, and predictable IV cycles. They are ideal for every strategy.</li>
+    <li><i class="fa-solid fa-check"></i> Covered calls generate 1-4% monthly income on mega-cap positions. Target 30-45 DTE at the 0.20-0.30 delta strike. Close at 50% profit and reset.</li>
+    <li><i class="fa-solid fa-check"></i> Cash-secured puts let you buy the dip with a paycheck. Only sell puts on stocks you genuinely want to own. The wheel strategy combines CSPs and covered calls into a perpetual income machine.</li>
+    <li><i class="fa-solid fa-check"></i> Vertical spreads provide defined-risk directional bets. Bull call spreads for bullish views, bear put spreads for bearish. Always calculate max loss before entering.</li>
+    <li><i class="fa-solid fa-check"></i> Iron condors profit from range-bound mega-caps between earnings. Best with IV Rank above 30, no catalysts within the expiration window, and 30-45 DTE.</li>
+    <li><i class="fa-solid fa-check"></i> LEAPS (12-18 month deep ITM calls) provide leveraged exposure with defined risk and 76% less capital. The poor man's covered call uses LEAPS as the stock substitute.</li>
+    <li><i class="fa-solid fa-check"></i> Earnings straddles work when the actual move exceeds the implied move. NVDA and TSLA tend to underprice their moves; AAPL and MSFT tend to overprice. IV crush destroys directional bets that are not spread-protected.</li>
+    <li><i class="fa-solid fa-check"></i> Never risk more than 2% of portfolio per options trade. Use IV Rank to decide when to sell (above 50) vs buy (below 30) premium.</li>
+  </ul>
+</div>
+
+<a href="/series/trading-mega-caps/part6-earnings-macro/" class="next-cta">
+  <div>
+    <div class="next-label">Part 6 of 8</div>
+    <div class="next-title">Earnings &amp; Macro Sensitivity — What Moves the Giants <i class="fa-solid fa-arrow-right"></i></div>
+  </div>
+</a>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-arrow" title="Technical Trading"><i class="fas fa-chevron-left"></i></a><span class="series-title">Trading Mega-Caps</span><div class="series-steps"><a href="/series/trading-mega-caps/part1-titans/" class="series-step" title="The Titans"><span class="series-num">1</span><span class="series-label">The Titans</span></a><a href="/series/trading-mega-caps/part2-mag7/" class="series-step" title="The Magnificent 7"><span class="series-num">2</span><span class="series-label">The Magnificent 7</span></a><a href="/series/trading-mega-caps/part3-valuation/" class="series-step" title="Valuation Frameworks"><span class="series-num">3</span><span class="series-label">Valuation Frameworks</span></a><a href="/series/trading-mega-caps/part4-technical-trading/" class="series-step" title="Technical Trading"><span class="series-num">4</span><span class="series-label">Technical Trading</span></a><a href="/series/trading-mega-caps/part5-options/" class="series-step current" title="Options Strategies"><span class="series-num">5</span><span class="series-label">Options Strategies</span></a><a href="/series/trading-mega-caps/part6-earnings-macro/" class="series-step" title="Earnings &amp; Macro"><span class="series-num">6</span><span class="series-label">Earnings &amp; Macro</span></a><a href="/series/trading-mega-caps/part7-dividends-buybacks/" class="series-step" title="Dividends &amp; Buybacks"><span class="series-num">7</span><span class="series-label">Dividends &amp; Buybacks</span></a><a href="/series/trading-mega-caps/part8-portfolio-alpha/" class="series-step" title="Portfolio &amp; Alpha"><span class="series-num">8</span><span class="series-label">Portfolio &amp; Alpha</span></a></div><span class="series-counter">5/8</span><a href="/series/trading-mega-caps/part6-earnings-macro/" class="series-arrow" title="Earnings &amp; Macro"><i class="fas fa-chevron-right"></i></a></div></div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================================================ -->
+<!-- ECHARTS SCRIPTS                                               -->
+<!-- ============================================================ -->
+<script>
+// Chart 1: IV Rank History for AAPL
+var chartIvRank = echarts.init(document.getElementById('chart-iv-rank'));
+chartIvRank.setOption({
+  title: { text: 'AAPL IV Rank — 12-Month History with Earnings Events', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'], axisLabel: { fontSize: 11 }, boundaryGap: false },
+  yAxis: { type: 'value', name: 'IV Rank (%)', min: 0, max: 100, axisLabel: { fontSize: 11 } },
+  series: [
+    {
+      name: 'IV Rank',
+      type: 'line',
+      smooth: true,
+      data: [25, 38, 22, 18, 65, 30, 22, 72, 28, 20, 68, 32, 24],
+      lineStyle: { color: '#1e3a5f', width: 3 },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(30,58,95,0.3)' }, { offset: 1, color: 'rgba(30,58,95,0.02)' }] } },
+      itemStyle: { color: '#1e3a5f' },
+      markPoint: {
+        data: [
+          { coord: ['Apr', 38], name: 'Q2 Earnings', symbol: 'pin', symbolSize: 35, label: { show: true, formatter: 'Q2\nEarnings', fontSize: 8 }, itemStyle: { color: '#dc2626' } },
+          { coord: ['Jul', 65], name: 'Q3 Earnings', symbol: 'pin', symbolSize: 35, label: { show: true, formatter: 'Q3\nEarnings', fontSize: 8 }, itemStyle: { color: '#dc2626' } },
+          { coord: ['Oct', 72], name: 'Q4 Earnings', symbol: 'pin', symbolSize: 35, label: { show: true, formatter: 'Q4\nEarnings', fontSize: 8 }, itemStyle: { color: '#dc2626' } },
+          { coord: ['Jan', 68], name: 'Q1 Earnings', symbol: 'pin', symbolSize: 35, label: { show: true, formatter: 'Q1\nEarnings', fontSize: 8 }, itemStyle: { color: '#dc2626' } }
+        ]
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { yAxis: 50, lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: 'Sell Premium Above', fontSize: 10, color: '#f59e0b' } },
+          { yAxis: 30, lineStyle: { color: '#10b981', type: 'dashed' }, label: { formatter: 'Buy Premium Below', fontSize: 10, color: '#10b981' } }
+        ]
+      }
+    }
+  ]
+});
+
+// Chart 2: Greeks Sensitivity — Delta vs Stock Price
+var chartGreeks = echarts.init(document.getElementById('chart-greeks'));
+chartGreeks.setOption({
+  title: { text: 'Option Greeks vs Stock Price — AAPL $230 Call (30 DTE)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '8%', right: '8%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['$200','$205','$210','$215','$220','$225','$230','$235','$240','$245','$250','$255','$260'], name: 'AAPL Price', axisLabel: { fontSize: 10 } },
+  yAxis: [
+    { type: 'value', name: 'Delta / Gamma', min: 0, max: 1, axisLabel: { fontSize: 10 } },
+    { type: 'value', name: 'Theta ($/day)', min: -0.25, max: 0, axisLabel: { fontSize: 10 }, splitLine: { show: false } }
+  ],
+  series: [
+    {
+      name: 'Delta',
+      type: 'line',
+      smooth: true,
+      data: [0.05, 0.08, 0.14, 0.22, 0.32, 0.42, 0.52, 0.62, 0.71, 0.78, 0.84, 0.89, 0.93],
+      lineStyle: { color: '#1e3a5f', width: 3 },
+      itemStyle: { color: '#1e3a5f' }
+    },
+    {
+      name: 'Gamma',
+      type: 'line',
+      smooth: true,
+      data: [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.06, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01],
+      lineStyle: { color: '#10b981', width: 2 },
+      itemStyle: { color: '#10b981' }
+    },
+    {
+      name: 'Theta',
+      type: 'bar',
+      yAxisIndex: 1,
+      data: [-0.03, -0.04, -0.06, -0.08, -0.10, -0.12, -0.13, -0.12, -0.10, -0.08, -0.06, -0.04, -0.03],
+      itemStyle: { color: 'rgba(239,68,68,0.4)' }
+    }
+  ]
+});
+
+// Chart 3: Covered Call Payoff Diagram
+var chartCoveredCall = echarts.init(document.getElementById('chart-covered-call'));
+var ccPrices = [];
+var ccStock = [];
+var ccCovered = [];
+for (var i = 200; i <= 270; i += 2) {
+  ccPrices.push('$' + i);
+  ccStock.push(i - 230);
+  var callPL = Math.min(0, -(i - 245)) * 1; // short call P/L
+  ccCovered.push((i - 230) + 3.20 + (i > 245 ? -(i - 245) : 0));
+}
+chartCoveredCall.setOption({
+  title: { text: 'Covered Call Payoff — AAPL $230 Stock + Short $245 Call ($3.20)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return p[0].axisValue + '<br/>' + p.map(function(s) { return s.marker + s.seriesName + ': $' + s.value.toFixed(2); }).join('<br/>'); } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ccPrices, name: 'AAPL at Expiry', axisLabel: { fontSize: 10, interval: 4 } },
+  yAxis: { type: 'value', name: 'P/L per Share ($)', axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'Stock Only', type: 'line', data: ccStock, lineStyle: { color: '#94a3b8', width: 2, type: 'dashed' }, itemStyle: { color: '#94a3b8' }, symbol: 'none' },
+    { name: 'Covered Call', type: 'line', data: ccCovered, lineStyle: { color: '#1e3a5f', width: 3 }, itemStyle: { color: '#1e3a5f' }, symbol: 'none', areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(30,58,95,0.2)' }, { offset: 1, color: 'rgba(30,58,95,0)' }] }, origin: 'auto' } }
+  ]
+});
+
+// Chart 4: Wheel Strategy Cumulative Returns
+var chartWheel = echarts.init(document.getElementById('chart-wheel'));
+chartWheel.setOption({
+  title: { text: 'Wheel Strategy on AAPL — 12-Month Cumulative Premium Income', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return p[0].axisValue + '<br/>' + p.map(function(s) { return s.marker + s.seriesName + ': $' + s.value.toLocaleString(); }).join('<br/>'); } },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '5%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Cumulative Premium ($)', axisLabel: { fontSize: 10, formatter: '${value}' } },
+  series: [
+    {
+      name: 'CSP Premium',
+      type: 'bar',
+      stack: 'total',
+      data: [320, 0, 0, 285, 0, 310, 0, 0, 295, 0, 340, 0],
+      itemStyle: { color: '#1e3a5f' }
+    },
+    {
+      name: 'CC Premium',
+      type: 'bar',
+      stack: 'total',
+      data: [0, 280, 310, 0, 295, 0, 340, 280, 0, 320, 0, 310],
+      itemStyle: { color: '#60a5fa' }
+    },
+    {
+      name: 'Cumulative',
+      type: 'line',
+      data: [320, 600, 910, 1195, 1490, 1800, 2140, 2420, 2715, 3035, 3375, 3685],
+      lineStyle: { color: '#10b981', width: 3 },
+      itemStyle: { color: '#10b981' },
+      symbol: 'circle', symbolSize: 8
+    }
+  ]
+});
+
+// Chart 5: Vertical Spread Payoff
+var chartVertical = echarts.init(document.getElementById('chart-vertical'));
+var vPrices = [];
+var vBullCall = [];
+var vBearPut = [];
+for (var j = 850; j <= 950; j += 5) {
+  vPrices.push('$' + j);
+  vBullCall.push(Math.max(-11.5, Math.min(18.5, j - 890 - 11.5)));
+  vBearPut.push(Math.max(-10, Math.min(20, 920 - j - 10)));
+}
+chartVertical.setOption({
+  title: { text: 'Vertical Spread Payoffs — NVDA Bull Call ($890/$920) vs Bear Put ($920/$890)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '3%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: vPrices, name: 'NVDA at Expiry', axisLabel: { fontSize: 10, interval: 3 } },
+  yAxis: { type: 'value', name: 'P/L per Share ($)', axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'Bull Call Spread', type: 'line', data: vBullCall, lineStyle: { color: '#10b981', width: 3 }, itemStyle: { color: '#10b981' }, symbol: 'none' },
+    { name: 'Bear Put Spread', type: 'line', data: vBearPut, lineStyle: { color: '#ef4444', width: 3 }, itemStyle: { color: '#ef4444' }, symbol: 'none' }
+  ]
+});
+
+// Chart 6: Iron Condor Payoff
+var chartIronCondor = echarts.init(document.getElementById('chart-iron-condor'));
+var icPrices = [];
+var icPayoff = [];
+for (var k = 195; k <= 265; k += 2) {
+  icPrices.push('$' + k);
+  var pl = 1.25;
+  if (k < 210) pl = -(5 - 1.25);
+  else if (k < 215) pl = (k - 210) - (5 - 1.25);
+  else if (k > 250) pl = -(5 - 1.25);
+  else if (k > 245) pl = (250 - k) - (5 - 1.25);
+  icPayoff.push(parseFloat(pl.toFixed(2)));
+}
+chartIronCondor.setOption({
+  title: { text: 'Iron Condor Payoff — AAPL $210/$215 Put | $245/$250 Call', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return p[0].axisValue + '<br/>P/L: $' + p[0].value.toFixed(2) + '/share'; } },
+  grid: { left: '3%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: icPrices, name: 'AAPL at Expiry', axisLabel: { fontSize: 10, interval: 4 } },
+  yAxis: { type: 'value', name: 'P/L per Share ($)', axisLabel: { fontSize: 10 } },
+  series: [{
+    name: 'Iron Condor',
+    type: 'line',
+    data: icPayoff,
+    lineStyle: { color: '#1e3a5f', width: 3 },
+    itemStyle: { color: '#1e3a5f' },
+    symbol: 'none',
+    areaStyle: {
+      color: function(params) { return params.data >= 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'; },
+      origin: 0
+    },
+    markLine: {
+      silent: true,
+      data: [
+        { xAxis: '$215', lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: 'Short Put', fontSize: 9 } },
+        { xAxis: '$245', lineStyle: { color: '#f59e0b', type: 'dashed' }, label: { formatter: 'Short Call', fontSize: 9 } }
+      ]
+    }
+  }]
+});
+
+// Chart 7: Earnings IV Cycle
+var chartEarningsIv = echarts.init(document.getElementById('chart-earnings-iv'));
+chartEarningsIv.setOption({
+  title: { text: 'Earnings IV Cycle — AAPL Implied Volatility Around Earnings', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '5%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: ['-20d','-15d','-10d','-7d','-5d','-3d','-1d','Earnings','+1d','+3d','+5d','+7d','+10d','+15d','+20d'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', name: 'Implied Volatility (%)', min: 15, max: 50, axisLabel: { fontSize: 10 } },
+  series: [
+    {
+      name: 'Weekly Options IV',
+      type: 'line',
+      smooth: true,
+      data: [22, 24, 27, 30, 34, 38, 44, 45, 22, 21, 20, 20, 19, 19, 20],
+      lineStyle: { color: '#dc2626', width: 3 },
+      itemStyle: { color: '#dc2626' },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(220,38,38,0.2)' }, { offset: 1, color: 'rgba(220,38,38,0.02)' }] } },
+      markPoint: { data: [{ coord: ['Earnings', 45], name: 'IV Peak', symbol: 'pin', symbolSize: 40, label: { show: true, formatter: 'IV\nPeak', fontSize: 9 }, itemStyle: { color: '#dc2626' } }] }
+    },
+    {
+      name: 'Monthly Options IV',
+      type: 'line',
+      smooth: true,
+      data: [20, 21, 23, 25, 27, 29, 32, 33, 24, 23, 22, 21, 21, 20, 20],
+      lineStyle: { color: '#1e3a5f', width: 2 },
+      itemStyle: { color: '#1e3a5f' }
+    },
+    {
+      name: 'Stock Realized Vol',
+      type: 'line',
+      smooth: true,
+      data: [18, 18, 19, 19, 20, 20, 21, 35, 28, 22, 20, 19, 18, 18, 18],
+      lineStyle: { color: '#10b981', width: 2, type: 'dashed' },
+      itemStyle: { color: '#10b981' }
+    }
+  ]
+});
+
+// Chart 8: IV Rank Strategy Map
+var chartIvStrategy = echarts.init(document.getElementById('chart-iv-strategy'));
+chartIvStrategy.setOption({
+  title: { text: 'IV Rank Strategy Selection Guide', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'item' },
+  xAxis: { type: 'category', data: ['0-15','15-30','30-45','45-60','60-75','75-100'], name: 'IV Rank Range', axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Strategy Score (Higher = Preferred)', axisLabel: { fontSize: 10 }, max: 100 },
+  legend: { bottom: 0, textStyle: { fontSize: 10 } },
+  grid: { left: '5%', right: '4%', bottom: '18%', top: '15%', containLabel: true },
+  series: [
+    { name: 'Buy Debit Spreads', type: 'bar', data: [85, 70, 50, 30, 15, 10], itemStyle: { color: '#10b981' } },
+    { name: 'Sell Credit Spreads', type: 'bar', data: [10, 20, 45, 70, 85, 90], itemStyle: { color: '#1e3a5f' } },
+    { name: 'Iron Condors', type: 'bar', data: [5, 15, 40, 65, 80, 75], itemStyle: { color: '#60a5fa' } },
+    { name: 'Buy LEAPS', type: 'bar', data: [90, 75, 55, 35, 20, 10], itemStyle: { color: '#9333ea' } }
+  ]
+});
+
+// Resize all charts
+window.addEventListener('resize', function() {
+  chartIvRank.resize(); chartGreeks.resize(); chartCoveredCall.resize();
+  chartWheel.resize(); chartVertical.resize(); chartIronCondor.resize();
+  chartEarningsIv.resize(); chartIvStrategy.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
