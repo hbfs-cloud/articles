@@ -778,6 +778,98 @@ await test('detect() returns regime string', async () => {
   assert.ok(valid.includes(r?.regime), `Unexpected regime: ${r?.regime}`);
 });
 
+// ─── 10. Job Manager ─────────────────────────────────────────────────────────
+
+section('Job Manager (lib/job-manager.js)');
+
+const jobManager = await import('./lib/job-manager.js');
+
+await test('register + list', () => {
+  jobManager.register('test_job', {
+    name: 'Test Job', type: 'periodic',
+    fn: async () => 'ok',
+  });
+  const jobs = jobManager.list();
+  assert.ok(Array.isArray(jobs));
+  assert.ok(jobs.find(j => j.id === 'test_job'));
+});
+
+await test('start → running status', async () => {
+  const j = jobManager.start('test_job');
+  assert.ok(['running','idle'].includes(j.status)); // may finish fast
+});
+
+await test('stop → idle status', () => {
+  const j = jobManager.stop('test_job');
+  assert.equal(j.status, 'idle');
+});
+
+await test('pause + resume', () => {
+  jobManager.start('test_job');
+  const paused = jobManager.pause('test_job');
+  assert.equal(paused.status, 'paused');
+  const resumed = jobManager.resume('test_job');
+  assert.ok(['running','idle','scheduled'].includes(resumed.status));
+});
+
+await test('setSchedule + formatSchedule', () => {
+  jobManager.setSchedule('test_job', { every: '10min' });
+  const j = jobManager.get('test_job');
+  assert.ok(j.schedule?.every === '10min');
+  assert.equal(jobManager.formatSchedule({ every: '10min' }), 'every 10min');
+  assert.equal(jobManager.formatSchedule({ daily: '09:00', weekday: 1 }), 'every Mon at 09:00 UTC');
+  assert.equal(jobManager.formatSchedule(null), 'none');
+});
+
+await test('remove cleans up', () => {
+  jobManager.remove('test_job');
+  assert.equal(jobManager.get('test_job'), null);
+});
+
+await test('get unknown returns null (not throw)', () => {
+  assert.equal(jobManager.get('does_not_exist'), null);
+});
+
+// ─── 11. Rolling Scanner ─────────────────────────────────────────────────────
+
+section('Rolling Scanner (lib/rolling-scanner.js)');
+
+const rollingScanner = await import('./lib/rolling-scanner.js');
+
+await test('createScanner registers job in job-manager', () => {
+  const { jobId } = rollingScanner.createScanner({
+    id: 'test_scan', name: 'Test Scan',
+    universe: 'AAPL,MSFT',
+    filter: 'price > 0',
+    batch_size: 2,
+    batch_delay: 0,
+    cycle_delay: 9999999, // don't auto-repeat
+  });
+  assert.equal(jobId, 'scan:test_scan');
+  const j = jobManager.get(jobId);
+  assert.ok(j, 'job must exist in job-manager');
+  assert.equal(j.type, 'scanner');
+});
+
+await test('listScanners returns only scan: jobs', () => {
+  const scanners = rollingScanner.listScanners();
+  assert.ok(Array.isArray(scanners));
+  assert.ok(scanners.every(j => j.id.startsWith('scan:')));
+  assert.ok(scanners.find(j => j.id === 'scan:test_scan'));
+});
+
+await test('invalid DSL throws on create', () => {
+  assert.throws(() => {
+    rollingScanner.createScanner({ id: 'bad_dsl', filter: 'this is not valid DSL @#!' });
+  });
+});
+
+await test('removeScanner cleans up', () => {
+  const removed = rollingScanner.removeScanner('scan:test_scan');
+  assert.equal(removed, true);
+  assert.equal(jobManager.get('scan:test_scan'), null);
+});
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(50)}`);

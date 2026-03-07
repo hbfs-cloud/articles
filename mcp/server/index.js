@@ -49,7 +49,9 @@ import * as screener from './lib/screener.js';
 import * as bvc from './lib/bvc.js';
 import { getStorage } from './lib/storage.js';
 import * as barsWorker from './lib/bars-worker.js';
-import * as tickEnricher from './lib/tick-enricher.js';
+import * as tickEnricher   from './lib/tick-enricher.js';
+import * as jobManager     from './lib/job-manager.js';
+import * as rollingScanner from './lib/rolling-scanner.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -1005,6 +1007,137 @@ server.tool(
 );
 
 // ────────────────────────────────────
+// JOB MANAGER TOOLS
+// ────────────────────────────────────
+
+server.tool(
+  'job_list',
+  'List all background jobs (enricher, bars-worker, scanners…) with their status, schedule, last run, and progress.',
+  {},
+  async () => {
+    const jobs = jobManager.list();
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify(jobs.map(j => ({
+          id:          j.id,
+          name:        j.name,
+          description: j.description,
+          type:        j.type,
+          status:      j.status,
+          schedule:    jobManager.formatSchedule(j.schedule),
+          lastRun:     j.lastRun,
+          nextRun:     j.nextRun,
+          runCount:    j.runCount,
+          errorCount:  j.errorCount,
+          lastError:   j.lastError,
+          progress:    j.progress,
+        })), null, 2)
+      }]
+    };
+  }
+);
+
+server.tool(
+  'job_control',
+  'Start, stop, pause, resume, or run-now a background job by id.',
+  {
+    id:     z.string().describe('Job id (e.g. "enricher", "bars_worker", "scan:momentum")'),
+    action: z.enum(['start', 'stop', 'pause', 'resume', 'run_now']).describe('Action to perform'),
+  },
+  async ({ id, action }) => {
+    let result;
+    switch (action) {
+      case 'start':   result = jobManager.start(id);   break;
+      case 'stop':    result = jobManager.stop(id);    break;
+      case 'pause':   result = jobManager.pause(id);   break;
+      case 'resume':  result = jobManager.resume(id);  break;
+      case 'run_now': result = jobManager.runNow(id);  break;
+    }
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({ ok: true, id, action, status: result?.status }, null, 2)
+      }]
+    };
+  }
+);
+
+server.tool(
+  'job_set_schedule',
+  'Set or update the schedule for a job. Pass null to remove schedule (job becomes idle after current run).',
+  {
+    id:       z.string().describe('Job id'),
+    schedule: z.string().nullable().describe(
+      'Schedule as JSON string: {"every":"5min"} | {"every":"1h"} | {"every":"1d"} | {"daily":"09:00"} | {"daily":"09:00","weekday":1} | null to remove'
+    ),
+  },
+  async ({ id, schedule }) => {
+    const sched = schedule ? JSON.parse(schedule) : null;
+    const result = jobManager.setSchedule(id, sched);
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({ ok: true, id, schedule: jobManager.formatSchedule(sched), status: result?.status, nextRun: result?.nextRun }, null, 2)
+      }]
+    };
+  }
+);
+
+server.tool(
+  'job_create_scan',
+  'Create a rolling universe scanner job that continuously evaluates a DSL filter on every symbol in a universe.',
+  {
+    id:             z.string().describe('Unique scanner id (e.g. "momentum", "breakout")'),
+    name:           z.string().optional().describe('Human label'),
+    universe:       z.string().default('us_large').describe('Universe key (us_large, us_mid, us_small, crypto, ma) or comma-sep symbols'),
+    filter:         z.string().default('price > 0').describe('DSL filter expression (same syntax as run_screener)'),
+    alert_channels: z.array(z.string()).optional().describe('Notification channels: discord, telegram, slack, desktop'),
+    batch_size:     z.number().optional().describe('Symbols per batch (default: 50)'),
+    batch_delay:    z.number().optional().describe('Ms between batches (default: 2000)'),
+    cycle_delay:    z.number().optional().describe('Ms between full cycles (default: 60000)'),
+    once_per_cycle: z.boolean().optional().describe('Alert max once per symbol per cycle (default: true)'),
+    schedule:       z.string().optional().describe('Optional schedule JSON: {"every":"5min"} etc — defers start until scheduled'),
+  },
+  async ({ id, name, universe: uni, filter, alert_channels, batch_size, batch_delay, cycle_delay, once_per_cycle, schedule }) => {
+    const opts = {
+      id, name, universe: uni, filter, alert_channels,
+      batch_size, batch_delay, cycle_delay, once_per_cycle,
+      schedule: schedule ? JSON.parse(schedule) : null,
+    };
+    const { jobId, job } = rollingScanner.createScanner(opts);
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ok:      true,
+          jobId,
+          status:  job?.status,
+          message: `Scanner "${jobId}" created. Use job_list to monitor progress.`,
+        }, null, 2)
+      }]
+    };
+  }
+);
+
+server.tool(
+  'job_remove',
+  'Remove a scanner job (stops it and deletes it from the registry).',
+  {
+    id: z.string().describe('Job id to remove (e.g. "scan:momentum")'),
+  },
+  async ({ id }) => {
+    const removed = rollingScanner.removeScanner(id);
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({ ok: removed, id, message: removed ? `Job "${id}" removed.` : `Job "${id}" not found.` }, null, 2)
+      }]
+    };
+  }
+);
+
+// ────────────────────────────────────
 // STATUS TOOL
 // ────────────────────────────────────
 
@@ -1126,17 +1259,48 @@ if (config.alerts?.enabled !== false) {
   watchlist.startMonitoring(interval).catch(() => {});
 }
 
-// Start background bars worker (Parquet export + intraday cleanup every 6h)
-barsWorker.start(config.bars?.worker_interval_ms || 6 * 3600_000);
+// Register background jobs in job-manager so the user can control them
+// (start/stop/pause/resume/schedule via job_list + job_control MCP tools)
 
-// Start pattern enricher (breakout/reversal/squeeze scores every 5min)
-// Pre-seed with watchlist tickers so alerts are ready on first tick
+const enricherIntervalMs = config.alerts?.enricher_interval_ms || 5 * 60_000;
+const barsIntervalMs     = config.bars?.worker_interval_ms     || 6 * 3600_000;
+
+// Pre-seed enricher with watchlist tickers
 {
   const wl = watchlist.get();
   const wlTickers = (wl?.picks || []).map(p => p.ticker).concat(wl?.custom?.map(c => c.ticker) || []);
   if (wlTickers.length) tickEnricher.track(wlTickers);
-  tickEnricher.start(config.alerts?.enricher_interval_ms || 5 * 60_000);
 }
+
+jobManager.register('enricher', {
+  name:        'Pattern Enricher',
+  description: 'Computes breakout/reversal/squeeze scores for tracked tickers every 5 min',
+  type:        'periodic',
+  schedule:    { intervalMs: enricherIntervalMs },
+  autoStart:   true,
+  fn:          async () => { await tickEnricher.runNow(); return tickEnricher.status(); },
+  stopFn:      () => {},
+  pauseFn:     () => {},
+  resumeFn:    () => {},
+});
+
+// Immediate first run (non-blocking)
+tickEnricher.runNow().catch(() => {});
+
+jobManager.register('bars_worker', {
+  name:        'Bars Worker',
+  description: 'Exports daily bars to storage and cleans old intraday data every 6h',
+  type:        'periodic',
+  schedule:    { intervalMs: barsIntervalMs },
+  autoStart:   true,
+  fn:          async () => barsWorker.runNow(),
+  stopFn:      () => barsWorker.stop(),
+  pauseFn:     () => {},
+  resumeFn:    () => {},
+});
+
+// Also start bars worker directly (it manages its own internal timer for backward compat)
+barsWorker.start(barsIntervalMs);
 
 // Connect MCP transport
 const transport = new StdioServerTransport();
