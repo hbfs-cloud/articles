@@ -45,6 +45,7 @@ import * as cache from './lib/cache.js';
 import * as universe from './lib/universe.js';
 import * as screener from './lib/screener.js';
 import { getStorage } from './lib/storage.js';
+import * as barsWorker from './lib/bars-worker.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -498,7 +499,7 @@ server.tool(
       return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
     }
     if (name) {
-      const syms = universe.get(name);
+      const syms = await universe.get(name);
       return { content: [{ type: 'text', text: JSON.stringify({ universe: name, count: syms.length, symbols: syms }, null, 2) }] };
     }
     return { content: [{ type: 'text', text: JSON.stringify(universe.list(), null, 2) }] };
@@ -692,6 +693,28 @@ server.tool(
   }
 );
 
+server.tool(
+  'export_parquet',
+  'Export locally cached bars to Parquet format via DuckDB. Runs immediately (normally auto-runs every 6h). Requires DuckDB installed (brew install duckdb). Parquet files are saved to data/parquet/.',
+  {
+    force: z.boolean().optional().describe('Force re-export even if recently exported (default: false)')
+  },
+  async () => {
+    await barsWorker.runNow();
+    const st = barsWorker.status();
+    return { content: [{ type: 'text', text: JSON.stringify(st, null, 2) }] };
+  }
+);
+
+server.tool(
+  'bars_worker_status',
+  'Get bars background worker status: last run, export counts, DuckDB availability, storage stats, intraday cleanup info.',
+  {},
+  async () => {
+    return { content: [{ type: 'text', text: JSON.stringify(barsWorker.status(), null, 2) }] };
+  }
+);
+
 // ────────────────────────────────────
 // STATUS TOOL
 // ────────────────────────────────────
@@ -771,6 +794,9 @@ if (config.alerts?.enabled !== false) {
   const interval = (config.sources?.yahoo?.polling_interval || 15) * 1000;
   watchlist.startMonitoring(interval).catch(() => {});
 }
+
+// Start background bars worker (Parquet export + intraday cleanup every 6h)
+barsWorker.start(config.bars?.worker_interval_ms || 6 * 3600_000);
 
 // Connect MCP transport
 const transport = new StdioServerTransport();

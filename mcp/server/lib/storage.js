@@ -131,6 +131,40 @@ export class BarsStorage {
     return this.db.prepare(sql).all(...params);
   }
 
+  // ─── Latest bar date ─────────────────────────────────────
+
+  latestDate(symbol, interval = '1d', source = null) {
+    let sql = 'SELECT MAX(time) AS t FROM bars WHERE symbol = ? AND interval = ?';
+    const params = [symbol.toUpperCase(), interval];
+    if (source) { sql += ' AND source = ?'; params.push(source); }
+    return this.db.prepare(sql).get(...params)?.t ?? null;
+  }
+
+  countBars(symbol, interval = '1d') {
+    return this.db.prepare('SELECT COUNT(*) AS n FROM bars WHERE symbol = ? AND interval = ?')
+      .get(symbol.toUpperCase(), interval)?.n ?? 0;
+  }
+
+  // ─── Cleanup ──────────────────────────────────────────────
+
+  /**
+   * Delete intraday bars (1m,5m,15m,30m,1h) older than keepDays to limit disk usage.
+   * Daily bars are kept forever (they are immutable historical data).
+   */
+  cleanOldIntraday(keepDays = 7) {
+    const intradayIntervals = ['1m','2m','5m','15m','30m','60m','90m','1h','4h'];
+    const cutoff = new Date(Date.now() - keepDays * 86_400_000).toISOString();
+    const stmt = this.db.prepare(
+      `DELETE FROM bars WHERE interval = ? AND time < ?`
+    );
+    let deleted = 0;
+    for (const intv of intradayIntervals) {
+      const info = stmt.run(intv, cutoff);
+      deleted += info.changes;
+    }
+    return deleted;
+  }
+
   // ─── Statistics ──────────────────────────────────────────
 
   catalog() {

@@ -28,38 +28,63 @@ async function yf(url, ttlKey, ttl = 60) {
 
 // ══════════════════════════════════════
 // QUOTES (realtime-ish, 15s cache)
+// Uses v8/chart endpoint (no auth required) — parallel per-symbol requests
 // ══════════════════════════════════════
 
 export async function getQuotes(symbols) {
   const syms = Array.isArray(symbols) ? symbols : [symbols];
-  const url = `${BASE}/v7/finance/quote?symbols=${syms.join(',')}`;
-  const data = await yf(url, `quote:${syms.join(',')}`, 15);
-  const results = data?.quoteResponse?.result || [];
-  return results.map(q => ({
-    symbol: q.symbol,
-    price: q.regularMarketPrice,
-    change: q.regularMarketChange,
-    changePct: q.regularMarketChangePercent,
-    volume: q.regularMarketVolume,
-    avgVolume: q.averageDailyVolume3Month,
-    rvol: q.averageDailyVolume3Month ? +(q.regularMarketVolume / q.averageDailyVolume3Month).toFixed(2) : null,
-    high: q.regularMarketDayHigh,
-    low: q.regularMarketDayLow,
-    open: q.regularMarketOpen,
-    previousClose: q.regularMarketPreviousClose,
-    marketCap: q.marketCap,
-    pe: q.trailingPE,
-    forwardPe: q.forwardPE,
-    fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
-    fiftyTwoWeekLow: q.fiftyTwoWeekLow,
-    fiftyDayAvg: q.fiftyDayAverage,
-    twoHundredDayAvg: q.twoHundredDayAverage,
-    shortName: q.shortName,
-    exchange: q.exchange,
-    marketState: q.marketState,
-    preMarketPrice: q.preMarketPrice,
-    postMarketPrice: q.postMarketPrice
-  }));
+
+  const results = await Promise.allSettled(
+    syms.map(sym => {
+      const url = `${BASE2}/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`;
+      return yf(url, `quote:${sym}`, 15);
+    })
+  );
+
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => {
+      const result = r.value?.chart?.result?.[0];
+      if (!result) return null;
+      const meta  = result.meta || {};
+      const ohlcv = result.indicators?.quote?.[0] || {};
+
+      const closes  = (ohlcv.close  || []).filter(c => c != null);
+      const volumes = (ohlcv.volume || []).filter(v => v != null);
+      const price   = meta.regularMarketPrice || closes[closes.length - 1] || 0;
+      const prev    = meta.chartPreviousClose ?? meta.previousClose ?? closes[closes.length - 2] ?? price;
+      const change  = +(price - prev).toFixed(4);
+      const chgPct  = prev ? +(change / prev * 100).toFixed(4) : 0;
+      const vol     = meta.regularMarketVolume || volumes[volumes.length - 1] || 0;
+      const avgVol  = meta.averageDailyVolume3Month || meta.averageDailyVolume10Day || 0;
+
+      return {
+        symbol:           meta.symbol,
+        price,
+        change,
+        changePct:        chgPct,
+        volume:           vol,
+        avgVolume:        avgVol,
+        rvol:             avgVol ? +(vol / avgVol).toFixed(2) : null,
+        high:             meta.regularMarketDayHigh,
+        low:              meta.regularMarketDayLow,
+        open:             meta.regularMarketOpen,
+        previousClose:    prev,
+        marketCap:        meta.marketCap,
+        pe:               meta.trailingPE,
+        forwardPe:        meta.forwardPE,
+        fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh,
+        fiftyTwoWeekLow:  meta.fiftyTwoWeekLow,
+        fiftyDayAvg:      meta.fiftyDayAverage,
+        twoHundredDayAvg: meta.twoHundredDayAverage,
+        shortName:        meta.shortName,
+        exchange:         meta.exchangeName,
+        marketState:      meta.marketState,
+        preMarketPrice:   meta.preMarketPrice,
+        postMarketPrice:  meta.postMarketPrice,
+      };
+    })
+    .filter(Boolean);
 }
 
 // ══════════════════════════════════════

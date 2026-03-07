@@ -26,6 +26,7 @@
 import * as yahoo from './yahoo.js';
 import * as universe from './universe.js';
 import * as regime from './regime.js';
+import { getStorage } from './storage.js';
 
 // ═══════════════════════════════════════════════════════
 // TECHNICAL INDICATORS (pure functions on bar arrays)
@@ -113,10 +114,13 @@ export function compileDSL(expr) {
     .replace(/\bor\b/gi,  '||')
     .replace(/\bnot\b/gi, '!');
 
-  // Replace known field names with q.field references (word boundary safe)
-  for (const [field, mapped] of Object.entries(FIELD_MAP)) {
-    js = js.replace(new RegExp(`\\b${field}\\b`, 'gi'), mapped);
-  }
+  // Single-pass replacement: build one alternation regex so that already-substituted
+  // text (e.g. q.changePct) is never re-processed by a later iteration.
+  const pattern = new RegExp(
+    `\\b(${Object.keys(FIELD_MAP).join('|')})\\b`,
+    'gi'
+  );
+  js = js.replace(pattern, match => FIELD_MAP[match.toLowerCase()] ?? match);
 
   try {
     // eslint-disable-next-line no-new-func
@@ -313,11 +317,13 @@ export async function run(options = {}) {
 
   // 7. Optionally enrich with bars (RSI, ATR) — top 40 candidates max
   if (bars && filtered.length > 0) {
-    const candidates = filtered.slice(0, 40);
+    const runStorage  = getStorage();
+    const candidates  = filtered.slice(0, 40);
     await Promise.allSettled(
       candidates.map(async q => {
         try {
           const barData = await yahoo.getBars(q.symbol, '1d', '3mo');
+          runStorage.save(q.symbol, '1d', barData.bars, 'yahoo');
           const closes = barData.bars.map(b => b.close);
           q.rsi14 = calcRSI(closes);
           q.atr14 = calcATR(barData.bars);
@@ -389,19 +395,47 @@ export async function backtest(options = {}) {
   } = options;
 
   const univName = options.universe || 'us_large';
-  const symbols  = await universe.get(univName);
+  let symbols;
+  if (univName.includes(',')) {
+    symbols = univName.split(',').map(s => s.trim().toUpperCase());
+  } else {
+    symbols = await universe.get(univName);
+    // If universe key unknown, treat as single ticker
+    if (!symbols.length) symbols = [univName.trim().toUpperCase()];
+  }
   if (!symbols.length) throw new Error(`Unknown universe: "${univName}"`);
 
   const compiled = compileDSL(filter);
   if (!compiled.ok) throw new Error(`DSL error: ${compiled.error}`);
 
-  // Fetch 1-year bars for all universe symbols (cached)
-  const allBars = {};
+  // Fetch 1-year bars — check SQLite storage first (L2 cache), fallback to Yahoo
+  const storage  = getStorage();
+  const today    = new Date().toISOString().slice(0, 10);
+  const allBars  = {};
+
   await Promise.allSettled(
     symbols.map(async sym => {
       try {
+        // Use storage if bars are fresh (latest within 2 calendar days) and sufficient
+        const latest   = storage.latestDate(sym, '1d');
+        const latestD  = latest ? latest.slice(0, 10) : null;
+        const daysOld  = latestD ? Math.floor((Date.now() - new Date(latestD)) / 86_400_000) : 99;
+        const barCount = storage.countBars(sym, '1d');
+
+        if (daysOld <= 2 && barCount >= 200) {
+          const rows = storage.get(sym, '1d');
+          allBars[sym] = rows.map(r => ({
+            time: r.time, open: r.open, high: r.high, low: r.low, close: r.close, volume: r.volume
+          }));
+          return;
+        }
+
+        // Not cached or stale — fetch from Yahoo and persist
         const { bars } = await yahoo.getBars(sym, '1d', '1y');
-        if (bars.length > 20) allBars[sym] = bars;
+        if (bars.length > 20) {
+          allBars[sym] = bars;
+          storage.save(sym, '1d', bars, 'yahoo');
+        }
       } catch { /* skip */ }
     })
   );
