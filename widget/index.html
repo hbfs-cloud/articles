@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Watch — A+ Picks Widget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:transparent;overflow:hidden}
+
+/* ══════ TICKER TAPE MODE ══════ */
+.tape{display:flex;align-items:center;height:38px;background:linear-gradient(135deg,#0f172a,#1e293b);overflow:hidden;position:relative}
+.tape-brand{display:flex;align-items:center;gap:5px;padding:0 12px;flex-shrink:0;border-right:1px solid #334155;height:100%;cursor:pointer;text-decoration:none}
+.tape-brand img{height:18px}
+.tape-brand span{font-size:.6rem;font-weight:800;color:#e2e8f0;letter-spacing:.04em}
+.tape-regime{display:flex;align-items:center;gap:5px;padding:0 12px;flex-shrink:0;border-right:1px solid #334155;height:100%}
+.tape-regime-dot{width:6px;height:6px;border-radius:50%;animation:pulse-dot 2s infinite}
+.tape-regime-label{font-size:.58rem;font-weight:700;color:#94a3b8;text-transform:uppercase}
+.tape-regime-value{font-size:.62rem;font-weight:800}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.tape-track{display:flex;overflow:hidden;flex:1;height:100%;position:relative}
+.tape-scroll{display:flex;animation:tape-scroll var(--duration,60s) linear infinite;height:100%}
+.tape-scroll:hover{animation-play-state:paused}
+.tape-item{display:flex;align-items:center;gap:8px;padding:0 16px;height:100%;flex-shrink:0;border-right:1px solid #1e293b;cursor:default;transition:background .2s}
+.tape-item:hover{background:rgba(99,102,241,.12)}
+.tape-logo{width:18px;height:18px;border-radius:4px;object-fit:cover}
+.tape-ticker{font-size:.72rem;font-weight:800;color:#f1f5f9}
+.tape-flag{font-size:.6rem}
+.tape-strat{font-size:.52rem;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.15);padding:1px 5px;border-radius:3px}
+.tape-entry{font-size:.62rem;color:#94a3b8}
+.tape-entry strong{color:#e2e8f0}
+.tape-rr{font-size:.58rem;font-weight:800;color:#34d399}
+.tape-score{font-size:.58rem;font-weight:800;color:#818cf8;background:rgba(129,140,248,.12);padding:1px 5px;border-radius:3px}
+.tape-actions{display:flex;align-items:center;gap:2px;padding:0 8px;flex-shrink:0;border-left:1px solid #334155;height:100%}
+.tape-btn{background:none;border:none;color:#64748b;cursor:pointer;padding:4px 6px;font-size:.68rem;transition:color .2s;border-radius:4px}
+.tape-btn:hover{color:#e2e8f0;background:rgba(255,255,255,.06)}
+@keyframes tape-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ══════ VERTICAL LIST MODE ══════ */
+.vlist{background:#f8fafc;min-height:100vh;padding:8px}
+.vlist-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px}
+.vlist-brand{display:flex;align-items:center;gap:5px;text-decoration:none}
+.vlist-brand img{height:16px}
+.vlist-brand span{font-size:.6rem;font-weight:800;color:#0f172a;letter-spacing:.04em}
+.vlist-meta{display:flex;align-items:center;gap:8px}
+.vlist-regime{font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:4px}
+.vlist-actions{display:flex;gap:2px}
+.vlist-btn{background:none;border:1px solid #e2e8f0;color:#64748b;cursor:pointer;padding:3px 7px;font-size:.6rem;border-radius:5px;transition:all .15s}
+.vlist-btn:hover{color:#6366f1;border-color:#a5b4fc;background:#eef2ff}
+.vlist-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.vp{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;transition:border-color .15s}
+.vp:hover{border-color:#a5b4fc}
+.vp-top{display:flex;align-items:center;gap:6px}
+.vp-logo{width:24px;height:24px;border-radius:6px;object-fit:cover;border:1px solid #f1f5f9;flex-shrink:0}
+.vp-info{flex:1;min-width:0}
+.vp-row1{display:flex;align-items:center;gap:4px}
+.vp-ticker{font-size:.76rem;font-weight:800;color:#0f172a}
+.vp-flag{font-size:.58rem}
+.vp-type{font-size:.45rem;font-weight:700;padding:1px 4px;border-radius:3px;text-transform:uppercase}
+.vp-type--stock{background:#dbeafe;color:#1d4ed8}
+.vp-type--etf{background:#fef3c7;color:#92400e}
+.vp-name{font-size:.5rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vp-score{font-size:.82rem;font-weight:900;color:#6366f1;text-align:right;line-height:1}
+.vp-score small{display:block;font-size:.42rem;color:#a5b4fc;font-weight:600}
+.vp-mid{display:flex;align-items:center;gap:4px;margin-top:4px}
+.vp-strat{font-size:.52rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:1px 6px;border-radius:4px}
+.vp-rr{font-size:.56rem;font-weight:800;color:#059669;background:#ecfdf5;padding:1px 6px;border-radius:4px}
+.vp-levels{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:4px}
+.vp-lv{text-align:center}
+.vp-lv-label{display:block;font-size:.4rem;font-weight:600;color:#94a3b8;text-transform:uppercase}
+.vp-lv-val{display:block;font-size:.56rem;font-weight:700;color:#475569}
+.vp-lv-val.entry{color:#0f172a;font-weight:800}
+.vp-lv-val.stop{color:#dc2626}
+.vp-lv-val.tp{color:#059669}
+.vp-cat{font-size:.48rem;color:#6366f1;margin-top:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vlist-footer{text-align:center;padding:6px 0 2px}
+.vlist-footer a{font-size:.58rem;color:#6366f1;text-decoration:none;font-weight:700}
+.vlist-footer a:hover{text-decoration:underline}
+
+/* ══════ TOAST ══════ */
+.toast{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#0f172a;color:#e2e8f0;font-size:.7rem;font-weight:600;padding:8px 18px;border-radius:8px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+
+/* ══════ EMBED MODAL ══════ */
+.embed-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
+.embed-dialog{background:#fff;border-radius:16px;padding:20px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.embed-dialog h3{font-size:.9rem;margin-bottom:12px;color:#0f172a}
+.embed-dialog label{font-size:.65rem;font-weight:600;color:#64748b;display:block;margin-bottom:4px}
+.embed-dialog textarea{width:100%;font-family:'Inter',monospace;font-size:.62rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px;resize:none;color:#334155;margin-bottom:10px}
+.embed-dialog .embed-btns{display:flex;gap:6px;justify-content:flex-end}
+.embed-dialog button{font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;border:none}
+.embed-dialog .btn-copy{background:#6366f1;color:#fff}
+.embed-dialog .btn-close{background:#f1f5f9;color:#475569}
+
+@media(max-width:600px){
+  .vlist-grid{grid-template-columns:1fr}
+  .tape{height:34px}
+  .tape-brand span{display:none}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var URL = 'https://articles.market-watch.xyz/mcp/watchlist.json';
+  var FLAGS = { US: '\ud83c\uddfa\ud83c\uddf8', EU: '\ud83c\uddea\ud83c\uddfa', APAC: '\ud83c\udf0f', ETF: '\ud83d\udcca' };
+  var params = new URLSearchParams(location.search);
+  var mode = params.get('mode') || 'tape'; // tape | vertical
+
+  function regimeColor(r) {
+    if (!r) return '#64748b';
+    r = r.toUpperCase();
+    return r.indexOf('RISK-OFF') >= 0 ? '#ef4444' : r.indexOf('RISK-ON') >= 0 ? '#10b981' : '#f59e0b';
+  }
+
+  function isETF(p) { return p.region === 'ETF' || (p.tags && p.tags.indexOf('etf') >= 0); }
+  function typeLabel(p) { return isETF(p) ? 'ETF' : 'Stock'; }
+
+  function toast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(function(){ el.classList.remove('show'); }, 2000);
+  }
+
+  function copyForChat(data) {
+    var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
+    var lines = [];
+    lines.push('\ud83c\udfaf *Market Watch A+ Picks*');
+    lines.push('\ud83d\udcc5 ' + new Date(data.updated).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}));
+    lines.push('');
+    lines.push('\ud83c\udf21\ufe0f Regime: *' + data.regime + '* | VIX: ' + data.vix + ' | SPX: ' + (data.spx||'').toLocaleString() + ' | F&G: ' + data.fear_greed + '/100');
+    lines.push('');
+    sorted.forEach(function(p, i) {
+      var flag = FLAGS[p.region] || '';
+      var t = isETF(p) ? '\ud83d\udcca' : '\ud83c\udfe2';
+      lines.push(flag + ' *' + p.ticker + '* ' + t + ' | ' + p.strategy + ' | Score: ' + p.score + '/100');
+      lines.push('   Entry: $' + p.entry + ' | Stop: $' + p.stop + ' | TP1: $' + p.tp1 + (p.tp2 ? ' | TP2: $' + p.tp2 : '') + ' | R:R ' + p.rr);
+      if (p.catalyst) lines.push('   \u26a1 ' + p.catalyst);
+      lines.push('');
+    });
+    lines.push('\ud83d\udd17 Full report: ' + (data.url || 'https://articles.market-watch.xyz/scanner/'));
+    lines.push('\u00a9 Market Watch \u2014 articles.market-watch.xyz');
+    var text = lines.join('\n');
+    navigator.clipboard.writeText(text).then(function(){ toast('Copied! Paste in Telegram / Discord'); });
+  }
+
+  function showEmbed() {
+    var tickerCode = '<iframe src="https://articles.market-watch.xyz/widget/?mode=tape" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
+    var verticalCode = '<iframe src="https://articles.market-watch.xyz/widget/?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
+    var h = '<div class="embed-overlay" id="embedOverlay" onclick="if(event.target===this)this.remove()">';
+    h += '<div class="embed-dialog">';
+    h += '<h3><i class="fa-solid fa-code"></i> Embed Widget</h3>';
+    h += '<label>Ticker Tape (horizontal)</label>';
+    h += '<textarea rows="2" id="embedTape" readonly>' + tickerCode.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
+    h += '<label>Watchlist (vertical)</label>';
+    h += '<textarea rows="2" id="embedVert" readonly>' + verticalCode.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
+    h += '<div class="embed-btns">';
+    h += '<button class="btn-close" onclick="this.closest(\'.embed-overlay\').remove()">Close</button>';
+    h += '<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById(\'embedTape\').value);this.textContent=\'Copied!\'">Copy Tape</button>';
+    h += '<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById(\'embedVert\').value);this.textContent=\'Copied!\'">Copy List</button>';
+    h += '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', h);
+  }
+  window._showEmbed = showEmbed;
+
+  function renderTape(data) {
+    var root = document.getElementById('root');
+    var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
+    var h = '<div class="tape">';
+    // brand
+    h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="tape-brand">';
+    h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW">';
+    h += '<span>MARKET WATCH</span></a>';
+    // regime
+    h += '<div class="tape-regime">';
+    h += '<div class="tape-regime-dot" style="background:' + regimeColor(data.regime) + '"></div>';
+    h += '<span class="tape-regime-value" style="color:' + regimeColor(data.regime) + '">' + (data.regime || '?') + '</span></div>';
+    // track — duplicate items for seamless loop
+    h += '<div class="tape-track"><div class="tape-scroll">';
+    for (var dup = 0; dup < 2; dup++) {
+      sorted.forEach(function(p) {
+        var flag = FLAGS[p.region] || '';
+        h += '<div class="tape-item">';
+        h += '<img src="https://assets.parqet.com/logos/symbol/' + p.ticker + '?format=jpg" alt="" class="tape-logo" onerror="this.style.display=\'none\'">';
+        h += '<span class="tape-ticker">' + p.ticker + '</span>';
+        h += '<span class="tape-flag">' + flag + '</span>';
+        h += '<span class="tape-strat">' + p.strategy + '</span>';
+        h += '<span class="tape-entry">$<strong>' + p.entry + '</strong></span>';
+        h += '<span class="tape-rr">R:R ' + p.rr + '</span>';
+        h += '<span class="tape-score">' + p.score + '</span>';
+        h += '</div>';
+      });
+    }
+    h += '</div></div>';
+    // actions
+    h += '<div class="tape-actions">';
+    h += '<button class="tape-btn" title="Copy for Telegram/Discord" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
+    h += '<button class="tape-btn" title="Embed" onclick="window._showEmbed()"><i class="fa-solid fa-code"></i></button>';
+    h += '<a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank" class="tape-btn" title="Full Report"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
+    h += '</div>';
+    h += '</div>';
+    root.innerHTML = h;
+    // set animation duration based on items
+    var scrollEl = root.querySelector('.tape-scroll');
+    if (scrollEl) {
+      var dur = Math.max(30, sorted.length * 5);
+      scrollEl.style.setProperty('--duration', dur + 's');
+    }
+  }
+
+  function renderVertical(data) {
+    var root = document.getElementById('root');
+    var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
+    var h = '<div class="vlist">';
+    // header
+    h += '<div class="vlist-header">';
+    h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="vlist-brand">';
+    h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW"><span>A+ PICKS</span></a>';
+    h += '<div class="vlist-meta">';
+    h += '<span class="vlist-regime" style="background:' + regimeColor(data.regime) + '22;color:' + regimeColor(data.regime) + '">' + (data.regime || '?') + '</span>';
+    h += '<div class="vlist-actions">';
+    h += '<button class="vlist-btn" title="Copy" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
+    h += '<button class="vlist-btn" title="Embed" onclick="window._showEmbed()"><i class="fa-solid fa-code"></i></button>';
+    h += '</div></div></div>';
+    // grid
+    h += '<div class="vlist-grid">';
+    sorted.forEach(function(p) {
+      var flag = FLAGS[p.region] || '';
+      var tp = typeLabel(p).toLowerCase();
+      h += '<div class="vp">';
+      h += '<div class="vp-top">';
+      h += '<img src="https://assets.parqet.com/logos/symbol/' + p.ticker + '?format=jpg" alt="" class="vp-logo" onerror="this.style.display=\'none\'">';
+      h += '<div class="vp-info"><div class="vp-row1">';
+      h += '<span class="vp-ticker">' + p.ticker + '</span>';
+      h += '<span class="vp-flag">' + flag + '</span>';
+      h += '<span class="vp-type vp-type--' + tp + '">' + typeLabel(p) + '</span>';
+      h += '</div><div class="vp-name">' + (p.name || '') + '</div></div>';
+      h += '<div class="vp-score">' + p.score + '<small>/100</small></div>';
+      h += '</div>';
+      h += '<div class="vp-mid"><span class="vp-strat">' + p.strategy + '</span><span class="vp-rr">R:R ' + p.rr + '</span></div>';
+      h += '<div class="vp-levels">';
+      h += '<div class="vp-lv"><span class="vp-lv-label">Entry</span><span class="vp-lv-val entry">$' + p.entry + '</span></div>';
+      h += '<div class="vp-lv"><span class="vp-lv-label">Stop</span><span class="vp-lv-val stop">$' + p.stop + '</span></div>';
+      h += '<div class="vp-lv"><span class="vp-lv-label">TP1</span><span class="vp-lv-val tp">$' + p.tp1 + '</span></div>';
+      h += '<div class="vp-lv"><span class="vp-lv-label">TP2</span><span class="vp-lv-val tp">$' + (p.tp2 || '-') + '</span></div>';
+      h += '</div>';
+      if (p.catalyst) h += '<div class="vp-cat"><i class="fa-solid fa-bolt" style="color:#6366f1;font-size:.42rem"></i> ' + p.catalyst + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+    // footer
+    h += '<div class="vlist-footer"><a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank"><i class="fa-solid fa-chart-line"></i> Full Scanner Report</a>';
+    h += ' &nbsp;\u00b7&nbsp; <span style="font-size:.48rem;color:#94a3b8">\u00a9 Market Watch</span></div>';
+    h += '</div>';
+    root.innerHTML = h;
+  }
+
+  fetch(URL).then(function(r){ return r.json(); }).then(function(data){
+    window._copyChat = function(){ copyForChat(data); };
+    if (mode === 'vertical') renderVertical(data);
+    else renderTape(data);
+  }).catch(function(){
+    document.getElementById('root').innerHTML = '<div style="text-align:center;padding:12px;color:#94a3b8;font-size:.7rem">Unable to load data</div>';
+  });
+})();
+</script>
+</body>
+</html>

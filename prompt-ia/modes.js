@@ -581,44 +581,7 @@
     html += '</div>';
 
     if (data.picks && data.picks.length > 0) {
-      var scanUrl = data.url || '';
-      html += '<div class="live-picks-title"><i class="fa-solid fa-crosshairs"></i> ' + L.picks;
-      if (scanUrl) html += ' <a href="' + scanUrl + '" class="live-picks-link" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
-      html += '</div>';
-      html += '<div class="live-picks">';
-      var regionFlags = { US: '\ud83c\uddfa\ud83c\uddf8', EU: '\ud83c\uddea\ud83c\uddfa', APAC: '\ud83c\udf0f', ETF: '\ud83d\udcca' };
-      var sorted = data.picks.slice().sort(function(a, b) { return b.score - a.score; });
-      sorted.forEach(function(pick) {
-        var flag = regionFlags[pick.region] || '';
-        var isETF = pick.region === 'ETF' || (pick.tags && pick.tags.indexOf('etf') !== -1);
-        var typeBadge = isETF ? 'ETF' : 'Stock';
-        html += '<div class="live-pick">';
-        html += '<div class="live-pick-header">';
-        html += '<div class="live-pick-identity">';
-        html += '<img src="https://assets.parqet.com/logos/symbol/' + pick.ticker + '?format=jpg" alt="" class="live-pick-logo" onerror="this.style.display=\'none\'">';
-        html += '<div class="live-pick-info">';
-        html += '<div class="live-pick-ticker-row"><span class="live-pick-ticker">' + pick.ticker + '</span>';
-        html += '<span class="live-pick-flag">' + flag + '</span>';
-        html += '<span class="live-pick-type live-pick-type--' + typeBadge.toLowerCase() + '">' + typeBadge + '</span></div>';
-        html += '<div class="live-pick-name">' + (pick.name || '') + '</div>';
-        html += '</div></div>';
-        html += '<div class="live-pick-score-col"><div class="live-pick-score">' + pick.score + '</div><div class="live-pick-score-label">/100</div></div>';
-        html += '</div>';
-        html += '<div class="live-pick-strategy-row">';
-        html += '<span class="live-pick-strategy-badge">' + pick.strategy + '</span>';
-        html += '<span class="live-pick-rr">R:R ' + pick.rr + '</span>';
-        html += '</div>';
-        html += '<div class="live-pick-levels">';
-        html += '<div class="live-pick-level"><span class="live-pick-level-label">' + L.entry + '</span><span class="live-pick-level-value live-pick-level--entry">$' + pick.entry + '</span></div>';
-        html += '<div class="live-pick-level"><span class="live-pick-level-label">' + L.stop + '</span><span class="live-pick-level-value live-pick-level--stop">$' + pick.stop + '</span></div>';
-        html += '<div class="live-pick-level"><span class="live-pick-level-label">' + L.tp1 + '</span><span class="live-pick-level-value live-pick-level--tp">$' + pick.tp1 + '</span></div>';
-        if (pick.tp2) html += '<div class="live-pick-level"><span class="live-pick-level-label">TP2</span><span class="live-pick-level-value live-pick-level--tp">$' + pick.tp2 + '</span></div>';
-        html += '</div>';
-        if (pick.catalyst) html += '<div class="live-pick-catalyst"><i class="fa-solid fa-bolt"></i> ' + pick.catalyst + '</div>';
-        html += '</div>';
-      });
-      html += '</div>';
-      if (scanUrl) html += '<a href="' + scanUrl + '" class="live-picks-full-report" target="_blank"><i class="fa-solid fa-chart-line"></i> Full Scanner Report</a>';
+      html += '<iframe src="/widget/?mode=vertical" class="live-widget-iframe" title="A+ Picks"></iframe>';
     }
 
     if (data.updated) {
