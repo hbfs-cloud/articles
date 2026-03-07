@@ -60,37 +60,62 @@ const COUNTRY_CODES = {
   ca: 'CA', br: 'BR', mx: 'MX', za: 'ZA',
 };
 
+// ─── Crypto universe (hardcoded — StockAnalysis doesn't list crypto) ──────────
+// Yahoo Finance symbols for top crypto pairs
+
+const CRYPTO_SYMBOLS = [
+  'BTC-USD','ETH-USD','BNB-USD','SOL-USD','XRP-USD','DOGE-USD',
+  'ADA-USD','AVAX-USD','DOT-USD','LINK-USD','LTC-USD',
+  'BCH-USD','UNI-USD','ATOM-USD','APT-USD','ARB-USD',
+  'SUI-USD','TRX-USD','SHIB-USD','TON-USD','PEPE-USD',
+  'INJ-USD','SEI-USD','WLD-USD','JUP-USD'
+];
+
 // ─── Universe definitions ─────────────────────────────────────────────────────
-// Each entry: { type, countries[], minDolVol, minMcap?, maxMcap? }
+// Each entry: { type, countries[], minDolVol, minMcap?, maxMcap?, cap? }
+// cap: max symbols returned by get() — taken from top dollarVolume after filtering.
+//      Prevents screeners from hitting Yahoo with thousands of requests.
+//      getWithMeta() always returns the full filtered list (no cap).
+
+// NOTE: marketCap and dollarVolume from StockAnalysis are in raw USD dollars.
+//   dollarVolume: daily $ traded  (e.g. NVDA = $33B/day)
+//   marketCap:    market cap $    (e.g. NVDA = $4.3T = 4_300_000_000_000)
+//
+// cap: max symbols returned by get() — top N by dollarVolume.
+//   Keeps screeners from making thousands of Yahoo API requests.
+//   getWithMeta() returns the full filtered list (no cap applied).
+
+const _M  = 1_000_000;       // 1 million USD
+const _B  = 1_000_000_000;   // 1 billion USD
 
 const UNIVERSE_CONFIG = {
   // US stocks
-  us:       { type: 'stock', countries: ['us'], minDolVol: 500_000 },
-  us_large: { type: 'stock', countries: ['us'], minDolVol: 10_000_000, minMcap: 2_000 },
-  us_mid:   { type: 'stock', countries: ['us'], minDolVol: 1_000_000,  minMcap: 300,  maxMcap: 10_000 },
-  us_small: { type: 'stock', countries: ['us'], minDolVol: 500_000,    maxMcap: 2_000 },
+  us:       { type: 'stock', countries: ['us'], minDolVol:   5 * _M,              cap: 800 },
+  us_large: { type: 'stock', countries: ['us'], minDolVol:  50 * _M, minMcap: 2 * _B,  cap: 500 },
+  us_mid:   { type: 'stock', countries: ['us'], minDolVol:   5 * _M, minMcap: 300 * _M, maxMcap: 10 * _B, cap: 400 },
+  us_small: { type: 'stock', countries: ['us'], minDolVol:   1 * _M, maxMcap: 2 * _B,  cap: 300 },
 
   // Europe — main markets combined
-  eu:       { type: 'stock', countries: ['gb','de','fr','nl','it','es','se','ch','be','at','no','dk','fi','pt'], minDolVol: 500_000 },
-  eu_large: { type: 'stock', countries: ['gb','de','fr','nl','it','es','se','ch'], minDolVol: 2_000_000, minMcap: 1_000 },
-  uk:       { type: 'stock', countries: ['gb'], minDolVol: 500_000 },
-  de:       { type: 'stock', countries: ['de'], minDolVol: 500_000 },
-  fr:       { type: 'stock', countries: ['fr'], minDolVol: 500_000 },
-  ch:       { type: 'stock', countries: ['ch'], minDolVol: 500_000 },
+  eu:       { type: 'stock', countries: ['gb','de','fr','nl','it','es','se','ch','be','at','no','dk','fi','pt'], minDolVol: 5 * _M,  cap: 400 },
+  eu_large: { type: 'stock', countries: ['gb','de','fr','nl','it','es','se','ch'], minDolVol: 10 * _M, minMcap: 1 * _B, cap: 200 },
+  uk:       { type: 'stock', countries: ['gb'], minDolVol: 2 * _M, cap: 150 },
+  de:       { type: 'stock', countries: ['de'], minDolVol: 2 * _M, cap: 100 },
+  fr:       { type: 'stock', countries: ['fr'], minDolVol: 2 * _M, cap: 100 },
+  ch:       { type: 'stock', countries: ['ch'], minDolVol: 2 * _M, cap:  80 },
 
   // APAC
-  apac:     { type: 'stock', countries: ['jp','kr','hk','au','sg','tw','cn','in'], minDolVol: 1_000_000 },
-  jp:       { type: 'stock', countries: ['jp'], minDolVol: 1_000_000 },
-  kr:       { type: 'stock', countries: ['kr'], minDolVol: 1_000_000 },
-  au:       { type: 'stock', countries: ['au'], minDolVol: 500_000 },
-  hk:       { type: 'stock', countries: ['hk'], minDolVol: 1_000_000 },
+  apac:     { type: 'stock', countries: ['jp','kr','hk','au','sg','tw','cn','in'], minDolVol: 5 * _M, cap: 300 },
+  jp:       { type: 'stock', countries: ['jp'], minDolVol: 3 * _M, cap: 150 },
+  kr:       { type: 'stock', countries: ['kr'], minDolVol: 3 * _M, cap: 100 },
+  au:       { type: 'stock', countries: ['au'], minDolVol: 1 * _M, cap: 100 },
+  hk:       { type: 'stock', countries: ['hk'], minDolVol: 3 * _M, cap: 100 },
 
-  // ETFs
-  etf:      { type: 'etf',   countries: ['us'], minDolVol: 1_000_000 },
-  etf_eu:   { type: 'etf',   countries: ['gb','de','fr'], minDolVol: 500_000 },
+  // ETFs — top liquid only
+  etf:      { type: 'etf', countries: ['us'], minDolVol: 10 * _M, cap: 200 },
+  etf_eu:   { type: 'etf', countries: ['gb','de','fr'], minDolVol: 2 * _M, cap: 100 },
 
   // Combined
-  all:      { type: 'both',  countries: ['us','gb','de','fr','nl','jp','kr','hk','au'], minDolVol: 1_000_000 },
+  all:      { type: 'both', countries: ['us','gb','de','fr','nl','jp','kr','hk','au'], minDolVol: 20 * _M, cap: 600 },
 };
 
 // ─── Disk cache helpers ───────────────────────────────────────────────────────
@@ -241,6 +266,72 @@ async function buildUniverse(config) {
   return filtered;
 }
 
+// ─── SA symbol → Yahoo Finance symbol conversion ──────────────────────────────
+// StockAnalysis uses {EXCHANGE_CODE}/{TICKER} for non-US stocks.
+// Yahoo Finance uses {TICKER}.{SUFFIX} format.
+
+const SA_TO_YF_SUFFIX = {
+  // Europe
+  'ETR':  '.DE',   // Deutsche Börse Xetra (Germany)
+  'FRA':  '.F',    // Frankfurt (Germany, less liquid)
+  'EPA':  '.PA',   // Euronext Paris (France)
+  'AMS':  '.AS',   // Euronext Amsterdam (Netherlands)
+  'BIT':  '.MI',   // Borsa Italiana (Italy)
+  'BME':  '.MC',   // Bolsa Madrid (Spain)
+  'STO':  '.ST',   // Nasdaq Stockholm (Sweden)
+  'NGM':  '.ST',   // Nordic Growth Market (Sweden, same suffix)
+  'OSL':  '.OL',   // Oslo Stock Exchange (Norway)
+  'CPH':  '.CO',   // Nasdaq Copenhagen (Denmark)
+  'HEL':  '.HE',   // Nasdaq Helsinki (Finland)
+  'SWX':  '.SW',   // SIX Swiss Exchange
+  'VIE':  '.VI',   // Vienna Stock Exchange
+  'EBR':  '.BR',   // Euronext Brussels (Belgium)
+  'ELI':  '.LS',   // Euronext Lisbon (Portugal)
+  'XSAT': '.ST',   // Nasdaq First North (Sweden)
+  // APAC
+  'TYO':  '.T',    // Tokyo Stock Exchange (Japan)
+  'TSE':  '.T',    // Tokyo (alt code)
+  'KRX':  '.KS',   // Korea Stock Exchange
+  'XKRX': '.KS',
+  'HKEX': '.HK',   // Hong Kong Exchanges
+  'ASX':  '.AX',   // Australian Securities Exchange
+  'SGX':  '.SI',   // Singapore Exchange
+  'TWSE': '.TW',   // Taiwan Stock Exchange
+  'TAI':  '.TW',
+  'SHH':  '.SS',   // Shanghai Stock Exchange
+  'SHZ':  '.SZ',   // Shenzhen Stock Exchange
+  'NSE':  '.NS',   // India NSE
+  'BSE':  '.BO',   // India BSE
+  // Americas (non-US)
+  'TSX':  '.TO',   // Toronto Stock Exchange (Canada)
+  'TSXV': '.V',    // TSX Venture
+  'BVMF': '.SA',   // Brazil B3
+  'BMV':  '.MX',   // Mexico
+  // Other
+  'JSE':  '.JO',   // Johannesburg
+};
+
+/**
+ * Convert a StockAnalysis symbol to Yahoo Finance format.
+ * US symbols (no prefix) are returned unchanged.
+ * Returns null if the exchange code is unknown.
+ */
+export function saToYahoo(saSymbol) {
+  if (!saSymbol.includes('/')) return saSymbol;  // US stock, no conversion needed
+
+  const slashIdx  = saSymbol.indexOf('/');
+  const exchange  = saSymbol.slice(0, slashIdx);
+  const ticker    = saSymbol.slice(slashIdx + 1);
+  const suffix    = SA_TO_YF_SUFFIX[exchange];
+
+  if (!suffix) return null;  // unknown exchange — skip
+
+  // Share-class dots: INVE.B → INVE-B (Yahoo uses dash, SA uses dot)
+  const yahooTicker = ticker.replace(/\.([A-Z])$/, '-$1');
+
+  return `${yahooTicker}${suffix}`;
+}
+
 // ─── In-memory universe cache ─────────────────────────────────────────────────
 
 const _built = new Map();
@@ -265,25 +356,42 @@ async function getBuilt(name) {
 
 /**
  * Get symbol array for a universe, sorted by dollarVolume desc.
- * @param {string} name  Universe key (us, us_large, eu, apac, etf, all, …)
+ * Applies the universe cap (if configured) to keep screener calls manageable.
+ * @param {string} name  Universe key (us, us_large, eu, apac, etf, crypto, all, …)
  * @returns {Promise<string[]>}
  */
 export async function get(name) {
-  const meta = await getBuilt(name);
-  return Object.values(meta)
-    .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0))
-    .map(m => m.symbol);
+  const key = name.toLowerCase();
+  if (key === 'crypto') return [...CRYPTO_SYMBOLS];
+
+  const meta   = await getBuilt(key);
+  const sorted = Object.values(meta)
+    .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0));
+  const config = UNIVERSE_CONFIG[key];
+  const capped = config?.cap ? sorted.slice(0, config.cap) : sorted;
+
+  // Convert SA symbol format to Yahoo Finance format; drop unknowns
+  return capped
+    .map(m => saToYahoo(m.symbol))
+    .filter(Boolean);
 }
 
 /**
  * Get full metadata objects for a universe, sorted by dollarVolume desc.
+ * Returns all filtered symbols (no cap — intended for metadata/analysis, not live screeners).
  * @param {string} name  Universe key
  * @returns {Promise<object[]>}
  */
 export async function getWithMeta(name) {
-  const meta = await getBuilt(name);
+  const key = name.toLowerCase();
+  if (key === 'crypto') {
+    return CRYPTO_SYMBOLS.map(s => ({ symbol: s, yahooSymbol: s, type: 'CRYPTO', name: s }));
+  }
+  const meta = await getBuilt(key);
   return Object.values(meta)
-    .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0));
+    .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0))
+    .map(m => ({ ...m, yahooSymbol: saToYahoo(m.symbol) }))
+    .filter(m => m.yahooSymbol !== null);  // drop stocks on unknown exchanges
 }
 
 /**

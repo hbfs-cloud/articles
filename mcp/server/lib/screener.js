@@ -410,7 +410,6 @@ export async function backtest(options = {}) {
 
   // Fetch 1-year bars — check SQLite storage first (L2 cache), fallback to Yahoo
   const storage  = getStorage();
-  const today    = new Date().toISOString().slice(0, 10);
   const allBars  = {};
 
   await Promise.allSettled(

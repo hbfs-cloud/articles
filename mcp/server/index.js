@@ -480,10 +480,10 @@ server.tool(
 
 server.tool(
   'get_universe',
-  'List available symbol universes (US large/mid, EU, APAC, ETF, Crypto) or search for specific tickers by keyword. Also supports Yahoo Finance predefined screeners (most_actives, day_gainers, day_losers, undervalued_large, growth_tech).',
+  'List available symbol universes or get symbols for a specific one. Universes are sourced live from StockAnalysis.com (15k+ stocks, daily cache). Also supports Yahoo Finance predefined screeners.',
   {
     list:   z.boolean().optional().describe('List all available universes with symbol counts (default: true if no other param)'),
-    name:   z.string().optional().describe('Universe name: us_large, us_mid, us, eu, apac, etf, crypto, all'),
+    name:   z.string().optional().describe('Universe: us_large (~500), us_mid (~400), us (~800), eu (~400), eu_large (~200), uk, de, fr, apac (~300), jp, kr, au, hk, etf (~200), crypto (25 hardcoded), all (~600)'),
     search: z.string().optional().describe('Search Yahoo Finance for tickers matching a keyword (e.g. "semiconductor", "EV battery")'),
     yahoo_screener: z.string().optional().describe('Yahoo predefined screener: most_actives, day_gainers, day_losers, undervalued_large, growth_tech')
   },
@@ -696,9 +696,7 @@ server.tool(
 server.tool(
   'export_parquet',
   'Export locally cached bars to Parquet format via DuckDB. Runs immediately (normally auto-runs every 6h). Requires DuckDB installed (brew install duckdb). Parquet files are saved to data/parquet/.',
-  {
-    force: z.boolean().optional().describe('Force re-export even if recently exported (default: false)')
-  },
+  {},
   async () => {
     await barsWorker.runNow();
     const st = barsWorker.status();

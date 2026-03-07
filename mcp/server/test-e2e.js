@@ -333,19 +333,48 @@ await test('fetchYahooScreener() returns symbols for most_actives', async () => 
 });
 
 // StockAnalysis API test (will fetch live)
-await test('get("us_large") returns 100+ symbols from StockAnalysis', async () => {
+await test('get("us_large") returns 100+ Yahoo-compatible symbols', async () => {
   const syms = await universe.get('us_large');
   assert.ok(Array.isArray(syms), 'Not an array');
   assert.ok(syms.length >= 100, `Expected >= 100 symbols, got ${syms.length}`);
   assert.ok(syms.every(s => typeof s === 'string'), 'Symbols should be strings');
+  // US symbols should not contain slash (SA format) or unknown formats
+  assert.ok(!syms.some(s => s.includes('/')), 'Found slash in symbol — SA format not converted');
+});
+
+await test('get("eu") returns Yahoo-compatible symbols (.DE, .PA, .AS etc.)', async () => {
+  const syms = await universe.get('eu');
+  assert.ok(syms.length >= 50, `Expected >= 50 EU symbols, got ${syms.length}`);
+  assert.ok(!syms.some(s => s.includes('/')), 'EU symbols should not contain SA exchange prefix');
+  // Should have recognizable Yahoo suffixes
+  const hasSuffix = syms.some(s => s.includes('.DE') || s.includes('.PA') || s.includes('.AS') || s.includes('.ST') || s.includes('.L'));
+  assert.ok(hasSuffix, 'No Yahoo-format EU symbols found');
+});
+
+await test('get("crypto") returns 25 hardcoded Yahoo crypto symbols', async () => {
+  const syms = await universe.get('crypto');
+  assert.equal(syms.length, 25);
+  assert.ok(syms.includes('BTC-USD'));
+  assert.ok(syms.includes('ETH-USD'));
+});
+
+await test('saToYahoo converts SA format correctly', () => {
+  assert.equal(universe.saToYahoo('ETR/SAP'),    'SAP.DE');
+  assert.equal(universe.saToYahoo('EPA/MC'),     'MC.PA');
+  assert.equal(universe.saToYahoo('AMS/ASML'),   'ASML.AS');
+  assert.equal(universe.saToYahoo('STO/INVE.B'), 'INVE-B.ST');
+  assert.equal(universe.saToYahoo('AAPL'),       'AAPL');   // US: unchanged
+  assert.equal(universe.saToYahoo('OSL/EQNR'),  'EQNR.OL');
+  assert.equal(universe.saToYahoo('XXX/FOO'),   null);       // unknown exchange
 });
 
 await test('getWithMeta("us_large") returns objects with required fields', async () => {
   const metas = await universe.getWithMeta('us_large');
   assert.ok(metas.length >= 100);
   const first = metas[0];
-  assert.ok(first.symbol, 'Missing symbol');
-  assert.ok(first.name,   'Missing name');
+  assert.ok(first.symbol,      'Missing symbol');
+  assert.ok(first.yahooSymbol, 'Missing yahooSymbol');
+  assert.ok(first.name,        'Missing name');
   assert.ok(first.dollarVolume != null, 'Missing dollarVolume');
   // Sorted by dollarVolume desc
   assert.ok(metas[0].dollarVolume >= metas[1].dollarVolume, 'Not sorted by dollarVolume');
