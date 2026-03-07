@@ -17,6 +17,7 @@
  */
 
 import * as cache from './cache.js';
+import * as bvcLib from './bvc.js';
 import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -123,6 +124,9 @@ const UNIVERSE_CONFIG = {
 
   // Combined
   all:      { type: 'both', countries: ['us','gb','de','fr','nl','jp','kr','hk','au'], minDolVol: 20 * _M, cap: 600 },
+
+  // Morocco — Casablanca Bourse (BVC API, special type)
+  ma:       { type: 'bvc', countries: ['ma'] },
 };
 
 // ─── Disk cache helpers ───────────────────────────────────────────────────────
@@ -371,6 +375,12 @@ export async function get(name) {
   const key = name.toLowerCase();
   if (key === 'crypto') return [...CRYPTO_SYMBOLS];
 
+  // BVC (Casablanca Bourse) — load from BVC API
+  if (key === 'ma') {
+    const instruments = await bvcLib.loadInstruments();
+    return Object.keys(instruments);
+  }
+
   const meta   = await getBuilt(key);
   const sorted = Object.values(meta)
     .sort((a, b) => (b.dollarVolume ?? 0) - (a.dollarVolume ?? 0));
@@ -393,6 +403,10 @@ export async function getWithMeta(name) {
   const key = name.toLowerCase();
   if (key === 'crypto') {
     return CRYPTO_SYMBOLS.map(s => ({ symbol: s, yahooSymbol: s, type: 'CRYPTO', name: s }));
+  }
+  if (key === 'ma') {
+    const instruments = await bvcLib.loadInstruments();
+    return Object.values(instruments).map(i => ({ ...i, type: 'BVC', country: 'MA', exchange: 'CSE' }));
   }
   const meta = await getBuilt(key);
   return Object.values(meta)

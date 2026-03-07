@@ -44,6 +44,7 @@ import * as regime from './lib/regime.js';
 import * as cache from './lib/cache.js';
 import * as universe from './lib/universe.js';
 import * as screener from './lib/screener.js';
+import * as bvc from './lib/bvc.js';
 import { getStorage } from './lib/storage.js';
 import * as barsWorker from './lib/bars-worker.js';
 
@@ -636,6 +637,9 @@ server.tool(
         if (src === 'binance') {
           const data = await binance.getBars(sym, intv, rng === '1y' ? 365 : 100);
           bars = data.bars;
+        } else if (src === 'bvc') {
+          const data = await bvc.getBars(sym);
+          bars = data.bars;
         } else {
           const data = await yahoo.getBars(sym, intv, rng);
           bars = data.bars;
@@ -710,6 +714,56 @@ server.tool(
   {},
   async () => {
     return { content: [{ type: 'text', text: JSON.stringify(barsWorker.status(), null, 2) }] };
+  }
+);
+
+// ────────────────────────────────────
+// BVC (CASABLANCA BOURSE) TOOLS
+// ────────────────────────────────────
+
+server.tool(
+  'get_bvc_instruments',
+  'List all instruments traded on the Casablanca Stock Exchange (Bourse des Valeurs de Casablanca). Returns symbol, ISIN, and instrumentID for each stock.',
+  {},
+  async () => {
+    const instruments = await bvc.loadInstruments();
+    const list = Object.values(instruments).map(({ symbol, isin, instrumentID }) => ({ symbol, isin, instrumentID }));
+    list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+    return { content: [{ type: 'text', text: JSON.stringify({ exchange: 'CSE', country: 'MA', count: list.length, instruments: list }, null, 2) }] };
+  }
+);
+
+server.tool(
+  'get_bvc_bars',
+  'Fetch daily OHLCV bars for a Casablanca Bourse (BVC) stock. Bars are cached locally in SQLite. Use for backtesting Moroccan equities.',
+  {
+    symbol: z.string().describe('BVC ticker symbol (e.g. ATW, BCP, IAM, MASI)'),
+    format: z.string().optional().describe('Output format: json, csv (default: json)')
+  },
+  async ({ symbol, format }) => {
+    const storage = getStorage();
+    const sym = symbol.toUpperCase();
+    const { bars } = await bvc.getBars(sym);
+    storage.save(sym, '1d', bars, 'bvc');
+
+    if (format === 'csv') {
+      const csv = storage.exportCSV(sym, '1d');
+      return { content: [{ type: 'text', text: csv || `No bars for ${sym}` }] };
+    }
+    return { content: [{ type: 'text', text: JSON.stringify({ symbol: sym, source: 'bvc', exchange: 'CSE', count: bars.length, from: bars[0]?.time, to: bars[bars.length - 1]?.time, bars }, null, 2) }] };
+  }
+);
+
+server.tool(
+  'get_bvc_quote',
+  'Get the latest price quote for a Casablanca Bourse (BVC) stock. Since BVC has no real-time feed, the quote is derived from the most recent daily close.',
+  {
+    symbol: z.string().describe('BVC ticker symbol (e.g. ATW, BCP, IAM)')
+  },
+  async ({ symbol }) => {
+    const quote = await bvc.getQuote(symbol.toUpperCase());
+    if (!quote) return { content: [{ type: 'text', text: `No data found for ${symbol.toUpperCase()}` }] };
+    return { content: [{ type: 'text', text: JSON.stringify(quote, null, 2) }] };
   }
 );
 

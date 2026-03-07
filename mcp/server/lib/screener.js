@@ -25,6 +25,7 @@
 
 import * as yahoo from './yahoo.js';
 import * as binance from './binance.js';
+import * as bvc from './bvc.js';
 import * as universe from './universe.js';
 import * as regime from './regime.js';
 import { getStorage } from './storage.js';
@@ -178,6 +179,41 @@ function normaliseBinanceTicker(t) {
   };
 }
 
+function normaliseBVCQuote(q) {
+  const price = q.price || 0;
+  return {
+    symbol:        q.symbol,
+    name:          q.symbol,
+    price,
+    open:          q.open          || null,
+    high:          q.high          || null,
+    low:           q.low           || null,
+    previousClose: q.previousClose || null,
+    changePct:     q.changePct     || 0,
+    volume:        q.volume        || 0,
+    avgvol3m:      null,
+    avgvol10d:     null,
+    rvol:          null,
+    marketCapM:    null,
+    pe:            null,
+    forwardPe:     null,
+    beta:          null,
+    ema50:         price,
+    ema200:        price,
+    high52w:       price,
+    low52w:        price,
+    pctFromHigh:   null,
+    pctFromLow:    null,
+    aboveEma50:    1,
+    aboveEma200:   1,
+    rsi14:         null,
+    atr14:         null,
+    exchange:      'CSE',
+    marketState:   'CLOSED',  // BVC is not real-time
+    source:        'bvc',
+  };
+}
+
 function normaliseQuote(q) {
   const price   = q.price || 0;
   const ema50   = q.fiftyDayAvg  || price;
@@ -326,12 +362,21 @@ export async function run(options = {}) {
     }
   }
 
-  // 4. Fetch quotes — route by source (Binance for crypto, Yahoo for equities)
+  // 4. Fetch quotes — route by source
   const cryptoSyms = symbols.filter(s => universe.isCrypto(s));
-  const equitySyms = symbols.filter(s => !universe.isCrypto(s));
+
+  // Detect BVC symbols: always from 'ma' universe, or by checking instrument map for comma-sep input
+  let bvcInstrumentMap = {};
+  if (univName === 'ma' || univName.includes(',')) {
+    try { bvcInstrumentMap = await bvc.loadInstruments(); } catch {}
+  }
+  const bvcSyms    = univName === 'ma'
+    ? symbols.filter(s => !universe.isCrypto(s))
+    : symbols.filter(s => !universe.isCrypto(s) && s in bvcInstrumentMap);
+  const equitySyms = symbols.filter(s => !universe.isCrypto(s) && !bvcSyms.includes(s));
   const normalised = [];
 
-  // 4a. Binance batch (single request, no chunking needed)
+  // 4a. Binance batch
   if (cryptoSyms.length) {
     try {
       const tickers = await binance.getMultiTicker(cryptoSyms);
@@ -339,7 +384,19 @@ export async function run(options = {}) {
     } catch { /* skip on Binance error */ }
   }
 
-  // 4b. Yahoo parallel (chunked — one request per symbol internally)
+  // 4b. BVC (Casablanca) — use latest daily bar as quote proxy
+  if (bvcSyms.length) {
+    await Promise.allSettled(
+      bvcSyms.map(async sym => {
+        try {
+          const q = await bvc.getQuote(sym);
+          if (q?.price > 0) normalised.push(normaliseBVCQuote(q));
+        } catch { /* skip */ }
+      })
+    );
+  }
+
+  // 4c. Yahoo parallel (chunked)
   const CHUNK = 50;
   for (let i = 0; i < equitySyms.length; i += CHUNK) {
     const chunk = equitySyms.slice(i, i + CHUNK);
@@ -486,6 +543,9 @@ export async function backtest(options = {}) {
         if (universe.isCrypto(sym)) {
           const { bars } = await binance.getBars(sym, '1d', 365);
           if (bars.length > 20) { allBars[sym] = bars; storage.save(sym, '1d', bars, 'binance'); }
+        } else if (univName === 'ma' || (await bvc.isBVC(sym))) {
+          const { bars } = await bvc.getBars(sym);
+          if (bars.length > 20) { allBars[sym] = bars; storage.save(sym, '1d', bars, 'bvc'); }
         } else {
           const { bars } = await yahoo.getBars(sym, '1d', '1y');
           if (bars.length > 20) { allBars[sym] = bars; storage.save(sym, '1d', bars, 'yahoo'); }

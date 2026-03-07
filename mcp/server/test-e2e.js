@@ -40,6 +40,7 @@ const { default: Database } = await import('better-sqlite3');
 const cache       = await import('./lib/cache.js');
 const yahoo       = await import('./lib/yahoo.js');
 const binance     = await import('./lib/binance.js');
+const bvc         = await import('./lib/bvc.js');
 const { BarsStorage, getStorage } = await import('./lib/storage.js');
 const screener    = await import('./lib/screener.js');
 const universe    = await import('./lib/universe.js');
@@ -422,6 +423,65 @@ await test('getWithMeta("us_large") returns objects with required fields', async
   assert.ok(first.dollarVolume != null, 'Missing dollarVolume');
   // Sorted by dollarVolume desc
   assert.ok(metas[0].dollarVolume >= metas[1].dollarVolume, 'Not sorted by dollarVolume');
+});
+
+// ─── 8. BVC (Casablanca Bourse) ──────────────────────────────────────────────
+
+section('BVC — Casablanca Bourse (lib/bvc.js)');
+
+await test('loadInstruments() returns 50+ symbols', async () => {
+  const instruments = await bvc.loadInstruments();
+  const keys = Object.keys(instruments);
+  assert.ok(keys.length >= 50, `Expected >= 50 instruments, got ${keys.length}`);
+  // Each entry should have symbol, instrumentID, isin
+  const first = instruments[keys[0]];
+  assert.ok(first.symbol,       'Missing symbol');
+  assert.ok(first.instrumentID, 'Missing instrumentID');
+});
+
+await test('isBVC() detects CSE symbols', async () => {
+  // ATW (Attijariwafa Bank) should be a BVC symbol
+  const isAtw = await bvc.isBVC('ATW');
+  assert.ok(isAtw, 'ATW should be recognized as BVC symbol');
+  const notBvc = await bvc.isBVC('AAPL');
+  assert.ok(!notBvc, 'AAPL should not be a BVC symbol');
+});
+
+await test('getBars() returns OHLCV bars for ATW', async () => {
+  const { bars, source } = await bvc.getBars('ATW');
+  assert.ok(bars.length >= 100, `Expected >= 100 bars for ATW, got ${bars.length}`);
+  assert.equal(source, 'bvc');
+  assert.ok(bars[0].time, 'Missing time field');
+  assert.ok(bars[0].close > 0, 'Close price should be > 0');
+  // Should be sorted ascending
+  assert.ok(bars[0].time < bars[bars.length - 1].time, 'Bars not sorted ascending');
+});
+
+await test('getQuote() returns latest price for ATW', async () => {
+  const q = await bvc.getQuote('ATW');
+  assert.ok(q, 'No quote returned');
+  assert.ok(q.price > 0, `Price should be > 0, got ${q.price}`);
+  assert.equal(q.exchange, 'CSE');
+  assert.equal(q.source, 'bvc');
+  assert.ok(q.date, 'Missing date field');
+  assert.ok(typeof q.changePct === 'number', 'changePct should be a number');
+});
+
+await test('get("ma") universe returns BVC symbols', async () => {
+  const syms = await universe.get('ma');
+  assert.ok(Array.isArray(syms) && syms.length >= 50, `Expected >= 50 MA symbols, got ${syms.length}`);
+  assert.ok(syms.includes('ATW'), 'ATW missing from MA universe');
+  assert.ok(syms.includes('BCP'), 'BCP missing from MA universe');
+});
+
+await test('screener run() with MA universe fetches BVC quotes', async () => {
+  const result = await screener.run({
+    universe: 'ATW,BCP,IAM',
+    filter:   'change1d > -50',
+    limit:    5
+  });
+  assert.ok(result.picks.length > 0, 'No picks for BVC screener');
+  assert.ok(result.picks[0].exchange === 'CSE', `Expected CSE exchange, got ${result.picks[0].exchange}`);
 });
 
 // ─── 8. Bars Worker ───────────────────────────────────────────────────────────
