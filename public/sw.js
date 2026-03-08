@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mw-v1';
+const CACHE_NAME = 'mw-v2';
 const PRECACHE = [
   '/',
   '/assets/report.css',
@@ -41,7 +41,21 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Cache-first for assets (CSS, JS, images)
+  // Network-first for JSON data (always fresh)
+  if (e.request.url.includes('/data/') || e.request.url.endsWith('.json') || e.request.url.endsWith('.js')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets (CSS, images, fonts)
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
