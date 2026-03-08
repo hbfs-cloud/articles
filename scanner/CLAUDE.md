@@ -34,8 +34,37 @@ scanner/
    - Oversold bounce : `rsi14<35 && vol>sma(vol,20)*1.5`
    - Momentum expansion : `close>sma(close,20) && vol>sma(vol,20)*2 && rsi14>50 && rsi14<75`
    - Breakout squeeze : `close>sma(close,50) && atr(14)>atr(28)*1.2`
-3. **`QueryData`** types: quote pour les 10 tickers retenus
+3. **`QueryData`** types: quote,insider_transactions pour les 10 tickers retenus (validation prix spot + détection achats insiders)
 4. **WebSearch** pour les catalyseurs récents de chaque ticker
+
+### Insider Transactions — Signal Spécial (OBLIGATOIRE)
+
+**Objectif** : Détecter les achats significatifs d'insiders (CEO, CFO, Board) comme signal de conviction supplémentaire.
+
+**Collecte** : `QueryData` types=insider_transactions pour **tous** les candidats retenus après le screening initial.
+
+**Critères de signification** :
+- Achat open market (pas exercice d'options ni conversion) > $50K
+- Achat par un C-level (CEO, CFO, COO, CTO) ou Board member
+- Cluster d'achats : 2+ insiders achètent dans une fenêtre de 30 jours
+- Achat après une baisse > 15% = signal contrarian fort
+
+**Impact sur le score** :
+- Achat significatif d'un insider → **+5 points** au score composite
+- Cluster d'achats (2+ insiders) → **+10 points** et badge `🏷️ Insider Buy`
+- Ventes massives d'insiders → **-5 points** et mention dans les invalidations
+
+**Affichage dans le setup card** :
+- Si insider buy détecté → ajouter dans la section **Confirmations** (bloc vert) :
+  - "Insider buying: {Nom} ({Rôle}) bought {N} shares (${Montant}) on {Date}"
+- Si vente significative → ajouter dans la section **Invalidations** (bloc rouge) :
+  - "Insider selling: {Nom} ({Rôle}) sold {N} shares (${Montant}) on {Date}"
+- Badge spécial `badge-green` sur le setup card header : "Insider Buy" si achat significatif détecté
+
+**Exemples de signaux forts** :
+- CEO achète $200K d'actions après un drop de 20% → signal contrarian très fort
+- 3 board members achètent la même semaine → cluster bullish
+- CFO vend 80% de ses actions → red flag majeur
 
 ### Diversification Géographique & Setups A+ Europe/Asie/ETFs
 
