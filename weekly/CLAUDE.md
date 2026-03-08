@@ -14,7 +14,7 @@
 - **Vérifier `ls weekly/`** avant de créer le dossier
 
 ### Layout Interdit
-- **PAS de FAB (fnav)** : Le weekly n'utilise PAS la navigation flottante. Navigation Grid uniquement.
+- **FAB obligatoire** : Le weekly utilise le FAB flottant (fnav) comme tous les autres types d'articles. PAS de Navigation Grid inline.
 - **PAS de `hero-brand-link` / `hero-brand-logo`** dans le hero
 - **PAS de `<a>` ni `<img>` dans le `hero-section`** (sauf le bouton historique)
 - Reproduire EXACTEMENT le layout de `weekly/20260223/index.html`
@@ -87,8 +87,8 @@ Rapport de niveau institutionnel à destination de retail qui couvre tous les gr
 ```
 Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
 
-#### FAB — Pas de FAB pour le Weekly
-Le weekly n'utilise **pas** de FAB flottant. La navigation se fait via le Navigation Grid intégré.
+#### FAB — Navigation Flottante (OBLIGATOIRE)
+Le weekly utilise le FAB flottant comme tous les autres types d'articles. 6 items : Alerts, Markets, Metals & Crypto, Allocation & Trades, Outlook, Sources.
 
 #### Footer (OBLIGATOIRE)
 ```html
@@ -109,7 +109,7 @@ Le weekly n'utilise **pas** de FAB flottant. La navigation se fait via le Naviga
 ### Sections Obligatoires (dans l'ordre)
 
 1. **Hero Section** - Titre accrocheur + badges clés + date de la semaine
-2. **Navigation Grid** - Liens internes vers chaque section
+2. **FAB Navigation** - Menu flottant avec 6 raccourcis vers les sections principales
 3. **Alerte Banner** - Le sujet #1 de la semaine en rouge
 4. **Calendrier de la Semaine** - Grille Lun-Ven avec événements, earnings, données macro. Codage couleur: critical (rouge), important (jaune), normal.
 5. **Synthèse Exécutive** - Metric cards (S&P 500, Nasdaq, Dow, Russell, Or, Argent, BTC, VIX) + le paradoxe de la semaine

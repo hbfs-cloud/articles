@@ -138,7 +138,7 @@ Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dos
 4. Utiliser impérativement le CSS global: `<link rel="stylesheet" href="/assets/report.css">`
 5. Créer index.html avec **TOUTES** les sections obligatoires (voir weekly/CLAUDE.md — 18 sections)
 6. **Contraintes layout CRITIQUES** :
-   - **PAS de FAB (fnav)** : Le weekly n'utilise PAS la navigation flottante FAB. Utiliser le Navigation Grid intégré uniquement.
+   - **FAB obligatoire** : Le weekly utilise le FAB flottant (fnav) comme tous les autres types d'articles. PAS de Navigation Grid inline.
    - **PAS de `hero-brand-link` / `hero-brand-logo`** dans le hero : Le hero contient uniquement `hero-title`, `hero-subtitle`, `hero-badges`, `article-clickable-tags` et le bouton historique.
    - **Taille minimum** : L'article doit faire **> 100KB**. Si < 100KB, il manque probablement des sections.
    - **Toutes les 18 sections** de weekly/CLAUDE.md doivent être présentes (Hero, Nav Grid, Alerte, Calendrier, Synthèse, Bilan S-1, Macro, Métaux, Crypto, Earnings, Géopolitique, Rotation, Risques, Allocation, Trades, Leaders, Outlook, Sources)

@@ -286,24 +286,20 @@
     <!-- ==================== MAIN CONTENT ==================== -->
     <div class="container">
 
-        <!-- ==================== 1. NAVIGATION GRID ==================== -->
-        <div class="nav-grid">
-            <a href="#alertes" class="nav-grid-item"><i class="fas fa-triangle-exclamation"></i> Alerts</a>
-            <a href="#calendrier" class="nav-grid-item"><i class="fas fa-calendar-days"></i> Calendar</a>
-            <a href="#synthese" class="nav-grid-item"><i class="fas fa-chart-pie"></i> Executive Summary</a>
-            <a href="#compte-rendu" class="nav-grid-item"><i class="fas fa-clipboard-check"></i> Week Review</a>
-            <a href="#marches" class="nav-grid-item"><i class="fas fa-landmark"></i> Macro &amp; Markets</a>
-            <a href="#metaux" class="nav-grid-item"><i class="fas fa-gem"></i> Precious Metals</a>
-            <a href="#crypto" class="nav-grid-item"><i class="fab fa-bitcoin"></i> Crypto</a>
-            <a href="#earnings" class="nav-grid-item"><i class="fas fa-chart-bar"></i> Earnings</a>
-            <a href="#geopolitique" class="nav-grid-item"><i class="fas fa-globe"></i> Geopolitics</a>
-            <a href="#rotation" class="nav-grid-item"><i class="fas fa-arrows-rotate"></i> Sector Rotation</a>
-            <a href="#risques" class="nav-grid-item"><i class="fas fa-shield-halved"></i> Risk Matrix</a>
-            <a href="#allocation" class="nav-grid-item"><i class="fas fa-wallet"></i> Allocation</a>
-            <a href="#trades" class="nav-grid-item"><i class="fas fa-crosshairs"></i> Trades</a>
-            <a href="#leaders" class="nav-grid-item"><i class="fas fa-trophy"></i> Leaders</a>
-            <a href="#outlook" class="nav-grid-item"><i class="fas fa-binoculars"></i> Outlook</a>
-            <a href="#sources" class="nav-grid-item"><i class="fas fa-link"></i> Sources</a>
+        <!-- Floating FAB Navigation -->
+        <div class="fnav" id="floatingNav">
+            <div class="fnav-menu" id="fnavMenu">
+                <a href="#alertes" class="fnav-item" data-section="alertes"><i class="fas fa-triangle-exclamation"></i><span>Alerts</span></a>
+                <a href="#marches" class="fnav-item" data-section="marches"><i class="fas fa-chart-line"></i><span>Markets</span></a>
+                <a href="#metaux" class="fnav-item" data-section="metaux"><i class="fas fa-coins"></i><span>Metals & Crypto</span></a>
+                <a href="#allocation" class="fnav-item" data-section="allocation"><i class="fas fa-wallet"></i><span>Allocation & Trades</span></a>
+                <a href="#outlook" class="fnav-item" data-section="outlook"><i class="fas fa-binoculars"></i><span>Outlook</span></a>
+                <a href="#sources" class="fnav-item" data-section="sources"><i class="fas fa-link"></i><span>Sources</span></a>
+            </div>
+            <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+                <i class="fas fa-bars" id="fnavIcon"></i>
+                <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+            </button>
         </div>
 
         <!-- ==================== 2. ALERTS ==================== -->
@@ -1500,6 +1496,36 @@
 
     <script src="/assets/core.js"></script>
     <script src="/assets/tag-renderer.js"></script>
+    <script>
+    // FAB Navigation Toggle
+    (function(){
+        var btn = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        var icon = document.getElementById('fnavIcon');
+        var label = document.getElementById('fnavLabel');
+        if(!btn || !menu) return;
+        var isOpen = false;
+        function toggle() {
+            isOpen = !isOpen;
+            menu.classList.toggle('open', isOpen);
+            btn.classList.toggle('open', isOpen);
+            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+            label.textContent = isOpen ? 'Close' : 'Menu';
+        }
+        btn.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+        document.querySelectorAll('.fnav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                if(isOpen) toggle();
+            });
+        });
+        document.addEventListener('click', function(e) {
+            if(isOpen && !menu.contains(e.target) && !btn.contains(e.target)) toggle();
+        });
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape' && isOpen) toggle();
+        });
+    })();
+    </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
 
