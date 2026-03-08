@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Hormuz Shutdown, CPI Wednesday & VIX 29: The Crisis Deepens",
+    "desc": "Tanker traffic through the Strait of Hormuz has ground to a near-complete halt following the Feb 28 US-Israel strikes on Iran. Insurance providers pulled P&I coverage on March 5, creating an insurance-driven blockade. Over 200 ships anchored outside the strait. WTI crude surged +12% to $90.90/bbl. T...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260309/",
+    "date": "8 mars 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Iran, NFP & Or $5,248 : La Semaine du Chaos",
     "desc": "Frappes US-Israël sur l'Iran, Khamenei éliminé. Pétrole +12%, Or $5,248.\n            NFP vendredi, ISM Services lundi. NVIDIA $68Mds (+3.4%). BTC rebond $72K.\n            S&P 500 -1.0% post-choc. Risque d'escalade Moyen-Orient.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
@@ -2528,7 +2541,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Scanner Retrospective — Feb 24 to Mar 5, 2026",
-    "desc": "70 setups reviewed across 7 scans. 27% TP1 hit rate on completed trades. AAOI +19%, NOW +14%, USO +14% top picks. Early Risk-Off regime dominated — energy picks outperformed while EU/Asia ETFs lagged. 48 setups still in progress.",
+    "desc": "70 setups across 7 scans — provisional grade B- (69% still open, 27% HR on 31% resolved). Open positions averaging +0.4% MtM, 63% in positive/flat territory. AAOI +19%, NOW +14%, USO +14%. Projected final HR: 37-43%.",
     "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
     "grade": "",
     "href": "/scanner/retrospective/20260306/",
@@ -2961,19 +2974,6 @@ window.searchDataPrebuilt = [
     "tags": "tech,ai",
     "grade": "",
     "href": "tech/anthropic-ecosystem/part1-foundation/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Why Health = Alpha",
-    "desc": "The Healthy Retail Investor — Part 1: The scientific case that your body is your biggest alpha leak. Sleep, stress, nutrition, and cognitive load directly impact your P&L.",
-    "tags": "formation,us,eu",
-    "grade": "",
-    "href": "/series/healthy-retail-investor/part1-health-is-alpha/",
     "date": ""
   },
   {
