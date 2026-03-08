@@ -209,6 +209,43 @@ Si le rapport précédent contenait des trades, **inclure un bilan obligatoire**
 Statuts possibles : TP1 touché, TP2 touché, Stop touché, En cours, Invalidé.
 Inclure un **score de fiabilité** (ex: "2/3 trades gagnants, score +8% cumulé").
 
+### Polymarket — Marchés Prédictifs (OBLIGATOIRE quand pertinent)
+
+Intégrer les données Polymarket dans les sections où elles apportent une valeur ajoutée. Les marchés prédictifs offrent des probabilités en temps réel basées sur le consensus des traders, complémentaires aux analyses traditionnelles.
+
+#### Quand utiliser Polymarket
+- **Géopolitique** : probabilités de conflit, sanctions, élections, accords commerciaux
+- **Macro** : probabilités de baisse/hausse des taux Fed, récession, inflation
+- **Crypto** : prix BTC/ETH à date X, approbation ETF, régulation
+- **Earnings** : marchés sur résultats de grandes caps (beat/miss)
+- **Événements binaires** : tout événement ayant un marché Polymarket actif et liquide
+
+#### Collecte des données
+- **WebSearch** `"polymarket {sujet}" site:polymarket.com` pour trouver les marchés pertinents
+- **URL directe** : `https://polymarket.com/event/{slug}` pour les événements actifs
+- **Données clés** : probabilité actuelle (%), volume échangé ($), tendance (hausse/baisse vs 7j)
+
+#### Format d'affichage
+```html
+<div class="didactic-box">
+    <h4><i class="fa-solid fa-chart-column"></i> Polymarket Signal</h4>
+    <p><strong>{Titre du marché}</strong> — {Probabilité}% ({tendance})</p>
+    <p>Volume: ${montant} · <a href="https://polymarket.com/event/{slug}" class="source-ref" target="_blank" rel="noopener">
+        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+        <span class="source-name">Polymarket</span></a></p>
+    <p><em>{Interprétation: ce que le marché price vs le consensus institutionnel}</em></p>
+</div>
+```
+
+#### Directives
+- **Ne PAS baser une thèse uniquement sur Polymarket** — c'est un signal complémentaire
+- **Mentionner le volume** : un marché avec $50K de volume n'a pas la même valeur qu'un à $5M
+- **Comparer au consensus** : si Polymarket dit 70% recession et les analystes 30%, c'est une divergence notable
+- **Source obligatoire** : toujours lier vers le marché Polymarket avec `source-ref`
+- **Sections typiques** : Géopolitique, Outlook (scénarios), Macro, Crypto, Matrice des Risques
+
+---
+
 ### Directives
 - Utiliser des données à jour via le MCP Gateway MarketWatch
 - Ne pas se focaliser uniquement sur le dernier prix mais l'évolution (barres 15m/daily)

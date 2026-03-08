@@ -112,6 +112,46 @@ Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__cla
 - **AnalyzeOptionsStrategy**: Analyse de stratégies multi-legs
 - **LLMAnalysis**: Analyse DeepSeek
 
+## Polymarket — Marchés Prédictifs (Source Transversale)
+
+Les données Polymarket doivent être intégrées dans **tous les types d'articles** (weekly, daily, scanner, analyses) quand elles apportent un signal pertinent. Les marchés prédictifs offrent des probabilités en temps réel basées sur le consensus des traders.
+
+### Quand utiliser
+- **Géopolitique** : conflits, sanctions, élections, accords (ex: "Will US strike Iran?" → 72%)
+- **Macro/Fed** : probabilités de cut/hike, récession, CPI (ex: "Fed rate cut June 2026" → 45%)
+- **Crypto** : prix BTC/ETH à date X, régulation, approbation ETF
+- **Earnings** : marchés sur beat/miss de grandes caps
+- **Tout événement binaire** ayant un marché actif et liquide sur Polymarket
+
+### Collecte
+- `WebSearch "polymarket {sujet}" site:polymarket.com` pour trouver les marchés
+- Données clés : probabilité (%), volume ($), tendance vs 7j
+
+### Format HTML
+```html
+<div class="didactic-box">
+    <h4><i class="fa-solid fa-chart-column"></i> Polymarket Signal</h4>
+    <p><strong>{Titre du marché}</strong> — {Probabilité}% ({tendance ↑↓})</p>
+    <p>Volume: ${montant} · <a href="https://polymarket.com/event/{slug}" class="source-ref" target="_blank" rel="noopener">
+        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+        <span class="source-name">Polymarket</span></a></p>
+    <p><em>{Divergence vs consensus institutionnel si notable}</em></p>
+</div>
+```
+
+### Directives
+- Signal **complémentaire**, jamais la base d'une thèse
+- Toujours mentionner le **volume** (un marché à $50K ≠ un marché à $5M)
+- Comparer au consensus institutionnel — les divergences sont les plus intéressantes
+- Lien source obligatoire vers le marché Polymarket
+- **Sections typiques par article** :
+  | Type | Sections où intégrer Polymarket |
+  |------|-------------------------------|
+  | Weekly | Géopolitique, Outlook, Macro, Crypto, Matrice des Risques |
+  | Daily | Alerte du jour, Géopolitique, Crypto, Ce qu'il faut surveiller |
+  | Scanner | Catalyseurs des setups (si marché prédictif pertinent) |
+  | Analyses | Macro, Risques, Social Radar (si marché sur le ticker/secteur) |
+
 ## Commandes Utilisateur
 
 ### "Nouvelle analyse weekly" / "Update l'article pour next week"
@@ -223,6 +263,7 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
    - Calendrier économique du jour/semaine (CPI, FOMC, PMI, GDP, etc.)
    - Actualités géopolitiques majeures (Ukraine, Chine, tariffs, etc.)
    - Earnings calendar du jour
+   - **Polymarket** : marchés prédictifs pertinents (géopolitique, Fed, crypto) — voir section "Polymarket" ci-dessus
 3. **Créer `daily/YYYYMMDD/index.html`** avec les sections :
    - Hero + badges clés du jour
    - Navigation Grid

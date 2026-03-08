@@ -734,6 +734,23 @@ Quand on **régénère** une analyse qui existe déjà :
    </div>
    ```
 
+### Polymarket — Signal Complémentaire (quand pertinent)
+
+Intégrer les données Polymarket dans les sections Macro, Risques, ou Social Radar quand un marché prédictif pertinent existe pour le ticker ou son secteur.
+
+**Quand utiliser** :
+- Événement binaire impactant le ticker (approbation FDA, contrat gouvernemental, earnings)
+- Contexte macro avec marché Polymarket liquide (Fed, récession, tariffs)
+- Secteur impacté par un événement géopolitique pricé sur Polymarket
+
+**Collecte** : `WebSearch "polymarket {ticker ou événement}" site:polymarket.com`
+
+**Format** : Utiliser un `didactic-box` avec titre "Polymarket Signal", probabilité, volume, lien source-ref, et interprétation vs consensus. Voir format dans le CLAUDE.md racine, section "Polymarket".
+
+**Placement** : dans la section la plus pertinente (Macro, Risques, Social Radar, ou Actualités).
+
+---
+
 ### Directives Analyse Ticker
 - **Lisibilité** : un lecteur doit comprendre le titre en 2 minutes avec le Verdict Express seul
 - **Honnêteté** : ne pas minimiser les risques, surtout dilution et cash burn

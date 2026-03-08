@@ -66,6 +66,28 @@ scanner/
 - 3 board members achètent la même semaine → cluster bullish
 - CFO vend 80% de ses actions → red flag majeur
 
+### Polymarket — Signal Complémentaire pour Catalyseurs
+
+Quand un setup a un catalyseur lié à un événement binaire (earnings beat/miss, approbation réglementaire, événement géopolitique), vérifier si un marché Polymarket existe.
+
+**Collecte** : `WebSearch "polymarket {catalyseur}" site:polymarket.com`
+
+**Utilisation** :
+- Si un marché Polymarket pertinent existe avec volume > $100K → mentionner dans les **Catalyseurs** du setup
+- Format : "Polymarket prices {événement} at {X}% (${volume})" dans le texte du catalyseur
+- Lien source-ref vers le marché
+- Si la probabilité Polymarket diverge fortement du consensus marché → signal d'alerte
+
+**Exemple** :
+```html
+<p><strong>Catalyseur :</strong> Fed rate cut expected June — Polymarket prices at 62% ($4.2M volume)
+<a href="https://polymarket.com/event/fed-rate-cut-june" class="source-ref" target="_blank" rel="noopener">
+    <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+    <span class="source-name">Polymarket</span></a></p>
+```
+
+---
+
 ### Diversification Géographique & Setups A+ Europe/Asie/ETFs
 
 **OBLIGATOIRE** : Le scanner doit inclure des setups de qualité A+ sur les marchés européens, asiatiques et les ETFs, pas uniquement des actions US.
