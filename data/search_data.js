@@ -405,6 +405,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "LITE",
+    "exchange": "NASDAQ • Technology • Communication Equipment\n            — Photonics / AI Datacenter",
+    "name": "LITE — Photonics powerhouse riding AI datacenter wave. 65.5% revenue growth, $2.1B revenue, an...",
+    "title": "LITE — Photonics powerhouse riding AI datacenter wave. 65.5% revenue growth, $2.1B revenue, an...",
+    "desc": "Institutional-grade analysis of Lumentum Holdings (LITE): AI/datacenter photonics leader, 65.5% revenue growth, 4 consecutive EPS beats. Target $655.",
+    "tags": "us,tech,semis,ai,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/LITE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AIXA",
     "exchange": "XETRA (AIXA.DE) / OTC (AIXXF) • Technology • Semiconductor Equipment & Materials — Herzogenrath, Germany",
     "name": "AIXA — German semi-equipment champion — optoelectronics segment doubling on AI laser demand, 4...",
@@ -595,19 +608,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,ai,trade-idea",
     "grade": "A",
     "href": "/analyses/MRVL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "LITE",
-    "exchange": "NASDAQ • Technology",
-    "name": "LITE — Verdict Express — 2 Minutes",
-    "title": "LITE — Verdict Express — 2 Minutes",
-    "desc": "Verdict Express — 2 Minutes",
-    "tags": "us,tech,finance",
-    "grade": "",
-    "href": "/analyses/LITE/",
     "date": ""
   },
   {
