@@ -405,6 +405,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "Why Health = Alpha",
+    "title": "Why Health = Alpha",
+    "desc": "The Healthy Retail Investor — Part 1: The scientific case that your body is your biggest alpha leak. Sleep, stress, nutrition, and cognitive load directly impact your P&L.",
+    "tags": "formation,us,eu",
+    "grade": "",
+    "href": "/series/healthy-retail-investor/part1-health-is-alpha/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "The Healthy Retail Investor — Health IS Alpha",
+    "title": "The Healthy Retail Investor — Health IS Alpha",
+    "desc": "How to trade for decades while staying healthy. Sleep, stress, screen time, nutrition, exercise, psychology — science-backed routines for sustainable performance.",
+    "tags": "formation,us,eu",
+    "grade": "",
+    "href": "/series/healthy-retail-investor/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALOY",
     "exchange": "Nasdaq • Basic Materials • Rare Earth Metals & Magnets — Mine-to-Magnet US Defense",
     "name": "ALOY — REalloys (ALOY) : mine-to-magnet rare earth, contrat DLA, board défense (Gen Keane), $5...",
