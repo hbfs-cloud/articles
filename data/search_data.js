@@ -405,19 +405,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "NBIS",
-    "exchange": "NASDAQ • Communication Services • AI Infrastructure\n            — Full-Stack GPU Cloud",
-    "name": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
-    "title": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
-    "desc": "Nebius Group full-stack AI infrastructure analysis: $530M revenue (+501% YoY), $3.7B cash, $20B+ backlog, MSFT $17.4B contract. Target $147.",
-    "tags": "us,tech,ai,trade-idea",
-    "grade": "A",
-    "href": "/analyses/NBIS/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "AXTI",
     "exchange": "NASDAQ • Technology • Semiconductor Equipment & Materials\n            — Compound Substrates (InP / GaAs / Ge)",
     "name": "AXTI — AXT Inc: compound semiconductor substrates (InP, GaAs, Ge) for fiber optics, 5G, AI. $1...",
@@ -426,6 +413,19 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/AXTI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "NBIS",
+    "exchange": "NASDAQ • Communication Services • AI Infrastructure\n            — Full-Stack GPU Cloud",
+    "name": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
+    "title": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
+    "desc": "Nebius Group full-stack AI infrastructure analysis: $530M revenue (+501% YoY), $3.7B cash, $20B+ backlog, MSFT $17.4B contract. Target $147.",
+    "tags": "us,tech,ai,trade-idea",
+    "grade": "A",
+    "href": "/analyses/NBIS/",
     "date": ""
   },
   {
