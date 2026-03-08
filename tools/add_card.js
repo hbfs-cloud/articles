@@ -42,6 +42,15 @@ else if (argPath.includes('tech/')) tab = 'tech';
 else if (argPath.includes('analyses/')) tab = 'analyses';
 else tab = doc.documentElement.getAttribute('data-tab') || 'analyses';
 
+// GUARD: Skip sub-parts of multi-part series/tech articles.
+// Only the landing page or part1 should get a card, not part2, part3, etc.
+// Matches patterns like /part2-xxx/, /part3-xxx/, etc.
+const subPartMatch = argPath.match(/\/part(\d+)-/);
+if (subPartMatch && parseInt(subPartMatch[1]) > 1) {
+    console.log(`Skipped: ${argPath} is a sub-part (part ${subPartMatch[1]}). Only landing pages and part1 get indexed as cards.`);
+    process.exit(0);
+}
+
 const tags = doc.documentElement.getAttribute('data-tags') || "";
 const grade = doc.documentElement.getAttribute('data-level') || ""; // "expert" or "beginner", etc.
 // analyses have actual grades. Let me use data-grade if it exists on html?
