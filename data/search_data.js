@@ -405,6 +405,71 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AXTI",
+    "exchange": "NASDAQ • Technology",
+    "name": "AXTI — Verdict Express — 2 Minutes",
+    "title": "AXTI — Verdict Express — 2 Minutes",
+    "desc": "Verdict Express — 2 Minutes",
+    "tags": "us,tech,finance",
+    "grade": "",
+    "href": "/analyses/AXTI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "NBIS",
+    "exchange": "NASDAQ • Communication Services",
+    "name": "NBIS — Nebius Group N.V.",
+    "title": "NBIS — Nebius Group N.V.",
+    "desc": "",
+    "tags": "us,tech,finance",
+    "grade": "",
+    "href": "/analyses/NBIS/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "MRVL",
+    "exchange": "NASDAQ • Technology • Semiconductors — AI Infrastructure • Custom ASICs • Data Centers",
+    "name": "MRVL — AI infrastructure semiconductor play. Custom ASICs + cloud interconnect. Rallying +17.8...",
+    "title": "MRVL — AI infrastructure semiconductor play. Custom ASICs + cloud interconnect. Rallying +17.8...",
+    "desc": "Marvell Technology MRVL intermediate analysis: AI data center leader, custom ASICs, $89.68, RSI 40 oversold bounce setup. Grade A.",
+    "tags": "us,tech,semis,ai,trade-idea",
+    "grade": "A",
+    "href": "/analyses/MRVL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "LITE",
+    "exchange": "NASDAQ • Technology",
+    "name": "LITE — Verdict Express — 2 Minutes",
+    "title": "LITE — Verdict Express — 2 Minutes",
+    "desc": "Verdict Express — 2 Minutes",
+    "tags": "us,tech,finance",
+    "grade": "",
+    "href": "/analyses/LITE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "POET",
+    "exchange": "NASDAQ • Technology • Semiconductors — Photonic Integration",
+    "name": "POET — Analyse complète POET Technologies (POET) : photonique AI, Optical Interposer, Teraligh...",
+    "title": "POET — Analyse complète POET Technologies (POET) : photonique AI, Optical Interposer, Teraligh...",
+    "desc": "Analyse complète POET Technologies (POET) : photonique AI, Optical Interposer, Teralight 1.6T. $5.58 | MCap $827M | Pré-revenu | Cash $300M+",
+    "tags": "",
+    "grade": "",
+    "href": "/analyses/POET/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "HUT",
     "exchange": "NASDAQ • Financial Services • Capital Markets — Bitcoin Mining & AI Infrastructure",
     "name": "HUT — Bitcoin mining meets AI infrastructure. Anthropic partnership, 179% rev growth, $71.93 ...",
@@ -413,6 +478,45 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,crypto,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/HUT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "APLD",
+    "exchange": "NASDAQ • Technology / Data Centers",
+    "name": "APLD — Applied Digital is building critical AI infrastructure. But with high debt, extreme vol...",
+    "title": "APLD — Applied Digital is building critical AI infrastructure. But with high debt, extreme vol...",
+    "desc": "Applied Digital is building critical AI infrastructure. But with high debt, extreme volatility, and a recent NVIDIA divestment – is it a future leader or a risky bet? A beginner's guide.",
+    "tags": "us,tech,ai,hpc,cloud-computing,data-centers,blockchain,trade-idea,speculative",
+    "grade": "C+",
+    "href": "/analyses/APLD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "WULF",
+    "exchange": "NASDAQ • Financial Services",
+    "name": "WULF — Verdict Express — 2 Minutes",
+    "title": "WULF — Verdict Express — 2 Minutes",
+    "desc": "Verdict Express — 2 Minutes",
+    "tags": "us,tech,finance",
+    "grade": "",
+    "href": "/analyses/WULF/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "CRWV",
+    "exchange": "NASDAQ • Technology",
+    "name": "CRWV — CoreWeave, Inc.",
+    "title": "CRWV — CoreWeave, Inc.",
+    "desc": "",
+    "tags": "us,tech,finance",
+    "grade": "",
+    "href": "/analyses/CRWV/",
     "date": ""
   },
   {
@@ -483,19 +587,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "MRVL",
-    "exchange": "NASDAQ • Technology • Semiconductors — AI Infrastructure • Custom ASICs • Data Centers",
-    "name": "MRVL — AI infrastructure semiconductor play. Custom ASICs + cloud interconnect. Rallying +17.8...",
-    "title": "MRVL — AI infrastructure semiconductor play. Custom ASICs + cloud interconnect. Rallying +17.8...",
-    "desc": "Marvell Technology MRVL intermediate analysis: AI data center leader, custom ASICs, $89.68, RSI 40 oversold bounce setup. Grade A.",
-    "tags": "us,tech,semis,ai,trade-idea",
-    "grade": "A",
-    "href": "/analyses/MRVL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "ALT",
     "exchange": "NASDAQ • Healthcare • Biotechnology\n            — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
     "name": "ALT — pemvidutide BTD MASH, Phase 3 en 2026, cash $340M, beta 0.17 — biotech pure-play obésit...",
@@ -543,19 +634,6 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,speculative,trade-idea,asia",
     "grade": "B-",
     "href": "/analyses/TMDE/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "APLD",
-    "exchange": "NASDAQ • Technology / Data Centers",
-    "name": "APLD — Applied Digital: AI Infrastructure, High Volatility",
-    "title": "APLD — Applied Digital: AI Infrastructure, High Volatility",
-    "desc": "Applied Digital is building critical AI infrastructure. But with high debt, extreme volatility, and a recent NVIDIA divestment – is it a future leader or a risky bet? A beginner's guide.",
-    "tags": "us,tech,ai,hpc,cloud-computing,data-centers,blockchain,trade-idea,speculative",
-    "grade": "C+",
-    "href": "/analyses/APLD/",
     "date": ""
   },
   {
@@ -738,19 +816,6 @@ window.searchDataPrebuilt = [
     "tags": "forex,macro",
     "grade": "B+",
     "href": "analyses/EURUSD",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "POET",
-    "exchange": "NASDAQ • Semiconductors • Photonics",
-    "name": "POET Technologies Inc.",
-    "title": "POET Technologies Inc.",
-    "desc": "Analyse complète POET Technologies (POET) : Photonique AI, Optical\n            Interposer, Teralight 1.6T. $5.58, MCap $827M, Pré-revenu, Cash\n            $300M+. Cuivre vs Optique, setup avancé, social media &\n            manipulation.",
-    "tags": "us,semis,tech,speculative,trade-idea",
-    "grade": "B",
-    "href": "analyses/POET",
     "date": ""
   },
   {
@@ -1003,19 +1068,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "CRWV",
-    "exchange": "NASDAQ • Technology",
-    "name": "CoreWeave, Inc.",
-    "title": "CoreWeave, Inc.",
-    "desc": "Analyse technique et fondamentale complète de CoreWeave, Inc.\n            (CRWV). Prix: $95.39, Market Cap: .",
-    "tags": "us,tech,ai,trade-idea",
-    "grade": "B+",
-    "href": "analyses/CRWV",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "CVX",
     "exchange": "NYSE • Energy",
     "name": "Chevron — Energy Major / Dividende 3.9%",
@@ -1115,19 +1167,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "B+",
     "href": "analyses/MDB",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "NBIS",
-    "exchange": "NASDAQ • Communication Services",
-    "name": "Nebius Group N.V.",
-    "title": "Nebius Group N.V.",
-    "desc": "Analyse technique et fondamentale complète de Nebius Group N.V.\n            (NBIS). Prix: $97.08, Market Cap: .",
-    "tags": "",
-    "grade": "B+",
-    "href": "analyses/NBIS",
     "date": ""
   },
   {
@@ -1523,19 +1562,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "APLD",
-    "exchange": "NASDAQ • Technology / Data Centers",
-    "name": "Applied Digital Corporation",
-    "title": "Applied Digital Corporation",
-    "desc": "Analyse technique et fondamentale complète de Applied Digital\n            Corporation (APLD). Prix: $35.00, Market Cap: .",
-    "tags": "us,tech,ai,speculative,trade-idea",
-    "grade": "B-",
-    "href": "analyses/APLD",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "CAPR",
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Capricor Therapeutics",
@@ -1570,19 +1596,6 @@ window.searchDataPrebuilt = [
     "tags": "us,semis,tech,speculative",
     "grade": "B-",
     "href": "analyses/ICHR",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "LITE",
-    "exchange": "NASDAQ • Technology",
-    "name": "Lumentum Holdings",
-    "title": "Lumentum Holdings",
-    "desc": "Lumentum Holdings est un leader mondial des composants optiques et\n            photoniques pour les réseaux de télécommunications, les data\n            centers et les applications...",
-    "tags": "us,semis,tech,speculative",
-    "grade": "B-",
-    "href": "analyses/LITE",
     "date": ""
   },
   {
@@ -1661,19 +1674,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,speculative,trade-idea",
     "grade": "B-",
     "href": "analyses/USAR",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "WULF",
-    "exchange": "NASDAQ • Crypto Mining",
-    "name": "TeraWulf — Crypto Miner / Data Center",
-    "title": "TeraWulf — Crypto Miner / Data Center",
-    "desc": "BTC miner nucléaire. Short 27.3% = squeeze potential. Revenue\n            +87%. Beta 4.3. Insiders 27%. Target $23.56 (+45%). 12 employés,\n            $7B EV.",
-    "tags": "us,crypto,speculative,trade-idea",
-    "grade": "B-",
-    "href": "analyses/WULF",
     "date": ""
   },
   {
@@ -2428,19 +2428,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "D+",
     "href": "analyses/WWR",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AXTI",
-    "exchange": "NASDAQ • Technology",
-    "name": "AXT Inc",
-    "title": "AXT Inc",
-    "desc": "AXT Inc est un fabricant de substrats semi-conducteurs composés\n            (III-V), fondé en 1986 à Fremont, Californie. La société produit\n            des wafers en phosphure...",
-    "tags": "us,semis,speculative",
-    "grade": "D",
-    "href": "analyses/AXTI",
     "date": ""
   },
   {
