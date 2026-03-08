@@ -10,7 +10,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260309/",
-    "date": "8 mars 2026"
+    "date": "9 - 13 March 2026"
   },
   {
     "type": "hebdo",
@@ -401,6 +401,58 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "daily/20260217/",
     "date": "17 Février 2026 — Lundi"
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "HUT",
+    "exchange": "NASDAQ • Financial Services • Capital Markets — Bitcoin Mining & AI Infrastructure",
+    "name": "HUT — Bitcoin mining meets AI infrastructure. Anthropic partnership, 179% rev growth, $71.93 ...",
+    "title": "HUT — Bitcoin mining meets AI infrastructure. Anthropic partnership, 179% rev growth, $71.93 ...",
+    "desc": "Institutional-grade analysis of Hut 8 Corp (HUT): Bitcoin miner pivoting to AI infrastructure via Anthropic partnership. $5.3B market cap, 179% revenue growth, beta 6.17.",
+    "tags": "us,tech,crypto,ai,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/HUT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "CORZ",
+    "exchange": "NASDAQ • Technology • Software - Infrastructure\n            — Bitcoin Mining / AI Data Centers",
+    "name": "CORZ — BTC miner pivoting to AI data centers, $1B Morgan Stanley loan, RSI 37 oversold, analys...",
+    "title": "CORZ — BTC miner pivoting to AI data centers, $1B Morgan Stanley loan, RSI 37 oversold, analys...",
+    "desc": "Core Scientific analysis: Bitcoin miner pivoting to AI/HPC hosting, $1B Morgan Stanley facility, $4.7B MCap, 19% short interest. Target $26.40.",
+    "tags": "us,tech,crypto,ai,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/CORZ/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "CIFR",
+    "exchange": "NASDAQ • Technology • Data Centers / Bitcoin Mining — HPC & AI Infrastructure",
+    "name": "CIFR — From Bitcoin miner to AI data center developer. HPC pivot complete, $27 analyst target,...",
+    "title": "CIFR — From Bitcoin miner to AI data center developer. HPC pivot complete, $27 analyst target,...",
+    "desc": "Institutional analysis of Cipher Digital (CIFR): BTC miner pivoting to HPC/AI data centers. $628M cash, $2.8B debt, 20.5% short interest, analyst target $27.23. RSI 40 pullback setup.",
+    "tags": "us,tech,crypto,energy,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/CIFR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "IREN",
+    "exchange": "NASDAQ • Technology / Capital Markets • Bitcoin Mining & AI/HPC Data Centers",
+    "name": "IREN — AI/HPC pivot with 50K+ Nvidia B300 GPUs, $6B ATM dilution risk, 13% short interest, RSI...",
+    "title": "IREN — AI/HPC pivot with 50K+ Nvidia B300 GPUs, $6B ATM dilution risk, 13% short interest, RSI...",
+    "desc": "IREN institutional analysis: Bitcoin miner turned AI/HPC data center play. $6B ATM offering, 150K GPU fleet target, $757M revenue, Jim Chanos short thesis. Grade B+.",
+    "tags": "us,tech,crypto,ai,energy,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/IREN/",
+    "date": ""
   },
   {
     "type": "analyse",
@@ -1029,32 +1081,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "HUT",
-    "exchange": "NASDAQ • Financial Services / Data Centers",
-    "name": "Hut 8 Corp.",
-    "title": "Hut 8 Corp.",
-    "desc": "Analyse technique et fondamentale complète de Hut 8 Corp. (HUT).\n            Prix: $53.50, Market Cap: .",
-    "tags": "",
-    "grade": "B+",
-    "href": "analyses/HUT",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IREN",
-    "exchange": "NASDAQ • Financial Services / Data Centers",
-    "name": "IREN Limited",
-    "title": "IREN Limited",
-    "desc": "Analyse technique et fondamentale complète de IREN Limited (IREN).\n            Prix: $42.14, Market Cap: .",
-    "tags": "",
-    "grade": "B+",
-    "href": "analyses/IREN",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "ITRG",
     "exchange": "NYSE American • Basic Materials",
     "name": "Integra Resources Corp.",
@@ -1271,19 +1297,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "B",
     "href": "analyses/BDRY",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "CIFR",
-    "exchange": "NASDAQ • Financial Services / Data Centers",
-    "name": "Cipher Mining Inc.",
-    "title": "Cipher Mining Inc.",
-    "desc": "Analyse technique et fondamentale complète de Cipher Mining Inc.\n            (CIFR). Prix: $16.53, Market Cap: .",
-    "tags": "",
-    "grade": "B",
-    "href": "analyses/CIFR",
     "date": ""
   },
   {
@@ -1531,19 +1544,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,speculative",
     "grade": "B-",
     "href": "analyses/CAPR",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "CORZ",
-    "exchange": "NASDAQ • Technology",
-    "name": "Core Scientific, Inc.",
-    "title": "Core Scientific, Inc.",
-    "desc": "Analyse technique et fondamentale complète de Core Scientific,\n            Inc. (CORZ). Prix: $17.84, Market Cap: .",
-    "tags": "us,tech,crypto,speculative,trade-idea",
-    "grade": "B-",
-    "href": "analyses/CORZ",
     "date": ""
   },
   {
