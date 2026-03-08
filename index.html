@@ -3442,6 +3442,10 @@
 
       state.page++;
 
+      // Translate newly rendered card buttons
+      var cl = currentLangFilter === 'all' ? 'en' : currentLangFilter;
+      if (typeof translateCardButtons === 'function') translateCardButtons(cl);
+
       if (end < state.data.length) {
         const trigger = document.createElement('div');
         trigger.className = 'infinite-scroll-trigger';
@@ -3818,12 +3822,56 @@
       var noResultsText = noResultsTexts[uiLang] || noResultsTexts.en;
       style.textContent = '.search-results:empty::after { content: "' + noResultsText + '"; }';
 
+      // Translate card buttons
+      translateCardButtons(uiLang);
+
       // Apply language filter to cards via applyAllFilters
       if (typeof applyAllFilters === 'function') {
         applyAllFilters();
       }
       // Also update tab counters for all tabs
       updateTabCounts();
+    }
+
+    // Button translations per tab type and language
+    var btnLabels = {
+      weekly:   { fr: 'Lire le Rapport',    en: 'Read Report',      ar: 'قراءة التقرير',     es: 'Leer Informe',      zh: '阅读报告' },
+      daily:    { fr: 'Lire le Briefing',    en: 'Read Briefing',    ar: 'قراءة الإحاطة',     es: 'Leer Briefing',     zh: '阅读简报' },
+      analyses: { fr: 'Lire l\'Analyse',     en: 'Read Analysis',    ar: 'قراءة التحليل',     es: 'Leer Análisis',     zh: '阅读分析' },
+      scanner:  { fr: 'Voir le Scan',        en: 'View Scan',        ar: 'عرض المسح',         es: 'Ver Escaneo',       zh: '查看扫描' },
+      retro:    { fr: 'Lire la Rétrospective', en: 'Read Retrospective', ar: 'قراءة المراجعة', es: 'Leer Retrospectiva', zh: '阅读回顾' },
+      series:   { fr: 'Commencer la série',  en: 'Start the Series', ar: 'ابدأ السلسلة',      es: 'Iniciar la Serie',  zh: '开始系列' },
+      tech:     { fr: 'Lire le Guide',       en: 'Read Guide',       ar: 'قراءة الدليل',      es: 'Leer Guía',         zh: '阅读指南' }
+    };
+
+    function translateCardButtons(uiLang) {
+      document.querySelectorAll('.report-card').forEach(function(card) {
+        var btn = card.querySelector('.btn-read-primary');
+        if (!btn) return;
+        // Determine tab type from parent panel id="tab-{type}"
+        var panel = card.closest('.tab-panel');
+        if (!panel) return;
+        var tab = (panel.id || '').replace('tab-', '');
+        // Check if retrospective
+        var href = btn.getAttribute('href') || '';
+        var isRetro = href.includes('retrospective');
+        var type = isRetro ? 'retro' : tab;
+        if (!btnLabels[type]) return;
+        // Determine target language
+        var cardLangs = (card.getAttribute('data-lang') || '').split(',').filter(Boolean);
+        var targetLang;
+        if (cardLangs.length <= 1 && cardLangs[0]) {
+          // Monolingual article: use article's language
+          targetLang = cardLangs[0];
+        } else if (cardLangs.length > 1) {
+          // Multilingual: use user's chosen language, fallback to English
+          targetLang = cardLangs.indexOf(uiLang) >= 0 ? uiLang : 'en';
+        } else {
+          targetLang = uiLang;
+        }
+        var label = btnLabels[type][targetLang] || btnLabels[type]['en'];
+        btn.textContent = label;
+      });
     }
 
     // Detect available languages for a card from its link hrefs
