@@ -31,17 +31,16 @@ const html = fs.readFileSync(fullPath, 'utf8');
 const dom = new JSDOM(html);
 const doc = dom.window.document;
 
-let tab = doc.documentElement.getAttribute('data-tab');
-if (!tab) {
-    // try to guess from path
-    if (argPath.includes('weekly/')) tab = 'weekly';
-    else if (argPath.includes('daily/')) tab = 'daily';
-    else if (argPath.includes('scanner/')) tab = 'scanner';
-    else if (argPath.includes('analyses/')) tab = 'analyses';
-    else if (argPath.includes('series/')) tab = 'series';
-    else if (argPath.includes('tech/')) tab = 'tech';
-    else tab = 'analyses';
-}
+// Path-based tab detection takes priority over data-tab for series/
+// (series HTML uses data-tab="analyses" for tag-renderer but cards go to series.json)
+let tab;
+if (argPath.includes('series/')) tab = 'series';
+else if (argPath.includes('weekly/')) tab = 'weekly';
+else if (argPath.includes('daily/')) tab = 'daily';
+else if (argPath.includes('scanner/')) tab = 'scanner';
+else if (argPath.includes('tech/')) tab = 'tech';
+else if (argPath.includes('analyses/')) tab = 'analyses';
+else tab = doc.documentElement.getAttribute('data-tab') || 'analyses';
 
 const tags = doc.documentElement.getAttribute('data-tags') || "";
 const grade = doc.documentElement.getAttribute('data-level') || ""; // "expert" or "beginner", etc.
