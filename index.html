@@ -1523,7 +1523,23 @@
       border-bottom: 1px solid #f1f5f9;
     }
     .tag-explorer-cat {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      border-radius: 8px;
+      border: 1px solid #f1f5f9;
+      overflow: hidden;
+    }
+    .tag-explorer-cat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+      background: #f8fafc;
+    }
+    .tag-explorer-cat-header:hover {
+      background: #f1f5f9;
     }
     .tag-explorer-cat-label {
       font-size: 0.6rem;
@@ -1531,8 +1547,54 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: #94a3b8;
+      display: inline;
+    }
+    .tag-explorer-cat-count {
+      font-size: 0.55rem;
+      color: #cbd5e1;
+      margin-left: auto;
+    }
+    .tag-explorer-cat-chevron {
+      font-size: 0.55rem;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+    .tag-explorer-cat.expanded .tag-explorer-cat-chevron {
+      transform: rotate(90deg);
+    }
+    .tag-explorer-cat .tag-explorer-chips {
+      display: none;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px 10px 8px;
+    }
+    .tag-explorer-cat.expanded .tag-explorer-chips {
+      display: flex;
+    }
+    .tag-explorer-cat-active-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+    .tag-explorer-selected {
+      padding: 8px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      display: none;
+    }
+    .tag-explorer-selected.visible { display: block; }
+    .tag-explorer-selected-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6366f1;
       margin-bottom: 4px;
       display: block;
+    }
+    .tag-explorer-selected-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
     }
     .tag-explorer-chips {
       display: flex;
@@ -1595,9 +1657,24 @@
     }
 
     @media (max-width: 768px) {
-      .tag-explorer-dialog { max-width: 100%; width: 100%; max-height: 90vh; border-radius: 12px 12px 0 0; }
-      .tag-explorer-overlay { padding-top: 2vh; align-items: flex-end; }
-      .tag-explorer-chip { font-size: 0.65rem; padding: 2px 8px; }
+      .tag-explorer-overlay { padding-top: 0; align-items: flex-end; }
+      .tag-explorer-dialog {
+        max-width: 100%;
+        width: 100%;
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+        animation: none;
+      }
+      .tag-explorer-cloud { padding: 8px 12px 4px; }
+      .tag-explorer-chip { font-size: 0.6rem; padding: 2px 6px; }
+      .tag-explorer-results { padding: 4px; -webkit-overflow-scrolling: touch; }
+      .tag-explorer-results .search-item { padding: 8px 10px; gap: 10px; }
+      .tag-explorer-results .search-item-logo,
+      .tag-explorer-results .search-item-fallback { width: 28px; height: 28px; }
+      .tag-explorer-results .search-item-ticker { font-size: 0.82rem; }
+      .tag-explorer-selected { padding: 6px 12px; }
+      .tag-explorer-cat-header { padding: 5px 8px; }
     }
 
     /* ===== SEARCH RESULTS GROUPED ===== */
@@ -2603,6 +2680,10 @@
         <h2><i class="fas fa-tags"></i> <span data-i18n="tags.title">Tag Explorer</span></h2>
         <button class="tag-explorer-close" onclick="closeTagExplorer()"><i class="fas fa-times"></i></button>
       </div>
+      <div class="tag-explorer-selected" id="tagExplorerSelected">
+        <span class="tag-explorer-selected-label">Selected Tags</span>
+        <div class="tag-explorer-selected-chips" id="tagExplorerSelectedChips"></div>
+      </div>
       <div class="tag-explorer-cloud" id="tagCloud"></div>
       <div class="tag-explorer-context" id="tagExplorerContext"></div>
       <div class="tag-explorer-results" id="tagExplorerResults"></div>
@@ -3164,12 +3245,13 @@
     // ===================================================================
     // RENDER SEARCH RESULTS (grouped by type)
     // ===================================================================
-    var typeOrder = ["analyse", "hebdo", "daily", "scanner", "série"];
+    var typeOrder = ["analyse", "hebdo", "daily", "scanner", "tech", "série"];
     var typeLabels = {
       analyse: "Analyses",
       hebdo: "Hebdo",
       daily: "Daily",
       scanner: "Scanner",
+      tech: "Tech",
       série: "Séries",
     };
 
@@ -3243,6 +3325,7 @@
               hebdo: "fa-calendar-week",
               daily: "fa-sun",
               scanner: "fa-satellite-dish",
+              tech: "fa-code",
               série: "fa-graduation-cap",
             };
             logoHtml =
@@ -3352,8 +3435,17 @@
       renderExplorerResults();
     }
 
+    var expandedCats = {};
+
+    function toggleCatExpand(catKey) {
+      expandedCats[catKey] = !expandedCats[catKey];
+      renderTagCloud();
+    }
+
     function renderTagCloud() {
       var cloud = document.getElementById('tagCloud');
+      var selectedArea = document.getElementById('tagExplorerSelected');
+      var selectedChips = document.getElementById('tagExplorerSelectedChips');
       var data = window.searchDataPrebuilt || [];
       // Count articles per tag
       var tagCounts = {};
@@ -3366,6 +3458,23 @@
         });
       });
 
+      // Render selected tags bar
+      if (explorerTags.length) {
+        var selHtml = '';
+        explorerTags.forEach(function(t) {
+          var meta = tagMeta[t] || {};
+          selHtml += '<span class="tag-explorer-chip active" data-cat="' + (meta.cat || 'region') +
+            '" onclick="toggleExplorerTag(\'' + t + '\')">' +
+            (meta.label || t) +
+            ' <i class="fas fa-times" style="font-size:0.5rem;margin-left:2px;opacity:0.7;"></i></span>';
+        });
+        selectedChips.innerHTML = selHtml;
+        selectedArea.classList.add('visible');
+      } else {
+        selectedChips.innerHTML = '';
+        selectedArea.classList.remove('visible');
+      }
+
       var cats = [
         { key: 'region', label: 'Region' },
         { key: 'sector', label: 'Sectors' },
@@ -3377,21 +3486,32 @@
       var html = '';
       cats.forEach(function(cat) {
         var chips = [];
+        var activeChips = [];
+        var tagCount = 0;
         Object.keys(tagMeta).forEach(function(t) {
           if (tagMeta[t].cat !== cat.key) return;
           if (tagCounts[t] === 0) return;
+          tagCount++;
           var isActive = explorerTags.indexOf(t) !== -1;
-          chips.push(
-            '<span class="tag-explorer-chip' + (isActive ? ' active' : '') +
+          var chip = '<span class="tag-explorer-chip' + (isActive ? ' active' : '') +
             '" data-cat="' + cat.key +
-            '" onclick="toggleExplorerTag(\'' + t + '\')">' +
+            '" onclick="event.stopPropagation();toggleExplorerTag(\'' + t + '\')">' +
             (tagMeta[t].label || t) +
-            '<span class="chip-count">' + tagCounts[t] + '</span></span>'
-          );
+            '<span class="chip-count">' + tagCounts[t] + '</span></span>';
+          chips.push(chip);
+          if (isActive) {
+            activeChips.push(chip);
+          }
         });
         if (!chips.length) return;
-        html += '<div class="tag-explorer-cat">' +
+        var isExpanded = !!expandedCats[cat.key];
+        html += '<div class="tag-explorer-cat' + (isExpanded ? ' expanded' : '') + '">' +
+          '<div class="tag-explorer-cat-header" onclick="toggleCatExpand(\'' + cat.key + '\')">' +
+          '<i class="fas fa-chevron-right tag-explorer-cat-chevron"></i>' +
           '<span class="tag-explorer-cat-label">' + cat.label + '</span>' +
+          (activeChips.length ? '<div class="tag-explorer-cat-active-chips">' + activeChips.join('') + '</div>' : '') +
+          '<span class="tag-explorer-cat-count">' + tagCount + ' tags</span>' +
+          '</div>' +
           '<div class="tag-explorer-chips">' + chips.join('') + '</div></div>';
       });
       cloud.innerHTML = html;
@@ -3445,7 +3565,7 @@
       var html = '';
       typeOrder.forEach(function(type) {
         if (!groups[type]) return;
-        var iconMap = { analyse: 'fa-chart-line', hebdo: 'fa-calendar-week', daily: 'fa-sun', scanner: 'fa-satellite-dish', 'série': 'fa-graduation-cap' };
+        var iconMap = { analyse: 'fa-chart-line', hebdo: 'fa-calendar-week', daily: 'fa-sun', scanner: 'fa-satellite-dish', tech: 'fa-code', 'série': 'fa-graduation-cap' };
         html += '<div class="search-group-header"><i class="fa-solid ' + (iconMap[type] || 'fa-file') + '"></i>' + (typeLabels[type] || type) + ' <span style="color:#cbd5e1;">(' + groups[type].length + ')</span></div>';
         groups[type].forEach(function(d) {
           var display = d.ticker || d.title.substring(0, 40);
