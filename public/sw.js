@@ -1,9 +1,6 @@
-const CACHE_NAME = 'mw-v2';
-const PRECACHE = [
-  '/',
+const CACHE_NAME = 'mw-static-v1';
+const STATIC_ASSETS = [
   '/assets/report.css',
-  '/assets/core.js',
-  '/assets/tag-renderer.js',
   '/logo.svg',
   '/favicon.ico',
   '/icon-192x192.png',
@@ -13,7 +10,7 @@ const PRECACHE = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE))
+      .then(cache => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
@@ -27,45 +24,29 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network-first for HTML (always fresh content)
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request).then(r => r || caches.match('/')))
-    );
-    return;
+  // Never cache: HTML pages, JSON data, JS data files
+  if (e.request.mode === 'navigate' ||
+      e.request.url.includes('/data/') ||
+      e.request.url.endsWith('.json')) {
+    return;  // Let the browser handle it normally
   }
 
-  // Network-first for JSON data (always fresh)
-  if (e.request.url.includes('/data/') || e.request.url.endsWith('.json') || e.request.url.endsWith('.js')) {
+  // Cache-first only for static assets (CSS, images, SVG, fonts, icons)
+  if (e.request.destination === 'style' ||
+      e.request.destination === 'image' ||
+      e.request.destination === 'font') {
     e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          }
           return res;
-        })
-        .catch(() => caches.match(e.request))
+        });
+      })
     );
-    return;
   }
-
-  // Cache-first for static assets (CSS, images, fonts)
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res.ok && e.request.url.startsWith(self.location.origin)) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return res;
-      });
-    })
-  );
+  // Everything else: normal browser behavior (no SW interference)
 });
