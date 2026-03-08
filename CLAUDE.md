@@ -449,7 +449,7 @@ Placé dans le hero de chaque article. Peuplé automatiquement par `/assets/tag-
 - **Boutons des cartes** : Le texte du bouton `.btn-read-primary` est traduit dynamiquement par `translateCardButtons()` dans `index.html`. Ne PAS écrire le texte du bouton en dur dans les JSON. Les traductions sont dans l'objet `btnLabels` (6 types × 5 langues).
   - Article **monolingue** (`data-lang="en"`) → bouton dans la langue de l'article
   - Article **multilingue** (`data-lang="ar,en,fr"`) → bouton dans la langue choisie par l'utilisateur sur le site, fallback anglais
-- **Badge "Latest"** : Un badge "Dernier Rapport" / "Latest Report" / etc. est ajouté dynamiquement par JS sur la **première carte** des tabs weekly, daily, et scanner. Ce badge est traduit selon la même logique (langue article mono / langue site multi). Il ne doit JAMAIS être codé en dur dans les JSON — il est géré par `translateCardButtons()`.
+- **Badge "Latest Report"** (weekly uniquement) : Un badge "Dernier Rapport" / "Latest Report" est ajouté dynamiquement par JS sur la **première carte** du tab weekly. Ce badge est traduit selon la même logique (langue article mono / langue site multi). Il ne doit JAMAIS être codé en dur dans les JSON — il est géré par `translateCardButtons()`.
 - **Filtres Analyses** : Les chips de filtre (grade, confidence, quick tags, slider jours) utilisent `data-i18n` et sont traduits dans l'objet `translations` (5 langues). Toute nouvelle UI doit utiliser ce système.
 
 ### Autres Conventions
