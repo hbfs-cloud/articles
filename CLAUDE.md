@@ -445,6 +445,13 @@ Placé dans le hero de chaque article. Peuplé automatiquement par `/assets/tag-
 ```
 - `echarts-responsive.js` : Patch automatique des instances ECharts pour mobile (réduction des fontSize, ajustement des grilles, tooltip confiné). Inclure uniquement sur les pages avec des ECharts.
 
+### Internationalisation des Cartes (OBLIGATOIRE)
+- **Boutons des cartes** : Le texte du bouton `.btn-read-primary` est traduit dynamiquement par `translateCardButtons()` dans `index.html`. Ne PAS écrire le texte du bouton en dur dans les JSON. Les traductions sont dans l'objet `btnLabels` (6 types × 5 langues).
+  - Article **monolingue** (`data-lang="en"`) → bouton dans la langue de l'article
+  - Article **multilingue** (`data-lang="ar,en,fr"`) → bouton dans la langue choisie par l'utilisateur sur le site, fallback anglais
+- **Badge "Latest"** : Un badge "Dernier Rapport" / "Latest Report" / etc. est ajouté dynamiquement par JS sur la **première carte** des tabs weekly, daily, et scanner. Ce badge est traduit selon la même logique (langue article mono / langue site multi). Il ne doit JAMAIS être codé en dur dans les JSON — il est géré par `translateCardButtons()`.
+- **Filtres Analyses** : Les chips de filtre (grade, confidence, quick tags, slider jours) utilisent `data-i18n` et sont traduits dans l'objet `translations` (5 langues). Toute nouvelle UI doit utiliser ce système.
+
 ### Autres Conventions
 - **Logo brand-bar** (**OBLIGATOIRE**) : Dans les pages d'analyses individuelles (`analyses/{TICKER}/`), le `ticker-header` doit **TOUJOURS** utiliser le logo Market Watch (`<img src="https://market-watch.xyz/logo.svg" alt="MW">`), **JAMAIS** le logo de la société. Le logo de la société (parqet.com) est réservé **uniquement** aux cartes de listing dans `index.html`.
 - **Logo société dans index.html** : Sur la landing page (cartes `.report-card`), utiliser `<img src="https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg">` avec fallback initiales. Pour les tickers européens, utiliser le ticker court (AIR, AF, ENX) et non AIR.PA.

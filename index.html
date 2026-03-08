@@ -3952,6 +3952,40 @@
         var label = btnLabels[type][targetLang] || btnLabels[type]['en'];
         btn.textContent = label;
       });
+
+      // Add "Latest" badge to first card of each tab
+      var latestLabels = {
+        weekly:   { fr: 'Dernier Rapport',    en: 'Latest Report',      ar: 'أحدث تقرير',     es: 'Último Informe',     zh: '最新报告' },
+        daily:    { fr: 'Dernier Briefing',    en: 'Latest Briefing',    ar: 'أحدث إحاطة',     es: 'Último Briefing',    zh: '最新简报' },
+        scanner:  { fr: 'Dernier Scan',        en: 'Latest Scan',        ar: 'أحدث مسح',       es: 'Último Escaneo',     zh: '最新扫描' }
+      };
+      ['weekly', 'daily', 'scanner'].forEach(function(tabId) {
+        var panel = document.getElementById('tab-' + tabId);
+        if (!panel) return;
+        var cards = panel.querySelectorAll('.report-card');
+        cards.forEach(function(c) {
+          var old = c.querySelector('.latest-badge');
+          if (old) old.remove();
+        });
+        if (cards.length === 0) return;
+        var first = cards[0];
+        var cardLangs = (first.getAttribute('data-lang') || '').split(',').filter(Boolean);
+        var tl;
+        if (cardLangs.length <= 1 && cardLangs[0]) {
+          tl = cardLangs[0];
+        } else if (cardLangs.length > 1) {
+          tl = cardLangs.indexOf(uiLang) >= 0 ? uiLang : 'en';
+        } else {
+          tl = uiLang;
+        }
+        var txt = (latestLabels[tabId] || {})[tl] || (latestLabels[tabId] || {})['en'];
+        if (!txt) return;
+        var badge = document.createElement('span');
+        badge.className = 'latest-badge';
+        badge.style.cssText = 'display:inline-block;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px';
+        badge.textContent = txt;
+        first.insertBefore(badge, first.firstChild);
+      });
     }
 
     // Detect available languages for a card from its link hrefs
