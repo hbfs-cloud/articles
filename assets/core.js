@@ -79,7 +79,7 @@ function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses
             chip.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = `/index.html?tab=${defaultTab}&tags=` + t;
+                window.location.href = '/?tags=' + t + '&explore=tags';
             };
             tagsContainer.appendChild(chip);
         }

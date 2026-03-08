@@ -1462,6 +1462,144 @@
       }
     }
 
+    /* ===== TAG EXPLORER OVERLAY ===== */
+    .tag-explorer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1200;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 6vh;
+      backdrop-filter: blur(4px);
+    }
+    .tag-explorer-overlay.visible { display: flex; }
+
+    .tag-explorer-dialog {
+      background: white;
+      border-radius: 16px;
+      width: 94%;
+      max-width: 640px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: searchIn 0.15s ease-out;
+    }
+
+    .tag-explorer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .tag-explorer-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+    .tag-explorer-header h2 i { color: #6366f1; }
+    .tag-explorer-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .tag-explorer-close:hover { background: #f1f5f9; color: #334155; }
+
+    .tag-explorer-cloud {
+      padding: 12px 20px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .tag-explorer-cat {
+      margin-bottom: 6px;
+    }
+    .tag-explorer-cat-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .tag-explorer-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tag-explorer-chip {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      color: #64748b;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .tag-explorer-chip:hover { border-color: #94a3b8; }
+    .tag-explorer-chip.active[data-cat="region"] { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+    .tag-explorer-chip.active[data-cat="sector"] { background: #f0fdf4; color: #15803d; border-color: #86efac; }
+    .tag-explorer-chip.active[data-cat="theme"] { background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd; }
+    .tag-explorer-chip.active[data-cat="content"] { background: #fffbeb; color: #b45309; border-color: #fcd34d; }
+    .tag-explorer-chip.active[data-cat="special"] { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
+    .tag-explorer-chip .chip-count {
+      font-size: 0.6rem;
+      opacity: 0.6;
+      margin-left: 2px;
+    }
+
+    .tag-explorer-context {
+      padding: 8px 20px;
+      font-size: 0.78rem;
+      color: #64748b;
+      background: #f8fafc;
+      border-bottom: 1px solid #f1f5f9;
+      display: none;
+    }
+    .tag-explorer-context.visible { display: block; }
+    .tag-explorer-context strong { color: #0f172a; }
+
+    .tag-explorer-results {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .tag-explorer-results:empty::after {
+      content: "Select a tag to explore";
+      display: block;
+      text-align: center;
+      padding: 2rem;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+    }
+    .tag-explorer-empty {
+      text-align: center;
+      padding: 2rem;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .tag-explorer-dialog { max-width: 100%; width: 100%; max-height: 90vh; border-radius: 12px 12px 0 0; }
+      .tag-explorer-overlay { padding-top: 2vh; align-items: flex-end; }
+      .tag-explorer-chip { font-size: 0.65rem; padding: 2px 8px; }
+    }
+
     /* ===== SEARCH RESULTS GROUPED ===== */
     .search-group-header {
       font-size: 0.65rem;
@@ -2458,6 +2596,19 @@
     </div>
   </div>
 
+  <!-- Tag Explorer Overlay -->
+  <div id="tagExplorer" class="tag-explorer-overlay" onclick="if(event.target===this)closeTagExplorer();">
+    <div class="tag-explorer-dialog">
+      <div class="tag-explorer-header">
+        <h2><i class="fas fa-tags"></i> <span data-i18n="tags.title">Tag Explorer</span></h2>
+        <button class="tag-explorer-close" onclick="closeTagExplorer()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="tag-explorer-cloud" id="tagCloud"></div>
+      <div class="tag-explorer-context" id="tagExplorerContext"></div>
+      <div class="tag-explorer-results" id="tagExplorerResults"></div>
+    </div>
+  </div>
+
   <script>
     // ===================================================================
     // TAG METADATA
@@ -2612,6 +2763,9 @@
       renderTagFilterBar();
       applyAllFilters();
       syncTagsToURL();
+      // Open tag explorer for better navigation
+      explorerTags = activeTags.slice();
+      openTagExplorer();
     }
 
     function deactivateTagFilter(tag) {
@@ -3162,6 +3316,185 @@
       });
 
     // ===================================================================
+    // TAG EXPLORER
+    // ===================================================================
+    var explorerTags = [];
+
+    function openTagExplorer(initialTag) {
+      var overlay = document.getElementById('tagExplorer');
+      overlay.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+      if (initialTag && explorerTags.indexOf(initialTag) === -1) {
+        explorerTags = [initialTag];
+      }
+      renderTagCloud();
+      renderExplorerResults();
+    }
+
+    function closeTagExplorer() {
+      document.getElementById('tagExplorer').classList.remove('visible');
+      document.body.style.overflow = '';
+      // Sync explorer tags back to main filter
+      activeTags = explorerTags.slice();
+      renderTagFilterBar();
+      applyAllFilters();
+      syncTagsToURL();
+    }
+
+    function toggleExplorerTag(tag) {
+      var idx = explorerTags.indexOf(tag);
+      if (idx === -1) {
+        explorerTags.push(tag);
+      } else {
+        explorerTags.splice(idx, 1);
+      }
+      renderTagCloud();
+      renderExplorerResults();
+    }
+
+    function renderTagCloud() {
+      var cloud = document.getElementById('tagCloud');
+      var data = window.searchDataPrebuilt || [];
+      // Count articles per tag
+      var tagCounts = {};
+      Object.keys(tagMeta).forEach(function(t) { tagCounts[t] = 0; });
+      data.forEach(function(item) {
+        if (!item.tags) return;
+        item.tags.split(',').forEach(function(t) {
+          t = t.trim();
+          if (tagCounts[t] !== undefined) tagCounts[t]++;
+        });
+      });
+
+      var cats = [
+        { key: 'region', label: 'Region' },
+        { key: 'sector', label: 'Sectors' },
+        { key: 'theme', label: 'Themes' },
+        { key: 'content', label: 'Content' },
+        { key: 'special', label: 'Special' }
+      ];
+
+      var html = '';
+      cats.forEach(function(cat) {
+        var chips = [];
+        Object.keys(tagMeta).forEach(function(t) {
+          if (tagMeta[t].cat !== cat.key) return;
+          if (tagCounts[t] === 0) return;
+          var isActive = explorerTags.indexOf(t) !== -1;
+          chips.push(
+            '<span class="tag-explorer-chip' + (isActive ? ' active' : '') +
+            '" data-cat="' + cat.key +
+            '" onclick="toggleExplorerTag(\'' + t + '\')">' +
+            (tagMeta[t].label || t) +
+            '<span class="chip-count">' + tagCounts[t] + '</span></span>'
+          );
+        });
+        if (!chips.length) return;
+        html += '<div class="tag-explorer-cat">' +
+          '<span class="tag-explorer-cat-label">' + cat.label + '</span>' +
+          '<div class="tag-explorer-chips">' + chips.join('') + '</div></div>';
+      });
+      cloud.innerHTML = html;
+    }
+
+    function renderExplorerResults() {
+      var el = document.getElementById('tagExplorerResults');
+      var ctx = document.getElementById('tagExplorerContext');
+
+      if (!explorerTags.length) {
+        el.innerHTML = '';
+        ctx.classList.remove('visible');
+        return;
+      }
+
+      var data = window.searchDataPrebuilt || [];
+      var matched = data.filter(function(item) {
+        if (!item.tags) return false;
+        var itemTags = item.tags.split(',').map(function(t) { return t.trim(); });
+        return explorerTags.every(function(t) { return itemTags.indexOf(t) !== -1; });
+      });
+
+      // Sort by date (newest first) — use href as proxy since dates vary format
+      matched.sort(function(a, b) {
+        // Extract YYYYMMDD from href patterns like /weekly/20260309/ or /daily/20260308/
+        var dateA = (a.href.match(/\/(\d{8})\//)||[])[1] || '';
+        var dateB = (b.href.match(/\/(\d{8})\//)||[])[1] || '';
+        return dateB.localeCompare(dateA);
+      });
+
+      // Context bar
+      var tagLabels = explorerTags.map(function(t) {
+        return (tagMeta[t] || {}).label || t;
+      }).join(' + ');
+      ctx.innerHTML = '<i class="fas fa-filter" style="margin-right:6px;"></i><strong>' + tagLabels + '</strong> — ' + matched.length + ' article' + (matched.length !== 1 ? 's' : '');
+      ctx.classList.add('visible');
+
+      if (!matched.length) {
+        el.innerHTML = '<div class="tag-explorer-empty"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#cbd5e1;"></i>No articles match this combination</div>';
+        return;
+      }
+
+      // Group by type
+      var groups = {};
+      matched.forEach(function(d) {
+        var t = d.type;
+        if (!groups[t]) groups[t] = [];
+        groups[t].push(d);
+      });
+
+      var html = '';
+      typeOrder.forEach(function(type) {
+        if (!groups[type]) return;
+        var iconMap = { analyse: 'fa-chart-line', hebdo: 'fa-calendar-week', daily: 'fa-sun', scanner: 'fa-satellite-dish', 'série': 'fa-graduation-cap' };
+        html += '<div class="search-group-header"><i class="fa-solid ' + (iconMap[type] || 'fa-file') + '"></i>' + (typeLabels[type] || type) + ' <span style="color:#cbd5e1;">(' + groups[type].length + ')</span></div>';
+        groups[type].forEach(function(d) {
+          var display = d.ticker || d.title.substring(0, 40);
+          var sub = d.ticker ? d.name : (d.date || d.desc.substring(0, 60));
+          var logoHtml;
+          if (d.ticker) {
+            logoHtml = '<img src="https://assets.parqet.com/logos/symbol/' + d.ticker + '?format=jpg" class="search-item-logo" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+              '<div class="search-item-fallback" style="display:none;">' + d.ticker.substring(0, 4) + '</div>';
+          } else {
+            logoHtml = '<div class="search-item-fallback" style="display:flex;background:linear-gradient(135deg,#2563eb,#7c3aed);"><i class="fa-solid ' + (iconMap[d.type] || 'fa-file') + '" style="font-size:0.7rem;"></i></div>';
+          }
+          // Show tags on each result
+          var itemTags = (d.tags || '').split(',').filter(Boolean);
+          var tagsHtml = '<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;">';
+          itemTags.forEach(function(t) {
+            t = t.trim();
+            var meta = tagMeta[t];
+            if (!meta) return;
+            var isActive = explorerTags.indexOf(t) !== -1;
+            var catColors = { region: '#1d4ed8', sector: '#15803d', theme: '#6d28d9', content: '#b45309', special: '#dc2626' };
+            tagsHtml += '<span style="font-size:0.55rem;padding:1px 5px;border-radius:8px;' +
+              (isActive ? 'background:' + catColors[meta.cat] + ';color:white;font-weight:700;' : 'background:#f1f5f9;color:#94a3b8;') +
+              'cursor:pointer;" onclick="event.preventDefault();event.stopPropagation();toggleExplorerTag(\'' + t + '\')">' + (meta.label || t) + '</span>';
+          });
+          tagsHtml += '</div>';
+
+          html += '<a class="search-item" href="' + d.href + '">' +
+            logoHtml +
+            '<div class="search-item-info">' +
+            '<div class="search-item-ticker">' + display + '</div>' +
+            '<div class="search-item-name">' + sub + '</div>' +
+            tagsHtml +
+            '</div>' +
+            '<span class="search-item-arrow"><i class="fas fa-chevron-right"></i></span>' +
+            '</a>';
+        });
+      });
+
+      el.innerHTML = html;
+    }
+
+    // Escape key to close tag explorer
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && document.getElementById('tagExplorer').classList.contains('visible')) {
+        closeTagExplorer();
+      }
+    });
+
+    // ===================================================================
     // INIT FROM URL PARAMS
     // ===================================================================
     (function () {
@@ -3176,6 +3509,7 @@
         setGradeFilter(urlGrade);
       }
       var urlTags = params.get("tags");
+      var urlExplore = params.get("explore");
       if (urlTags) {
         activeTags = urlTags.split(",").filter(Boolean);
         renderTagFilterBar();
@@ -3184,6 +3518,11 @@
           if (activeTags.indexOf(b.dataset.tag) !== -1)
             b.classList.add("active");
         });
+        // Open tag explorer if requested or if coming from article tag click
+        if (urlExplore === 'tags') {
+          explorerTags = activeTags.slice();
+          openTagExplorer();
+        }
       }
       applyAllFilters();
     })();
@@ -3618,6 +3957,7 @@
         'tag.semis': 'Semi-conducteurs',
         'search.trigger': 'Rechercher...',
         'search.placeholder': 'Rechercher ticker, titre, sujet, tag...',
+        'tags.title': 'Explorateur de Tags',
         'footer.copy': '© 2026 Market Watch. Tous droits réservés.',
         'series.parcours': 'Parcours guidés',
         'analyses.noResults': 'Aucune analyse trouvée',
@@ -3672,6 +4012,7 @@
         'tag.semis': 'Semis',
         'search.trigger': 'Search...',
         'search.placeholder': 'Search ticker, title, topic, tag...',
+        'tags.title': 'Tag Explorer',
         'footer.copy': '© 2026 Market Watch. All rights reserved.',
         'series.parcours': 'Guided paths',
         'analyses.noResults': 'No analyses found',
@@ -3726,6 +4067,7 @@
         'tag.semis': 'رقائق',
         'search.trigger': 'بحث...',
         'search.placeholder': 'بحث عن سهم، عنوان، موضوع...',
+        'tags.title': 'مستكشف العلامات',
         'footer.copy': '© 2026 Market Watch. جميع الحقوق محفوظة.',
         'series.parcours': 'مسارات موجّهة',
         'analyses.noResults': 'لم يتم العثور على تحليلات',
