@@ -2393,8 +2393,6 @@
       <div style="display:flex;justify-content:center;gap:0.25rem;margin-bottom:1rem;">
         <button class="radar-mode active" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i></button>
         <button class="radar-mode" data-mode="board" title="Dashboard"><i class="fas fa-columns"></i></button>
-        <button class="radar-mode" data-mode="matrix" title="Threat Matrix"><i class="fas fa-border-all"></i></button>
-        <button class="radar-mode" data-mode="timeline" title="Timeline"><i class="fas fa-timeline"></i></button>
         <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i></button>
       </div>
 
@@ -4203,7 +4201,7 @@
     function render() {
       if (!RD) return;
       var view = document.getElementById('radarView');
-      ({ signals: renderSignals, board: renderBoard, matrix: renderMatrix, timeline: renderTimeline, radar: renderRadar }[currentMode] || renderSignals)(view);
+      ({ signals: renderSignals, board: renderBoard, radar: renderRadar }[currentMode] || renderSignals)(view);
     }
 
     // Shared: build a single item row
@@ -4251,7 +4249,7 @@
           h += '<strong style="font-size:0.78rem;color:'+c.text+';">'+it.label+link+'</strong>';
           h += '<div style="width:40px;height:3px;background:'+c.border+';border-radius:2px;flex-shrink:0;"><div style="width:'+bar+'%;height:100%;background:'+c.fill+';border-radius:2px;"></div></div>';
           h += '</div>';
-          if (it.detail) h += '<p style="margin:2px 0 0;font-size:0.7rem;color:'+c.text+';opacity:0.7;line-height:1.3;">'+it.detail+'</p>';
+          if (it.detail) h += '<p style="margin:2px 0 0;font-size:0.7rem;color:'+c.text+';opacity:0.7;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+it.detail+'</p>';
           h += '</div>';
         });
         h += '</div>';
@@ -4260,102 +4258,7 @@
       el.innerHTML = h;
     }
 
-    // =========== MODE 3: THREAT MATRIX ===========
-    function renderMatrix(el) {
-      var items = RD.items.slice();
-      // X = proximity (days until event, 0=today), Y = importance
-      var today = new Date(); today.setHours(0,0,0,0);
-      items.forEach(function(it) {
-        if (it.date) {
-          var d = new Date(it.date); d.setHours(0,0,0,0);
-          it._days = Math.round((d - today) / 86400000);
-        } else { it._days = 0; }
-      });
-      var maxDays = 30;
-
-      var h = '<div style="position:relative;background:#0f172a;border-radius:12px;padding:1.5rem;overflow:hidden;min-height:400px;">';
-      // Axes
-      h += '<div style="position:absolute;left:1.5rem;top:1rem;bottom:2.5rem;width:1px;background:rgba(80,180,238,0.2);"></div>';
-      h += '<div style="position:absolute;left:1.5rem;right:1rem;bottom:2.5rem;height:1px;background:rgba(80,180,238,0.2);"></div>';
-      // Labels
-      h += '<div style="position:absolute;left:0;top:50%;transform:rotate(-90deg) translateX(50%);font-size:0.65rem;color:#475569;font-weight:700;letter-spacing:0.1em;">IMPACT</div>';
-      h += '<div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.65rem;color:#475569;font-weight:700;letter-spacing:0.1em;">TIME PROXIMITY (days)</div>';
-      // Grid lines
-      for (var g = 1; g <= 4; g++) {
-        var pct = g * 20;
-        h += '<div style="position:absolute;left:1.5rem;right:1rem;bottom:calc(2.5rem + '+pct+'%*(100% - 4rem)/100);height:1px;background:rgba(80,180,238,0.06);"></div>';
-      }
-      // Items as positioned dots
-      items.forEach(function(it) {
-        var c = C[it.category] || C.regime;
-        var imp = (it.importance||5);
-        var days = Math.max(-5, Math.min(maxDays, it._days));
-        // X: left (close to now) → right (far future). Reverse: 0 days = right side
-        var xPct = Math.max(5, Math.min(92, 90 - (days / maxDays) * 85));
-        var yPct = Math.max(8, Math.min(88, imp * 9));
-        var sz = Math.max(8, imp * 3.5);
-        var link = it.link ? 'cursor:pointer;' : '';
-        h += '<div style="position:absolute;left:'+xPct+'%;bottom:calc(2.5rem + '+yPct+'%*(100% - 4rem)/100);transform:translate(-50%,50%);text-align:center;'+link+'" '+(it.link ? 'onclick="location.href=\''+it.link+'\'"' : '')+'>';
-        h += '<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+c.fill+';box-shadow:0 0 '+(sz/2)+'px '+c.glow+';margin:0 auto;"></div>';
-        if (imp >= 6) h += '<div style="font-size:0.6rem;color:'+c.fill+';font-weight:700;margin-top:2px;white-space:nowrap;">'+(it.short||it.label)+'</div>';
-        h += '</div>';
-      });
-      h += '</div>';
-      // Matrix legend
-      h += '<div style="display:flex;justify-content:center;gap:1rem;margin-top:0.75rem;font-size:0.7rem;color:var(--text-muted);">';
-      ['risk','event','opportunity','regime'].forEach(function(cat) {
-        h += '<span><i class="fas fa-circle" style="font-size:5px;color:'+C[cat].fill+';vertical-align:middle;margin-right:3px;"></i>'+C[cat].label+'</span>';
-      });
-      h += '</div>';
-      el.innerHTML = h;
-    }
-
-    // =========== MODE 4: TIMELINE ===========
-    function renderTimeline(el) {
-      var items = RD.items.slice();
-      var today = new Date(); today.setHours(0,0,0,0);
-      items.forEach(function(it) {
-        if (it.date) {
-          var d = new Date(it.date); d.setHours(0,0,0,0);
-          it._days = Math.round((d - today) / 86400000);
-        } else { it._days = 0; }
-      });
-      items.sort(function(a,b) { return a._days - b._days; });
-
-      var h = '<div style="position:relative;padding:1rem 0;">';
-      // Center line
-      h += '<div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--border);transform:translateX(-50%);"></div>';
-      // Today marker
-      var todayIdx = 0;
-      items.forEach(function(it,i) { if (it._days <= 0) todayIdx = i; });
-
-      items.forEach(function(it, i) {
-        var c = C[it.category] || C.regime;
-        var isLeft = i % 2 === 0;
-        var imp = it.importance || 5;
-        var dotSz = Math.max(10, imp * 2.5);
-        var dayLabel = it._days === 0 ? 'Today' : it._days < 0 ? Math.abs(it._days)+'d ago' : 'In '+it._days+'d';
-        var link = it.link ? 'cursor:pointer;' : '';
-        var onclick = it.link ? ' onclick="location.href=\''+it.link+'\'"' : '';
-
-        h += '<div style="display:flex;align-items:flex-start;margin-bottom:0.5rem;'+(isLeft?'flex-direction:row;':'flex-direction:row-reverse;')+'">';
-        // Content side
-        h += '<div style="flex:1;'+(isLeft?'text-align:right;padding-right:1.25rem;':'text-align:left;padding-left:1.25rem;')+link+'"'+onclick+'>';
-        h += '<div style="display:inline-block;background:'+c.bg+';border:1px solid '+c.border+';border-radius:8px;padding:0.4rem 0.7rem;max-width:300px;text-align:left;">';
-        h += '<div style="display:flex;align-items:center;gap:0.3rem;"><span style="font-size:0.65rem;color:'+c.fill+';font-weight:700;"><i class="fas '+c.icon+'"></i></span><strong style="font-size:0.78rem;color:'+c.text+';">'+it.label+'</strong></div>';
-        if (it.detail) h += '<p style="margin:2px 0 0;font-size:0.68rem;color:'+c.text+';opacity:0.7;line-height:1.25;">'+it.detail.substring(0,120)+(it.detail.length>120?'...':'')+'</p>';
-        h += '</div>';
-        h += '<div style="font-size:0.6rem;color:var(--text-muted);margin-top:2px;">'+dayLabel+(it.date?' · '+it.date:'')+'</div>';
-        h += '</div>';
-        // Center dot
-        h += '<div style="flex-shrink:0;width:'+dotSz+'px;height:'+dotSz+'px;border-radius:50%;background:'+c.fill+';border:2px solid '+c.bg+';z-index:1;margin-top:0.5rem;"></div>';
-        // Other side spacer
-        h += '<div style="flex:1;"></div>';
-        h += '</div>';
-      });
-      h += '</div>';
-      el.innerHTML = h;
-    }
+    // (Matrix and Timeline modes removed — kept Signal Board, Dashboard, Radar)
 
     // =========== MODE 5: RADAR CANVAS ===========
     function renderRadar(el) {
