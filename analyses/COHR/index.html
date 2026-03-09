@@ -115,7 +115,7 @@
 
     <!-- FINVIZ CHART -->
     <div class="finviz-wrap">
-        <div onclick="window.open('https://finviz.com/quote.ashx?t=COHR','_blank')">
+        <div onclick="openChartModal()">
             <img src="https://charts2.finviz.com/chart.ashx?t=COHR&ty=c&ta=1&p=d&s=l" alt="COHR Chart" onerror="this.parentElement.style.display='none'">
             <div class="finviz-footer">
                 <span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span><span>Source: Finviz</span>
@@ -1006,20 +1006,10 @@
 
     </div><!-- end container -->
 
-    <!-- CHART MODAL -->
-    <div id="chartModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:1001;align-items:center;justify-content:center;flex-direction:column;padding:1rem;" onclick="if(event.target===this)this.style.display='none'">
-        <button onclick="document.getElementById('chartModal').style.display='none'" style="position:absolute;top:1rem;right:1.5rem;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;">&times;</button>
-        <img src="https://charts2.finviz.com/chart.ashx?t=COHR&ty=c&ta=1&p=d&s=l" alt="COHR Chart" style="max-width:95%;max-height:70vh;border-radius:8px;">
-        <div style="display:flex;gap:1rem;margin-top:1rem;">
-            <a href="https://finviz.com/quote.ashx?t=COHR" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-size:0.85rem;"><i class="fa-solid fa-chart-line"></i> Finviz</a>
-            <a href="https://www.tradingview.com/symbols/NYSE-COHR/" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-size:0.85rem;"><i class="fa-solid fa-chart-candlestick"></i> TradingView</a>
-            <a href="https://finance.yahoo.com/quote/COHR/" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-size:0.85rem;"><i class="fa-solid fa-chart-area"></i> Yahoo Finance</a>
-        </div>
-    </div>
 
     <script>
-    function openChartModal() { document.getElementById('chartModal').style.display = 'flex'; }
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.getElementById('chartModal').style.display = 'none'; document.getElementById('historyModal').style.display = 'none'; }});
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') {
+            document.getElementById('historyModal').style.display = 'none'; }});
 
     // Verdict Radar
     (function() {
@@ -1194,6 +1184,27 @@
 
     <script src="/assets/core.js"></script>
 
+    
+    <!-- CHART MODAL -->
+    <div id="imageModal"
+        style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column;"
+        onclick="if(event.target===this)closeChartModal()">
+        <button onclick="closeChartModal()"
+            style="position:absolute;top:20px;right:30px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;">&times;</button>
+        <img id="modalImg" src="" style="max-width:90%;max-height:80vh;border-radius:8px;">
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+            <a href="https://finviz.com/quote.ashx?t=COHR" target="_blank"
+                style="padding:8px 16px;background:#3b82f6;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
+            <a href="https://www.tradingview.com/chart/?symbol=COHR" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-line"></i> TradingView</a>
+            <a href="https://finance.yahoo.com/quote/COHR/" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-area"></i> Yahoo Finance</a>
+        </div>
+    </div>
+
     <footer class="article-footer">
         &copy; 2026 Market Watch. Data via MarketWatch Gateway.
         This is not financial advice.
@@ -1223,6 +1234,9 @@
         </button>
     </div>
     <script>
+        function openChartModal() { document.getElementById('modalImg').src = 'https://charts2.finviz.com/chart.ashx?t=COHR&ty=c&ta=1&p=d&s=l'; document.getElementById('imageModal').style.display = 'flex'; }
+        function closeChartModal() { document.getElementById('imageModal').style.display = 'none'; }
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeChartModal(); });
     (function() {
         var fab = document.getElementById('fnavBtn');
         var menu = document.getElementById('fnavMenu');

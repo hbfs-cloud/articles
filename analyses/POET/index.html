@@ -136,7 +136,7 @@
 
     <!-- Finviz Chart -->
     <div class="finviz-wrap">
-        <div onclick="window.open('https://finviz.com/quote.ashx?t=POET','_blank')">
+        <div onclick="openChartModal()">
             <img src="https://charts2.finviz.com/chart.ashx?t=POET&ty=c&ta=1&p=d&s=l" alt="POET Chart" onerror="this.parentElement.style.display='none'">
             <div class="finviz-footer">
                 <span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span><span>Source: Finviz</span>
@@ -1668,7 +1668,28 @@
         </div>
 
         
-  <footer class="article-footer">
+  
+    <!-- CHART MODAL -->
+    <div id="imageModal"
+        style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column;"
+        onclick="if(event.target===this)closeChartModal()">
+        <button onclick="closeChartModal()"
+            style="position:absolute;top:20px;right:30px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;">&times;</button>
+        <img id="modalImg" src="" style="max-width:90%;max-height:80vh;border-radius:8px;">
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+            <a href="https://finviz.com/quote.ashx?t=POET" target="_blank"
+                style="padding:8px 16px;background:#3b82f6;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
+            <a href="https://www.tradingview.com/chart/?symbol=POET" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-line"></i> TradingView</a>
+            <a href="https://finance.yahoo.com/quote/POET/" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-area"></i> Yahoo Finance</a>
+        </div>
+    </div>
+
+    <footer class="article-footer">
     &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
     Ceci n'est pas un conseil financier.
     <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
@@ -1677,25 +1698,18 @@
     </div>
 
     <!-- Chart Modal -->
-    <div id="chartModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1100; align-items:center; justify-content:center;" onclick="if(event.target===this)closeChartModal()">
-        <div style="background:#0f172a; border-radius:16px; padding:1.5rem; max-width:750px; width:94%; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h3 style="margin:0; color:white; font-size:1.1rem;"><i class="fa-solid fa-chart-line" style="color:#3b82f6; margin-right:0.5rem;"></i>POET &mdash; Daily Chart</h3>
-                <button onclick="closeChartModal()" style="background:none; border:none; color:#94a3b8; font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
-            </div>
-            <img src="https://charts2.finviz.com/chart.ashx?t=POET&ty=c&ta=1&p=d&s=l" alt="POET Chart" style="width:100%; border-radius:8px;">
-        </div>
+
     </div>
 
     <script>
-    function openChartModal(){document.getElementById('chartModal').style.display='flex';}
-    function closeChartModal(){document.getElementById('chartModal').style.display='none';}
-    document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChartModal();});
-    </script>
+        </script>
     <script src="/assets/core.js"></script>
 
 <div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#verdict" class="fnav-item" data-section="verdict"><i class="fas fa-gavel"></i><span>Verdict</span></a><a href="#activite" class="fnav-item" data-section="activite"><i class="fas fa-briefcase"></i><span>Activité</span></a><a href="#news" class="fnav-item" data-section="news"><i class="fas fa-newspaper"></i><span>News</span></a><a href="#fondamentaux" class="fnav-item" data-section="fondamentaux"><i class="fas fa-calculator"></i><span>Fondamentaux</span></a><a href="#capital" class="fnav-item" data-section="capital"><i class="fas fa-building-columns"></i><span>Capital</span></a><a href="#technique" class="fnav-item" data-section="technique"><i class="fas fa-chart-line"></i><span>Technique</span></a><a href="#secteur" class="fnav-item" data-section="secteur"><i class="fas fa-industry"></i><span>Secteur</span></a><a href="#leaders" class="fnav-item" data-section="leaders"><i class="fas fa-trophy"></i><span>Leaders</span></a><a href="#social" class="fnav-item" data-section="social"><i class="fas fa-comments"></i><span>Social Radar</span></a><a href="#risques" class="fnav-item" data-section="risques"><i class="fas fa-shield-halved"></i><span>Risques</span></a><a href="#trade" class="fnav-item" data-section="trade"><i class="fas fa-crosshairs"></i><span>Trade Idea</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
 <script>
+        function openChartModal() { document.getElementById('modalImg').src = 'https://charts2.finviz.com/chart.ashx?t=POET&ty=c&ta=1&p=d&s=l'; document.getElementById('imageModal').style.display = 'flex'; }
+        function closeChartModal() { document.getElementById('imageModal').style.display = 'none'; }
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeChartModal(); });
 (function() {
   var fab = document.getElementById('fnavBtn');
   var menu = document.getElementById('fnavMenu');

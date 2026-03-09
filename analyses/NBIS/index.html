@@ -131,7 +131,7 @@
 
     <!-- FINVIZ CHART -->
     <div class="finviz-wrap">
-        <div onclick="window.open('https://finviz.com/quote.ashx?t=NBIS','_blank')">
+        <div onclick="openChartModal()">
             <img src="https://charts2.finviz.com/chart.ashx?t=NBIS&ty=c&ta=1&p=d&s=l" alt="NBIS Chart" onerror="this.parentElement.style.display='none'">
             <div class="finviz-footer">
                 <span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span><span>Source: Finviz</span>
@@ -1024,21 +1024,25 @@
 
     </div><!-- /container -->
 
+
+    
     <!-- CHART MODAL -->
-    <div id="chartModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:1001;align-items:center;justify-content:center;flex-direction:column;padding:2rem;"
-        onclick="if(event.target===this)this.style.display='none'">
-        <div style="max-width:1000px;width:100%;text-align:center;">
-            <img src="https://charts2.finviz.com/chart.ashx?t=NBIS&ty=c&ta=1&p=d&s=l" alt="NBIS Chart" style="width:100%;border-radius:12px;border:1px solid #334155;">
-            <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap;">
-                <a href="https://finviz.com/quote.ashx?t=NBIS" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-size:0.9rem;padding:8px 16px;border:1px solid #3b82f6;border-radius:8px;">
-                    <i class="fa-solid fa-chart-simple"></i> Finviz</a>
-                <a href="https://www.tradingview.com/symbols/NASDAQ-NBIS/" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-size:0.9rem;padding:8px 16px;border:1px solid #3b82f6;border-radius:8px;">
-                    <i class="fa-solid fa-chart-line"></i> TradingView</a>
-                <a href="https://finance.yahoo.com/quote/NBIS/" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-size:0.9rem;padding:8px 16px;border:1px solid #3b82f6;border-radius:8px;">
-                    <i class="fa-brands fa-yahoo"></i> Yahoo Finance</a>
-            </div>
-            <button onclick="document.getElementById('chartModal').style.display='none'" style="margin-top:1.5rem;background:none;border:1px solid #64748b;color:#94a3b8;padding:8px 24px;border-radius:8px;cursor:pointer;font-size:0.85rem;">
-                Close (Esc)</button>
+    <div id="imageModal"
+        style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column;"
+        onclick="if(event.target===this)closeChartModal()">
+        <button onclick="closeChartModal()"
+            style="position:absolute;top:20px;right:30px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;">&times;</button>
+        <img id="modalImg" src="" style="max-width:90%;max-height:80vh;border-radius:8px;">
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+            <a href="https://finviz.com/quote.ashx?t=NBIS" target="_blank"
+                style="padding:8px 16px;background:#3b82f6;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
+            <a href="https://www.tradingview.com/chart/?symbol=NBIS" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-line"></i> TradingView</a>
+            <a href="https://finance.yahoo.com/quote/NBIS/" target="_blank"
+                style="padding:8px 16px;background:#1e293b;border:1px solid #475569;color:white;text-decoration:none;border-radius:6px;font-size:0.9rem;font-weight:600;"><i
+                    class="fa-solid fa-chart-area"></i> Yahoo Finance</a>
         </div>
     </div>
 
@@ -1073,11 +1077,8 @@
 
     <!-- ECHARTS SCRIPTS -->
     <script>
-    // Chart Modal
-    function openChartModal() { document.getElementById('chartModal').style.display = 'flex'; }
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            document.getElementById('chartModal').style.display = 'none';
             document.getElementById('historyModal').style.display = 'none';
         }
     });
@@ -1296,6 +1297,9 @@
 
     <!-- FAB Script -->
     <script>
+        function openChartModal() { document.getElementById('modalImg').src = 'https://charts2.finviz.com/chart.ashx?t=NBIS&ty=c&ta=1&p=d&s=l'; document.getElementById('imageModal').style.display = 'flex'; }
+        function closeChartModal() { document.getElementById('imageModal').style.display = 'none'; }
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeChartModal(); });
     (function() {
         var fab = document.getElementById('fnavBtn');
         var menu = document.getElementById('fnavMenu');
