@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="formation,us,options,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Mastering the VIX — The Definitive Guide to Volatility Trading | Market Watch</title>
+ <meta name="description" content="A 5-part series on the VIX: calculation, term structure, seasonality, regime detection, ETPs, futures, options, and advanced volatility strategies. From VIX basics to tail risk hedging.">
+ <meta property="og:title" content="Mastering the VIX — The Definitive Guide to Volatility Trading | Market Watch">
+ <meta property="og:description" content="Everything you need to know about volatility trading. VIX decoded, seasonality, regime signals, ETPs &amp; futures, and advanced strategies. A 5-part masterclass.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/mastering-the-vix/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ .hero-section {
+   padding: 4rem 2rem 3rem 2rem;
+   background: linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%);
+   text-align: center;
+ }
+ .hero-date {
+   font-size: 0.85rem;
+   font-weight: 700;
+   color: #d97706;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+   margin-bottom: 1rem;
+ }
+ .hero-badge-amber { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+ .hero-badge-orange { background: rgba(217,119,6,0.1); color: #d97706; border: 1px solid rgba(217,119,6,0.2); }
+ .hero-badge-purple { background: rgba(147,51,234,0.1); color: #9333ea; border: 1px solid rgba(147,51,234,0.2); }
+ .hero-badge-blue { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); }
+
+ .roadmap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin: 2rem 0; }
+ .roadmap-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; transition: all 0.3s; text-decoration: none; color: inherit; display: block; }
+ .roadmap-card:hover { border-color: #f59e0b; transform: translateY(-3px); box-shadow: 0 12px 30px -8px rgba(0,0,0,0.1); }
+ .roadmap-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-weight: 800; font-size: 0.85rem; margin-bottom: 0.75rem; }
+ .roadmap-card h4 { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem; }
+ .roadmap-card ul { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+ .roadmap-card ul li { font-size: 0.85rem; color: #64748b; line-height: 1.6; }
+ .roadmap-meta { font-size: 0.8rem; color: #d97706; font-weight: 600; }
+
+ .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+ .stat-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 1.25rem; text-align: center; }
+ .stat-num { font-size: 1.8rem; font-weight: 800; color: #d97706; }
+ .stat-label { font-size: 0.85rem; color: #475569; margin-top: 0.25rem; }
+
+ .vix-intro-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
+ .vix-intro-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; }
+ .vix-intro-card h4 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem; }
+ .vix-intro-card p { font-size: 0.88rem; color: #64748b; line-height: 1.6; margin: 0; }
+ .vix-intro-card .vix-icon { font-size: 1.5rem; margin-bottom: 0.75rem; color: #f59e0b; }
+
+ .vix-timeline { position: relative; padding-left: 2rem; margin: 1.5rem 0; }
+ .vix-timeline::before { content: ''; position: absolute; left: 0.6rem; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, #f59e0b, #d97706); border-radius: 3px; }
+ .vix-event { position: relative; margin-bottom: 1.5rem; padding-left: 1rem; }
+ .vix-event::before { content: ''; position: absolute; left: -1.65rem; top: 0.35rem; width: 12px; height: 12px; background: #f59e0b; border-radius: 50%; border: 3px solid #fffbeb; }
+ .vix-event h4 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.25rem; }
+ .vix-event p { font-size: 0.85rem; color: #64748b; line-height: 1.5; margin: 0; }
+ .vix-event .vix-date { font-size: 0.8rem; color: #d97706; font-weight: 600; }
+
+ .who-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+ .who-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; text-align: center; }
+ .who-card .who-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+ .who-card h4 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem; }
+ .who-card p { font-size: 0.85rem; color: #64748b; line-height: 1.5; margin: 0; }
+
+ @media (max-width: 768px) {
+   .roadmap-grid { grid-template-columns: 1fr; }
+   .stat-grid { grid-template-columns: 1fr 1fr; }
+   .hero-section { padding: 2.5rem 1rem 2rem; }
+   .vix-intro-grid { grid-template-columns: 1fr; }
+   .who-grid { grid-template-columns: 1fr; }
+ }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" class="gtm-noscript"></iframe></noscript>
+
+ <!-- Brand Bar -->
+ <nav class="brand-bar">
+   <div class="brand-bar-inner">
+     <a href="/" class="brand-logo">
+       <img src="/logo.svg" alt="" width="36" height="36">
+       <span class="brand-title">MarketWatch</span>
+     </a>
+     <div class="brand-actions">
+       <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+     </div>
+   </div>
+ </nav>
+
+ <!-- Hero -->
+ <section class="hero-section">
+   <div class="hero-date"><i class="fa-solid fa-bolt"></i> New Series &mdash; March 2026</div>
+   <h1 class="hero-title">Mastering the VIX</h1>
+   <p class="hero-subtitle">
+     The Definitive Guide to Volatility Trading.<br>
+     Calculation, term structure, seasonality, regime signals, ETPs, futures, options &mdash; everything you need to trade volatility.<br>
+     <strong>Because volatility is not risk. It is opportunity.</strong>
+   </p>
+   <div class="hero-badges">
+     <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-book"></i> 5 Parts</span>
+     <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-flask"></i> Science-Backed</span>
+     <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> Intermediate</span>
+     <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-chart-candlestick"></i> Options</span>
+   </div>
+   <div id="article-clickable-tags" class="card-tags"></div>
+ </section>
+
+ <!-- Series Bar -->
+ <div class="series-bar">
+   <div class="series-bar-inner">
+     <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
+     <span class="series-title">Mastering the VIX</span>
+     <div class="series-steps">
+       <a href="/series/mastering-the-vix/part1-vix-decoded/" class="series-step">
+         <span class="series-num">1</span>
+         <span class="series-label">VIX Decoded</span>
+       </a>
+       <a href="/series/mastering-the-vix/part2-seasonality/" class="series-step">
+         <span class="series-num">2</span>
+         <span class="series-label">Seasonality</span>
+       </a>
+       <a href="/series/mastering-the-vix/part3-indicator/" class="series-step">
+         <span class="series-num">3</span>
+         <span class="series-label">VIX as Indicator</span>
+       </a>
+       <a href="/series/mastering-the-vix/part4-trading/" class="series-step">
+         <span class="series-num">4</span>
+         <span class="series-label">Trading the VIX</span>
+       </a>
+       <a href="/series/mastering-the-vix/part5-strategies/" class="series-step">
+         <span class="series-num">5</span>
+         <span class="series-label">Advanced Strategies</span>
+       </a>
+     </div>
+     <span class="series-counter">0/5</span>
+     <a href="/series/mastering-the-vix/part1-vix-decoded/" class="series-arrow">
+       <i class="fas fa-chevron-right"></i>
+     </a>
+   </div>
+ </div>
+
+ <!-- Main Content -->
+ <main class="container">
+
+ <!-- Why This Series -->
+ <div id="thesis" class="content-card">
+   <h2><i class="fa-solid fa-bolt"></i> Why This Series?</h2>
+
+   <p>The VIX is the most quoted, most misunderstood, and most powerful indicator in global markets. Financial media call it the "Fear Index" &mdash; but that label barely scratches the surface. The VIX is a <strong>tradable asset class</strong>, a <strong>regime filter</strong>, a <strong>hedging tool</strong>, and a <strong>profit center</strong> for those who understand its mechanics.</p>
+
+   <p>Yet most retail traders know only one thing about the VIX: "when it goes up, stocks go down." That surface-level understanding leaves enormous edge on the table. The professionals who dominate volatility markets &mdash; market makers, hedge funds, and proprietary desks &mdash; exploit term structure, seasonality, mean reversion, and the volatility risk premium every single day. This series gives you the same toolkit.</p>
+
+   <div class="stat-grid">
+     <div class="stat-card">
+       <div class="stat-num">26 days</div>
+       <div class="stat-label">Average time for VIX to mean-revert from a spike above 30 (CBOE data, 1990&ndash;2025)</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-num">+115%</div>
+       <div class="stat-label">Average VIX spike during the 10 largest drawdowns in S&amp;P 500 history</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-num">86%</div>
+       <div class="stat-label">Of the time VIX futures are in contango &mdash; the basis of the short-vol trade</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-num">4.2%/mo</div>
+       <div class="stat-label">Historical average volatility risk premium (realized vs implied vol, 2006&ndash;2025)</div>
+     </div>
+   </div>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-graduation-cap"></i> Why Volatility Is an Asset Class</h4>
+     <p>Traditional portfolios allocate to stocks, bonds, and maybe commodities. But <strong>volatility</strong> has unique properties that make it an asset class in its own right:</p>
+     <p><strong>Negative correlation to equities.</strong> The VIX has an average daily correlation of -0.75 to the S&amp;P 500. When stocks crash, volatility explodes &mdash; making VIX-linked instruments among the best portfolio hedges available. During the COVID crash of March 2020, the VIX surged from 14 to 82 while the S&amp;P 500 fell 34%. A small VIX call position could have offset the entire drawdown.</p>
+     <p><strong>Mean reversion.</strong> Unlike stocks, which can trend indefinitely, volatility always reverts to its long-term mean (~19 for the VIX). This makes volatility one of the few assets where "buy low, sell high" is a statistically robust strategy. Every VIX spike above 40 in history has returned below 20 within months.</p>
+     <p><strong>Structural risk premium.</strong> Implied volatility (what options price in) consistently exceeds realized volatility (what actually happens). This gap &mdash; the volatility risk premium &mdash; has averaged 3-5% annualized since VIX inception. Harvesting this premium is a core strategy for institutional desks, and it is available to retail traders through VIX ETPs and options.</p>
+     <p><strong>Convexity.</strong> Volatility moves are asymmetric: the VIX can double in a week during a crisis but takes months to drift back down. This convexity creates opportunities for both long-vol (crisis alpha) and short-vol (premium harvesting) strategies depending on regime.</p>
+   </div>
+ </div>
+
+ <!-- VIX History Timeline -->
+ <div id="history" class="content-card">
+   <h2><i class="fa-solid fa-timeline"></i> A Brief History of the VIX</h2>
+   <p>Understanding where the VIX came from helps you understand what it actually measures &mdash; and why its behavior has changed over the decades.</p>
+
+   <div class="vix-timeline">
+     <div class="vix-event">
+       <span class="vix-date">1993</span>
+       <h4>VIX Is Born</h4>
+       <p>The CBOE introduces the original VIX, calculated from S&amp;P 100 (OEX) options using the Black-Scholes model. It measures 30-day expected volatility of the OEX index.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2003</span>
+       <h4>The Modern VIX</h4>
+       <p>CBOE redesigns VIX to use S&amp;P 500 options (SPX) and a model-free variance swap methodology. The new calculation uses the entire options strip, not just at-the-money strikes, capturing the skew and tail risk priced by the market.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2004</span>
+       <h4>VIX Futures Launch</h4>
+       <p>CBOE Futures Exchange lists VIX futures, creating the first direct way to trade volatility as an asset. The term structure (contango/backwardation) becomes a key concept.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2006</span>
+       <h4>VIX Options Launch</h4>
+       <p>Options on VIX begin trading, enabling sophisticated volatility strategies: straddles, strangles, spreads, and calendar trades directly on the volatility index.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2009</span>
+       <h4>VIX ETPs Arrive</h4>
+       <p>iPath launches VXX (short-term VIX futures ETN), followed by UVXY, SVXY, and dozens of others. Retail traders get direct access to volatility trading &mdash; and most lose money from roll decay without understanding why.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2018</span>
+       <h4>Volmageddon</h4>
+       <p>February 5, 2018: the VIX doubles in a single day, XIV (inverse VIX ETN) loses 96% of its value and is terminated. The event exposes the risks of short-volatility crowding and changes the VIX product landscape permanently.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2020</span>
+       <h4>COVID &mdash; VIX Hits 82.69</h4>
+       <p>The highest VIX close in history (March 16, 2020) during the COVID pandemic crash. The VIX term structure inverts deeply &mdash; backwardation signals extreme near-term fear. VIX calls bought at 14 in January were up 20x by March.</p>
+     </div>
+     <div class="vix-event">
+       <span class="vix-date">2024&ndash;2026</span>
+       <h4>The 0DTE Revolution</h4>
+       <p>Zero-days-to-expiration (0DTE) SPX options now account for over 50% of daily SPX options volume. This structural shift compresses intraday VIX moves and changes traditional VIX-to-SPX correlation patterns, creating new opportunities for volatility traders.</p>
+     </div>
+   </div>
+ </div>
+
+ <!-- Volatility Trader Radar -->
+ <div id="radar" class="content-card">
+   <h2><i class="fa-solid fa-chart-radar"></i> The Volatility Trader Profile</h2>
+   <p>Six competencies define a successful volatility trader. This series builds each one systematically. Rate yourself honestly &mdash; most traders overestimate their VIX knowledge and underestimate the complexity of volatility products.</p>
+   <div id="radarChart" class="echart-container"></div>
+ </div>
+
+ <!-- What You'll Learn -->
+ <div id="learn" class="content-card">
+   <h2><i class="fa-solid fa-lightbulb"></i> What You Will Learn</h2>
+
+   <div class="takeaway-box">
+     <h3><i class="fa-solid fa-list-check"></i> Series Learning Outcomes</h3>
+     <ul class="takeaway-list">
+       <li><i class="fa-solid fa-check"></i> <strong>Decode the VIX</strong> &mdash; understand what it really measures, how it is calculated, and why spot VIX, VIX futures, and VIX ETPs behave differently</li>
+       <li><i class="fa-solid fa-check"></i> <strong>Exploit seasonality</strong> &mdash; identify the monthly, weekly, and intraday patterns that create predictable volatility moves around FOMC, OpEx, earnings, and year-end</li>
+       <li><i class="fa-solid fa-check"></i> <strong>Use VIX as a regime filter</strong> &mdash; combine VIX level, term structure, VIX/VIX3M ratio, and VVIX to determine market regime and adjust your equity strategy accordingly</li>
+       <li><i class="fa-solid fa-check"></i> <strong>Trade VIX products</strong> &mdash; master the mechanics of VXX, UVXY, SVXY, VIX futures, and VIX options, including roll yield, contango decay, and basis risk</li>
+       <li><i class="fa-solid fa-check"></i> <strong>Deploy advanced strategies</strong> &mdash; implement volatility arbitrage, dispersion trades, VIX calendar spreads, tail risk hedges, and systematic short-vol premium harvesting</li>
+       <li><i class="fa-solid fa-check"></i> <strong>Manage vol-of-vol risk</strong> &mdash; size positions correctly, set circuit breakers, and survive the events that blow up volatility traders (Volmageddon, COVID, SVB)</li>
+     </ul>
+   </div>
+
+   <div class="vix-intro-grid">
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-calculator"></i></div>
+       <h4>Quantitative Foundation</h4>
+       <p>The VIX formula, variance swap methodology, and term structure math explained in plain English. No PhD required &mdash; just the intuition behind the numbers that move billions daily.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-calendar-days"></i></div>
+       <h4>Calendar-Driven Edge</h4>
+       <p>FOMC meetings, OpEx weeks, earnings seasons, and year-end windows create systematic volatility patterns. We map them all and show you how to position ahead of each cycle.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-gauge-high"></i></div>
+       <h4>Regime Detection</h4>
+       <p>VIX level alone is not enough. Learn to combine term structure slope, VIX/VIX3M ratio, VVIX readings, and put/call skew to detect regime shifts before they appear in price.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+       <h4>Practical Trade Setups</h4>
+       <p>Every concept comes with actionable trade ideas: specific entries, exits, position sizing, and risk controls for each VIX product. Backtested results included where applicable.</p>
+     </div>
+   </div>
+ </div>
+
+ <!-- Who Is This For -->
+ <div id="audience" class="content-card">
+   <h2><i class="fa-solid fa-users"></i> Who Is This Series For?</h2>
+   <p>Whether you want to trade volatility directly or simply use the VIX to make better equity decisions, this series has something for you.</p>
+
+   <div class="who-grid">
+     <div class="who-card">
+       <div class="who-icon"><i class="fa-solid fa-chart-line"></i></div>
+       <h4>Active Equity Traders</h4>
+       <p>Use VIX as a regime filter to know when to be aggressive, defensive, or flat. Improve your win rate by aligning equity trades with the volatility environment.</p>
+     </div>
+     <div class="who-card">
+       <div class="who-icon"><i class="fa-solid fa-shield-halved"></i></div>
+       <h4>Portfolio Hedgers</h4>
+       <p>Learn to protect a long portfolio using VIX calls, VIX call spreads, and tail risk strategies that cost less than you think and pay off when you need them most.</p>
+     </div>
+     <div class="who-card">
+       <div class="who-icon"><i class="fa-solid fa-fire"></i></div>
+       <h4>Volatility Traders</h4>
+       <p>Go beyond "buy VXX when scared." Master the term structure, roll yield, basis trades, and systematic strategies that institutional vol desks use daily.</p>
+     </div>
+     <div class="who-card">
+       <div class="who-icon"><i class="fa-solid fa-brain"></i></div>
+       <h4>Options Traders</h4>
+       <p>Understand the volatility surface, skew, and implied-vs-realized dynamics that determine whether your options trades are priced fairly &mdash; or stacked against you.</p>
+     </div>
+   </div>
+ </div>
+
+ <!-- Key Concepts Preview -->
+ <div id="concepts" class="content-card">
+   <h2><i class="fa-solid fa-puzzle-piece"></i> Key Concepts You Will Master</h2>
+   <p>A preview of the essential building blocks covered across all five parts.</p>
+
+   <table class="data-table">
+     <thead>
+       <tr>
+         <th>Concept</th>
+         <th>Part</th>
+         <th>Why It Matters</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>VIX Calculation</strong></td>
+         <td>1</td>
+         <td>Understanding the variance swap formula reveals what VIX actually measures &mdash; and what it does not</td>
+       </tr>
+       <tr>
+         <td><strong>Contango vs Backwardation</strong></td>
+         <td>1</td>
+         <td>The term structure determines whether long-vol or short-vol is the dominant trade. 86% of the time, contango favors short vol</td>
+       </tr>
+       <tr>
+         <td><strong>FOMC Volatility Crush</strong></td>
+         <td>2</td>
+         <td>VIX drops an average of 1.5 points on FOMC days as uncertainty resolves. Positioning ahead is a repeatable edge</td>
+       </tr>
+       <tr>
+         <td><strong>OpEx Gravity</strong></td>
+         <td>2</td>
+         <td>Options expiration pins the market and suppresses realized vol. Monthly OpEx weeks have 30% lower realized vol than non-OpEx weeks</td>
+       </tr>
+       <tr>
+         <td><strong>VIX/VIX3M Ratio</strong></td>
+         <td>3</td>
+         <td>When the ratio exceeds 1.0, the term structure is inverted &mdash; a reliable signal of acute stress and elevated crash risk</td>
+       </tr>
+       <tr>
+         <td><strong>VVIX (Vol of Vol)</strong></td>
+         <td>3</td>
+         <td>VVIX above 120 signals that volatility itself is becoming volatile &mdash; a precursor to regime change</td>
+       </tr>
+       <tr>
+         <td><strong>Roll Yield</strong></td>
+         <td>4</td>
+         <td>VIX ETPs roll futures monthly. In contango, this costs long holders ~5% per month. Understanding roll yield is the difference between profit and slow bleed</td>
+       </tr>
+       <tr>
+         <td><strong>Volatility Risk Premium</strong></td>
+         <td>4</td>
+         <td>Implied vol exceeds realized vol ~85% of the time. This 3-5% annualized premium is the structural edge of systematic short-vol strategies</td>
+       </tr>
+       <tr>
+         <td><strong>Dispersion Trading</strong></td>
+         <td>5</td>
+         <td>Selling index vol while buying component vol exploits the correlation risk premium &mdash; a favorite institutional strategy</td>
+       </tr>
+       <tr>
+         <td><strong>Tail Risk Hedging</strong></td>
+         <td>5</td>
+         <td>Far OTM VIX calls cost pennies and pay 10-50x during crises. The Universa approach to portfolio insurance, demystified</td>
+       </tr>
+     </tbody>
+   </table>
+ </div>
+
+ <!-- VIX vs SPX Relationship -->
+ <div id="relationship" class="content-card">
+   <h2><i class="fa-solid fa-arrows-left-right"></i> The VIX&ndash;SPX Relationship</h2>
+   <p>The correlation between VIX and the S&amp;P 500 is the foundation of volatility trading. But the relationship is more nuanced than "inverse" &mdash; it is <strong>asymmetric</strong>.</p>
+
+   <div id="asymmetryChart" class="echart-container"></div>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-magnifying-glass-chart"></i> Understanding Asymmetry</h4>
+     <p>When the S&amp;P 500 drops 1%, the VIX rises an average of <strong>4.2 points</strong>. But when the S&amp;P 500 rises 1%, the VIX drops only <strong>2.8 points</strong>. This asymmetry &mdash; the "leverage effect" &mdash; exists because falling prices increase financial leverage (debt/equity ratio rises), which increases future uncertainty.</p>
+     <p>In practice, this means: <strong>long-VIX positions have natural convexity</strong>. A $1 VIX call can return $10 in a crash, but a $1 VIX put can only return the premium minus intrinsic value on a slow grind lower. Understanding this asymmetry is critical for sizing volatility positions.</p>
+     <p>The relationship also varies by regime. In low-vol environments (VIX &lt; 15), the correlation weakens &mdash; the VIX can drift sideways even as stocks rise. In high-vol regimes (VIX &gt; 30), the inverse correlation tightens to -0.90+, and both instruments move in near-lockstep.</p>
+   </div>
+ </div>
+
+ <!-- Roadmap -->
+ <div id="roadmap" class="content-card">
+   <h2><i class="fa-solid fa-route"></i> Series Roadmap</h2>
+   <p>Five parts, each self-contained but building on the previous. Read them in order for the full framework, or jump to the topic that matters most to your trading right now.</p>
+
+   <div class="roadmap-grid">
+
+     <a href="/series/mastering-the-vix/part1-vix-decoded/" class="roadmap-card">
+       <span class="roadmap-num">1</span>
+       <h4>VIX Decoded</h4>
+       <ul>
+         <li>What the VIX really measures and how it is calculated</li>
+         <li>VIX spot vs VIX futures vs VIX ETPs &mdash; critical differences</li>
+         <li>Term structure: contango, backwardation, and the roll</li>
+         <li>Reading the VIX futures curve like a professional</li>
+       </ul>
+       <span class="roadmap-meta"><i class="fa-solid fa-clock"></i> ~15 min read</span>
+     </a>
+
+     <a href="/series/mastering-the-vix/part2-seasonality/" class="roadmap-card">
+       <span class="roadmap-num">2</span>
+       <h4>VIX Seasonality</h4>
+       <ul>
+         <li>Monthly patterns: January effect, summer doldrums, October spikes</li>
+         <li>FOMC cycle: pre-meeting drift and post-decision crush</li>
+         <li>OpEx effects: weekly, monthly, and quarterly expiration gravity</li>
+         <li>Year-end compression and January reset dynamics</li>
+       </ul>
+       <span class="roadmap-meta"><i class="fa-solid fa-clock"></i> ~14 min read</span>
+     </a>
+
+     <a href="/series/mastering-the-vix/part3-indicator/" class="roadmap-card">
+       <span class="roadmap-num">3</span>
+       <h4>VIX as Indicator</h4>
+       <ul>
+         <li>VIX levels and regime classification (low/normal/elevated/crisis)</li>
+         <li>VIX/VIX3M ratio: the term structure inversion signal</li>
+         <li>VVIX: vol of vol and what extreme readings mean</li>
+         <li>Mean reversion signals and entry timing for equity trades</li>
+       </ul>
+       <span class="roadmap-meta"><i class="fa-solid fa-clock"></i> ~13 min read</span>
+     </a>
+
+     <a href="/series/mastering-the-vix/part4-trading/" class="roadmap-card">
+       <span class="roadmap-num">4</span>
+       <h4>Trading the VIX</h4>
+       <ul>
+         <li>VIX ETPs deep dive: VXX, UVXY, SVXY, VIXY mechanics</li>
+         <li>VIX futures: margin, settlement, and term structure trading</li>
+         <li>VIX options: European-style, cash-settled, AM-settled quirks</li>
+         <li>Roll yield, contango decay, and volatility risk premium harvesting</li>
+       </ul>
+       <span class="roadmap-meta"><i class="fa-solid fa-clock"></i> ~16 min read</span>
+     </a>
+
+     <a href="/series/mastering-the-vix/part5-strategies/" class="roadmap-card">
+       <span class="roadmap-num">5</span>
+       <h4>Advanced Strategies</h4>
+       <ul>
+         <li>Volatility arbitrage: trading implied vs realized vol</li>
+         <li>Dispersion trading: index vol vs component vol</li>
+         <li>VIX calendar spreads and butterfly positioning</li>
+         <li>Tail risk hedging: portfolio insurance for black swan events</li>
+       </ul>
+       <span class="roadmap-meta"><i class="fa-solid fa-clock"></i> ~18 min read</span>
+     </a>
+
+   </div>
+
+   <a href="/series/mastering-the-vix/part1-vix-decoded/" class="next-cta">
+     <div>
+       <div class="next-label">Start the Series</div>
+       <div class="next-title">Part 1: VIX Decoded &rarr;</div>
+     </div>
+     <i class="fa-solid fa-arrow-right"></i>
+   </a>
+ </div>
+
+ <!-- Prerequisites -->
+ <div id="prereqs" class="content-card">
+   <h2><i class="fa-solid fa-clipboard-check"></i> Prerequisites</h2>
+   <p>This series is written at the <strong>intermediate level</strong>. You do not need to be an options expert, but you should be comfortable with the following concepts before starting.</p>
+
+   <div class="compare-table-wrapper">
+     <table class="compare-table">
+       <thead>
+         <tr>
+           <th>You Should Know</th>
+           <th>Helpful But Not Required</th>
+           <th>You Will Learn Here</th>
+         </tr>
+       </thead>
+       <tbody>
+         <tr>
+           <td>What options are (calls &amp; puts)</td>
+           <td>Black-Scholes model intuition</td>
+           <td>VIX calculation methodology</td>
+         </tr>
+         <tr>
+           <td>Basic chart reading (support, resistance)</td>
+           <td>Greeks (delta, vega, theta)</td>
+           <td>VIX term structure analysis</td>
+         </tr>
+         <tr>
+           <td>What ETFs and ETNs are</td>
+           <td>Futures contract mechanics</td>
+           <td>VIX ETP roll yield and decay</td>
+         </tr>
+         <tr>
+           <td>Risk/reward and position sizing</td>
+           <td>Statistical concepts (standard deviation)</td>
+           <td>Regime detection with vol signals</td>
+         </tr>
+         <tr>
+           <td>S&amp;P 500 as a market benchmark</td>
+           <td>Correlation and beta concepts</td>
+           <td>Advanced vol strategies and hedging</td>
+         </tr>
+       </tbody>
+     </table>
+   </div>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-info-circle"></i> New to Options?</h4>
+     <p>If you are completely new to options, consider reading our <strong>Options Basics</strong> series first. Parts 1 and 2 of this VIX series are still accessible without deep options knowledge, but Parts 3-5 will make much more sense with a foundation in calls, puts, and basic Greeks.</p>
+   </div>
+ </div>
+
+ <!-- The VIX Landscape -->
+ <div id="landscape" class="content-card">
+   <h2><i class="fa-solid fa-sitemap"></i> The VIX Product Landscape</h2>
+   <p>The "VIX" is not one thing &mdash; it is an ecosystem of interconnected products. Understanding how they relate is essential before you trade any of them.</p>
+
+   <div id="landscapeChart" class="echart-container"></div>
+
+   <table class="data-table">
+     <thead>
+       <tr>
+         <th>Product</th>
+         <th>Type</th>
+         <th>Tracks</th>
+         <th>Key Characteristic</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>VIX Index</strong></td>
+         <td>Index (not tradable)</td>
+         <td>30-day implied vol of SPX options</td>
+         <td>The benchmark. Cannot be bought or sold directly</td>
+       </tr>
+       <tr>
+         <td><strong>VIX Futures</strong></td>
+         <td>Futures</td>
+         <td>Expected VIX at expiration</td>
+         <td>Cash-settled, AM settlement on Wednesday. Term structure is key</td>
+       </tr>
+       <tr>
+         <td><strong>VIX Options</strong></td>
+         <td>Options</td>
+         <td>VIX futures (not spot VIX)</td>
+         <td>European-style, cash-settled. Priced off futures, not spot</td>
+       </tr>
+       <tr>
+         <td><strong>VXX / VIXY</strong></td>
+         <td>ETP (long vol)</td>
+         <td>Short-term VIX futures index</td>
+         <td>Bleeds ~5%/month in contango. For short-term hedging only</td>
+       </tr>
+       <tr>
+         <td><strong>UVXY</strong></td>
+         <td>ETP (1.5x long vol)</td>
+         <td>1.5x daily short-term VIX futures</td>
+         <td>Leveraged decay. Loses ~80%/year in calm markets. Crisis instrument only</td>
+       </tr>
+       <tr>
+         <td><strong>SVXY</strong></td>
+         <td>ETP (0.5x short vol)</td>
+         <td>-0.5x daily short-term VIX futures</td>
+         <td>Profits from contango roll yield. Reduced leverage post-Volmageddon</td>
+       </tr>
+       <tr>
+         <td><strong>VIX3M</strong></td>
+         <td>Index</td>
+         <td>3-month implied vol of SPX options</td>
+         <td>Used with VIX to calculate term structure slope (VIX/VIX3M ratio)</td>
+       </tr>
+       <tr>
+         <td><strong>VVIX</strong></td>
+         <td>Index</td>
+         <td>Implied vol of VIX options</td>
+         <td>Vol of vol. High VVIX = uncertainty about volatility itself</td>
+       </tr>
+     </tbody>
+   </table>
+ </div>
+
+ <!-- Common Mistakes -->
+ <div id="mistakes" class="content-card">
+   <h2><i class="fa-solid fa-triangle-exclamation"></i> The 7 Deadly Mistakes of VIX Trading</h2>
+   <p>Before you trade a single VIX product, burn these into your memory. Every one of these mistakes has cost retail traders significant money.</p>
+
+   <div class="vix-intro-grid">
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-1"></i></div>
+       <h4>Buying VXX as a Long-Term Hedge</h4>
+       <p>VXX loses ~5% per month to contango roll. Holding it "just in case" is like paying fire insurance that costs more than your house every two years. Use VIX call spreads instead.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-2"></i></div>
+       <h4>Thinking VIX ETPs Track Spot VIX</h4>
+       <p>VXX can drop 3% on a day the VIX is flat if the futures curve is steep. ETPs track futures, not spot. The basis between futures and spot can be 2-5 points in normal markets.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-3"></i></div>
+       <h4>Shorting UVXY Without Risk Controls</h4>
+       <p>"UVXY always goes to zero" is true on a long enough timeline &mdash; but it can spike 300% in a week before it does. A single gap-up can wipe out years of short-vol profits.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-4"></i></div>
+       <h4>Ignoring the Term Structure</h4>
+       <p>A VIX at 20 with a flat term structure is a very different signal than a VIX at 20 with steep contango. The term structure tells you what the market expects next, not just what it fears now.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-5"></i></div>
+       <h4>Oversizing Volatility Positions</h4>
+       <p>VIX products have 3-5x the daily volatility of the S&amp;P 500. A 10% portfolio allocation to UVXY has the volatility impact of a 30-50% equity position. Size accordingly.</p>
+     </div>
+     <div class="vix-intro-card">
+       <div class="vix-icon"><i class="fa-solid fa-6"></i></div>
+       <h4>Selling Naked VIX Calls</h4>
+       <p>VIX calls have no upper bound. In March 2020, VIX 80 calls went from $0.05 to $20+ in days. Selling naked VIX calls is the single fastest way to blow up a trading account.</p>
+     </div>
+   </div>
+
+   <div class="alert-box">
+     <i class="fa-solid fa-skull-crossbones"></i>
+     <strong>Mistake #7: Trading VIX Without Reading This Series First.</strong> The VIX ecosystem is full of structural traps designed to separate uninformed traders from their capital. Contango decay, basis risk, settlement quirks, and leveraged compounding all work against the casual participant. This series exists to make sure you understand every trap before you encounter it with real money.
+   </div>
+ </div>
+
+ <!-- Disclaimer -->
+ <div class="content-card">
+   <div class="disclaimer-mega">
+     <i class="fa-solid fa-triangle-exclamation"></i>
+     <strong>Disclaimer:</strong> This series is for educational and informational purposes only. It does not constitute investment advice. Volatility products are complex instruments that can result in substantial losses, including losses exceeding your initial investment for leveraged and inverse products. VIX options and futures have unique settlement and exercise mechanics that differ from equity options. Past performance of any strategy discussed is not indicative of future results. Always consult a qualified financial advisor before trading volatility products.
+   </div>
+ </div>
+
+ </main>
+
+ <!-- FAB Navigation -->
+ <div class="fnav" id="floatingNav">
+   <div class="fnav-menu" id="fnavMenu">
+     <a href="#thesis" class="fnav-item" data-section="thesis"><i class="fas fa-bolt"></i><span>Why This Series</span></a>
+     <a href="#history" class="fnav-item" data-section="history"><i class="fas fa-timeline"></i><span>VIX History</span></a>
+     <a href="#radar" class="fnav-item" data-section="radar"><i class="fas fa-chart-radar"></i><span>Trader Profile</span></a>
+     <a href="#concepts" class="fnav-item" data-section="concepts"><i class="fas fa-puzzle-piece"></i><span>Key Concepts</span></a>
+     <a href="#landscape" class="fnav-item" data-section="landscape"><i class="fas fa-sitemap"></i><span>VIX Products</span></a>
+     <a href="#roadmap" class="fnav-item" data-section="roadmap"><i class="fas fa-route"></i><span>Roadmap</span></a>
+   </div>
+   <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+     <i class="fas fa-bars" id="fnavIcon"></i>
+     <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+   </button>
+ </div>
+
+ <!-- Footer -->
+ <footer class="article-footer">
+   &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+   This is not financial advice.
+   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+ </footer>
+
+ <script src="/assets/core.js"></script>
+ <script src="/assets/tag-renderer.js"></script>
+ <script src="/assets/echarts-responsive.js"></script>
+ <script>
+ // Volatility Trader Radar Chart
+ (function() {
+   var dom = document.getElementById('radarChart');
+   if (!dom) return;
+   dom.style.width = '100%';
+   dom.style.height = '420px';
+   var chart = echarts.init(dom);
+
+   var option = {
+     tooltip: { trigger: 'item' },
+     legend: { data: ['Typical Retail Trader', 'Volatility Expert Target'], bottom: 0, textStyle: { fontSize: 12 } },
+     radar: {
+       indicator: [
+         { name: 'VIX\nKnowledge', max: 100 },
+         { name: 'Seasonality', max: 100 },
+         { name: 'Regime\nDetection', max: 100 },
+         { name: 'ETPs &\nFutures', max: 100 },
+         { name: 'Options\nGreeks', max: 100 },
+         { name: 'Risk\nManagement', max: 100 }
+       ],
+       shape: 'polygon',
+       splitNumber: 5,
+       axisName: { color: '#334155', fontSize: 12, fontWeight: 600 },
+       splitArea: { areaStyle: { color: ['#fffbeb', '#fef3c7', '#fde68a', '#fcd34d', '#fbbf24'] } },
+       splitLine: { lineStyle: { color: '#fde68a' } },
+       axisLine: { lineStyle: { color: '#fbbf24' } }
+     },
+     series: [{
+       type: 'radar',
+       data: [
+         {
+           value: [30, 15, 20, 25, 35, 28],
+           name: 'Typical Retail Trader',
+           symbol: 'circle',
+           symbolSize: 6,
+           lineStyle: { color: '#ef4444', width: 2 },
+           itemStyle: { color: '#ef4444' },
+           areaStyle: { color: 'rgba(239,68,68,0.15)' }
+         },
+         {
+           value: [92, 85, 88, 90, 82, 95],
+           name: 'Volatility Expert Target',
+           symbol: 'circle',
+           symbolSize: 6,
+           lineStyle: { color: '#f59e0b', width: 2.5 },
+           itemStyle: { color: '#f59e0b' },
+           areaStyle: { color: 'rgba(245,158,11,0.2)' }
+         }
+       ]
+     }]
+   };
+
+   chart.setOption(option);
+   window.addEventListener('resize', function() { chart.resize(); });
+ })();
+
+ // VIX-SPX Asymmetry Chart
+ (function() {
+   var dom = document.getElementById('asymmetryChart');
+   if (!dom) return;
+   dom.style.width = '100%';
+   dom.style.height = '380px';
+   var chart = echarts.init(dom);
+
+   var option = {
+     tooltip: {
+       trigger: 'axis',
+       formatter: function(params) {
+         var result = params[0].axisValue + '<br/>';
+         params.forEach(function(p) {
+           result += p.marker + ' ' + p.seriesName + ': <strong>' + p.value + ' pts</strong><br/>';
+         });
+         return result;
+       }
+     },
+     legend: { data: ['VIX Response (avg pts)'], bottom: 0, textStyle: { fontSize: 12 } },
+     grid: { left: '8%', right: '5%', top: '10%', bottom: '18%' },
+     xAxis: {
+       type: 'category',
+       data: ['SPX -3%', 'SPX -2%', 'SPX -1%', 'SPX -0.5%', 'SPX +0.5%', 'SPX +1%', 'SPX +2%', 'SPX +3%'],
+       axisLabel: { fontSize: 11, fontWeight: 600 },
+       axisLine: { lineStyle: { color: '#cbd5e1' } }
+     },
+     yAxis: {
+       type: 'value',
+       name: 'VIX Change (pts)',
+       nameTextStyle: { fontSize: 11, color: '#64748b' },
+       axisLabel: { fontSize: 11, formatter: '{value}' },
+       splitLine: { lineStyle: { color: '#f1f5f9' } }
+     },
+     series: [{
+       name: 'VIX Response (avg pts)',
+       type: 'bar',
+       data: [
+         { value: 12.8, itemStyle: { color: '#ef4444' } },
+         { value: 8.4, itemStyle: { color: '#f87171' } },
+         { value: 4.2, itemStyle: { color: '#fca5a5' } },
+         { value: 1.9, itemStyle: { color: '#fecaca' } },
+         { value: -1.4, itemStyle: { color: '#bbf7d0' } },
+         { value: -2.8, itemStyle: { color: '#86efac' } },
+         { value: -4.5, itemStyle: { color: '#4ade80' } },
+         { value: -5.8, itemStyle: { color: '#22c55e' } }
+       ],
+       barWidth: '50%',
+       label: {
+         show: true,
+         position: function(params) { return params.value >= 0 ? 'top' : 'bottom'; },
+         formatter: function(params) { return (params.value > 0 ? '+' : '') + params.value; },
+         fontSize: 11,
+         fontWeight: 700,
+         color: '#334155'
+       }
+     }]
+   };
+
+   chart.setOption(option);
+   window.addEventListener('resize', function() { chart.resize(); });
+ })();
+
+ // VIX Product Landscape Treemap
+ (function() {
+   var dom = document.getElementById('landscapeChart');
+   if (!dom) return;
+   dom.style.width = '100%';
+   dom.style.height = '360px';
+   var chart = echarts.init(dom);
+
+   var option = {
+     tooltip: {
+       formatter: function(info) {
+         return '<strong>' + info.name + '</strong><br/>' + (info.data.desc || '');
+       }
+     },
+     series: [{
+       type: 'treemap',
+       roam: false,
+       nodeClick: false,
+       breadcrumb: { show: false },
+       label: {
+         show: true,
+         formatter: function(params) {
+           return params.name + '\n' + (params.data.sub || '');
+         },
+         fontSize: 12,
+         fontWeight: 600,
+         lineHeight: 18
+       },
+       levels: [
+         {
+           itemStyle: { borderColor: '#fff', borderWidth: 3, gapWidth: 3 },
+           upperLabel: { show: false }
+         },
+         {
+           itemStyle: { borderColor: '#f1f5f9', borderWidth: 2, gapWidth: 2 },
+           upperLabel: { show: true, fontSize: 11, fontWeight: 700, color: '#fff', height: 28, backgroundColor: '#475569', borderRadius: [6,6,0,0], padding: [4,8] }
+         }
+       ],
+       data: [
+         {
+           name: 'Indices',
+           value: 30,
+           itemStyle: { color: '#fbbf24' },
+           children: [
+             { name: 'VIX', value: 12, sub: 'Spot Index', desc: '30-day implied volatility of SPX options', itemStyle: { color: '#f59e0b' } },
+             { name: 'VIX3M', value: 8, sub: '3-Month Vol', desc: '3-month implied volatility benchmark', itemStyle: { color: '#fbbf24' } },
+             { name: 'VVIX', value: 6, sub: 'Vol of Vol', desc: 'Implied volatility of VIX options', itemStyle: { color: '#fcd34d' } },
+             { name: 'VIX9D', value: 4, sub: '9-Day Vol', desc: '9-day implied volatility for short-term signals', itemStyle: { color: '#fde68a' } }
+           ]
+         },
+         {
+           name: 'Futures & Options',
+           value: 35,
+           itemStyle: { color: '#fb923c' },
+           children: [
+             { name: 'VIX Futures', value: 18, sub: 'Monthly/Weekly', desc: 'Cash-settled futures on VIX index', itemStyle: { color: '#f97316' } },
+             { name: 'VIX Options', value: 12, sub: 'European-Style', desc: 'Options on VIX futures, cash-settled', itemStyle: { color: '#fb923c' } },
+             { name: 'Mini VIX', value: 5, sub: 'Micro Futures', desc: 'Smaller contract size for retail', itemStyle: { color: '#fdba74' } }
+           ]
+         },
+         {
+           name: 'ETPs',
+           value: 35,
+           itemStyle: { color: '#e879f9' },
+           children: [
+             { name: 'VXX', value: 10, sub: 'Short-Term Long', desc: 'iPath Series B S&P 500 VIX Short-Term Futures ETN', itemStyle: { color: '#d946ef' } },
+             { name: 'UVXY', value: 8, sub: '1.5x Leveraged', desc: 'ProShares Ultra VIX Short-Term Futures ETF', itemStyle: { color: '#c026d3' } },
+             { name: 'SVXY', value: 8, sub: '0.5x Short Vol', desc: 'ProShares Short VIX Short-Term Futures ETF', itemStyle: { color: '#e879f9' } },
+             { name: 'VIXY', value: 5, sub: 'Short-Term Long', desc: 'ProShares VIX Short-Term Futures ETF', itemStyle: { color: '#f0abfc' } },
+             { name: 'VIXM', value: 4, sub: 'Mid-Term Long', desc: 'ProShares VIX Mid-Term Futures ETF', itemStyle: { color: '#f5d0fe' } }
+           ]
+         }
+       ]
+     }]
+   };
+
+   chart.setOption(option);
+   window.addEventListener('resize', function() { chart.resize(); });
+ })();
+ </script>
+</body>
+</html>

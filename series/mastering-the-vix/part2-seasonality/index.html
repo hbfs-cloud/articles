@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>VIX Seasonality | Mastering the VIX &mdash; Part 2 of 5 | Market Watch</title>
+ <meta name="description" content="Mastering the VIX — Part 2: Predictable patterns in volatility across months, weeks, FOMC cycles, options expiration, and earnings seasons. Use the calendar as edge.">
+ <meta property="og:title" content="VIX Seasonality | Mastering the VIX | Market Watch">
+ <meta property="og:description" content="Part 2 of 5: VIX follows repeatable seasonal patterns driven by options expiration cycles, earnings seasons, fiscal year flows, and macro event clustering.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/mastering-the-vix/part2-seasonality/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* Mastering the VIX Series — Amber Theme (#f59e0b / #d97706) */
+ .hero-section {
+   padding: 4rem 2rem 8rem 2rem;
+   background: linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%);
+   text-align: center;
+ }
+ .hero-date {
+   font-size: 0.85rem;
+   font-weight: 700;
+   color: #d97706;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+   margin-bottom: 1rem;
+ }
+ .hero-badges {
+   display: flex;
+   gap: 0.75rem;
+   justify-content: center;
+   flex-wrap: wrap;
+   margin-top: 2rem;
+ }
+ .hero-badge {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.4rem;
+   padding: 0.5rem 1rem;
+   border-radius: 99px;
+   font-size: 0.8rem;
+   font-weight: 700;
+ }
+ .hero-badge-amber { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2); }
+ .hero-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+ .hero-badge-green { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+ .hero-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
+ .hero-badge-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+ /* Stat Cards */
+ .stat-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+   gap: 1.5rem;
+   margin: 2rem 0;
+ }
+ .stat-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 16px;
+   padding: 2rem;
+   text-align: center;
+   transition: all 0.3s;
+ }
+ .stat-card:hover {
+   transform: translateY(-4px);
+   box-shadow: 0 12px 30px -5px rgba(0,0,0,0.1);
+   border-color: #f59e0b;
+ }
+ .stat-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+ .stat-value { font-size: 2rem; font-weight: 900; color: #0f172a; margin-bottom: 0.25rem; }
+ .stat-label { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+
+ /* Phase Cards */
+ .phase-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 20px;
+   padding: 2.5rem;
+   margin: 2rem 0;
+   position: relative;
+   overflow: hidden;
+   transition: border-color 0.3s;
+ }
+ .phase-card:hover { border-color: #f59e0b; }
+ .phase-card::before {
+   content: '';
+   position: absolute;
+   top: 0; left: 0; right: 0;
+   height: 4px;
+ }
+ .phase-card.card-amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+ .phase-card.card-red::before { background: linear-gradient(90deg, #ef4444, #7f1d1d); }
+ .phase-card.card-blue::before { background: linear-gradient(90deg, #3b82f6, #1e3a5f); }
+ .phase-card.card-green::before { background: linear-gradient(90deg, #10b981, #059669); }
+ .phase-card.card-purple::before { background: linear-gradient(90deg, #8b5cf6, #4c1d95); }
+
+ .phase-title {
+   font-size: 1.6rem;
+   font-weight: 800;
+   color: #0f172a;
+   margin-bottom: 0.5rem;
+ }
+ .phase-subtitle {
+   font-size: 1rem;
+   color: #64748b;
+   margin-bottom: 1.5rem;
+   font-weight: 500;
+ }
+
+ /* Checklist */
+ .checklist { list-style: none; padding: 0; margin: 1.5rem 0; }
+ .checklist li { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0; font-size: 0.95rem; color: #334155; line-height: 1.5; }
+ .checklist li i { margin-top: 0.15rem; flex-shrink: 0; }
+ .check-valid { color: #10b981; }
+ .check-invalid { color: #ef4444; }
+ .check-amber { color: #f59e0b; }
+
+ /* Section Divider */
+ .section-divider {
+   display: flex;
+   align-items: center;
+   gap: 1rem;
+   margin: 3rem 0 2rem;
+   color: #94a3b8;
+   font-size: 0.75rem;
+   font-weight: 700;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+ }
+ .section-divider::before,
+ .section-divider::after {
+   content: '';
+   flex: 1;
+   height: 1px;
+   background: #e2e8f0;
+ }
+
+ /* Part Divider */
+ .part-divider {
+   text-align: center;
+   padding: 3rem 2rem;
+   margin: 3rem -2rem 2rem;
+   background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
+   color: white;
+   border-radius: 20px;
+ }
+ .part-divider h2 {
+   font-size: 2rem;
+   font-weight: 900;
+   margin: 0 0 0.5rem;
+ }
+ .part-divider p {
+   font-size: 1rem;
+   opacity: 0.85;
+   margin: 0;
+ }
+
+ /* Compare Table */
+ .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin: 2rem 0; }
+ .compare-table th { background: #1e293b; color: white; padding: 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+ .compare-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
+ .compare-table tr:nth-child(even) td { background: #f8fafc; }
+ .compare-table tr:last-child td { border-bottom: none; }
+
+ /* Month Grid */
+ .month-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+   gap: 1rem;
+   margin: 2rem 0;
+ }
+ .month-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 14px;
+   padding: 1.5rem;
+   text-align: center;
+   transition: all 0.3s;
+ }
+ .month-card:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 8px 25px -5px rgba(0,0,0,0.1);
+   border-color: #f59e0b;
+ }
+ .month-card .month-name {
+   font-weight: 800;
+   color: #0f172a;
+   font-size: 0.95rem;
+   margin-bottom: 0.25rem;
+ }
+ .month-card .month-vix {
+   font-size: 1.4rem;
+   font-weight: 900;
+   margin-bottom: 0.25rem;
+ }
+ .month-card .month-desc {
+   font-size: 0.75rem;
+   color: #64748b;
+   line-height: 1.4;
+ }
+ .vix-low { color: #10b981; }
+ .vix-mid { color: #f59e0b; }
+ .vix-high { color: #ef4444; }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+   .stat-grid { grid-template-columns: repeat(2, 1fr); }
+   .month-grid { grid-template-columns: repeat(3, 1fr); }
+   .hero-section { padding: 2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size: 1.8rem !important; }
+   .phase-card { padding: 1.5rem; }
+   .compare-table { font-size: 0.8rem; }
+   .compare-table th, .compare-table td { padding: 0.6rem; }
+   .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+   .part-divider { margin: 2rem 0 1.5rem; padding: 2rem 1rem; border-radius: 12px; }
+   .part-divider h2 { font-size: 1.4rem; }
+ }
+ @media (max-width: 480px) {
+   .stat-grid { grid-template-columns: 1fr; }
+   .month-grid { grid-template-columns: repeat(2, 1fr); }
+   .hero-section h1 { font-size: 1.4rem !important; }
+   .hero-section { padding: 2rem 1rem 4rem; }
+   .hero-badge { font-size: 0.65rem; padding: 0.3rem 0.6rem; gap: 0.25rem; }
+   .hero-badges { gap: 0.4rem; margin-top: 1rem; }
+ }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" class="gtm-noscript"></iframe></noscript>
+
+ <!-- Brand Bar -->
+ <nav class="brand-bar">
+   <div class="brand-bar-inner">
+     <a href="/" class="brand-logo">
+       <img src="/logo.svg" alt="" width="36" height="36">
+       <span class="brand-title">MarketWatch</span>
+     </a>
+     <div class="brand-actions">
+       <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+     </div>
+   </div>
+ </nav>
+
+ <!-- Hero -->
+ <section class="hero-section">
+   <div class="hero-date"><i class="fa-solid fa-calendar-days"></i> Mastering the VIX &mdash; Part 2 of 5</div>
+   <h1 class="hero-title">VIX Seasonality</h1>
+   <p class="hero-subtitle">Predictable patterns in volatility across months, weeks, FOMC cycles, options expiration, and earnings seasons. The VIX is not random &mdash; it follows a calendar. Smart volatility traders use these patterns as repeatable edge.</p>
+   <div class="hero-badges">
+     <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-list-ol"></i> Part 2/5</span>
+     <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-bar"></i> Data-Driven</span>
+     <span class="hero-badge hero-badge-green"><i class="fa-solid fa-seedling"></i> Intermediate</span>
+     <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-clock"></i> 14 min read</span>
+   </div>
+   <div id="article-clickable-tags" class="card-tags"></div>
+ </section>
+
+ <!-- Series Bar -->
+ <div class="series-bar">
+   <div class="series-bar-inner">
+     <a href="/series/mastering-the-vix/part1-vix-decoded/" class="series-arrow">
+       <i class="fas fa-chevron-left"></i>
+     </a>
+     <span class="series-title">Mastering the VIX</span>
+     <div class="series-steps">
+       <a href="/series/mastering-the-vix/part1-vix-decoded/" class="series-step">
+         <span class="series-num">1</span>
+         <span class="series-label">VIX Decoded</span>
+       </a>
+       <a href="/series/mastering-the-vix/part2-seasonality/" class="series-step current">
+         <span class="series-num">2</span>
+         <span class="series-label">Seasonality</span>
+       </a>
+       <a href="/series/mastering-the-vix/part3-indicator/" class="series-step">
+         <span class="series-num">3</span>
+         <span class="series-label">VIX as Indicator</span>
+       </a>
+       <a href="/series/mastering-the-vix/part4-trading/" class="series-step">
+         <span class="series-num">4</span>
+         <span class="series-label">Trading VIX</span>
+       </a>
+       <a href="/series/mastering-the-vix/part5-strategies/" class="series-step">
+         <span class="series-num">5</span>
+         <span class="series-label">Advanced</span>
+       </a>
+     </div>
+     <span class="series-counter">2/5</span>
+     <a href="/series/mastering-the-vix/part3-indicator/" class="series-arrow">
+       <i class="fas fa-chevron-right"></i>
+     </a>
+   </div>
+ </div>
+
+ <div class="container">
+
+<!-- ============================== -->
+<!-- SECTION 1: WHY VOLATILITY HAS A CALENDAR -->
+<!-- ============================== -->
+
+<div class="section-divider" id="intro">Why Volatility Has a Calendar</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-days"></i> The VIX Is Not Random</h2>
+
+  <p>Most traders treat the VIX as a purely reactive indicator &mdash; it spikes when bad things happen and drops when markets calm down. This is only half the story. Beneath the surface, the VIX follows <strong>repeatable seasonal patterns</strong> that have persisted for decades, driven by structural forces in the options market, the corporate calendar, and institutional fund flows.</p>
+
+  <p>These patterns are not random correlations. They emerge from <strong>mechanical processes</strong>: options expiration cycles that compress and release gamma, earnings seasons that inject and resolve uncertainty, FOMC meetings that create predictable fear premiums, and fiscal year flows that force institutional repositioning at specific calendar points.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why Seasonality Persists</h4>
+    <p>Unlike many market anomalies, VIX seasonality does not get arbitraged away. The structural forces behind it &mdash; options expiration schedules, corporate reporting requirements, central bank meeting calendars &mdash; are <strong>fixed by regulation and convention</strong>. The FOMC meets 8 times per year on set dates. Earnings season happens in January, April, July, and October. Monthly OpEx is always the third Friday. These are not market inefficiencies &mdash; they are <strong>calendar certainties</strong> that create predictable volatility patterns.</p>
+  </div>
+
+  <p>Understanding VIX seasonality does not mean you can predict every VIX move. Black swans still happen. But it means you can identify <strong>when protection is cheap, when selling volatility has the highest expected value, and when the market is structurally predisposed to a volatility spike</strong>. That is genuine, repeatable edge.</p>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+      <div class="stat-value">Sep-Oct</div>
+      <div class="stat-label">Historically the highest-VIX months &mdash; September averages 20.8, October 21.4 (2010-2025)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-sun"></i></div>
+      <div class="stat-value">Jul-Aug</div>
+      <div class="stat-label">Summer doldrums &mdash; lowest average VIX readings of the year (15.2 and 16.1)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-gavel"></i></div>
+      <div class="stat-value">2-3 pts</div>
+      <div class="stat-label">Average VIX premium built into the 5 days before FOMC meetings</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="stat-value">-1.5 pts</div>
+      <div class="stat-label">Average VIX crush in the 48 hours after FOMC announcement</div>
+    </div>
+  </div>
+
+  <p>In this article, we will dissect every major seasonal pattern in the VIX &mdash; monthly, weekly, event-driven &mdash; and build a practical playbook you can use to time your volatility trades, hedge purchases, and position sizing throughout the year.</p>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 2: MONTHLY VIX PATTERNS -->
+<!-- ============================== -->
+
+<div class="section-divider" id="monthly">Monthly VIX Patterns</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-bar"></i> The 12-Month Volatility Cycle</h2>
+
+  <p>When you average VIX readings by calendar month across 15 years of data (2010-2025), a clear pattern emerges. Volatility is <strong>not uniformly distributed</strong> throughout the year &mdash; it clusters around specific months driven by earnings, fiscal flows, and institutional behavior.</p>
+
+  <!-- ECharts: Average VIX by Month -->
+  <div id="monthlyVixChart" class="echart-container" data-ec-width="100%" data-ec-height="420px"></div>
+
+  <div class="month-grid">
+    <div class="month-card">
+      <div class="month-name">January</div>
+      <div class="month-vix vix-low">16.8</div>
+      <div class="month-desc">Post-holiday normalization. New year inflows suppress vol.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">February</div>
+      <div class="month-vix vix-mid">18.2</div>
+      <div class="month-desc">Rising. Q4 earnings tail end + early macro data.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">March</div>
+      <div class="month-vix vix-mid">18.5</div>
+      <div class="month-desc">Quarter-end rebalancing. Fiscal year flows for many funds.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">April</div>
+      <div class="month-vix vix-mid">17.4</div>
+      <div class="month-desc">Tax selling. Earnings season begins. Mixed signals.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">May</div>
+      <div class="month-vix vix-mid">17.8</div>
+      <div class="month-desc">"Sell in May" &mdash; hedging activity picks up modestly.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">June</div>
+      <div class="month-vix vix-low">16.5</div>
+      <div class="month-desc">Summer begins. Lower volumes, lower implied vol.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">July</div>
+      <div class="month-vix vix-low">15.2</div>
+      <div class="month-desc">Peak summer doldrums. Desks thinly staffed.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">August</div>
+      <div class="month-vix vix-low">16.1</div>
+      <div class="month-desc">Low vol but watch for August surprises (2015, 2024).</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">September</div>
+      <div class="month-vix vix-high">20.8</div>
+      <div class="month-desc">Worst month for stocks. Fund redemptions. Vol spikes.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">October</div>
+      <div class="month-vix vix-high">21.4</div>
+      <div class="month-desc">Crash month reputation. Highest VIX readings historically.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">November</div>
+      <div class="month-vix vix-mid">17.6</div>
+      <div class="month-desc">Post-election clarity. Year-end rally positioning.</div>
+    </div>
+    <div class="month-card">
+      <div class="month-name">December</div>
+      <div class="month-vix vix-low">16.2</div>
+      <div class="month-desc">Santa rally. Tax-loss selling done. Vol compression.</div>
+    </div>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Avg VIX</th>
+        <th>Median VIX</th>
+        <th>Max VIX</th>
+        <th>Key Driver</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>January</td><td>16.8</td><td>15.4</td><td>37.3</td><td>New year inflows, post-holiday</td></tr>
+      <tr><td>February</td><td>18.2</td><td>16.1</td><td>49.5</td><td>Late earnings, Volmageddon 2018</td></tr>
+      <tr><td>March</td><td>18.5</td><td>16.8</td><td>82.7</td><td>Quarter-end, COVID 2020</td></tr>
+      <tr><td>April</td><td>17.4</td><td>15.9</td><td>41.7</td><td>Tax selling, earnings start</td></tr>
+      <tr><td>May</td><td>17.8</td><td>16.2</td><td>40.1</td><td>"Sell in May" hedging</td></tr>
+      <tr><td>June</td><td>16.5</td><td>15.1</td><td>34.6</td><td>Summer begins, lower volume</td></tr>
+      <tr><td>July</td><td>15.2</td><td>13.9</td><td>28.9</td><td>Peak summer doldrums</td></tr>
+      <tr><td>August</td><td>16.1</td><td>14.5</td><td>53.3</td><td>Summer surprise risk (2015, 2024)</td></tr>
+      <tr><td>September</td><td>20.8</td><td>18.7</td><td>46.7</td><td>Worst month historically for equities</td></tr>
+      <tr><td>October</td><td>21.4</td><td>18.2</td><td>82.7</td><td>Crash month, highest VIX readings</td></tr>
+      <tr><td>November</td><td>17.6</td><td>15.8</td><td>36.5</td><td>Election clarity, year-end rally</td></tr>
+      <tr><td>December</td><td>16.2</td><td>14.6</td><td>35.3</td><td>Santa rally, vol compression</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The September-October Effect</h4>
+    <p>September and October are consistently the highest-VIX months of the year. This is not superstition &mdash; it is driven by <strong>three structural forces</strong>: (1) mutual fund fiscal year-ends in October force portfolio rebalancing and tax-loss harvesting, (2) Q3 earnings approach with maximum uncertainty, and (3) hedge funds return from summer and aggressively reposition. The "October crash" reputation (1929, 1987, 2008) further amplifies the fear premium, creating a self-reinforcing cycle where traders buy more protection precisely because they expect October to be volatile.</p>
+  </div>
+
+  <p>The practical takeaway: <strong>protection bought in July is structurally cheap. Protection bought in September is structurally expensive.</strong> Smart institutional desks roll hedges forward during summer doldrums, capturing 3-5 VIX points of cheapness before the fall vol spike materializes.</p>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 3: WEEKLY VIX PATTERNS -->
+<!-- ============================== -->
+
+<div class="section-divider" id="weekly">Weekly VIX Patterns</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-calendar-week"></i> The Day-of-Week Effect</h2>
+
+  <p>VIX seasonality is not just a monthly phenomenon &mdash; it operates on a weekly cycle as well. The day of the week you enter or exit a volatility position matters, and the data shows a consistent pattern that has persisted across market regimes.</p>
+
+  <!-- ECharts: Average VIX Change by Day of Week -->
+  <div id="weeklyVixChart" class="echart-container" data-ec-width="100%" data-ec-height="380px"></div>
+
+  <div class="phase-card card-amber">
+    <div class="phase-title"><i class="fa-solid fa-calendar-day"></i> Monday: The Weekend Gap Premium</div>
+    <div class="phase-subtitle">VIX tends to be elevated on Mondays due to weekend risk premium</div>
+    <p>Markets are closed for ~63 hours over the weekend. During that time, geopolitical events, natural disasters, corporate scandals, and policy announcements can occur without the market being able to reprice. This <strong>weekend gap risk</strong> systematically inflates implied volatility on Monday mornings. Traders buying Friday afternoon protection pay less than those buying Monday morning protection for the same calendar coverage &mdash; the weekend risk premium averages 0.3-0.5 VIX points.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Average Monday VIX change: +0.35 points</strong> from Friday close</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>60% of Mondays</strong> show higher VIX than Friday close</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Selling vol Monday AM</strong> captures weekend premium decay</li>
+    </ul>
+  </div>
+
+  <div class="phase-card card-green">
+    <div class="phase-title"><i class="fa-solid fa-chart-line"></i> Tuesday-Wednesday: The Midweek Compression</div>
+    <div class="phase-subtitle">VIX typically declines as weekend risk evaporates and no immediate catalysts loom</div>
+    <p>Once Monday's gap risk has been priced and no immediate event looms, implied volatility tends to compress. Tuesday and Wednesday are statistically the lowest-anxiety days of the trading week. <strong>Systematic vol sellers</strong> have historically found these the best entry days for short premium positions, as the weekend risk premium has decayed but Friday's OpEx gamma effects have not yet begun.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>Average Tuesday VIX change: -0.22 points</strong></li>
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>Average Wednesday VIX change: -0.18 points</strong></li>
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>Best days</strong> for entering short volatility positions</li>
+    </ul>
+  </div>
+
+  <div class="phase-card card-blue">
+    <div class="phase-title"><i class="fa-solid fa-arrows-left-right"></i> Thursday-Friday: OpEx Positioning</div>
+    <div class="phase-subtitle">Gamma effects dominate as weekly/monthly options approach expiration</div>
+    <p>Thursday sees positioning activity for Friday's weekly options expiration. Market makers begin hedging their gamma exposure, which can create directional moves that either amplify or suppress realized volatility. <strong>Friday is dominated by OpEx mechanics</strong> &mdash; with 0DTE options now accounting for over 40% of SPX options volume, the Friday close has become increasingly influenced by gamma unwinding and dealer hedging flows.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Average Thursday VIX change: +0.08 points</strong> (neutral)</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Average Friday VIX change: -0.15 points</strong> (OpEx compression)</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>OpEx weeks vs non-OpEx weeks</strong>: Friday VIX drop is 2x larger on monthly OpEx</li>
+    </ul>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>OpEx Week</th>
+        <th>Non-OpEx Week</th>
+        <th>Difference</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Avg Friday VIX Change</td><td>-0.42 pts</td><td>-0.15 pts</td><td>-0.27 pts</td></tr>
+      <tr><td>Avg Week VIX Range</td><td>3.8 pts</td><td>2.9 pts</td><td>+0.9 pts</td></tr>
+      <tr><td>Avg SPX Daily Move</td><td>0.92%</td><td>0.78%</td><td>+0.14%</td></tr>
+      <tr><td>Vol-of-Vol (VVIX)</td><td>98.5</td><td>92.1</td><td>+6.4 pts</td></tr>
+      <tr><td>Dealer Gamma Exposure</td><td>High (long)</td><td>Moderate</td><td>Amplified hedging</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The 0DTE Revolution</h4>
+    <p>Since 2022, the explosion of 0DTE (zero days to expiration) SPX options has fundamentally altered intraday VIX patterns. With daily expirations available Monday through Friday, <strong>every day is now a mini-OpEx</strong>. The traditional weekly cycle is becoming less pronounced as gamma effects occur daily rather than concentrating on Fridays. This does not eliminate the weekly pattern, but it compresses it. The Monday gap premium and midweek compression persist, but the Friday OpEx effect is spreading across the entire week.</p>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 4: THE FOMC CYCLE     -->
+<!-- ============================== -->
+
+<div class="section-divider" id="fomc">The FOMC Cycle</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-landmark"></i> The Most Predictable VIX Pattern</h2>
+
+  <p>If there is one VIX seasonal pattern that has been most extensively studied and most reliably exploited by institutional traders, it is the <strong>FOMC cycle</strong>. The Federal Reserve meets 8 times per year on predetermined dates, and the VIX behavior around these meetings follows a remarkably consistent script.</p>
+
+  <div class="part-divider">
+    <h2><i class="fa-solid fa-landmark-dome"></i> The FOMC VIX Script</h2>
+    <p>T-5 to T+5: A predictable arc of fear and relief</p>
+  </div>
+
+  <!-- ECharts: VIX Path Around FOMC Meetings -->
+  <div id="fomcChart" class="echart-container" data-ec-width="100%" data-ec-height="420px"></div>
+
+  <div class="phase-card card-red">
+    <div class="phase-title"><i class="fa-solid fa-arrow-trend-up"></i> T-5 to T-1: The Fear Build</div>
+    <div class="phase-subtitle">VIX rises 2-3 points as uncertainty premium builds before the announcement</div>
+    <p>In the 5 trading days before an FOMC meeting, the VIX systematically rises. This is not because traders expect bad news &mdash; it is because they are <strong>pricing in uncertainty</strong>. The Fed could raise, cut, or hold rates. The dot plot could shift. Powell's press conference could introduce new language. This uncertainty is real and measurable, and it gets priced into options as an "FOMC premium."</p>
+    <p>The rise is not linear. It typically accelerates in the final 2 days (T-2 and T-1) as traders who procrastinated on hedging rush to buy protection. This creates a <strong>vol squeeze effect</strong> where put demand spikes, driving VIX higher even if the S&amp;P 500 is flat.</p>
+  </div>
+
+  <div class="phase-card card-green">
+    <div class="phase-title"><i class="fa-solid fa-arrow-trend-down"></i> T+0 (2:00 PM ET): The Crush</div>
+    <div class="phase-subtitle">VIX drops 1.5-2 points in minutes as uncertainty resolves</div>
+    <p>At precisely 2:00 PM Eastern on FOMC Wednesday, the Fed releases its statement. In the <strong>first 30 minutes after the announcement</strong>, the VIX drops an average of 1.5 points regardless of what the Fed actually says. This is the "uncertainty premium removal" &mdash; the volatility that was priced for the unknown has been resolved, and the options market rapidly reprices.</p>
+    <p>Even on hawkish surprises, the VIX often drops initially because the <strong>resolution of uncertainty</strong> is inherently vol-compressing. The VIX may later rise if the market decides the outcome is genuinely bearish, but the initial reaction is almost always a crush.</p>
+  </div>
+
+  <div class="phase-card card-blue">
+    <div class="phase-title"><i class="fa-solid fa-arrows-rotate"></i> T+1 to T+5: The FOMC Drift</div>
+    <div class="phase-subtitle">Stocks tend to rally and VIX tends to remain compressed for several days after FOMC</div>
+    <p>One of the most studied anomalies in market microstructure is the <strong>"FOMC drift"</strong> &mdash; the tendency for stocks to rally in the days following an FOMC meeting. Research by Lucca and Moench (2015) at the New York Fed found that a significant portion of the equity risk premium over the past 30 years has accrued in the 24 hours around FOMC announcements. The VIX counterpart of this drift is a sustained compression that lasts 3-5 trading days post-FOMC.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why the FOMC Pattern Is So Reliable</h4>
+    <p>The FOMC pattern persists because it is driven by <strong>structural market mechanics</strong>, not behavioral bias. Before FOMC, hedgers <em>must</em> buy protection because of risk management mandates &mdash; fund prospectuses, bank capital requirements, and fiduciary obligations force protective put buying. After FOMC, those same hedgers <em>can</em> roll off protection because the event has passed. This is not a choice &mdash; it is a <strong>compliance requirement</strong>. As long as institutional risk management rules exist, the FOMC VIX cycle will persist. This is what makes it arguably the single most reliable seasonal pattern in all of volatility trading.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>FOMC Phase</th>
+        <th>Days</th>
+        <th>Avg VIX Change</th>
+        <th>Win Rate</th>
+        <th>Trade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Pre-FOMC Build</td><td>T-5 to T-1</td><td>+2.3 pts</td><td>78%</td><td>Long VIX / Buy puts</td></tr>
+      <tr><td>Announcement Crush</td><td>T+0 (2PM)</td><td>-1.5 pts</td><td>82%</td><td>Short VIX / Sell straddles</td></tr>
+      <tr><td>Post-FOMC Drift</td><td>T+1 to T+5</td><td>-0.8 pts</td><td>68%</td><td>Short VIX / Long SPY</td></tr>
+      <tr><td>Full Cycle (T-5 to T+5)</td><td>11 days</td><td>+0.0 pts</td><td>N/A</td><td>Round-trip: vol neutral</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> When the Pattern Breaks</h4>
+    <p>The FOMC VIX pattern works <em>most</em> of the time, but it fails spectacularly during <strong>regime shifts</strong>. When the Fed signals a major policy pivot (taper tantrum 2013, emergency rate cuts 2020, aggressive hiking cycle 2022), the post-FOMC VIX crush can reverse into a sustained VIX spike. The pattern also weakens during inter-meeting actions &mdash; emergency meetings or unscheduled interventions break the calendar regularity. Always check whether the upcoming FOMC is expected to be a "pivot meeting" before deploying FOMC-based vol trades.</p>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 5: OPTIONS EXPIRATION  -->
+<!-- ============================== -->
+
+<div class="section-divider" id="opex">Options Expiration Effects</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-rotate"></i> The OpEx Gamma Machine</h2>
+
+  <p>Options expiration is the mechanical heartbeat of the volatility market. Every month, trillions of dollars in options contracts expire, forcing dealers to unwind hedges, gamma to reset, and implied volatility to reprice. Understanding the OpEx cycle is essential for any volatility trader.</p>
+
+  <div class="phase-card card-amber">
+    <div class="phase-title"><i class="fa-solid fa-calendar-check"></i> Monthly OpEx (3rd Friday)</div>
+    <div class="phase-subtitle">The single most important date on the volatility calendar</div>
+    <p>Standard monthly options expire on the third Friday of each month. In the days leading up to OpEx, several mechanical forces converge:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Gamma compression</strong>: As expiration approaches, near-the-money options develop extreme gamma. Dealers who are long gamma (typical in a positive GEX environment) dampen market moves by buying dips and selling rips, compressing realized volatility and dragging the VIX lower.</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Theta decay acceleration</strong>: Time decay goes parabolic in the final 48 hours before expiration. Short premium positions profit rapidly, reducing demand for new protection and further compressing VIX.</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>Pin risk</strong>: Large open interest at round strikes can "pin" the market to those levels on expiration day, creating artificially low realized vol.</li>
+    </ul>
+    <p>The net result: <strong>VIX typically drops into OpEx</strong>. On average, VIX declines 0.5-1.0 points in the 3 days leading to monthly expiration. But watch the Monday after OpEx &mdash; with the gamma overhang removed, the market is "unanchored" and can make larger directional moves, often spiking VIX.</p>
+  </div>
+
+  <div class="phase-card card-red">
+    <div class="phase-title"><i class="fa-solid fa-bolt"></i> Quad Witching (Quarterly OpEx)</div>
+    <div class="phase-subtitle">Four types of contracts expire simultaneously &mdash; March, June, September, December</div>
+    <p>Quarterly "quad witching" is monthly OpEx on steroids. On these days, stock options, stock index options, stock index futures, and single stock futures all expire simultaneously. The notional value expiring can exceed <strong>$5 trillion</strong>, creating massive rebalancing flows.</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-invalid"></i> <strong>Volume spikes 40-60%</strong> above normal monthly OpEx</li>
+      <li><i class="fa-solid fa-check check-invalid"></i> <strong>Last-hour volatility</strong> can be 2-3x normal as portfolio managers roll positions</li>
+      <li><i class="fa-solid fa-check check-invalid"></i> <strong>VIX term structure distortion</strong>: near-term VIX can spike while VIX3M remains stable</li>
+      <li><i class="fa-solid fa-check check-invalid"></i> <strong>Post-quad-witching week</strong> historically shows elevated VIX (+0.8 pts avg) as new gamma rebuilds</li>
+    </ul>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Regular Monthly OpEx</th>
+        <th>Quad Witching</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Frequency</td><td>Every month (3rd Friday)</td><td>4x/year (Mar, Jun, Sep, Dec)</td></tr>
+      <tr><td>Contracts Expiring</td><td>Equity + Index options</td><td>Options + Futures + Index Futures + Single Stock Futures</td></tr>
+      <tr><td>Notional Value</td><td>$1-2 trillion</td><td>$4-5+ trillion</td></tr>
+      <tr><td>Avg VIX Change (T-3 to T0)</td><td>-0.6 pts</td><td>-0.9 pts</td></tr>
+      <tr><td>Avg VIX Change (T+1 to T+3)</td><td>+0.3 pts</td><td>+0.8 pts</td></tr>
+      <tr><td>Volume vs Normal</td><td>+20%</td><td>+50-60%</td></tr>
+      <tr><td>Last-Hour SPX Move</td><td>0.3%</td><td>0.6-0.8%</td></tr>
+      <tr><td>Post-Expiration VIX Drift</td><td>Neutral</td><td>Elevated 3-5 days</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> The 0DTE Factor</h4>
+    <p>The introduction of daily SPX expirations has created a new paradigm. With 0DTE options now accounting for over <strong>40% of total SPX options volume</strong>, the traditional OpEx cycle is being supplemented by a daily micro-cycle. Every day, billions in 0DTE options expire at 4:00 PM ET, creating intraday gamma effects that used to only occur on monthly OpEx Fridays. For VIX traders, this means: (1) intraday VIX moves are increasingly driven by 0DTE gamma flips, (2) the traditional monthly OpEx VIX compression pattern is slightly diminished but still present, and (3) new opportunities exist in trading intraday VIX patterns tied to 0DTE flows.</p>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 6: EARNINGS SEASON     -->
+<!-- ============================== -->
+
+<div class="section-divider" id="earnings">Earnings Season Volatility</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-chart-pie"></i> The Earnings Uncertainty Premium</h2>
+
+  <p>Four times a year, corporate America opens its books. Earnings season is the single largest source of <strong>idiosyncratic uncertainty</strong> in the equity market, and it has a measurable, predictable impact on the VIX. The pattern is simple: <strong>VIX rises in the 2-3 weeks before earnings season begins, then declines as individual companies report and uncertainty resolves.</strong></p>
+
+  <!-- ECharts: VIX During Earnings Season -->
+  <div id="earningsChart" class="echart-container" data-ec-width="100%" data-ec-height="380px"></div>
+
+  <div class="phase-card card-purple">
+    <div class="phase-title"><i class="fa-solid fa-building"></i> The Mega-Cap Effect</div>
+    <div class="phase-subtitle">AAPL, MSFT, AMZN, GOOG, META collectively move the VIX</div>
+    <p>The five largest US companies by market cap represent over <strong>25% of the S&amp;P 500's weight</strong>. When these companies report earnings (typically in the last week of January, April, July, and October), the VIX is directly affected by their individual outcomes. A single company &mdash; Apple or Microsoft &mdash; can move the SPX by 1-2% on earnings, which translates to a 1-2 point VIX move.</p>
+    <p>Critically, the <strong>aggregate earnings risk premium</strong> for mega-cap tech week is 1-3 VIX points above what would be expected from macro conditions alone. This premium builds during the 5 days before the first mega-cap report and dissipates over 2-3 days after the last one. Smart volatility traders specifically target this window.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why Earnings Season Moves VIX Even If You Do Not Trade Individual Stocks</h4>
+    <p>You might think: "I only trade SPX options, not individual stocks &mdash; why should I care about earnings season?" The answer is <strong>correlation</strong>. During earnings season, implied correlation (measured by the CBOE Implied Correlation Index) typically drops because individual stocks are moving on company-specific news rather than macro themes. Lower implied correlation means index implied volatility (VIX) drops <em>relative to</em> individual stock implied volatility &mdash; even if the VIX level stays elevated in absolute terms. This creates opportunities in dispersion trades (long single-stock vol, short index vol) that are only available during earnings season.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Earnings Season Phase</th>
+        <th>Timing</th>
+        <th>Avg VIX Impact</th>
+        <th>Driver</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Pre-Season Build</td><td>2-3 weeks before first major report</td><td>+1.5 to +2.5 pts</td><td>Aggregate earnings uncertainty pricing</td></tr>
+      <tr><td>Early Reports</td><td>Banks + industrials (Week 1-2)</td><td>Flat to +0.5 pts</td><td>Some resolution, but big tech still ahead</td></tr>
+      <tr><td>Mega-Cap Week</td><td>AAPL/MSFT/AMZN/GOOG/META</td><td>+1 to +3 pts premium</td><td>Concentrated 25% SPX weight at risk</td></tr>
+      <tr><td>Post Mega-Cap</td><td>1-2 weeks after last big report</td><td>-2 to -4 pts</td><td>Uncertainty resolved, hedges unwound</td></tr>
+      <tr><td>Season Tail</td><td>Small/mid-cap reports</td><td>-0.5 to -1 pts</td><td>Residual compression, low market impact</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Earnings-FOMC Collision</h4>
+    <p>Some of the highest VIX readings in non-crisis markets occur when <strong>mega-cap earnings week coincides with an FOMC meeting</strong>. This dual uncertainty creates a compounding premium &mdash; both the FOMC fear build and the earnings uncertainty premium stack on top of each other. When this happens (roughly 2-3 times per year), the VIX premium can be 3-5 points above equilibrium, making it one of the most attractive environments for short premium strategies <em>after</em> both events resolve.</p>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 7: NOTABLE ANOMALIES   -->
+<!-- ============================== -->
+
+<div class="section-divider" id="anomalies">Notable Anomalies</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-skull-crossbones"></i> When the Calendar Breaks</h2>
+
+  <p>Seasonal patterns are statistical tendencies, not laws of physics. Understanding <em>when and why</em> they break is just as important as understanding the patterns themselves. Here are the most instructive VIX anomalies that every volatility trader should study.</p>
+
+  <div class="phase-card card-red">
+    <div class="phase-title"><i class="fa-solid fa-explosion"></i> Volmageddon &mdash; February 5, 2018</div>
+    <div class="phase-subtitle">The day a volatility product broke the market</div>
+    <p>The VIX had spent most of 2017 below 12, lulling an entire generation of traders into believing volatility was permanently dead. Inverse volatility products &mdash; most notably the <strong>XIV (VelocityShares Daily Inverse VIX Short-Term ETN)</strong> &mdash; had attracted billions from retail traders running the "short vol" strategy as a passive income trade.</p>
+    <p>On February 5, 2018, the VIX spiked from 17 to <strong>50 in a single day</strong> &mdash; a +116% move. The XIV lost 96% of its value <em>in after-hours trading</em> and was liquidated the next day. Credit Suisse terminated the product entirely. Over <strong>$2 billion in investor wealth</strong> was destroyed in hours. The cause? A feedback loop: as the VIX rose, inverse vol products had to buy VIX futures to rebalance, pushing VIX higher, forcing more buying, in a death spiral.</p>
+    <p><strong>Lesson</strong>: Seasonality told you February 2018 was a "rising VIX" month (February is structurally higher than January). The pattern was right. But the <em>magnitude</em> was 10x what seasonality predicted because of a structural vulnerability in the product ecosystem. Seasonal patterns give you direction and timing; they do not cap magnitude.</p>
+  </div>
+
+  <div class="phase-card card-red">
+    <div class="phase-title"><i class="fa-solid fa-virus"></i> COVID &mdash; March 16, 2020</div>
+    <div class="phase-subtitle">VIX 82.69: The highest closing reading in history</div>
+    <p>The COVID crash was the fastest bear market in history. The S&amp;P 500 fell 34% in 23 trading days. The VIX reached <strong>82.69 on March 16, 2020</strong>, surpassing the 2008 financial crisis peak of 80.86. Seasonality would have told you March is a moderately elevated VIX month (average 18.5). The actual reading was 4.5x the seasonal average.</p>
+    <p><strong>Lesson</strong>: Seasonal patterns operate within a "normal" regime. Exogenous shocks (pandemics, wars, financial system collapses) create regime breaks where historical averages become meaningless. The key is to <strong>size positions</strong> based on the assumption that seasonal patterns work 80% of the time, not 100%.</p>
+  </div>
+
+  <div class="phase-card card-blue">
+    <div class="phase-title"><i class="fa-solid fa-face-sleeping"></i> 2017: The Ultra-Low VIX Anomaly</div>
+    <div class="phase-subtitle">52 days below VIX 10 &mdash; more than the previous 27 years combined</div>
+    <p>2017 was the mirror image of a VIX spike &mdash; a prolonged vol suppression event. The VIX closed below 10 on <strong>52 trading days</strong>, compared to just 9 days total in the prior 27 years. The standard seasonal cycle &mdash; summer low, fall high &mdash; was almost completely flattened. September 2017 VIX averaged just 11.2 vs the historical September average of 20.8.</p>
+    <p><strong>Lesson</strong>: Low-volatility regimes can persist far longer than models predict. The seasonal pattern was <em>directionally correct</em> (September was the highest VIX month of 2017) but the <em>absolute level</em> was compressed by macro conditions (strong earnings, low rates, synchronized global growth, no geopolitical shocks). Seasonality gives you relative positioning, not absolute levels.</p>
+  </div>
+
+  <div class="phase-card card-purple">
+    <div class="phase-title"><i class="fa-solid fa-flag-usa"></i> Election Year Volatility</div>
+    <div class="phase-subtitle">Presidential elections create a unique VIX pattern with a pre-election build and post-election crush</div>
+    <p>Every four years, the US presidential election injects a unique volatility pattern. The VIX typically rises 3-5 points in October of election years (above the already-elevated seasonal October average), as options traders price the <strong>binary outcome risk</strong> of Election Day. After the election is called, VIX typically drops 4-6 points in a massive uncertainty removal event &mdash; regardless of which party wins.</p>
+    <p>The 2020 election was a notable exception: the VIX remained elevated post-election due to contested results and delayed vote counting. The <strong>uncertainty removal</strong> only happened when the electoral outcome became clear, not on Election Night.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h4><i class="fa-solid fa-bookmark"></i> Key Dates Every VIX Trader Should Know</h4>
+    <ul>
+      <li><strong>Oct 19, 1987</strong> &mdash; Black Monday. DJIA -22.6% in one day. VIX equivalent estimated at 150+.</li>
+      <li><strong>Oct 15, 2008</strong> &mdash; Financial crisis peak. VIX closed at 69.95 (intraday 81.65).</li>
+      <li><strong>Aug 24, 2015</strong> &mdash; "Flash Crash 2.0." VIX opened at 53, closed at 40. China devaluation fears.</li>
+      <li><strong>Feb 5, 2018</strong> &mdash; Volmageddon. VIX +116% intraday. XIV liquidated.</li>
+      <li><strong>Mar 16, 2020</strong> &mdash; COVID peak. VIX 82.69, highest closing reading ever.</li>
+      <li><strong>Jan 27, 2021</strong> &mdash; GameStop squeeze. VIX spiked to 37 on retail-driven single-stock vol.</li>
+      <li><strong>Aug 5, 2024</strong> &mdash; Japan carry-trade unwind. VIX spiked to 65 intraday, reversed to 27 same day.</li>
+    </ul>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Black Swans vs Grey Swans</h4>
+    <p>Nassim Taleb's distinction matters for seasonality traders. A <strong>Black Swan</strong> is an event that is both unpredictable and unprecedented &mdash; COVID, 9/11. Seasonal patterns cannot help with these. A <strong>Grey Swan</strong> is an event that is <em>known to be possible</em> but whose timing is uncertain &mdash; a banking crisis, a credit event, a geopolitical escalation. Grey Swans tend to <em>amplify</em> existing seasonal patterns rather than override them. The 2008 financial crisis peaked in October &mdash; the historically worst month. The 2018 Volmageddon happened in February &mdash; a seasonally rising-VIX month. Grey Swans often ride the seasonal current. This means <strong>seasonal high-VIX periods are not just "expensive" for protection buyers &mdash; they are also the periods when catastrophic VIX spikes are most likely to occur</strong>.</p>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 8: THE PLAYBOOK        -->
+<!-- ============================== -->
+
+<div class="section-divider" id="playbook">The Seasonality Playbook</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-book-open"></i> Putting It All Together</h2>
+
+  <p>Now that you understand the monthly cycle, the weekly cycle, the FOMC cycle, OpEx mechanics, and earnings season effects, how do you actually <em>use</em> this knowledge? Here is a month-by-month playbook for volatility traders.</p>
+
+  <!-- ECharts: Strategy Calendar Heatmap -->
+  <div id="playbookChart" class="echart-container" data-ec-width="100%" data-ec-height="350px"></div>
+
+  <div class="phase-card card-green">
+    <div class="phase-title"><i class="fa-solid fa-snowflake"></i> Q1: January-March</div>
+    <div class="phase-subtitle">Transition from low-vol year-end to rising spring volatility</div>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>January</strong>: VIX starts low (16.8 avg). Good month to <strong>buy cheap protection</strong> for the year. Roll year-end hedges into Q1.</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>February</strong>: VIX rising (18.2 avg). Q4 earnings resolving. Watch for Volmageddon-type tail risks. Reduce short vol exposure.</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>March</strong>: Quarter-end rebalancing drives vol (18.5 avg). Quad witching in March. Good month for <strong>calendar spreads</strong> (short March, long April).</li>
+    </ul>
+  </div>
+
+  <div class="phase-card card-blue">
+    <div class="phase-title"><i class="fa-solid fa-seedling"></i> Q2: April-June</div>
+    <div class="phase-subtitle">Earnings resolution into summer compression</div>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>April</strong>: Tax selling creates vol pockets (17.4 avg). Earnings season begins. Play the <strong>FOMC cycle</strong> if meeting falls in April/May.</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>May</strong>: "Sell in May" is partially a vol-buying phenomenon (17.8 avg). Institutions buy summer hedges. Good time to <strong>sell straddles</strong> with May expiration.</li>
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>June</strong>: Summer begins, VIX drops (16.5 avg). Quad witching creates a brief June vol spike then compression. Start <strong>accumulating September/October hedges</strong> while they are cheap.</li>
+    </ul>
+  </div>
+
+  <div class="phase-card card-amber">
+    <div class="phase-title"><i class="fa-solid fa-sun"></i> Q3: July-September</div>
+    <div class="phase-subtitle">Summer doldrums into the most dangerous quarter</div>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>July</strong>: Peak cheapness for volatility (15.2 avg). <strong>Best month to buy protection</strong> for fall. VIX puts are cheap, VIX calls are cheap. Load up on September/October hedges.</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>August</strong>: Still low VIX (16.1 avg) but beware August surprises. Thinly-traded markets amplify moves. Good month for <strong>risk-defined short vol</strong> (iron condors) but keep hedges in place.</li>
+      <li><i class="fa-solid fa-check check-invalid"></i> <strong>September</strong>: Danger zone (20.8 avg). <strong>Do not sell naked vol in September.</strong> If you accumulated July/August hedges, they start paying off. Play defensive.</li>
+    </ul>
+  </div>
+
+  <div class="phase-card card-red">
+    <div class="phase-title"><i class="fa-solid fa-leaf"></i> Q4: October-December</div>
+    <div class="phase-subtitle">Peak volatility into year-end compression</div>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check check-invalid"></i> <strong>October</strong>: Historically highest VIX (21.4 avg). <strong>Protection is expensive but necessary.</strong> Consider selling premium into the November crush &mdash; but only risk-defined (spreads, not naked).</li>
+      <li><i class="fa-solid fa-check check-amber"></i> <strong>November</strong>: Post-election (every 4 years) or post-October normalization (17.6 avg). VIX drops as year-end rally positioning begins. Good month for <strong>short vol structures</strong> with December expiration.</li>
+      <li><i class="fa-solid fa-check check-valid"></i> <strong>December</strong>: Year-end rally compresses VIX (16.2 avg). Santa rally effect is real. <strong>Start buying January protection</strong> while December VIX is low. Quad witching creates a brief December spike then final compression.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway-box">
+    <h4><i class="fa-solid fa-bookmark"></i> Monthly Strategy Summary</h4>
+    <ul>
+      <li><strong>Buy Protection When Cheap</strong>: July, August, December, January. VIX is structurally depressed. Hedge costs are minimized.</li>
+      <li><strong>Sell Vol When Expensive</strong>: September, October (post-spike), FOMC days. VIX premium is structurally elevated. Short premium expected value is highest.</li>
+      <li><strong>Play the FOMC Cycle</strong>: Buy VIX T-5, sell T+0. 78% win rate over 15 years. The most reliable single trade in volatility.</li>
+      <li><strong>Respect Earnings Season</strong>: Do not sell vol into mega-cap earnings week. Wait for post-earnings VIX crush.</li>
+      <li><strong>OpEx Compression</strong>: VIX drops into monthly OpEx (3rd Friday). VIX spikes after quarterly OpEx (quad witching). Trade accordingly.</li>
+      <li><strong>Size for Tail Risk</strong>: Seasonal patterns work 80% of the time. The other 20% includes Volmageddon and COVID. Never risk more than you can afford to lose on a "seasonality says it should be fine" thesis.</li>
+    </ul>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The Meta-Rule</h4>
+    <p>Seasonality is a <strong>second-order signal</strong>, not a primary signal. It tells you when vol is cheap or expensive <em>relative to its own calendar cycle</em>, not whether the overall regime is bullish or bearish for volatility. A VIX of 18 in July (above seasonal average) is more concerning than a VIX of 18 in October (below seasonal average). Always combine seasonality with regime analysis (Part 3), term structure analysis (Part 4), and positioning data (Part 5) before putting on a trade.</p>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- SECTION 9: NEXT CTA            -->
+<!-- ============================== -->
+
+<div class="section-divider" id="next">Continue the Series</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-road"></i> What Comes Next</h2>
+
+  <p>You now understand <strong>when</strong> volatility tends to rise and fall. In Part 3, we move from calendar patterns to real-time interpretation: how to use the VIX as a <strong>live market indicator</strong> that tells you what the options market is pricing right now, what the term structure reveals about expected volatility regimes, and how to read the VIX in context with other risk gauges (VVIX, SKEW, put/call ratios).</p>
+
+  <p>Part 2 gave you the calendar. Part 3 gives you the dashboard.</p>
+</div>
+
+<!-- Next CTA -->
+<a href="/series/mastering-the-vix/part3-indicator/" class="next-cta">
+  <span class="next-cta-label">Next: Part 3</span>
+  <span class="next-cta-title">VIX as Indicator <i class="fas fa-arrow-right"></i></span>
+  <span class="next-cta-desc">How to read the VIX in real-time &mdash; term structure, VVIX, SKEW, and the signals that matter for your next trade.</span>
+</a>
+
+</div><!-- /container -->
+
+<!-- FAB -->
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-calendar-days"></i><span>Calendar</span></a>
+    <a href="#monthly" class="fnav-item" data-section="monthly"><i class="fas fa-chart-bar"></i><span>Monthly</span></a>
+    <a href="#weekly" class="fnav-item" data-section="weekly"><i class="fas fa-calendar-week"></i><span>Weekly</span></a>
+    <a href="#fomc" class="fnav-item" data-section="fomc"><i class="fas fa-landmark"></i><span>FOMC</span></a>
+    <a href="#opex" class="fnav-item" data-section="opex"><i class="fas fa-rotate"></i><span>OpEx</span></a>
+    <a href="#earnings" class="fnav-item" data-section="earnings"><i class="fas fa-chart-pie"></i><span>Earnings</span></a>
+    <a href="#anomalies" class="fnav-item" data-section="anomalies"><i class="fas fa-skull-crossbones"></i><span>Anomalies</span></a>
+    <a href="#playbook" class="fnav-item" data-section="playbook"><i class="fas fa-book-open"></i><span>Playbook</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- ============================== -->
+<!-- ECHARTS                        -->
+<!-- ============================== -->
+
+<!-- Chart 1: Average VIX by Month -->
+<script>
+(function() {
+  var dom = document.getElementById('monthlyVixChart');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f8fafc', fontFamily: 'Inter', fontSize: 12 } },
+    grid: { left: 50, right: 20, top: 40, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Average VIX',
+      nameTextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#94a3b8' },
+      min: 12,
+      max: 24,
+      axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 16.8, itemStyle: { color: '#10b981' } },
+        { value: 18.2, itemStyle: { color: '#f59e0b' } },
+        { value: 18.5, itemStyle: { color: '#f59e0b' } },
+        { value: 17.4, itemStyle: { color: '#f59e0b' } },
+        { value: 17.8, itemStyle: { color: '#f59e0b' } },
+        { value: 16.5, itemStyle: { color: '#10b981' } },
+        { value: 15.2, itemStyle: { color: '#10b981' } },
+        { value: 16.1, itemStyle: { color: '#10b981' } },
+        { value: 20.8, itemStyle: { color: '#ef4444' } },
+        { value: 21.4, itemStyle: { color: '#ef4444' } },
+        { value: 17.6, itemStyle: { color: '#f59e0b' } },
+        { value: 16.2, itemStyle: { color: '#10b981' } }
+      ],
+      barWidth: '50%',
+      label: {
+        show: true,
+        position: 'top',
+        fontFamily: 'Inter',
+        fontSize: 11,
+        fontWeight: 700,
+        color: '#334155'
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { yAxis: 17.8, label: { formatter: 'Annual Avg: 17.8', fontSize: 10, fontFamily: 'Inter', color: '#94a3b8' },
+            lineStyle: { color: '#94a3b8', type: 'dashed', width: 1.5 } }
+        ]
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- Chart 2: Average VIX Change by Day of Week -->
+<script>
+(function() {
+  var dom = document.getElementById('weeklyVixChart');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f8fafc', fontFamily: 'Inter', fontSize: 12 },
+      formatter: function(params) { return params[0].name + '<br/>Avg VIX Change: <strong>' + (params[0].value > 0 ? '+' : '') + params[0].value + ' pts</strong>'; }
+    },
+    grid: { left: 60, right: 20, top: 40, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      axisLabel: { fontFamily: 'Inter', fontSize: 12, color: '#64748b', fontWeight: 600 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Avg VIX Change (pts)',
+      nameTextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#94a3b8' },
+      axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: function(v) { return (v > 0 ? '+' : '') + v; } },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 0.35, itemStyle: { color: '#ef4444' } },
+        { value: -0.22, itemStyle: { color: '#10b981' } },
+        { value: -0.18, itemStyle: { color: '#10b981' } },
+        { value: 0.08, itemStyle: { color: '#f59e0b' } },
+        { value: -0.15, itemStyle: { color: '#10b981' } }
+      ],
+      barWidth: '45%',
+      label: {
+        show: true,
+        position: function(params) { return params[1] >= 0 ? 'top' : 'bottom'; },
+        fontFamily: 'Inter',
+        fontSize: 12,
+        fontWeight: 700,
+        formatter: function(params) { return (params.value > 0 ? '+' : '') + params.value; }
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { yAxis: 0, lineStyle: { color: '#94a3b8', type: 'solid', width: 1 } }
+        ]
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- Chart 3: VIX Path Around FOMC Meetings -->
+<script>
+(function() {
+  var dom = document.getElementById('fomcChart');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f8fafc', fontFamily: 'Inter', fontSize: 12 } },
+    legend: { data: ['Average VIX Level', 'VIX Change'], top: 5, textStyle: { fontFamily: 'Inter', fontSize: 11 } },
+    grid: { left: 55, right: 55, top: 45, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: ['T-5', 'T-4', 'T-3', 'T-2', 'T-1', 'FOMC', 'T+1', 'T+2', 'T+3', 'T+4', 'T+5'],
+      axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', fontWeight: 600 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'VIX Level',
+        nameTextStyle: { fontFamily: 'Inter', fontSize: 10, color: '#94a3b8' },
+        min: 16,
+        max: 22,
+        axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b' },
+        splitLine: { lineStyle: { color: '#f1f5f9' } }
+      },
+      {
+        type: 'value',
+        name: 'Change (pts)',
+        nameTextStyle: { fontFamily: 'Inter', fontSize: 10, color: '#94a3b8' },
+        axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b', formatter: function(v) { return (v > 0 ? '+' : '') + v; } },
+        splitLine: { show: false }
+      }
+    ],
+    series: [
+      {
+        name: 'Average VIX Level',
+        type: 'line',
+        data: [17.8, 18.1, 18.5, 19.2, 20.1, 18.6, 18.0, 17.8, 17.5, 17.4, 17.3],
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: { color: '#f59e0b', width: 3 },
+        itemStyle: { color: '#f59e0b', borderColor: '#fff', borderWidth: 2 },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(245,158,11,0.2)' },
+              { offset: 1, color: 'rgba(245,158,11,0.02)' }
+            ]
+          }
+        }
+      },
+      {
+        name: 'VIX Change',
+        type: 'bar',
+        yAxisIndex: 1,
+        data: [
+          { value: 0.3, itemStyle: { color: '#ef4444' } },
+          { value: 0.3, itemStyle: { color: '#ef4444' } },
+          { value: 0.4, itemStyle: { color: '#ef4444' } },
+          { value: 0.7, itemStyle: { color: '#ef4444' } },
+          { value: 0.9, itemStyle: { color: '#ef4444' } },
+          { value: -1.5, itemStyle: { color: '#10b981' } },
+          { value: -0.6, itemStyle: { color: '#10b981' } },
+          { value: -0.2, itemStyle: { color: '#10b981' } },
+          { value: -0.3, itemStyle: { color: '#10b981' } },
+          { value: -0.1, itemStyle: { color: '#10b981' } },
+          { value: -0.1, itemStyle: { color: '#10b981' } }
+        ],
+        barWidth: '30%'
+      }
+    ],
+    markArea: {
+      silent: true,
+      data: [[
+        { xAxis: 'T-5', itemStyle: { color: 'rgba(239,68,68,0.05)' } },
+        { xAxis: 'T-1' }
+      ],[
+        { xAxis: 'FOMC', itemStyle: { color: 'rgba(16,185,129,0.05)' } },
+        { xAxis: 'T+5' }
+      ]]
+    }
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- Chart 4: VIX During Earnings Season -->
+<script>
+(function() {
+  var dom = document.getElementById('earningsChart');
+  var chart = echarts.init(dom);
+  var weeks = ['W-3', 'W-2', 'W-1', 'Banks\nWeek', 'Industrials\nWeek', 'Mega-Cap\nWeek', 'W+1', 'W+2', 'W+3'];
+  var option = {
+    tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#334155', textStyle: { color: '#f8fafc', fontFamily: 'Inter', fontSize: 12 } },
+    grid: { left: 55, right: 20, top: 40, bottom: 50 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b', fontWeight: 500, interval: 0 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'VIX Level',
+      nameTextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#94a3b8' },
+      min: 14,
+      max: 22,
+      axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [{
+      type: 'line',
+      data: [16.2, 17.0, 18.1, 18.8, 18.5, 20.2, 18.4, 17.1, 16.5],
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 10,
+      lineStyle: { color: '#8b5cf6', width: 3 },
+      itemStyle: { color: '#8b5cf6', borderColor: '#fff', borderWidth: 2 },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(139,92,246,0.2)' },
+            { offset: 1, color: 'rgba(139,92,246,0.02)' }
+          ]
+        }
+      },
+      markPoint: {
+        data: [
+          { coord: ['Mega-Cap\nWeek', 20.2], name: 'Peak', symbol: 'pin', symbolSize: 50,
+            label: { formatter: 'PEAK\n20.2', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 12, color: '#fff' },
+            itemStyle: { color: '#8b5cf6' } }
+        ]
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { yAxis: 17.8, label: { formatter: 'Seasonal Avg', fontSize: 10, fontFamily: 'Inter', color: '#94a3b8' },
+            lineStyle: { color: '#94a3b8', type: 'dashed', width: 1.5 } }
+        ]
+      }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- Chart 5: Strategy Calendar Heatmap -->
+<script>
+(function() {
+  var dom = document.getElementById('playbookChart');
+  var chart = echarts.init(dom);
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var strategies = ['Buy Protection', 'Sell Premium', 'FOMC Play'];
+  var data = [
+    [0,0,3],[1,0,1],[2,0,2],[3,0,1],[4,0,1],[5,0,3],[6,0,4],[7,0,3],[8,0,0],[9,0,0],[10,0,2],[11,0,4],
+    [0,1,1],[1,1,2],[2,1,2],[3,1,2],[4,1,2],[5,1,2],[6,1,1],[7,1,1],[8,1,4],[9,1,4],[10,1,3],[11,1,2],
+    [0,2,2],[1,2,2],[2,2,3],[3,2,2],[4,2,3],[5,2,3],[6,2,2],[7,2,1],[8,2,3],[9,2,2],[10,2,2],[11,2,2]
+  ];
+  var option = {
+    tooltip: {
+      position: 'top',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#f8fafc', fontFamily: 'Inter', fontSize: 12 },
+      formatter: function(params) {
+        var labels = ['Not Recommended', 'Low Priority', 'Moderate', 'Good', 'Best Window'];
+        return months[params.data[0]] + ' — ' + strategies[params.data[1]] + '<br/><strong>' + labels[params.data[2]] + '</strong>';
+      }
+    },
+    grid: { left: 110, right: 20, top: 10, bottom: 35 },
+    xAxis: {
+      type: 'category',
+      data: months,
+      axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b', fontWeight: 600 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      splitArea: { show: true, areaStyle: { color: ['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.03)'] } }
+    },
+    yAxis: {
+      type: 'category',
+      data: strategies,
+      axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#334155', fontWeight: 600 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    visualMap: {
+      min: 0,
+      max: 4,
+      calculable: false,
+      orient: 'horizontal',
+      left: 'center',
+      bottom: 0,
+      inRange: {
+        color: ['#fecaca', '#fde68a', '#bfdbfe', '#86efac', '#10b981']
+      },
+      textStyle: { fontFamily: 'Inter', fontSize: 10, color: '#64748b' },
+      text: ['Best', 'Avoid'],
+      itemWidth: 12,
+      itemHeight: 12
+    },
+    series: [{
+      type: 'heatmap',
+      data: data,
+      label: { show: false },
+      itemStyle: { borderColor: '#fff', borderWidth: 3, borderRadius: 4 },
+      emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.15)' } }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+<!-- FAB Script -->
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+<script src="/assets/core.js"></script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

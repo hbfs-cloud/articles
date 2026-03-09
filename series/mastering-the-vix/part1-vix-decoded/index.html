@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>VIX Decoded | Mastering the VIX &mdash; Part 1 of 5 | Market Watch</title>
+ <meta name="description" content="Mastering the VIX — Part 1: What the VIX really is, how it's calculated from SPX options, the term structure, and why calling it a 'fear gauge' is misleading.">
+ <meta property="og:title" content="VIX Decoded | Mastering the VIX | Market Watch">
+ <meta property="og:description" content="Part 1 of 5: The VIX is not a fear gauge — it's the market's expectation of 30-day annualized volatility derived from S&P 500 options. Learn the math, the levels, and the term structure.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/mastering-the-vix/part1-vix-decoded/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* Mastering the VIX Series — Amber Theme (#f59e0b / #d97706) */
+ .hero-section {
+   padding: 4rem 2rem 8rem 2rem;
+   background: linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%);
+   text-align: center;
+ }
+ .hero-date {
+   font-size: 0.85rem;
+   font-weight: 700;
+   color: #d97706;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+   margin-bottom: 1rem;
+ }
+ .hero-badges {
+   display: flex;
+   gap: 0.75rem;
+   justify-content: center;
+   flex-wrap: wrap;
+   margin-top: 2rem;
+ }
+ .hero-badge {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.4rem;
+   padding: 0.5rem 1rem;
+   border-radius: 99px;
+   font-size: 0.8rem;
+   font-weight: 700;
+ }
+ .hero-badge-amber { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2); }
+ .hero-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+ .hero-badge-green { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+ .hero-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.2); }
+ .hero-badge-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+ /* Stat Cards */
+ .stat-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+   gap: 1.5rem;
+   margin: 2rem 0;
+ }
+ .stat-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 16px;
+   padding: 2rem;
+   text-align: center;
+   transition: all 0.3s;
+ }
+ .stat-card:hover {
+   transform: translateY(-4px);
+   box-shadow: 0 12px 30px -5px rgba(0,0,0,0.1);
+   border-color: #f59e0b;
+ }
+ .stat-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+ .stat-value { font-size: 2rem; font-weight: 900; color: #0f172a; margin-bottom: 0.25rem; }
+ .stat-label { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+
+ /* Phase Cards */
+ .phase-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 20px;
+   padding: 2.5rem;
+   margin: 2rem 0;
+   position: relative;
+   overflow: hidden;
+   transition: border-color 0.3s;
+ }
+ .phase-card:hover { border-color: #f59e0b; }
+ .phase-card::before {
+   content: '';
+   position: absolute;
+   top: 0; left: 0; right: 0;
+   height: 4px;
+ }
+ .phase-card.card-amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+ .phase-card.card-red::before { background: linear-gradient(90deg, #ef4444, #7f1d1d); }
+ .phase-card.card-blue::before { background: linear-gradient(90deg, #3b82f6, #1e3a5f); }
+ .phase-card.card-green::before { background: linear-gradient(90deg, #10b981, #059669); }
+ .phase-card.card-purple::before { background: linear-gradient(90deg, #8b5cf6, #4c1d95); }
+
+ .phase-title {
+   font-size: 1.6rem;
+   font-weight: 800;
+   color: #0f172a;
+   margin-bottom: 0.5rem;
+ }
+ .phase-subtitle {
+   font-size: 1rem;
+   color: #64748b;
+   margin-bottom: 1.5rem;
+   font-weight: 500;
+ }
+
+ /* Checklist */
+ .checklist { list-style: none; padding: 0; margin: 1.5rem 0; }
+ .checklist li { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0; font-size: 0.95rem; color: #334155; line-height: 1.5; }
+ .checklist li i { margin-top: 0.15rem; flex-shrink: 0; }
+ .check-valid { color: #10b981; }
+ .check-invalid { color: #ef4444; }
+ .check-amber { color: #f59e0b; }
+
+ /* Part Divider */
+ .part-divider {
+   text-align: center;
+   padding: 3rem 2rem;
+   margin: 3rem -2rem 2rem;
+   background: linear-gradient(135deg, #92400e 0%, #d97706 50%, #f59e0b 100%);
+   color: white;
+   border-radius: 20px;
+ }
+ .part-divider h2 {
+   font-size: 2rem;
+   font-weight: 900;
+   margin: 0 0 0.5rem;
+ }
+ .part-divider p {
+   font-size: 1rem;
+   opacity: 0.85;
+   margin: 0;
+ }
+
+ /* Compare Table */
+ .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin: 2rem 0; }
+ .compare-table th { background: #1e293b; color: white; padding: 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+ .compare-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
+ .compare-table tr:nth-child(even) td { background: #f8fafc; }
+ .compare-table tr:last-child td { border-bottom: none; }
+
+ /* Myth Card */
+ .myth-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 16px;
+   padding: 2rem;
+   margin: 1.5rem 0;
+   transition: all 0.3s;
+ }
+ .myth-card:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 8px 25px -5px rgba(0,0,0,0.08);
+   border-color: #f59e0b;
+ }
+ .myth-number {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   width: 36px; height: 36px;
+   border-radius: 50%;
+   background: #d97706;
+   color: white;
+   font-weight: 900;
+   font-size: 0.9rem;
+   margin-bottom: 0.75rem;
+ }
+ .myth-title {
+   font-size: 1.15rem;
+   font-weight: 800;
+   color: #0f172a;
+   margin-bottom: 0.5rem;
+ }
+ .myth-verdict {
+   font-size: 0.8rem;
+   font-weight: 700;
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+   padding: 0.3rem 0.75rem;
+   border-radius: 99px;
+   display: inline-block;
+   margin-bottom: 0.75rem;
+   background: rgba(239, 68, 68, 0.1);
+   color: #ef4444;
+   border: 1px solid rgba(239, 68, 68, 0.2);
+ }
+
+ /* Ticker Grid */
+ .ticker-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+   gap: 1rem;
+   margin: 1.5rem 0;
+ }
+ .ticker-card {
+   background: white;
+   border: 2px solid #e2e8f0;
+   border-radius: 12px;
+   padding: 1.25rem;
+   text-align: center;
+   transition: all 0.3s;
+ }
+ .ticker-card:hover {
+   border-color: #f59e0b;
+   transform: translateY(-2px);
+   box-shadow: 0 6px 20px -4px rgba(0,0,0,0.08);
+ }
+ .ticker-symbol { font-size: 1rem; font-weight: 900; color: #0f172a; margin-bottom: 0.25rem; }
+ .ticker-desc { font-size: 0.75rem; color: #64748b; line-height: 1.4; }
+
+ /* Next CTA */
+ .next-cta {
+   background: linear-gradient(135deg, #92400e, #d97706);
+   border-radius: 20px;
+   padding: 3rem 2rem;
+   text-align: center;
+   color: white;
+   margin: 3rem 0;
+ }
+ .next-cta h3 { font-size: 1.4rem; font-weight: 900; margin: 0 0 0.5rem; }
+ .next-cta p { opacity: 0.85; margin: 0 0 1.5rem; font-size: 1rem; }
+ .next-cta a {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.5rem;
+   background: white;
+   color: #d97706;
+   padding: 0.85rem 2rem;
+   border-radius: 12px;
+   font-weight: 800;
+   font-size: 1rem;
+   text-decoration: none;
+   transition: all 0.3s;
+ }
+ .next-cta a:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+
+ /* Section Divider */
+ .section-divider {
+   display: flex;
+   align-items: center;
+   gap: 1rem;
+   margin: 3rem 0 2rem;
+   color: #94a3b8;
+   font-size: 0.75rem;
+   font-weight: 700;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+ }
+ .section-divider::before,
+ .section-divider::after {
+   content: '';
+   flex: 1;
+   height: 1px;
+   background: #e2e8f0;
+ }
+
+ /* Formula Box */
+ .formula-box {
+   background: #fffbeb;
+   border: 2px solid #f59e0b;
+   border-radius: 16px;
+   padding: 2rem;
+   text-align: center;
+   margin: 2rem 0;
+ }
+ .formula-box .formula {
+   font-size: 1.3rem;
+   font-weight: 900;
+   color: #92400e;
+   font-family: 'Courier New', monospace;
+   margin: 1rem 0;
+ }
+ .formula-box .formula-label {
+   font-size: 0.85rem;
+   color: #92400e;
+   font-weight: 600;
+ }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+   .stat-grid { grid-template-columns: repeat(2, 1fr); }
+   .ticker-grid { grid-template-columns: repeat(3, 1fr); }
+   .hero-section { padding: 2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size: 1.8rem !important; }
+   .phase-card { padding: 1.5rem; }
+   .compare-table { font-size: 0.8rem; }
+   .compare-table th, .compare-table td { padding: 0.6rem; }
+   .hero-badge { font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+   .part-divider { margin: 2rem 0 1.5rem; padding: 2rem 1rem; border-radius: 12px; }
+   .part-divider h2 { font-size: 1.4rem; }
+   .myth-card { padding: 1.5rem; }
+   .formula-box .formula { font-size: 1rem; }
+ }
+ @media (max-width: 480px) {
+   .stat-grid { grid-template-columns: 1fr; }
+   .ticker-grid { grid-template-columns: repeat(2, 1fr); }
+   .hero-section h1 { font-size: 1.4rem !important; }
+   .hero-section { padding: 2rem 1rem 4rem; }
+   .hero-badge { font-size: 0.65rem; padding: 0.3rem 0.6rem; gap: 0.25rem; }
+   .hero-badges { gap: 0.4rem; margin-top: 1rem; }
+ }
+ </style>
+</head>
+<body>
+ <!-- Google Tag Manager (noscript) -->
+ <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" class="gtm-noscript"></iframe></noscript>
+
+ <!-- Brand Bar -->
+ <nav class="brand-bar">
+   <div class="brand-bar-inner">
+     <a href="/" class="brand-logo">
+       <img src="/logo.svg" alt="" width="36" height="36">
+       <span class="brand-title">MarketWatch</span>
+     </a>
+     <div class="brand-actions">
+       <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+     </div>
+   </div>
+ </nav>
+
+ <!-- Hero -->
+ <section class="hero-section">
+   <div class="hero-date"><i class="fa-solid fa-chart-line"></i> Mastering the VIX &mdash; Part 1 of 5</div>
+   <h1 class="hero-title">VIX Decoded</h1>
+   <p class="hero-subtitle">The VIX is not a "fear gauge" &mdash; it is the market's expectation of 30-day annualized volatility derived from S&amp;P 500 options prices. Understand what it really measures, how it is calculated, and what the term structure tells you that the headline number does not.</p>
+   <div class="hero-badges">
+     <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-list-ol"></i> Part 1/5</span>
+     <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calculator"></i> Quantitative</span>
+     <span class="hero-badge hero-badge-green"><i class="fa-solid fa-graduation-cap"></i> Intermediate</span>
+     <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-clock"></i> 14 min read</span>
+   </div>
+   <div id="article-clickable-tags" class="card-tags"></div>
+ </section>
+
+ <!-- Series Bar -->
+ <div class="series-bar">
+   <div class="series-bar-inner">
+     <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
+     <span class="series-title">Mastering the VIX</span>
+     <div class="series-steps">
+       <a href="/series/mastering-the-vix/part1-vix-decoded/" class="series-step current">
+         <span class="series-num">1</span>
+         <span class="series-label">VIX Decoded</span>
+       </a>
+       <a href="/series/mastering-the-vix/part2-seasonality/" class="series-step">
+         <span class="series-num">2</span>
+         <span class="series-label">Seasonality</span>
+       </a>
+       <a href="/series/mastering-the-vix/part3-indicator/" class="series-step">
+         <span class="series-num">3</span>
+         <span class="series-label">VIX as Indicator</span>
+       </a>
+       <a href="/series/mastering-the-vix/part4-trading/" class="series-step">
+         <span class="series-num">4</span>
+         <span class="series-label">Trading the VIX</span>
+       </a>
+       <a href="/series/mastering-the-vix/part5-strategies/" class="series-step">
+         <span class="series-num">5</span>
+         <span class="series-label">Advanced Strategies</span>
+       </a>
+     </div>
+     <span class="series-counter">1/5</span>
+     <a href="/series/mastering-the-vix/part2-seasonality/" class="series-arrow">
+       <i class="fas fa-chevron-right"></i>
+     </a>
+   </div>
+ </div>
+
+ <div class="container">
+
+ <!-- ============================== -->
+ <!-- SECTION 1: WHAT IS THE VIX     -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="intro">What Is the VIX?</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-bolt"></i> Not a Fear Gauge &mdash; An Expectations Meter</h2>
+
+   <p>Every financial news anchor calls the VIX the "fear index." It makes for a good headline, but it is misleading. The VIX does not measure fear. It does not measure panic. It does not even measure current volatility. <strong>The VIX measures the market's expectation of how volatile the S&amp;P 500 will be over the next 30 calendar days.</strong></p>
+
+   <p>More precisely, the CBOE Volatility Index (VIX) is derived from the prices of S&amp;P 500 index options (SPX). When option traders collectively pay more for options &mdash; because they expect bigger moves ahead &mdash; the VIX rises. When they pay less, the VIX falls. It is a forward-looking measure of <em>implied</em> volatility, not a backward-looking measure of <em>realized</em> volatility.</p>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> The Key Distinction</h4>
+     <p><strong>Implied Volatility (IV)</strong> is what the market <em>expects</em> to happen. It is derived from option prices. <strong>Realized Volatility (RV)</strong> is what <em>actually</em> happened. It is calculated from historical price movements. The VIX measures IV. The two often diverge &mdash; and that divergence is tradeable. We will explore this in depth in the "Implied vs Realized" section below.</p>
+   </div>
+
+   <p>The VIX was created by the <strong>Chicago Board Options Exchange (CBOE)</strong> in 1993, based on research by Professor Robert Whaley of Vanderbilt University. The original VIX (now called <strong>VXO</strong>) was based on S&amp;P 100 (OEX) options and used only eight at-the-money strikes. In <strong>2003</strong>, the CBOE redesigned the index entirely:</p>
+
+   <ul class="checklist">
+     <li><i class="fa-solid fa-check check-amber"></i> <strong>Switched to S&amp;P 500 (SPX) options</strong> &mdash; much deeper and more liquid market</li>
+     <li><i class="fa-solid fa-check check-amber"></i> <strong>Uses a wide strip of out-of-the-money strikes</strong> &mdash; captures the entire implied volatility surface, not just ATM</li>
+     <li><i class="fa-solid fa-check check-amber"></i> <strong>Model-free calculation</strong> &mdash; no Black-Scholes assumptions required</li>
+     <li><i class="fa-solid fa-check check-amber"></i> <strong>Based on variance swap pricing</strong> &mdash; theoretically more robust</li>
+   </ul>
+
+   <p>The media branded it the "fear index" because VIX spikes tend to coincide with market selloffs. But correlation is not causation. The VIX also rises before anticipated events like FOMC meetings, elections, and earnings seasons &mdash; situations where uncertainty is high but fear may be absent. A better name would be the <strong>"uncertainty index"</strong> or the <strong>"expected move index."</strong></p>
+
+   <div class="stat-grid">
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+       <div class="stat-value">1993</div>
+       <div class="stat-label">Year the original VIX was introduced by CBOE (based on OEX options)</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+       <div class="stat-value">2003</div>
+       <div class="stat-label">Redesigned to use SPX options with model-free variance swap methodology</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-chart-area"></i></div>
+       <div class="stat-value">30</div>
+       <div class="stat-label">Calendar days of expected volatility that the VIX measures (forward-looking)</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+       <div class="stat-value">82.69</div>
+       <div class="stat-label">All-time intraday VIX high, reached on March 16, 2020 during COVID crash</div>
+     </div>
+   </div>
+
+   <p>Understanding this distinction &mdash; that the VIX is an <em>expectation</em>, not a measurement &mdash; is the foundation for everything in this series. When you see "VIX at 25," you are not seeing fear. You are seeing what options traders collectively believe the S&amp;P 500 will do over the next month. And as we will learn, those traders are systematically wrong in a very specific, very profitable way.</p>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 2: HOW IT IS CALCULATED -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="calculation">How the VIX Is Calculated</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-calculator"></i> The Math Behind the Number</h2>
+
+   <p>You do not need a PhD to understand VIX calculation. The core idea is elegant: <strong>aggregate the prices of many SPX options across different strike prices to extract the market's expected variance, then take the square root to get volatility.</strong></p>
+
+   <p>Here is the process in four steps:</p>
+
+   <div class="phase-card card-amber">
+     <div class="phase-title">Step 1: Select the Options</div>
+     <div class="phase-subtitle">CBOE uses two SPX option expirations that bracket 30 days</div>
+     <p>The VIX always looks at two sets of SPX options: one expiring just before 30 calendar days from now (<strong>near-term</strong>) and one expiring just after (<strong>next-term</strong>). It interpolates between them to target exactly 30 days. Only <strong>out-of-the-money (OTM)</strong> options are used &mdash; puts below the forward price, calls above it. This avoids double-counting intrinsic value.</p>
+   </div>
+
+   <div class="phase-card card-blue">
+     <div class="phase-title">Step 2: Weight by Strike</div>
+     <div class="phase-subtitle">Each option contributes proportionally to the strip</div>
+     <p>Each OTM option's price is weighted by the distance between its strike and the adjacent strikes (delta-K). Options that are deep OTM contribute less because they are cheaper, but they still contribute. This is critical: <strong>deep OTM puts</strong> &mdash; crash protection &mdash; have a disproportionate effect on the VIX when their prices spike. This is why the VIX rises more on selloffs than it falls on rallies.</p>
+   </div>
+
+   <div class="phase-card card-green">
+     <div class="phase-title">Step 3: Calculate Variance</div>
+     <div class="phase-subtitle">Sum the weighted option prices to get expected variance</div>
+     <p>The weighted strip of option prices is summed and adjusted by the risk-free rate and forward price. The result is the <strong>expected variance</strong> of the S&amp;P 500 over 30 days. This is essentially the fair price of a <strong>variance swap</strong> &mdash; a derivative that pays the difference between realized and implied variance.</p>
+   </div>
+
+   <div class="phase-card card-purple">
+     <div class="phase-title">Step 4: Annualize and Square Root</div>
+     <div class="phase-subtitle">Convert 30-day variance to annualized volatility</div>
+     <p>Take the square root of the expected variance to get standard deviation (volatility). Then annualize it by multiplying by the square root of 365/30. The result is the VIX &mdash; <strong>an annualized percentage representing expected volatility.</strong></p>
+   </div>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> What Does a VIX Number Actually Mean?</h4>
+     <p>The VIX is quoted in annualized percentage points. To convert it to <strong>expected daily moves</strong>, you divide by the square root of the number of trading days in a year (252):</p>
+   </div>
+
+   <div class="formula-box">
+     <div class="formula-label">Expected Daily Move (1 standard deviation)</div>
+     <div class="formula">Daily Move = VIX / &radic;252</div>
+     <div class="formula-label">&radic;252 &asymp; 15.87</div>
+   </div>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>VIX Level</th>
+         <th>Expected Daily Move</th>
+         <th>Expected Weekly Move</th>
+         <th>Expected Monthly Move</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>12</strong></td>
+         <td>&plusmn;0.76%</td>
+         <td>&plusmn;1.69%</td>
+         <td>&plusmn;3.46%</td>
+       </tr>
+       <tr>
+         <td><strong>16</strong></td>
+         <td>&plusmn;1.01%</td>
+         <td>&plusmn;2.26%</td>
+         <td>&plusmn;4.62%</td>
+       </tr>
+       <tr>
+         <td><strong>20</strong></td>
+         <td>&plusmn;1.26%</td>
+         <td>&plusmn;2.82%</td>
+         <td>&plusmn;5.77%</td>
+       </tr>
+       <tr>
+         <td><strong>25</strong></td>
+         <td>&plusmn;1.58%</td>
+         <td>&plusmn;3.52%</td>
+         <td>&plusmn;7.22%</td>
+       </tr>
+       <tr>
+         <td><strong>30</strong></td>
+         <td>&plusmn;1.89%</td>
+         <td>&plusmn;4.23%</td>
+         <td>&plusmn;8.66%</td>
+       </tr>
+       <tr>
+         <td><strong>40</strong></td>
+         <td>&plusmn;2.52%</td>
+         <td>&plusmn;5.63%</td>
+         <td>&plusmn;11.55%</td>
+       </tr>
+       <tr>
+         <td><strong>60</strong></td>
+         <td>&plusmn;3.78%</td>
+         <td>&plusmn;8.45%</td>
+         <td>&plusmn;17.32%</td>
+       </tr>
+       <tr>
+         <td><strong>80</strong></td>
+         <td>&plusmn;5.04%</td>
+         <td>&plusmn;11.27%</td>
+         <td>&plusmn;23.09%</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <div class="alert-box">
+     <h4><i class="fa-solid fa-triangle-exclamation"></i> These Are 1-Standard-Deviation Moves</h4>
+     <p>A VIX of 20 means the market expects SPX to move &plusmn;1.26% on a given day with ~68% probability (one sigma). The actual move will exceed this roughly one-third of the time. For risk management, multiply by 2 for a ~95% confidence interval, or by 3 for ~99.7%. This is why a VIX of 80 during COVID did not mean "the market will move 5% daily" &mdash; it meant there was a 68% chance of a 5% move, and a 32% chance of something even larger.</p>
+   </div>
+
+   <p>One of the most important properties of the VIX calculation is its <strong>asymmetry</strong>. Because it uses OTM options, and because OTM puts are typically more expensive than equidistant OTM calls (the "volatility skew"), the VIX is naturally biased upward when downside risk increases. The market charges a premium for crash protection, and the VIX reflects that premium. This is why the VIX moves more on 3% down days than 3% up days.</p>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 3: VIX LEVELS DECODED  -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="levels">VIX Levels Decoded</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-layer-group"></i> What Each VIX Level Tells You</h2>
+
+   <p>Not all VIX readings are created equal. A VIX of 18 in January 2020 meant something very different from a VIX of 18 in April 2020 (coming down from 82). Context matters. But as a general framework, here is how to interpret the major VIX regimes:</p>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>VIX Range</th>
+         <th>Regime</th>
+         <th>Market State</th>
+         <th>Historical Examples</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>9-12</strong></td>
+         <td>Extreme Complacency</td>
+         <td>Ultra-low vol, tight ranges, grinding higher. Often precedes sharp spikes. Selling vol here is picking up pennies.</td>
+         <td>Nov 2017 (VIX 9.14 all-time closing low), Jan 2018 pre-Volmageddon</td>
+       </tr>
+       <tr>
+         <td><strong>12-15</strong></td>
+         <td>Low Volatility</td>
+         <td>Calm, trending markets. Options are cheap. Good for buying protection, poor for selling premium.</td>
+         <td>Most of 2019, summer 2021</td>
+       </tr>
+       <tr>
+         <td><strong>15-20</strong></td>
+         <td>Normal</td>
+         <td>Historical median range. Healthy two-way market. The VIX spends ~45% of its time here.</td>
+         <td>Most of 2023, Q1 2024</td>
+       </tr>
+       <tr>
+         <td><strong>20-25</strong></td>
+         <td>Elevated</td>
+         <td>Uncertainty increasing. Hedging demand rising. Sector rotation and increased dispersion.</td>
+         <td>Q4 2022, Oct 2023 (Middle East tensions)</td>
+       </tr>
+       <tr>
+         <td><strong>25-35</strong></td>
+         <td>High Fear</td>
+         <td>Active selloff or major uncertainty event. Mean reversion starts becoming attractive but timing is risky.</td>
+         <td>Fed hiking cycle 2022, banking crisis Mar 2023, tariff escalation 2025</td>
+       </tr>
+       <tr>
+         <td><strong>35-50</strong></td>
+         <td>Crisis</td>
+         <td>Genuine panic. Liquidity dries up. Correlations spike to 1. Historically, buying SPX here has been profitable on 6-12 month horizons.</td>
+         <td>Aug 2015 (China devaluation), Feb 2018 (Volmageddon), Q4 2018 (Fed taper)</td>
+       </tr>
+       <tr>
+         <td><strong>50+</strong></td>
+         <td>Extreme Panic</td>
+         <td>Systemic crisis. Circuit breakers, gap openings, margin calls. Extremely rare &mdash; has only happened during GFC (2008), COVID (2020), and briefly in Volmageddon (2018).</td>
+         <td>Oct 2008 (VIX 80+), Mar 2020 (VIX 82.69), Feb 2018 (VIX 50.30 intraday)</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> The VIX Mean Reversion Property</h4>
+     <p>The single most important statistical property of the VIX is its <strong>mean-reverting nature</strong>. Unlike stock prices, which can trend indefinitely, the VIX always returns to its long-term average (historically around 19-20). High VIX readings <em>will</em> come down. Low VIX readings <em>will</em> spike. The question is always <em>when</em> and <em>how fast</em>. This mean-reverting property is the foundation of most volatility trading strategies, which we will explore in Parts 4 and 5.</p>
+   </div>
+
+   <!-- Chart: VIX Historical 2020-2026 -->
+   <div id="vixHistoryChart" class="echart-container"></div>
+
+   <p>The chart above shows the VIX from 2020 to 2026. Notice how every spike is followed by a decline back toward the 15-22 range. The COVID spike to 82 collapsed to 25 within 6 weeks. The 2022 bear market kept the VIX elevated (20-35) for months, but it eventually normalized. The 2025 tariff-driven spike receded as markets priced in the new reality. <strong>Mean reversion is reliable; its timing is not.</strong></p>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 4: TERM STRUCTURE      -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="term-structure">The VIX Term Structure</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-wave-square"></i> Beyond the Headline Number</h2>
+
+   <p>The single VIX number you see on CNBC is just the tip of the iceberg. Beneath it lies the <strong>VIX term structure</strong> &mdash; a curve that shows expected volatility at different time horizons. Understanding this curve is what separates tourists from professionals in the volatility space.</p>
+
+   <p>The CBOE publishes several volatility indices with different time horizons:</p>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>Index</th>
+         <th>Horizon</th>
+         <th>Description</th>
+         <th>Primary Use</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>VIX9D</strong></td>
+         <td>9 days</td>
+         <td>Near-term expected vol. Extremely sensitive to imminent events (FOMC, CPI, earnings).</td>
+         <td>Event-driven trading, gamma scalping</td>
+       </tr>
+       <tr>
+         <td><strong>VIX</strong></td>
+         <td>30 days</td>
+         <td>The standard VIX. Benchmark for volatility expectations.</td>
+         <td>Headline risk gauge, VIX futures, options strategies</td>
+       </tr>
+       <tr>
+         <td><strong>VIX3M</strong></td>
+         <td>3 months</td>
+         <td>Medium-term expected vol. More stable, less event-driven.</td>
+         <td>Term structure analysis, VIX/VIX3M ratio</td>
+       </tr>
+       <tr>
+         <td><strong>VIX6M</strong></td>
+         <td>6 months</td>
+         <td>Long-term expected vol. Reflects structural uncertainty.</td>
+         <td>Macro positioning, long-dated hedging</td>
+       </tr>
+       <tr>
+         <td><strong>VIX1Y (VXV)</strong></td>
+         <td>12 months</td>
+         <td>One-year expected vol. The most stable point on the curve.</td>
+         <td>Strategic allocation, long-term risk budgeting</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <p>The relationship between these indices creates two fundamental regimes:</p>
+
+   <div class="part-divider">
+     <h2><i class="fa-solid fa-arrows-up-down"></i> Contango vs Backwardation</h2>
+     <p>The two states of the VIX term structure that define your volatility strategy</p>
+   </div>
+
+   <div class="phase-card card-amber">
+     <div class="phase-title"><i class="fa-solid fa-arrow-trend-up"></i> Contango (Normal State)</div>
+     <div class="phase-subtitle">Futures prices ABOVE spot VIX &mdash; market expects calm now, uncertainty later</div>
+     <p>In a normal market, the term structure slopes upward: VIX9D &lt; VIX &lt; VIX3M &lt; VIX6M. This makes intuitive sense &mdash; the further out you look, the more uncertainty there is. You know roughly what will happen this week, but six months from now? Anything could happen.</p>
+     <p><strong>Contango is the dominant state.</strong> The VIX term structure is in contango approximately <strong>80-85% of the time</strong>. This is the "normal" state of the world. VIX futures roll down the curve as they approach expiration, losing value. This is why products like VXX (which hold rolling front-month VIX futures) bleed value over time &mdash; they are constantly buying expensive futures and selling them cheaper as they approach expiry.</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-check check-valid"></i> <strong>Market is calm</strong> &mdash; no immediate crisis or major event</li>
+       <li><i class="fa-solid fa-check check-valid"></i> <strong>Short vol strategies work well</strong> &mdash; selling VIX futures or credit spreads profits from roll-down</li>
+       <li><i class="fa-solid fa-check check-valid"></i> <strong>VXX/UVXY decay</strong> &mdash; long volatility ETPs lose money from negative roll yield</li>
+       <li><i class="fa-solid fa-check check-valid"></i> <strong>Risk: complacency</strong> &mdash; extended contango often precedes violent VIX spikes</li>
+     </ul>
+   </div>
+
+   <div class="phase-card card-red">
+     <div class="phase-title"><i class="fa-solid fa-arrow-trend-down"></i> Backwardation (Crisis State)</div>
+     <div class="phase-subtitle">Spot VIX ABOVE futures &mdash; panic NOW, expectation it will subside</div>
+     <p>When the term structure inverts &mdash; VIX9D &gt; VIX &gt; VIX3M &gt; VIX6M &mdash; you have <strong>backwardation</strong>. The market is saying: "Things are terrible <em>right now</em>, but we expect them to calm down eventually." This is the signature of acute fear.</p>
+     <p><strong>Backwardation is rare and short-lived.</strong> It occurs only about <strong>15-20% of the time</strong>, almost exclusively during market selloffs. It is the single best objective signal that the market is in genuine distress (as opposed to just being nervous). Historical studies show that buying SPX when the VIX term structure is in steep backwardation has produced strong positive returns on 3-6 month horizons.</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-xmark check-invalid"></i> <strong>Active crisis</strong> &mdash; selling, margin calls, forced liquidation</li>
+       <li><i class="fa-solid fa-xmark check-invalid"></i> <strong>Short vol strategies get destroyed</strong> &mdash; negative gamma, exploding losses</li>
+       <li><i class="fa-solid fa-xmark check-invalid"></i> <strong>VXX/UVXY surge</strong> &mdash; positive roll yield amplifies long vol positions</li>
+       <li><i class="fa-solid fa-check check-valid"></i> <strong>Contrarian signal</strong> &mdash; backwardation > 5pts has historically signaled bottoms</li>
+     </ul>
+   </div>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>Attribute</th>
+         <th>Contango</th>
+         <th>Backwardation</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>Frequency</strong></td>
+         <td>~80-85% of trading days</td>
+         <td>~15-20% of trading days</td>
+       </tr>
+       <tr>
+         <td><strong>Term Structure Shape</strong></td>
+         <td>Upward sloping (9D &lt; 30D &lt; 3M &lt; 6M)</td>
+         <td>Inverted (9D &gt; 30D &gt; 3M &gt; 6M)</td>
+       </tr>
+       <tr>
+         <td><strong>VIX Futures vs Spot</strong></td>
+         <td>Futures trade above spot</td>
+         <td>Spot trades above futures</td>
+       </tr>
+       <tr>
+         <td><strong>Roll Yield</strong></td>
+         <td>Negative (costs money to hold long VIX)</td>
+         <td>Positive (rewards holding long VIX)</td>
+       </tr>
+       <tr>
+         <td><strong>Market Emotion</strong></td>
+         <td>Calm, complacent, trending</td>
+         <td>Panic, forced selling, capitulation</td>
+       </tr>
+       <tr>
+         <td><strong>Winning Strategy</strong></td>
+         <td>Sell vol, short VIX futures, credit spreads</td>
+         <td>Buy dips, long vol (but time carefully)</td>
+       </tr>
+       <tr>
+         <td><strong>Key Risk</strong></td>
+         <td>Sudden spike wipes out months of gains</td>
+         <td>Mean reversion can be slow (weeks)</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <!-- Chart: Term Structure in Both Regimes -->
+   <div id="termStructureChart" class="echart-container"></div>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> The VIX/VIX3M Ratio: A Simple but Powerful Signal</h4>
+     <p>One of the most useful term structure metrics is the <strong>VIX/VIX3M ratio</strong>. When VIX &lt; VIX3M (ratio below 1.0), the market is calm and contango prevails. When VIX &gt; VIX3M (ratio above 1.0), backwardation is setting in and stress is elevated. A ratio <strong>above 1.10</strong> has historically coincided with major market bottoms approximately 70% of the time within 1-3 months. This ratio is freely available and updated in real time &mdash; no expensive data feed required.</p>
+   </div>
+
+   <div class="alert-box">
+     <h4><i class="fa-solid fa-triangle-exclamation"></i> Contango is Not Safety</h4>
+     <p>The most dangerous VIX environment is <strong>deep, extended contango</strong> &mdash; when the curve is steep and has been stable for months. This creates two problems: (1) vol-selling strategies attract more capital, crowding the trade, and (2) the market becomes complacent, building leverage and reducing hedges. The Volmageddon event of February 5, 2018 happened after 14 months of uninterrupted contango. The VIX went from 14 to 50 in a single day, destroying several volatility ETPs and billions of dollars in short-vol capital.</p>
+   </div>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 5: IMPLIED VS REALIZED -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="vs-realized">Implied vs Realized Volatility</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-scale-balanced"></i> The Volatility Risk Premium</h2>
+
+   <p>Here is the single most profitable fact in all of volatility trading: <strong>the VIX consistently overestimates actual realized volatility.</strong> This is not a bug &mdash; it is a structural feature of the market, and it has persisted for decades.</p>
+
+   <p>On average, the VIX trades <strong>2-4 points above</strong> subsequent 30-day realized volatility. If the VIX is at 20, the S&amp;P 500 typically realizes about 16-18% annualized volatility over the following month. This gap is called the <strong>Volatility Risk Premium (VRP)</strong>.</p>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> Why Does the VRP Exist?</h4>
+     <p>The VRP exists for the same reason insurance premiums exceed expected losses: <strong>risk aversion</strong>. Option buyers (hedgers) are willing to pay a premium for protection, just as homeowners pay more for fire insurance than the expected cost of fires. Option sellers (dealers, hedge funds) demand a premium for bearing the risk of sudden, large moves. This creates a structural overpayment for options, which the VIX reflects.</p>
+     <p>The VRP is the reason why <strong>selling options is profitable over the long term</strong>. You are harvesting the insurance premium. Of course, this works until it does not &mdash; the premium is compensation for the risk of catastrophic loss during tail events. This is the classic "picking up nickels in front of a steamroller" trade, and managing its risks is the subject of Part 5.</p>
+   </div>
+
+   <div class="stat-grid">
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-chart-bar"></i></div>
+       <div class="stat-value">~86%</div>
+       <div class="stat-label">Percentage of months where VIX overestimates realized vol (1990-2025)</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-coins"></i></div>
+       <div class="stat-value">3.2 pts</div>
+       <div class="stat-label">Median VRP: VIX minus realized volatility over 30 days (long-term average)</div>
+     </div>
+     <div class="stat-card">
+       <div class="stat-icon"><i class="fa-solid fa-arrow-down"></i></div>
+       <div class="stat-value">-8 pts</div>
+       <div class="stat-label">VRP during COVID crash: VIX underestimated realized vol by 8 points</div>
+     </div>
+   </div>
+
+   <p>The key insight is that the VRP is <strong>positive most of the time but deeply negative during crises</strong>. When the VIX underestimates realized volatility &mdash; when actual moves exceed expectations &mdash; is precisely when selling vol blows up. This is why position sizing and tail risk hedging are critical for any volatility strategy.</p>
+
+   <!-- Chart: VIX vs Realized Volatility -->
+   <div id="vrpChart" class="echart-container"></div>
+
+   <p>The chart above illustrates the VRP over time. The blue area (VIX implied) almost always sits above the orange area (realized volatility). The gap between them is your premium &mdash; or your loss during extreme events. Notice how the premium collapses and inverts during the 2020 crash: the VIX at 60-80 was actually <em>underpricing</em> the realized moves, which exceeded 10% daily.</p>
+
+   <div class="alert-box">
+     <h4><i class="fa-solid fa-triangle-exclamation"></i> Do Not Confuse VRP With Free Money</h4>
+     <p>The VRP is real, persistent, and well-documented in academic literature (Carr &amp; Wu 2009, Bollerslev et al. 2009). But harvesting it requires:<br>
+     (1) <strong>Sufficient capital</strong> to survive drawdowns (the VRP can be -10 or worse during crises).<br>
+     (2) <strong>Position sizing discipline</strong> &mdash; no single trade should risk more than 2-3% of capital.<br>
+     (3) <strong>Tail hedging</strong> &mdash; owning cheap OTM puts to survive Black Swan events.<br>
+     We will cover practical VRP harvesting strategies in detail in Part 5.</p>
+   </div>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 6: VIX MYTHS           -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="myths">5 VIX Myths Debunked</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-mask"></i> What the VIX Does NOT Do</h2>
+
+   <p>The VIX is one of the most misunderstood indicators in finance. Here are five myths that even experienced traders believe, and why they are wrong.</p>
+
+   <div class="myth-card">
+     <div class="myth-number">1</div>
+     <div class="myth-title">"The VIX Predicts Crashes"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
+     <p>The VIX does not predict anything. It <strong>reacts</strong> to option prices, which in turn react to market moves and positioning. Before every major crash in history &mdash; 2008, 2020, the August 2015 flash crash &mdash; the VIX was at normal or low levels. It did not warn you. It spiked <em>after</em> the selling began.</p>
+     <p>A better predictive signal is the <strong>shape of the term structure</strong> or the <strong>VVIX</strong> (the volatility of VIX itself). But even these are anticipatory signals, not crystal balls. The VIX is a thermometer, not a weather forecast: it tells you the temperature right now, not what it will be tomorrow.</p>
+   </div>
+
+   <div class="myth-card">
+     <div class="myth-number">2</div>
+     <div class="myth-title">"High VIX = Always Buy the Dip"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> Oversimplified</div>
+     <p>The idea that you should "buy when the VIX spikes" has some statistical merit on longer time horizons (6-12 months), but it is dangerous as a short-term trading rule. During the 2008 GFC, the VIX first hit 40 in September. If you bought then, SPX fell another 40% over the next six months. The VIX can stay elevated for weeks or months.</p>
+     <p><strong>A better approach:</strong> Wait for the VIX to start <em>declining</em> from elevated levels (i.e., the rate of change turns negative). Historically, buying SPX 5-10 days after a VIX spike peak &mdash; not at the peak &mdash; has produced significantly better risk-adjusted returns.</p>
+   </div>
+
+   <div class="myth-card">
+     <div class="myth-number">3</div>
+     <div class="myth-title">"The VIX Can't Go Below 10"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
+     <p>The VIX hit <strong>9.14</strong> on November 3, 2017, its all-time closing low. Throughout late 2017, the VIX spent weeks below 10. This was driven by historically low hedging demand, massive short-vol strategies, and extremely tight realized volatility in SPX.</p>
+     <p>The lesson: there is no theoretical floor for the VIX. If option prices are sufficiently cheap, the VIX can go as low as the math allows. But ultra-low VIX readings are inherently unstable &mdash; they attract short-vol capital until the crowding triggers a violent unwind. The February 2018 Volmageddon was the direct consequence of the 2017 VIX compression.</p>
+   </div>
+
+   <div class="myth-card">
+     <div class="myth-number">4</div>
+     <div class="myth-title">"You Can Buy the VIX"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
+     <p>You cannot buy or sell "the VIX." The VIX is a <strong>calculated index</strong> &mdash; there are no shares, no ETF, no fund that tracks the VIX spot price. What you can trade:</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-check check-amber"></i> <strong>VIX Futures</strong> &mdash; the closest proxy, but they track <em>expected future VIX</em>, not spot VIX</li>
+       <li><i class="fa-solid fa-check check-amber"></i> <strong>VIX Options</strong> &mdash; options on VIX futures (not on spot VIX), European-style, cash-settled</li>
+       <li><i class="fa-solid fa-check check-amber"></i> <strong>VIX ETPs</strong> &mdash; VXX, UVXY, SVXY &mdash; track rolling VIX futures, with significant tracking error and roll costs</li>
+       <li><i class="fa-solid fa-check check-amber"></i> <strong>SPX Options</strong> &mdash; the underlying instruments from which VIX is derived</li>
+     </ul>
+     <p>Each of these instruments has its own dynamics, costs, and risks. A VIX future can expire at a very different level than where spot VIX is on expiration day. We will deep-dive into trading these instruments in Part 4.</p>
+   </div>
+
+   <div class="myth-card">
+     <div class="myth-number">5</div>
+     <div class="myth-title">"VIX and SPX Always Move in Opposite Directions"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> Mostly True, But Not Always</div>
+     <p>The correlation between daily VIX changes and SPX returns is approximately <strong>-0.80</strong>. That is strongly negative, but it is not -1.0. There are days when both VIX and SPX rise simultaneously &mdash; typically before a major event (FOMC, elections) when the market rallies but option demand increases. And there are days when both fall &mdash; after an anticipated event passes and vol crush occurs alongside a flat or slightly negative SPX.</p>
+     <p>The asymmetry is also notable: VIX rises more on SPX down days than it falls on equivalent SPX up days. A 2% SPX decline might push VIX up 4-5 points, but a 2% SPX rally might only pull VIX down 2-3 points. This is because the volatility skew &mdash; OTM puts being more expensive than equidistant OTM calls &mdash; amplifies downside VIX moves.</p>
+   </div>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 7: YOUR VIX TOOLKIT    -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="toolkit">Your VIX Toolkit</div>
+
+ <div class="content-card">
+   <h2><i class="fa-solid fa-toolbox"></i> Essential Resources for VIX Analysis</h2>
+
+   <p>Armed with the knowledge from this article, here are the tools and tickers you need to monitor the VIX ecosystem daily. All of these are free or available through standard brokerage platforms.</p>
+
+   <div class="takeaway-box">
+     <h4><i class="fa-solid fa-star"></i> Key Tickers to Monitor</h4>
+     <p>Add these to your watchlist. Together, they give you a complete picture of the volatility landscape.</p>
+   </div>
+
+   <div class="ticker-grid">
+     <div class="ticker-card">
+       <div class="ticker-symbol">$VIX</div>
+       <div class="ticker-desc">30-day expected S&amp;P 500 volatility. The benchmark.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">$VIX9D</div>
+       <div class="ticker-desc">9-day expected vol. Spikes before imminent events (CPI, FOMC).</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">$VIX3M</div>
+       <div class="ticker-desc">3-month expected vol. Used for VIX/VIX3M ratio (term structure signal).</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">$VIX6M</div>
+       <div class="ticker-desc">6-month expected vol. Structural uncertainty gauge.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">$VVIX</div>
+       <div class="ticker-desc">Volatility of VIX. High VVIX = market expects VIX itself to move sharply.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">$VXV</div>
+       <div class="ticker-desc">3-month VIX (legacy ticker, same as VIX3M). Used in some ratio strategies.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">VXX</div>
+       <div class="ticker-desc">iPath VIX Short-Term Futures ETN. Tracks front-month VIX futures.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">UVXY</div>
+       <div class="ticker-desc">1.5x leveraged VIX futures ETF. Amplified exposure, extreme decay.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">SVXY</div>
+       <div class="ticker-desc">-0.5x inverse VIX futures ETF. Profits from contango roll-down.</div>
+     </div>
+     <div class="ticker-card">
+       <div class="ticker-symbol">$SKEW</div>
+       <div class="ticker-desc">CBOE Skew Index. Measures tail risk pricing in SPX options.</div>
+     </div>
+   </div>
+
+   <h3><i class="fa-solid fa-desktop"></i> Free Websites for VIX Analysis</h3>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>Resource</th>
+         <th>URL</th>
+         <th>What It Shows</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>VIX Central</strong></td>
+         <td>vixcentral.com</td>
+         <td>Real-time VIX futures term structure curve, contango/backwardation percentages, historical curves</td>
+       </tr>
+       <tr>
+         <td><strong>CBOE VIX Dashboard</strong></td>
+         <td>cboe.com/tradable_products/vix</td>
+         <td>Official VIX data, whitepapers, methodology documentation</td>
+       </tr>
+       <tr>
+         <td><strong>VoVolCalc</strong></td>
+         <td>vovolcalc.com</td>
+         <td>Historical VIX vs realized vol comparison, VRP charting</td>
+       </tr>
+       <tr>
+         <td><strong>TradingView</strong></td>
+         <td>tradingview.com</td>
+         <td>Chart VIX, VIX9D, VIX3M, VIX6M, VVIX with full technical analysis overlay</td>
+       </tr>
+       <tr>
+         <td><strong>Yahoo Finance</strong></td>
+         <td>finance.yahoo.com/quote/^VIX</td>
+         <td>Free delayed VIX quotes, historical data download</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> Your Daily VIX Checklist</h4>
+     <p>Before the market opens, check these four things in under 60 seconds:</p>
+     <ol>
+       <li><strong>VIX level</strong> &mdash; which regime are we in? (Complacency, Normal, Elevated, Crisis)</li>
+       <li><strong>VIX/VIX3M ratio</strong> &mdash; is the term structure in contango or backwardation?</li>
+       <li><strong>VIX direction</strong> &mdash; is VIX rising or falling? (Rising VIX = tighten stops, reduce size. Falling VIX = expand stops, look for opportunities.)</li>
+       <li><strong>VVIX</strong> &mdash; is the "vol of vol" elevated? (High VVIX = expect VIX itself to make a large move today, in either direction.)</li>
+     </ol>
+     <p>This 60-second check gives you a complete read on the volatility landscape. It should be as automatic as checking the weather before leaving the house.</p>
+   </div>
+
+   <div class="alert-box">
+     <h4><i class="fa-solid fa-forward"></i> Coming in Part 2: VIX Seasonality</h4>
+     <p>Now that you understand what the VIX is and how it works, Part 2 will reveal when it moves. The VIX has strong seasonal patterns &mdash; month-of-year effects, day-of-week effects, FOMC cycle effects, and OpEx dynamics. These patterns are statistically significant, persistent, and directly tradeable. You will learn why "Sell in May" has a volatility corollary, why VIX rises before FOMC meetings and crashes after them, and why the third Friday of every month matters more than you think.</p>
+   </div>
+ </div>
+
+
+ <!-- ============================== -->
+ <!-- SECTION 8: NEXT CTA            -->
+ <!-- ============================== -->
+
+ <div class="section-divider" id="next">Continue the Series</div>
+
+ <div class="next-cta">
+   <h3>Part 2: VIX Seasonality</h3>
+   <p>Discover the seasonal patterns, FOMC cycles, and OpEx dynamics that drive VIX movements throughout the year.</p>
+   <a href="/series/mastering-the-vix/part2-seasonality/">
+     Continue to Part 2 <i class="fa-solid fa-arrow-right"></i>
+   </a>
+ </div>
+
+ <!-- Series Bar Bottom -->
+ <div class="series-bar">
+   <div class="series-bar-inner">
+     <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
+     <span class="series-title">Mastering the VIX</span>
+     <div class="series-steps">
+       <a href="/series/mastering-the-vix/part1-vix-decoded/" class="series-step current">
+         <span class="series-num">1</span>
+         <span class="series-label">VIX Decoded</span>
+       </a>
+       <a href="/series/mastering-the-vix/part2-seasonality/" class="series-step">
+         <span class="series-num">2</span>
+         <span class="series-label">Seasonality</span>
+       </a>
+       <a href="/series/mastering-the-vix/part3-indicator/" class="series-step">
+         <span class="series-num">3</span>
+         <span class="series-label">VIX as Indicator</span>
+       </a>
+       <a href="/series/mastering-the-vix/part4-trading/" class="series-step">
+         <span class="series-num">4</span>
+         <span class="series-label">Trading the VIX</span>
+       </a>
+       <a href="/series/mastering-the-vix/part5-strategies/" class="series-step">
+         <span class="series-num">5</span>
+         <span class="series-label">Advanced Strategies</span>
+       </a>
+     </div>
+     <span class="series-counter">1/5</span>
+     <a href="/series/mastering-the-vix/part2-seasonality/" class="series-arrow">
+       <i class="fas fa-chevron-right"></i>
+     </a>
+   </div>
+ </div>
+
+ </div><!-- /.container -->
+
+ <!-- Footer -->
+ <footer class="article-footer">
+   &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+   This is not financial advice.
+   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+ </footer>
+
+ <!-- FAB Navigation -->
+ <div class="fnav" id="floatingNav">
+   <div class="fnav-menu" id="fnavMenu">
+     <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bolt"></i><span>What Is the VIX</span></a>
+     <a href="#calculation" class="fnav-item" data-section="calculation"><i class="fas fa-calculator"></i><span>Calculation</span></a>
+     <a href="#levels" class="fnav-item" data-section="levels"><i class="fas fa-layer-group"></i><span>VIX Levels</span></a>
+     <a href="#term-structure" class="fnav-item" data-section="term-structure"><i class="fas fa-wave-square"></i><span>Term Structure</span></a>
+     <a href="#vs-realized" class="fnav-item" data-section="vs-realized"><i class="fas fa-scale-balanced"></i><span>Implied vs Realized</span></a>
+     <a href="#myths" class="fnav-item" data-section="myths"><i class="fas fa-mask"></i><span>Myths Debunked</span></a>
+     <a href="#toolkit" class="fnav-item" data-section="toolkit"><i class="fas fa-toolbox"></i><span>Toolkit</span></a>
+     <a href="#next" class="fnav-item" data-section="next"><i class="fas fa-arrow-right"></i><span>Next Part</span></a>
+   </div>
+   <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+     <i class="fas fa-bars" id="fnavIcon"></i>
+     <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+   </button>
+ </div>
+
+ <!-- ECharts: VIX Historical 2020-2026 -->
+ <script>
+ (function() {
+   var dom = document.getElementById('vixHistoryChart');
+   if (!dom) return;
+   dom.style.width = '100%';
+   dom.style.height = '480px';
+   dom.style.margin = '2rem 0';
+   var chart = echarts.init(dom);
+
+   var dates = [];
+   var vixData = [];
+
+   // Simulated VIX monthly data 2020-2026
+   var rawData = [
+     ['2020-01', 14], ['2020-02', 40], ['2020-03', 82], ['2020-04', 35], ['2020-05', 28], ['2020-06', 30],
+     ['2020-07', 25], ['2020-08', 22], ['2020-09', 27], ['2020-10', 32], ['2020-11', 24], ['2020-12', 22],
+     ['2021-01', 33], ['2021-02', 22], ['2021-03', 20], ['2021-04', 17], ['2021-05', 20], ['2021-06', 16],
+     ['2021-07', 19], ['2021-08', 16], ['2021-09', 23], ['2021-10', 16], ['2021-11', 21], ['2021-12', 22],
+     ['2022-01', 28], ['2022-02', 30], ['2022-03', 28], ['2022-04', 33], ['2022-05', 30], ['2022-06', 29],
+     ['2022-07', 24], ['2022-08', 23], ['2022-09', 32], ['2022-10', 30], ['2022-11', 23], ['2022-12', 22],
+     ['2023-01', 20], ['2023-02', 21], ['2023-03', 26], ['2023-04', 16], ['2023-05', 17], ['2023-06', 14],
+     ['2023-07', 14], ['2023-08', 17], ['2023-09', 17], ['2023-10', 22], ['2023-11', 15], ['2023-12', 13],
+     ['2024-01', 14], ['2024-02', 14], ['2024-03', 13], ['2024-04', 16], ['2024-05', 13], ['2024-06', 13],
+     ['2024-07', 16], ['2024-08', 38], ['2024-09', 19], ['2024-10', 20], ['2024-11', 15], ['2024-12', 18],
+     ['2025-01', 16], ['2025-02', 19], ['2025-03', 26], ['2025-04', 33], ['2025-05', 24], ['2025-06', 21],
+     ['2025-07', 18], ['2025-08', 17], ['2025-09', 19], ['2025-10', 20], ['2025-11', 17], ['2025-12', 16],
+     ['2026-01', 17], ['2026-02', 19], ['2026-03', 22]
+   ];
+
+   rawData.forEach(function(d) { dates.push(d[0]); vixData.push(d[1]); });
+
+   var option = {
+     backgroundColor: 'transparent',
+     title: {
+       text: 'VIX Monthly Highs (2020-2026)',
+       subtext: 'Key events annotated',
+       left: 'center',
+       textStyle: { fontFamily: 'Inter', fontWeight: 800, fontSize: 16, color: '#0f172a' },
+       subtextStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
+     },
+     tooltip: {
+       trigger: 'axis',
+       backgroundColor: '#1e293b',
+       borderColor: '#334155',
+       textStyle: { fontFamily: 'Inter', color: '#f8fafc', fontSize: 12 },
+       formatter: function(p) { return p[0].name + '<br/>VIX: <strong>' + p[0].value + '</strong>'; }
+     },
+     grid: { left: '8%', right: '5%', top: '18%', bottom: '12%' },
+     xAxis: {
+       type: 'category',
+       data: dates,
+       axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b', rotate: 45 },
+       axisLine: { lineStyle: { color: '#e2e8f0' } }
+     },
+     yAxis: {
+       type: 'value',
+       name: 'VIX',
+       nameTextStyle: { fontFamily: 'Inter', fontWeight: 700, fontSize: 12, color: '#64748b' },
+       axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' },
+       splitLine: { lineStyle: { color: '#f1f5f9' } }
+     },
+     series: [{
+       type: 'line',
+       data: vixData,
+       smooth: true,
+       symbol: 'circle',
+       symbolSize: 6,
+       lineStyle: { color: '#d97706', width: 3 },
+       itemStyle: { color: '#d97706', borderColor: '#fff', borderWidth: 2 },
+       areaStyle: {
+         color: {
+           type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+           colorStops: [
+             { offset: 0, color: 'rgba(245,158,11,0.3)' },
+             { offset: 1, color: 'rgba(245,158,11,0.02)' }
+           ]
+         }
+       },
+       markPoint: {
+         data: [
+           { coord: ['2020-03', 82], name: 'COVID', symbol: 'pin', symbolSize: 50,
+             label: { formatter: 'COVID\n82', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
+             itemStyle: { color: '#ef4444' } },
+           { coord: ['2022-04', 33], name: '2022 Bear', symbol: 'pin', symbolSize: 40,
+             label: { formatter: '2022\nBear', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
+             itemStyle: { color: '#f59e0b' } },
+           { coord: ['2023-03', 26], name: 'SVB', symbol: 'pin', symbolSize: 40,
+             label: { formatter: 'SVB\nCrisis', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
+             itemStyle: { color: '#8b5cf6' } },
+           { coord: ['2024-08', 38], name: 'Yen Carry', symbol: 'pin', symbolSize: 44,
+             label: { formatter: 'Yen\nCarry', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
+             itemStyle: { color: '#3b82f6' } },
+           { coord: ['2025-04', 33], name: 'Tariffs', symbol: 'pin', symbolSize: 40,
+             label: { formatter: 'Tariff\nWar', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
+             itemStyle: { color: '#ef4444' } }
+         ]
+       },
+       markLine: {
+         silent: true,
+         data: [
+           { yAxis: 20, label: { formatter: 'Long-term avg ~20', fontSize: 10, fontFamily: 'Inter', color: '#94a3b8' },
+             lineStyle: { color: '#94a3b8', type: 'dashed', width: 1 } }
+         ]
+       }
+     }],
+     visualMap: {
+       show: false,
+       pieces: [
+         { lte: 15, color: '#10b981' },
+         { gt: 15, lte: 25, color: '#d97706' },
+         { gt: 25, lte: 35, color: '#f59e0b' },
+         { gt: 35, color: '#ef4444' }
+       ]
+     }
+   };
+   chart.setOption(option);
+   window.addEventListener('resize', function() { chart.resize(); });
+ })();
+ </script>
+
+ <!-- ECharts: Term Structure -->
+ <script>
+ (function() {
+   var dom = document.getElementById('termStructureChart');
+   if (!dom) return;
+   dom.style.width = '100%';
+   dom.style.height = '420px';
+   dom.style.margin = '2rem 0';
+   var chart = echarts.init(dom);
+
+   var tenors = ['VIX9D', 'VIX (30D)', 'VIX3M', 'VIX6M', 'VIX1Y'];
+
+   var option = {
+     backgroundColor: 'transparent',
+     title: {
+       text: 'VIX Term Structure: Contango vs Backwardation',
+       left: 'center',
+       textStyle: { fontFamily: 'Inter', fontWeight: 800, fontSize: 15, color: '#0f172a' }
+     },
+     tooltip: {
+       trigger: 'axis',
+       backgroundColor: '#1e293b',
+       borderColor: '#334155',
+       textStyle: { fontFamily: 'Inter', color: '#f8fafc', fontSize: 12 }
+     },
+     legend: {
+       bottom: '3%',
+       textStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
+     },
+     grid: { left: '8%', right: '5%', top: '15%', bottom: '15%' },
+     xAxis: {
+       type: 'category',
+       data: tenors,
+       axisLabel: { fontFamily: 'Inter', fontSize: 12, fontWeight: 600, color: '#334155' },
+       axisLine: { lineStyle: { color: '#e2e8f0' } }
+     },
+     yAxis: {
+       type: 'value',
+       name: 'Implied Volatility (%)',
+       min: 10,
+       max: 50,
+       nameTextStyle: { fontFamily: 'Inter', fontWeight: 700, fontSize: 11, color: '#64748b' },
+       axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}%' },
+       splitLine: { lineStyle: { color: '#f1f5f9' } }
+     },
+     series: [
+       {
+         name: 'Contango (Normal)',
+         type: 'line',
+         data: [14, 16, 18, 19, 20],
+         smooth: true,
+         symbol: 'circle',
+         symbolSize: 10,
+         lineStyle: { color: '#10b981', width: 3 },
+         itemStyle: { color: '#10b981', borderColor: '#fff', borderWidth: 2 },
+         areaStyle: {
+           color: {
+             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+             colorStops: [
+               { offset: 0, color: 'rgba(16,185,129,0.15)' },
+               { offset: 1, color: 'rgba(16,185,129,0.02)' }
+             ]
+           }
+         }
+       },
+       {
+         name: 'Backwardation (Crisis)',
+         type: 'line',
+         data: [45, 38, 30, 26, 24],
+         smooth: true,
+         symbol: 'circle',
+         symbolSize: 10,
+         lineStyle: { color: '#ef4444', width: 3 },
+         itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 },
+         areaStyle: {
+           color: {
+             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+             colorStops: [
+               { offset: 0, color: 'rgba(239,68,68,0.15)' },
+               { offset: 1, color: 'rgba(239,68,68,0.02)' }
+             ]
+           }
+         }
+       }
+     ]
+   };
+   chart.setOption(option);
+   window.addEventListener('resize', function() { chart.resize(); });
+ })();
+ </script>
+
+ <!-- ECharts: VIX vs Realized Volatility (VRP) -->
+ <script>
+ (function() {
+   var dom = document.getElementById('vrpChart');
+   if (!dom) return;
+   dom.style.width = '100%';
+   dom.style.height = '420px';
+   dom.style.margin = '2rem 0';
+   var chart = echarts.init(dom);
+
+   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+   var years = ['2022', '2023', '2024', '2025'];
+   var labels = [];
+   years.forEach(function(y) { months.forEach(function(m) { labels.push(m + ' ' + y); }); });
+
+   // Simulated VIX (implied) vs realized vol
+   var implied = [
+     28,30,28,33,30,29,24,23,32,30,23,22,
+     20,21,26,16,17,14,14,17,17,22,15,13,
+     14,14,13,16,13,13,16,38,19,20,15,18,
+     16,19,26,33,24,21,18,17,19,20,17,16
+   ];
+   var realized = [
+     22,25,24,28,25,24,19,18,27,26,19,18,
+     16,17,22,13,14,11,11,14,14,18,12,10,
+     11,11,10,13,10,10,13,34,16,17,12,15,
+     13,16,23,30,20,17,15,14,16,17,14,13
+   ];
+
+   var option = {
+     backgroundColor: 'transparent',
+     title: {
+       text: 'VIX (Implied) vs 30-Day Realized Volatility',
+       subtext: 'The gap = Volatility Risk Premium (VRP)',
+       left: 'center',
+       textStyle: { fontFamily: 'Inter', fontWeight: 800, fontSize: 15, color: '#0f172a' },
+       subtextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' }
+     },
+     tooltip: {
+       trigger: 'axis',
+       backgroundColor: '#1e293b',
+       borderColor: '#334155',
+       textStyle: { fontFamily: 'Inter', color: '#f8fafc', fontSize: 12 },
+       formatter: function(p) {
+         var vrp = (p[0].value - p[1].value).toFixed(1);
+         return p[0].name + '<br/>' +
+           '<span style="color:#d97706">VIX (Implied): ' + p[0].value + '%</span><br/>' +
+           '<span style="color:#3b82f6">Realized: ' + p[1].value + '%</span><br/>' +
+           '<strong>VRP: ' + vrp + ' pts</strong>';
+       }
+     },
+     legend: {
+       bottom: '2%',
+       textStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
+     },
+     grid: { left: '8%', right: '5%', top: '18%', bottom: '14%' },
+     xAxis: {
+       type: 'category',
+       data: labels,
+       axisLabel: { fontFamily: 'Inter', fontSize: 9, color: '#64748b', rotate: 60, interval: 2 },
+       axisLine: { lineStyle: { color: '#e2e8f0' } }
+     },
+     yAxis: {
+       type: 'value',
+       name: 'Volatility (%)',
+       nameTextStyle: { fontFamily: 'Inter', fontWeight: 700, fontSize: 11, color: '#64748b' },
+       axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}%' },
+       splitLine: { lineStyle: { color: '#f1f5f9' } }
+     },
+     series: [
+       {
+         name: 'VIX (Implied)',
+         type: 'line',
+         data: implied,
+         smooth: true,
+         symbol: 'none',
+         lineStyle: { color: '#d97706', width: 2.5 },
+         areaStyle: {
+           color: {
+             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+             colorStops: [
+               { offset: 0, color: 'rgba(217,119,6,0.2)' },
+               { offset: 1, color: 'rgba(217,119,6,0.02)' }
+             ]
+           }
+         }
+       },
+       {
+         name: 'Realized Volatility',
+         type: 'line',
+         data: realized,
+         smooth: true,
+         symbol: 'none',
+         lineStyle: { color: '#3b82f6', width: 2.5 },
+         areaStyle: {
+           color: {
+             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+             colorStops: [
+               { offset: 0, color: 'rgba(59,130,246,0.15)' },
+               { offset: 1, color: 'rgba(59,130,246,0.02)' }
+             ]
+           }
+         }
+       }
+     ]
+   };
+   chart.setOption(option);
+   window.addEventListener('resize', function() { chart.resize(); });
+ })();
+ </script>
+
+ <!-- FAB Script -->
+ <script>
+ (function() {
+   var fab = document.getElementById('fnavBtn');
+   var menu = document.getElementById('fnavMenu');
+   var icon = document.getElementById('fnavIcon');
+   var label = document.getElementById('fnavLabel');
+   var items = menu.querySelectorAll('.fnav-item');
+   var sections = [];
+   var isOpen = false;
+
+   items.forEach(function(item) {
+     var id = item.getAttribute('data-section');
+     var el = document.getElementById(id);
+     if (el) sections.push({ id: id, el: el, item: item });
+   });
+
+   function toggle() {
+     isOpen = !isOpen;
+     menu.classList.toggle('open', isOpen);
+     fab.classList.toggle('open', isOpen);
+     icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+   }
+
+   fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+   document.addEventListener('click', function(e) {
+     if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+   });
+   document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+   items.forEach(function(item) {
+     item.addEventListener('click', function(e) {
+       e.preventDefault();
+       var id = this.getAttribute('data-section');
+       var target = document.getElementById(id);
+       if (target) {
+         var brandBar = document.querySelector('.brand-bar');
+         var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+         window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+       }
+       if (isOpen) toggle();
+     });
+   });
+
+   var currentActive = null;
+   var observer = new IntersectionObserver(function(entries) {
+     entries.forEach(function(entry) {
+       if (entry.isIntersecting) {
+         var match = sections.find(function(s) { return s.el === entry.target; });
+         if (match) {
+           if (currentActive) currentActive.item.classList.remove('active');
+           match.item.classList.add('active');
+           currentActive = match;
+           label.textContent = match.item.querySelector('span').textContent;
+         }
+       }
+     });
+   }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+
+   sections.forEach(function(s) { observer.observe(s.el); });
+   if (sections.length > 0) {
+     sections[0].item.classList.add('active');
+     currentActive = sections[0];
+     label.textContent = sections[0].item.querySelector('span').textContent;
+   }
+ })();
+ </script>
+ <script src="/assets/core.js"></script>
+ <script src="/assets/echarts-responsive.js"></script>
+ <script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
