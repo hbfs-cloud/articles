@@ -60,6 +60,32 @@ body:has(.tape){overflow:hidden}
 .tape--light .tape-btn:hover{color:#6366f1;background:rgba(99,102,241,.08)}
 @keyframes tape-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
+/* ══════ LIVE PRICE STATES ══════ */
+.pw-price{font-family:'Inter',monospace;font-weight:700;font-size:.62rem}
+.pw-chg{font-size:.52rem;font-weight:700}
+.pw-chg.up{color:#10b981}
+.pw-chg.down{color:#ef4444}
+.pw-chg.flat{color:#64748b}
+.pw-badge{font-size:.42rem;font-weight:800;padding:1px 4px;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.pw-badge.trending{background:#ecfdf5;color:#059669}
+.pw-badge.entry-zone{background:#fffbeb;color:#d97706;animation:pw-pulse 1.5s infinite}
+.pw-badge.near-stop{background:#fef2f2;color:#dc2626;animation:pw-pulse 1s infinite}
+.pw-badge.stopped{background:#f1f5f9;color:#94a3b8}
+.pw-badge.tp1-hit{background:#ecfdf5;color:#059669}
+.pw-badge.tp2-hit{background:#fefce8;color:#a16207}
+.pw-badge.underwater{background:#fef2f2;color:#ef4444}
+@keyframes pw-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+/* Tape status dot */
+.tape-status{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+/* Stopped item */
+.tape-item.pw-stopped-item{opacity:.35;filter:grayscale(.8)}
+.vp.pw-stopped-card{opacity:.35;filter:grayscale(.8);pointer-events:none}
+.vp.pw-trending-card{border-color:#86efac}
+.vp.pw-entry-zone-card{border-color:#fbbf24}
+.vp.pw-near-stop-card{border-color:#fca5a5}
+.vp.pw-tp1-card{border-color:#34d399;background:#f0fdf4}
+.vp.pw-tp2-card{border-color:#fbbf24;background:#fefce8}
+
 /* ══════ VERTICAL LIST MODE ══════ */
 .vlist{background:#f8fafc;min-height:100vh;padding:8px}
 .vlist-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px}
@@ -72,7 +98,7 @@ body:has(.tape){overflow:hidden}
 .vlist-btn{background:none;border:1px solid #e2e8f0;color:#64748b;cursor:pointer;padding:3px 7px;font-size:.6rem;border-radius:5px;transition:all .15s}
 .vlist-btn:hover{color:#6366f1;border-color:#a5b4fc;background:#eef2ff}
 .vlist-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.vp{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;transition:border-color .15s;cursor:pointer;text-decoration:none;display:block;color:inherit}
+.vp{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;transition:all .2s;cursor:pointer;text-decoration:none;display:block;color:inherit}
 .vp:hover{border-color:#a5b4fc}
 .vp-top{display:flex;align-items:center;gap:6px}
 .vp-logo{width:24px;height:24px;border-radius:6px;object-fit:cover;border:1px solid #f1f5f9;flex-shrink:0}
@@ -89,6 +115,13 @@ body:has(.tape){overflow:hidden}
 .vp-mid{display:flex;align-items:center;gap:4px;margin-top:4px}
 .vp-strat{font-size:.52rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:1px 6px;border-radius:4px}
 .vp-rr{font-size:.56rem;font-weight:800;color:#059669;background:#ecfdf5;padding:1px 6px;border-radius:4px}
+/* Live price row in vertical mode */
+.vp-live{display:flex;align-items:center;gap:6px;margin-top:4px;padding:3px 0;min-height:18px}
+.vp-live-price{font-size:.72rem;font-weight:800;color:#0f172a;font-family:'Inter',monospace}
+.vp-live-chg{font-size:.56rem;font-weight:700}
+.vp-live-chg.up{color:#10b981}
+.vp-live-chg.down{color:#ef4444}
+.vp-live-chg.flat{color:#94a3b8}
 .vp-levels{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:4px}
 .vp-lv{text-align:center}
 .vp-lv-label{display:block;font-size:.4rem;font-weight:600;color:#94a3b8;text-transform:uppercase}
@@ -148,32 +181,216 @@ body:has(.tape){overflow:hidden}
 
 <script>
 (function(){
-  var URL = 'https://articles.market-watch.xyz/mcp/watchlist.json';
+  var WATCHLIST_URL = 'https://articles.market-watch.xyz/mcp/watchlist.json';
+  var YAHOO_PROXY = 'https://corsproxy.io/?url=';
+  var BINANCE_API = 'https://api.binance.com/api/v3/ticker/price';
   var FLAGS = { US: '\ud83c\uddfa\ud83c\uddf8', EU: '\ud83c\uddea\ud83c\uddfa', APAC: '\ud83c\udf0f', ETF: '\ud83d\udcca' };
+
   var params = new URLSearchParams(location.search);
-  var mode = params.get('mode') || 'tape'; // tape | vertical | embed
-  var theme = params.get('theme') || 'dark'; // dark | light
-  var bg = params.get('bg') || ''; // custom background hex (no #)
+  var mode = params.get('mode') || 'tape';
+  var theme = params.get('theme') || 'dark';
+  var bg = params.get('bg') || '';
+  var showPrice = params.get('price') !== 'false';   // default: true
+  var showAlert = params.get('alert') === 'true';     // default: false
 
-  function yahooUrl(ticker) {
-    return 'https://finance.yahoo.com/quote/' + encodeURIComponent(ticker) + '/';
-  }
+  var livePrices = {};     // { TICKER: { price, chg, chgPct, time } }
+  var prevStatuses = {};   // for alert dedup
+  var alertCooldowns = {}; // { TICKER: timestamp }
+  var pollTimer = null;
+  var watchlistData = null;
 
-  function regimeColor(r) {
-    if (!r) return '#64748b';
-    r = r.toUpperCase();
-    return r.indexOf('RISK-OFF') >= 0 ? '#ef4444' : r.indexOf('RISK-ON') >= 0 ? '#10b981' : '#f59e0b';
-  }
-
-  function isETF(p) { return p.region === 'ETF' || (p.tags && p.tags.indexOf('etf') >= 0); }
-  function typeLabel(p) { return isETF(p) ? 'ETF' : 'Stock'; }
+  // ══════ Helpers ══════
+  function yahooUrl(t) { return 'https://finance.yahoo.com/quote/' + encodeURIComponent(t) + '/'; }
+  function regimeColor(r) { if(!r) return '#64748b'; r=r.toUpperCase(); return r.indexOf('RISK-OFF')>=0?'#ef4444':r.indexOf('RISK-ON')>=0?'#10b981':'#f59e0b'; }
+  function isETF(p) { return p.region==='ETF'||(p.tags&&p.tags.indexOf('etf')>=0); }
+  function typeLabel(p) { return isETF(p)?'ETF':'Stock'; }
+  function isCrypto(p) { return (p.tags&&p.tags.indexOf('crypto')>=0)||/\-USD$/i.test(p.ticker); }
+  function fmt(n) { return n>=1000?n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):n.toFixed(2); }
 
   function toast(msg) {
-    var el = document.getElementById('toast');
-    el.textContent = msg; el.classList.add('show');
-    setTimeout(function(){ el.classList.remove('show'); }, 2000);
+    var el=document.getElementById('toast');
+    el.textContent=msg;el.classList.add('show');
+    setTimeout(function(){el.classList.remove('show');},2000);
   }
 
+  // ══════ Position Classification ══════
+  function classify(pick, price) {
+    if (!price) return { status:'unknown', cls:'', label:'', color:'#64748b' };
+    var entry=pick.entry, stop=pick.stop, tp1=pick.tp1, tp2=pick.tp2||tp1*1.1;
+    var isLong = entry > stop;
+
+    // TP2 hit
+    if (tp2 && (isLong ? price>=tp2 : price<=tp2)) return { status:'tp2-hit', cls:'tp2-hit', label:'TP2 \u2713', color:'#a16207' };
+    // TP1 hit
+    if (isLong ? price>=tp1 : price<=tp1) return { status:'tp1-hit', cls:'tp1-hit', label:'TP1 \u2713', color:'#059669' };
+    // Stopped out
+    if (isLong ? price<=stop : price>=stop) return { status:'stopped', cls:'stopped', label:'STOPPED', color:'#94a3b8' };
+    // Near stop (within 2%)
+    if (Math.abs(price-stop)/stop <= 0.02) return { status:'near-stop', cls:'near-stop', label:'Near Stop', color:'#ef4444' };
+    // Near entry (within 2%)
+    if (Math.abs(price-entry)/entry <= 0.02) return { status:'entry-zone', cls:'entry-zone', label:'Entry Zone', color:'#d97706' };
+    // Good trend (above entry for long, below for short)
+    if (isLong ? price>entry : price<entry) return { status:'trending', cls:'trending', label:'Trending', color:'#10b981' };
+    // Underwater (between stop and entry, wrong side)
+    return { status:'underwater', cls:'underwater', label:'Underwater', color:'#ef4444' };
+  }
+
+  // ══════ Price Fetching ══════
+  function fetchBinancePrice(ticker) {
+    // BTC-USD → BTCUSDT
+    var sym = ticker.replace('-USD','USDT');
+    return fetch(BINANCE_API+'?symbol='+sym)
+      .then(function(r){return r.json();})
+      .then(function(d){return { ticker:ticker, price:parseFloat(d.price) };})
+      .catch(function(){return null;});
+  }
+
+  function fetchYahooPrices(symbols) {
+    // Batch via v8 chart — one request per symbol via CORS proxy
+    var fetches = symbols.map(function(sym) {
+      var url = YAHOO_PROXY + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d');
+      return fetch(url, { signal: AbortSignal.timeout(8000) })
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var result = d.chart && d.chart.result && d.chart.result[0];
+          if (!result) return null;
+          var meta = result.meta;
+          var price = meta.regularMarketPrice;
+          var prevClose = meta.chartPreviousClose || meta.previousClose;
+          var chg = prevClose ? price - prevClose : 0;
+          var chgPct = prevClose ? (chg/prevClose)*100 : 0;
+          return { ticker:sym, price:price, chg:chg, chgPct:chgPct };
+        })
+        .catch(function(){return null;});
+    });
+    return Promise.allSettled(fetches).then(function(results){
+      var out = [];
+      results.forEach(function(r){if(r.status==='fulfilled'&&r.value) out.push(r.value);});
+      return out;
+    });
+  }
+
+  function fetchAllPrices(picks) {
+    var cryptoTickers = [], stockTickers = [];
+    picks.forEach(function(p) {
+      if (isCrypto(p)) cryptoTickers.push(p.ticker);
+      else stockTickers.push(p.ticker);
+    });
+
+    var tasks = [];
+    if (stockTickers.length) tasks.push(fetchYahooPrices(stockTickers));
+    cryptoTickers.forEach(function(t) { tasks.push(fetchBinancePrice(t).then(function(r){return r?[r]:[];})); });
+
+    return Promise.allSettled(tasks).then(function(results) {
+      results.forEach(function(r) {
+        if (r.status !== 'fulfilled') return;
+        var arr = Array.isArray(r.value) ? r.value : [r.value];
+        arr.forEach(function(item) {
+          if (!item) return;
+          livePrices[item.ticker] = {
+            price: item.price,
+            chg: item.chg || 0,
+            chgPct: item.chgPct || 0,
+            time: Date.now()
+          };
+        });
+      });
+    });
+  }
+
+  // ══════ DOM Update (after price fetch) ══════
+  function updateLivePrices(picks) {
+    picks.forEach(function(p) {
+      var lp = livePrices[p.ticker];
+      if (!lp) return;
+      var st = classify(p, lp.price);
+
+      // Tape mode updates
+      document.querySelectorAll('.tape-item[data-ticker="'+p.ticker+'"]').forEach(function(el) {
+        // Status dot
+        var dot = el.querySelector('.tape-status');
+        if (dot) { dot.style.background = st.color; dot.title = st.label; }
+        // Live price
+        var prEl = el.querySelector('.tape-live');
+        if (prEl) {
+          prEl.textContent = '$'+fmt(lp.price);
+          prEl.style.color = lp.chg >= 0 ? '#34d399' : '#f87171';
+        }
+        // Stopped state
+        el.classList.toggle('pw-stopped-item', st.status === 'stopped');
+      });
+
+      // Vertical mode updates
+      var card = document.querySelector('.vp[data-ticker="'+p.ticker+'"]');
+      if (card) {
+        // Live price row
+        var liveRow = card.querySelector('.vp-live');
+        if (liveRow) {
+          var prSpan = liveRow.querySelector('.vp-live-price');
+          var chgSpan = liveRow.querySelector('.vp-live-chg');
+          var badge = liveRow.querySelector('.pw-badge');
+          if (prSpan) prSpan.textContent = '$'+fmt(lp.price);
+          if (chgSpan) {
+            var sign = lp.chg >= 0 ? '+' : '';
+            chgSpan.textContent = sign+lp.chgPct.toFixed(2)+'%';
+            chgSpan.className = 'vp-live-chg ' + (lp.chg>0?'up':lp.chg<0?'down':'flat');
+          }
+          if (badge) { badge.textContent = st.label; badge.className = 'pw-badge '+st.cls; }
+        }
+        // Card border state
+        card.className = 'vp';
+        if (st.status === 'stopped') card.classList.add('pw-stopped-card');
+        else if (st.status === 'trending' || st.status === 'tp1-hit') card.classList.add('pw-trending-card');
+        else if (st.status === 'tp2-hit') card.classList.add('pw-tp2-card');
+        else if (st.status === 'entry-zone') card.classList.add('pw-entry-zone-card');
+        else if (st.status === 'near-stop') card.classList.add('pw-near-stop-card');
+      }
+
+      // Alerts
+      if (showAlert && st.status !== 'unknown') checkAlertForPick(p, st, lp);
+    });
+  }
+
+  // ══════ Browser Notifications ══════
+  function checkAlertForPick(pick, st, lp) {
+    var key = pick.ticker;
+    var prev = prevStatuses[key];
+    prevStatuses[key] = st.status;
+    if (!prev || prev === st.status) return; // no change
+    // Cooldown: 5 min per ticker
+    if (alertCooldowns[key] && Date.now()-alertCooldowns[key] < 300000) return;
+
+    var alertStatuses = ['entry-zone','near-stop','stopped','tp1-hit','tp2-hit'];
+    if (alertStatuses.indexOf(st.status) === -1) return;
+
+    alertCooldowns[key] = Date.now();
+    var icons = { 'entry-zone':'\ud83d\udfe1', 'near-stop':'\ud83d\udd34', 'stopped':'\u26d4', 'tp1-hit':'\u2705', 'tp2-hit':'\ud83c\udfc6' };
+    var body = icons[st.status]+' '+pick.ticker+' — '+st.label+' at $'+fmt(lp.price);
+    if (Notification.permission === 'granted') {
+      new Notification('Market Watch Alert', { body: body, icon: 'https://articles.market-watch.xyz/logo.svg' });
+    }
+  }
+
+  function requestAlertPermission() {
+    if (!showAlert) return;
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  // ══════ Polling ══════
+  function startPolling(picks) {
+    if (!showPrice) return;
+    function poll() {
+      fetchAllPrices(picks).then(function() { updateLivePrices(picks); });
+    }
+    poll(); // immediate
+    var hasCrypto = picks.some(isCrypto);
+    var interval = hasCrypto ? 15000 : 30000;
+    pollTimer = setInterval(poll, interval);
+  }
+
+  // ══════ Copy for Chat ══════
   function copyForChat(data) {
     var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
     var lines = [];
@@ -185,52 +402,49 @@ body:has(.tape){overflow:hidden}
     sorted.forEach(function(p) {
       var flag = FLAGS[p.region] || '';
       var t = isETF(p) ? '\ud83d\udcca' : '\ud83c\udfe2';
-      lines.push(flag + ' *' + p.ticker + '* ' + t + ' | ' + p.strategy + ' | Score: ' + p.score + '/100');
+      var lp = livePrices[p.ticker];
+      var priceStr = lp ? ' | Now: $'+fmt(lp.price) : '';
+      lines.push(flag + ' *' + p.ticker + '* ' + t + ' | ' + p.strategy + ' | Score: ' + p.score + '/100' + priceStr);
       lines.push('   Entry: $' + p.entry + ' | Stop: $' + p.stop + ' | TP1: $' + p.tp1 + (p.tp2 ? ' | TP2: $' + p.tp2 : '') + ' | R:R ' + p.rr);
       if (p.catalyst) lines.push('   \u26a1 ' + p.catalyst);
       lines.push('');
     });
     lines.push('\ud83d\udd17 Full report: ' + (data.url || 'https://articles.market-watch.xyz/scanner/'));
     lines.push('\u00a9 Market Watch \u2014 articles.market-watch.xyz');
-    var text = lines.join('\n');
-    navigator.clipboard.writeText(text).then(function(){ toast('Copied! Paste in Telegram / Discord'); });
+    navigator.clipboard.writeText(lines.join('\n')).then(function(){ toast('Copied! Paste in Telegram / Discord'); });
   }
 
   function openEmbedModal() {
-    // If inside an iframe, ask the parent to show the modal
-    if (window.parent !== window) {
-      window.parent.postMessage({ type: 'mw-embed-modal' }, '*');
-    } else {
-      // Standalone: redirect to embed page
-      window.location.href = '/widget/?mode=embed';
-    }
+    if (window.parent !== window) window.parent.postMessage({ type: 'mw-embed-modal' }, '*');
+    else window.location.href = '/widget/?mode=embed';
   }
   window._openEmbed = openEmbedModal;
 
+  // ══════ RENDER: Tape ══════
   function renderTape(data) {
     var root = document.getElementById('root');
     var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
     var themeClass = theme === 'light' ? 'tape--light' : 'tape--dark';
+    var isDark = theme !== 'light';
     var h = '<div class="tape ' + themeClass + '"';
     if (bg) h += ' style="background:#' + bg + '"';
     h += '>';
-    // brand
     h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="tape-brand">';
     h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW">';
     h += '<span>MARKET WATCH</span></a>';
-    // regime
     h += '<div class="tape-regime">';
     h += '<div class="tape-regime-dot" style="background:' + regimeColor(data.regime) + '"></div>';
     h += '<span class="tape-regime-value" style="color:' + regimeColor(data.regime) + '">' + (data.regime || '?') + '</span></div>';
-    // track — duplicate items for seamless loop
     h += '<div class="tape-track"><div class="tape-scroll">';
     for (var dup = 0; dup < 2; dup++) {
       sorted.forEach(function(p) {
         var flag = FLAGS[p.region] || '';
-        h += '<a href="' + yahooUrl(p.ticker) + '" target="_blank" class="tape-item">';
+        h += '<a href="' + yahooUrl(p.ticker) + '" target="_blank" class="tape-item" data-ticker="'+p.ticker+'">';
+        if (showPrice) h += '<div class="tape-status" style="background:#64748b;" title="Loading..."></div>';
         h += '<img src="https://assets.parqet.com/logos/symbol/' + p.ticker + '?format=jpg" alt="" class="tape-logo" onerror="this.style.display=\'none\'">';
         h += '<span class="tape-ticker">' + p.ticker + '</span>';
         h += '<span class="tape-flag">' + flag + '</span>';
+        if (showPrice) h += '<span class="tape-live pw-price" style="color:'+(isDark?'#94a3b8':'#64748b')+'">—</span>';
         h += '<span class="tape-strat">' + p.strategy + '</span>';
         h += '<span class="tape-entry">$<strong>' + p.entry + '</strong></span>';
         h += '<span class="tape-rr">R:R ' + p.rr + '</span>';
@@ -239,27 +453,21 @@ body:has(.tape){overflow:hidden}
       });
     }
     h += '</div></div>';
-    // actions
     h += '<div class="tape-actions">';
     h += '<button class="tape-btn" title="Copy for Telegram/Discord" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
     h += '<button class="tape-btn" title="Embed" onclick="window._openEmbed()"><i class="fa-solid fa-code"></i></button>';
     h += '<a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank" class="tape-btn" title="Full Report"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
-    h += '</div>';
-    h += '</div>';
+    h += '</div></div>';
     root.innerHTML = h;
-    // set animation duration
     var scrollEl = root.querySelector('.tape-scroll');
-    if (scrollEl) {
-      var dur = Math.max(30, sorted.length * 5);
-      scrollEl.style.setProperty('--duration', dur + 's');
-    }
+    if (scrollEl) { scrollEl.style.setProperty('--duration', Math.max(30, sorted.length * 5) + 's'); }
   }
 
+  // ══════ RENDER: Vertical ══════
   function renderVertical(data) {
     var root = document.getElementById('root');
     var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
     var h = '<div class="vlist">';
-    // header
     h += '<div class="vlist-header">';
     h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="vlist-brand">';
     h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW"><span>A+ PICKS</span></a>';
@@ -269,12 +477,11 @@ body:has(.tape){overflow:hidden}
     h += '<button class="vlist-btn" title="Copy" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
     h += '<button class="vlist-btn" title="Embed" onclick="window._openEmbed()"><i class="fa-solid fa-code"></i></button>';
     h += '</div></div></div>';
-    // grid
     h += '<div class="vlist-grid">';
     sorted.forEach(function(p) {
       var flag = FLAGS[p.region] || '';
       var tp = typeLabel(p).toLowerCase();
-      h += '<a href="' + yahooUrl(p.ticker) + '" target="_blank" class="vp">';
+      h += '<a href="' + yahooUrl(p.ticker) + '" target="_blank" class="vp" data-ticker="'+p.ticker+'">';
       h += '<div class="vp-top">';
       h += '<img src="https://assets.parqet.com/logos/symbol/' + p.ticker + '?format=jpg" alt="" class="vp-logo" onerror="this.style.display=\'none\'">';
       h += '<div class="vp-info"><div class="vp-row1">';
@@ -285,6 +492,14 @@ body:has(.tape){overflow:hidden}
       h += '<div class="vp-score">' + p.score + '<small>/100</small></div>';
       h += '</div>';
       h += '<div class="vp-mid"><span class="vp-strat">' + p.strategy + '</span><span class="vp-rr">R:R ' + p.rr + '</span></div>';
+      // Live price row
+      if (showPrice) {
+        h += '<div class="vp-live">';
+        h += '<span class="vp-live-price" style="color:#94a3b8;">—</span>';
+        h += '<span class="vp-live-chg flat">—</span>';
+        h += '<span class="pw-badge" style="visibility:hidden;">—</span>';
+        h += '</div>';
+      }
       h += '<div class="vp-levels">';
       h += '<div class="vp-lv"><span class="vp-lv-label">Entry</span><span class="vp-lv-val entry">$' + p.entry + '</span></div>';
       h += '<div class="vp-lv"><span class="vp-lv-label">Stop</span><span class="vp-lv-val stop">$' + p.stop + '</span></div>';
@@ -295,26 +510,27 @@ body:has(.tape){overflow:hidden}
       h += '</a>';
     });
     h += '</div>';
-    // footer
     h += '<div class="vlist-footer"><a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank"><i class="fa-solid fa-chart-line"></i> Full Scanner Report</a>';
+    if (showPrice) h += ' &nbsp;\u00b7&nbsp; <span style="font-size:.42rem;color:#94a3b8"><i class="fa-solid fa-bolt"></i> Live prices</span>';
     h += ' &nbsp;\u00b7&nbsp; <span style="font-size:.48rem;color:#94a3b8">\u00a9 Market Watch</span></div>';
     h += '</div>';
     root.innerHTML = h;
   }
 
+  // ══════ RENDER: Embed Page ══════
   function renderEmbedPage(data) {
     document.body.style.overflow = 'auto';
     var root = document.getElementById('root');
-    var tapeCodeDark = '<iframe src="https://articles.market-watch.xyz/widget/?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
-    var tapeCodeLight = '<iframe src="https://articles.market-watch.xyz/widget/?mode=tape&theme=light" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
-    var verticalCode = '<iframe src="https://articles.market-watch.xyz/widget/?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
+    var base = 'https://articles.market-watch.xyz/widget/';
+    var tapeCodeDark  = '<iframe src="'+base+'?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
+    var tapeCodeLight = '<iframe src="'+base+'?mode=tape&theme=light" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
+    var verticalCode  = '<iframe src="'+base+'?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
 
     var h = '<div class="embed-page">';
     h += '<div class="embed-box">';
     h += '<h2><i class="fa-solid fa-code" style="color:#6366f1"></i> Embed A+ Picks Widget</h2>';
-    h += '<p class="embed-sub">Add the Market Watch A+ Picks widget to your website. Choose a layout and theme below.</p>';
+    h += '<p class="embed-sub">Add the Market Watch A+ Picks widget to your website. Live prices update every 30s (stocks) / 15s (crypto).</p>';
 
-    // Layout choice
     h += '<div class="embed-options">';
     h += '<div class="embed-opt active" id="optTape" onclick="selectLayout(\'tape\')">';
     h += '<i class="fa-solid fa-bars-staggered"></i><span>Ticker Tape</span><small>Horizontal scrolling bar</small></div>';
@@ -322,7 +538,6 @@ body:has(.tape){overflow:hidden}
     h += '<i class="fa-solid fa-grip"></i><span>Watchlist</span><small>Vertical card grid</small></div>';
     h += '</div>';
 
-    // Theme choice (only for tape)
     h += '<div id="themeSection">';
     h += '<h3 style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:8px"><i class="fa-solid fa-palette" style="color:#6366f1"></i> Theme</h3>';
     h += '<div class="embed-theme-row">';
@@ -334,77 +549,85 @@ body:has(.tape){overflow:hidden}
     h += '<span>Light</span></div>';
     h += '</div></div>';
 
-    // Preview
+    // Options
+    h += '<div style="margin-bottom:14px;">';
+    h += '<h3 style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:8px"><i class="fa-solid fa-sliders" style="color:#6366f1"></i> Options</h3>';
+    h += '<label style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#334155;cursor:pointer;margin-bottom:6px;">';
+    h += '<input type="checkbox" checked id="optPrice" onchange="updateEmbedCode()"> Live prices (Yahoo + Binance)</label>';
+    h += '<label style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#334155;cursor:pointer;">';
+    h += '<input type="checkbox" id="optAlert" onchange="updateEmbedCode()"> Browser notifications at key levels</label>';
+    h += '</div>';
+
     h += '<div class="embed-section">';
     h += '<h3><i class="fa-solid fa-eye"></i> Preview</h3>';
     h += '<div class="embed-preview" id="embedPreview">';
     h += '<iframe src="/widget/?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" id="previewFrame"></iframe>';
     h += '</div></div>';
 
-    // Code
     h += '<div class="embed-section">';
     h += '<h3><i class="fa-solid fa-terminal"></i> Embed Code</h3>';
     h += '<textarea class="embed-code" rows="3" id="embedCode" readonly>' + tapeCodeDark.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
     h += '<button class="embed-copy-btn" onclick="copyEmbedCode()"><i class="fa-solid fa-copy"></i> Copy Code</button>';
     h += '</div>';
 
-    // Brand
     h += '<div class="embed-brand"><a href="https://articles.market-watch.xyz/" target="_blank">';
     h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW"> Market Watch</a></div>';
-
     h += '</div></div>';
     root.innerHTML = h;
 
-    // embed page logic
-    var currentLayout = 'tape';
-    var currentTheme = 'dark';
-    var codes = {
-      tape: { dark: tapeCodeDark, light: tapeCodeLight },
-      vertical: verticalCode
-    };
+    var currentLayout = 'tape', currentTheme = 'dark';
 
     window.selectLayout = function(layout) {
       currentLayout = layout;
-      document.getElementById('optTape').className = 'embed-opt' + (layout === 'tape' ? ' active' : '');
-      document.getElementById('optVert').className = 'embed-opt' + (layout === 'vertical' ? ' active' : '');
-      document.getElementById('themeSection').style.display = layout === 'tape' ? '' : 'none';
-      updateEmbedPreview();
+      document.getElementById('optTape').className = 'embed-opt' + (layout==='tape'?' active':'');
+      document.getElementById('optVert').className = 'embed-opt' + (layout==='vertical'?' active':'');
+      document.getElementById('themeSection').style.display = layout==='tape'?'':'none';
+      updateEmbedCode();
     };
     window.selectTheme = function(t) {
       currentTheme = t;
-      document.getElementById('themeDark').className = 'embed-theme' + (t === 'dark' ? ' active' : '');
-      document.getElementById('themeLight').className = 'embed-theme' + (t === 'light' ? ' active' : '');
-      updateEmbedPreview();
+      document.getElementById('themeDark').className = 'embed-theme' + (t==='dark'?' active':'');
+      document.getElementById('themeLight').className = 'embed-theme' + (t==='light'?' active':'');
+      updateEmbedCode();
     };
     window.copyEmbedCode = function() {
-      var code = document.getElementById('embedCode').value;
-      navigator.clipboard.writeText(code).then(function(){
-        toast('Embed code copied!');
-      });
+      navigator.clipboard.writeText(document.getElementById('embedCode').value).then(function(){ toast('Embed code copied!'); });
     };
+    window.updateEmbedCode = function() {
+      var priceOn = document.getElementById('optPrice').checked;
+      var alertOn = document.getElementById('optAlert').checked;
+      var extraParams = '';
+      if (!priceOn) extraParams += '&price=false';
+      if (alertOn) extraParams += '&alert=true';
 
-    function updateEmbedPreview() {
-      var code, previewSrc, previewStyle;
+      var previewSrc, previewStyle, code;
       if (currentLayout === 'tape') {
-        code = codes.tape[currentTheme];
-        previewSrc = '/widget/?mode=tape&theme=' + currentTheme;
+        previewSrc = '/widget/?mode=tape&theme='+currentTheme+extraParams;
         previewStyle = 'width:100%;height:38px;border:none;';
+        code = '<iframe src="'+base+'?mode=tape&theme='+currentTheme+extraParams+'" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
       } else {
-        code = codes.vertical;
-        previewSrc = '/widget/?mode=vertical';
+        previewSrc = '/widget/?mode=vertical'+extraParams;
         previewStyle = 'width:100%;height:400px;border:none;border-radius:8px;';
+        code = '<iframe src="'+base+'?mode=vertical'+extraParams+'" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
       }
       document.getElementById('embedCode').value = code;
       document.getElementById('previewFrame').src = previewSrc;
       document.getElementById('previewFrame').style.cssText = previewStyle;
-    }
+    };
   }
 
-  fetch(URL).then(function(r){ return r.json(); }).then(function(data){
+  // ══════ Boot ══════
+  fetch(WATCHLIST_URL).then(function(r){ return r.json(); }).then(function(data){
+    watchlistData = data;
     window._copyChat = function(){ copyForChat(data); };
-    if (mode === 'embed') renderEmbedPage(data);
-    else if (mode === 'vertical') renderVertical(data);
+    if (mode === 'embed') { renderEmbedPage(data); return; }
+    if (mode === 'vertical') renderVertical(data);
     else renderTape(data);
+    // Start live price tracking
+    if (showPrice && data.picks && data.picks.length) {
+      requestAlertPermission();
+      startPolling(data.picks);
+    }
   }).catch(function(){
     document.getElementById('root').innerHTML = '<div style="text-align:center;padding:12px;color:#94a3b8;font-size:.7rem">Unable to load data</div>';
   });
