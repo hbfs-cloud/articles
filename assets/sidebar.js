@@ -2,6 +2,7 @@
  * sidebar.js — Global sidebar navigation for Market Watch articles.
  * Include via <script src="/assets/sidebar.js"></script> before </body>.
  * Loads /assets/sidebar.css and injects a sidebar identical to the landing page.
+ * Applies i18n translations from stored language preference.
  */
 (function () {
   // Don't inject on the landing page (it has its own sidebar)
@@ -16,6 +17,44 @@
   // === Remove brand-bar ===
   var brandBar = document.querySelector('nav.brand-bar');
   if (brandBar) brandBar.remove();
+
+  // === i18n translations (subset for sidebar) ===
+  var T = {
+    fr: {
+      'tab.radar': 'Radar', 'tab.weekly': 'Hebdo', 'tab.daily': 'Daily',
+      'tab.analyses': 'Analyses', 'tab.scanner': 'Scanner', 'tab.series': 'S\u00e9ries', 'tab.tech': 'Tech',
+      'search.trigger': 'Rechercher...', 'sidebar.start': 'D\u00e9buter en Bourse'
+    },
+    en: {
+      'tab.radar': 'Radar', 'tab.weekly': 'Weekly', 'tab.daily': 'Daily',
+      'tab.analyses': 'Analyses', 'tab.scanner': 'Scanner', 'tab.series': 'Series', 'tab.tech': 'Tech',
+      'search.trigger': 'Search...', 'sidebar.start': 'Getting Started'
+    },
+    ar: {
+      'tab.radar': '\u0631\u0627\u062f\u0627\u0631', 'tab.weekly': '\u0623\u0633\u0628\u0648\u0639\u064a', 'tab.daily': '\u064a\u0648\u0645\u064a',
+      'tab.analyses': '\u062a\u062d\u0644\u064a\u0644\u0627\u062a', 'tab.scanner': '\u0645\u0627\u0633\u062d', 'tab.series': '\u0633\u0644\u0627\u0633\u0644', 'tab.tech': '\u062a\u0642\u0646\u064a\u0629',
+      'search.trigger': '\u0628\u062d\u062b...', 'sidebar.start': '\u0628\u062f\u0627\u064a\u0629'
+    },
+    es: {
+      'tab.radar': 'Radar', 'tab.weekly': 'Semanal', 'tab.daily': 'Diario',
+      'tab.analyses': 'An\u00e1lisis', 'tab.scanner': 'Esc\u00e1ner', 'tab.series': 'Series', 'tab.tech': 'Tech',
+      'search.trigger': 'Buscar...', 'sidebar.start': 'Empezar'
+    },
+    zh: {
+      'tab.radar': '\u96f7\u8fbe', 'tab.weekly': '\u5468\u62a5', 'tab.daily': '\u65e5\u62a5',
+      'tab.analyses': '\u5206\u6790', 'tab.scanner': '\u626b\u63cf', 'tab.series': '\u7cfb\u5217', 'tab.tech': '\u6280\u672f',
+      'search.trigger': '\u641c\u7d22...', 'sidebar.start': '\u5165\u95e8'
+    }
+  };
+
+  // Resolve stored language
+  var storedLang = localStorage.getItem('mw-lang') || 'all';
+  var uiLang = (storedLang === 'all') ? 'en' : storedLang;
+  if (!T[uiLang]) uiLang = 'en';
+
+  function t(key) {
+    return (T[uiLang] && T[uiLang][key]) || (T.en && T.en[key]) || key;
+  }
 
   // === Detect current tab from html data-tab or URL ===
   var htmlEl = document.documentElement;
@@ -32,20 +71,20 @@
 
   // === Build sidebar HTML (same structure as landing page) ===
   var tabs = [
-    { tab: 'radar', icon: 'fa-satellite-dish', label: 'Radar' },
-    { tab: 'weekly', icon: 'fa-calendar-week', label: 'Hebdo' },
-    { tab: 'daily', icon: 'fa-sun', label: 'Daily' },
-    { tab: 'analyses', icon: 'fa-chart-column', label: 'Analyses' },
-    { tab: 'scanner', icon: 'fa-crosshairs', label: 'Scanner' },
-    { tab: 'series', icon: 'fa-graduation-cap', label: 'Séries' },
-    { tab: 'tech', icon: 'fa-microchip', label: 'Tech' }
+    { tab: 'radar', icon: 'fa-satellite-dish' },
+    { tab: 'weekly', icon: 'fa-calendar-week' },
+    { tab: 'daily', icon: 'fa-sun' },
+    { tab: 'analyses', icon: 'fa-chart-column' },
+    { tab: 'scanner', icon: 'fa-crosshairs' },
+    { tab: 'series', icon: 'fa-graduation-cap' },
+    { tab: 'tech', icon: 'fa-microchip' }
   ];
 
-  var navLinks = tabs.map(function (t) {
-    var active = t.tab === currentTab ? ' active' : '';
-    var href = t.tab === 'radar' ? '/' : '/?tab=' + t.tab;
-    var countSpan = t.tab !== 'radar' ? '<span class="sidebar-count" id="sidebarCount-' + t.tab + '"></span>' : '';
-    return '<a href="' + href + '" class="sidebar-link' + active + '"><i class="fa-solid ' + t.icon + '"></i><span>' + t.label + '</span>' + countSpan + '</a>';
+  var navLinks = tabs.map(function (tb) {
+    var active = tb.tab === currentTab ? ' active' : '';
+    var href = tb.tab === 'radar' ? '/' : '/?tab=' + tb.tab;
+    var countSpan = tb.tab !== 'radar' ? '<span class="sidebar-count" id="sidebarCount-' + tb.tab + '"></span>' : '';
+    return '<a href="' + href + '" class="sidebar-link' + active + '"><i class="fa-solid ' + tb.icon + '"></i><span data-i18n="tab.' + tb.tab + '">' + t('tab.' + tb.tab) + '</span>' + countSpan + '</a>';
   }).join('');
 
   var sidebarHTML = [
@@ -55,7 +94,7 @@
     '    Market Watch',
     '  </a>',
     '  <div class="sidebar-top">',
-    '    <a href="/?search=1" class="sidebar-search-btn"><i class="fa-solid fa-magnifying-glass"></i><span>Search...</span><kbd>\u2318K</kbd></a>',
+    '    <a href="/?search=1" class="sidebar-search-btn"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="search.trigger">' + t('search.trigger') + '</span><kbd>\u2318K</kbd></a>',
     '    <select class="sidebar-lang" id="sidebarLang" onchange="localStorage.setItem(\'mw-lang\',this.value);location.reload()">',
     '      <option value="all">\ud83c\udf10 All</option>',
     '      <option value="en">\ud83c\uddfa\ud83c\uddf8 EN</option>',
@@ -69,7 +108,7 @@
     '  <div class="sidebar-bottom">',
     '    <a href="/prompt-ia/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Prompt IA</span></a>',
     '    <a href="/integrations/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-plug"></i><span>Integrations</span></a>',
-    '    <a href="/series/quick-start/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-graduation-cap"></i><span>D\u00e9buter en Bourse</span></a>',
+    '    <a href="/series/quick-start/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-graduation-cap"></i><span data-i18n="sidebar.start">' + t('sidebar.start') + '</span></a>',
     '  </div>',
     '</aside>',
     '<div class="sidebar-overlay" id="sidebarOverlay"></div>',
@@ -113,7 +152,6 @@
   // === Init language select ===
   var langSel = document.getElementById('sidebarLang');
   if (langSel) {
-    var storedLang = localStorage.getItem('mw-lang') || 'all';
     langSel.value = storedLang;
   }
 
