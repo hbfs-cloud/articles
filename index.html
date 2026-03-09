@@ -42,7 +42,7 @@
   <meta name="apple-mobile-web-app-title" content="MarketWatch">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <script src="/data/search_data.js"></script>
   <style>
@@ -2391,8 +2391,8 @@
 
       <!-- Mode switcher -->
       <div style="display:flex;justify-content:center;gap:0.25rem;margin-bottom:1rem;">
-        <button class="radar-mode active" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i></button>
-        <button class="radar-mode" data-mode="board" title="Dashboard"><i class="fas fa-columns"></i></button>
+        <button class="radar-mode" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i></button>
+        <button class="radar-mode active" data-mode="board" title="Dashboard"><i class="fas fa-columns"></i></button>
         <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i></button>
       </div>
 
@@ -4224,8 +4224,95 @@
     // =========== MODE 1: SIGNAL BOARD ===========
     function renderSignals(el) {
       var items = RD.items.slice().sort(function(a,b) { return (b.importance||0) - (a.importance||0); });
-      var h = '<div style="max-width:700px;margin:0 auto;">';
-      items.forEach(function(it) { h += itemRow(it, it.category); });
+      var catIcons = {risk:'fa-skull-crossbones',event:'fa-bolt',opportunity:'fa-rocket',regime:'fa-shield-halved'};
+
+      var h = '<style>';
+      h += '.rs-feed{max-width:720px;margin:0 auto;position:relative;padding-left:28px}';
+      h += '.rs-feed::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,#cbd5e1 8%,#cbd5e1 92%,transparent)}';
+      h += '.rs-tick{position:relative;margin-bottom:0.35rem;animation:rs-in 0.35s ease both}';
+      h += '@keyframes rs-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}';
+      // Node on the timeline
+      h += '.rs-node{position:absolute;left:-28px;top:0.6rem;width:10px;height:10px;border-radius:3px;border:2px solid #fff;box-shadow:0 0 0 1px currentColor,0 0 8px currentColor;z-index:2}';
+      // Priority item (importance >= 9)
+      h += '.rs-pri{border-radius:10px;padding:0.7rem 0.85rem;border:1px solid #e2e8f0;background:#fff;position:relative;overflow:hidden;transition:transform 0.15s,box-shadow 0.15s}';
+      h += '.rs-pri:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,0.06)}';
+      h += '.rs-pri::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}';
+      h += '.rs-pri-head{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem}';
+      h += '.rs-pri-badge{font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:2px 7px;border-radius:4px;flex-shrink:0}';
+      h += '.rs-pri-imp{font-family:"JetBrains Mono",monospace;font-size:1.1rem;font-weight:800;opacity:0.1;position:absolute;top:0.55rem;right:0.75rem;line-height:1}';
+      h += '.rs-pri-label{font-family:"DM Sans",sans-serif;font-size:0.88rem;font-weight:800;line-height:1.2;display:flex;align-items:center;gap:0.3rem}';
+      h += '.rs-pri-detail{font-family:"DM Sans",sans-serif;font-size:0.73rem;line-height:1.4;opacity:0.7;margin-top:0.15rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}';
+      h += '.rs-pri-footer{display:flex;align-items:center;gap:0.6rem;margin-top:0.35rem;font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.04em}';
+      // Compact item (importance < 9)
+      h += '.rs-cmp{display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.6rem;border-radius:8px;transition:background 0.12s,padding-left 0.12s;cursor:default}';
+      h += 'a.rs-cmp{text-decoration:none;cursor:pointer}';
+      h += 'a.rs-cmp:hover{background:#f8fafc;padding-left:0.85rem}';
+      h += '.rs-cmp-cat{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:0.5rem;flex-shrink:0}';
+      h += '.rs-cmp-label{font-family:"DM Sans",sans-serif;font-size:0.78rem;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}';
+      h += '.rs-cmp-bar{width:36px;height:3px;border-radius:2px;background:#f1f5f9;flex-shrink:0;overflow:hidden}';
+      h += '.rs-cmp-bar-fill{height:100%;border-radius:2px}';
+      h += '.rs-cmp-date{font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:600;opacity:0.35;flex-shrink:0}';
+      h += '.rs-cmp-arrow{font-size:0.55rem;opacity:0;transition:opacity 0.12s;flex-shrink:0}';
+      h += 'a.rs-cmp:hover .rs-cmp-arrow{opacity:0.6}';
+      h += '</style>';
+
+      // Feed header
+      h += '<div style="max-width:720px;margin:0 auto 0.5rem;display:flex;align-items:center;justify-content:space-between;">';
+      h += '<div style="display:flex;align-items:center;gap:0.5rem;">';
+      h += '<div style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px rgba(16,185,129,0.5);animation:pulse-dot 2s infinite;"></div>';
+      h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.65rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">PRIORITY FEED</span>';
+      h += '</div>';
+      h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.6rem;font-weight:600;color:var(--text-muted);opacity:0.5;">'+items.length+' SIGNALS</span>';
+      h += '</div>';
+
+      h += '<div class="rs-feed">';
+
+      items.forEach(function(it, idx) {
+        var c = C[it.category] || C.regime;
+        var icon = catIcons[it.category] || c.icon;
+        var imp = it.importance || 5;
+        var isPriority = imp >= 9;
+        var bar = Math.min(100, imp * 10);
+        var delay = (idx * 0.04) + 's';
+
+        h += '<div class="rs-tick" style="animation-delay:'+delay+';">';
+        h += '<div class="rs-node" style="color:'+c.fill+';background:'+c.fill+';"></div>';
+
+        if (isPriority) {
+          var tag = it.link ? 'a' : 'div';
+          var href = it.link ? ' href="'+it.link+'"' : '';
+          h += '<'+tag+' class="rs-pri"'+href+' style="border-color:'+c.border+';color:'+c.text+';">';
+          h += '<div class="rs-pri::before" style="background:'+c.fill+';"></div>';
+          h += '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:'+c.fill+';border-radius:10px 0 0 10px;"></div>';
+          h += '<div class="rs-pri-imp" style="color:'+c.fill+';">'+imp+'</div>';
+          h += '<div class="rs-pri-head">';
+          h += '<span class="rs-pri-badge" style="background:'+c.bg+';color:'+c.fill+';border:1px solid '+c.border+';"><i class="fas '+icon+'" style="margin-right:3px;font-size:0.5rem;"></i>'+c.label.toUpperCase()+'</span>';
+          if (it.date) h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.55rem;font-weight:600;opacity:0.35;">'+it.date+'</span>';
+          h += '</div>';
+          h += '<div class="rs-pri-label" style="color:'+c.text+';">'+it.label;
+          if (it.link) h += ' <i class="fas fa-arrow-up-right-from-square" style="font-size:0.55rem;color:'+c.fill+';opacity:0.45;"></i>';
+          h += '</div>';
+          if (it.detail) h += '<div class="rs-pri-detail" style="color:'+c.text+';">'+it.detail+'</div>';
+          h += '<div class="rs-pri-footer" style="color:'+c.text+';">';
+          h += '<span><i class="fas fa-signal" style="margin-right:2px;"></i>IMP '+imp+'/10</span>';
+          if (it.link_label) h += '<span>'+it.link_label+'</span>';
+          h += '</div>';
+          h += '</'+tag+'>';
+        } else {
+          var tag2 = it.link ? 'a' : 'div';
+          var href2 = it.link ? ' href="'+it.link+'"' : '';
+          h += '<'+tag2+' class="rs-cmp"'+href2+' style="color:'+c.text+';">';
+          h += '<div class="rs-cmp-cat" style="background:'+c.bg+';color:'+c.fill+';border:1px solid '+c.border+';"><i class="fas '+icon+'"></i></div>';
+          h += '<span class="rs-cmp-label">'+it.label+'</span>';
+          h += '<div class="rs-cmp-bar"><div class="rs-cmp-bar-fill" style="width:'+bar+'%;background:'+c.fill+';"></div></div>';
+          if (it.date) h += '<span class="rs-cmp-date">'+it.date.slice(5)+'</span>';
+          if (it.link) h += '<i class="fas fa-chevron-right rs-cmp-arrow" style="color:'+c.fill+';"></i>';
+          h += '</'+tag2+'>';
+        }
+
+        h += '</div>';
+      });
+
       h += '</div>';
       el.innerHTML = h;
     }
@@ -4236,7 +4323,6 @@
       var catIcons = {risk:'fa-skull-crossbones',event:'fa-bolt',opportunity:'fa-rocket',regime:'fa-shield-halved'};
 
       var h = '<style>';
-      h += '@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap");';
       h += '.rb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;max-width:960px;margin:0 auto}';
       h += '@media(max-width:700px){.rb-grid{grid-template-columns:1fr}}';
       h += '.rb-panel{position:relative;border-radius:10px;overflow:hidden;background:#fff;border:1px solid #e2e8f0;transition:transform 0.2s,box-shadow 0.2s}';
@@ -4332,17 +4418,87 @@
 
     // =========== MODE 5: RADAR CANVAS ===========
     function renderRadar(el) {
-      el.innerHTML = '<div style="background:#060b18;border-radius:12px;padding:1rem;overflow:hidden;">' +
-        '<div id="radarContainer" style="position:relative;width:100%;max-width:600px;margin:0 auto;">' +
-        '<canvas id="radarCanvas" style="width:100%;display:block;"></canvas>' +
-        '<div id="radarTooltip" style="display:none;position:absolute;background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:10px;padding:10px 14px;font-size:0.8rem;max-width:260px;pointer-events:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.6);line-height:1.4;"></div>' +
-        '</div>' +
-        '<div style="display:flex;justify-content:center;gap:1rem;margin-top:0.75rem;font-size:0.7rem;">' +
-        '<span style="color:#ef4444;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Risks</span>' +
-        '<span style="color:#f59e0b;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Events</span>' +
-        '<span style="color:#10b981;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Opps</span>' +
-        '<span style="color:#3b82f6;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Regime</span>' +
-        '</div></div>';
+      var cats = ['risk','event','opportunity','regime'];
+      var catIcons = {risk:'fa-skull-crossbones',event:'fa-bolt',opportunity:'fa-rocket',regime:'fa-shield-halved'};
+
+      var h = '<style>';
+      h += '.rr-wrap{display:grid;grid-template-columns:1fr 220px;gap:0;max-width:960px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #1e293b;background:#060b18}';
+      h += '@media(max-width:700px){.rr-wrap{grid-template-columns:1fr}.rr-side{border-left:none;border-top:1px solid #1e293b}}';
+      h += '.rr-main{position:relative;padding:0.75rem}';
+      h += '.rr-side{border-left:1px solid #1e293b;background:#0a1628;display:flex;flex-direction:column}';
+      h += '.rr-side-head{padding:0.6rem 0.75rem;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:0.4rem}';
+      h += '.rr-side-head-dot{width:6px;height:6px;border-radius:50%;background:#50b4ee;animation:pulse-dot 2s infinite;box-shadow:0 0 6px rgba(80,180,238,0.5)}';
+      h += '.rr-side-head-label{font-family:"JetBrains Mono",monospace;font-size:0.6rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#64748b}';
+      h += '.rr-cat-section{padding:0.5rem 0.75rem;border-bottom:1px solid #1e293b0a}';
+      h += '.rr-cat-head{display:flex;align-items:center;gap:0.35rem;margin-bottom:0.3rem}';
+      h += '.rr-cat-icon{width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.45rem;flex-shrink:0}';
+      h += '.rr-cat-name{font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase}';
+      h += '.rr-cat-count{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:0.5rem;font-weight:600;opacity:0.35}';
+      h += '.rr-sig{display:flex;align-items:center;gap:0.35rem;padding:0.2rem 0;cursor:default;transition:padding-left 0.12s}';
+      h += 'a.rr-sig{text-decoration:none;cursor:pointer}';
+      h += 'a.rr-sig:hover{padding-left:0.25rem}';
+      h += '.rr-sig-dot{width:4px;height:4px;border-radius:1px;flex-shrink:0}';
+      h += '.rr-sig-label{font-family:"DM Sans",sans-serif;font-size:0.68rem;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8}';
+      h += 'a.rr-sig:hover .rr-sig-label{color:#e2e8f0}';
+      h += '.rr-sig-imp{font-family:"JetBrains Mono",monospace;font-size:0.5rem;font-weight:700;opacity:0.3;flex-shrink:0}';
+      h += '.rr-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:0.75rem;padding:0.5rem;margin-top:auto;border-top:1px solid #1e293b}';
+      h += '.rr-legend-item{display:flex;align-items:center;gap:4px;font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase}';
+      h += '.rr-legend-dot{width:6px;height:6px;border-radius:2px}';
+      h += '</style>';
+
+      h += '<div class="rr-wrap">';
+
+      // Main canvas area
+      h += '<div class="rr-main">';
+      h += '<div id="radarContainer" style="position:relative;width:100%;max-width:580px;margin:0 auto;">';
+      h += '<canvas id="radarCanvas" style="width:100%;display:block;"></canvas>';
+      h += '<div id="radarTooltip" style="display:none;position:absolute;background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:10px;padding:10px 14px;font-size:0.8rem;max-width:260px;pointer-events:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.6);line-height:1.4;"></div>';
+      h += '</div>';
+      h += '</div>';
+
+      // Sidebar
+      h += '<div class="rr-side">';
+      h += '<div class="rr-side-head"><div class="rr-side-head-dot"></div><span class="rr-side-head-label">Active Signals</span></div>';
+
+      cats.forEach(function(cat) {
+        var c = C[cat];
+        var icon = catIcons[cat] || c.icon;
+        var items = RD.items.filter(function(it) { return it.category === cat; });
+        items.sort(function(a,b) { return (b.importance||0) - (a.importance||0); });
+        if (!items.length) return;
+
+        h += '<div class="rr-cat-section">';
+        h += '<div class="rr-cat-head">';
+        h += '<div class="rr-cat-icon" style="background:'+c.fill+'22;color:'+c.fill+';"><i class="fas '+icon+'"></i></div>';
+        h += '<span class="rr-cat-name" style="color:'+c.fill+';">'+c.label+'</span>';
+        h += '<span class="rr-cat-count">'+items.length+'</span>';
+        h += '</div>';
+
+        items.forEach(function(it) {
+          var tag = it.link ? 'a' : 'div';
+          var href = it.link ? ' href="'+it.link+'"' : '';
+          h += '<'+tag+' class="rr-sig"'+href+'>';
+          h += '<div class="rr-sig-dot" style="background:'+c.fill+';box-shadow:0 0 4px '+c.glow+';"></div>';
+          h += '<span class="rr-sig-label">'+(it.short||it.label)+'</span>';
+          h += '<span class="rr-sig-imp">'+(it.importance||5)+'</span>';
+          h += '</'+tag+'>';
+        });
+
+        h += '</div>';
+      });
+
+      // Legend at bottom
+      h += '<div class="rr-legend">';
+      cats.forEach(function(cat) {
+        var c = C[cat];
+        h += '<div class="rr-legend-item"><div class="rr-legend-dot" style="background:'+c.fill+';box-shadow:0 0 6px '+c.glow+';"></div><span style="color:'+c.fill+';">'+c.label+'</span></div>';
+      });
+      h += '</div>';
+
+      h += '</div>'; // side
+      h += '</div>'; // wrap
+
+      el.innerHTML = h;
 
       setTimeout(function() {
         canvas = document.getElementById('radarCanvas');
@@ -4471,7 +4627,18 @@
         if (tab === 'radar') {
           if (!radarReady) { init(); radarReady = true; }
           else { render(); }
-        } else { stopAnim(); }
+        } else {
+          stopAnim();
+          // Ensure tab content is rendered if data loaded but not yet displayed
+          if (typeof tabState !== 'undefined' && tabState[tab] && tabState[tab].loaded) {
+            var panel = document.getElementById('tab-' + tab);
+            var grid = panel ? panel.querySelector('.grid-cards') : null;
+            if (grid && !grid.querySelector('.report-card')) {
+              renderCards(tab, true);
+              if (typeof applyAllFilters === 'function') applyAllFilters();
+            }
+          }
+        }
       };
       var urlTab = new URLSearchParams(location.search).get('tab');
       if (urlTab === 'radar' || !urlTab) {
