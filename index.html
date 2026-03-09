@@ -4208,25 +4208,31 @@
       RD.items.forEach(function(it) { (groups[it.category]||groups.regime).push(it); });
       // Quadrant angles: risk=top-right, event=bottom-right, opportunity=bottom-left, regime=top-left
       var qA = { risk:-Math.PI/4, event:Math.PI/4, opportunity:3*Math.PI/4, regime:-3*Math.PI/4 };
-      var spread = Math.PI/2.5;
       Object.keys(groups).forEach(function(cat) {
         var items = groups[cat], base = qA[cat]||0;
-        // Sort by importance desc for better layout
+        // Spread covers most of the quadrant (80°)
+        var spread = Math.PI/2.2;
+        // Sort by importance desc
         items.sort(function(a,b) { return (b.importance||5) - (a.importance||5); });
         items.forEach(function(it,i) {
           var imp = it.importance||5;
-          // Distance: high importance = closer to center (urgent/important near center)
-          // imp 10 → 15% from center, imp 1 → 85% from center
-          var distRatio = 0.15 + 0.70 * (1 - imp/10);
-          // Add slight jitter to avoid overlap
-          var jitter = (Math.sin(i*3.7+imp*1.3)*0.04 + Math.cos(i*2.1)*0.03) * radius;
-          var dist = radius * distRatio + jitter;
-          // Spread items within quadrant
-          var angle = base - spread/2 + (items.length>1 ? (i+0.5)/(items.length)*spread : spread/2);
-          // Blip size proportional to importance: imp 10 → 22px, imp 1 → 6px
-          var sz = Math.max(6, Math.min(22, 4 + imp * 1.8)) * dpr;
-          // Blink: importance >= 8 or urgent items blink
-          var shouldBlink = imp >= 8;
+          // Distance from center: imp 10 → 12%, imp 1 → 88%
+          var distRatio = 0.12 + 0.76 * (1 - imp/10);
+          // Stagger: alternate items on slightly different radii to avoid overlap
+          var stagger = (i % 2 === 0 ? 0.04 : -0.04) * (1 + i*0.01);
+          distRatio = Math.max(0.10, Math.min(0.92, distRatio + stagger));
+          var dist = radius * distRatio;
+          // Spread items evenly across the quadrant arc
+          var angle;
+          if (items.length === 1) {
+            angle = base;
+          } else {
+            angle = base - spread/2 + (i / (items.length - 1)) * spread;
+          }
+          // Blip radius proportional to importance: imp 10 → 24px, imp 5 → 10px, imp 1 → 4px
+          var sz = Math.max(4, Math.round(imp * imp * 0.24)) * dpr;
+          // Only blink for truly critical items: importance >= 9
+          var shouldBlink = imp >= 9;
           blips.push({ x:cx+Math.cos(angle)*dist, y:cy+Math.sin(angle)*dist, angle:angle, dist:dist,
             size:sz, color:C[it.category]||C.regime, data:it, pulse:0, blink:shouldBlink, blinkPhase:Math.random()*Math.PI*2 });
         });
