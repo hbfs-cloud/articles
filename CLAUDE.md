@@ -188,7 +188,7 @@ Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dos
 8. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 9. **OBLIGATOIRE — Commit & Push** :
    ```bash
-   git add weekly/YYYYMMDD/ data/weekly.json data/search_data.js
+   git add weekly/YYYYMMDD/ data/weekly.json data/search_data.js data/radar.json
    git commit -m "feat: weekly YYYYMMDD — {titre court}"
    git push origin main
    ```
@@ -284,7 +284,7 @@ Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Cry
 5. Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 6. **OBLIGATOIRE — Commit & Push** :
    ```bash
-   git add daily/YYYYMMDD/ data/daily.json data/search_data.js
+   git add daily/YYYYMMDD/ data/daily.json data/search_data.js data/radar.json
    git commit -m "feat: briefing quotidien DD mois YYYY — {titre court}"
    git push origin main
    ```
@@ -354,7 +354,7 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Les champs obligatoires : `updated` (ISO date), `regime`, `vix`, `dxy`, `spx`, `fear_greed`, `picks[]` (ticker, name, strategy, entry, stop, tp1, tp2, rr, score, region, tags, catalyst), `alerts`, `next_update`
 10. **OBLIGATOIRE — Commit & Push** :
    ```bash
-   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json
+   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
    git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
    git push origin main
    ```
@@ -399,12 +399,62 @@ Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note 
    Vérifier que le fichier HTML fait > 10KB et que `add_card.js` a réussi avant de push.
 
 ### Landing Page (index.html) — Tabs
-6 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Tech** (guides techniques), **Séries** (séries éducatives).
-- URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=tech`, `?tab=series`
+6 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Radar** (intelligence marché temps réel), **Séries** (séries éducatives).
+- **Tech** est dans le footer (pas dans les tabs), accessible via `?tab=tech`
+- URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=radar`, `?tab=series`
 - Grade filter : `?grade=A` (tab analyses uniquement)
 - Recherche : symbole ticker uniquement
 - Mobile : les tabs s'affichent en grille d'icones (5 colonnes) au lieu de texte horizontal
 - **Ordre des cartes** (**OBLIGATOIRE**) : Dans tous les tabs, les cartes `.report-card` sont **toujours triées par date décroissante** (plus récent en haut). Exception : dans le tab Scanner, le bloc "Performance du Scanner" reste fixe en tout premier (avant les cartes). Les rétrospectives et scans sont ensuite mélangés et triés strictement par date.
+
+### Radar — `data/radar.json` (OBLIGATOIRE à mettre à jour)
+Le tab Radar affiche un radar animé (canvas) avec des blips représentant les risques, événements, opportunités et le régime de marché. Les blips sont cliquables et redirigent vers la section pertinente de l'article source.
+
+**Mise à jour OBLIGATOIRE** : À chaque publication de daily, weekly, ou scanner, Claude DOIT mettre à jour `data/radar.json` avec les données actuelles. Ce fichier n'est PAS généré par un script — il est rédigé par Claude qui comprend le contexte et l'importance relative de chaque élément.
+
+**Format `data/radar.json`** :
+```json
+{
+  "updated": "2026-03-09",
+  "regime": "RISK-OFF",
+  "vix": 29.49,
+  "spx": 6740.02,
+  "fear_greed": 22,
+  "items": [
+    {
+      "category": "risk|event|opportunity|regime",
+      "label": "Titre court affiché",
+      "short": "LABEL RADAR",
+      "detail": "Description 1-2 phrases avec contexte et impact",
+      "importance": 1-10,
+      "date": "YYYY-MM-DD",
+      "link": "/daily/YYYYMMDD/#section",
+      "link_label": "Read more"
+    }
+  ]
+}
+```
+
+**Catégories et couleurs** :
+| Catégorie | Couleur | Quadrant | Exemples |
+|-----------|---------|----------|----------|
+| `risk` | Rouge | Haut-droite | Trade war, recession, VIX spike, crash sectoriel |
+| `event` | Ambre | Bas-droite | CPI, FOMC, NFP, earnings majeurs, IPOs |
+| `opportunity` | Vert | Bas-gauche | Picks scanner A+, setups actifs, secteurs en rotation |
+| `regime` | Bleu | Haut-gauche | Régime Risk-On/Off, Fear&Greed, DXY, rotation sectorielle |
+
+**Importance (1-10)** : Détermine la taille du blip ET sa distance au centre (10 = gros blip au centre = urgent/critique, 1 = petit blip en périphérie = bruit de fond). Labels affichés uniquement si importance >= 7.
+
+**Champ `link`** : URL relative pointant vers la section exacte de l'article qui traite du sujet. Format : `/daily/YYYYMMDD/#section-id` ou `/scanner/YYYYMMDD/#setup-N`. L'utilisateur clique sur le blip et arrive directement au bon endroit.
+
+**Règles de curation** :
+- 20-30 items au total (pas plus — le radar doit rester lisible)
+- Min 4 items par catégorie
+- Les opportunités viennent des 2-3 derniers scans (picks avec score >= 88)
+- Les risques reflètent les menaces actives (pas les risques théoriques)
+- Les événements couvrent la semaine en cours + les events majeurs à 30 jours
+- Le régime reflète l'état actuel (VIX, F&G, DXY, rotation, sentiment)
+- Supprimer les items obsolètes (events passés, opportunités qui ont touché leur TP/stop)
 
 ## Conventions
 

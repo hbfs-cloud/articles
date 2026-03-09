@@ -114,6 +114,19 @@
     .how-step p { margin: 0; font-size: 0.85rem; color: #64748b; }
     @media (max-width: 640px) { .how-it-works { grid-template-columns: 1fr; } }
 
+    /* -- Copy button -- */
+    .code-wrap { position: relative; }
+    .copy-btn { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-family: inherit; transition: all 0.2s; z-index: 2; }
+    .copy-btn:hover { background: rgba(255,255,255,0.15); color: #e2e8f0; }
+    .copy-btn.copied { background: #10b981; color: white; border-color: #10b981; }
+
+    /* -- Extension feature grid -- */
+    .ext-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .ext-feat { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; text-align: center; }
+    .ext-feat i { font-size: 1.5rem; color: #3b82f6; display: block; margin-bottom: 0.5rem; }
+    .ext-feat strong { display: block; font-size: 0.9rem; margin-bottom: 0.25rem; }
+    .ext-feat small { font-size: 0.8rem; color: #64748b; }
+
     /* -- Responsive -- */
     @media (max-width: 768px) {
       .mcp-hero h1 { font-size: 1.6rem; }
@@ -164,6 +177,11 @@
       <span><i class="fab fa-github"></i> Open Source</span>
     </div>
     <div id="article-clickable-tags" class="card-tags" style="margin-top:1rem;"></div>
+  </div>
+
+  <!-- Live Ticker Tape -->
+  <div style="background:#0f172a;border-bottom:1px solid #1e293b;">
+    <iframe src="/widget/?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks — Live"></iframe>
   </div>
 
   <div class="container">
@@ -1034,9 +1052,33 @@ Not financial advice.</code></pre>
     <span data-lang="fr">Extension Chrome</span>
   </h2>
 
-  <div data-lang="en"><p>The Market Watch extension injects live scanner data directly into the financial sites you already use — no extra tabs, no copy-paste.</p></div>
-  <div data-lang="fr"><p>L'extension Market Watch injecte les donn&eacute;es du scanner directement dans les sites financiers que vous utilisez d&eacute;j&agrave; &mdash; aucun onglet suppl&eacute;mentaire, aucun copier-coller.</p></div>
+  <div data-lang="en"><p>The Market Watch extension injects live scanner data directly into the financial sites you already use — no extra tabs, no copy-paste. It reads the daily watchlist and overlays A+ picks, trade levels, and regime context wherever you browse.</p></div>
+  <div data-lang="fr"><p>L'extension Market Watch injecte les donn&eacute;es du scanner directement dans les sites financiers que vous utilisez d&eacute;j&agrave; &mdash; aucun onglet suppl&eacute;mentaire, aucun copier-coller. Elle lit la watchlist quotidienne et superpose les picks A+, niveaux de trade et contexte r&eacute;gime partout o&ugrave; vous naviguez.</p></div>
 
+  <div class="ext-features">
+    <div class="ext-feat">
+      <i class="fas fa-chart-line"></i>
+      <strong><span data-lang="en">Chart Overlay</span><span data-lang="fr">Overlay Graphique</span></strong>
+      <small><span data-lang="en">Entry, stop, TP1, TP2 lines on Yahoo Finance charts</span><span data-lang="fr">Lignes entr&eacute;e, stop, TP1, TP2 sur les graphiques Yahoo Finance</span></small>
+    </div>
+    <div class="ext-feat">
+      <i class="fas fa-medal"></i>
+      <strong><span data-lang="en">A+ Badges</span><span data-lang="fr">Badges A+</span></strong>
+      <small><span data-lang="en">Score badges on tickers across Yahoo, TradingView, Finviz</span><span data-lang="fr">Badges score sur les tickers Yahoo, TradingView, Finviz</span></small>
+    </div>
+    <div class="ext-feat">
+      <i class="fas fa-shield-halved"></i>
+      <strong><span data-lang="en">Regime Banner</span><span data-lang="fr">Banni&egrave;re R&eacute;gime</span></strong>
+      <small><span data-lang="en">Risk-On/Off indicator on every financial page</span><span data-lang="fr">Indicateur Risk-On/Off sur chaque page financi&egrave;re</span></small>
+    </div>
+    <div class="ext-feat">
+      <i class="fas fa-robot"></i>
+      <strong><span data-lang="en">AI Inject</span><span data-lang="fr">Injection IA</span></strong>
+      <small><span data-lang="en">Auto-injects market context into DeepSeek chat</span><span data-lang="fr">Injecte auto le contexte march&eacute; dans DeepSeek</span></small>
+    </div>
+  </div>
+
+  <h3><span data-lang="en">Supported Sites</span><span data-lang="fr">Sites support&eacute;s</span></h3>
   <div class="data-table">
     <table>
       <thead><tr><th>Site</th><th><span data-lang="en">What gets injected</span><span data-lang="fr">Ce qui est inject&eacute;</span></th></tr></thead>
@@ -1051,12 +1093,17 @@ Not financial advice.</code></pre>
   </div>
 
   <h3><span data-lang="en">Install (Developer Mode)</span><span data-lang="fr">Installation (Mode d&eacute;veloppeur)</span></h3>
+  <div data-lang="en"><p>Available as an unpacked Chrome extension. Takes 30 seconds to set up:</p></div>
+  <div data-lang="fr"><p>Disponible en extension Chrome non-packag&eacute;e. Installation en 30 secondes :</p></div>
   <div class="code-label">Chrome</div>
   <pre><code># 1. Open: chrome://extensions/
 # 2. Toggle: Developer mode (top right)
 # 3. Click: Load unpacked
 # 4. Select folder: articles/mcp/extension/
 # 5. Pin the extension — done!</code></pre>
+  <div class="alert-box" style="background:#eff6ff;border-color:#3b82f6">
+    <i class="fas fa-circle-info"></i> <span data-lang="en">The extension auto-updates from the daily <code>watchlist.json</code> — no manual refresh needed. New picks appear as soon as the scanner runs.</span><span data-lang="fr">L'extension se met &agrave; jour automatiquement depuis le <code>watchlist.json</code> quotidien &mdash; aucune actualisation manuelle. Les nouveaux picks apparaissent d&egrave;s que le scanner tourne.</span>
+  </div>
 </div>
 
 <!-- =========================================================== -->
@@ -1165,6 +1212,31 @@ function showTab(id) {
 })();
 </script>
 
+<script>
+// -- Copy to clipboard --
+function copyCode(btn) {
+  var pre = btn.closest('.code-wrap').querySelector('code');
+  var text = pre.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+// Auto-wrap all pre>code blocks with copy button
+document.querySelectorAll('.config-panel pre, #watchlist-api pre, #scanner pre.dim').forEach(function(pre) {
+  if (pre.closest('.convo') || pre.closest('.code-wrap')) return;
+  var wrap = document.createElement('div');
+  wrap.className = 'code-wrap';
+  pre.parentNode.insertBefore(wrap, pre);
+  wrap.appendChild(pre);
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copy';
+  btn.onclick = function() { copyCode(this); };
+  wrap.appendChild(btn);
+});
+</script>
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
 </body>

@@ -5,10 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Market Watch | Institutional Intelligence</title>
+  <meta name="description" content="Institutional-grade financial intelligence — Weekly reports, daily briefings, ticker analyses, algorithmic scanner picks. 430+ articles covering US, EU, APAC markets and crypto.">
   <!-- Open Graph -->
   <meta property="og:title" content="Market Watch | Institutional Intelligence">
   <meta property="og:description"
-    content="Analyses financières institutionnelles — Rapports hebdomadaires, analyses détaillées par ticker, macro, crypto, métaux précieux">
+    content="Institutional-grade financial intelligence — Weekly reports, daily briefings, ticker analyses, algorithmic scanner picks. 430+ articles covering US, EU, APAC markets and crypto.">
   <meta property="og:image" content="https://articles.market-watch.xyz/icon-512x512.png">
   <meta property="og:url" content="https://articles.market-watch.xyz/">
   <meta property="og:type" content="website">
@@ -523,47 +524,27 @@
     .footer-links {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
       flex-wrap: wrap;
     }
     .footer-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: 700;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
       text-decoration: none;
       transition: all 0.2s;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--bg-hover);
     }
-    .footer-link-emerald {
-      background: rgba(16,185,129,0.1);
-      color: #059669;
-      border: 1px solid rgba(16,185,129,0.2);
-    }
-    .footer-link-emerald:hover {
-      background: rgba(16,185,129,0.2);
-      transform: translateY(-1px);
-    }
-    .footer-link-indigo {
-      background: rgba(99,102,241,0.1);
-      color: #4f46e5;
-      border: 1px solid rgba(99,102,241,0.2);
-    }
-    .footer-link-indigo:hover {
-      background: rgba(99,102,241,0.2);
-      transform: translateY(-1px);
-    }
-
-    .footer-link-amber {
-      background: rgba(245,158,11,0.1);
-      color: #d97706;
-      border: 1px solid rgba(245,158,11,0.2);
-    }
-    .footer-link-amber:hover {
-      background: rgba(245,158,11,0.2);
+    .footer-link:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
       transform: translateY(-1px);
     }
 
@@ -1929,10 +1910,9 @@
         <span class="tab-label" data-i18n="tab.scanner">Scanner</span>
         <span class="tab-count" id="scannerCount">14</span>
       </button>
-      <button class="main-tab" data-tab="tech">
-        <i class="fa-solid fa-microchip tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.tech">Tech</span>
-        <span class="tab-count" id="techCount">12</span>
+      <button class="main-tab" data-tab="radar">
+        <i class="fa-solid fa-satellite-dish tab-icon"></i>
+        <span class="tab-label" data-i18n="tab.radar">Radar</span>
       </button>
       <button class="main-tab" data-tab="series">
         <i class="fa-solid fa-graduation-cap tab-icon"></i>
@@ -2394,26 +2374,38 @@
     <!-- /tab-scanner -->
 
     <!-- ============================================================ -->
-    <!-- TAB: TECH -->
+    <!-- TAB: RADAR -->
     <!-- ============================================================ -->
-    <div class="tab-panel" id="tab-tech">
-      <div style="margin: 2rem 0 1rem; text-align: center">
+    <div class="tab-panel" id="tab-radar">
+      <div style="margin: 1.5rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-microchip" style="color: #0d9488; margin-right: 8px"></i><span data-i18n="panel.tech.title">Tech — Data Engineering
-          &amp; Quantitative Infrastructure</span>
+          <i class="fa-solid fa-satellite-dish" style="color: #50b4ee; margin-right: 8px"></i><span data-i18n="panel.radar.title">Radar — Market Intelligence</span>
         </h2>
-        <p style="
-              color: var(--text-muted);
-              margin: 0.5rem 0 0;
-              font-size: 0.95rem;
-            " data-i18n="panel.tech.sub">
-          Build reliable financial data pipelines, backtest engines, and
-          trading systems.
-        </p>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0; font-size: 0.95rem;" data-i18n="panel.radar.sub">Black swans, risks, catalysts, earnings, and opportunities — one glance.</p>
       </div>
-      <div class="grid-cards" style="margin-top: 1rem"></div>
+
+      <!-- Radar Canvas -->
+      <div id="radarContainer" style="position:relative;max-width:700px;margin:0 auto;aspect-ratio:1/1;">
+        <canvas id="radarCanvas" style="width:100%;height:100%;display:block;border-radius:50%;"></canvas>
+        <!-- Tooltip -->
+        <div id="radarTooltip" style="display:none;position:absolute;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:0.8rem;max-width:260px;pointer-events:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.4);line-height:1.4;"></div>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin:1rem 0 0.5rem;font-size:0.8rem;color:var(--text-muted);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.risks">Risks / Black Swans</span></span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.events">Events / Earnings</span></span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.opps">Opportunities</span></span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.regime">Regime / Sentiment</span></span>
+      </div>
+
+      <!-- Radar info panels (populated from radar.json) -->
+      <div id="radarPanels" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.5rem;"></div>
+
+      <!-- Last update -->
+      <p id="radarUpdated" style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:1rem;"></p>
     </div>
-    <!-- /tab-tech -->
+    <!-- /tab-radar -->
 
     <!-- ============================================================ -->
     <!-- TAB: SÉRIES -->
@@ -2666,6 +2658,20 @@
       <div class="grid-cards" style="margin-top: 1rem"></div>
     </div>
     <!-- /tab-series -->
+
+    <!-- ============================================================ -->
+    <!-- TAB: TECH (hidden from toolbar, accessible via footer link) -->
+    <!-- ============================================================ -->
+    <div class="tab-panel" id="tab-tech">
+      <div style="margin: 2rem 0 1rem; text-align: center">
+        <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
+          <i class="fa-solid fa-microchip" style="color: #0d9488; margin-right: 8px"></i><span data-i18n="panel.tech.title">Tech — Data Engineering &amp; Quantitative Infrastructure</span>
+        </h2>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0; font-size: 0.95rem;" data-i18n="panel.tech.sub">Build reliable financial data pipelines, backtest engines, and trading systems.</p>
+      </div>
+      <div class="grid-cards" style="margin-top: 1rem"></div>
+    </div>
+    <!-- /tab-tech -->
   </div>
   <!-- /container -->
 
@@ -2691,9 +2697,11 @@
 
   <footer>
     <div class="footer-links">
-      <a href="/series/quick-start/" class="footer-link footer-link-emerald"><i class="fa-solid fa-bolt"></i> Quick Start — 30 min</a>
-      <a href="/prompt-ia/" class="footer-link footer-link-indigo"><i class="fa-solid fa-wand-magic-sparkles"></i> Prompt IA</a>
-      <a href="/feed.xml" class="footer-link footer-link-amber" target="_blank"><i class="fa-solid fa-rss"></i> RSS Feed</a>
+      <a href="/series/quick-start/" class="footer-link"><i class="fa-solid fa-bolt"></i> Quick Start</a>
+      <a href="/prompt-ia/" class="footer-link"><i class="fa-solid fa-wand-magic-sparkles"></i> Prompt IA</a>
+      <a href="/mcp/" class="footer-link"><i class="fa-solid fa-robot"></i> MCP Server</a>
+      <a href="/?tab=tech" class="footer-link" onclick="event.preventDefault();switchTab('tech');loadTabContent('tech');window.scrollTo(0,0);"><i class="fa-solid fa-microchip"></i> Tech</a>
+      <a href="/feed.xml" class="footer-link" target="_blank"><i class="fa-solid fa-rss"></i> RSS</a>
     </div>
     <p data-i18n="footer.copy">© 2026 Market Watch. Tous droits réservés.</p>
   </footer>
@@ -3971,6 +3979,7 @@
       daily: { data: [], page: 0, loaded: false },
       analyses: { data: [], page: 0, loaded: false },
       scanner: { data: [], page: 0, loaded: false },
+      radar: { data: [], page: 0, loaded: true },
       tech: { data: [], page: 0, loaded: false },
       series: { data: [], page: 0, loaded: false }
     };
@@ -4076,7 +4085,7 @@
     // Pre-fetch all tab data (for counters), render only the active tab
     function prefetchAllTabs() {
       var tabs = ['weekly', 'daily', 'analyses', 'scanner', 'tech', 'series'];
-      var activeTab = '';
+      var activeTab = currentTab || '';
       var activeBtn = document.querySelector('.main-tab.active');
       if (activeBtn) activeTab = activeBtn.dataset.tab;
 
@@ -4124,6 +4133,330 @@
     });
   </script>
 
+  <!-- ============================================================ -->
+  <!-- RADAR ENGINE -->
+  <!-- ============================================================ -->
+  <script>
+  (function() {
+    var radarData = null;
+    var radarAngle = 0;
+    var radarAnim = null;
+    var blips = [];
+    var hoveredBlip = null;
+    var canvas, ctx, cw, ch, cx, cy, radius;
+
+    // Category colors
+    var CAT_COLORS = {
+      risk:   { fill: '#ef4444', glow: 'rgba(239,68,68,0.5)' },
+      event:  { fill: '#f59e0b', glow: 'rgba(245,158,11,0.5)' },
+      opportunity: { fill: '#10b981', glow: 'rgba(16,185,129,0.5)' },
+      regime: { fill: '#3b82f6', glow: 'rgba(59,130,246,0.5)' }
+    };
+
+    function initRadar() {
+      canvas = document.getElementById('radarCanvas');
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Mouse/touch events
+      canvas.addEventListener('mousemove', onHover);
+      canvas.addEventListener('mouseleave', function() { hoveredBlip = null; hideTooltip(); });
+      canvas.addEventListener('click', onClick);
+      canvas.addEventListener('touchstart', onTouch, { passive: true });
+
+      loadRadarData();
+    }
+
+    function resizeCanvas() {
+      var container = document.getElementById('radarContainer');
+      var w = container.clientWidth;
+      var dpr = window.devicePixelRatio || 1;
+      canvas.width = w * dpr;
+      canvas.height = w * dpr;
+      cw = w * dpr; ch = w * dpr;
+      cx = cw / 2; cy = ch / 2;
+      radius = (Math.min(cw, ch) / 2) - 4 * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    function loadRadarData() {
+      fetch('/data/radar.json?v=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          radarData = data;
+          buildBlips();
+          buildPanels();
+          var up = document.getElementById('radarUpdated');
+          if (up && data.updated) up.textContent = 'Last update: ' + data.updated;
+          startAnimation();
+        })
+        .catch(function(e) { console.warn('Radar data not available', e); });
+    }
+
+    function buildBlips() {
+      blips = [];
+      if (!radarData || !radarData.items) return;
+      radarData.items.forEach(function(item, i) {
+        // importance 1-10 → distance from center (10=close=urgent, 1=far=background)
+        var imp = item.importance || 5;
+        var dist = radius * (1 - (imp / 12)); // high importance = closer to center
+        // Spread items around the circle by category quadrant + offset
+        var quadrant = { risk: 0, event: 1, opportunity: 2, regime: 3 }[item.category] || 0;
+        var baseAngle = (quadrant * Math.PI / 2) + (Math.PI / 8); // start of quadrant
+        var offset = (i * 0.618) % 1; // golden ratio spread
+        var angle = baseAngle + offset * (Math.PI / 2.5);
+        var size = Math.max(4, Math.min(14, imp * 1.3)) * (window.devicePixelRatio || 1);
+        blips.push({
+          x: cx + Math.cos(angle) * dist,
+          y: cy + Math.sin(angle) * dist,
+          angle: angle,
+          dist: dist,
+          size: size,
+          color: CAT_COLORS[item.category] || CAT_COLORS.regime,
+          data: item,
+          pulse: 0
+        });
+      });
+    }
+
+    function buildPanels() {
+      var container = document.getElementById('radarPanels');
+      if (!container || !radarData) return;
+      var cats = [
+        { key: 'risk', icon: 'fa-triangle-exclamation', label: 'Risks', color: '#ef4444' },
+        { key: 'event', icon: 'fa-calendar-day', label: 'Events', color: '#f59e0b' },
+        { key: 'opportunity', icon: 'fa-bullseye', label: 'Opportunities', color: '#10b981' },
+        { key: 'regime', icon: 'fa-gauge-high', label: 'Regime', color: '#3b82f6' }
+      ];
+      var html = '';
+      cats.forEach(function(cat) {
+        var items = (radarData.items || []).filter(function(it) { return it.category === cat.key; });
+        if (!items.length) return;
+        html += '<div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:1rem;border-left:4px solid ' + cat.color + ';">';
+        html += '<h3 style="margin:0 0 0.75rem;font-size:1rem;color:' + cat.color + ';"><i class="fas ' + cat.icon + '"></i> ' + cat.label + ' <span style="font-size:0.8rem;color:var(--text-muted);">(' + items.length + ')</span></h3>';
+        items.forEach(function(it) {
+          var impDots = '';
+          for (var d = 0; d < Math.min(it.importance || 5, 10); d++) impDots += '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + cat.color + ';margin-right:2px;opacity:' + (0.3 + 0.7 * (d < (it.importance || 5))) + ';"></span>';
+          var linkHtml = it.link ? ' <a href="' + it.link + '" style="color:' + cat.color + ';font-size:0.75rem;text-decoration:none;font-weight:600;" title="' + (it.link_label || 'Read more') + '"><i class="fas fa-arrow-up-right-from-square"></i></a>' : '';
+          html += '<div style="margin-bottom:0.6rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+          html += '<strong style="font-size:0.85rem;">' + it.label + linkHtml + '</strong>';
+          html += '<span style="font-size:0.7rem;">' + impDots + '</span>';
+          html += '</div>';
+          if (it.detail) html += '<p style="margin:0.2rem 0 0;font-size:0.78rem;color:var(--text-muted);line-height:1.3;">' + it.detail + '</p>';
+          if (it.date) html += '<span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-clock" style="margin-right:3px;"></i>' + it.date + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      container.innerHTML = html;
+    }
+
+    function startAnimation() {
+      if (radarAnim) return;
+      function frame() {
+        radarAngle += 0.008;
+        if (radarAngle > Math.PI * 2) radarAngle -= Math.PI * 2;
+        drawRadar();
+        radarAnim = requestAnimationFrame(frame);
+      }
+      radarAnim = requestAnimationFrame(frame);
+    }
+
+    function stopAnimation() {
+      if (radarAnim) { cancelAnimationFrame(radarAnim); radarAnim = null; }
+    }
+
+    function drawRadar() {
+      var dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, cw, ch);
+
+      // Background
+      ctx.fillStyle = '#0a0f1e';
+      ctx.beginPath(); ctx.arc(cx, cy, radius + 2 * dpr, 0, Math.PI * 2); ctx.fill();
+
+      // Concentric circles
+      for (var i = 1; i <= 4; i++) {
+        var r = radius * i / 4;
+        ctx.strokeStyle = 'rgba(80,180,238,0.15)';
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      }
+
+      // Cross lines
+      ctx.strokeStyle = 'rgba(80,180,238,0.1)';
+      ctx.lineWidth = 1 * dpr;
+      ctx.beginPath(); ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius); ctx.stroke();
+
+      // Quadrant labels
+      ctx.font = (10 * dpr) + 'px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(80,180,238,0.4)';
+      ctx.textAlign = 'center';
+      ctx.fillText('RISKS', cx + radius * 0.55, cy - radius * 0.85);
+      ctx.fillText('EVENTS', cx + radius * 0.85, cy + radius * 0.55);
+      ctx.fillText('OPPORTUNITIES', cx - radius * 0.55, cy + radius * 0.85);
+      ctx.fillText('REGIME', cx - radius * 0.85, cy - radius * 0.55);
+
+      // Sweep gradient (conic if supported, else radial fallback)
+      if (ctx.createConicGradient) {
+        var sweepLen = Math.PI / 3;
+        var grad = ctx.createConicGradient(radarAngle - sweepLen, cx, cy);
+        grad.addColorStop(0, 'rgba(80,180,238,0)');
+        grad.addColorStop(0.7, 'rgba(80,180,238,0)');
+        grad.addColorStop(0.95, 'rgba(80,180,238,0.12)');
+        grad.addColorStop(1, 'rgba(80,180,238,0.25)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+      } else {
+        // Fallback: draw a sweep wedge
+        ctx.fillStyle = 'rgba(80,180,238,0.08)';
+        ctx.beginPath(); ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, radarAngle - Math.PI / 4, radarAngle);
+        ctx.closePath(); ctx.fill();
+      }
+
+      // Sweep line
+      ctx.strokeStyle = 'rgba(80,180,238,0.7)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(radarAngle) * radius, cy + Math.sin(radarAngle) * radius);
+      ctx.stroke();
+
+      // Center dot
+      ctx.fillStyle = '#50b4ee';
+      ctx.beginPath(); ctx.arc(cx, cy, 3 * dpr, 0, Math.PI * 2); ctx.fill();
+
+      // Blips
+      blips.forEach(function(b) {
+        // Pulse when sweep passes over
+        var angleDiff = Math.abs(((radarAngle - b.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2));
+        if (angleDiff < 0.15 || angleDiff > Math.PI * 2 - 0.15) b.pulse = 1;
+        if (b.pulse > 0) b.pulse -= 0.012;
+
+        var sz = b.size + (b === hoveredBlip ? 4 * dpr : 0);
+        var alpha = 0.5 + b.pulse * 0.5;
+
+        // Glow
+        if (b.pulse > 0.1 || b === hoveredBlip) {
+          ctx.fillStyle = b.color.glow;
+          ctx.beginPath(); ctx.arc(b.x, b.y, sz + 6 * dpr, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Dot
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = b.color.fill;
+        ctx.beginPath(); ctx.arc(b.x, b.y, sz, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Label for important items
+        if ((b.data.importance || 0) >= 7 || b === hoveredBlip) {
+          ctx.font = 'bold ' + (9 * dpr) + 'px Inter, sans-serif';
+          ctx.fillStyle = '#e2e8f0';
+          ctx.textAlign = 'center';
+          ctx.fillText(b.data.short || b.data.label, b.x, b.y - sz - 4 * dpr);
+        }
+      });
+
+      // Outer ring
+      ctx.strokeStyle = 'rgba(80,180,238,0.3)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    function getBlipAt(e) {
+      var rect = canvas.getBoundingClientRect();
+      var dpr = window.devicePixelRatio || 1;
+      var mx = (e.clientX - rect.left) * dpr;
+      var my = (e.clientY - rect.top) * dpr;
+      var closest = null, minD = Infinity;
+      blips.forEach(function(b) {
+        var d = Math.sqrt((b.x - mx) * (b.x - mx) + (b.y - my) * (b.y - my));
+        if (d < b.size + 10 * dpr && d < minD) { closest = b; minD = d; }
+      });
+      return closest;
+    }
+
+    function onHover(e) {
+      var b = getBlipAt(e);
+      hoveredBlip = b;
+      canvas.style.cursor = b ? 'pointer' : 'default';
+      if (b) {
+        showTooltip(e, b.data);
+      } else {
+        hideTooltip();
+      }
+    }
+
+    function onClick(e) {
+      var b = getBlipAt(e);
+      if (b && b.data.link) {
+        window.location.href = b.data.link;
+      }
+    }
+
+    function onTouch(e) {
+      var touch = e.touches[0];
+      var b = getBlipAt(touch);
+      if (b) {
+        showTooltip(touch, b.data);
+        hoveredBlip = b;
+        if (b.data.link) {
+          setTimeout(function() { window.location.href = b.data.link; }, 600);
+        }
+      }
+    }
+
+    function showTooltip(e, data) {
+      var tip = document.getElementById('radarTooltip');
+      var container = document.getElementById('radarContainer');
+      var rect = container.getBoundingClientRect();
+      tip.innerHTML = '<strong>' + data.label + '</strong>' +
+        (data.detail ? '<br><span style="color:#94a3b8;">' + data.detail + '</span>' : '') +
+        (data.date ? '<br><span style="font-size:0.7rem;color:#64748b;"><i class="fas fa-clock"></i> ' + data.date + '</span>' : '') +
+        (data.link ? '<br><span style="font-size:0.7rem;color:#50b4ee;">Click to read <i class="fas fa-arrow-right"></i></span>' : '');
+      tip.style.display = 'block';
+      var x = e.clientX - rect.left + 15;
+      var y = e.clientY - rect.top - 10;
+      if (x + 260 > rect.width) x = x - 280;
+      if (y + 100 > rect.height) y = y - 80;
+      tip.style.left = x + 'px';
+      tip.style.top = y + 'px';
+    }
+
+    function hideTooltip() {
+      document.getElementById('radarTooltip').style.display = 'none';
+    }
+
+    // Start/stop radar when tab is visible
+    var radarInitialized = false;
+    var origSwitchTab = window.switchTab || function(){};
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Patch switchTab to start/stop radar animation
+      var _switchTab = switchTab;
+      switchTab = function(tab) {
+        _switchTab(tab);
+        if (tab === 'radar') {
+          if (!radarInitialized) { initRadar(); radarInitialized = true; }
+          else { resizeCanvas(); buildBlips(); startAnimation(); }
+        } else {
+          stopAnimation();
+        }
+      };
+
+      // If ?tab=radar on load
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'radar') {
+        setTimeout(function() { initRadar(); radarInitialized = true; startAnimation(); }, 200);
+      }
+    });
+  })();
+  </script>
+
   <!-- Language Switcher Logic (data-i18n resolution, like market-watch.xyz) -->
   <script>
     var translations = {
@@ -4134,7 +4467,7 @@
         'tab.daily': 'Daily',
         'tab.analyses': 'Analyses',
         'tab.scanner': 'Scanner',
-        'tab.tech': 'Tech',
+        'tab.radar': 'Radar',
         'tab.series': 'Séries',
         'panel.weekly.title': 'Rapports Hebdomadaires',
         'panel.weekly.sub': 'Analyse macro institutionnelle chaque dimanche — Marchés, secteurs, crypto, métaux et géopolitique',
@@ -4144,9 +4477,15 @@
         'panel.analyses.sub': 'Analyse fondamentale et technique approfondie par ticker — Grade A+ à F, multilingue, multi-niveau',
         'panel.scanner.title': 'Scanner Quotidien',
         'panel.scanner.sub': 'Détection algorithmique des meilleurs setups du jour — Analyse multi-stratégie avec régime de marché',
+        'panel.radar.title': 'Radar — Intelligence Marché',
+        'panel.radar.sub': 'Cygnes noirs, risques, catalyseurs, earnings et opportunités — en un coup d\'oeil.',
         'panel.tech.title': 'Tech — Data Engineering & Quantitative Infrastructure',
         'panel.tech.sub': 'Pipelines de données financières, moteurs de backtest et systèmes de trading.',
         'panel.series.title': 'Séries Éducatives',
+        'radar.legend.risks': 'Risques / Cygnes Noirs',
+        'radar.legend.events': 'Événements / Earnings',
+        'radar.legend.opps': 'Opportunités',
+        'radar.legend.regime': 'Régime / Sentiment',
         'panel.series.sub': 'Guides complets pour apprendre à investir — Du débutant au confirmé',
         'daily.info': ' Le briefing quotidien est publié chaque matin à 7h00. Il couvre les 4 grandes zones (US, EU, AP, Crypto), les événements du jour, et propose une formation et des idées de trading.',
         'scanner.info': ' Le scanner est exécuté quotidiennement. Les setups sont classés par score composite intégrant RSI, volume, supports/résistances et signaux techniques.',
@@ -4189,7 +4528,7 @@
         'tab.daily': 'Daily',
         'tab.analyses': 'Analyses',
         'tab.scanner': 'Scanner',
-        'tab.tech': 'Tech',
+        'tab.radar': 'Radar',
         'tab.series': 'Series',
         'panel.weekly.title': 'Weekly Reports',
         'panel.weekly.sub': 'Institutional macro analysis every Sunday — Markets, sectors, crypto, metals and geopolitics',
@@ -4199,9 +4538,15 @@
         'panel.analyses.sub': 'In-depth fundamental and technical analysis per ticker — Grade A+ to F, multilingual, multi-level',
         'panel.scanner.title': 'Daily Scanner',
         'panel.scanner.sub': 'Algorithmic detection of the best daily setups — Multi-strategy analysis with market regime',
+        'panel.radar.title': 'Radar — Market Intelligence',
+        'panel.radar.sub': 'Black swans, risks, catalysts, earnings, and opportunities — one glance.',
         'panel.tech.title': 'Tech — Data Engineering & Quantitative Infrastructure',
         'panel.tech.sub': 'Build reliable financial data pipelines, backtest engines, and trading systems.',
         'panel.series.title': 'Educational Series',
+        'radar.legend.risks': 'Risks / Black Swans',
+        'radar.legend.events': 'Events / Earnings',
+        'radar.legend.opps': 'Opportunities',
+        'radar.legend.regime': 'Regime / Sentiment',
         'panel.series.sub': 'Complete guides to learn investing — From beginner to advanced',
         'daily.info': ' The daily briefing is published every morning at 7:00 AM. It covers 4 major zones (US, EU, AP, Crypto), daily events, and offers a training lesson and trading ideas.',
         'scanner.info': ' The scanner runs daily. Setups are ranked by composite score including RSI, volume, support/resistance and technical signals.',
@@ -4244,7 +4589,7 @@
         'tab.daily': 'يومي',
         'tab.analyses': 'تحليلات',
         'tab.scanner': 'الماسح',
-        'tab.tech': 'تقنية',
+        'tab.radar': 'رادار',
         'tab.series': 'سلسلة',
         'panel.weekly.title': 'التقارير الأسبوعية',
         'panel.weekly.sub': 'تحليل ماكرو مؤسسي كل أحد — الأسواق والقطاعات والعملات المشفرة والمعادن والجيوسياسة',
@@ -4254,6 +4599,8 @@
         'panel.analyses.sub': 'تحليل أساسي وتقني معمّق لكل سهم — درجة A+ إلى F، متعدد اللغات',
         'panel.scanner.title': 'الماسح اليومي',
         'panel.scanner.sub': 'كشف خوارزمي لأفضل الإعدادات اليومية — تحليل متعدد الاستراتيجيات',
+        'panel.radar.title': 'رادار — استخبارات السوق',
+        'panel.radar.sub': 'البجع الأسود، المخاطر، المحفزات، الأرباح والفرص — بنظرة واحدة.',
         'panel.tech.title': 'تقنية — هندسة البيانات والبنية الكمية',
         'panel.tech.sub': 'بناء خطوط بيانات مالية وأنظمة تداول موثوقة.',
         'panel.series.title': 'سلسلة تعليمية',
@@ -4299,7 +4646,7 @@
         'tab.daily': 'Diario',
         'tab.analyses': 'Análisis',
         'tab.scanner': 'Escáner',
-        'tab.tech': 'Tech',
+        'tab.radar': 'Radar',
         'tab.series': 'Series',
         'panel.weekly.title': 'Informes Semanales',
         'panel.weekly.sub': 'Análisis macro institucional cada domingo — Mercados, sectores, cripto, metales y geopolítica',
@@ -4309,6 +4656,8 @@
         'panel.analyses.sub': 'Análisis fundamental y técnico en profundidad por ticker — Grado A+ a F, multilingüe',
         'panel.scanner.title': 'Escáner Diario',
         'panel.scanner.sub': 'Detección algorítmica de los mejores setups del día — Análisis multi-estrategia',
+        'panel.radar.title': 'Radar — Inteligencia de Mercado',
+        'panel.radar.sub': 'Cisnes negros, riesgos, catalizadores, earnings y oportunidades — de un vistazo.',
         'panel.tech.title': 'Tech — Ingeniería de Datos e Infraestructura Cuantitativa',
         'panel.tech.sub': 'Pipelines de datos financieros, motores de backtesting y sistemas de trading.',
         'panel.series.title': 'Series Educativas',
@@ -4353,7 +4702,7 @@
         'tab.daily': '日报',
         'tab.analyses': '分析',
         'tab.scanner': '扫描器',
-        'tab.tech': '技术',
+        'tab.radar': '雷达',
         'tab.series': '系列',
         'panel.weekly.title': '每周报告',
         'panel.weekly.sub': '每周日机构级宏观分析 — 市场、行业、加密货币、金属与地缘政治',
@@ -4363,6 +4712,8 @@
         'panel.analyses.sub': '逐只深度基本面与技术分析 — A+到F级评分，多语言',
         'panel.scanner.title': '每日扫描',
         'panel.scanner.sub': '算法检测当日最佳交易机会 — 多策略分析与市场环境识别',
+        'panel.radar.title': '雷达 — 市场情报',
+        'panel.radar.sub': '黑天鹅、风险、催化剂、财报和机会 — 一目了然。',
         'panel.tech.title': '技术 — 数据工程与量化基础设施',
         'panel.tech.sub': '构建可靠的金融数据管道、回测引擎和交易系统。',
         'panel.series.title': '教育系列',
