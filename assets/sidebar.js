@@ -8,11 +8,20 @@
   // Don't inject on the landing page (it has its own sidebar)
   if (document.getElementById('sidebar')) return;
 
-  // === Load shared sidebar CSS ===
+  // === Load shared sidebar CSS (wait for it before injecting HTML) ===
   var link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = '/assets/sidebar.css';
   document.head.appendChild(link);
+
+  // Wait for CSS to load before rendering sidebar
+  link.onload = initSidebar;
+  // Fallback: if onload never fires (rare), init after 300ms
+  setTimeout(function () { if (!window.__sidebarReady) initSidebar(); }, 300);
+
+  function initSidebar() {
+    if (window.__sidebarReady) return;
+    window.__sidebarReady = true;
 
   // === Remove brand-bar ===
   var brandBar = document.querySelector('nav.brand-bar');
@@ -166,4 +175,6 @@
       })
       .catch(function () { /* silent */ });
   });
+
+  } // end initSidebar
 })();
