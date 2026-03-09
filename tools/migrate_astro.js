@@ -331,6 +331,15 @@ function fixCoreScript(html) {
     }
   }
 
+  // Add sidebar.js if missing
+  if (!out.includes('sidebar.js')) {
+    const bodyEnd = out.lastIndexOf('</body>');
+    if (bodyEnd !== -1) {
+      out = out.slice(0, bodyEnd) + '    <script src="/assets/sidebar.js"></script>\n' + out.slice(bodyEnd);
+      fixes.push('script: added sidebar.js');
+    }
+  }
+
   // Add echarts-responsive.js if page uses ECharts and doesn't have it yet
   if (out.includes('echarts.init') && !out.includes('echarts-responsive.js')) {
     const bodyEnd = out.lastIndexOf('</body>');
