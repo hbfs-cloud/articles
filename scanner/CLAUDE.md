@@ -143,6 +143,24 @@ Pour chaque setup Europe/Asie/ETF, **ajouter un badge géographique** :
 - 1 Asie (action ou ETF Asie)
 - 2 ETFs thématiques/sectoriels
 
+#### Titre de la Carte Scanner (OBLIGATOIRE)
+
+Le `<h2>` de chaque carte scanner dans `data/scanner.json` DOIT suivre ce format exact :
+
+```
+Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKER10}
+```
+
+- **{REGIME}** : le régime détecté en MAJUSCULES (`RISK-ON`, `EARLY RISK-OFF`, `RISK-OFF`, `NEUTRAL`, `RECOVERY`)
+- **{TICKERS}** : les 10 tickers séparés par des virgules, dans l'ordre du scan
+- **Jamais** de titre générique ("Daily Scanner", "Scan du jour", etc.)
+
+**Exemples conformes** :
+- `Top 10 A+ EARLY RISK-OFF — MRVL, HIMS, CF, IOT, ADBE, LLY, TLT, SQQQ, DBA, SAP`
+- `Top 10 A+ RISK-OFF — XOM, EQNR, RTX, KR, ADM, TTE, GLD, EWY, SH, UNG`
+
+Le `<div class="report-card-meta">` doit contenir la date au format `{Day}, {Month} {DD}, {YYYY}` (en anglais) ou `{Jour} {DD} {Mois} {YYYY}` (en français).
+
 #### Mise à jour Index.html
 
 Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la couverture géographique** dans la description :

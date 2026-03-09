@@ -345,6 +345,7 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Mentionner en intro : "Suite à la rétrospective du DD/MM (note X, hit rate Y%), nous avons ajusté [Z]"
    - Badge géographique sur chaque setup (US 🇺🇸 / Europe 🇪🇺 / Asia 🌏 / ETF 📊)
    - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
+   - **Titre carte** (**OBLIGATOIRE**) : Le `<h2>` de la carte dans `data/scanner.json` doit suivre le format `Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, ..., {TICKER10}`. Jamais de titre générique ("Daily Scanner", "Scan du jour").
 7. Créer les variantes multilangue/multiniveau
 8. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
 9. **OBLIGATOIRE — Mettre à jour `mcp/watchlist.json`** avec les données du scan :
