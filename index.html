@@ -1521,7 +1521,7 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <a href="/" class="sidebar-brand">
-      <img src="/logo.svg" alt="MW" width="28" height="28">
+      <img src="/logo.svg" alt="MW" width="24" height="24">
       Market Watch
     </a>
     <div class="sidebar-top">
@@ -1540,40 +1540,40 @@
       </select>
     </div>
     <nav class="sidebar-nav">
-      <button class="sidebar-link active" data-tab="radar" onclick="sidebarSwitchTab('radar')">
+      <a href="javascript:void(0)" class="sidebar-link active" data-tab="radar" onclick="sidebarSwitchTab('radar')">
         <i class="fa-solid fa-satellite-dish"></i>
         <span data-i18n="tab.radar">Radar</span>
-      </button>
-      <button class="sidebar-link" data-tab="weekly" onclick="sidebarSwitchTab('weekly')">
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" data-tab="weekly" onclick="sidebarSwitchTab('weekly')">
         <i class="fa-solid fa-calendar-week"></i>
         <span data-i18n="tab.weekly">Hebdo</span>
         <span class="sidebar-count" id="sidebarWeeklyCount">10</span>
-      </button>
-      <button class="sidebar-link" data-tab="daily" onclick="sidebarSwitchTab('daily')">
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" data-tab="daily" onclick="sidebarSwitchTab('daily')">
         <i class="fa-solid fa-sun"></i>
         <span data-i18n="tab.daily">Daily</span>
         <span class="sidebar-count" id="sidebarDailyCount">16</span>
-      </button>
-      <button class="sidebar-link" data-tab="analyses" onclick="sidebarSwitchTab('analyses')">
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" data-tab="analyses" onclick="sidebarSwitchTab('analyses')">
         <i class="fa-solid fa-chart-column"></i>
         <span data-i18n="tab.analyses">Analyses</span>
         <span class="sidebar-count" id="sidebarAnalysesCount"></span>
-      </button>
-      <button class="sidebar-link" data-tab="scanner" onclick="sidebarSwitchTab('scanner')">
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" data-tab="scanner" onclick="sidebarSwitchTab('scanner')">
         <i class="fa-solid fa-crosshairs"></i>
         <span data-i18n="tab.scanner">Scanner</span>
         <span class="sidebar-count" id="sidebarScannerCount">14</span>
-      </button>
-      <button class="sidebar-link" data-tab="series" onclick="sidebarSwitchTab('series')">
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" data-tab="series" onclick="sidebarSwitchTab('series')">
         <i class="fa-solid fa-graduation-cap"></i>
         <span data-i18n="tab.series">Séries</span>
         <span class="sidebar-count" id="sidebarSeriesCount">28</span>
-      </button>
-      <button class="sidebar-link" data-tab="tech" onclick="sidebarSwitchTab('tech')">
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" data-tab="tech" onclick="sidebarSwitchTab('tech')">
         <i class="fa-solid fa-microchip"></i>
         <span data-i18n="tab.tech">Tech</span>
         <span class="sidebar-count" id="sidebarTechCount">18</span>
-      </button>
+      </a>
     </nav>
     <div class="sidebar-bottom">
       <a href="/prompt-ia/" class="sidebar-link sidebar-extra">
@@ -1586,18 +1586,51 @@
       </a>
       <a href="/series/quick-start/" class="sidebar-link sidebar-extra">
         <i class="fa-solid fa-graduation-cap"></i>
-        <span>Débuter en Bourse</span>
+        <span data-i18n="sidebar.start">Débuter en Bourse</span>
       </a>
     </div>
   </aside>
-
-  <!-- Mobile sidebar overlay -->
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-  <!-- Mobile hamburger toggle -->
-  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Menu">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu">
     <i class="fas fa-bars" id="sidebarToggleIcon"></i>
   </button>
+
+  <!-- Sidebar toggle logic — isolated script so it can't break from other JS errors -->
+  <script>
+    (function() {
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      var toggleBtn = document.getElementById('sidebarToggle');
+      var icon = document.getElementById('sidebarToggleIcon');
+
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+        if (icon) icon.className = 'fas fa-bars';
+      }
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        overlay.classList.toggle('visible', isOpen);
+        icon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+      }
+
+      // Expose globally for onclick handlers
+      window.toggleSidebar = toggleSidebar;
+      window.closeSidebar = closeSidebar;
+      window.sidebarSwitchTab = function(tab) {
+        if (typeof switchTab === 'function') switchTab(tab);
+        if (typeof loadTabContent === 'function') loadTabContent(tab);
+        closeSidebar();
+      };
+
+      if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+      if (overlay) overlay.addEventListener('click', closeSidebar);
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar();
+      });
+    })();
+  </script>
 
   <!-- Main content area -->
   <div class="main-content" id="mainContent">
@@ -2571,29 +2604,8 @@
         }
       });
 
-    // ===================================================================
-    // SIDEBAR TOGGLE (mobile)
-    // ===================================================================
-    function toggleSidebar() {
-      var sidebar = document.getElementById('sidebar');
-      var overlay = document.getElementById('sidebarOverlay');
-      var icon = document.getElementById('sidebarToggleIcon');
-      var isOpen = sidebar.classList.toggle('open');
-      overlay.classList.toggle('visible', isOpen);
-      icon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
-    }
-    function closeSidebar() {
-      var sidebar = document.getElementById('sidebar');
-      var overlay = document.getElementById('sidebarOverlay');
-      var icon = document.getElementById('sidebarToggleIcon');
-      sidebar.classList.remove('open');
-      overlay.classList.remove('visible');
-      if (icon) icon.className = 'fas fa-bars';
-    }
-    function sidebarSwitchTab(tab) {
-      switchTab(tab);
-      loadTabContent(tab);
-      closeSidebar();
+    // SIDEBAR TOGGLE — now handled by isolated <script> after sidebar HTML
+    // sidebarSwitchTab is wired to switchTab+loadTabContent+closeSidebar globally
     }
 
     // ===================================================================
