@@ -594,7 +594,7 @@ window.searchDataPrebuilt = [
     "desc": "Institutional-grade analysis of Marvell Technology (MRVL): AI ASIC leader, Q4 beat, FY27 $11B revenue guide, +18% post-earnings gap. Target $119.",
     "tags": "us,tech,semis,ai,trade-idea",
     "grade": "A",
-    "href": "/Users/marketwatchxyz/GolandProjects/articles/analyses/MRVL/",
+    "href": "/analyses/MRVL/",
     "date": ""
   },
   {

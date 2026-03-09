@@ -246,6 +246,9 @@ if (tab === 'analyses') {
 }
 
 let href = argPath.replace(/\\/g, '/');
+// Strip absolute project path if present (handles agents passing full paths)
+const projectRoot = path.resolve(__dirname, '..').replace(/\\/g, '/');
+if (href.startsWith(projectRoot)) href = href.substring(projectRoot.length);
 if (href.endsWith('index.html')) href = href.replace('index.html', '');
 if (!href.startsWith('/')) href = '/' + href;
 if (href.startsWith('//')) href = href.substring(1);
