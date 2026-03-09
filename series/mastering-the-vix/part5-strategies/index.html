@@ -341,6 +341,7 @@
   </div>
 </div>
 
+ <div id="vol-family"></div>
    <div class="part-divider">
      <h2><i class="fa-solid fa-table-cells"></i> Global Volatility Index Comparison</h2>
      <p>How they differ in range, correlation, and key drivers</p>
@@ -1245,5 +1246,42 @@
  })();
  </script>
 
+<script>
+// ===== FAB Navigation =====
+(function(){
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if(!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var open = false;
+
+  fab.addEventListener('click', function(){
+    open = !open;
+    menu.classList.toggle('active', open);
+    icon.className = open ? 'fas fa-xmark' : 'fas fa-bars';
+    label.textContent = open ? 'Close' : 'Menu';
+  });
+
+  items.forEach(function(item){
+    item.addEventListener('click', function(){
+      open = false;
+      menu.classList.remove('active');
+      icon.className = 'fas fa-bars';
+      label.textContent = 'Menu';
+    });
+  });
+
+  document.addEventListener('click', function(e){
+    if(open && !fab.contains(e.target) && !menu.contains(e.target)){
+      open = false;
+      menu.classList.remove('active');
+      icon.className = 'fas fa-bars';
+      label.textContent = 'Menu';
+    }
+  });
+})();
+</script>
 </body>
 </html>

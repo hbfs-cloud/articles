@@ -198,7 +198,8 @@
  <!-- SECTION 2: VIX MEAN REVERSION -->
  <div class="section-divider" id="mean-reversion">VIX Mean Reversion</div>
 
- <div class="content-card">
+ <div id="contrarian"></div>
+<div class="content-card">
    <h2><i class="fa-solid fa-arrows-rotate"></i> The Most Reliable Property of the VIX</h2>
 
    <p>If you could know only one thing about the VIX, it should be this: <strong>the VIX always reverts to the mean.</strong> No other financial variable exhibits as strong and consistent mean reversion as implied volatility. Stocks can trend for years. Bonds can stay elevated for decades. Currencies can maintain new ranges indefinitely. But the VIX always comes back.</p>
@@ -720,5 +721,42 @@
  <script src="/assets/core.js"></script>
  <script src="/assets/tag-renderer.js"></script>
  <script src="/assets/echarts-responsive.js"></script>
+<script>
+// ===== FAB Navigation =====
+(function(){
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if(!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var open = false;
+
+  fab.addEventListener('click', function(){
+    open = !open;
+    menu.classList.toggle('active', open);
+    icon.className = open ? 'fas fa-xmark' : 'fas fa-bars';
+    label.textContent = open ? 'Close' : 'Menu';
+  });
+
+  items.forEach(function(item){
+    item.addEventListener('click', function(){
+      open = false;
+      menu.classList.remove('active');
+      icon.className = 'fas fa-bars';
+      label.textContent = 'Menu';
+    });
+  });
+
+  document.addEventListener('click', function(e){
+    if(open && !fab.contains(e.target) && !menu.contains(e.target)){
+      open = false;
+      menu.classList.remove('active');
+      icon.className = 'fas fa-bars';
+      label.textContent = 'Menu';
+    }
+  });
+})();
+</script>
 </body>
 </html>

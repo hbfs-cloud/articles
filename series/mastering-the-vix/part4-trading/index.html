@@ -199,7 +199,8 @@
  <!-- SECTION 2: VIX FUTURES 101 -->
  <div class="section-divider" id="futures">VIX Futures 101</div>
 
- <div class="content-card">
+ <div id="spot"></div>
+<div class="content-card">
    <h2><i class="fa-solid fa-scroll"></i> VIX Futures &mdash; The Foundation of Everything</h2>
 
    <p>VIX futures are the bedrock of the VIX trading ecosystem. Every ETP, every VIX option, every structured product ultimately derives its value from VIX futures. Understanding their mechanics is non-negotiable.</p>
@@ -763,5 +764,42 @@
  <script src="/assets/core.js"></script>
  <script src="/assets/tag-renderer.js"></script>
  <script src="/assets/echarts-responsive.js"></script>
+<script>
+// ===== FAB Navigation =====
+(function(){
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if(!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var open = false;
+
+  fab.addEventListener('click', function(){
+    open = !open;
+    menu.classList.toggle('active', open);
+    icon.className = open ? 'fas fa-xmark' : 'fas fa-bars';
+    label.textContent = open ? 'Close' : 'Menu';
+  });
+
+  items.forEach(function(item){
+    item.addEventListener('click', function(){
+      open = false;
+      menu.classList.remove('active');
+      icon.className = 'fas fa-bars';
+      label.textContent = 'Menu';
+    });
+  });
+
+  document.addEventListener('click', function(e){
+    if(open && !fab.contains(e.target) && !menu.contains(e.target)){
+      open = false;
+      menu.classList.remove('active');
+      icon.className = 'fas fa-bars';
+      label.textContent = 'Menu';
+    }
+  });
+})();
+</script>
 </body>
 </html>
