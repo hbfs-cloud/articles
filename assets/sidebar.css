@@ -1,7 +1,5 @@
 /* ===== GLOBAL SIDEBAR NAVIGATION =====
    Single source of truth for sidebar on landing page + article pages.
-   Mobile: compact spacing so ALL items fit without scrolling on any device.
-   If viewport is extremely short, only the nav section scrolls.
 */
 
 /* ── Base ─────────────────────────────────────────── */
@@ -14,8 +12,8 @@
   background: #fff;
   border-right: 1px solid #e2e8f0;
   z-index: 200;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
   padding: 0;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
@@ -39,7 +37,6 @@
   font-family: 'Inter', sans-serif;
   letter-spacing: -0.01em;
   border-bottom: 1px solid #e2e8f0;
-  flex-shrink: 0;
 }
 
 /* ── Top (search + lang) ─────────────────────────── */
@@ -49,13 +46,10 @@
   flex-direction: column;
   gap: 5px;
   border-bottom: 1px solid #e2e8f0;
-  flex-shrink: 0;
 }
 
 /* ── Nav (7 items — scrolls only if viewport is too short) ── */
 .sidebar-nav {
-  flex: 1 1 auto;
-  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;
@@ -64,6 +58,7 @@
   padding: 0.35rem 0.75rem;
   margin: 0;
   list-style: none;
+  min-height: 0;
 }
 
 /* Thin subtle scrollbar if nav needs to scroll */
@@ -142,7 +137,6 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  flex-shrink: 0;
 }
 
 .sidebar-extra {
@@ -264,10 +258,9 @@ body.has-sidebar {
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 250 !important;
     width: 280px !important;
-    /* Use dvh for mobile browsers with dynamic address bar */
     height: 100vh;
     height: 100dvh;
-    max-height: -webkit-fill-available;
+    bottom: auto;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
   }
@@ -284,9 +277,6 @@ body.has-sidebar {
     margin-left: 0;
   }
 
-  /* Compact everything so all 13 items fit without scrolling
-     Total budget: brand ~38px + top ~64px + nav ~190px + bottom ~68px = ~360px
-     Fits in any modern phone viewport (min 480px portrait) */
   .sidebar-brand {
     padding: 0.5rem 0.85rem;
     font-size: 0.88rem;
