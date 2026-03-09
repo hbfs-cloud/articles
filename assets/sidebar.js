@@ -30,6 +30,9 @@
     '.mw-sidebar-search{display:flex;align-items:center;gap:8px;width:calc(100% - 1rem);margin:0 0.5rem;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#94a3b8;font-size:0.8rem;font-family:inherit;cursor:pointer;transition:all 0.15s}',
     '.mw-sidebar-search:hover{border-color:#2563eb;color:#2563eb}',
     '.mw-sidebar-search kbd{margin-left:auto;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;padding:0 4px;font-size:0.65rem;font-family:inherit;color:#94a3b8}',
+    '.mw-sidebar-lang{width:calc(100% - 1rem);margin:0 0.5rem;appearance:none;-webkit-appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E") no-repeat right 10px center;border:1px solid #e2e8f0;border-radius:8px;padding:8px 28px 8px 12px;font-size:0.8rem;font-weight:600;font-family:inherit;color:#0f172a;cursor:pointer;transition:all 0.15s}',
+    '.mw-sidebar-lang:hover{border-color:#2563eb}',
+    '.mw-sidebar-lang:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1)}',
     '.mw-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:190;backdrop-filter:blur(2px)}',
     '.mw-sidebar-overlay.visible{display:block}',
     '.mw-sidebar-toggle{display:none;position:fixed;top:0.75rem;left:0.75rem;z-index:300;width:40px;height:40px;border-radius:10px;border:1px solid #e2e8f0;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#0f172a;font-size:1.1rem;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.06)}',
@@ -92,6 +95,15 @@
     '    <a href="/integrations/" class="mw-sidebar-extra"><i class="fa-solid fa-plug"></i><span>Integrations</span></a>',
     '    <a href="/series/quick-start/" class="mw-sidebar-extra"><i class="fa-solid fa-bolt"></i><span>Quick Start</span></a>',
     '    <div class="mw-sidebar-divider"></div>',
+    '    <a href="/?search=1" class="mw-sidebar-search"><i class="fa-solid fa-magnifying-glass"></i><span>Search...</span><kbd>\u2318K</kbd></a>',
+    '    <select class="mw-sidebar-lang" id="mwSidebarLang" onchange="localStorage.setItem(\'mw-lang\',this.value);location.reload()">',
+    '      <option value="all">\ud83c\udf10 All</option>',
+    '      <option value="en">\ud83c\uddfa\ud83c\uddf8 EN</option>',
+    '      <option value="fr">\ud83c\uddeb\ud83c\uddf7 FR</option>',
+    '      <option value="ar">\ud83c\uddf8\ud83c\udde6 AR</option>',
+    '      <option value="es">\ud83c\uddea\ud83c\uddf8 ES</option>',
+    '      <option value="zh">\ud83c\udde8\ud83c\uddf3 ZH</option>',
+    '    </select>',
     '  </div>',
     '</aside>',
     '<div class="mw-sidebar-overlay" id="mwSidebarOverlay"></div>',
@@ -131,6 +143,13 @@
       closeSidebar();
     }
   });
+
+  // === Init language select ===
+  var langSel = document.getElementById('mwSidebarLang');
+  if (langSel) {
+    var storedLang = localStorage.getItem('mw-lang') || 'all';
+    langSel.value = storedLang;
+  }
 
   // === Fetch tab counts ===
   var countTabs = ['weekly', 'daily', 'analyses', 'scanner', 'series', 'tech'];
