@@ -28,7 +28,7 @@ const legacyDirs = [
 
 // Files to copy
 const legacyFiles = [
-  'index.html', '404.html', 'CNAME', 'logo.svg',
+  'index.html', '404.html', 'CNAME', 'logo.svg', 'feed.xml', 'sitemap.xml',
 ];
 
 let copied = 0;
