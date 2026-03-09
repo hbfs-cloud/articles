@@ -375,63 +375,8 @@
       white-space: nowrap;
     }
 
-    /* Main tabs — Hidden on desktop (sidebar replaces), bottom bar on mobile */
-    .main-tabs {
-      display: none;
-      gap: 0;
-      margin: 0;
-      border-bottom: none;
-    }
-
-    .main-tab {
-      padding: 12px 28px;
-      border: none;
-      background: none;
-      font-family: "Inter", sans-serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      position: relative;
-      transition: color 0.2s;
-    }
-
-    .main-tab:hover {
-      color: var(--text-primary);
-    }
-
-    .main-tab.active {
-      color: var(--accent);
-    }
-
-    .main-tab.active::after {
-      content: "";
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: var(--accent);
-    }
-
-    .main-tab .tab-count {
-      background: #f1f5f9;
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      padding: 1px 7px;
-      border-radius: 10px;
-      margin-left: 6px;
-    }
-
-    .main-tab.active .tab-count {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .main-tab .tab-icon {
-      font-size: 1em;
-      margin-right: 6px;
-    }
+    /* Main tabs — hidden, kept for JS state only */
+    .main-tabs { display: none !important; }
 
     .tab-panel {
       display: none;
@@ -441,7 +386,7 @@
       display: block;
     }
 
-    /* Mobile tabs: handled in bottom nav bar section below */
+    /* Mobile tabs removed — sidebar is the only navigation */
 
     /* Radar mode switcher */
     .radar-mode {
@@ -1413,12 +1358,7 @@
       font-weight: 700;
     }
 
-    /* ===== DESKTOP: TABS HIDDEN (sidebar replaces) ===== */
-    @media (min-width: 769px) {
-      .main-tabs {
-        display: none !important;
-      }
-    }
+    /* Tabs always hidden — sidebar is the only navigation */
 
     /* ===== TAB TRANSITIONS ===== */
     @keyframes tabFadeIn {
@@ -1443,84 +1383,7 @@
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
     }
 
-    /* ===== MOBILE: BOTTOM NAV BAR ===== */
-    @media (max-width: 768px) {
-      .main-tabs {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        display: flex !important;
-        justify-content: space-around;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid #e2e8f0;
-        border-radius: 0;
-        margin: 0;
-        padding: 4px 0;
-        padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-        gap: 0;
-        min-height: auto;
-      }
-
-      .main-tab {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        padding: 6px 4px;
-        border-radius: 8px;
-        font-size: 0.6rem;
-        min-height: auto;
-        min-width: 0;
-        flex: 1;
-        transition: color 0.15s;
-      }
-
-      .main-tab .tab-icon {
-        font-size: 1.15rem;
-        margin-right: 0;
-        display: block;
-        line-height: 1;
-      }
-
-      .main-tab .tab-label {
-        display: block;
-        font-size: 0.6rem;
-        letter-spacing: 0.02em;
-      }
-
-      .main-tab .tab-count {
-        display: none;
-      }
-
-      .main-tab.active {
-        color: var(--accent);
-        background: transparent;
-        box-shadow: none;
-      }
-
-      .main-tab.active::after {
-        display: none;
-      }
-
-      .main-tab:hover {
-        background: transparent;
-      }
-
-      /* Space for bottom nav */
-      .container {
-        padding-bottom: 80px;
-      }
-
-      footer {
-        padding-bottom: 90px;
-      }
-    }
+    /* (mobile bottom bar removed — sidebar is the only navigation) */
 
     /* ===== TAG EXPLORER OVERLAY ===== */
     .tag-explorer-overlay {
@@ -1907,7 +1770,7 @@
   <div class="main-content" id="mainContent">
 
   <!-- A+ Picks Ticker Tape — Always at very top -->
-  <iframe src="/widget/?mode=tape&theme=light" id="tickerTape" title="A+ Picks" style="width:100%;height:38px;border:none;display:block;margin-bottom:0"></iframe>
+  <iframe src="/widget/?mode=tape&theme=light" id="tickerTape" title="A+ Picks" style="width:100%;height:42px;border:none;border-bottom:1px solid #e2e8f0;display:block;background:#fff"></iframe>
 
   <!-- Promo Banners (skippable) -->
   <div class="container" style="padding-top: 1rem">
@@ -1937,37 +1800,14 @@
   </script>
 
   <div class="container">
-    <!-- TABS (mobile bottom bar only — hidden on desktop, sidebar replaces) -->
-    <div class="main-tabs">
-      <button class="main-tab" data-tab="weekly">
-        <i class="fa-solid fa-calendar-week tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.weekly">Hebdo</span>
-        <span class="tab-count" id="weeklyCount">10</span>
-      </button>
-      <button class="main-tab" data-tab="daily">
-        <i class="fa-solid fa-sun tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.daily">Daily</span>
-        <span class="tab-count" id="dailyCount">16</span>
-      </button>
-      <button class="main-tab" data-tab="analyses">
-        <i class="fa-solid fa-chart-column tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.analyses">Analyses</span>
-        <span class="tab-count" id="analysesCount"></span>
-      </button>
-      <button class="main-tab" data-tab="scanner">
-        <i class="fa-solid fa-crosshairs tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.scanner">Scanner</span>
-        <span class="tab-count" id="scannerCount">14</span>
-      </button>
-      <button class="main-tab active" data-tab="radar">
-        <i class="fa-solid fa-satellite-dish tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.radar">Radar</span>
-      </button>
-      <button class="main-tab" data-tab="series">
-        <i class="fa-solid fa-graduation-cap tab-icon"></i>
-        <span class="tab-label" data-i18n="tab.series">Séries</span>
-        <span class="tab-count" id="seriesCount">28</span>
-      </button>
+    <!-- Hidden tab state holders for JS compatibility -->
+    <div class="main-tabs" style="display:none!important">
+      <button class="main-tab" data-tab="weekly"><span class="tab-count" id="weeklyCount">10</span></button>
+      <button class="main-tab" data-tab="daily"><span class="tab-count" id="dailyCount">16</span></button>
+      <button class="main-tab" data-tab="analyses"><span class="tab-count" id="analysesCount"></span></button>
+      <button class="main-tab" data-tab="scanner"><span class="tab-count" id="scannerCount">14</span></button>
+      <button class="main-tab active" data-tab="radar"></button>
+      <button class="main-tab" data-tab="series"><span class="tab-count" id="seriesCount">28</span></button>
     </div>
 
     <!-- TAG FILTER BAR (shown when tags are active) -->
